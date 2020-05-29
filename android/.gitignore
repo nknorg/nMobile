@@ -1,0 +1,10 @@
+gradle-wrapper.jar
+/.gradle
+gradlew
+gradlew.bat
+/captures/
+/local.properties
+GeneratedPluginRegistrant.java
+/app/key/nkn.keystore
+release.sh
+/tmp/

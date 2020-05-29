@@ -1,0 +1,154 @@
+//import com.android.build.OutputFile
+//import com.android.build.gradle.api.ApplicationVariant
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterRoot = localProperties.getProperty('flutter.sdk')
+if (flutterRoot == null) {
+    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0'
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
+
+android {
+    compileSdkVersion 29
+    defaultConfig {
+        // Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        applicationId "org.nkn.mobile.app"
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            //abiFilters "armeabi-v7a"
+        }
+    }
+
+    signingConfigs {
+        release {
+            String kStoreFile = System.getenv("KEY_STORE_FILE")
+            boolean useDebugConf = kStoreFile == null
+            println("---------->>> signingConfigs.release | useDebugConf: $useDebugConf")
+            storeFile file(useDebugConf ? KEYSTORE_FILE : kStoreFile)
+            storePassword useDebugConf ? KEYSTORE_STOREPWD : System.getenv("KEY_STORE_STORE_PWD")
+            keyAlias useDebugConf ? KEYSTORE_ALIAS : System.getenv("KEY_STORE_KEY_ALIAS")
+            keyPassword useDebugConf ? KEYSTORE_PASSWORD : System.getenv("KEY_STORE_KEY_PWD")
+            v2SigningEnabled true
+        }
+        debug {
+            println("---------->>> signingConfigs.debug")
+            storeFile file(KEYSTORE_FILE)
+            storePassword KEYSTORE_STOREPWD
+            keyAlias KEYSTORE_ALIAS
+            keyPassword KEYSTORE_PASSWORD
+            v2SigningEnabled true
+        }
+    }
+    buildTypes {
+        release {
+            shrinkResources false
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            applicationIdSuffix ".flutter"
+            versionNameSuffix "-flutter"
+        }
+    }
+
+//    splits {
+//        abi {
+//            reset()
+//            enable true
+//            universalApk false  // If true, also generate a universal APK
+//            include "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
+//        }
+//    }
+//    // applicationVariants are e.g. debug, release
+//    applicationVariants.all { variant ->
+//        variant.outputs.each { output ->
+//            // For each separate APK per architecture, set a unique version code as described here:
+//            // http://tools.android.com/tech-docs/new-build-system/user-guide/apk-splits
+//            def versionCodes = ["arm64-v8a": 1, "armeabi-v7a": 2, "x86": 3, "x86_64": 4]
+//            def abi = output.getFilter(OutputFile.ABI)
+//            def verCode = defaultConfig.versionCode
+//            if (abi != null) {  // null for the universal-debug, universal-release variants
+//                output.versionCodeOverride = versionCodes.get(abi) * version4Abi(verCode) + verCode
+//                println("versionCode: $output.versionCodeOverride : $variant.applicationId : $abi")
+//            }
+//        }
+//    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+}
+
+// Put the highest bit +1. e.g: [1]01413935 -> [2]01413935 / [3]01413935 etc.
+static def version4Abi(int code) {
+    return Math.pow(10, code.toString().length() - 1).toInteger()
+}
+
+static def weekIndex() {
+    Calendar calendar = Calendar.getInstance()
+    calendar.setFirstDayOfWeek(Calendar.MONDAY)
+    calendar.setMinimalDaysInFirstWeek(1)
+    return String.format("%02d", calendar.get(Calendar.WEEK_OF_YEAR))
+}
+
+static def weekDay() {
+    Calendar calendar = Calendar.getInstance()
+    calendar.setFirstDayOfWeek(Calendar.MONDAY)
+    calendar.setMinimalDaysInFirstWeek(1)
+    def dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1
+    if (dayOfWeek == 0) return 7 else return dayOfWeek
+}
+
+static def getDate() {
+    return new Date().format('yyyyMMdd')
+}
+
+flutter {
+    source '../..'
+}
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation(name: 'nkn', ext: 'aar')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
+    implementation "org.bouncycastle:bcprov-jdk15on:1.64"
+    implementation 'com.google.protobuf:protobuf-java:3.11.4'
+}
