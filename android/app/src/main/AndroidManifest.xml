@@ -25,7 +25,7 @@
 
     <application
         android:name=".application.App"
-        android:label="nMobile"
+        android:label="nMobile pro"
         tools:replace="android:label"
         android:requestLegacyExternalStorage="true"
         android:usesCleartextTraffic="true"

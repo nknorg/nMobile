@@ -18,6 +18,8 @@ class LocalStorage {
   static const String NEWS_LIST = 'NEWS_LIST';
 
   static const String WALLET_TIP_STATUS = 'WALLET_TIP_STATUS';
+  static const String MININR_AGREE_STATUS = 'MININR_AGREE_STATUS';
+
   static const String CHAT_UNSEND_CONTENT = 'CHAT_UNSEND_CONTENT';
   static const String RN_WALLET_UPGRADED = 'RN_WALLET_UPGRADED';
 

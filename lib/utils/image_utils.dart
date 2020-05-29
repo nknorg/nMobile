@@ -1,5 +1,4 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/svg.dart';
@@ -78,7 +77,7 @@ Widget loadAssetWalletImage(String name, {double width, double height, BoxFit fi
 }
 
 Widget loadNetworkImage(String imageUrl, {double width, double height, BoxFit fit: BoxFit.cover, String holderImg: "ic_launcher"}) {
-  if (TextUtil.isEmpty(imageUrl) || !imageUrl.startsWith('http')) {
+  if (imageUrl == null || imageUrl.length == 0 || !imageUrl.startsWith('http')) {
     return loadAssetImage(holderImg, height: height, width: width, fit: fit);
   }
   return CachedNetworkImage(
@@ -90,7 +89,7 @@ Widget loadNetworkImage(String imageUrl, {double width, double height, BoxFit fi
 }
 
 ImageProvider getImageProvider(String imageUrl, {String holderImg: ""}) {
-  if (TextUtil.isEmpty(imageUrl)) {
+  if (imageUrl == null || imageUrl.length == 0) {
     return AssetImage(getImgPath(holderImg));
   }
   return CachedNetworkImageProvider(imageUrl);

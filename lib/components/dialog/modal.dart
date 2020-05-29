@@ -21,6 +21,7 @@ class ModalDialog extends StatefulWidget {
   bool hasCloseButton;
   show({
     Widget title,
+    Widget close,
     Widget content,
     List<Widget> actions,
     double height = 300,

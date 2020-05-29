@@ -6,6 +6,7 @@ import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/screens/news.dart';
 import 'package:nmobile/services/background_fetch_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/services/task_service.dart';
@@ -30,7 +31,7 @@ class _AppScreenState extends State<AppScreen> {
   int _currentIndex = 0;
   List<Widget> screens = <Widget>[
     ChatScreen(),
-//    NewsScreen(),
+    NewsScreen(),
     HomeScreen(),
     SettingsScreen(),
   ];
