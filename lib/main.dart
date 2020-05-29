@@ -1,4 +1,5 @@
 import 'package:bot_toast/bot_toast.dart';
+import 'package:common_utils/common_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,7 +29,14 @@ void main() async {
   });
 }
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
+  static final String sName = "App";
+
+  @override
+  AppState createState() => new AppState();
+}
+
+class AppState extends State<App> with WidgetsBindingObserver {
   List<BlocProvider> providers = [
     BlocProvider<GlobalBloc>(
       create: (BuildContext context) => GlobalBloc(),
@@ -55,6 +63,18 @@ class App extends StatelessWidget {
       ),
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    LogUtil.v("--" + state.toString());
+    Global.state = state;
+  }
 
   @override
   Widget build(BuildContext context) {

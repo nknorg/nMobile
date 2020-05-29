@@ -5,6 +5,6 @@ gradlew.bat
 /captures/
 /local.properties
 GeneratedPluginRegistrant.java
-/app/key/nkn.keystore
+/app/key/
 release.sh
 /tmp/
