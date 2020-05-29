@@ -1,4 +1,3 @@
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -34,9 +33,7 @@ Future _onDidReceiveLocalNotification(int id, String title, String body, String 
   );
 }
 
-Future _onSelectNotification(String payload) async {
-
-}
+Future _onSelectNotification(String payload) async {}
 
 class LocalNotification {
   static FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -80,11 +77,9 @@ class LocalNotification {
   }
 
   static messageNotification(String title, String content, {int badgeNumber}) async {
-    LogUtil.v(title);
-    LogUtil.v(content);
+    if (Global.state == null || Global.state == AppLifecycleState.resumed) return;
     var iOSPlatformChannelSpecifics = IOSNotificationDetails(badgeNumber: badgeNumber);
     var androidNotificationDetails = AndroidNotificationDetails('channel_ID', 'channel name', 'channel description');
-
     var platformChannelSpecifics = NotificationDetails(androidNotificationDetails, iOSPlatformChannelSpecifics);
     try {
       switch (Settings.localNotificationType) {
