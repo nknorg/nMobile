@@ -14,6 +14,9 @@ import 'package:nmobile/screens/contact/add_contact.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/home.dart';
+import 'package:nmobile/screens/ncdn/home.dart';
+import 'package:nmobile/screens/ncdn/node_detail.dart';
+import 'package:nmobile/screens/ncdn/with_draw_page.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/screens/select.dart';
 import 'package:nmobile/screens/settings/channel.dart';
@@ -49,6 +52,9 @@ Map<String, WidgetBuilder> routes = {
   CommonWebViewPage.routeName: (BuildContext context, {arguments}) => CommonWebViewPage(arguments: arguments),
   ChangeUpdateContentPage.routeName: (BuildContext context, {arguments}) => ChangeUpdateContentPage(arguments: arguments),
   AddContact.routeName: (BuildContext context) => AddContact(),
+  NcdnHomeScreen.routeName: (BuildContext context, {arguments}) => NcdnHomeScreen(arguments: arguments),
+  NodeDetailScreen.routeName: (BuildContext context, {arguments}) => NodeDetailScreen(arguments: arguments),
+  WithDrawPage.routeName: (BuildContext context, {arguments}) => WithDrawPage(arguments: arguments),
   PopularGroupPage.routeName: (BuildContext context) => PopularGroupPage(),
   NcdnHomeScreen.routeName: (BuildContext context, {arguments}) => NcdnHomeScreen(arguments: arguments),
   NodeDetailScreen.routeName: (BuildContext context, {arguments}) => NodeDetailScreen(arguments: arguments),
