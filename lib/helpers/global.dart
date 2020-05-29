@@ -28,7 +28,7 @@ class Global {
   static String buildVersion;
   static Map<String, num> loadTopicTime = {};
   static Map<String, num> loadLoadSubscribers = {};
-
+  static AppLifecycleState state;
   static Map<String, DateTime> _loadProfileCache = {};
 
   static Future init(VoidCallback callback) async {
