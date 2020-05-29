@@ -765,6 +765,10 @@ class NMobileLocalizations {
     return Intl.message('$field is required.', name: 'error_field_required', desc: '', args: [field]);
   }
 
+  String error_amount_min_max(double min, double max) {
+    return Intl.message('This field must be greater than $min and less than $max.', name: 'error_amount_min_max', desc: '', args: [min, max]);
+  }
+
   String get error_confirm_password {
     return Intl.message('Password does not match.', name: 'error_confirm_password', desc: '');
   }

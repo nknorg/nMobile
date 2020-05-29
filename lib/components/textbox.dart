@@ -19,6 +19,7 @@ class Textbox extends StatefulWidget {
   String hintText;
   String helperText;
   Widget suffixIcon;
+  Widget prefixIcon;
   final bool autofocus;
   final FocusNode focusNode;
   final TextInputType keyboardType;
@@ -31,8 +32,37 @@ class Textbox extends StatefulWidget {
   List<TextInputFormatter> inputFormatters;
   final int maxLength;
   final bool maxLengthEnforced;
+  GestureTapCallback onTap;
 
-  Textbox({this.value, this.padding = const EdgeInsets.only(bottom: 10), this.showErrorMessage = true, this.enabled = true, this.readOnly = false, this.multi = false, this.minLines, this.maxLines = 3, this.autofocus = false, this.focusNode, this.controller, this.password = false, this.validator, this.hintText, this.helperText, this.keyboardType, this.textInputAction, this.suffixIcon, this.onSaved, this.onChanged, this.onFieldSubmitted, this.inputFormatters, this.maxLength, this.maxLengthEnforced = true, this.fontSize = 14});
+  Textbox({
+    this.value,
+    this.padding = const EdgeInsets.only(bottom: 10),
+    this.showErrorMessage = true,
+    this.enabled = true,
+    this.readOnly = false,
+    this.multi = false,
+    this.minLines,
+    this.maxLines = 3,
+    this.autofocus = false,
+    this.focusNode,
+    this.controller,
+    this.password = false,
+    this.validator,
+    this.hintText,
+    this.helperText,
+    this.keyboardType,
+    this.textInputAction,
+    this.suffixIcon,
+    this.prefixIcon,
+    this.onSaved,
+    this.onChanged,
+    this.onFieldSubmitted,
+    this.inputFormatters,
+    this.maxLength,
+    this.maxLengthEnforced = true,
+    this.onTap,
+    this.fontSize = 14,
+  });
 
   @override
   _TextboxState createState() => _TextboxState();
@@ -122,7 +152,9 @@ class _TextboxState extends State<Textbox> {
                     ),
               hintText: widget.hintText,
               hintStyle: TextStyle(fontSize: 14),
+              errorMaxLines: 3,
               helperText: widget.helperText,
+              prefixIcon: widget.prefixIcon,
               suffixIcon: widget.suffixIcon,
               disabledBorder: borderStyle,
               enabledBorder: borderStyle),
@@ -134,6 +166,7 @@ class _TextboxState extends State<Textbox> {
           onFieldSubmitted: widget.onFieldSubmitted,
           maxLength: widget.maxLength,
           maxLengthEnforced: widget.maxLengthEnforced,
+          onTap: widget.onTap,
         ),
       );
     }

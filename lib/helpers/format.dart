@@ -73,9 +73,12 @@ class Format {
     if (null == value) {
       return '0 K';
     }
-    List<String> unitArr = ['B', 'KB', 'MB', 'GB'];
+    List<String> unitArr = ['B', 'KB', 'MB', 'GB', 'TB'];
     int index = 0;
     while (value > 1024) {
+      if(index == unitArr.length - 1){
+        break;
+      }
       index++;
       value = value / 1024;
     }

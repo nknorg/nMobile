@@ -1,12 +1,15 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:bs58check/bs58check.dart';
+import 'package:common_utils/common_utils.dart';
 import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flustars/flustars.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
+import 'package:nmobile/tweetnacl/tweetnaclfast.dart';
 import 'package:path/path.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -14,6 +17,7 @@ const ADDRESS_GEN_PREFIX = '02b825';
 const ADDRESS_GEN_PREFIX_LEN = ADDRESS_GEN_PREFIX.length ~/ 2;
 const UINT160_LEN = 20;
 const CHECKSUM_LEN = 4;
+const SEED_LENGTH = 32;
 const ADDRESS_LEN = ADDRESS_GEN_PREFIX_LEN + UINT160_LEN + CHECKSUM_LEN;
 
 String hexEncode(List<int> raw) {
@@ -22,6 +26,10 @@ String hexEncode(List<int> raw) {
 
 List<int> hexDecode(String s) {
   return hex.decode(s);
+}
+
+Uint8List randomBytes([len = SEED_LENGTH]) {
+  return TweetNaclFast.randombytes(len);
 }
 
 String getPublicKeyByClientAddr(String addr) {
@@ -286,4 +294,30 @@ String getOwnerPubkeyByTopic(String topic) {
     return topic.substring(index + 1);
   }
   return null;
+}
+
+DateTime getStartOfDay(DateTime time) {
+  String formattedDate = DateUtil.formatDate(time,
+      isUtc: false, format: 'yyyy-MM-dd');
+  DateTime newDate = DateTime.parse(formattedDate);
+  return newDate;
+}
+
+int getTimestampLatest(bool phase, int day) {
+  String newHours;
+  DateTime now = new DateTime.now();
+  DateTime sixtyDaysFromNow = now.add(new Duration(days: day));
+  String formattedDate = DateUtil.formatDate(sixtyDaysFromNow,
+      isUtc: false, format: 'yyyy-MM-dd');
+  if (phase) {
+    newHours = formattedDate + ' 00:00:00';
+  } else {
+    newHours = formattedDate + ' 23:59:59';
+  }
+
+  DateTime newDate = DateTime.parse(newHours);
+//  String newFormattedDate = DateUtil.formatDate(newDate,
+//      isUtc: false, format: 'yyyy-MM-dd HH:mm:ss');
+  int timeStamp = newDate.millisecondsSinceEpoch ;
+  return timeStamp;
 }

@@ -1,8 +1,11 @@
 import 'package:common_utils/common_utils.dart';
+import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:nmobile/about_text.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
@@ -20,10 +23,12 @@ import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/ncdn/home.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
@@ -330,6 +335,30 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                               ),
                             ],
                           ),
+                        ),
+                        Expanded(
+                          flex: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 20),
+                            child: Column(
+                              children: <Widget>[
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: Button(
+                                    width: double.infinity,
+                                    text: '查看收益',
+                                    onPressed: () async {
+                                      if (SpUtil.getBool(LocalStorage.MININR_AGREE_STATUS, defValue: false)) {
+                                        showPasswordAction();
+                                      } else {
+                                        showAgreeContent();
+                                      }
+                                    },
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
                         )
                       ],
                     ),
@@ -341,6 +370,97 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
         ),
       ),
     );
+  }
+
+  var controller = new ScrollController();
+
+  showAgreeContent() {
+    ModalDialog.of(context).show(
+      height: 610.h,
+      hasCloseButton: false,
+      title: Label(
+        'nCDN节点共享计划用户协议',
+        type: LabelType.h2,
+        softWrap: true,
+      ),
+      content: Container(
+        width: double.infinity,
+        height: 350.h,
+        child: Scrollbar(
+          child: ListView(
+            controller: controller,
+            children: <Widget>[
+              Label(
+                agreement,
+                type: LabelType.bodyRegular,
+                softWrap: true,
+              )
+            ],
+          ),
+        ),
+      ),
+      actions: <Widget>[
+        Button(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Label(
+                '同意',
+                type: LabelType.h3,
+              )
+            ],
+          ),
+          width: double.infinity,
+          onPressed: () async {
+            Navigator.pop(context);
+            SpUtil.putBool(LocalStorage.MININR_AGREE_STATUS, true);
+            showPasswordAction();
+          },
+        ),
+        Button(
+          backgroundColor: Colors.transparent,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Label(
+                '不同意',
+                type: LabelType.h3,
+                color: DefaultTheme.fontColor2,
+              )
+            ],
+          ),
+          width: double.infinity,
+          onPressed: () async {
+            Navigator.pop(context);
+          },
+        ),
+      ],
+    );
+  }
+
+  showPasswordAction() async {
+    var password = await widget.arguments.getPassword();
+    if (password != null) {
+      try {
+        var wallet = await widget.arguments.exportWallet(password);
+
+        Navigator.of(context).pushNamed(NcdnHomeScreen.routeName, arguments: {
+          'wallet': widget.arguments,
+          'publicKey': wallet['publicKey'],
+          'seed': wallet['seed'],
+        });
+      } catch (e) {
+        if (e.message == 'password wrong') {
+          ModalDialog.of(context).show(
+            height: 240,
+            content: Label(
+              NMobileLocalizations.of(context).password_wrong,
+              type: LabelType.bodyRegular,
+            ),
+          );
+        }
+      }
+    }
   }
 
   TextEditingController _walletNameController = TextEditingController();

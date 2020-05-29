@@ -52,9 +52,19 @@ class Validator {
     };
   }
 
-  amount() {
+  amount({double min = 0, double max}) {
     return (value) {
-      return value.trim().length > 0 ? null : _localizations.error_required;
+      var res = value.trim().length > 0 ? null : _localizations.error_required;
+      if (max != null) {
+        var val;
+        try {
+          val = double.parse(value.trim());
+        } catch (e) {}
+        if (val != null) {
+          res = val > max ? _localizations.error_amount_min_max(min, max) : null;
+        }
+      }
+      return res;
     };
   }
 
@@ -80,6 +90,12 @@ class Validator {
   nknIdentifier() {
     return (value) {
       return value.trim().length == 0 ? _localizations.error_required : !RegExp(r'^[^.]*.?[0-9a-f]{64}$').hasMatch(value) ? _localizations.error_client_address_format : null;
+    };
+  }
+
+  ethIdentifier() {
+    return (value) {
+      return (value != null && (value.toString().startsWith('0x') || value.toString().startsWith('0X')) && value.toString().length == 42) ? null : '地址输入错误';
     };
   }
 
