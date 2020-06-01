@@ -266,15 +266,24 @@ class NMobileLocalizations {
   }
 
   String get wallet_password_mach {
-    return Intl.message('Your password must be at least 8 characters. It is recommended to use a mix of different characters.', name: 'wallet_password_mach', desc: '');
+    return Intl.message(
+        'Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
+        name: 'wallet_password_mach',
+        desc: '');
   }
 
   String get wallet_password_helper_text {
-    return Intl.message('Your password must be at least 8 characters. It is recommended to use a mix of different characters.', name: 'wallet_password_helper_text', desc: '');
+    return Intl.message(
+        'Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
+        name: 'wallet_password_helper_text',
+        desc: '');
   }
 
   String get wallet_password_error {
-    return Intl.message('Your password must be at least 8 characters. It is recommended to use a mix of different characters.', name: 'wallet_password_error', desc: '');
+    return Intl.message(
+        'Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
+        name: 'wallet_password_error',
+        desc: '');
   }
 
   String get password_wrong {
@@ -306,19 +315,25 @@ class NMobileLocalizations {
   }
 
   String get delete_wallet_confirm_text {
-    return Intl.message('This will remove the wallet off your local device. Please make sure your wallet is fully backed up or you will lose your funds.', name: 'delete_wallet_confirm_text', desc: '');
+    return Intl.message(
+        'This will remove the wallet off your local device. Please make sure your wallet is fully backed up or you will lose your funds.',
+        name: 'delete_wallet_confirm_text',
+        desc: '');
   }
 
   String get delete_message_confirm_title {
-    return Intl.message('Are you sure you want to delete this message?', name: 'delete_message_confirm_title', desc: '');
+    return Intl.message('Are you sure you want to delete this message?',
+        name: 'delete_message_confirm_title', desc: '');
   }
 
   String get delete_contact_confirm_title {
-    return Intl.message('Are you sure you want to delete this contact?', name: 'delete_contact_confirm_title', desc: '');
+    return Intl.message('Are you sure you want to delete this contact?',
+        name: 'delete_contact_confirm_title', desc: '');
   }
 
   String get delete_chennel_confirm_title {
-    return Intl.message('Are you sure you want to unsubscribe from this channel?', name: 'delete_chennel_confirm_title', desc: '');
+    return Intl.message('Are you sure you want to unsubscribe from this channel?',
+        name: 'delete_chennel_confirm_title', desc: '');
   }
 
   String get delete_cache_confirm_title {
@@ -366,7 +381,10 @@ class NMobileLocalizations {
   }
 
   String get seed_qrcode_dec {
-    return Intl.message('Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.', name: 'seed_qrcode_dec', desc: '');
+    return Intl.message(
+        'Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.',
+        name: 'seed_qrcode_dec',
+        desc: '');
   }
 
   String get to {
@@ -726,7 +744,8 @@ class NMobileLocalizations {
   }
 
   String get no_wallet_desc {
-    return Intl.message('Manage both your Mainnet and ERC-20 NKN tokens with our smart wallet manager.', name: 'no_wallet_desc', desc: '');
+    return Intl.message('Manage both your Mainnet and ERC-20 NKN tokens with our smart wallet manager.',
+        name: 'no_wallet_desc', desc: '');
   }
 
   String get no_wallet_create {
@@ -746,7 +765,10 @@ class NMobileLocalizations {
   }
 
   String get import_keystore_nkn_wallet_desc {
-    return Intl.message('From your existing wallet, find out how to export keystore as well as associated password, make a backup of both, and then use both to import your existing wallet into nMobile.', name: 'import_keystore_nkn_wallet_desc', desc: '');
+    return Intl.message(
+        'From your existing wallet, find out how to export keystore as well as associated password, make a backup of both, and then use both to import your existing wallet into nMobile.',
+        name: 'import_keystore_nkn_wallet_desc',
+        desc: '');
   }
 
   String get import_seed_nkn_wallet_title {
@@ -754,7 +776,10 @@ class NMobileLocalizations {
   }
 
   String get import_seed_nkn_wallet_desc {
-    return Intl.message('From your existing wallet, find out how to export Seed (also called "Secret Seed"), make a backup copy, and then use it to import your existing wallet into nMobile.', name: 'import_seed_nkn_wallet_desc', desc: '');
+    return Intl.message(
+        'From your existing wallet, find out how to export Seed (also called "Secret Seed"), make a backup copy, and then use it to import your existing wallet into nMobile.',
+        name: 'import_seed_nkn_wallet_desc',
+        desc: '');
   }
 
   String get error_required {
@@ -798,7 +823,8 @@ class NMobileLocalizations {
   }
 
   String get chat_no_wallet_desc {
-    return Intl.message('You need a Mainnet compatible wallet before you\ncan use D-Chat.', name: 'chat_no_wallet_desc', desc: '');
+    return Intl.message('You need a Mainnet compatible wallet before you\ncan use D-Chat.',
+        name: 'chat_no_wallet_desc', desc: '');
   }
 
   String get chat_tab_messages {
@@ -818,7 +844,8 @@ class NMobileLocalizations {
   }
 
   String get chat_no_messages_desc {
-    return Intl.message('Start a new direct message or group chat, or join\nexisting ones..', name: 'chat_no_messages_desc', desc: '');
+    return Intl.message('Start a new direct message or group chat, or join\nexisting ones..',
+        name: 'chat_no_messages_desc', desc: '');
   }
 
   String get cantact_no_contact_title {
@@ -826,7 +853,8 @@ class NMobileLocalizations {
   }
 
   String get cantact_no_contact_desc {
-    return Intl.message('Use your contact list to quickly message and\n send funds to your friends.', name: 'cantact_no_contact_desc', desc: '');
+    return Intl.message('Use your contact list to quickly message and\n send funds to your friends.',
+        name: 'cantact_no_contact_desc', desc: '');
   }
 
   String get s {
@@ -922,7 +950,8 @@ class NMobileLocalizations {
   }
 
   String get private_messages_desc {
-    return Intl.message('All direct messages are completely private and secure.', name: 'private_messages_desc', desc: '');
+    return Intl.message('All direct messages are completely private and secure.',
+        name: 'private_messages_desc', desc: '');
   }
 
   String get learn_more {
@@ -934,7 +963,8 @@ class NMobileLocalizations {
   }
 
   String get scan_show_me_desc {
-    return Intl.message('Scan the QR code pattern below to add me to the contact.', name: 'scan_show_me_desc', desc: '');
+    return Intl.message('Scan the QR code pattern below to add me to the contact.',
+        name: 'scan_show_me_desc', desc: '');
   }
 
   String get nick_name {
@@ -967,6 +997,21 @@ class NMobileLocalizations {
 
   String get group_chat {
     return Intl.message('Group', name: 'group_chat', desc: '');
+  }
+
+  String get not_backed_up {
+    return Intl.message('Not backed up yet', name: 'not_backed_up', desc: '');
+  }
+
+  String get d_not_backed_up_title {
+    return Intl.message('Important: Please Back Up\n Your Wallets!', name: 'd_not_backed_up_title', desc: '');
+  }
+
+  String get d_not_backed_up_desc {
+    return Intl.message(
+        'When you update your nMobile software or accidentally uninstall nMobile, your wallet might be lost and you might NOT be able to access your assets! So please take 3 minutes time now to back up all your wallets.',
+        name: 'd_not_backed_up_desc',
+        desc: '');
   }
 }
 

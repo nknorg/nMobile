@@ -385,14 +385,12 @@
     "type": "text",
     "placeholders": {}
   },
-
   "local_notification_only_name": "只显示名字",
   "@local_notification_only_name": {
-      "description": "",
-      "type": "text",
-      "placeholders": {}
-    },
-
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "local_notification_both_name_message": "显示名字和消息",
   "@local_notification_both_name_message": {
     "description": "",
@@ -886,63 +884,71 @@
     "description": "",
     "type": "text",
     "placeholders": {}
+  },
+  "private_messages": "私密通讯",
+  "@private_messages": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "private_messages_desc": "所有消息都是完全隐私和安全的。",
+  "@private_messages_desc": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "learn_more": "更多",
+  "@learn_more": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "enter_or_select_a_user_pubkey": "请输入对方的公钥或在通讯录选择",
+  "@enter_or_select_a_user_pubkey": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "scan_show_me_desc": "扫一扫下面的二维码图案，添加我到联系人。",
+  "@scan_show_me_desc": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "d_chat_address": "滴聊地址",
+  "@d_chat_address": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "input_d_chat_address": "请输入滴聊地址",
+  "@input_d_chat_address": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "nick_name": "NickName",
+  "@nick_name": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "not_backed_up": "尚未全部备份",
+  "@not_backed_up": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "d_not_backed_up_title": "重要提示：请备份您的钱包！",
+  "@d_not_backed_up_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "d_not_backed_up_desc": "当您更新您的 nMobile App 或者偶然地卸载 nMobile 时，您的钱包可能会丢失，这时您将无法访问您的资产！因此，请现在花3分钟时间备份所有钱包。",
+  "@d_not_backed_up_desc": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
   }
-
-   "private_messages": "私密通讯",
-      "@optional": {
-        "description": "",
-        "type": "text",
-        "placeholders": {}
-      }
-
-
-      "private_messages_desc": "所有消息都是完全隐私和安全的。",
-      "@optional": {
-        "description": "",
-        "type": "text",
-        "placeholders": {}
-      }
-
-
-      "learn_more": "更多",
-      "@optional": {
-        "description": "",
-        "type": "text",
-        "placeholders": {}
-      }
-
-      "enter_or_select_a_user_pubkey": "请输入对方的公钥或在通讯录选择",
-      "@optional": {
-        "description": "",
-        "type": "text",
-        "placeholders": {}
-      }
-
-      "scan_show_me_desc": "扫一扫下面的二维码图案，添加我到联系人。",
-      "@optional": {
-        "description": "",
-        "type": "text",
-        "placeholders": {}
-      }
-
-      "d_chat_address": "滴聊地址",
-          "@optional": {
-            "description": "",
-            "type": "text",
-            "placeholders": {}
-      }
-
-       "input_d_chat_address": "请输入滴聊地址",
-      "@optional": {
-        "description": "",
-        "type": "text",
-        "placeholders": {}
-      }
-
-    "nick_name": "NickName",
-    "@optional": {
-      "description": "",
-      "type": "text",
-      "placeholders": {}
-    }
 }

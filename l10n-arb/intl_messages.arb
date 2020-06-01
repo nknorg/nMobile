@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-05-12T15:55:43.214456",
+  "@@last_modified": "2020-06-01T20:28:08.355665",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -24,14 +24,14 @@
     "type": "text",
     "placeholders": {}
   },
-  "connect": "Connect",
-  "@connect": {
+  "click_connect": "Click this button for connect",
+  "@click_connect": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "click_connect": "Click this button for connect",
-  "@click_connect": {
+  "connect": "Connect",
+  "@connect": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -98,6 +98,12 @@
   },
   "save": "Save",
   "@save": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "save_to_album": "Save To Album",
+  "@save_to_album": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -270,7 +276,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "failure": "failure",
+  "failure": "Failure",
   "@failure": {
     "description": "",
     "type": "text",
@@ -1339,62 +1345,101 @@
     "description": "",
     "type": "text",
     "placeholders": {}
+  },
+  "private_messages": "Private Messages",
+  "@private_messages": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "private_messages_desc": "All direct messages are completely private and secure.",
+  "@private_messages_desc": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "learn_more": "Learn More",
+  "@learn_more": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "enter_or_select_a_user_pubkey": "Enter/Select a user public key",
+  "@enter_or_select_a_user_pubkey": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "scan_show_me_desc": "Scan the QR code pattern below to add me to the contact.",
+  "@scan_show_me_desc": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "nick_name": "NickName",
+  "@nick_name": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "d_chat_address": "D-Chat Address",
+  "@d_chat_address": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "input_d_chat_address": "Please input D-Chat Address",
+  "@input_d_chat_address": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "tip_password_error": "Wrong password",
+  "@tip_password_error": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "type_a_message": "Type a message",
+  "@type_a_message": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "placeholder_draft": "[Draft]",
+  "@placeholder_draft": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "friends": "Friend",
+  "@friends": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "group_chat": "Group",
+  "@group_chat": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "not_backed_up": "Not backed up yet",
+  "@not_backed_up": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "d_not_backed_up_title": "Important: Please Back Up\n Your Wallets!",
+  "@d_not_backed_up_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "d_not_backed_up_desc": "When you update your nMobile software or accidentally uninstall nMobile, your wallet might be lost and you might NOT be able to access your assets! So please take 3 minutes time now to back up all your wallets.",
+  "@d_not_backed_up_desc": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
   }
-
-    "private_messages": "Private Messages",
-    "@optional": {
-      "description": "",
-      "type": "text",
-      "placeholders": {}
-    }
-
-
-    "private_messages_desc": "All direct messages are completely private and secure.",
-    "@optional": {
-      "description": "",
-      "type": "text",
-      "placeholders": {}
-    }
-
-
-    "learn_more": "Learn More",
-    "@optional": {
-      "description": "",
-      "type": "text",
-      "placeholders": {}
-    }
-
-    "enter_or_select_a_user_pubkey": "Enter/Select a user public key",
-    "@optional": {
-      "description": "",
-      "type": "text",
-      "placeholders": {}
-    }
-
-    "scan_show_me_desc": "Scan the QR code pattern below to add me to the contact.",
-    "@optional": {
-      "description": "",
-      "type": "text",
-      "placeholders": {}
-    }
-
-    "nick_name": "NickName",
-    "@optional": {
-      "description": "",
-      "type": "text",
-      "placeholders": {}
-    }
-    "d_chat_address": "D-Chat Address",
-    "@optional": {
-      "description": "",
-      "type": "text",
-      "placeholders": {}
-    }
-
-     "input_d_chat_address": "Please input D-Chat Address",
-    "@optional": {
-      "description": "",
-      "type": "text",
-      "placeholders": {}
-    }
 }
