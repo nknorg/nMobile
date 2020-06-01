@@ -21,6 +21,7 @@ import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
 import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/extensions.dart';
 
 class WalletHome extends StatefulWidget {
   static const String routeName = '/wallet/home';
@@ -73,7 +74,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
       backgroundColor: DefaultTheme.primaryColor,
       appBar: Header(
         titleChild: Padding(
-          padding: const EdgeInsets.only(left: 20),
+          padding: 20.pal(),
           child: Label(
             NMobileLocalizations.of(context).my_wallets,
             type: LabelType.h2,
