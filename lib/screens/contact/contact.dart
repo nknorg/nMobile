@@ -11,6 +11,7 @@ import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
@@ -28,6 +29,7 @@ import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/screens/chat/photo_page.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:oktoast/oktoast.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class ContactScreen extends StatefulWidget {
@@ -145,293 +147,260 @@ class _ContactScreenState extends State<ContactScreen> {
             },
           ),
         ),
-        body: ConstrainedBox(
-          constraints: BoxConstraints.expand(),
-          child: Stack(
-            alignment: Alignment.bottomCenter,
+        body: Container(
+          child: Column(
             children: <Widget>[
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height),
-                  color: DefaultTheme.backgroundColor4,
-                  child: Flex(direction: Axis.vertical, children: <Widget>[
-                    Expanded(
-                      flex: 0,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: <Widget>[
-                          InkWell(
-                            onTap: () {
-                              if (widget?.arguments?.avatarFilePath != null) {
-                                Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
-                              }
-                            },
-                            child: Padding(
-                              padding: EdgeInsets.only(bottom: 16),
-                              child: widget.arguments.avatarWidget(
-                                backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
-                                size: 70,
-                                bottomRight: Button(
-                                  padding: const EdgeInsets.all(0),
-                                  width: 40,
-                                  height: 40,
-                                  backgroundColor: DefaultTheme.primaryColor,
-                                  child: loadAssetIconsImage(
-                                    'camera',
-                                    width: 24,
-                                  ),
-                                  onPressed: () async {
-                                    updatePic();
-                                  },
-                                ),
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 16),
-                            child: Label(
-                              widget.arguments.name,
-                              type: LabelType.h2,
-                              dark: true,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ]),
-                ),
-              ),
               Container(
-                constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 320),
-                child: BodyBox(
-                  padding: const EdgeInsets.only(top: 32, left: 20, right: 20),
-                  color: DefaultTheme.backgroundLightColor,
-                  child: Flex(
-                    direction: Axis.vertical,
-                    children: <Widget>[
-                      Expanded(
-                        flex: 0,
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: <Widget>[
-                              Label(
-                                NMobileLocalizations.of(context).my_details,
-                                type: LabelType.h2,
-                                fontWeight: FontWeight.bold,
-                                height: 1,
-                              )
-                            ],
+                color: DefaultTheme.backgroundColor4,
+                width: double.infinity,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    InkWell(
+                      onTap: () {
+                        if (widget?.arguments?.avatarFilePath != null) {
+                          Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
+                        }
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 16.h),
+                        child: widget.arguments.avatarWidget(
+                          backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
+                          size: 50,
+                          bottomRight: Button(
+                            padding: const EdgeInsets.all(0),
+                            width: 30.w,
+                            height: 30.w,
+                            backgroundColor: DefaultTheme.primaryColor,
+                            child: loadAssetIconsImage(
+                              'camera',
+                              width: 18.w,
+                            ),
+                            onPressed: () async {
+                              updatePic();
+                            },
                           ),
                         ),
                       ),
-                      Expanded(
-                        flex: 1,
-                        child: Padding(
-                          padding: EdgeInsets.only(top: 0),
-                          child: SingleChildScrollView(
-                            child: Flex(
-                              direction: Axis.vertical,
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 16.h),
+                      child: Label(
+                        widget.arguments.name,
+                        type: LabelType.h2,
+                        dark: true,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(color: DefaultTheme.backgroundColor4),
+                  child: BodyBox(
+                    padding: EdgeInsets.only(top: 32.h, left: 20.w, right: 20.w),
+                    color: DefaultTheme.backgroundLightColor,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 20.h),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
                               children: <Widget>[
-                                Expanded(
-                                  flex: 0,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(top: 0),
-                                    child: Column(
-                                      children: <Widget>[
-                                        Expanded(
-                                          flex: 0,
-                                          child: Column(
-                                            children: <Widget>[
-                                              Flex(
-                                                direction: Axis.horizontal,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Expanded(
-                                                    flex: 0,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(left: 0, right: 20),
-                                                      child: loadAssetIconsImage(
-                                                        'user',
-                                                        color: DefaultTheme.primaryColor,
-                                                        width: 24,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 1,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(top: 4),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: <Widget>[
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                            children: <Widget>[
-                                                              Label(
-                                                                NMobileLocalizations.of(context).nick_name,
-                                                                type: LabelType.h3,
-                                                                textAlign: TextAlign.start,
-                                                              ),
-                                                              InkWell(
-                                                                child: Label(
-                                                                  NMobileLocalizations.of(context).edit,
-                                                                  color: DefaultTheme.primaryColor,
-                                                                  type: LabelType.bodyRegular,
-                                                                ),
-                                                                onTap: () {
-                                                                  showChangeNameDialog();
-                                                                },
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          Textbox(
-                                                            controller: _nameController,
-                                                            readOnly: true,
-                                                            enabled: false,
-                                                            textInputAction: TextInputAction.next,
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Flex(
-                                                direction: Axis.horizontal,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Expanded(
-                                                    flex: 0,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(left: 0, right: 20),
-                                                      child: loadAssetIconsImage(
-                                                        'key',
-                                                        color: DefaultTheme.primaryColor,
-                                                        width: 24,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 1,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(top: 4),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: <Widget>[
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                            children: <Widget>[
-                                                              Label(
-                                                                NMobileLocalizations.of(context).d_chat_address,
-                                                                type: LabelType.h3,
-                                                                textAlign: TextAlign.start,
-                                                              ),
-                                                              InkWell(
-                                                                child: Label(
-                                                                  NMobileLocalizations.of(context).copy,
-                                                                  color: DefaultTheme.primaryColor,
-                                                                  type: LabelType.bodyRegular,
-                                                                ),
-                                                                onTap: () {
-                                                                  copyAction(widget.arguments.clientAddress);
-                                                                },
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          InkWell(
-                                                            onTap: () {
-                                                              copyAction(widget.arguments.clientAddress);
-                                                            },
-                                                            child: Textbox(
-                                                              value: widget.arguments.clientAddress,
-                                                              readOnly: true,
-                                                              enabled: false,
-                                                              textInputAction: TextInputAction.next,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Flex(
-                                                direction: Axis.horizontal,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Expanded(
-                                                    flex: 0,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(left: 0, right: 20),
-                                                      child: loadAssetIconsImage(
-                                                        'wallet',
-                                                        color: DefaultTheme.primaryColor,
-                                                        width: 24,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 1,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(top: 4),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: <Widget>[
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                            children: <Widget>[
-                                                              Label(
-                                                                NMobileLocalizations.of(context).wallet_address,
-                                                                type: LabelType.h3,
-                                                                textAlign: TextAlign.start,
-                                                              ),
-                                                              InkWell(
-                                                                child: Label(
-                                                                  NMobileLocalizations.of(context).copy,
-                                                                  color: DefaultTheme.primaryColor,
-                                                                  type: LabelType.bodyRegular,
-                                                                ),
-                                                                onTap: () {
-                                                                  copyAction(widget.arguments.nknWalletAddress);
-                                                                },
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          InkWell(
-                                                            onTap: () {
-                                                              copyAction(widget.arguments.nknWalletAddress);
-                                                            },
-                                                            child: Textbox(
-                                                              value: widget.arguments.nknWalletAddress,
-                                                              readOnly: true,
-                                                              textInputAction: TextInputAction.next,
-                                                              enabled: false,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                                Label(
+                                  NMobileLocalizations.of(context).my_details,
+                                  type: LabelType.h2,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1,
+                                )
                               ],
                             ),
                           ),
-                        ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 0),
+                            child: Column(
+                              children: <Widget>[
+                                Column(
+                                  children: <Widget>[
+                                    Flex(
+                                      direction: Axis.horizontal,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 0, right: 20),
+                                          child: loadAssetIconsImage(
+                                            'user',
+                                            color: DefaultTheme.primaryColor,
+                                            width: 24,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 1,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(top: 4),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: <Widget>[
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: <Widget>[
+                                                    Label(
+                                                      NMobileLocalizations.of(context).nick_name,
+                                                      type: LabelType.h3,
+                                                      textAlign: TextAlign.start,
+                                                    ),
+                                                    InkWell(
+                                                      child: Label(
+                                                        NMobileLocalizations.of(context).edit,
+                                                        color: DefaultTheme.primaryColor,
+                                                        type: LabelType.bodyRegular,
+                                                      ),
+                                                      onTap: () {
+                                                        showChangeNameDialog();
+                                                      },
+                                                    ),
+                                                  ],
+                                                ),
+                                                Textbox(
+                                                  controller: _nameController,
+                                                  readOnly: true,
+                                                  enabled: false,
+                                                  textInputAction: TextInputAction.next,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Flex(
+                                      direction: Axis.horizontal,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Expanded(
+                                          flex: 0,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(left: 0, right: 20),
+                                            child: loadAssetIconsImage(
+                                              'key',
+                                              color: DefaultTheme.primaryColor,
+                                              width: 24,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 1,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(top: 4),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: <Widget>[
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: <Widget>[
+                                                    Label(
+                                                      NMobileLocalizations.of(context).d_chat_address,
+                                                      type: LabelType.h3,
+                                                      textAlign: TextAlign.start,
+                                                    ),
+                                                    InkWell(
+                                                      child: Label(
+                                                        NMobileLocalizations.of(context).copy,
+                                                        color: DefaultTheme.primaryColor,
+                                                        type: LabelType.bodyRegular,
+                                                      ),
+                                                      onTap: () {
+                                                        copyAction(widget.arguments.clientAddress);
+                                                      },
+                                                    ),
+                                                  ],
+                                                ),
+                                                InkWell(
+                                                  onTap: () {
+                                                    copyAction(widget.arguments.clientAddress);
+                                                  },
+                                                  child: Textbox(
+                                                    value: widget.arguments.clientAddress,
+                                                    readOnly: true,
+                                                    enabled: false,
+                                                    textInputAction: TextInputAction.next,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Flex(
+                                      direction: Axis.horizontal,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Expanded(
+                                          flex: 0,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(left: 0, right: 20),
+                                            child: loadAssetIconsImage(
+                                              'wallet',
+                                              color: DefaultTheme.primaryColor,
+                                              width: 24,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 1,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(top: 4),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: <Widget>[
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: <Widget>[
+                                                    Label(
+                                                      NMobileLocalizations.of(context).wallet_address,
+                                                      type: LabelType.h3,
+                                                      textAlign: TextAlign.start,
+                                                    ),
+                                                    InkWell(
+                                                      child: Label(
+                                                        NMobileLocalizations.of(context).copy,
+                                                        color: DefaultTheme.primaryColor,
+                                                        type: LabelType.bodyRegular,
+                                                      ),
+                                                      onTap: () {
+                                                        copyAction(widget.arguments.nknWalletAddress);
+                                                      },
+                                                    ),
+                                                  ],
+                                                ),
+                                                InkWell(
+                                                  onTap: () {
+                                                    copyAction(widget.arguments.nknWalletAddress);
+                                                  },
+                                                  child: Textbox(
+                                                    value: widget.arguments.nknWalletAddress,
+                                                    readOnly: true,
+                                                    textInputAction: TextInputAction.next,
+                                                    enabled: false,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
+                          )
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -458,8 +427,7 @@ class _ContactScreenState extends State<ContactScreen> {
                     width: 24,
                   ),
                   onPressed: () {
-                    widget.arguments.setFriend();
-                    setState(() {});
+                    showAction(true);
                   },
                 )
               : IconButton(
@@ -469,8 +437,7 @@ class _ContactScreenState extends State<ContactScreen> {
                     width: 24,
                   ),
                   onPressed: () {
-                    widget.arguments.setFriend(isFriend: false);
-                    setState(() {});
+                    showAction(false);
                   },
                 ),
         ),
@@ -1023,5 +990,59 @@ class _ContactScreenState extends State<ContactScreen> {
         ),
       ),
     );
+  }
+
+  showAction(bool b) async {
+    if (!b) {
+      await ModalDialog.of(context).confirm(
+        height: 280.h,
+        title: Label(
+          NMobileLocalizations.of(context).delete_friend_confirm_title,
+          type: LabelType.h2,
+          softWrap: true,
+        ),
+        content: Container(),
+        agree: Padding(
+          padding: EdgeInsets.only(bottom: 8),
+          child: Button(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: loadAssetIconsImage(
+                    'trash',
+                    color: DefaultTheme.backgroundLightColor,
+                    width: 24,
+                  ),
+                ),
+                Label(
+                  NMobileLocalizations.of(context).delete,
+                  type: LabelType.h3,
+                )
+              ],
+            ),
+            backgroundColor: DefaultTheme.strongColor,
+            width: double.infinity,
+            onPressed: () {
+              Navigator.pop(context);
+              widget.arguments.setFriend(isFriend: b);
+              setState(() {});
+            },
+          ),
+        ),
+        reject: Button(
+          backgroundColor: DefaultTheme.backgroundLightColor,
+          fontColor: DefaultTheme.fontColor2,
+          text: NMobileLocalizations.of(context).cancel,
+          width: double.infinity,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      );
+    } else {
+      widget.arguments.setFriend(isFriend: b);
+      setState(() {});
+      showToast(NMobileLocalizations.of(context).success);
+    }
   }
 }

@@ -25,7 +25,6 @@ import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
-import 'package:nmobile/screens/common_web_page.dart';
 import 'package:nmobile/screens/select.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
@@ -363,7 +362,6 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                         ),
                       ),
                     ),
-
                   ],
                 ),
               ),
@@ -492,7 +490,8 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                           ],
                         ),
                         onPressed: () {
-                          Navigator.pushNamed(context, CommonWebViewPage.routeName, arguments: {CommonWebViewPage.webUrl: 'https://forum.nkn.org'});
+                          launchURL('https://forum.nkn.org');
+//                          Navigator.pushNamed(context, CommonWebViewPage.routeName, arguments: {CommonWebViewPage.webUrl: 'https://forum.nkn.org'});
                         },
                       ),
                     ),

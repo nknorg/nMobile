@@ -137,6 +137,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   void initState() {
     super.initState();
     targetId = widget.arguments.topic.topic;
+    Global.currentChatId = targetId;
     isUnSubscribe = LocalStorage.getUnsubscribeTopicList().contains(targetId);
     _contactBloc = BlocProvider.of<ContactBloc>(context);
     Future.delayed(Duration(milliseconds: 200), () {
@@ -171,7 +172,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             } else if (state.message.contentType == ContentType.receipt && !state.message.isOutbound) {
               var msg = _messages.firstWhere((x) => x.msgId == state.message.content && x.isOutbound, orElse: () => null);
               if (msg != null) {
-                LogUtil.e('message send success');
+                LogUtil.v('message send success');
                 setState(() {
                   msg.isSuccess = true;
                 });
@@ -225,6 +226,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   @override
   void dispose() {
+    Global.currentChatId = null;
     LocalStorage.saveChatUnSendContentFromId(targetId, content: _sendController.text);
     _chatBloc.add(RefreshMessages());
     _chatSubscription?.cancel();
@@ -413,6 +415,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                         itemBuilder: (BuildContext context, int index) {
                           var message = _messages[index];
                           bool showTime;
+                          bool hideHeader = false;
                           if (index + 1 >= _messages.length) {
                             showTime = true;
                           } else {
@@ -422,6 +425,11 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                             } else {
                               showTime = true;
                             }
+                          }
+
+                          if (!showTime) {
+                            var preMessage = index == _messages.length ? message : _messages[index + 1];
+                            hideHeader = message.from == preMessage.from;
                           }
                           return BlocBuilder<ContactBloc, ContactState>(builder: (context, state) {
                             ContactSchema contact;
@@ -443,12 +451,14 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                 return ChatBubble(
                                   message: message,
                                   showTime: showTime,
+                                  hideHeader: hideHeader,
                                 );
                               } else {
                                 return ChatBubble(
                                   message: message,
                                   showTime: showTime,
                                   contact: contact,
+                                  hideHeader: hideHeader,
                                   onChanged: (String v) {
                                     setState(() {
                                       _sendController.text = _sendController.text + ' @$v ';

@@ -317,6 +317,7 @@ class ContactSchema {
     if (e == null) {
       return null;
     }
+    LogUtil.v(e);
     var contact = ContactSchema(
       id: e['id'],
       type: e['type'],
