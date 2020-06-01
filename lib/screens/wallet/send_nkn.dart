@@ -19,7 +19,6 @@ import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/components/wallet/dropdown.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
@@ -77,10 +76,10 @@ class _SendNknScreenState extends State<SendNknScreen> {
       var password = await wallet.getPassword();
       if (password != null) {
         try {
-          Navigator.pop(context, true);
           var w = await wallet.exportWallet(password);
           var keystore = w['keystore'];
           var hash = await NknWalletPlugin.transfer(keystore, password, _sendTo, _amount, _fee.toString());
+          Navigator.pop(context, true);
           showToast(NMobileLocalizations.of(context).success);
         } catch (e) {
           EasyLoading.dismiss();
@@ -333,13 +332,9 @@ class _SendNknScreenState extends State<SendNknScreen> {
                                                               hintText: NMobileLocalizations.of(context).enter_receive_address,
                                                               suffixIcon: GestureDetector(
                                                                 onTap: () async {
-                                                                  if (Global.currentClient != null) {
-                                                                    var contact = await Navigator.of(context).pushNamed(ContactHome.routeName, arguments: true);
-                                                                    if (contact is ContactSchema) {
-                                                                      _sendToController.text = contact.nknWalletAddress;
-                                                                    }
-                                                                  } else {
-                                                                    showToast('D-Chat not login');
+                                                                  var contact = await Navigator.of(context).pushNamed(ContactHome.routeName, arguments: true);
+                                                                  if (contact is ContactSchema) {
+                                                                    _sendToController.text = contact.nknWalletAddress;
                                                                   }
                                                                 },
                                                                 child: Container(
