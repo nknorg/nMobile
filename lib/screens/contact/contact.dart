@@ -995,7 +995,7 @@ class _ContactScreenState extends State<ContactScreen> {
   showAction(bool b) async {
     if (!b) {
       await ModalDialog.of(context).confirm(
-        height: 350.h,
+        height: 280.h,
         title: Label(
           NMobileLocalizations.of(context).delete_friend_confirm_title,
           type: LabelType.h2,
@@ -1005,9 +1005,22 @@ class _ContactScreenState extends State<ContactScreen> {
         agree: Padding(
           padding: EdgeInsets.only(bottom: 8),
           child: Button(
-            child: Label(
-              NMobileLocalizations.of(context).delete,
-              type: LabelType.h3,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: loadAssetIconsImage(
+                    'trash',
+                    color: DefaultTheme.backgroundLightColor,
+                    width: 24,
+                  ),
+                ),
+                Label(
+                  NMobileLocalizations.of(context).delete,
+                  type: LabelType.h3,
+                )
+              ],
             ),
             backgroundColor: DefaultTheme.strongColor,
             width: double.infinity,
