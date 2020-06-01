@@ -168,7 +168,7 @@ class ContactSchema {
     } else if (size > 30) {
       fontType = LabelType.h4;
     }
-
+    LogUtil.v(sourceProfile?.avatar);
     if (avatar == null || avatar.path == null) {
       if (sourceProfile?.avatar != null) {
         view = CircleAvatar(

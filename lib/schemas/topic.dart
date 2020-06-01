@@ -98,6 +98,7 @@ class TopicSchema {
     } else if (size > 30) {
       fontType = LabelType.h4;
     }
+
     if (avatar == null) {
       var wid = <Widget>[
         Material(
@@ -135,9 +136,7 @@ class TopicSchema {
         height: size,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(6.0),
-          child: Container(
-            decoration: BoxDecoration(image: DecorationImage(image: FileImage(avatar))),
-          ),
+          child: Image.file(avatar),
         ),
       );
     }
@@ -146,7 +145,7 @@ class TopicSchema {
   Future<bool> setAvatar(File image) async {
     avatar = image;
     Map<String, dynamic> data = {
-      'avatar': getLocalContactPath(image.path),
+      'avatar': image.path,
 //      'avatar': getLocalPath(image.path),
       'updated_time': DateTime.now().millisecondsSinceEpoch,
     };
@@ -214,8 +213,6 @@ class TopicSchema {
   }
 
   Future<Map<String, dynamic>> getPrivateOwnerMeta() async {
-    LogUtil.v('address =========');
-    LogUtil.v(Global.currentClient.address);
     if (!Global.isLoadTopic(topic)) {
       TopicSchema topicSchema = await getTopic(topic);
       if (topicSchema.data != null && topicSchema.data.length > 0) {
@@ -524,7 +521,7 @@ class TopicSchema {
       'id': id,
       'topic': topic,
       'count': count,
-      'avatar': avatar != null ? getLocalContactPath(avatar.path) : null,
+      'avatar': avatar != null ? avatar.path : null,
 //      'avatar': avatar != null ? getLocalPath(avatar.path) : null,
       'type': type,
       'owner': owner,
@@ -542,7 +539,8 @@ class TopicSchema {
       id: e['id'],
       topic: e['topic'],
       count: e['count'],
-      avatar: e['avatar'] != null ? File(join(Global.applicationRootDirectory.path, e['avatar'])) : null,
+      avatar: e['avatar'] != null ? File(e['avatar']) : null,
+//      avatar: e['avatar'] != null ? File(join(Global.applicationRootDirectory.path, e['avatar'])) : null,
       type: e['type'],
       owner: e['owner'],
       expiresAt: e['expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['expires_at']) : null,
