@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -13,7 +12,6 @@ import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
-import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
@@ -31,6 +29,7 @@ class ChannelSettingsScreen extends StatefulWidget {
   static const String routeName = '/settings/channel';
 
   final TopicSchema arguments;
+
   ChannelSettingsScreen({this.arguments});
 
   @override
@@ -40,6 +39,7 @@ class ChannelSettingsScreen extends StatefulWidget {
 class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
   ChatBloc _chatBloc;
   bool isUnSubscribe = false;
+
   initAsync() async {
     widget.arguments.getTopicCount().then((count) {
       setState(() {});
@@ -99,11 +99,11 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: <Widget>[
                         Padding(
-                          padding: EdgeInsets.only(bottom: 24, left: 20, right: 20),
+                          padding: EdgeInsets.only(bottom: 24.h, left: 16.w, right: 20.w),
                           child: Row(
                             children: <Widget>[
                               Padding(
-                                padding: const EdgeInsets.only(right: 16),
+                                padding: EdgeInsets.only(right: 16.w),
                                 child: widget.arguments.avatarWidget(
                                   backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
                                   size: 48,
@@ -155,7 +155,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
             Container(
               constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 190),
               child: BodyBox(
-                padding: const EdgeInsets.only(top: 32),
+                padding: const EdgeInsets.only(top: 12),
                 color: DefaultTheme.backgroundLightColor,
                 child: Flex(
                   direction: Axis.vertical,
@@ -170,88 +170,77 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                             children: <Widget>[
                               Expanded(
                                 flex: 0,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 0),
-                                  child: Column(
-                                    children: <Widget>[
-                                      Expanded(
-                                        flex: 0,
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: <Widget>[
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                children: <Widget>[
-                                                  Label(
-                                                    NMobileLocalizations.of(context).topic,
-                                                    type: LabelType.h4,
-                                                    textAlign: TextAlign.start,
-                                                  ),
-                                                  InkWell(
-                                                    child: Label(
-                                                      NMobileLocalizations.of(context).copy,
-                                                      color: DefaultTheme.primaryColor,
-                                                      type: LabelType.bodyRegular,
-                                                    ),
-                                                    onTap: () {
-                                                      CopyUtils.copyAction(context, widget.arguments.topic);
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                              InkWell(
-                                                onTap: () {
-                                                  CopyUtils.copyAction(context, widget.arguments.topic);
-                                                },
-                                                child: Textbox(
-                                                  value: widget.arguments.topic,
-                                                  readOnly: true,
-                                                  padding: EdgeInsets.zero,
-                                                  enabled: false,
-                                                  textInputAction: TextInputAction.next,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        height: 50.h,
-                                        child: FlatButton(
-                                          padding: const EdgeInsets.only(left: 16, right: 16),
-                                          onPressed: () async {
-                                            Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: TopicSchema(topic: widget.arguments.topic));
-                                          },
-                                          child: Row(
+                                child: Column(
+                                  children: <Widget>[
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+                                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.line))),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Row(
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: <Widget>[
                                               Label(
-                                                NMobileLocalizations.of(context).view_channel_members,
-                                                type: LabelType.bodyRegular,
-                                                color: DefaultTheme.fontColor1,
-                                                height: 1,
+                                                NMobileLocalizations.of(context).topic,
+                                                type: LabelType.h4,
+                                                overflow: TextOverflow.ellipsis,
+                                                textAlign: TextAlign.start,
                                               ),
-                                              SvgPicture.asset(
-                                                'assets/icons/right.svg',
-                                                width: 24,
-                                                color: DefaultTheme.fontColor2,
-                                              )
+                                              InkWell(
+                                                child: Label(
+                                                  NMobileLocalizations.of(context).copy,
+                                                  color: DefaultTheme.primaryColor,
+                                                  type: LabelType.bodyRegular,
+                                                ),
+                                                onTap: () {
+                                                  CopyUtils.copyAction(context, widget.arguments.topic);
+                                                },
+                                              ),
                                             ],
                                           ),
+                                          SizedBox(
+                                            height: 10.h,
+                                          ),
+                                          InkWell(
+                                              onTap: () {
+                                                CopyUtils.copyAction(context, widget.arguments.topic);
+                                              },
+                                              child: Label(
+                                                widget.arguments.topic,
+                                                type: LabelType.bodyRegular,
+                                                color: DefaultTheme.fontColor1,
+                                              )),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+                                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.line))),
+                                      child: InkWell(
+                                        onTap: () {
+                                          Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: TopicSchema(topic: widget.arguments.topic));
+                                        },
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: <Widget>[
+                                            Label(
+                                              NMobileLocalizations.of(context).view_channel_members,
+                                              type: LabelType.bodyRegular,
+                                              color: DefaultTheme.fontColor1,
+                                              height: 1,
+                                            ),
+                                            SvgPicture.asset(
+                                              'assets/icons/right.svg',
+                                              width: 24,
+                                              color: DefaultTheme.fontColor2,
+                                            )
+                                          ],
                                         ),
                                       ),
-                                      Container(
-                                        width: double.infinity,
-                                        height: 1,
-                                        margin: const EdgeInsets.only(left: 16, right: 16),
-                                        color: DefaultTheme.line,
-                                      ),
-                                      getTopicStatusView()
-                                    ],
-                                  ),
+                                    ),
+                                    getTopicStatusView()
+                                  ],
                                 ),
                               ),
                             ],
@@ -289,34 +278,23 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
   getTopicStatusView() {
     if (!isUnSubscribe) {
       return InkWell(
-        onTap: () {
+        onTap: () async {
           unSubscriberAction();
         },
-        child: Column(
-          children: <Widget>[
-            SizedBox(
-              width: double.infinity,
-              height: 50.h,
-              child: FlatButton(
-                padding: const EdgeInsets.only(left: 16, right: 16),
-                onPressed: () async {
-                  Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: TopicSchema(topic: widget.arguments.topic));
-                },
-                child: Label(
-                  NMobileLocalizations.of(context).unsubscribe,
-                  type: LabelType.bodyRegular,
-                  color: Colors.red,
-                  height: 1,
-                ),
-              ),
-            ),
-            Container(
-              width: double.infinity,
-              height: 1,
-              margin: const EdgeInsets.only(left: 16, right: 16),
-              color: DefaultTheme.line,
-            ),
-          ],
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+          width: double.infinity,
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.line))),
+          child: Column(
+            children: <Widget>[
+              Label(
+                NMobileLocalizations.of(context).unsubscribe,
+                type: LabelType.bodyLarge,
+                color: Colors.red,
+                height: 1,
+              )
+            ],
+          ),
         ),
       );
     } else {
@@ -324,41 +302,20 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
         onTap: () {
           subscriberAction();
         },
-        child: Column(
-          children: <Widget>[
-            SizedBox(
-              width: double.infinity,
-              height: 50.h,
-              child: FlatButton(
-                padding: const EdgeInsets.only(left: 16, right: 16),
-                onPressed: () async {
-                  Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: TopicSchema(topic: widget.arguments.topic));
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Label(
-                      NMobileLocalizations.of(context).subscribe,
-                      type: LabelType.bodyRegular,
-                      color: DefaultTheme.fontColor1,
-                      height: 1,
-                    ),
-                    SvgPicture.asset(
-                      'assets/icons/right.svg',
-                      width: 24,
-                      color: DefaultTheme.fontColor2,
-                    )
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              width: double.infinity,
-              height: 1,
-              margin: const EdgeInsets.only(left: 16, right: 16),
-              color: DefaultTheme.line,
-            ),
-          ],
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+          width: double.infinity,
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.line))),
+          child: Column(
+            children: <Widget>[
+              Label(
+                NMobileLocalizations.of(context).subscribe,
+                type: LabelType.bodyLarge,
+                color: DefaultTheme.primaryColor,
+                height: 1,
+              )
+            ],
+          ),
         ),
       );
     }
@@ -366,76 +323,24 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
 
   unSubscriberAction() async {
     var result = await ModalDialog.of(context).confirm(
-      height: 380.h,
+      height: 350.h,
       title: Label(
-        NMobileLocalizations.of(context).delete_chennel_confirm_title,
+        NMobileLocalizations.of(context).leave_group_confirm_title,
         type: LabelType.h2,
         softWrap: true,
       ),
-      content: Column(
-        children: <Widget>[
-          Container(
-            child: Container(
-              height: 50.h,
-              padding: const EdgeInsets.only(),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Container(
-                    padding: const EdgeInsets.only(right: 16),
-                    alignment: Alignment.center,
-                    child: widget.arguments.avatarWidget(
-                      backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
-                      fontColor: DefaultTheme.primaryColor,
-                      size: 48,
-                    ),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Label(
-                          widget.arguments.topic,
-                          type: LabelType.h3,
-                        ),
-                        Label(
-                          '${widget.arguments.count} ' + NMobileLocalizations.of(context).members,
-                          type: LabelType.bodyRegular,
-                          softWrap: true,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+      content: Container(),
       agree: Padding(
-        padding: const EdgeInsets.only(bottom: 8),
+        padding: EdgeInsets.only(bottom: 8.h),
         child: Button(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: SvgPicture.asset(
-                  'assets/icons/trash.svg',
-                  color: DefaultTheme.backgroundLightColor,
-                  width: 24,
-                ),
-              ),
-              Label(
-                NMobileLocalizations.of(context).unsubscribe,
-                type: LabelType.h3,
-              )
-            ],
+          child: Label(
+            NMobileLocalizations.of(context).unsubscribe,
+            type: LabelType.h3,
           ),
           backgroundColor: DefaultTheme.strongColor,
           width: double.infinity,
           onPressed: () {
+            widget.arguments.unsubscribe();
             Navigator.of(context).pop(true);
           },
         ),
@@ -448,9 +353,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
         onPressed: () => Navigator.of(context).pop(),
       ),
     );
-    if (result == true) {
-
-    }
+    if (result == true) {}
   }
 
   subscriberAction() {

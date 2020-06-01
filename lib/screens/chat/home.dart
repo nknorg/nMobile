@@ -281,7 +281,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                 onPressed: () async {
                                   var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
                                   if (address != null) {
-                                    ContactSchema contact = ContactSchema(type: ContactType.friend, clientAddress: address);
+                                    ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
                                     await contact.createContact();
                                     var c = await ContactSchema.getContactByAddress(address);
                                     if (c != null) {
