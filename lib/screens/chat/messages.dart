@@ -279,7 +279,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                                     onPressed: () async {
                                       var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
                                       if (address != null) {
-                                        ContactSchema contact = ContactSchema(type: ContactType.friend, clientAddress: address);
+                                        ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
                                         await contact.createContact();
                                         Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
                                       }
