@@ -39,10 +39,7 @@ class _NoContactScreenState extends State<NoContactScreen> {
                 child: Container(
                   padding: const EdgeInsets.only(right: 16),
                   alignment: Alignment.center,
-                  child: Hero(
-                    tag: 'avatar:${Global.currentUser.clientAddress}',
-                    child: Global.currentUser.avatarWidget(backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 24),
-                  ),
+                  child: Global.currentUser.avatarWidget(backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 24),
                 ),
               ),
               Expanded(

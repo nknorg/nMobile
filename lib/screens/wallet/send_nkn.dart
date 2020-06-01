@@ -27,7 +27,6 @@ import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/scanner.dart';
-import 'package:nmobile/screens/wallet/home.dart';
 import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/image_utils.dart';
@@ -77,13 +76,11 @@ class _SendNknScreenState extends State<SendNknScreen> {
       var password = await wallet.getPassword();
       if (password != null) {
         try {
-          EasyLoading.show();
           var w = await wallet.exportWallet(password);
           var keystore = w['keystore'];
           var hash = await NknWalletPlugin.transfer(keystore, password, _sendTo, _amount, _fee.toString());
-          EasyLoading.dismiss();
-
-          Navigator.of(context).pushReplacementNamed(WalletHome.routeName);
+          Navigator.pop(context, true);
+          showToast(NMobileLocalizations.of(context).success);
         } catch (e) {
           EasyLoading.dismiss();
           if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
@@ -96,6 +93,8 @@ class _SendNknScreenState extends State<SendNknScreen> {
                 type: LabelType.bodyRegular,
               ),
             );
+          } else {
+            showToast(NMobileLocalizations.of(context).failure);
           }
         }
       }

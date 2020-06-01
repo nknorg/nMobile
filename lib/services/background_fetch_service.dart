@@ -51,9 +51,7 @@ class BackgroundFetchService {
           BackgroundFetch.finish(taskId);
         });
       }
-    }).then((int status) {
-
-    }).catchError((e) {
+    }).then((int status) {}).catchError((e) {
       print('[BackgroundFetch] configure ERROR: $e');
     });
   }

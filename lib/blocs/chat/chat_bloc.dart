@@ -137,7 +137,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         yield MessagesUpdated(target: message.to, message: message);
         return;
       case ContentType.eventContactOptions:
-
         try {
           var pid = await NknClientPlugin.sendText([message.to], message.toActionContentOptionsData());
         } catch (e) {
@@ -187,7 +186,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Stream<ChatState> _mapReceiveMessageToState(ReceiveMessage event) async* {
-    LogUtil.v('receive  message');
+    LogUtil.v('=======receive  message ==============');
     var message = event.message;
     if (await message.isExist()) {
       return;
@@ -239,7 +238,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         message.receipt();
         message.isSuccess = true;
         checkBurnOptions(message, contact);
-        LocalNotification.messageNotification(title, message.content);
+        LocalNotification.messageNotification(title, message.content, message: message);
         await message.insert();
         var unReadCount = await MessageSchema.unReadMessages();
         FlutterAppBadger.updateBadgeCount(unReadCount);
@@ -248,7 +247,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       case ContentType.ChannelInvitation:
         message.receipt();
         message.isSuccess = true;
-        LocalNotification.messageNotification(title, message.content);
+        LocalNotification.messageNotification(title, message.content, message: message);
         await message.insert();
         var unReadCount = await MessageSchema.unReadMessages();
         FlutterAppBadger.updateBadgeCount(unReadCount);
@@ -267,7 +266,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       case ContentType.textExtension:
         message.receipt();
         message.isSuccess = true;
-        LocalNotification.messageNotification(title, message.content);
+        LocalNotification.messageNotification(title, message.content, message: message);
         await message.insert();
         var unReadCount = await MessageSchema.unReadMessages();
         if (message.deleteAfterSeconds != contact.options.deleteAfterSeconds) {
@@ -290,7 +289,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         message.receipt();
         message.isSuccess = true;
         checkBurnOptions(message, contact);
-        LocalNotification.messageNotification(title, message.content);
+        LocalNotification.messageNotification(title, message.content, message: message);
         await message.loadMedia();
         await message.insert();
         var unReadCount = await MessageSchema.unReadMessages();

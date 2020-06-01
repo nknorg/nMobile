@@ -1,8 +1,10 @@
+import 'package:common_utils/common_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/screens/news.dart';
 
 import 'global.dart';
@@ -76,8 +78,21 @@ class LocalNotification {
     }
   }
 
-  static messageNotification(String title, String content, {int badgeNumber}) async {
-    if (Global.state == null || Global.state == AppLifecycleState.resumed) return;
+  static messageNotification(String title, String content, {int badgeNumber, MessageSchema message}) async {
+    LogUtil.v(message.from);
+    LogUtil.v(Global.currentChatId);
+    LogUtil.v(Global.state);
+    LogUtil.v(AppLifecycleState.resumed);
+
+    if (message != null && Global.state == AppLifecycleState.resumed) {
+      if (message.topic != null) {
+        if (Global.currentChatId == message.topic) {
+          return;
+        }
+      } else if (Global.currentChatId == message.from) {
+        return;
+      }
+    }
     var iOSPlatformChannelSpecifics = IOSNotificationDetails(badgeNumber: badgeNumber);
     var androidNotificationDetails = AndroidNotificationDetails('channel_ID', 'channel name', 'channel description');
     var platformChannelSpecifics = NotificationDetails(androidNotificationDetails, iOSPlatformChannelSpecifics);
