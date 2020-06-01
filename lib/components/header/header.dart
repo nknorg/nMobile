@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
@@ -12,8 +13,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
   final Widget action;
   final Widget leading;
   bool hasBack;
-  bool isWalletPage;
-  bool isNotBackedUp;
+  bool isWalletPageBackedUp;
 
   Header(
       {this.title,
@@ -22,8 +22,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
       this.action,
       this.leading,
       this.hasBack = true,
-      this.isWalletPage = false,
-      this.isNotBackedUp = true});
+      this.isWalletPageBackedUp = false});
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +33,8 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: 0,
       leading: leading,
       title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           (titleChild != null
                   ? titleChild
@@ -60,11 +61,13 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget notBackedUp(BuildContext context) {
-    final label = Label(
-      NMobileLocalizations.of(context).not_backed_up,
-      type: LabelType.h4,
-    ).padding(4.pal().par(4));
-    return isWalletPage && isNotBackedUp ? label : label.offstage(true);
+    final label = Align(
+        alignment: Alignment.bottomRight,
+        child: Label(
+          NMobileLocalizations.of(context).not_backed_up,
+          type: LabelType.h4,
+        )).padding(4.pal().par(4));
+    return isWalletPageBackedUp ? label : label.offstage(true);
   }
 
   @override

@@ -20,11 +20,12 @@ import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
 import 'package:nmobile/services/task_service.dart';
-import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
+import 'package:nmobile/utils/image_utils.dart';
 
 class WalletHome extends StatefulWidget {
   static const String routeName = '/wallet/home';
+
   @override
   _WalletHomeState createState() => _WalletHomeState();
 }
@@ -34,6 +35,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
   WalletsBloc _walletsBloc;
   StreamSubscription _walletSubscription;
   final GetIt locator = GetIt.instance;
+  bool _isNotBackedUp = true;
 
   double _totalNkn = 0;
 
@@ -81,6 +83,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
           ),
         ),
         hasBack: false,
+        isWalletPageBackedUp: true,
         backgroundColor: DefaultTheme.primaryColor,
         action: PopupMenuButton(
           icon: loadAssetIconsImage('more', width: 24),
