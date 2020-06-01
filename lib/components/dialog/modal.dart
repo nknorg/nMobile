@@ -135,7 +135,7 @@ class _ModalDialogState extends State<ModalDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 24),
+                      padding: EdgeInsets.only(bottom: 24),
                       child: widget.title ??
                           Label(
                             NMobileLocalizations.of(context).warning,

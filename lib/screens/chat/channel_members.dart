@@ -148,7 +148,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: <Widget>[
                         Padding(
-                          padding: EdgeInsets.only(bottom: 24, left: 20, right: 20),
+                          padding: EdgeInsets.only(bottom: 24.h, left: 20.w, right: 20.w),
                           child: Row(
                             children: <Widget>[
                               Padding(
@@ -178,9 +178,9 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
               ),
             ),
             Container(
-              constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 190),
+              constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 190.h),
               child: BodyBox(
-                padding: const EdgeInsets.only(top: 2, left: 20, right: 20),
+                padding: EdgeInsets.only(top: 2.h, left: 20.w, right: 20.w),
                 color: DefaultTheme.backgroundLightColor,
                 child: Flex(
                   direction: Axis.vertical,
@@ -190,10 +190,10 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                       child: Padding(
                         padding: EdgeInsets.only(top: 0),
                         child: ListView.builder(
-                          padding: const EdgeInsets.only(bottom: 20),
+                          padding: EdgeInsets.only(bottom: 10.h),
                           controller: _scrollController,
                           itemCount: _subs.length,
-                          itemExtent: 72,
+                          itemExtent: 72.h,
                           itemBuilder: (BuildContext context, int index) {
                             var contact = _subs[index];
                             return getItemView(contact);
@@ -220,7 +220,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
     return Expanded(
       child: Label(
         name,
-        type: LabelType.h3,
+        type: LabelType.h4,
         overflow: TextOverflow.fade,
       ),
     );
@@ -251,10 +251,10 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
             Expanded(
               flex: 0,
               child: Container(
-                padding: const EdgeInsets.only(right: 16),
+                padding: EdgeInsets.only(right: 16.w),
                 alignment: Alignment.center,
                 child: contact.avatarWidget(
-                  size: 24,
+                  size: 22,
                   backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
                 ),
               ),
@@ -264,7 +264,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
               child: Container(
                 padding: const EdgeInsets.only(),
                 decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: DefaultTheme.backgroundColor2)),
+                  border: Border(bottom: BorderSide(color: DefaultTheme.line)),
                 ),
                 child: Flex(
                   direction: Axis.horizontal,
@@ -273,12 +273,14 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                       flex: 1,
                       child: Container(
                         alignment: Alignment.centerLeft,
-                        height: 48.h,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
-                            Row(
-                              children: nameLabel,
+                            Container(
+                              child: Row(
+                                children: nameLabel,
+                              ),
                             ),
                             Label(
                               contact.clientAddress,
@@ -293,9 +295,9 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                       flex: 0,
                       child: Container(
                         alignment: Alignment.centerRight,
-                        height: 44,
+                        height: 44.h,
                         child: Padding(
-                          padding: const EdgeInsets.only(left: 16),
+                          padding: EdgeInsets.only(left: 16.w),
                           child: Row(
                             mainAxisSize: MainAxisSize.max,
                             mainAxisAlignment: MainAxisAlignment.center,

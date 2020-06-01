@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class DefaultTheme {
   static const Color primaryColor = Color(0xFF0F6EFF);
@@ -16,17 +17,17 @@ class DefaultTheme {
   static const Color fontColor2 = Color(0xFF8F92A1);
   static const Color fontLightColor = Color(0xFFFFFFFF);
 
-  static final double h1FontSize = 32;
-  static final double h2FontSize = 24;
-  static final double h3FontSize = 18;
-  static final double h4FontSize = 16;
-  static final double h5FontSize = 16;
-  static final double displayFontSize = 16;
-  static final double bodyLargeFontSize = 18;
-  static final double bodyRegularFontSize = 16;
-  static final double bodySmallFontSize = 14;
-  static final double labelFontSize = 14;
-  static final double chatTimeSize = 12;
+  static final double h1FontSize = 30.sp;
+  static final double h2FontSize = 22.sp;
+  static final double h3FontSize = 16.sp;
+  static final double h4FontSize = 14.sp;
+  static final double h5FontSize = 14.sp;
+  static final double displayFontSize = 14.sp;
+  static final double bodyLargeFontSize = 16.sp;
+  static final double bodyRegularFontSize = 14.sp;
+  static final double bodySmallFontSize = 12.sp;
+  static final double labelFontSize = 12.sp;
+  static final double chatTimeSize = 12.sp;
 
   static final double headerHeight = 114;
 

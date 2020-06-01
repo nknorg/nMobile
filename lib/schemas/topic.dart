@@ -684,7 +684,7 @@ class TopicSchema {
 
       return TopicSchema.parseEntity(res?.first);
     } catch (e) {
-      LogUtil.e(e, tag: 'getTopic');
+      LogUtil.v(e, tag: 'getTopic');
       return null;
     }
   }
@@ -699,7 +699,7 @@ class TopicSchema {
 
       return res.map((x) => parseEntity(x)).toList();
     } catch (e) {
-      LogUtil.e(e, tag: 'getAllTopic');
+      LogUtil.v(e, tag: 'getAllTopic');
       return null;
     }
   }
@@ -729,7 +729,7 @@ class TopicSchema {
 
       return count;
     } catch (e) {
-      LogUtil.e(e, tag: 'getTopicCount');
+      LogUtil.v(e, tag: 'getTopicCount');
       return getTopicCount();
     }
   }
