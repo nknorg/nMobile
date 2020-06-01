@@ -114,7 +114,7 @@ class _ChatBubbleState extends State<ChatBubble> {
   Widget build(BuildContext context) {
     BoxDecoration decoration;
     Widget timeWidget;
-    Widget burnWidget;
+    Widget burnWidget = Container();
     String timeFormat = NKNTimeUtil.formatChatTime(context, widget.message.timestamp);
     List<Widget> content = <Widget>[];
     timeWidget = Label(
@@ -137,12 +137,14 @@ class _ChatBubbleState extends State<ChatBubble> {
       dark = true;
       if (widget.message.options != null && widget.message.options['deleteAfterSeconds'] != null) {
         burnWidget = Row(
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Icon(
               FontAwesomeIcons.clock,
               size: 12,
               color: DefaultTheme.fontLightColor.withAlpha(178),
             ),
+            SizedBox(width: 4.w),
             Label(
               Format.timeFromNowFormat(widget.message.deleteTime ?? DateTime.now().add(Duration(seconds: widget.message.options['deleteAfterSeconds'] + 1))),
               type: LabelType.bodySmall,
@@ -175,6 +177,7 @@ class _ChatBubbleState extends State<ChatBubble> {
 
       if (widget.message.options != null && widget.message.options['deleteAfterSeconds'] != null) {
         burnWidget = Row(
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.only(right: 4),
@@ -375,8 +378,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                     decoration: decoration,
                     child: Container(
                       constraints: BoxConstraints(maxWidth: 272.w),
-                      child: Stack(
-                        alignment: Alignment.topLeft,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: content,
                       ),
                     ),
