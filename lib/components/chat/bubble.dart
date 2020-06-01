@@ -36,8 +36,9 @@ class ChatBubble extends StatefulWidget {
   BubbleStyle style;
   ValueChanged<String> onChanged;
   bool showTime;
+  bool hideHeader;
 
-  ChatBubble({this.message, this.contact, this.onChanged, this.preMessage, this.showTime = true}) {
+  ChatBubble({this.message, this.contact, this.onChanged, this.preMessage, this.showTime = true, this.hideHeader = false}) {
     if (message.isOutbound) {
       if (message.isSendError) {
         style = BubbleStyle.SendError;
@@ -135,26 +136,19 @@ class _ChatBubbleState extends State<ChatBubble> {
       );
       dark = true;
       if (widget.message.options != null && widget.message.options['deleteAfterSeconds'] != null) {
-        burnWidget = Positioned(
-          left: 0,
-          bottom: 0,
-          child: Row(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: Icon(
-                  FontAwesomeIcons.clock,
-                  size: 12,
-                  color: DefaultTheme.fontLightColor.withAlpha(178),
-                ),
-              ),
-              Label(
-                Format.timeFromNowFormat(widget.message.deleteTime ?? DateTime.now().add(Duration(seconds: widget.message.options['deleteAfterSeconds'] + 1))),
-                type: LabelType.bodySmall,
-                color: DefaultTheme.fontLightColor.withAlpha(178),
-              ),
-            ],
-          ),
+        burnWidget = Row(
+          children: <Widget>[
+            Icon(
+              FontAwesomeIcons.clock,
+              size: 12,
+              color: DefaultTheme.fontLightColor.withAlpha(178),
+            ),
+            Label(
+              Format.timeFromNowFormat(widget.message.deleteTime ?? DateTime.now().add(Duration(seconds: widget.message.options['deleteAfterSeconds'] + 1))),
+              type: LabelType.bodySmall,
+              color: DefaultTheme.fontLightColor.withAlpha(178),
+            ),
+          ],
         );
       }
     } else if (widget.style == BubbleStyle.SendError) {
@@ -180,26 +174,22 @@ class _ChatBubbleState extends State<ChatBubble> {
       );
 
       if (widget.message.options != null && widget.message.options['deleteAfterSeconds'] != null) {
-        burnWidget = Positioned(
-          left: 0,
-          bottom: 0,
-          child: Row(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: Icon(
-                  FontAwesomeIcons.clock,
-                  size: 12,
-                  color: DefaultTheme.fontColor2,
-                ),
-              ),
-              Label(
-                Format.timeFromNowFormat(widget.message.deleteTime ?? DateTime.now().add(Duration(seconds: widget.message.options['deleteAfterSeconds'] + 1))),
-                type: LabelType.bodySmall,
+        burnWidget = Row(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Icon(
+                FontAwesomeIcons.clock,
+                size: 12,
                 color: DefaultTheme.fontColor2,
               ),
-            ],
-          ),
+            ),
+            Label(
+              Format.timeFromNowFormat(widget.message.deleteTime ?? DateTime.now().add(Duration(seconds: widget.message.options['deleteAfterSeconds'] + 1))),
+              type: LabelType.bodySmall,
+              color: DefaultTheme.fontColor2,
+            ),
+          ],
         );
       }
     }
@@ -292,17 +282,24 @@ class _ChatBubbleState extends State<ChatBubble> {
           child: Opacity(
             opacity: widget.message.isSuccess ? 1 : 0.4,
             child: Container(
-              padding: EdgeInsets.only(top: 8.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Label(
-                    widget.contact.name,
-                    height: 1,
-                    type: LabelType.bodySmall,
-                    color: DefaultTheme.primaryColor,
+                  Visibility(
+                    visible: !widget.hideHeader,
+                    child: Column(
+                      children: <Widget>[
+                        SizedBox(height: 8.h),
+                        Label(
+                          widget.contact.name,
+                          height: 1,
+                          type: LabelType.bodySmall,
+                          color: DefaultTheme.primaryColor,
+                        ),
+                        SizedBox(height: 6.h),
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 6.h),
                   Container(
                     padding: EdgeInsets.all(10.w),
                     decoration: decoration,
@@ -332,15 +329,18 @@ class _ChatBubbleState extends State<ChatBubble> {
                 onLongPress: () {
                   widget.onChanged(widget.contact.name);
                 },
-                child: widget.contact.avatarWidget(
-                  size: 22,
-                  backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
+                child: Opacity(
+                  opacity: !widget.hideHeader ? 1.0 : 0.0,
+                  child: widget.contact.avatarWidget(
+                    size: 22,
+                    backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
+                  ),
                 ),
               ),
             ));
       }
       return Padding(
-        padding: const EdgeInsets.only(top: 4),
+        padding: EdgeInsets.only(top: 4.h),
         child: Align(
           alignment: widget.style == BubbleStyle.Me || widget.style == BubbleStyle.SendError ? Alignment.centerRight : Alignment.centerLeft,
           child: Column(
@@ -351,14 +351,14 @@ class _ChatBubbleState extends State<ChatBubble> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: contents,
               ),
-              SizedBox(height: 8.h),
+              !widget.hideHeader ? SizedBox(height: 8.h) : Container(),
             ],
           ),
         ),
       );
     } else {
       return Padding(
-        padding: const EdgeInsets.only(top: 4),
+        padding: EdgeInsets.only(top: 4.h),
         child: Column(
           children: <Widget>[
             widget.showTime ? timeWidget : Container(),

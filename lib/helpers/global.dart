@@ -28,8 +28,9 @@ class Global {
   static String buildVersion;
   static Map<String, num> loadTopicTime = {};
   static Map<String, num> loadLoadSubscribers = {};
-  static AppLifecycleState state;
+  static AppLifecycleState state = AppLifecycleState.resumed;
   static Map<String, DateTime> _loadProfileCache = {};
+  static String currentChatId;
 
   static Future init(VoidCallback callback) async {
     WidgetsFlutterBinding.ensureInitialized();

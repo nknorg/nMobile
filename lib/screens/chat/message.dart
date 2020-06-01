@@ -99,6 +99,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
   void initState() {
     super.initState();
     targetId = widget.arguments.contact.clientAddress;
+    Global.currentChatId = targetId;
     _deleteTickHandle();
     initAsync();
     _sendFocusNode.addListener(() {
@@ -205,6 +206,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
 
   @override
   void dispose() {
+    Global.currentChatId = null;
     LocalStorage.saveChatUnSendContentFromId(targetId, content: _sendController.text);
     _chatBloc.add(RefreshMessages());
     _chatSubscription?.cancel();
@@ -323,10 +325,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                 child: Container(
                   padding: EdgeInsets.only(right: 14.w),
                   alignment: Alignment.center,
-                  child: Hero(
-                    tag: 'avatar:${targetId}',
-                    child: widget.arguments.contact.avatarWidget(backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 24),
-                  ),
+                  child: widget.arguments.contact.avatarWidget(backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 24),
                 ),
               ),
               Expanded(
@@ -360,26 +359,28 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                   Expanded(
                     flex: 1,
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 12, right: 16, top: 4),
+                      padding: EdgeInsets.only(left: 12.w, right: 16.w, top: 4.h),
                       child: ListView.builder(
                         reverse: true,
-                        padding: const EdgeInsets.only(bottom: 8),
+                        padding: EdgeInsets.only(bottom: 8.h),
                         controller: _scrollController,
                         itemCount: _messages.length,
                         physics: const AlwaysScrollableScrollPhysics(),
                         itemBuilder: (BuildContext context, int index) {
                           var message = _messages[index];
                           bool showTime;
+                          var preMessage;
                           if (index + 1 >= _messages.length) {
                             showTime = true;
                           } else {
                             if (ContentType.text == message.contentType || ContentType.media == message.contentType) {
-                              var preMessage = index == _messages.length ? message : _messages[index + 1];
+                              preMessage = index == _messages.length ? message : _messages[index + 1];
                               showTime = (message.timestamp.isAfter(preMessage.timestamp.add(Duration(minutes: 3))));
                             } else {
                               showTime = true;
                             }
                           }
+
                           if (message.contentType == ContentType.eventContactOptions) {
                             var content = jsonDecode(message.content);
                             if (content['content'] != null) {

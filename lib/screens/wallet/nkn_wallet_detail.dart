@@ -32,6 +32,8 @@ import 'package:nmobile/screens/ncdn/home.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
+import 'package:nmobile/services/service_locator.dart';
+import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/image_utils.dart';
@@ -65,7 +67,11 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
   }
 
   _send() {
-    Navigator.of(context).pushNamed(SendNknScreen.routeName, arguments: widget.arguments);
+    Navigator.of(context).pushNamed(SendNknScreen.routeName, arguments: widget.arguments).then((v) {
+      if (v != null) {
+        locator<TaskService>().queryNknWalletBalanceTask();
+      }
+    });
   }
 
   @override

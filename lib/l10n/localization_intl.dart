@@ -334,6 +334,10 @@ class NMobileLocalizations {
         name: 'delete_contact_confirm_title', desc: '');
   }
 
+  String get delete_friend_confirm_title {
+    return Intl.message('Are you sure you want to delete this friend?', name: 'delete_friend_confirm_title', desc: '');
+  }
+
   String get delete_chennel_confirm_title {
     return Intl.message('Are you sure you want to unsubscribe from this channel?',
         name: 'delete_chennel_confirm_title', desc: '');
