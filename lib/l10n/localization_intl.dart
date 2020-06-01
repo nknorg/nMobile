@@ -338,6 +338,10 @@ class NMobileLocalizations {
     return Intl.message('Are you sure you want to delete this friend?', name: 'delete_friend_confirm_title', desc: '');
   }
 
+  String get leave_group_confirm_title {
+    return Intl.message('Are you sure you want to leave this group?', name: 'leave_group_confirm_title', desc: '');
+  }
+
   String get delete_chennel_confirm_title {
     return Intl.message('Are you sure you want to unsubscribe from this channel?',
         name: 'delete_chennel_confirm_title', desc: '');
@@ -717,7 +721,7 @@ class NMobileLocalizations {
   }
 
   String get unsubscribe {
-    return Intl.message('Unsubscribe', name: 'unsubscribe', desc: '');
+    return Intl.message('Leave', name: 'unsubscribe', desc: '');
   }
 
   String get menu_wallet {
