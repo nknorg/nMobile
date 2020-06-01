@@ -1,3 +1,4 @@
+import 'package:common_utils/common_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -78,6 +79,11 @@ class LocalNotification {
   }
 
   static messageNotification(String title, String content, {int badgeNumber, MessageSchema message}) async {
+    LogUtil.v(message.from);
+    LogUtil.v(Global.currentChatId);
+    LogUtil.v(Global.state);
+    LogUtil.v(AppLifecycleState.resumed);
+
     if (message != null && Global.state == AppLifecycleState.resumed) {
       if (message.topic != null) {
         if (Global.currentChatId == message.topic) {

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -113,7 +114,7 @@ class _ChatBubbleState extends State<ChatBubble> {
   Widget build(BuildContext context) {
     BoxDecoration decoration;
     Widget timeWidget;
-    Widget burnWidget = Container();
+    Widget burnWidget;
     String timeFormat = NKNTimeUtil.formatChatTime(context, widget.message.timestamp);
     List<Widget> content = <Widget>[];
     timeWidget = Label(
@@ -136,14 +137,12 @@ class _ChatBubbleState extends State<ChatBubble> {
       dark = true;
       if (widget.message.options != null && widget.message.options['deleteAfterSeconds'] != null) {
         burnWidget = Row(
-          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Icon(
               FontAwesomeIcons.clock,
               size: 12,
               color: DefaultTheme.fontLightColor.withAlpha(178),
             ),
-            SizedBox(width: 4.w),
             Label(
               Format.timeFromNowFormat(widget.message.deleteTime ?? DateTime.now().add(Duration(seconds: widget.message.options['deleteAfterSeconds'] + 1))),
               type: LabelType.bodySmall,
@@ -176,7 +175,6 @@ class _ChatBubbleState extends State<ChatBubble> {
 
       if (widget.message.options != null && widget.message.options['deleteAfterSeconds'] != null) {
         burnWidget = Row(
-          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.only(right: 4),
@@ -377,9 +375,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                     decoration: decoration,
                     child: Container(
                       constraints: BoxConstraints(maxWidth: 272.w),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Stack(
+                        alignment: Alignment.topLeft,
                         children: content,
                       ),
                     ),
@@ -395,6 +392,7 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   getChannelInviteView() {
+    LogUtil.v(widget.message.content);
     var name;
     var groupName;
     TopicSchema topicSchema = TopicSchema(topic: widget.message.content);
@@ -475,6 +473,7 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   getJoinOrLeaveView() {
+    LogUtil.v(widget.message.content);
     var groupName = " " + NMobileLocalizations.of(context).joined_channel;
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20),

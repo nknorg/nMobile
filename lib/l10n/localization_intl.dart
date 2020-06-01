@@ -325,6 +325,10 @@ class NMobileLocalizations {
     return Intl.message('Are you sure you want to leave this group?', name: 'leave_group_confirm_title', desc: '');
   }
 
+  String get delete_friend_confirm_title {
+    return Intl.message('Are you sure you want to delete this friend?', name: 'delete_friend_confirm_title', desc: '');
+  }
+
   String get delete_chennel_confirm_title {
     return Intl.message('Are you sure you want to leave from this group?', name: 'delete_chennel_confirm_title', desc: '');
   }
