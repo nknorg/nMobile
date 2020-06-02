@@ -1,10 +1,14 @@
 import 'package:common_utils/common_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
@@ -14,6 +18,7 @@ import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/subscribers.dart';
 import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/contact/contact.dart';
@@ -35,7 +40,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
   ScrollController _scrollController = ScrollController();
   List<ContactSchema> _subs = List<ContactSchema>();
   Permission _permissionHelper;
-
+  ChatBloc _chatBloc;
   _genContactList(List<SubscribersSchema> data) async {
     List<ContactSchema> list = List<ContactSchema>();
 
@@ -100,20 +105,22 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
   @override
   void initState() {
     super.initState();
+    _chatBloc = BlocProvider.of<ChatBloc>(context);
     initAsync();
   }
 
   @override
   Widget build(BuildContext context) {
     List<Widget> topicWidget = <Widget>[
-      Label(widget.arguments.topicName, type: LabelType.h2, dark: true),
+      SizedBox(width: 6.w),
+      Label(widget.arguments.topicName, type: LabelType.h3, dark: true),
     ];
     if (widget.arguments.type == TopicType.private) {
       topicWidget.insert(
         0,
         loadAssetIconsImage(
           'lock',
-          width: 24,
+          width: 22,
           color: DefaultTheme.fontLightColor,
         ),
       );
@@ -121,13 +128,26 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
 
     return Scaffold(
       appBar: Header(
-        title: NMobileLocalizations.of(context).channel_members.toUpperCase(),
+        title: NMobileLocalizations.of(context).channel_members,
         leading: BackButton(
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
         backgroundColor: DefaultTheme.backgroundColor4,
+        action: IconButton(
+          icon: loadAssetIconsImage(
+            'user-plus',
+            color: DefaultTheme.backgroundLightColor,
+            width: 24,
+          ),
+          onPressed: () async {
+            var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+            if (address != null) {
+              acceptPrivateAction(address);
+            }
+          },
+        ),
       ),
       body: ConstrainedBox(
         constraints: BoxConstraints.expand(),
@@ -387,5 +407,25 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
     }
 
     return toolBtns;
+  }
+
+  acceptPrivateAction(address) async {
+    showToast(NMobileLocalizations.of(context).invitation_sent);
+    if (widget.arguments.type == TopicType.private) {
+      await widget.arguments.acceptPrivateMember(addr: address);
+    }
+
+    var sendMsg = MessageSchema.fromSendData(from: Global.currentClient.address, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
+    sendMsg.isOutbound = true;
+
+    var sendMsg1 = MessageSchema.fromSendData(from: Global.currentClient.address, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
+    sendMsg1.isOutbound = true;
+
+    try {
+      _chatBloc.add(SendMessage(sendMsg));
+      _chatBloc.add(SendMessage(sendMsg1));
+    } catch (e) {
+      print('send message error: $e');
+    }
   }
 }

@@ -124,12 +124,22 @@ class _InputChannelDialogState extends State<InputChannelDialog> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(left: 20, right: 20),
+                            padding: EdgeInsets.only(left: 20, right: 20),
                             child: Textbox(
                               padding: const EdgeInsets.only(bottom: 10),
                               controller: _topicController,
                               validator: Validator.of(context).required(),
                               hintText: NMobileLocalizations.of(context).enter_topic,
+                              suffixIcon: InkWell(
+                                onTap: () {
+//                                  Navigator.pushNamed(context, PopularGroupPage.routeName);
+                                },
+                                child: Icon(
+                                  Icons.group,
+                                  size: 20,
+                                  color: DefaultTheme.primaryColor,
+                                ),
+                              ),
                             ),
                           ),
                           Padding(

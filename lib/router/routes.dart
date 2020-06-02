@@ -7,6 +7,7 @@ import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
 import 'package:nmobile/screens/chat/photo_page.dart';
+import 'package:nmobile/screens/chat/populai_group_page.dart';
 import 'package:nmobile/screens/common/page/change_update_content.dart';
 import 'package:nmobile/screens/common_web_page.dart';
 import 'package:nmobile/screens/contact/add_contact.dart';
@@ -47,8 +48,8 @@ Map<String, WidgetBuilder> routes = {
   CommonWebViewPage.routeName: (BuildContext context, {arguments}) => CommonWebViewPage(arguments: arguments),
   ChangeUpdateContentPage.routeName: (BuildContext context, {arguments}) => ChangeUpdateContentPage(arguments: arguments),
   AddContact.routeName: (BuildContext context) => AddContact(),
+  PopularGroupPage.routeName: (BuildContext context) => PopularGroupPage(),
 };
-
 
 var onGenerateRoute = (RouteSettings settings) {
   final String name = settings.name;
