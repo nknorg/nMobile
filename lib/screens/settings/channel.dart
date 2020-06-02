@@ -9,6 +9,7 @@ import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
@@ -24,6 +25,8 @@ import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/utils/copy_utils.dart';
+import 'package:nmobile/utils/image_utils.dart';
+import 'package:oktoast/oktoast.dart';
 
 class ChannelSettingsScreen extends StatefulWidget {
   static const String routeName = '/settings/channel';
@@ -58,27 +61,41 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     List<Widget> topicWidget = <Widget>[
-      Label(widget.arguments.topicName, type: LabelType.h2, dark: true),
+      SizedBox(width: 6.w),
+      Label(widget.arguments.topicName, type: LabelType.h3, dark: true),
     ];
     if (widget.arguments.type == TopicType.private) {
       topicWidget.insert(
         0,
         SvgPicture.asset(
           'assets/icons/lock.svg',
-          width: 24,
+          width: 22,
           color: DefaultTheme.fontLightColor,
         ),
       );
     }
     return Scaffold(
       appBar: Header(
-        title: NMobileLocalizations.of(context).channel_settings.toUpperCase(),
+        title: NMobileLocalizations.of(context).channel_settings,
         leading: BackButton(
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
         backgroundColor: DefaultTheme.backgroundColor4,
+        action: IconButton(
+          icon: loadAssetIconsImage(
+            'user-plus',
+            color: DefaultTheme.backgroundLightColor,
+            width: 24,
+          ),
+          onPressed: () async {
+            var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+            if (address != null) {
+              acceptPrivateAction(address);
+            }
+          },
+        ),
       ),
       body: ConstrainedBox(
         constraints: BoxConstraints.expand(),
@@ -219,7 +236,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                                       decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.line))),
                                       child: InkWell(
                                         onTap: () {
-                                          Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: TopicSchema(topic: widget.arguments.topic));
+                                          Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: widget.arguments);
                                         },
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -291,6 +308,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                 NMobileLocalizations.of(context).unsubscribe,
                 type: LabelType.bodyLarge,
                 color: Colors.red,
+                fontWeight: FontWeight.bold,
                 height: 1,
               )
             ],
@@ -312,6 +330,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                 NMobileLocalizations.of(context).subscribe,
                 type: LabelType.bodyLarge,
                 color: DefaultTheme.primaryColor,
+                fontWeight: FontWeight.bold,
                 height: 1,
               )
             ],
@@ -374,5 +393,25 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
     // todo topic type
     var topicSchema = TopicSchema(topic: topic, expiresAt: now.add(blockToExpiresTime(duration)));
     topicSchema.insertIfNoData();
+  }
+
+  acceptPrivateAction(address) async {
+    showToast(NMobileLocalizations.of(context).invitation_sent);
+    if (widget.arguments.type == TopicType.private) {
+      await widget.arguments.acceptPrivateMember(addr: address);
+    }
+
+    var sendMsg = MessageSchema.fromSendData(from: Global.currentClient.address, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
+    sendMsg.isOutbound = true;
+
+    var sendMsg1 = MessageSchema.fromSendData(from: Global.currentClient.address, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
+    sendMsg1.isOutbound = true;
+
+    try {
+      _chatBloc.add(SendMessage(sendMsg));
+      _chatBloc.add(SendMessage(sendMsg1));
+    } catch (e) {
+      print('send message error: $e');
+    }
   }
 }
