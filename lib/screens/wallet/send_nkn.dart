@@ -19,6 +19,7 @@ import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/components/wallet/dropdown.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
@@ -332,9 +333,13 @@ class _SendNknScreenState extends State<SendNknScreen> {
                                                               hintText: NMobileLocalizations.of(context).enter_receive_address,
                                                               suffixIcon: GestureDetector(
                                                                 onTap: () async {
-                                                                  var contact = await Navigator.of(context).pushNamed(ContactHome.routeName, arguments: true);
-                                                                  if (contact is ContactSchema) {
-                                                                    _sendToController.text = contact.nknWalletAddress;
+                                                                  if (Global.currentClient != null) {
+                                                                    var contact = await Navigator.of(context).pushNamed(ContactHome.routeName, arguments: true);
+                                                                    if (contact is ContactSchema) {
+                                                                      _sendToController.text = contact.nknWalletAddress;
+                                                                    }
+                                                                  } else {
+                                                                    showToast('D-Chat not login');
                                                                   }
                                                                 },
                                                                 child: Container(
