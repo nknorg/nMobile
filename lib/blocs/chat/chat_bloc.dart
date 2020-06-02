@@ -364,9 +364,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   ///change burn status
   checkBurnOptions(MessageSchema message, ContactSchema contact) {
-    if (contact?.options?.deleteAfterSeconds == null) {
-      LogUtil.v(' ====   null');
-    }
     if (message.topic != null || contact?.options?.deleteAfterSeconds == null) return;
     contact.setBurnOptions(null);
     contactBloc.add(LoadContact(address: [contact.clientAddress]));

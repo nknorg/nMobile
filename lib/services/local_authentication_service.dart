@@ -1,7 +1,8 @@
 import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
+import 'package:local_auth/local_auth.dart';
 
 class LocalAuthenticationService {
   final _localAuth = LocalAuthentication();
@@ -25,18 +26,19 @@ class LocalAuthenticationService {
     }
   }
 
-  Future<void> authenticate() async {
+  Future<bool> authenticate() async {
     if (isProtectionEnabled) {
       try {
         isAuthenticated = await _localAuth.authenticateWithBiometrics(
           localizedReason: 'authenticate to access',
-          useErrorDialogs: true,
+          useErrorDialogs: false,
           stickyAuth: true,
         );
       } on PlatformException catch (e) {
         debugPrint(e.message);
         debugPrintStack();
       }
+      return isAuthenticated;
     }
   }
 }
