@@ -90,7 +90,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
       backgroundColor: DefaultTheme.primaryColor,
       appBar: Header(
         titleChild: Padding(
-          padding: 20.pad(),
+          padding: 0.pad(l: 20),
           child: Label(
             NMobileLocalizations.of(context).my_wallets,
             type: LabelType.h2,
