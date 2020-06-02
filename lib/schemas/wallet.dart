@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:common_utils/common_utils.dart';
 import 'package:equatable/equatable.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/helpers/global.dart';
@@ -36,21 +37,23 @@ class WalletSchema extends Equatable {
   @override
   String toString() => 'WalletSchema { address: $address }';
 
-  Future<String> getPassword() async {
-    if (_localAuth.isProtectionEnabled) {
+  Future<String> getPassword({int count = 0}) async {
+    if (_localAuth.isProtectionEnabled && count < 1) {
       final password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');
       if (password == null) {
-        return BottomDialog.of(Global.appContext)
-            .showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
+        return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
       } else {
         await _localAuth.authenticate();
         if (_localAuth.isAuthenticated) {
           return password;
+        } else {
+          count++;
+          LogUtil.v(count.toString());
+          return getPassword(count: count);
         }
       }
     } else {
-      return BottomDialog.of(Global.appContext)
-          .showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
+      return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
     }
   }
 
