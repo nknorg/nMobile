@@ -1,9 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/utils/extensions.dart';
 
 class Header extends StatelessWidget implements PreferredSizeWidget {
@@ -12,8 +11,8 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
   final Color backgroundColor;
   final Widget action;
   final Widget leading;
+  final Widget notBackedUpTip;
   bool hasBack;
-  bool isWalletPageBackedUp;
 
   Header(
       {this.title,
@@ -21,8 +20,8 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
       this.backgroundColor,
       this.action,
       this.leading,
-      this.hasBack = true,
-      this.isWalletPageBackedUp = false});
+      this.notBackedUpTip,
+      this.hasBack = true});
 
   @override
   Widget build(BuildContext context) {
@@ -36,38 +35,22 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          (titleChild != null
-                  ? titleChild
-                  : Text(
-                      title ?? '',
-                      textAlign: TextAlign.start,
-                      style: TextStyle(fontSize: DefaultTheme.labelFontSize),
-                      overflow: TextOverflow.fade,
-                      softWrap: false,
-                      maxLines: 1,
-                    ))
-              .padding(4.pal()),
-          notBackedUp(context)
+          (titleChild ??
+                  Text(
+                    title ?? '',
+                    textAlign: TextAlign.start,
+                    style: TextStyle(fontSize: DefaultTheme.labelFontSize),
+                    overflow: TextOverflow.fade,
+                    softWrap: false,
+                    maxLines: 1,
+                  ))
+              .pad(l: 4),
+          notBackedUpTip != null ? notBackedUpTip : Space.empty
         ],
       ),
-      actions: <Widget>[
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5.0),
-          child: action,
-        ),
-      ],
+      actions: action.padd(5.symm()).toList,
       elevation: 0,
     );
-  }
-
-  Widget notBackedUp(BuildContext context) {
-    final label = Align(
-        alignment: Alignment.bottomRight,
-        child: Label(
-          NMobileLocalizations.of(context).not_backed_up,
-          type: LabelType.h4,
-        )).padding(4.pal().par(4));
-    return isWalletPageBackedUp ? label : label.offstage(true);
   }
 
   @override

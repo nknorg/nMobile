@@ -26,6 +26,9 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
       yield* _mapUpdateWalletToState(event);
     } else if (event is ReLoadWallets) {
       yield* _mapReloadWalletToState();
+    } else if (event is UpdateWalletBackedUp) {
+      await _setWalletBackedUp(event);
+      yield* _mapReloadWalletToState();
     }
   }
 
@@ -69,14 +72,15 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
 
   Stream<WalletsState> _mapReloadWalletToState() async* {
     yield WalletsLoading();
-    final List<WalletSchema> list = List.from((state as WalletsLoaded).wallets);
-    yield WalletsLoaded(list);
+    if (state is WalletsLoaded) {
+      final List<WalletSchema> list = List.from((state as WalletsLoaded).wallets);
+      yield WalletsLoaded(list);
+    }
   }
 
   Stream<WalletsState> _mapAddWalletToState(AddWallet event) async* {
     if (state is WalletsLoaded) {
       final List<WalletSchema> list = List.from((state as WalletsLoaded).wallets)..add(event.wallet);
-
       yield WalletsLoaded(list);
       _addWallet(event.wallet, event.keystore);
     }
@@ -86,9 +90,11 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
     if (state is WalletsLoaded) {
       final List<WalletSchema> list = List.from((state as WalletsLoaded).wallets);
       int index = list.indexOf(event.wallet);
-      list[index] = event.wallet;
+      if (index >= 0) {
+        list[index] = event.wallet;
+        _setWallet(index, event.wallet);
+      }
       yield WalletsLoaded(list);
-      _setWallet(index, event.wallet);
     }
   }
 
@@ -102,10 +108,32 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
     }
   }
 
+  _setWalletBackedUp(UpdateWalletBackedUp event) async {
+    final address = event.address;
+    final List<WalletSchema> list = List.from((state as WalletsLoaded).wallets);
+    final wallet = list.firstWhere((w) => w.address == address, orElse: () => null);
+    if (wallet != null) {
+      int index = list.indexOf(wallet);
+      wallet.isBackedUp = true;
+      await _setWallet(index, wallet);
+    }
+  }
+
   Future _addWallet(WalletSchema wallet, String keystore) async {
     List<Future> futures = <Future>[];
 
-    Map<String, dynamic> data = {'name': wallet.name, 'type': wallet.type, 'address': wallet.address};
+    Map<String, dynamic> data = {
+      'name': wallet.name,
+      'type': wallet.type,
+      'address': wallet.address,
+      'isBackedUp': wallet.isBackedUp
+    };
+    if (wallet.balance != null) {
+      data['balance'] = wallet.balance ?? 0;
+    }
+    if (wallet.balanceEth != null) {
+      data['balanceEth'] = wallet.balanceEth ?? 0;
+    }
     var wallets = await _localStorage.getArray(LocalStorage.NKN_WALLET_KEY);
     int index = wallets?.indexWhere((x) => x['address'] == wallet.address) ?? -1;
     if (index < 0) {
@@ -119,9 +147,17 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
 
   Future _setWallet(int n, WalletSchema wallet) async {
     List<Future> futures = <Future>[];
-    Map<String, dynamic> data = {'name': wallet.name, 'type': wallet.type, 'address': wallet.address};
+    Map<String, dynamic> data = {
+      'name': wallet.name,
+      'type': wallet.type,
+      'address': wallet.address,
+      'isBackedUp': wallet.isBackedUp
+    };
     if (wallet.balance != null) {
       data['balance'] = wallet.balance ?? 0;
+    }
+    if (wallet.balanceEth != null) {
+      data['balanceEth'] = wallet.balanceEth ?? 0;
     }
     futures.add(_localStorage.setItem(LocalStorage.NKN_WALLET_KEY, n, data));
     await Future.wait(futures);
