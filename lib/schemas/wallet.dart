@@ -22,6 +22,7 @@ class WalletSchema extends Equatable {
   String publicKey;
   String seed;
   double balanceEth = 0;
+  bool isBackedUp = false;
 
   final LocalStorage _localStorage = LocalStorage();
   final SecureStorage _secureStorage = SecureStorage();
