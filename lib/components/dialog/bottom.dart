@@ -15,6 +15,7 @@ import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -331,7 +332,7 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  showSelectWalletDialog({@required String title}) {
+  showSelectWalletDialog({@required String title, void callback(WalletSchema wallet)}) {
     FilteredWalletsBloc _filteredWalletsBloc = BlocProvider.of<FilteredWalletsBloc>(context);
     double height = 300;
     return show<String>(
@@ -365,6 +366,7 @@ class BottomDialog extends StatefulWidget {
                           var wallet = state.wallets[index];
                           return GestureDetector(
                             onTap: () {
+                              if(callback != null) {callback(wallet);}
                               _filteredWalletsBloc.add(LoadWalletFilter((x) => x.address == wallet.address));
                               close();
                             },

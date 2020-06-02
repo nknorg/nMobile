@@ -36,6 +36,17 @@ class UpdateWallet extends WalletsEvent {
   String toString() => 'UpdateWallet { wallet: $wallet }';
 }
 
+class UpdateWalletBackedUp extends WalletsEvent {
+  final String address;
+  const UpdateWalletBackedUp(this.address);
+
+  @override
+  List<Object> get props => [address];
+
+  @override
+  String toString() => 'UpdateWalletBackedUp { address: $address }';
+}
+
 class DeleteWallet extends WalletsEvent {
   final WalletSchema wallet;
 

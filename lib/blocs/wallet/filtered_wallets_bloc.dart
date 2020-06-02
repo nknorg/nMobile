@@ -10,6 +10,7 @@ import 'package:nmobile/blocs/wallet/wallets_state.dart';
 class FilteredWalletsBloc extends Bloc<FilteredWalletsEvent, FilteredWalletsState> {
   final WalletsBloc walletsBloc;
   StreamSubscription walletsSubscription;
+
   FilteredWalletsBloc({@required this.walletsBloc}) {
     walletsBloc.listen((state) {
       if (state is WalletsLoaded) {
@@ -19,7 +20,9 @@ class FilteredWalletsBloc extends Bloc<FilteredWalletsEvent, FilteredWalletsStat
   }
 
   @override
-  FilteredWalletsState get initialState => walletsBloc.state is WalletsLoaded ? FilteredWalletsLoaded((walletsBloc.state as WalletsLoaded).wallets, null) : FilteredWalletsLoading();
+  FilteredWalletsState get initialState => walletsBloc.state is WalletsLoaded
+      ? FilteredWalletsLoaded((walletsBloc.state as WalletsLoaded).wallets, null)
+      : FilteredWalletsLoading();
 
   @override
   Stream<FilteredWalletsState> mapEventToState(FilteredWalletsEvent event) async* {
@@ -34,7 +37,11 @@ class FilteredWalletsBloc extends Bloc<FilteredWalletsEvent, FilteredWalletsStat
     if (walletsBloc.state is WalletsLoaded) {
       var wallets = (walletsBloc.state as WalletsLoaded).wallets;
       yield FilteredWalletsLoaded(
-        event.filter != null ? [wallets.singleWhere(event.filter, orElse: () => null)] : [wallets.first],
+        event.filter != null
+            ? [wallets.singleWhere(event.filter, orElse: () => null)]
+            : [
+                null /*orElse*/
+              ],
         event.filter,
       );
     }
@@ -51,7 +58,10 @@ class FilteredWalletsBloc extends Bloc<FilteredWalletsEvent, FilteredWalletsStat
 
   @override
   Future<void> close() {
-    walletsSubscription.cancel();
+    if (walletsSubscription != null) {
+      walletsSubscription.cancel();
+      walletsSubscription = null;
+    }
     return super.close();
   }
 }

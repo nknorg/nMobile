@@ -1,27 +1,36 @@
 import 'dart:async';
 
+import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nmobile/blocs/wallet/filtered_wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/filtered_wallets_event.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
 import 'package:nmobile/components/box/body.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/wallet_not_backed_up.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/wallet/item.dart';
+import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn_wallet.dart';
 import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';
+import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
 import 'package:nmobile/services/task_service.dart';
+import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:oktoast/oktoast.dart';
 
 class WalletHome extends StatefulWidget {
   static const String routeName = '/wallet/home';
@@ -35,9 +44,9 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
   WalletsBloc _walletsBloc;
   StreamSubscription _walletSubscription;
   final GetIt locator = GetIt.instance;
-  bool _isNotBackedUp = true;
 
   double _totalNkn = 0;
+  bool _allBackedUp = true;
 
   @override
   void initState() {
@@ -47,7 +56,12 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
     _walletSubscription = _walletsBloc.listen((state) {
       if (state is WalletsLoaded) {
         _totalNkn = 0;
+        _allBackedUp = true;
         state.wallets.forEach((x) => _totalNkn += x.balance ?? 0);
+        state.wallets.forEach((x) => _allBackedUp = x.isBackedUp && _allBackedUp);
+        setState(() {
+          LogUtil.v('_allBackedUp: $_allBackedUp');
+        });
       }
     });
 
@@ -76,14 +90,14 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
       backgroundColor: DefaultTheme.primaryColor,
       appBar: Header(
         titleChild: Padding(
-          padding: 20.pal(),
+          padding: 20.pad(),
           child: Label(
             NMobileLocalizations.of(context).my_wallets,
             type: LabelType.h2,
           ),
         ),
         hasBack: false,
-        isWalletPageBackedUp: true,
+        notBackedUpTip: notBackedUpTip(context),
         backgroundColor: DefaultTheme.primaryColor,
         action: PopupMenuButton(
           icon: loadAssetIconsImage('more', width: 24),
@@ -129,7 +143,9 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
                       .map(
                         (w) => Padding(
                           padding: const EdgeInsets.only(bottom: 16),
-                          child: WalletItem(type: WalletType.nkn, schema: w),
+                          child: WalletItem(
+                              type: w.type == WalletSchema.NKN_WALLET ? WalletType.nkn : WalletType.eth,
+                              schema: w),
                         ),
                       )
                       .toList(),
@@ -141,5 +157,72 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
         ),
       ),
     );
+  }
+
+  Widget notBackedUpTip(BuildContext context) {
+    return _allBackedUp
+        ? Space.empty
+        : FlatButton(
+            child: Row(
+              children: <Widget>[
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: SvgPicture.asset('assets/icons/warning_20.svg', color: Colours.yellow_f0),
+                ),
+                Text(
+                  NMobileLocalizations.of(context).not_backed_up,
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                      fontSize: DefaultTheme.bodySmallFontSize,
+                      fontStyle: FontStyle.italic,
+                      color: Colours.pink_f8),
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: false,
+                  maxLines: 1,
+                ).pad(l: 4),
+              ],
+            ),
+            padding: 0.pad(),
+            onPressed: _onNotBackedUpTipClicked,
+          );
+  }
+
+  _onNotBackedUpTipClicked() {
+    // Don't use `context` as `Widget build(BuildContext context)`.
+    WalletNotBackedUpDialog.of(context).show(() {
+      BottomDialog.of(context).showSelectWalletDialog(
+          title: NMobileLocalizations.of(context).select_asset_to_backup, callback: _listen);
+    });
+  }
+
+  _listen(WalletSchema ws) {
+    LogUtil.v(ws);
+    Future(() {
+      final future = ws.getPassword();
+      future.then((password) async {
+        print('password: $password');
+        if (password != null) {
+          try {
+            var wallet = await ws.exportWallet(password);
+            if (wallet['address'] == ws.address) {
+              Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+                'wallet': wallet,
+                'keystore': wallet['keystore'],
+                'address': wallet['address'],
+                'publicKey': wallet['publicKey'],
+                'seed': wallet['seed'],
+              });
+            } else {
+              showToast(NMobileLocalizations.of(context).password_wrong);
+            }
+          } catch (e) {
+            if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+              showToast(NMobileLocalizations.of(context).password_wrong);
+            }
+          }
+        }
+      });
+    });
   }
 }
