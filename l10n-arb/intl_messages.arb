@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-06-01T20:28:08.355665",
+  "@@last_modified": "2020-06-03T14:37:22.831622",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1439,6 +1439,16 @@
   "d_not_backed_up_desc": "When you update your nMobile software or accidentally uninstall nMobile, your wallet might be lost and you might NOT be able to access your assets! So please take 3 minutes time now to back up all your wallets.",
   "@d_not_backed_up_desc": {
     "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "go_backup": "Go Backup",
+  "@go_backup": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "select_asset_to_backup": "Select Asset to Backup",
+  "@select_asset_to_backup": {
     "type": "text",
     "placeholders": {}
   }

@@ -950,5 +950,15 @@
     "description": "",
     "type": "text",
     "placeholders": {}
+  },
+  "go_backup": "去备份",
+  "@go_backup": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "select_asset_to_backup": "选择要备份的钱包",
+  "@select_asset_to_backup": {
+    "type": "text",
+    "placeholders": {}
   }
 }

@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -8,6 +13,7 @@ import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/image_utils.dart';
@@ -28,6 +34,11 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
   String publicKey;
   String seed;
   String address;
+  WalletsBloc _walletsBloc;
+
+  _setBackupFlag() {
+    _walletsBloc.add(UpdateWalletBackedUp(address));
+  }
 
   @override
   void initState() {
@@ -36,6 +47,8 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
     address = widget.arguments['address'];
     publicKey = widget.arguments['publicKey'];
     seed = widget.arguments['seed'];
+
+    _walletsBloc = BlocProvider.of<WalletsBloc>(Global.appContext);
   }
 
   @override
@@ -77,7 +90,8 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                       color: Color(0xFFF1F4FF),
                                       borderRadius: BorderRadius.all(Radius.circular(8)),
                                     ),
-                                    child: SvgPicture.asset('assets/logo.svg', color: Color(0xFF253A7E)),
+                                    child: SvgPicture.asset('assets/logo.svg',
+                                        color: Color(0xFF253A7E)),
                                   ),
                                 ),
                                 Padding(
@@ -120,10 +134,12 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: <Widget>[
                                                   Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.spaceBetween,
                                                     children: <Widget>[
                                                       Label(
-                                                        NMobileLocalizations.of(context).wallet_address,
+                                                        NMobileLocalizations.of(context)
+                                                            .wallet_address,
                                                         type: LabelType.h4,
                                                         textAlign: TextAlign.start,
                                                       ),
@@ -179,7 +195,8 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: <Widget>[
                                                   Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.spaceBetween,
                                                     children: <Widget>[
                                                       Label(
                                                         NMobileLocalizations.of(context).public_key,
@@ -239,7 +256,8 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: <Widget>[
                                                   Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.spaceBetween,
                                                     children: <Widget>[
                                                       Label(
                                                         NMobileLocalizations.of(context).seed,
@@ -254,6 +272,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                         ),
                                                         onTap: () {
                                                           CopyUtils.copyAction(context, seed);
+                                                          _setBackupFlag();
                                                         },
                                                       ),
                                                     ],
@@ -261,6 +280,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                   InkWell(
                                                     onTap: () {
                                                       CopyUtils.copyAction(context, seed);
+                                                      _setBackupFlag();
                                                     },
                                                     child: Textbox(
                                                       multi: true,
@@ -299,7 +319,8 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: <Widget>[
                                                   Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.spaceBetween,
                                                     children: <Widget>[
                                                       Label(
                                                         NMobileLocalizations.of(context).keystore,
@@ -314,6 +335,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                         ),
                                                         onTap: () {
                                                           CopyUtils.copyAction(context, keystore);
+                                                          _setBackupFlag();
                                                         },
                                                       ),
                                                     ],
@@ -321,6 +343,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                   InkWell(
                                                     onTap: () {
                                                       CopyUtils.copyAction(context, keystore);
+                                                      _setBackupFlag();
                                                     },
                                                     child: Textbox(
                                                       multi: true,
@@ -368,9 +391,11 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                           fontColor: DefaultTheme.primaryColor,
                           onPressed: () {
                             BottomDialog.of(context).showQrcodeDialog(
-                              title: NMobileLocalizations.of(context).seed + NMobileLocalizations.of(context).qrcode,
+                              title: NMobileLocalizations.of(context).seed +
+                                  NMobileLocalizations.of(context).qrcode,
                               data: seed,
                             );
+                            _setBackupFlag();
                           },
                         ),
                       ],
