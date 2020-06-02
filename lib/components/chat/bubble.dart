@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -396,7 +395,6 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   getChannelInviteView() {
-    LogUtil.v(widget.message.content);
     var name;
     var groupName;
     TopicSchema topicSchema = TopicSchema(topic: widget.message.content);
@@ -477,7 +475,6 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   getJoinOrLeaveView() {
-    LogUtil.v(widget.message.content);
     var groupName = " " + NMobileLocalizations.of(context).joined_channel;
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20),

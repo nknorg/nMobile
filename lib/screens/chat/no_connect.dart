@@ -1,3 +1,4 @@
+import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,10 +23,14 @@ class NoConnectScreen extends StatefulWidget {
 class _NoConnectScreenState extends State<NoConnectScreen> {
   ClientBloc _clientBloc;
   WalletSchema _currentWallet;
+
   @override
   void initState() {
     super.initState();
     _clientBloc = BlocProvider.of<ClientBloc>(context);
+    Future.delayed(Duration(milliseconds: 500), () {
+      _next();
+    });
   }
 
   @override
@@ -104,12 +109,8 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
                               width: double.infinity,
                               text: NMobileLocalizations.of(context).connect,
                               padding: EdgeInsets.only(top: 16.h, bottom: 16.h),
-                              onPressed: () async {
-                                var password = await _currentWallet.getPassword();
-
-                                if (password != null) {
-                                  _clientBloc.add(CreateClient(_currentWallet, password));
-                                }
+                              onPressed: () {
+                                _next();
                               },
                             );
                           }
@@ -125,5 +126,13 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
         ),
       ),
     );
+  }
+
+  _next() async {
+    var password = await _currentWallet.getPassword();
+    LogUtil.v(password);
+    if (password != null) {
+      _clientBloc.add(CreateClient(_currentWallet, password));
+    }
   }
 }

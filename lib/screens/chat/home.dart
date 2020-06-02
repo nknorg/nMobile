@@ -218,7 +218,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                 ),
                               ),
                               SizedBox(
-                                height: 48,
+                                height: 48.h,
                                 child: Align(
                                   alignment: Alignment.centerRight,
                                   child: Container(

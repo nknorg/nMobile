@@ -16,7 +16,6 @@ import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/chat/bubble.dart';
 import 'package:nmobile/components/chat/system.dart';
-import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
@@ -30,6 +29,7 @@ import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
+import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/screens/settings/channel.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:oktoast/oktoast.dart';
@@ -346,6 +346,11 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             direction: Axis.horizontal,
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
+//              Label(
+//                '${widget.arguments.topic.topicName} （${_topicCount ?? 1}）',
+//                type: LabelType.bodyLarge,
+//                color: Colors.white,
+//              )
               Expanded(
                 flex: 0,
                 child: Container(
@@ -377,19 +382,14 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
           ),
         ),
         backgroundColor: DefaultTheme.backgroundColor4,
-        action: IconButton(
-          icon: loadAssetIconsImage(
-            'user-plus',
-            color: DefaultTheme.backgroundLightColor,
-            width: 24,
-          ),
-          onPressed: () async {
-            var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
-            if (address != null) {
-              acceptPrivateAction(address);
-            }
-          },
-        ),
+        action: FlatButton(
+            onPressed: () {
+              Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: widget.arguments.topic);
+            },
+            child: Icon(
+              Icons.group,
+              color: Colors.white,
+            )),
       ),
       body: GestureDetector(
         onTap: () {
