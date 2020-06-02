@@ -5,7 +5,8 @@ import 'messages_all.dart';
 
 class NMobileLocalizations {
   static Future<NMobileLocalizations> load(Locale locale) {
-    final String name = locale.countryCode?.isNotEmpty ?? false ? locale.toString() : locale.languageCode;
+    final String name =
+        locale.countryCode?.isNotEmpty ?? false ? locale.toString() : locale.languageCode;
     final String localeName = Intl.canonicalizedLocale(name);
     return initializeMessages(localeName).then((_) {
       Intl.defaultLocale = localeName;
@@ -278,7 +279,8 @@ class NMobileLocalizations {
   }
 
   String get password_wrong {
-    return Intl.message('Wallet password or keystore file is wrong.', name: 'password_wrong', desc: '');
+    return Intl.message('Wallet password or keystore file is wrong.',
+        name: 'password_wrong', desc: '');
   }
 
   String get confirm_password {
@@ -302,7 +304,8 @@ class NMobileLocalizations {
   }
 
   String get delete_wallet_confirm_title {
-    return Intl.message('Are you sure you want to delete this wallet?', name: 'delete_wallet_confirm_title', desc: '');
+    return Intl.message('Are you sure you want to delete this wallet?',
+        name: 'delete_wallet_confirm_title', desc: '');
   }
 
   String get delete_wallet_confirm_text {
@@ -330,7 +333,8 @@ class NMobileLocalizations {
   }
 
   String get delete_cache_confirm_title {
-    return Intl.message('Are you sure you want to delete cache?', name: 'delete_cache_confirm_title', desc: '');
+    return Intl.message('Are you sure you want to delete cache?',
+        name: 'delete_cache_confirm_title', desc: '');
   }
 
   String get click_to_settings {
@@ -594,7 +598,8 @@ class NMobileLocalizations {
   }
 
   String get local_notification_both_name_message {
-    return Intl.message('Display name and message', name: 'local_notification_both_name_message', desc: '');
+    return Intl.message('Display name and message',
+        name: 'local_notification_both_name_message', desc: '');
   }
 
   String get local_notification_none_display {
@@ -770,7 +775,8 @@ class NMobileLocalizations {
   }
 
   String error_field_required(String field) {
-    return Intl.message('$field is required.', name: 'error_field_required', desc: '', args: [field]);
+    return Intl.message('$field is required.',
+        name: 'error_field_required', desc: '', args: [field]);
   }
 
   String error_amount_min_max(double min, double max) {
@@ -790,7 +796,8 @@ class NMobileLocalizations {
   }
 
   String get error_client_address_format {
-    return Intl.message('Client address format does not match.', name: 'error_client_address_format', desc: '');
+    return Intl.message('Client address format does not match.',
+        name: 'error_client_address_format', desc: '');
   }
 
   String get error_nkn_address_format {
@@ -830,7 +837,8 @@ class NMobileLocalizations {
   }
 
   String get cantact_no_contact_title {
-    return Intl.message('You haven’t got any\n contacts yet', name: 'cantact_no_contact_title', desc: '');
+    return Intl.message('You haven’t got any\n contacts yet',
+        name: 'cantact_no_contact_title', desc: '');
   }
 
   String get cantact_no_contact_desc {
@@ -938,7 +946,8 @@ class NMobileLocalizations {
   }
 
   String get enter_or_select_a_user_pubkey {
-    return Intl.message('Enter/Select a user public key', name: 'enter_or_select_a_user_pubkey', desc: '');
+    return Intl.message('Enter/Select a user public key',
+        name: 'enter_or_select_a_user_pubkey', desc: '');
   }
 
   String get scan_show_me_desc {
@@ -986,7 +995,8 @@ class NMobileLocalizations {
   }
 
   String get d_not_backed_up_title {
-    return Intl.message('Important: Please Back Up\n Your Wallets!', name: 'd_not_backed_up_title', desc: '');
+    return Intl.message('Important: Please Back Up\n Your Wallets!',
+        name: 'd_not_backed_up_title', desc: '');
   }
 
   String get d_not_backed_up_desc {
