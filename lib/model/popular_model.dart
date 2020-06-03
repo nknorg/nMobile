@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nmobile/consts/theme.dart';
 
 class PopularModel {
   final Color titleColor;
@@ -12,9 +13,12 @@ class PopularModel {
 
   static defaultData() {
     List<PopularModel> lists = [];
-    lists.add(PopularModel(Color(0xFF00CC96), Color(0x1900CC96), 'DC', '#d-chat', "d-chat"));
-    lists.add(PopularModel(Color(0xFFFC5D68), Color(0x19FC5D68), 'NC', '#nkn-chat', "nkn-chat"));
-    lists.add(PopularModel(Color(0xFF5458F7), Color(0x195458F7), '中', '#中文', "中文"));
+    lists.add(PopularModel(Color(DefaultTheme.headerColor1), Color(DefaultTheme.headerBackgroundColor1), 'DC', '#d-chat', "d-chat"));
+    lists.add(PopularModel(Color(DefaultTheme.headerColor2), Color(DefaultTheme.headerBackgroundColor2), 'NC', '#nkn-chat', "nkn-chat"));
+    lists.add(PopularModel(Color(DefaultTheme.headerColor3), Color(DefaultTheme.headerBackgroundColor3), 'C', '#cats', "cats"));
+    lists.add(PopularModel(Color(DefaultTheme.headerColor4), Color(DefaultTheme.headerBackgroundColor4), 'M', '#music', "中文"));
+    lists.add(PopularModel(Color(DefaultTheme.headerColor5), Color(DefaultTheme.headerBackgroundColor5), 'S', '#sport', "sport"));
+    lists.add(PopularModel(Color(DefaultTheme.headerColor6), Color(DefaultTheme.headerBackgroundColor6), '中', '#中文', "中文"));
     return lists;
   }
 }
