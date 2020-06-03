@@ -126,9 +126,9 @@ class NknClientPlugin {
         'data': data,
       });
     } catch (e) {
+      LogUtil.v('send fault');
       throw e;
     }
-
     return completer.future.whenComplete(() {
       _clientEventQueue.remove(id);
     });
@@ -167,15 +167,18 @@ class NknClientPlugin {
     Completer<String> completer = Completer<String>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
-    _methodChannel.invokeMethod('subscribe', {
-      '_id': id,
-      'identifier': identifier,
-      'topic': topic,
-      'duration': duration,
-      'fee': fee,
-      'meta': meta,
-    });
-
+    try {
+      _methodChannel.invokeMethod('subscribe', {
+        '_id': id,
+        'identifier': identifier,
+        'topic': topic,
+        'duration': duration,
+        'fee': fee,
+        'meta': meta,
+      });
+    } catch (e) {
+      LogUtil.v('subscribe fault');
+    }
     return completer.future.whenComplete(() {
       _clientEventQueue.remove(id);
     });
@@ -190,12 +193,16 @@ class NknClientPlugin {
     Completer<String> completer = Completer<String>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
-    _methodChannel.invokeMethod('unsubscribe', {
-      '_id': id,
-      'identifier': identifier,
-      'topic': topic,
-      'fee': fee,
-    });
+    try {
+      _methodChannel.invokeMethod('unsubscribe', {
+        '_id': id,
+        'identifier': identifier,
+        'topic': topic,
+        'fee': fee,
+      });
+    } catch (v) {
+      LogUtil.v('unsubscribe fault');
+    }
 
     return completer.future.whenComplete(() {
       _clientEventQueue.remove(id);
