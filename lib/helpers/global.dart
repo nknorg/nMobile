@@ -53,8 +53,8 @@ class Global {
     Global.applicationRootDirectory = await getApplicationDocumentsDirectory();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     Global.version = packageInfo.version;
-    Global.buildVersion = '101';
-//    Global.buildVersion = packageInfo.buildNumber.replaceAll('.', '');
+//    Global.buildVersion = '101';
+    Global.buildVersion = packageInfo.buildNumber.replaceAll('.', '');
     LocalStorage localStorage = LocalStorage();
     // load language
     Global.locale = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.LOCALE_KEY}')) ?? 'auto';
