@@ -77,10 +77,10 @@ class _SendNknScreenState extends State<SendNknScreen> {
       var password = await wallet.getPassword();
       if (password != null) {
         try {
+          Navigator.pop(context, true);
           var w = await wallet.exportWallet(password);
           var keystore = w['keystore'];
           var hash = await NknWalletPlugin.transfer(keystore, password, _sendTo, _amount, _fee.toString());
-          Navigator.pop(context, true);
           showToast(NMobileLocalizations.of(context).success);
         } catch (e) {
           EasyLoading.dismiss();
