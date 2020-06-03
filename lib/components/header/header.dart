@@ -42,7 +42,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
                     ))
                 .pad(l: 4),
           ),
-          notBackedUpTip != null ? Expanded(child: notBackedUpTip) : Space.empty
+          Expanded(flex: 0, child: notBackedUpTip != null ? notBackedUpTip : Space.empty)
         ],
       ),
       actions: action.padd(5.symm()).toList,
