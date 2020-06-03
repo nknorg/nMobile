@@ -30,7 +30,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Expanded(
-            flex: 1,
+            flex: 0,
             child: (titleChild ??
                     Text(
                       title ?? '',
@@ -42,7 +42,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
                     ))
                 .pad(l: 4),
           ),
-          notBackedUpTip != null ? Expanded(child: notBackedUpTip) : Space.empty
+          notBackedUpTip != null ? Expanded(flex: 0, child: notBackedUpTip) : Space.empty
         ],
       ),
       actions: action.padd(5.symm()).toList,

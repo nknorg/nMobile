@@ -31,7 +31,7 @@ class _AppScreenState extends State<AppScreen> {
   List<Widget> screens = <Widget>[
     ChatScreen(),
 //    NewsScreen(),
-    HomeScreen(),
+//    HomeScreen(),
     SettingsScreen(),
   ];
 

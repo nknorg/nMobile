@@ -26,9 +26,11 @@ import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/select.dart';
+import 'package:nmobile/screens/wallet/wallet.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/const_utils.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:oktoast/oktoast.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -43,7 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
   final LocalStorage _localStorage = LocalStorage();
   final SecureStorage _secureStorage = SecureStorage();
   GlobalBloc _globalBloc;
-  StreamSubscription _globalBlocScription;
+  StreamSubscription _globalBlocSubs;
   List<SelectListItem> _languageList;
   String _currentLanguage;
   List<SelectListItem> _localNotificationTypeList;
@@ -84,11 +86,12 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
     if (Settings.localNotificationType == null) {
       _currentLocalNotificationType = NMobileLocalizations.of(Global.appContext).local_notification_only_name;
     } else {
-      _currentLocalNotificationType = _localNotificationTypeList?.firstWhere((x) => x.value == Settings.localNotificationType, orElse: () => null)?.text ?? NMobileLocalizations.of(Global.appContext).local_notification_only_name;
+      _currentLocalNotificationType = _localNotificationTypeList?.firstWhere((x) => x.value == Settings.localNotificationType, orElse: () => null)?.text ??
+          NMobileLocalizations.of(Global.appContext).local_notification_only_name;
     }
     initAsync();
     _globalBloc = BlocProvider.of<GlobalBloc>(context);
-    _globalBlocScription = _globalBloc.listen((state) {
+    _globalBlocSubs = _globalBloc.listen((state) {
       if (state is LocaleUpdated) {
         if (_languageList != null) {
           var item = _languageList.firstWhere((x) => x.value == state.locale, orElse: () => null);
@@ -136,7 +139,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
 
   @override
   void dispose() {
-    _globalBlocScription?.cancel();
+    _globalBlocSubs?.cancel();
     super.dispose();
   }
 
@@ -178,12 +181,11 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                 ),
               ),
               Container(
-                decoration: BoxDecoration(
-                  color: DefaultTheme.backgroundLightColor,
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                ),
-                child: Column(
-                  children: <Widget>[
+                  decoration: BoxDecoration(
+                    color: DefaultTheme.backgroundLightColor,
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  child: Column(children: <Widget>[
                     SizedBox(
                       width: double.infinity,
                       height: 48,
@@ -229,82 +231,89 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
+                    SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: FlatButton(
+                            padding: const EdgeInsets.only(left: 16, right: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                            onPressed: () async {
+                              Navigator.pushNamed(context, WalletScreen.routeName);
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Label(
+                                  NMobileLocalizations.of(context).my_wallets,
+                                  type: LabelType.bodyRegular,
+                                  color: DefaultTheme.fontColor1,
+                                  height: 1,
+                                ),
+                                SvgPicture.asset(
+                                  'assets/icons/right.svg',
+                                  width: 24,
+                                  color: DefaultTheme.fontColor2,
+                                )
+                              ],
+                            )))
+                  ])),
               _authTypeString == null
                   ? Container()
-                  : Column(
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.only(top: 16, bottom: 16),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: <Widget>[
-                              Label(
-                                NMobileLocalizations.of(context).security,
-                                type: LabelType.h3,
-                              ),
-                            ],
-                          ),
+                  : Column(children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16, bottom: 16),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[
+                            Label(
+                              NMobileLocalizations.of(context).security,
+                              type: LabelType.h3,
+                            ),
+                          ],
                         ),
-                        Container(
+                      ),
+                      Container(
                           decoration: BoxDecoration(
                             color: DefaultTheme.backgroundLightColor,
                             borderRadius: BorderRadius.all(Radius.circular(12)),
                           ),
-                          child: Column(
-                            children: <Widget>[
-                              SizedBox(
+                          child: Column(children: <Widget>[
+                            SizedBox(
                                 width: double.infinity,
                                 height: 48,
                                 child: FlatButton(
-                                  padding: const EdgeInsets.only(left: 16, right: 16),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
+                                    padding: const EdgeInsets.only(left: 16, right: 16),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: <Widget>[
                                       Label(
                                         _authTypeString ?? '',
                                         type: LabelType.bodyRegular,
                                         color: DefaultTheme.fontColor1,
                                         height: 1,
                                       ),
-                                      Row(
-                                        children: <Widget>[
-                                          CupertinoSwitch(
+                                      Row(children: <Widget>[
+                                        CupertinoSwitch(
                                             value: _authSelected,
                                             activeColor: DefaultTheme.primaryColor,
                                             onChanged: (value) async {
                                               changeAuthAction(value);
-                                            },
-                                          ),
-                                        ],
-                                      )
-                                    ],
-                                  ),
-                                  onPressed: () {},
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-              Padding(
-                padding: const EdgeInsets.only(top: 16, bottom: 16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    Label(
-                      NMobileLocalizations.of(context).notification,
-                      type: LabelType.h3,
-                    ),
-                  ],
-                ),
-              ),
+                                            })
+                                      ])
+                                    ]),
+                                    onPressed: () {}))
+                          ]))
+                    ]),
+              Row(
+                children: <Widget>[
+                  Label(
+                    NMobileLocalizations.of(context).notification,
+                    type: LabelType.h3,
+                  ),
+                ],
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+              ).pad(t: 16, b: 16),
               Container(
                 decoration: BoxDecoration(
                   color: DefaultTheme.backgroundLightColor,
