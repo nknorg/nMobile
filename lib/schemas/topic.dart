@@ -218,7 +218,7 @@ class TopicSchema {
     LogUtil.v(Global.currentClient.address);
     if (!Global.isLoadTopic(topic)) {
       TopicSchema topicSchema = await getTopic(topic);
-      if (topicSchema.data != null && topicSchema.data.length > 0) {
+      if (topicSchema != null && topicSchema.data != null && topicSchema.data.length > 0) {
         return topicSchema.data;
       }
     }
@@ -261,6 +261,9 @@ class TopicSchema {
       i++;
     }
     TopicSchema topicSchema = await TopicSchema.getTopic(topic);
+    if (topicSchema == null) {
+      topicSchema = TopicSchema(topic: topic);
+    }
     topicSchema.data = resultMeta;
     topicSchema.insertOrUpdate();
     return resultMeta;

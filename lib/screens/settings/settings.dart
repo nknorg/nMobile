@@ -403,7 +403,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                             Row(
                               children: <Widget>[
                                 Label(
-                                  '${Global.version} + (${Global.buildVersion})',
+                                  '${Global.version} + (Build ${Global.buildVersion})',
                                   type: LabelType.bodyRegular,
                                   color: DefaultTheme.fontColor2,
                                   height: 1,
