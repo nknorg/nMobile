@@ -25,7 +25,7 @@ import 'consts/theme.dart';
 
 void main() async {
   Global.init(() {
-    Catcher(App(), debugConfig: releaseOptions, releaseConfig: releaseOptions);
+    Catcher(App(), debugConfig: null, releaseConfig: releaseOptions);
   });
 //  Global.init(() {
 //    runApp(App());
