@@ -18,6 +18,7 @@ import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel.dart';
+import 'package:nmobile/screens/chat/populai_group_page.dart';
 import 'package:nmobile/utils/image_utils.dart';
 
 class InputChannelDialog extends StatefulWidget {
@@ -126,13 +127,16 @@ class _InputChannelDialogState extends State<InputChannelDialog> {
                           Padding(
                             padding: EdgeInsets.only(left: 20, right: 20),
                             child: Textbox(
-                              padding: const EdgeInsets.only(bottom: 10),
                               controller: _topicController,
                               validator: Validator.of(context).required(),
                               hintText: NMobileLocalizations.of(context).enter_topic,
                               suffixIcon: InkWell(
                                 onTap: () {
-//                                  Navigator.pushNamed(context, PopularGroupPage.routeName);
+                                  Navigator.pushNamed(context, PopularGroupPage.routeName).then((v) {
+                                    if (v != null) {
+                                      _topicController.text = v;
+                                    }
+                                  });
                                 },
                                 child: Icon(
                                   Icons.group,

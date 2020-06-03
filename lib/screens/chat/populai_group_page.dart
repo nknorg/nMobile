@@ -35,42 +35,63 @@ class PopularGroupPageState extends State<PopularGroupPage> {
       ),
       body: Builder(
         builder: (BuildContext context) => BodyBox(
-          padding: EdgeInsets.only(top: 20.h, left: 10.w, right: 10.w),
+          padding: EdgeInsets.only(top: 20.h, left: 16.w, right: 16.w),
           color: DefaultTheme.backgroundLightColor,
           child: Container(
             width: double.infinity,
             height: double.infinity,
-            child: Column(
-              children: <Widget>[
-                GridView.count(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    children: List.generate(
-                      populars.length,
-                      (index) {
-                        PopularModel model = populars[index];
-                        return Column(
-                          children: <Widget>[
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical: 60.h),
-                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: model.titleBgColor),
-                              child: Center(
-                                child: Label(
-                                  model.title,
-                                  type: LabelType.h3,
-                                  color: model.titleColor,
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ))
-              ],
+            child: GridView.count(
+              crossAxisCount: 3,
+              childAspectRatio: 0.9,
+              children: populars
+                  .map((item) => InkWell(
+                        onTap: () {
+                          Navigator.pop(context, item.topic);
+                        },
+                        child: PopularItem(
+                          data: item,
+                        ),
+                      ))
+                  .toList(),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class PopularItem extends StatelessWidget {
+  static final String routeName = "PopularItem";
+  final PopularModel data;
+  final VoidCallback click;
+
+  PopularItem({Key key, this.data, this.click}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Column(
+        children: <Widget>[
+          SizedBox(height: 20.h),
+          Container(
+            width: 90.w,
+            height: 84.h,
+            decoration: BoxDecoration(color: data.titleBgColor, borderRadius: BorderRadius.circular(8)),
+            child: Center(
+              child: Label(
+                data.title,
+                type: LabelType.h3,
+                color: data.titleColor,
+              ),
+            ),
+          ),
+          SizedBox(height: 6.h),
+          Label(
+            data.subTitle,
+            type: LabelType.h4,
+          ),
+        ],
       ),
     );
   }
