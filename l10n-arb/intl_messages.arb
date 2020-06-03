@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-06-03T14:37:22.831622",
+  "@@last_modified": "2020-06-03T15:37:29.506712",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -90,7 +90,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "channel_invitation": "channel invitation",
+  "channel_invitation": "group invitation",
   "@channel_invitation": {
     "description": "",
     "type": "text",
@@ -408,7 +408,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "create_wallet": "Create Wallet",
+  "create_wallet": "Create Account",
   "@create_wallet": {
     "description": "",
     "type": "text",
@@ -420,19 +420,19 @@
     "type": "text",
     "placeholders": {}
   },
-  "delete_wallet": "Delete Wallet",
+  "delete_wallet": "Delete Account",
   "@delete_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "delete_wallet_confirm_title": "Are you sure you want to delete this wallet?",
+  "delete_wallet_confirm_title": "Are you sure you want to delete this account?",
   "@delete_wallet_confirm_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "delete_wallet_confirm_text": "This will remove the wallet off your local device. Please make sure your wallet is fully backed up or you will lose your funds.",
+  "delete_wallet_confirm_text": "This will remove the wallet off your local device. Please make sure your account is fully backed up or you will lose your funds.",
   "@delete_wallet_confirm_text": {
     "description": "",
     "type": "text",
@@ -450,7 +450,19 @@
     "type": "text",
     "placeholders": {}
   },
-  "delete_chennel_confirm_title": "Are you sure you want to unsubscribe from this channel?",
+  "delete_friend_confirm_title": "Are you sure you want to delete this friend?",
+  "@delete_friend_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "leave_group_confirm_title": "Are you sure you want to leave this group?",
+  "@leave_group_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "delete_chennel_confirm_title": "Are you sure you want to leave from this group?",
   "@delete_chennel_confirm_title": {
     "description": "",
     "type": "text",
@@ -468,19 +480,19 @@
     "type": "text",
     "placeholders": {}
   },
-  "import_wallet": "Import Wallet",
+  "import_wallet": "Import Account",
   "@import_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "export_wallet": "Export Wallet",
+  "export_wallet": "Export Account",
   "@export_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "view_channel_members": "View Channel Members",
+  "view_channel_members": "Members",
   "@view_channel_members": {
     "description": "",
     "type": "text",
@@ -498,7 +510,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "main_wallet": "Main Wallet",
+  "main_wallet": "Main Account",
   "@main_wallet": {
     "description": "",
     "type": "text",
@@ -516,7 +528,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "verify_wallet_password": "Verify Wallet Password",
+  "verify_wallet_password": "Verify Account Password",
   "@verify_wallet_password": {
     "description": "",
     "type": "text",
@@ -612,7 +624,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "select_another_wallet": "Select Another Wallet",
+  "select_another_wallet": "Select Another Account",
   "@select_another_wallet": {
     "description": "",
     "type": "text",
@@ -630,7 +642,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "new_whisper": "New Whisper",
+  "new_whisper": "Direct Message",
   "@new_whisper": {
     "description": "",
     "type": "text",
@@ -642,13 +654,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "create_channel": "Create/Subscribe to channel",
+  "create_channel": "Create/Join to group",
   "@create_channel": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "private_channel": "Private Channel",
+  "private_channel": "Private Group",
   "@private_channel": {
     "description": "",
     "type": "text",
@@ -660,13 +672,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "channel_settings": "Channel Settings",
+  "channel_settings": "Group Settings",
   "@channel_settings": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "channel_members": "Channel Members",
+  "channel_members": "Group Members",
   "@channel_members": {
     "description": "",
     "type": "text",
@@ -684,7 +696,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "popular_channels": "Popular Channels",
+  "popular_channels": "Popular Groups",
   "@popular_channels": {
     "description": "",
     "type": "text",
@@ -978,7 +990,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "invites_desc_to": "invites You to join channel",
+  "invites_desc_to": "invites You to join group",
   "@invites_desc_to": {
     "description": "",
     "type": "text",
@@ -1008,13 +1020,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "unsubscribe": "Unsubscribe",
+  "unsubscribe": "Leave",
   "@unsubscribe": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "menu_wallet": "Wallet",
+  "menu_wallet": "Account",
   "@menu_wallet": {
     "description": "",
     "type": "text",
@@ -1068,19 +1080,19 @@
     "type": "text",
     "placeholders": {}
   },
-  "no_wallet_create": "Create New Wallet",
+  "no_wallet_create": "Create New Account",
   "@no_wallet_create": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "no_wallet_import": "Import Exisiting Wallet",
+  "no_wallet_import": "Import Exisiting Account",
   "@no_wallet_import": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "create_nkn_wallet_title": "CREATE MAINNET WALLET",
+  "create_nkn_wallet_title": "CREATE MAINNET ACCOUNT",
   "@create_nkn_wallet_title": {
     "description": "",
     "type": "text",
@@ -1092,7 +1104,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "import_keystore_nkn_wallet_desc": "From your existing wallet, find out how to export keystore as well as associated password, make a backup of both, and then use both to import your existing wallet into nMobile.",
+  "import_keystore_nkn_wallet_desc": "From your existing Account, find out how to export keystore as well as associated password, make a backup of both, and then use both to import your existing Account into nMobile.",
   "@import_keystore_nkn_wallet_desc": {
     "description": "",
     "type": "text",
@@ -1104,7 +1116,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "import_seed_nkn_wallet_desc": "From your existing wallet, find out how to export Seed (also called \"Secret Seed\"), make a backup copy, and then use it to import your existing wallet into nMobile.",
+  "import_seed_nkn_wallet_desc": "From your existing account, find out how to export Seed (also called \"Secret Seed\"), make a backup copy, and then use it to import your existing Account into nMobile.",
   "@import_seed_nkn_wallet_desc": {
     "description": "",
     "type": "text",
@@ -1166,7 +1178,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "chat_no_wallet_desc": "You need a Mainnet compatible wallet before you\ncan use D-Chat.",
+  "chat_no_wallet_desc": "You need a Mainnet compatible account before you\ncan use D-Chat.",
   "@chat_no_wallet_desc": {
     "description": "",
     "type": "text",
@@ -1178,7 +1190,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "chat_tab_channels": "Channels",
+  "chat_tab_channels": "Groups",
   "@chat_tab_channels": {
     "description": "",
     "type": "text",
@@ -1250,7 +1262,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "joined_channel": "Joined channel",
+  "joined_channel": "Joined group",
   "@joined_channel": {
     "description": "",
     "type": "text",
@@ -1304,7 +1316,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "hint_enter_wallet_name": "Enter wallet name",
+  "hint_enter_wallet_name": "Enter account name",
   "@hint_enter_wallet_name": {
     "description": "",
     "type": "text",
@@ -1424,19 +1436,25 @@
     "type": "text",
     "placeholders": {}
   },
+  "d_chat_not_login": "D-Chat not login",
+  "@d_chat_not_login": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "not_backed_up": "Not backed up yet",
   "@not_backed_up": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "d_not_backed_up_title": "Important: Please Back Up\n Your Wallets!",
+  "d_not_backed_up_title": "Important: Please Back Up\n Your Accounts!",
   "@d_not_backed_up_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "d_not_backed_up_desc": "When you update your nMobile software or accidentally uninstall nMobile, your wallet might be lost and you might NOT be able to access your assets! So please take 3 minutes time now to back up all your wallets.",
+  "d_not_backed_up_desc": "When you update your nMobile software or accidentally uninstall nMobile, your account might be lost and you might NOT be able to access your assets! So please take 3 minutes time now to back up all your wallets.",
   "@d_not_backed_up_desc": {
     "description": "",
     "type": "text",
