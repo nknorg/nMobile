@@ -26,6 +26,7 @@ import 'package:nmobile/screens/wallet/nkn_wallet_detail.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
+import 'package:nmobile/screens/wallet/wallet.dart';
 import 'package:nmobile/splash.dart';
 
 Map<String, WidgetBuilder> routes = {
@@ -55,6 +56,7 @@ Map<String, WidgetBuilder> routes = {
   NodeDetailScreen.routeName: (BuildContext context, {arguments}) => NodeDetailScreen(arguments: arguments),
   WithDrawPage.routeName: (BuildContext context, {arguments}) => WithDrawPage(arguments: arguments),
   PopularGroupPage.routeName: (BuildContext context) => PopularGroupPage(),
+  WalletScreen.routeName: (BuildContext context) => WalletScreen(),
 };
 
 var onGenerateRoute = (RouteSettings settings) {

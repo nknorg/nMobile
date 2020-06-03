@@ -31,7 +31,8 @@ class _WalletScreenState extends State<WalletScreen> {
             return NoWalletScreen();
           }
         }
-        return Welcome();
+        return NoWalletScreen();
+//        return Welcome();
       },
     );
   }

@@ -43,7 +43,7 @@ class _NavState extends State<Nav> {
       child: Padding(
         padding: EdgeInsets.only(top: 4),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             Button(
               icon: true,
@@ -56,6 +56,17 @@ class _NavState extends State<Nav> {
               fontColor: widget.currentIndex == 0 ? _selectedColor : _color,
               onPressed: () => _onItemTapped(0),
             ),
+//            Button(
+//              icon: true,
+//              size: 70,
+//              child: loadAssetIconsImage(
+//                'wallet',
+//                color: widget.currentIndex == 1 ? _selectedColor : _color,
+//              ),
+//              text: NMobileLocalizations.of(context).menu_wallet,
+//              fontColor: widget.currentIndex == 1 ? _selectedColor : _color,
+//              onPressed: () => _onItemTapped(1),
+//            ),
             Button(
               icon: true,
               size: 70,
