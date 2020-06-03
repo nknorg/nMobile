@@ -133,7 +133,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "enter_topic": "输入主题",
+  "enter_topic": "请输入群名称或选择一个群组",
   "@enter_topic": {
     "description": "",
     "type": "text",
@@ -169,25 +169,25 @@
     "type": "text",
     "placeholders": {}
   },
-  "new_whisper": "New Whisper",
+  "new_whisper": "新建私聊",
   "@new_whisper": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "new_group": "New Group",
+  "new_group": "新建群聊",
   "@new_group": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "create_channel": "创建/订阅频道",
+  "create_channel": "创建/加入群组",
   "@create_channel": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "private_channel": "建立私人频道",
+  "private_channel": "建立私人群",
   "@private_channel": {
     "description": "",
     "type": "text",
@@ -211,7 +211,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "topic": "话题",
+  "topic": "群组",
   "@topic": {
     "description": "",
     "type": "text",
@@ -247,7 +247,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "remark": "Remark",
+  "remark": "备注",
   "@remark": {
     "description": "",
     "type": "text",
@@ -259,7 +259,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "contacts": "Contacts",
+  "contacts": "通讯录",
   "@contacts": {
     "description": "",
     "type": "text",
@@ -463,7 +463,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "auto": "自动",
+  "auto": "跟随系统",
   "@auto": {
     "description": "",
     "type": "text",
@@ -541,7 +541,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "subscribe": "订阅",
+  "subscribe": "加入",
   "@subscribe": {
     "description": "",
     "type": "text",
@@ -571,7 +571,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "menu_chat": "D-Chat",
+  "menu_chat": "滴聊",
   "@menu_chat": {
     "description": "",
     "type": "text",
