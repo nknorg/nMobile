@@ -1,5 +1,4 @@
 import 'package:bot_toast/bot_toast.dart';
-import 'package:catcher/core/catcher.dart';
 import 'package:common_utils/common_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -17,19 +16,18 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/router/routes.dart';
 import 'package:nmobile/theme/slider_theme.dart';
-import 'package:nmobile/utils/crach_utils.dart';
 import 'package:oktoast/oktoast.dart';
 
 import 'blocs/wallet/wallets_bloc.dart';
 import 'consts/theme.dart';
 
 void main() async {
-  Global.init(() {
-    Catcher(App(), debugConfig: null, releaseConfig: releaseOptions);
-  });
 //  Global.init(() {
-//    runApp(App());
+//    Catcher(App(), debugConfig: null, releaseConfig: releaseOptions);
 //  });
+  Global.init(() {
+    runApp(App());
+  });
 }
 
 class App extends StatefulWidget {
@@ -97,7 +95,7 @@ class AppState extends State<App> with WidgetsBindingObserver {
                 return NMobileLocalizations.of(context).title;
               },
 //              navigatorKey: locator<NavigateService>().key,
-              navigatorKey: Catcher.navigatorKey,
+//              navigatorKey: Catcher.navigatorKey,
               onGenerateRoute: onGenerateRoute,
               title: 'nMobile',
               theme: ThemeData(
