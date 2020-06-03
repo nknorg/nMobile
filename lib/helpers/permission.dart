@@ -118,7 +118,7 @@ class Permission {
   }
 
   static Future<List<String>> getPrivateChannelDests(String topic) async {
-    TopicSchema topicSchema = TopicSchema(topic: topic, type: TopicType.private);
+    TopicSchema topicSchema = TopicSchema(topic: topic);
     Map<String, dynamic> meta = await topicSchema.getPrivateOwnerMeta();
     Map<String, dynamic> subscribers = await getSubscribers(topic: topic);
     Permission permission = Permission(accept: meta['accept'], reject: meta['reject']);
