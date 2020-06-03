@@ -25,7 +25,6 @@ class Markdown extends StatelessWidget {
 
     return MarkdownBody(
       data: data,
-      selectable: true,
       onTapLink: (href) {
         launchURL(href);
       },
