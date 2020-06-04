@@ -6,6 +6,7 @@ import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/screens/wallet/wallet.dart';
 import 'package:nmobile/services/background_fetch_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/services/task_service.dart';
@@ -14,7 +15,6 @@ import 'package:orientation/orientation.dart';
 
 import 'components/footer/nav.dart';
 import 'screens/chat/chat.dart';
-import 'screens/home.dart';
 import 'screens/settings/settings.dart';
 
 class AppScreen extends StatefulWidget {
@@ -31,7 +31,7 @@ class _AppScreenState extends State<AppScreen> {
   List<Widget> screens = <Widget>[
     ChatScreen(),
 //    NewsScreen(),
-//    HomeScreen(),
+    WalletScreen(),
     SettingsScreen(),
   ];
 
