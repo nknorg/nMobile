@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:common_utils/common_utils.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
 import 'package:nmobile/helpers/local_storage.dart';
@@ -62,6 +63,12 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
         if (x['balance'] != null) {
           wallet.balance = x['balance'] ?? 0;
         }
+        if (x['balanceEth'] != null) {
+          wallet.balanceEth = x['balanceEth'] ?? 0;
+        }
+        if (x['isBackedUp'] != null) {
+          wallet.isBackedUp = x['isBackedUp'];
+        }
         return wallet;
       }).toList();
       yield WalletsLoaded(list);
@@ -113,6 +120,7 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
     final List<WalletSchema> list = List.from((state as WalletsLoaded).wallets);
     final wallet = list.firstWhere((w) => w.address == address, orElse: () => null);
     if (wallet != null) {
+      LogUtil.v('wallet != null: $wallet');
       int index = list.indexOf(wallet);
       wallet.isBackedUp = true;
       await _setWallet(index, wallet);
@@ -146,6 +154,7 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
   }
 
   Future _setWallet(int n, WalletSchema wallet) async {
+    LogUtil.v('wallet.isBackedUp: ${wallet.isBackedUp}');
     List<Future> futures = <Future>[];
     Map<String, dynamic> data = {
       'name': wallet.name,

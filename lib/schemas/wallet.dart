@@ -29,7 +29,7 @@ class WalletSchema extends Equatable {
   final SecureStorage _secureStorage = SecureStorage();
   final LocalAuthenticationService _localAuth = locator<LocalAuthenticationService>();
 
-  WalletSchema({this.address, this.type, this.name, this.balance, this.balanceEth});
+  WalletSchema({this.address, this.type, this.name, this.balance, this.balanceEth, this.isBackedUp});
 
   @override
   List<Object> get props => [address, type, name];

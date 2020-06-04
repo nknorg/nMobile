@@ -57,8 +57,11 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
       if (state is WalletsLoaded) {
         _totalNkn = 0;
         _allBackedUp = true;
-        state.wallets.forEach((x) => _totalNkn += x.balance ?? 0);
-        state.wallets.forEach((x) => _allBackedUp = x.isBackedUp && _allBackedUp);
+        state.wallets.forEach((w) => _totalNkn += w.balance ?? 0);
+        state.wallets.forEach((w) {
+          LogUtil.v('w.isBackedUp: ${w.isBackedUp}, w.name: ${w.name}');
+          _allBackedUp = w.isBackedUp && _allBackedUp;
+        });
         setState(() {
           LogUtil.v('_allBackedUp: $_allBackedUp');
         });
@@ -143,9 +146,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
                       .map(
                         (w) => Padding(
                           padding: const EdgeInsets.only(bottom: 16),
-                          child: WalletItem(
-                              type: w.type == WalletSchema.NKN_WALLET ? WalletType.nkn : WalletType.eth,
-                              schema: w),
+                          child: WalletItem(type: w.type == WalletSchema.NKN_WALLET ? WalletType.nkn : WalletType.eth, schema: w),
                         ),
                       )
                       .toList(),
@@ -173,10 +174,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
                 Text(
                   NMobileLocalizations.of(context).not_backed_up,
                   textAlign: TextAlign.end,
-                  style: TextStyle(
-                      fontSize: DefaultTheme.bodySmallFontSize,
-                      fontStyle: FontStyle.italic,
-                      color: Colours.pink_f8),
+                  style: TextStyle(fontSize: DefaultTheme.bodySmallFontSize, fontStyle: FontStyle.italic, color: Colours.pink_f8),
                   overflow: TextOverflow.ellipsis,
                   softWrap: false,
                   maxLines: 1,
@@ -191,8 +189,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
   _onNotBackedUpTipClicked() {
     // Don't use `context` as `Widget build(BuildContext context)`.
     WalletNotBackedUpDialog.of(context).show(() {
-      BottomDialog.of(context).showSelectWalletDialog(
-          title: NMobileLocalizations.of(context).select_asset_to_backup, callback: _listen);
+      BottomDialog.of(context).showSelectWalletDialog(title: NMobileLocalizations.of(context).select_asset_to_backup, callback: _listen);
     });
   }
 
