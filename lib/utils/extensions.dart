@@ -10,42 +10,27 @@ extension ParseNumbers on String {
   }
 }
 
-extension PaddingDouble on double {
-  EdgeInsets pad({double l: 0, double t: 0, double r: 0, double b: 0, replace: false}) =>
-      EdgeInsets.only(
-          left: l <= 0 ? this < 0 ? 0 : this : l,
-          top: t <= 0 ? this < 0 ? 0 : this : t,
-          right: r <= 0 ? this < 0 ? 0 : this : r,
-          bottom: b <= 0 ? this < 0 ? 0 : this : b);
-
-  EdgeInsets symm({double v = 0}) => EdgeInsets.symmetric(horizontal: this, vertical: v);
-}
-
-extension PaddingInt on int {
-  EdgeInsets pad({double l: 0, double t: 0, double r: 0, double b: 0, replace: false}) =>
-      EdgeInsets.only(
-          left: l <= 0 ? this < 0 ? 0 : this.toDouble() : l,
-          top: t <= 0 ? this < 0 ? 0 : this.toDouble() : t,
-          right: r <= 0 ? this < 0 ? 0 : this.toDouble() : r,
-          bottom: b <= 0 ? this < 0 ? 0 : this.toDouble() : b);
+extension PaddingInt on num {
+  EdgeInsets pad({double l: -1, double t: -1, double r: -1, double b: -1, replace: false}) => EdgeInsets.only(
+      left: l < 0 ? this < 0 ? 0 : this.toDouble() : l,
+      top: t < 0 ? this < 0 ? 0 : this.toDouble() : t,
+      right: r < 0 ? this < 0 ? 0 : this.toDouble() : r,
+      bottom: b < 0 ? this < 0 ? 0 : this.toDouble() : b);
 
   EdgeInsets symm({double v = 0}) => EdgeInsets.symmetric(horizontal: this.toDouble(), vertical: v);
 }
 
 extension PaddingEdgeInsets on EdgeInsets {
   EdgeInsets pad({double l: 0, double t: 0, double r: 0, double b: 0, replace: false}) =>
-      EdgeInsets.only(
-          left: l < 0 ? 0 : l, top: t < 0 ? 0 : t, right: r < 0 ? 0 : r, bottom: b < 0 ? 0 : b);
+      EdgeInsets.only(left: l < 0 ? 0 : l, top: t < 0 ? 0 : t, right: r < 0 ? 0 : r, bottom: b < 0 ? 0 : b);
 }
 
 extension PaddingWidget on Widget {
-  Padding pad({double l: 0, double t: 0, double r: 0, double b: 0, replace: false}) => padd(
-      EdgeInsets.only(
-          left: l < 0 ? 0 : l, top: t < 0 ? 0 : t, right: r < 0 ? 0 : r, bottom: b < 0 ? 0 : b),
-      replace: replace);
+  Padding pad({double l: 0, double t: 0, double r: 0, double b: 0, replace: false}) =>
+      padd(EdgeInsets.only(left: l < 0 ? 0 : l, top: t < 0 ? 0 : t, right: r < 0 ? 0 : r, bottom: b < 0 ? 0 : b),
+          replace: replace);
 
-  Padding symm({double h = 0, double v = 0}) =>
-      padd(EdgeInsets.symmetric(horizontal: h, vertical: v), replace: true);
+  Padding symm({double h = 0, double v = 0}) => padd(EdgeInsets.symmetric(horizontal: h, vertical: v), replace: true);
 
   Padding padd(EdgeInsets padding, {bool replace = false}) => replace
       ? Padding(padding: padding, child: this is Padding ? (this as Padding).child : this)
@@ -57,9 +42,8 @@ extension AlignWidget on Widget {
 }
 
 extension OffstageWidget on Widget {
-  Widget offstage(bool off, {bool add = false}) => add
-      ? Offstage(offstage: off, child: this)
-      : off ? Offstage(offstage: true, child: this) : this;
+  Widget offstage(bool off, {bool add = false}) =>
+      add ? Offstage(offstage: off, child: this) : off ? Offstage(offstage: true, child: this) : this;
 }
 
 extension SingleWidgetToList on Widget {

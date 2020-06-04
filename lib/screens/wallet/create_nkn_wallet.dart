@@ -51,7 +51,7 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
       String keystore = await NknWalletPlugin.createWallet(null, _password);
       var json = jsonDecode(keystore);
       String address = json['Address'];
-      _walletsBloc.add(AddWallet(WalletSchema(address: address, type: 'nkn', name: _name), keystore));
+      _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
       EasyLoading.dismiss();
       Navigator.of(context).pushReplacementNamed(AppScreen.routeName);
     }
