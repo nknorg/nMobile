@@ -7,6 +7,7 @@ import 'package:nmobile/blocs/wallet/wallets_state.dart';
 import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
 import 'package:nmobile/screens/chat/no_wallet.dart';
+import 'package:nmobile/screens/chat/no_wallet_account.dart';
 
 class ChatScreen extends StatefulWidget {
   static const String routeName = '/chat';
@@ -34,7 +35,7 @@ class _ChatScreenState extends State<ChatScreen>
               },
             );
           } else {
-            return NoWalletScreen();
+            return NoWalletAccount();
           }
         }
         return Container();

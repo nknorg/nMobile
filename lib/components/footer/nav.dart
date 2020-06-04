@@ -48,7 +48,7 @@ class _NavState extends State<Nav> {
           children: <Widget>[
             Button(
               icon: true,
-              size: 70,
+              size: 68,
               child: loadAssetIconsImage(
                 'chat',
                 color: widget.currentIndex == 0 ? _selectedColor : _color,
@@ -59,7 +59,7 @@ class _NavState extends State<Nav> {
             ),
             Button(
               icon: true,
-              size: 70,
+              size: 68,
               child: loadAssetIconsImage(
                 'wallet',
                 color: widget.currentIndex == 1 ? _selectedColor : _color,
@@ -70,7 +70,7 @@ class _NavState extends State<Nav> {
             ),
             Button(
               icon: true,
-              size: 70,
+              size: 68,
               child: loadAssetIconsImage(
                 'settings',
                 color: widget.currentIndex == 2 ? _selectedColor : _color,

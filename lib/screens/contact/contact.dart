@@ -247,7 +247,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                   children: <Widget>[
                                                     Label(
-                                                      NMobileLocalizations.of(context).nick_name,
+                                                      NMobileLocalizations.of(context).nickname,
                                                       type: LabelType.h3,
                                                       textAlign: TextAlign.start,
                                                     ),
@@ -546,7 +546,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                             children: <Widget>[
                                                               Label(
-                                                                NMobileLocalizations.of(context).nick_name,
+                                                                NMobileLocalizations.of(context).nickname,
                                                                 type: LabelType.h4,
                                                                 textAlign: TextAlign.start,
                                                               ),
@@ -894,7 +894,7 @@ class _ContactScreenState extends State<ContactScreen> {
     _firstNameController.text = widget.arguments.firstName;
 
     BottomDialog.of(context).showBottomDialog(
-      title: NMobileLocalizations.of(context).edit_nick_name,
+      title: NMobileLocalizations.of(context).edit_nickname,
       child: Form(
         key: _nameFormKey,
         autovalidate: true,

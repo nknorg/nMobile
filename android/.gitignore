@@ -7,4 +7,5 @@ gradlew.bat
 GeneratedPluginRegistrant.java
 /app/key/
 release.sh
+release-pro.sh
 /tmp/

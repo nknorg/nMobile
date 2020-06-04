@@ -173,7 +173,7 @@ class AddContactState extends State<AddContact> {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: <Widget>[
                                           Label(
-                                            NMobileLocalizations.of(context).nick_name,
+                                            NMobileLocalizations.of(context).nickname,
                                             type: LabelType.h3,
                                             textAlign: TextAlign.start,
                                           ),
