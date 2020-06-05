@@ -127,6 +127,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
     }
 
     return Scaffold(
+      backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
         title: NMobileLocalizations.of(context).channel_members,
         leading: BackButton(
@@ -149,58 +150,36 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
           },
         ),
       ),
-      body: ConstrainedBox(
-        constraints: BoxConstraints.expand(),
-        child: Stack(
-          alignment: Alignment.bottomCenter,
-          children: <Widget>[
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height),
-                color: DefaultTheme.backgroundColor4,
-                child: Flex(direction: Axis.vertical, children: <Widget>[
-                  Expanded(
-                    flex: 0,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.only(bottom: 24.h, left: 20.w, right: 20.w),
-                          child: Row(
-                            children: <Widget>[
-                              Padding(
-                                padding: const EdgeInsets.only(right: 16),
-                                child: widget.arguments.avatarWidget(
-                                  backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
-                                  size: 48,
-                                  fontColor: DefaultTheme.fontLightColor,
-                                ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Row(
-                                    children: topicWidget,
-                                  ),
-                                  Label('${widget.arguments.count ?? 0} ' + NMobileLocalizations.of(context).members, type: LabelType.bodyRegular, color: DefaultTheme.successColor)
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+      body: Column(
+        children: <Widget>[
+          Container(
+            padding: EdgeInsets.only(bottom: 24.h, left: 16.w, right: 16.w),
+            child: Row(
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.only(right: 16.w),
+                  child: widget.arguments.avatarWidget(
+                    backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
+                    size: 48,
+                    fontColor: DefaultTheme.fontLightColor,
                   ),
-                ]),
-              ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      children: topicWidget,
+                    ),
+                    Label('${widget.arguments.count ?? 0} ' + NMobileLocalizations.of(context).members, type: LabelType.bodyRegular, color: DefaultTheme.successColor)
+                  ],
+                ),
+              ],
             ),
-            Container(
-              constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 190.h),
+          ),
+          Expanded(
+            child: Container(
               child: BodyBox(
-                padding: EdgeInsets.only(top: 2.h, left: 20.w, right: 20.w),
+                padding: EdgeInsets.only(top: 2.h, left: 16.w, right: 16.w),
                 color: DefaultTheme.backgroundLightColor,
                 child: Flex(
                   direction: Axis.vertical,
@@ -225,8 +204,8 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -263,7 +242,6 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
         );
       },
       child: Container(
-        padding: const EdgeInsets.only(),
         child: Flex(
           direction: Axis.horizontal,
           crossAxisAlignment: CrossAxisAlignment.stretch,

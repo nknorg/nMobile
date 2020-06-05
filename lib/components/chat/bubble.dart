@@ -146,7 +146,7 @@ class _ChatBubbleState extends State<ChatBubble> {
             SizedBox(width: 4.w),
             Label(
               Format.timeFromNowFormat(widget.message.deleteTime ?? DateTime.now().add(Duration(seconds: widget.message.options['deleteAfterSeconds'] + 1))),
-              type: LabelType.bodySmall,
+              type: LabelType.bodyRegular,
               color: DefaultTheme.fontLightColor.withAlpha(178),
             ),
           ],
@@ -188,7 +188,7 @@ class _ChatBubbleState extends State<ChatBubble> {
             ),
             Label(
               Format.timeFromNowFormat(widget.message.deleteTime ?? DateTime.now().add(Duration(seconds: widget.message.options['deleteAfterSeconds'] + 1))),
-              type: LabelType.bodySmall,
+              type: LabelType.bodyRegular,
               color: DefaultTheme.fontColor2,
             ),
           ],
@@ -225,7 +225,7 @@ class _ChatBubbleState extends State<ChatBubble> {
               padding: contentPadding,
               child: RichText(
                 text: TextSpan(
-                  style: TextStyle(fontSize: DefaultTheme.bodyRegularFontSize),
+                  style: TextStyle(fontSize: DefaultTheme.bodyLargeFontSize),
                   text: '',
                   children: children,
                 ),
@@ -281,6 +281,7 @@ class _ChatBubbleState extends State<ChatBubble> {
         GestureDetector(
           key: popupMenuKey,
           onTap: popupMenu,
+//          onLongPress: popupMenu,
           child: Opacity(
             opacity: widget.message.isSuccess ? 1 : 0.4,
             child: Container(
@@ -295,7 +296,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                         Label(
                           widget.contact.name,
                           height: 1,
-                          type: LabelType.bodySmall,
+                          type: LabelType.bodyRegular,
                           color: DefaultTheme.primaryColor,
                         ),
                         SizedBox(height: 6.h),
@@ -334,7 +335,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                 child: Opacity(
                   opacity: !widget.hideHeader ? 1.0 : 0.0,
                   child: widget.contact.avatarWidget(
-                    size: 22,
+                    size: 20,
                     backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
                   ),
                 ),
@@ -422,12 +423,12 @@ class _ChatBubbleState extends State<ChatBubble> {
             children: <Widget>[
               Label(
                 content,
-                type: LabelType.bodySmall,
+                type: LabelType.bodyRegular,
                 color: Color(0xFF2D2D2D),
               ),
               Label(
                 groupName,
-                type: LabelType.bodySmall,
+                type: LabelType.bodyRegular,
                 color: DefaultTheme.primaryColor,
               )
             ],
@@ -464,7 +465,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   },
                   child: Label(
                     NMobileLocalizations.of(context).accept,
-                    type: LabelType.bodySmall,
+                    type: LabelType.bodyRegular,
                     fontWeight: FontWeight.bold,
                     color: DefaultTheme.primaryColor,
                   ),
@@ -485,7 +486,7 @@ class _ChatBubbleState extends State<ChatBubble> {
             children: <Widget>[
               Label(
                 groupName,
-                type: LabelType.bodySmall,
+                type: LabelType.bodyRegular,
                 color: DefaultTheme.primaryColor,
               )
             ],

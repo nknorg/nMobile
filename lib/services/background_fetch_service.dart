@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:background_fetch/background_fetch.dart';
 import 'package:common_utils/common_utils.dart';
@@ -48,7 +49,10 @@ class BackgroundFetchService {
         Timer(Duration(seconds: 20), () {
           // todo debug
           LocalNotification.debugNotification('[debug] background fetch end', taskId);
-          BackgroundFetch.finish(taskId);
+          if (Platform.isIOS) {
+            NknClientPlugin.disConnect();
+            BackgroundFetch.finish(taskId);
+          }
         });
       }
     }).then((int status) {}).catchError((e) {
