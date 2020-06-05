@@ -122,7 +122,7 @@ class Label extends StatelessWidget {
         return Text(
           text,
           textScaleFactor: 1.0,
-          style: buildTextStyle(fontSize: DefaultTheme.labelFontSize, color: DefaultTheme.fontColor2),
+          style: buildTextStyle(fontSize: fontSize ?? DefaultTheme.labelFontSize, color: DefaultTheme.fontColor2),
           textAlign: this.textAlign,
           overflow: this.overflow,
           softWrap: softWrap,

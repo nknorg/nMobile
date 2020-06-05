@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -42,7 +43,9 @@ class CommonWebViewPageState extends State<CommonWebViewPage> {
             title: Text(title ?? ''),
             elevation: 0,
             leading: IconButton(
-                icon: Platform.isAndroid ? Icon(Icons.arrow_back) : Icon(Icons.arrow_back_ios),
+                icon: Platform.isAndroid
+                    ? Icon(Icons.arrow_back)
+                    : Icon(Icons.arrow_back_ios),
                 onPressed: () {
                   goBackAction();
                 }),
@@ -124,7 +127,7 @@ class CommonWebViewPageState extends State<CommonWebViewPage> {
   }
 
   _setTitleHandle(JavascriptMessage message) {
-    if (message.message != null) {
+    if (!TextUtil.isEmpty(message.message)) {
       setState(() {
         title = message.message;
       });

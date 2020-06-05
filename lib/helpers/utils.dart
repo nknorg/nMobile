@@ -17,7 +17,9 @@ const ADDRESS_GEN_PREFIX = '02b825';
 const ADDRESS_GEN_PREFIX_LEN = ADDRESS_GEN_PREFIX.length ~/ 2;
 const UINT160_LEN = 20;
 const CHECKSUM_LEN = 4;
+
 const SEED_LENGTH = 32;
+
 const ADDRESS_LEN = ADDRESS_GEN_PREFIX_LEN + UINT160_LEN + CHECKSUM_LEN;
 
 String hexEncode(List<int> raw) {
@@ -297,9 +299,14 @@ String getOwnerPubkeyByTopic(String topic) {
 }
 
 DateTime getStartOfDay(DateTime time) {
-  String formattedDate = DateUtil.formatDate(time,
-      isUtc: false, format: 'yyyy-MM-dd');
+  String formattedDate = DateUtil.formatDate(time, isUtc: false, format: 'yyyy-MM-dd');
   DateTime newDate = DateTime.parse(formattedDate);
+  return newDate;
+}
+
+DateTime getEndOfDay(DateTime time) {
+  String formattedDate = DateUtil.formatDate(time, isUtc: false, format: 'yyyy-MM-dd');
+  DateTime newDate = DateTime.parse(formattedDate + " 23:59:59");
   return newDate;
 }
 
@@ -307,8 +314,7 @@ int getTimestampLatest(bool phase, int day) {
   String newHours;
   DateTime now = new DateTime.now();
   DateTime sixtyDaysFromNow = now.add(new Duration(days: day));
-  String formattedDate = DateUtil.formatDate(sixtyDaysFromNow,
-      isUtc: false, format: 'yyyy-MM-dd');
+  String formattedDate = DateUtil.formatDate(sixtyDaysFromNow, isUtc: false, format: 'yyyy-MM-dd');
   if (phase) {
     newHours = formattedDate + ' 00:00:00';
   } else {
@@ -318,6 +324,6 @@ int getTimestampLatest(bool phase, int day) {
   DateTime newDate = DateTime.parse(newHours);
 //  String newFormattedDate = DateUtil.formatDate(newDate,
 //      isUtc: false, format: 'yyyy-MM-dd HH:mm:ss');
-  int timeStamp = newDate.millisecondsSinceEpoch ;
+  int timeStamp = newDate.millisecondsSinceEpoch;
   return timeStamp;
 }

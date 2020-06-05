@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/utils.dart';
 
@@ -22,14 +23,12 @@ class Markdown extends StatelessWidget {
     } else {
       linkStyle = TextStyle(color: DefaultTheme.primaryColor);
     }
-
     return MarkdownBody(
       data: data,
-      selectable: true,
       onTapLink: (href) {
         launchURL(href);
       },
-      styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(code: textStyle, p: textStyle.copyWith(fontSize: DefaultTheme.bodyRegularFontSize), a: linkStyle, h1: textStyle.copyWith(fontSize: DefaultTheme.h1FontSize), h2: textStyle.copyWith(fontSize: DefaultTheme.h2FontSize), h3: textStyle.copyWith(fontSize: DefaultTheme.h3FontSize), h4: textStyle.copyWith(fontSize: DefaultTheme.h4FontSize), h5: textStyle.copyWith(fontSize: DefaultTheme.h5FontSize), em: textStyle, listBullet: TextStyle(height: 1.25)),
+      styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(code: textStyle, p: textStyle.copyWith(fontSize: DefaultTheme.bodyRegularFontSize), a: linkStyle, h1: textStyle.copyWith(fontSize: 32.sp), h2: textStyle.copyWith(fontSize: 24.sp), h3: textStyle.copyWith(fontSize: 18.sp), h4: textStyle.copyWith(fontSize: DefaultTheme.h3FontSize), h5: textStyle.copyWith(fontSize: DefaultTheme.h3FontSize), em: textStyle, listBullet: TextStyle(height: 1.25)),
     );
   }
 }
