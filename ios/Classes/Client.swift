@@ -9,43 +9,48 @@ var clientEventSink: FlutterEventSink?
 private var onmessageWorkItem: DispatchWorkItem?
 private var onconnectWorkItem: DispatchWorkItem?
 
-func onConnect() {
+//let onmessageOperationQueue = OperationQueue()
+private var onmessageOperationItem: BlockOperation?
+
+var receiveMessageQueue = OperationQueue();
+
+
+func onConnect(_ client: NknMultiClient?) {
+    receiveMessageQueue.cancelAllOperations();
     let node = client?.onConnect?.next()
-    
     var data:[String:Any] = [String:Any]()
     data["event"] = "onConnect"
     data["node"] = ["address": node?.addr, "publicKey": node?.pubKey]
     data["client"] = ["address": client?.address()]
     clientEventSink?(data)
-    if(onmessageWorkItem?.isCancelled == false) {
-        onmessageWorkItem?.cancel()
-    }
-    onmessageWorkItem = DispatchWorkItem {
-        onMessage()
-    }
-    clientOnmessageQueue.async(execute: onmessageWorkItem!)
+    onMessage(client);
 }
 
-func onMessage() {
-    let message = client?.onMessage?.next()
-    guard let msg = message else {
-        Thread.sleep(forTimeInterval: 2)
-        onMessage()
-        return
-    }
+func onMessage(_ client: NknMultiClient?) {
+     receiveMessageQueue.cancelAllOperations();
     
-    var data:[String:Any] = [String:Any]()
-    data["event"] = "onMessage"
-    data["data"] = [
-        "src": msg.src,
-        "data": String(data: msg.data!, encoding: String.Encoding.utf8),
-        "type": msg.type,
-        "encrypted": msg.encrypted,
-        "pid": msg.messageID
-    ]
-    clientEventSink?(data)
-    
-    onMessage()
+    let blockOperation = BlockOperation()
+           blockOperation.addExecutionBlock{
+               let message = client?.onMessage?.next()
+                   guard let msg = message else {
+               //        Thread.sleep(forTimeInterval: 2)
+               //        onMessage()
+                       return
+                   }
+                   var data:[String:Any] = [String:Any]()
+                   data["event"] = "onMessage"
+                   data["data"] = [
+                       "src": msg.src,
+                       "data": String(data: msg.data!, encoding: String.Encoding.utf8) ?? "",
+                       "type": msg.type,
+                       "encrypted": msg.encrypted,
+                       "pid": msg.messageID
+                   ]
+                   clientEventSink?(data)
+
+                   onMessage(client)
+           }
+    receiveMessageQueue.addOperation(blockOperation)
 }
 
 func isConnected(_ call: FlutterMethodCall, result: FlutterResult) {
@@ -57,6 +62,9 @@ func isConnected(_ call: FlutterMethodCall, result: FlutterResult) {
 }
 
 func disConnect(_ call: FlutterMethodCall, result: FlutterResult){
+    
+    receiveMessageQueue.cancelAllOperations();
+    
     if(client == nil){
          result(1)
     }else{
@@ -72,14 +80,22 @@ func disConnect(_ call: FlutterMethodCall, result: FlutterResult){
 }
 
 func createClient(_ call: FlutterMethodCall, result: FlutterResult) {
+    
     if(client != nil) {
-        return
+        do {
+             receiveMessageQueue.cancelAllOperations();
+            try client?.close()
+            client = nil;
+        } catch {
+             client = nil;
+            
+        }
     }
     let args = call.arguments as! [String: Any]
     let identifier = args["identifier"] as? String
     let keystore = args["keystore"] as? String
     let password = args["password"] as? String
-    
+
     let config = NknWalletConfig.init()
     config.password = password ?? ""
     var error: NSError?
@@ -89,7 +105,7 @@ func createClient(_ call: FlutterMethodCall, result: FlutterResult) {
         return
     }
     result(nil)
-    
+
     if(onconnectWorkItem?.isCancelled == false) {
         onconnectWorkItem?.cancel()
     }
@@ -99,7 +115,7 @@ func createClient(_ call: FlutterMethodCall, result: FlutterResult) {
             clientEventSink?(FlutterError.init(code: String(error?.code ?? 0), message: error?.localizedDescription, details: nil))
             return
         }
-        
+
         let clientConfig = NknClientConfig()
 //        clientConfig.seedRPCServerAddr = NknStringArray.init(from: "https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
         client = NknNewMultiClient(account, identifier, 3, true, clientConfig, &error)
@@ -107,7 +123,7 @@ func createClient(_ call: FlutterMethodCall, result: FlutterResult) {
             clientEventSink?(FlutterError.init(code: String(error?.code ?? 0), message: error?.localizedDescription, details: nil))
             return
         }
-        onConnect()
+        onConnect(client)
     }
     clientOnconnectQueue.async(execute: onconnectWorkItem!)
 }

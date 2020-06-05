@@ -2,16 +2,12 @@ package org.nkn.nmobile
 
 import android.os.HandlerThread
 import android.os.Process
-import android.util.Log
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import nkn.*
-import org.json.JSONObject
-import org.nkn.mobile.app.util.Bytes2String.toHex
 import org.nkn.nmobile.NknClientEventPlugin.Companion.clientEventSink
 import org.nkn.nmobile.application.App
 import java.util.ArrayList
-import java.util.concurrent.Executors
 
 class NknClientPlugin : MethodChannel.MethodCallHandler {
 
@@ -216,7 +212,7 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
             }
         } catch (e: Exception) {
             App.handler().post {
-                clientEventSink?.error(_id, "", "")
+                clientEventSink?.error(_id, "subscribe failure", "")
             }
         }
     }
@@ -244,7 +240,7 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
                 }
             } catch (e: Exception) {
                 App.handler().post {
-                    clientEventSink?.error(_id, "", "")
+                    clientEventSink?.error(_id, "publish failure", "")
                 }
             }
         }
@@ -288,7 +284,7 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
                 }
             } catch (e: Exception) {
                 App.handler().post {
-                    clientEventSink!!.error(_id, "", "")
+                    clientEventSink!!.error(_id, "send failure", "")
                 }
             }
         }
@@ -303,23 +299,25 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
         }
     }
 
-    private fun disConnect(call: MethodCall, result: MethodChannel.Result) {
+    private fun disConnect(call: MethodCall?, result: MethodChannel.Result?) {
+        try {
+            msgReceiveHandler.removeCallbacks(receiveMessagesRun);
+        } catch (e: Exception) {
+        }
         if (client != null) {
             try {
-                msgReceiveHandler.removeCallbacks(receiveMessagesRun);
-            } catch (e: Exception) {
-            }
-
-            try {
-                client?.close();
+                client!!.close();
                 client = null;
+                if(result !=null)
                 result.success(1)
 
             } catch (e: Exception) {
                 client = null;
+                if(result !=null)
                 result.success(0)
             }
         } else {
+            if(result !=null)
             result.success(1)
         }
     }
@@ -333,12 +331,15 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
         config.password = password
 
         val wallet = Nkn.walletFromJSON(keystore, config)
-
+        connectActionHandler.removeCallbacksAndMessages(null);
         result.success(null)
         if (client != null) {
-            return
+            try {
+                msgReceiveHandler.removeCallbacks(receiveMessagesRun);
+            } catch (e: Exception) {
+            }
+            client = null;
         }
-        connectActionHandler.removeCallbacksAndMessages(null);
         connectActionHandler.post {
             try {
                 val account = Nkn.newAccount(wallet.seed())
@@ -360,6 +361,8 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
 
 
     private fun onConnect() {
+//        disConnect(null,null);
+        msgReceiveHandler.removeCallbacks(receiveMessagesRun);
         val node = client?.onConnect?.next()
         var data = hashMapOf(
                 "event" to "onConnect",
@@ -399,11 +402,13 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
                         }
                         onMessage()
                     } else {
-                        msgReceiveHandler.postDelayed({ onMessage() }, 5000)
+                        disConnect(null,null);
+//                        msgReceiveHandler.postDelayed({ onMessage() }, 5000)
                     }
                 }
             } catch (e: Exception) {
-                msgReceiveHandler.postDelayed({ onMessage() }, 5000)
+                disConnect(null,null);
+//                msgReceiveHandler.postDelayed({ onMessage() }, 5000)
             }
         }
     }
