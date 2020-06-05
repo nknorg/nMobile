@@ -154,7 +154,6 @@ class _TextboxState extends State<Textbox> {
               hintStyle: TextStyle(fontSize: 14),
               errorMaxLines: 3,
               helperText: widget.helperText,
-              prefixIcon: widget.prefixIcon,
               suffixIcon: widget.suffixIcon,
               disabledBorder: borderStyle,
               enabledBorder: borderStyle),

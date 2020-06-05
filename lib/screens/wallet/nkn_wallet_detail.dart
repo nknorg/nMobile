@@ -381,67 +381,54 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
   var controller = new ScrollController();
 
   showAgreeContent() {
-    ModalDialog.of(context).show(
-      height: 610.h,
-      hasCloseButton: false,
-      title: Label(
-        'nCDN节点共享计划用户协议',
-        type: LabelType.h2,
-        softWrap: true,
-      ),
-      content: Container(
-        width: double.infinity,
-        height: 350.h,
-        child: Scrollbar(
-          child: ListView(
-            controller: controller,
-            children: <Widget>[
-              Label(
-                agreement,
-                type: LabelType.bodyRegular,
+    showDialog<void>(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context) {
+          return Container(
+            child: AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.w)),
+              title: Label(
+                'nCDN节点共享计划用户协议',
+                type: LabelType.h2,
                 softWrap: true,
-              )
-            ],
-          ),
-        ),
-      ),
-      actions: <Widget>[
-        Button(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Label(
-                '同意',
-                type: LabelType.h3,
-              )
-            ],
-          ),
-          width: double.infinity,
-          onPressed: () async {
-            Navigator.pop(context);
-            SpUtil.putBool(LocalStorage.MININR_AGREE_STATUS, true);
-            showPasswordAction();
-          },
-        ),
-        Button(
-          backgroundColor: Colors.transparent,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Label(
-                '不同意',
-                type: LabelType.h3,
-                color: DefaultTheme.fontColor2,
-              )
-            ],
-          ),
-          width: double.infinity,
-          onPressed: () async {
-            Navigator.pop(context);
-          },
-        ),
-      ],
-    );
+              ),
+              content: Container(
+                constraints: BoxConstraints(minHeight: 100.h, maxHeight: 400.h, minWidth: double.infinity / 4 * 5),
+                child: SingleChildScrollView(
+                  child: Label(
+                    agreement,
+                    type: LabelType.bodyRegular,
+                    softWrap: true,
+                  ),
+                ),
+              ),
+              actions: <Widget>[
+                FlatButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      Navigator.pop(context);
+                      SpUtil.putBool(LocalStorage.MININR_AGREE_STATUS, true);
+                      showPasswordAction();
+                    },
+                    child: Label(
+                      '同意',
+                      type: LabelType.h3,
+                    )),
+                FlatButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Label(
+                      '不同意',
+                      type: LabelType.h3,
+                      color: DefaultTheme.fontColor2,
+                    )),
+              ],
+            ),
+          );
+        });
   }
 
   showPasswordAction() async {
@@ -471,6 +458,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
 
   TextEditingController _walletNameController = TextEditingController();
   GlobalKey _nameFormKey = new GlobalKey<FormState>();
+
   showChangeNameDialog() {
     BottomDialog.of(context).showBottomDialog(
       title: NMobileLocalizations.of(context).wallet_name,

@@ -95,7 +95,7 @@ class Api {
             validateStatus: (_) => true,
           ),
         );
-
+        LogUtil.v(res);
         if (res.statusCode >= 200 && res.statusCode < 300 && res.data != null) {
           var msg;
           if (res.data is String) {
