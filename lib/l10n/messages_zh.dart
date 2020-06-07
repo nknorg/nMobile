@@ -32,6 +32,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "add_new_contact" : MessageLookupByLibrary.simpleMessage("添加联系人"),
     "address_book" : MessageLookupByLibrary.simpleMessage("查看地址簿"),
     "advanced" : MessageLookupByLibrary.simpleMessage("高级"),
+    "already_the_latest_version" : MessageLookupByLibrary.simpleMessage("已是最新版本"),
     "amount" : MessageLookupByLibrary.simpleMessage("数量"),
     "app_version" : MessageLookupByLibrary.simpleMessage("版本号"),
     "auto" : MessageLookupByLibrary.simpleMessage("跟随系统"),

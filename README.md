@@ -1,6 +1,6 @@
-# nmobile
+# nMobile Pro
 
-nMobile
+nMobile Pro
 
 ## Getting Started
 

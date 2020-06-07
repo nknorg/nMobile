@@ -11,6 +11,7 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/screens/settings/app_upgrade.dart';
 import 'package:nmobile/utils/extensions.dart';
+import 'package:oktoast/oktoast.dart';
 
 class AppVersion extends StatelessWidget {
   static const String routeName = '/settings/app_version';
@@ -41,17 +42,20 @@ class AppVersion extends StatelessWidget {
                       height: 48,
                       child: FlatButton(
                           onPressed: () {
-                            UpgradeChecker.checkUpgrade(context, (showNotes, versionCode, title, notes, force, jsonMap) {
+                            showToast(NMobileLocalizations.of(context).check_upgrade, duration: Duration(seconds: 3));
+                            UpgradeChecker.checkUpgrade(context, false, (showNotes, version, title, notes, force, jsonMap) {
                               if (showNotes) {
-                                ApkUpgradeNotesDialog.of(context).show(versionCode, title, notes, force, jsonMap, (jsonMap) {
+                                ApkUpgradeNotesDialog.of(context).show(version, title, notes, force, jsonMap, (jsonMap) {
                                   UpgradeChecker.downloadApkFile(jsonMap, (progress) {
                                     // TODO:
                                     print('downloadApkFile progress: $progress%');
                                   });
-                                }, (versionCode) {
-                                  UpgradeChecker.setVersionIgnoredOrInstalled(versionCode);
+                                }, (version) {
+                                  UpgradeChecker.setVersionIgnored(version);
                                 });
                               }
+                            }, onAlreadyTheLatestVersion: () {
+                              showToast(NMobileLocalizations.of(context).already_the_latest_version);
                             });
                           },
                           child: Row(

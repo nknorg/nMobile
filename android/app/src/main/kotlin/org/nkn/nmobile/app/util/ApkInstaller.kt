@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.core.content.FileProvider
 import java.io.File
 
@@ -27,6 +28,7 @@ class ApkInstaller {
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 val uri = FileProvider.getUriForFile(context, "${context.packageName}.FileProvider", apk)
                 intent.setDataAndType(uri, "application/vnd.android.package-archive")
+                Log.d("ApkInstaller", uri.toString())
             } else {
                 intent.setDataAndType(Uri.fromFile(apk), "application/vnd.android.package-archive")
             }

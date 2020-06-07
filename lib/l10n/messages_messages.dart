@@ -34,6 +34,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "add_new_contact" : MessageLookupByLibrary.simpleMessage("Add New Contact"),
     "address_book" : MessageLookupByLibrary.simpleMessage("Address Book"),
     "advanced" : MessageLookupByLibrary.simpleMessage("Advanced"),
+    "already_the_latest_version" : MessageLookupByLibrary.simpleMessage("Already the latest version"),
     "amount" : MessageLookupByLibrary.simpleMessage("Amount"),
     "app_version" : MessageLookupByLibrary.simpleMessage("App Version"),
     "auto" : MessageLookupByLibrary.simpleMessage("Auto"),

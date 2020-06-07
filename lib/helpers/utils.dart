@@ -6,12 +6,12 @@ import 'package:common_utils/common_utils.dart';
 import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flustars/flustars.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/tweetnacl/tweetnaclfast.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const ADDRESS_GEN_PREFIX = '02b825';
@@ -157,13 +157,13 @@ String createContactFilePath(File file) {
   return path;
 }
 
-String createApkCachePath(String apkUrl) {
-  final String tmp = getTmpPath();
-  final Directory dir = Directory(join(tmp, 'apk'));
+Future<String> createApkCachePath(String apkUrl) async {
+  Directory rootDir = (await getTemporaryDirectory());
+  final Directory dir = Directory(join(rootDir.path, 'apks'));
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
-  return join(tmp, 'apk', getFileName(apkUrl));
+  return join(dir.path, getFileName(apkUrl));
 }
 
 String getCachePath() {

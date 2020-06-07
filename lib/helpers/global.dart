@@ -36,6 +36,8 @@ class Global {
 
   static bool isLocaleZh() => locale != null && locale.startsWith('zh');
 
+  static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
+
   static Future init(VoidCallback callback) async {
     WidgetsFlutterBinding.ensureInitialized();
     await SpUtil.getInstance();

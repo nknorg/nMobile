@@ -13,7 +13,7 @@ import org.nkn.mobile.app.util.Bytes2String.decodeHex
 import org.nkn.mobile.app.util.Bytes2String.toHex
 import org.nkn.nmobile.NknWalletEventPlugin.Companion.walletEventSink
 import org.nkn.nmobile.app.util.WalletUtils
-import org.nkn.nmobile.app.util.ApkInstaller
+import org.nkn.mobile.app.util.ApkInstaller
 import org.nkn.nmobile.application.App
 
 class InstallApkMethodPlugin : MethodChannel.MethodCallHandler {
@@ -29,7 +29,8 @@ class InstallApkMethodPlugin : MethodChannel.MethodCallHandler {
     }
 
     private fun installApk(call: MethodCall, result: MethodChannel.Result) {
-        val path = call.argument<String>("apk_file_path");
+        val path = call.argument<String>("apk_file_path")!!
+        Log.d("InstallApkMethodPlugin", "installApk | path: $path")
         ApkInstaller.installApk(App.get(), path)
         result.success(path)
     }
