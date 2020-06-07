@@ -25,6 +25,10 @@ class LocalStorage {
 
   static const String UN_SUBSCRIBE_LIST = 'UN_SUBSCRIBE_LIST';
 
+  static const String APP_UPGRADED_PREV_TIME_MILLIS = 'APP_UPGRADED_PREV_TIME_MILLIS';
+  static const String APP_UPGRADED_GATED_LAUNCH_WITH_VERSION = 'APP_UPGRADED_GATED_LAUNCH_WITH_VERSION';
+  static const String APP_UPGRADED_VERSION_IGNORED_OR_INSTALLED = 'APP_UPGRADED_VERSION_IGNORED_OR_INSTALLED';
+
   set(String key, val) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (val == null) {

@@ -960,5 +960,25 @@
   "@select_asset_to_backup": {
     "type": "text",
     "placeholders": {}
+  },
+  "check_upgrade": "检查更新",
+  "@check_upgrade": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "release_notes": "该版更新功能：",
+  "@release_notes": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "download_now": "立即下载",
+  "@download_now": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "ignore": "放弃该版更新",
+  "@ignore": {
+    "type": "text",
+    "placeholders": {}
   }
 }
