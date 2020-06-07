@@ -32,7 +32,6 @@ class MainActivity: FlutterActivity() {
 
         EventChannel(flutterEngine.dartExecutor, "org.nkn.sdk/client/event").setStreamHandler(NknClientEventPlugin())
 
-
         MethodChannel(flutterEngine.dartExecutor, N_MOBILE_NATIVE).setMethodCallHandler { methodCall, result ->
             if (methodCall.method == "backDesktop") {
                 result.success(true)
@@ -40,9 +39,9 @@ class MainActivity: FlutterActivity() {
             }else{
                 result.success(true)
             }
-
         }
 
+        MethodChannel(flutterEngine.dartExecutor, "org.nkn.native.call/apk_installer").setMethodCallHandler(InstallApkMethodPlugin())
     }
 
     override fun onResume() {

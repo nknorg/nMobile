@@ -980,5 +980,10 @@
   "@ignore": {
     "type": "text",
     "placeholders": {}
+  },
+  "already_the_latest_version": "已是最新版本",
+  "@already_the_latest_version": {
+    "type": "text",
+    "placeholders": {}
   }
 }
