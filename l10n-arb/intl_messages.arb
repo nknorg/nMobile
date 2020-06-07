@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-06-05T18:28:55.103017",
+  "@@last_modified": "2020-06-07T14:52:05.212997",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1472,6 +1472,11 @@
   },
   "create_account": "Create Account",
   "@create_account": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "import_wallet_as_account": "Import Wallet as Account",
+  "@import_wallet_as_account": {
     "type": "text",
     "placeholders": {}
   }

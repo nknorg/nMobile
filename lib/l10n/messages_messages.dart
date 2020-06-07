@@ -144,6 +144,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "import_seed_nkn_wallet_desc" : MessageLookupByLibrary.simpleMessage("From your existing wallet, find out how to export Seed (also called \"Secret Seed\"), make a backup copy, and then use it to import your existing wallet into nMobile."),
     "import_seed_nkn_wallet_title" : MessageLookupByLibrary.simpleMessage("Import with Seed"),
     "import_wallet" : MessageLookupByLibrary.simpleMessage("Import Wallet"),
+    "import_wallet_as_account" : MessageLookupByLibrary.simpleMessage("Import Wallet as Account"),
     "input_d_chat_address" : MessageLookupByLibrary.simpleMessage("Please input D-Chat Address"),
     "input_keystore" : MessageLookupByLibrary.simpleMessage("Please paste keystore"),
     "input_name" : MessageLookupByLibrary.simpleMessage("Please input Name"),
