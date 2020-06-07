@@ -70,7 +70,7 @@ android {
         }
         debug {
             applicationIdSuffix ".flutter"
-            versionNameSuffix "-flutter"
+            versionNameSuffix ""
         }
     }
 
