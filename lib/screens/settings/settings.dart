@@ -26,6 +26,7 @@ import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/select.dart';
+import 'package:nmobile/screens/settings/app_version.dart';
 import 'package:nmobile/screens/wallet/wallet.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
@@ -426,7 +427,9 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                             )
                           ],
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.of(context).pushNamed(AppVersion.routeName);
+                        },
                       ),
                     ),
                     SizedBox(

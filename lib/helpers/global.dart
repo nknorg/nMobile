@@ -32,6 +32,10 @@ class Global {
   static Map<String, DateTime> _loadProfileCache = {};
   static String currentChatId;
 
+  static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
+
+  static bool isLocaleZh() => locale != null && locale.startsWith('zh');
+
   static Future init(VoidCallback callback) async {
     WidgetsFlutterBinding.ensureInitialized();
     await SpUtil.getInstance();

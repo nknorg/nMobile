@@ -995,6 +995,10 @@ class NMobileLocalizations {
 
   String get go_backup => Intl.message('Go Backup', name: 'go_backup');
   String get select_asset_to_backup => Intl.message('Select Asset to Backup', name: 'select_asset_to_backup');
+  String get check_upgrade => Intl.message('Check Upgrade', name: 'check_upgrade');
+  String get release_notes => Intl.message('Release Notes:', name: 'release_notes');
+  String get download_now => Intl.message('Download Now', name: 'download_now');
+  String get ignore => Intl.message('Ignore', name: 'ignore');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {

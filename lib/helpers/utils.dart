@@ -6,6 +6,7 @@ import 'package:common_utils/common_utils.dart';
 import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flustars/flustars.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
@@ -154,6 +155,15 @@ String createContactFilePath(File file) {
   }
   String path = join(rootDir.path, dir.path, name + '.' + fileExt);
   return path;
+}
+
+String createApkCachePath(String apkUrl) {
+  final String tmp = getTmpPath();
+  final Directory dir = Directory(join(tmp, 'apk'));
+  if (!dir.existsSync()) {
+    dir.createSync(recursive: true);
+  }
+  return join(tmp, 'apk', getFileName(apkUrl));
 }
 
 String getCachePath() {

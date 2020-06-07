@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!--<external-path
+        name="p1"
+        path="/data/dir1/" />
+    <external-path
+        name="p2"
+        path="/" />-->
+<!-- /data/user/0/org.nkn.nmobilePro.flutter/app_flutter/tmp/apk/xxx.apk -->
+    <external-files-path
+        name="p3"
+        path="/app_flutter/tmp/apk" />
+    <external-cache-path
+        name="p4"
+        path="/app_flutter/tmp/apk" />
+    <cache-path
+        name="p5"
+        path="/app_flutter/tmp/apk" />
+    <files-path
+        name="p6"
+        path="/app_flutter/tmp/apk" />
+</paths>
