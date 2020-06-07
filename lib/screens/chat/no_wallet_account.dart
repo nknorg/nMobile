@@ -1,16 +1,16 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get_it/get_it.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/components/box/body.dart';
-import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
+import 'package:nmobile/components/selector_text.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
@@ -19,8 +19,9 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/chat/home.dart';
-import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';
 import 'package:nmobile/utils/extensions.dart';
+import 'package:nmobile/utils/image_utils.dart';
 
 class NoWalletAccount extends StatefulWidget {
   static const String routeName = '/chat/no_wallet_account';
@@ -113,10 +114,26 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                Label(
-                                  NMobileLocalizations.of(context).nickname,
-                                  type: LabelType.h3,
-                                  textAlign: TextAlign.start,
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Label(
+                                      NMobileLocalizations.of(context).nickname,
+                                      type: LabelType.h3,
+                                      textAlign: TextAlign.start,
+                                    ),
+                                    TextSelector(
+                                      NMobileLocalizations.of(context).import_wallet_as_account,
+                                      DefaultTheme.h5FontSize,
+                                      Colours.blue_0f,
+                                      Colours.gray_81,
+                                      fontStyle: FontStyle.italic,
+                                      decoration: TextDecoration.underline,
+                                      onTap: () {
+                                        Navigator.pushNamed(context, ImportNknWalletScreen.routeName);
+                                      },
+                                    ),
+                                  ],
                                 ),
                                 Textbox(
                                   hintText: NMobileLocalizations.of(context).input_nickname,

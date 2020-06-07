@@ -992,6 +992,7 @@ class NMobileLocalizations {
   String get go_backup => Intl.message('Go Backup', name: 'go_backup');
   String get select_asset_to_backup => Intl.message('Select Asset to Backup', name: 'select_asset_to_backup');
   String get create_account => Intl.message('Create Account', name: 'create_account');
+  String get import_wallet_as_account => Intl.message('Import Wallet as Account', name: 'import_wallet_as_account');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {

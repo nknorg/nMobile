@@ -140,6 +140,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "import_seed_nkn_wallet_desc" : MessageLookupByLibrary.simpleMessage("从已有的钱包中，找出如何导出Seed（也称为“秘密种子”），对其进行备份，然后使用它导入nMobile。"),
     "import_seed_nkn_wallet_title" : MessageLookupByLibrary.simpleMessage("使用Seed导入"),
     "import_wallet" : MessageLookupByLibrary.simpleMessage("导入钱包"),
+    "import_wallet_as_account" : MessageLookupByLibrary.simpleMessage("导入钱包作为账户"),
     "input_d_chat_address" : MessageLookupByLibrary.simpleMessage("请输入滴聊地址"),
     "input_keystore" : MessageLookupByLibrary.simpleMessage("请粘贴 keystore"),
     "input_name" : MessageLookupByLibrary.simpleMessage("请输入名字"),
