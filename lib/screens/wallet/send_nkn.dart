@@ -77,11 +77,20 @@ class _SendNknScreenState extends State<SendNknScreen> {
       var password = await wallet.getPassword();
       if (password != null) {
         try {
+          wallet.exportWallet(password).then((v) {
+            NknWalletPlugin.transfer(v['keystore'], password, _sendTo, _amount, _fee.toString()).then((hash) {
+              if (hash != null) {
+                showToast(NMobileLocalizations.of(context).success);
+              } else {
+                showToast(NMobileLocalizations.of(context).failure);
+              }
+            });
+          });
           Navigator.pop(context, true);
-          var w = await wallet.exportWallet(password);
-          var keystore = w['keystore'];
-          var hash = await NknWalletPlugin.transfer(keystore, password, _sendTo, _amount, _fee.toString());
-          showToast(NMobileLocalizations.of(context).success);
+//          var w = await wallet.exportWallet(password);
+//          var keystore = w['keystore'];
+//          var hash = await NknWalletPlugin.transfer(keystore, password, _sendTo, _amount, _fee.toString());
+//          showToast(NMobileLocalizations.of(context).success);
         } catch (e) {
           EasyLoading.dismiss();
           if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
