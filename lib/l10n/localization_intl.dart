@@ -678,7 +678,7 @@ class NMobileLocalizations {
   }
 
   String get invites_desc_to {
-    return Intl.message('invites You to join group', name: 'invites_desc_to', desc: '');
+    return Intl.message('Invites You to join group', name: 'invites_desc_to', desc: '');
   }
 
   String get accept {
