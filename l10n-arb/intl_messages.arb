@@ -990,7 +990,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "invites_desc_to": "invites You to join group",
+  "invites_desc_to": "Invites You to join group",
   "@invites_desc_to": {
     "description": "",
     "type": "text",

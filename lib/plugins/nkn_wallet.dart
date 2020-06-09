@@ -116,6 +116,7 @@ class NknWalletPlugin {
       return hash;
     } catch (e) {
       throw e;
+      return null;
     }
   }
 
@@ -129,5 +130,4 @@ class NknWalletPlugin {
       return null;
     }
   }
-
 }

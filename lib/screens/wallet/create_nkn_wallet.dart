@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nmobile/app.dart';
@@ -47,12 +46,10 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
   next() async {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
-      EasyLoading.show();
       String keystore = await NknWalletPlugin.createWallet(null, _password);
       var json = jsonDecode(keystore);
       String address = json['Address'];
       _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
-      EasyLoading.dismiss();
       Navigator.of(context).pushReplacementNamed(AppScreen.routeName);
     }
   }

@@ -116,6 +116,7 @@ class NknClientPlugin {
 
   static Future<Uint8List> sendText(List<String> dests, String data) async {
     LogUtil.v('sendText  $data ', tag: TAG);
+    LogUtil.v('sendText  $dests ', tag: TAG);
     Completer<Uint8List> completer = Completer<Uint8List>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
@@ -163,19 +164,20 @@ class NknClientPlugin {
     String fee = '0',
     String meta = '',
   }) async {
-    LogUtil.v('subscribe', tag: TAG);
     Completer<String> completer = Completer<String>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
     try {
-      _methodChannel.invokeMethod('subscribe', {
+      var data = {
         '_id': id,
         'identifier': identifier,
         'topic': topic,
         'duration': duration,
         'fee': fee,
         'meta': meta,
-      });
+      };
+      LogUtil.v('subscribe  $data', tag: TAG);
+      _methodChannel.invokeMethod('subscribe', data);
     } catch (e) {
       LogUtil.v('subscribe fault');
     }
