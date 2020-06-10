@@ -52,6 +52,8 @@ class AppVersion extends StatelessWidget {
                                   });
                                 }, (version) {
                                   UpgradeChecker.setVersionIgnored(version);
+                                }, () {
+                                  UpgradeChecker.setDialogDismissed();
                                 });
                               }
                             }, onAlreadyTheLatestVersion: () {

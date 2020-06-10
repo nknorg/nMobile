@@ -10,9 +10,7 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
-import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/apk_installer.dart';
-import 'package:oktoast/oktoast.dart';
 
 class UpgradeChecker {
   static final _localStore = LocalStorage();
@@ -24,6 +22,10 @@ class UpgradeChecker {
   static String get _currentVer => Global.versionFull; // 1.0.1-pro + (Build 101);
 
   static bool _dialogShowing = false;
+
+  static void setDialogDismissed() {
+    _dialogShowing = false;
+  }
 
   static Future<int> _getPrevTimeMillis() async {
     return await _localStore.get(LocalStorage.APP_UPGRADED_PREV_TIME_MILLIS);
@@ -40,7 +42,7 @@ class UpgradeChecker {
   }
 
   static void setVersionIgnored(String version) async {
-    _dialogShowing = false;
+    setDialogDismissed();
     print('setVersionIgnoredOrInstalled version: $version');
     await _localStore.set(LocalStorage.APP_UPGRADED_VERSION_IGNORED, version);
   }
@@ -98,6 +100,8 @@ class UpgradeChecker {
             });
           }, (version) {
             setVersionIgnored(version);
+          }, () {
+            setDialogDismissed();
           });
         }
       });
@@ -153,7 +157,7 @@ class UpgradeChecker {
   }
 
   static void downloadApkFile(Map jsonMap, onProgress(String progress)) async {
-    _dialogShowing = false;
+    setDialogDismissed();
     final String apkUrl = jsonMap['apkUrl'];
     final String sha1Hash = jsonMap['sha-1'];
     final String version = jsonMap['version'];

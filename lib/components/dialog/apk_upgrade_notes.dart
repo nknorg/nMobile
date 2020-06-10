@@ -22,10 +22,11 @@ class ApkUpgradeNotesDialog extends StatefulWidget {
   Map _jsonMap;
   OnDownload _onDownload;
   OnIgnore _onIgnore;
+  VoidCallback _onClose;
 
   ApkUpgradeNotesDialog.of(this._context);
 
-  show(String version, String title, String notes, bool force, Map jsonMap, OnDownload onDownload, OnIgnore onIgnore) {
+  show(String version, String title, String notes, bool force, Map jsonMap, OnDownload onDownload, OnIgnore onIgnore, VoidCallback onClose) {
     this._title = title;
     this._version = version;
     this._notes = notes;
@@ -33,6 +34,7 @@ class ApkUpgradeNotesDialog extends StatefulWidget {
     this._jsonMap = jsonMap;
     this._onDownload = onDownload;
     this._onIgnore = onIgnore;
+    this._onClose = onClose;
     return showDialog(
       context: _context,
       barrierDismissible: false,
@@ -81,7 +83,10 @@ class _ApkUpgradeNotesDialogState extends State<ApkUpgradeNotesDialog> {
                         padding: 0.pad().pad(t: 6, r: 6),
                         size: 48,
                         child: loadAssetIconsImage('close', width: 16),
-                        onPressed: () => widget.close()).sized(h: 48).toList)),
+                        onPressed: () {
+                          widget.close();
+                          widget._onClose();
+                        }).sized(h: 48).toList)),
             Expanded(
               flex: 1,
               child: Column(
