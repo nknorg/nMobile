@@ -45,10 +45,10 @@ class AppVersion extends StatelessWidget {
                             showToast(NMobileLocalizations.of(context).check_upgrade, duration: Duration(seconds: 3));
                             UpgradeChecker.checkUpgrade(context, false, (showNotes, version, title, notes, force, jsonMap) {
                               if (showNotes) {
-                                ApkUpgradeNotesDialog.of(context).show(version, title, notes, force, jsonMap, (jsonMap) {
+                                var bloc;
+                                bloc = ApkUpgradeNotesDialog.of(context).show(version, title, notes, force, jsonMap, (jsonMap) {
                                   UpgradeChecker.downloadApkFile(jsonMap, (progress) {
-                                    // TODO:
-                                    print('downloadApkFile progress: $progress%');
+                                    bloc.add(progress);
                                   });
                                 }, (version) {
                                   UpgradeChecker.setVersionIgnored(version);

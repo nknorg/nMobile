@@ -93,10 +93,10 @@ class UpgradeChecker {
     if (prev == null || _isNowAfterOneDay(prev)) {
       checkUpgrade(context, true, (showNotes, version, title, notes, force, jsonMap) {
         if (showNotes) {
-          ApkUpgradeNotesDialog.of(context).show(version, title, notes, force, jsonMap, (jsonMap) {
+          var bloc;
+          bloc = ApkUpgradeNotesDialog.of(context).show(version, title, notes, force, jsonMap, (jsonMap) {
             downloadApkFile(jsonMap, (progress) {
-              // TODO:
-              print('downloadApkFile progress: $progress%');
+              bloc.add(progress);
             });
           }, (version) {
             setVersionIgnored(version);
@@ -156,7 +156,7 @@ class UpgradeChecker {
     });
   }
 
-  static void downloadApkFile(Map jsonMap, onProgress(String progress)) async {
+  static void downloadApkFile(Map jsonMap, onProgress(double progress)) async {
     setDialogDismissed();
     final String apkUrl = jsonMap['apkUrl'];
     final String sha1Hash = jsonMap['sha-1'];
@@ -172,9 +172,8 @@ class UpgradeChecker {
     final tmpFile = File(apkCachePath + '.tmp');
     LogUtil.v('tmpFile: ${tmpFile.path}', tag: 'upgrade.profile');
     _dio.download(apkUrl, tmpFile.path, queryParameters: {'version': version}, onReceiveProgress: (received, total) {
-      if (total != -1) {
-        String progress = (received / total * 100).toStringAsFixed(0);
-        onProgress(progress);
+      if (total > 0) {
+        onProgress(received / total);
       }
     }).then((resp) async {
       var apkFile = tmpFile.renameSync(apkCachePath);
