@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
@@ -26,7 +24,7 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
     super.build(context);
     return BlocBuilder<WalletsBloc, WalletsState>(
       builder: (context, state) {
-        if(!_autoChecking) {
+        if (!_autoChecking) {
           _autoChecking = true;
           Timer(Duration(seconds: 10), () {
             _autoChecking = false;
@@ -38,6 +36,8 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
             return BlocBuilder<ClientBloc, ClientState>(
               builder: (context, clientState) {
                 if (clientState is NoConnect) {
+                  LogUtil.v('====****===');
+                  LogUtil.v(clientState);
                   return NoConnectScreen();
                 } else {
                   return ChatHome();

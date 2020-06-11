@@ -27,6 +27,7 @@ import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
+import 'package:nmobile/plugins/nshell_client.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/ncdn/home.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
@@ -436,7 +437,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     if (password != null) {
       try {
         var wallet = await widget.arguments.exportWallet(password);
-
+        NShellClientPlugin.createClient(wallet['keystore'], password);
         Navigator.of(context).pushNamed(NcdnHomeScreen.routeName, arguments: {
           'wallet': widget.arguments,
           'publicKey': wallet['publicKey'],

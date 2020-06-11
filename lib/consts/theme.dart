@@ -10,6 +10,7 @@ class DefaultTheme {
   static const Color backgroundColor3 = Color(0xFFE5E5E5);
   static const Color backgroundColor4 = Color(0xFF0B163C);
   static const Color backgroundColor5 = Color(0xFF2D2D2D);
+  static const Color backgroundColor6 = Color(0xFFF3F4F6);
 
   static const Color notificationBackgroundColor = Color(0xFF00CC96);
 

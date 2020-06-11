@@ -7,6 +7,7 @@ import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
+import 'package:nmobile/plugins/nshell_client.dart';
 import 'package:nmobile/schemas/client.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
@@ -55,6 +56,7 @@ class Global {
   static Future initData() async {
     NknWalletPlugin.init();
     NknClientPlugin.init();
+    NShellClientPlugin.init();
     LocalNotification.init();
     Global.applicationRootDirectory = await getApplicationDocumentsDirectory();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
