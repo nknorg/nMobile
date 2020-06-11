@@ -75,7 +75,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
 
       var password = await wallet.getPassword();
       if (password != null) {
-        Navigator.pop(context);
+        Navigator.pop(context, true);
         Future.delayed(Duration(milliseconds: 200), () {
           transferAction(password);
         });

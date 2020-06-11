@@ -243,6 +243,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "topic" : MessageLookupByLibrary.simpleMessage("群组"),
     "total_balance" : MessageLookupByLibrary.simpleMessage("余额"),
     "touch_id" : MessageLookupByLibrary.simpleMessage("Touch ID"),
+    "transfer_initiated" : MessageLookupByLibrary.simpleMessage("转账初始化"),
+    "transfer_initiated_desc" : MessageLookupByLibrary.simpleMessage("您的转帐正在进行中，可能需要花一些时间才能出现在区块链上。"),
     "unsubscribe" : MessageLookupByLibrary.simpleMessage("退出"),
     "update_burn_after_reading" : MessageLookupByLibrary.simpleMessage("修改"),
     "updated_at" : MessageLookupByLibrary.simpleMessage("Updated at"),
