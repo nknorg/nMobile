@@ -22,7 +22,7 @@ import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/ncdn/with_draw_page.dart';
 import 'package:oktoast/oktoast.dart';
 
-import 'node_detail.dart';
+import 'node_main_page.dart';
 
 class NcdnHomeScreen extends StatefulWidget {
   static const String routeName = '/ncdn/home';
@@ -160,7 +160,10 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
         action: Button(
           padding: EdgeInsets.zero,
           icon: true,
-          child: Label('提现'),
+          child: Label(
+            '提现',
+            color: Colors.white,
+          ),
           onPressed: () {
             showTip();
           },
@@ -349,9 +352,9 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             padding: const EdgeInsets.only(top: 8),
                             child: Button(
                               width: double.infinity,
-                              text: '查看节点明细',
+                              text: '查看节点',
                               onPressed: () {
-                                Navigator.of(context).pushNamed(NodeDetailScreen.routeName, arguments: {
+                                Navigator.of(context).pushNamed(NodeMainPage.routeName, arguments: {
                                   'wallet': _wallet,
                                   'publicKey': _publicKey,
                                   'seed': _seed,

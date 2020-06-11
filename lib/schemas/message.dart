@@ -28,6 +28,7 @@ class ContentType {
   static const String eventContactOptions = 'event:contactOptions';
   static const String dchatSubscribe = 'dchat/subscribe';
   static const String eventSubscribe = 'event:subscribe';
+  static const String eventNodeOnline = 'event:node_online';
   static const String ChannelInvitation = 'event:channelInvitation';
 }
 

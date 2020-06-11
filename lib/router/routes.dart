@@ -15,7 +15,9 @@ import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/home.dart';
 import 'package:nmobile/screens/ncdn/home.dart';
-import 'package:nmobile/screens/ncdn/node_detail.dart';
+import 'package:nmobile/screens/ncdn/node_detail_page.dart';
+import 'package:nmobile/screens/ncdn/node_list_page.dart';
+import 'package:nmobile/screens/ncdn/node_main_page.dart';
 import 'package:nmobile/screens/ncdn/with_draw_page.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/screens/select.dart';
@@ -54,12 +56,14 @@ Map<String, WidgetBuilder> routes = {
   ChangeUpdateContentPage.routeName: (BuildContext context, {arguments}) => ChangeUpdateContentPage(arguments: arguments),
   AddContact.routeName: (BuildContext context) => AddContact(),
   NcdnHomeScreen.routeName: (BuildContext context, {arguments}) => NcdnHomeScreen(arguments: arguments),
-  NodeDetailScreen.routeName: (BuildContext context, {arguments}) => NodeDetailScreen(arguments: arguments),
+  NodeMainPage.routeName: (BuildContext context, {arguments}) => NodeMainPage(arguments: arguments),
   WithDrawPage.routeName: (BuildContext context, {arguments}) => WithDrawPage(arguments: arguments),
   PopularGroupPage.routeName: (BuildContext context) => PopularGroupPage(),
   NcdnHomeScreen.routeName: (BuildContext context, {arguments}) => NcdnHomeScreen(arguments: arguments),
-  NodeDetailScreen.routeName: (BuildContext context, {arguments}) => NodeDetailScreen(arguments: arguments),
+  NodeMainPage.routeName: (BuildContext context, {arguments}) => NodeMainPage(arguments: arguments),
   WithDrawPage.routeName: (BuildContext context, {arguments}) => WithDrawPage(arguments: arguments),
+  NodeDetailPage.routeName: (BuildContext context, {arguments}) => NodeDetailPage(arguments: arguments),
+  NodeListPage.routeName: (BuildContext context, {arguments}) => NodeListPage(arguments: arguments),
   PopularGroupPage.routeName: (BuildContext context) => PopularGroupPage(),
   WalletScreen.routeName: (BuildContext context) => WalletScreen(),
   AppVersion.routeName: (BuildContext context) => AppVersion(),
