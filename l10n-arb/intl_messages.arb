@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-06-07T14:52:05.212997",
+  "@@last_modified": "2020-06-12T01:49:24.581877",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1477,6 +1477,16 @@
   },
   "import_wallet_as_account": "Import Wallet as Account",
   "@import_wallet_as_account": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transfer_initiated": "Transfer Initiated",
+  "@transfer_initiated": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transfer_initiated_desc": "Your transfer is in progress. It could take a few seconds to appear on the blockchain.",
+  "@transfer_initiated_desc": {
     "type": "text",
     "placeholders": {}
   }

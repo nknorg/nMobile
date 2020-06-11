@@ -970,5 +970,15 @@
   "@import_wallet_as_account": {
     "type": "text",
     "placeholders": {}
+  },
+  "transfer_initiated": "转账初始化",
+  "@transfer_initiated": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transfer_initiated_desc": "您的转帐正在进行中，可能需要花一些时间才能出现在区块链上。",
+  "@transfer_initiated_desc": {
+    "type": "text",
+    "placeholders": {}
   }
 }
