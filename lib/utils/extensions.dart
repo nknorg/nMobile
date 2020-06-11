@@ -27,14 +27,12 @@ extension PaddingEdgeInsets on EdgeInsets {
 
 extension PaddingWidget on Widget {
   Padding pad({double l: 0, double t: 0, double r: 0, double b: 0, replace: false}) =>
-      padd(EdgeInsets.only(left: l < 0 ? 0 : l, top: t < 0 ? 0 : t, right: r < 0 ? 0 : r, bottom: b < 0 ? 0 : b),
-          replace: replace);
+      padd(EdgeInsets.only(left: l < 0 ? 0 : l, top: t < 0 ? 0 : t, right: r < 0 ? 0 : r, bottom: b < 0 ? 0 : b), replace: replace);
 
   Padding symm({double h = 0, double v = 0}) => padd(EdgeInsets.symmetric(horizontal: h, vertical: v), replace: true);
 
-  Padding padd(EdgeInsets padding, {bool replace = false}) => replace
-      ? Padding(padding: padding, child: this is Padding ? (this as Padding).child : this)
-      : Padding(padding: padding, child: this);
+  Padding padd(EdgeInsets padding, {bool replace = false}) =>
+      replace ? Padding(padding: padding, child: this is Padding ? (this as Padding).child : this) : Padding(padding: padding, child: this);
 }
 
 extension AlignWidget on Widget {
@@ -42,12 +40,19 @@ extension AlignWidget on Widget {
 }
 
 extension OffstageWidget on Widget {
-  Widget offstage(bool off, {bool add = false}) =>
-      add ? Offstage(offstage: off, child: this) : off ? Offstage(offstage: true, child: this) : this;
+  Widget offstage(bool off, {bool add = false}) => add ? Offstage(offstage: off, child: this) : off ? Offstage(offstage: true, child: this) : this;
 }
 
 extension SingleWidgetToList on Widget {
   List<Widget> get toList => [this];
+}
+
+extension SizedBoxWidget on Widget {
+  SizedBox sized({double w, double h}) => SizedBox(width: w, height: h, child: this);
+}
+
+extension CenterWidget on Widget {
+  Center get center => Center(child: this);
 }
 
 class Space {

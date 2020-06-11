@@ -27,6 +27,7 @@ import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
+import 'package:nmobile/screens/wallet/transfer_status.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/image_utils.dart';
@@ -55,12 +56,18 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     _nameController.text = widget.arguments.name;
   }
 
-  _recieve() {
+  _receive() {
     Navigator.of(context).pushNamed(ReceiveNknScreen.routeName, arguments: widget.arguments);
   }
 
   _send() {
-    Navigator.of(context).pushNamed(SendNknScreen.routeName, arguments: widget.arguments);
+    Navigator.of(context).pushNamed(SendNknScreen.routeName, arguments: widget.arguments).then((v) {
+      if (v != null) {
+        TransferStatusPopup.show(context);
+        // see `SendNknScreen.transferAction()`
+        //locator<TaskService>().queryNknWalletBalanceTask();
+      }
+    });
   }
 
   @override
@@ -261,7 +268,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                                   padding: const EdgeInsets.only(left: 8),
                                   child: Button(
                                     text: NMobileLocalizations.of(context).recieve,
-                                    onPressed: _recieve,
+                                    onPressed: _receive,
                                   ),
                                 ),
                               ),
@@ -345,6 +352,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
 
   TextEditingController _walletNameController = TextEditingController();
   GlobalKey _nameFormKey = new GlobalKey<FormState>();
+
   showChangeNameDialog() {
     BottomDialog.of(context).showBottomDialog(
       title: NMobileLocalizations.of(context).wallet_name,

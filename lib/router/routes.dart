@@ -23,6 +23,7 @@ import 'package:nmobile/screens/wallet/nkn_wallet_detail.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
+import 'package:nmobile/screens/wallet/transfer_status.dart';
 import 'package:nmobile/screens/wallet/wallet.dart';
 import 'package:nmobile/splash.dart';
 
