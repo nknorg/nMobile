@@ -12,8 +12,6 @@ import nkn.WalletConfig
 
 class MainActivity: FlutterActivity() {
 
-    private val N_MOBILE_NATIVE = "android/nmbile/native/common"
-
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine);
@@ -32,6 +30,13 @@ class MainActivity: FlutterActivity() {
 
         EventChannel(flutterEngine.dartExecutor, "org.nkn.sdk/client/event").setStreamHandler(NknClientEventPlugin())
 
+
+        MethodChannel(flutterEngine.dartExecutor, "org.nkn.sdk/nshellclient").setMethodCallHandler(NShellClientPlugin())
+
+        EventChannel(flutterEngine.dartExecutor, "org.nkn.sdk/nshellclient/event").setStreamHandler(NShellClientEventPlugin())
+
+
+        val N_MOBILE_NATIVE = "android/nmbile/native/common"
         MethodChannel(flutterEngine.dartExecutor, N_MOBILE_NATIVE).setMethodCallHandler { methodCall, result ->
             if (methodCall.method == "backDesktop") {
                 result.success(true)
@@ -44,7 +49,4 @@ class MainActivity: FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor, "org.nkn.native.call/apk_installer").setMethodCallHandler(InstallApkMethodPlugin())
     }
 
-    override fun onResume() {
-        super.onResume()
-    }
 }
