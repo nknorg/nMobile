@@ -98,8 +98,8 @@ class _NodeMainPageState extends State<NodeMainPage> {
 
   search() {
     LoadingDialog.of(context).show();
-//    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/NKNFAPK9RHJJrR6h3UgBGwq85uAhccQdzyHY';
-    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/${_wallet.address}';
+    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/NKNFAPK9RHJJrR6h3UgBGwq85uAhccQdzyHY';
+//    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/${_wallet.address}';
     var params = {
       'start': _start.millisecondsSinceEpoch ~/ 1000,
       'end': _end.add(Duration(days: 1)).millisecondsSinceEpoch ~/ 1000,
@@ -122,21 +122,24 @@ class _NodeMainPageState extends State<NodeMainPage> {
   }
 
   resetFormatData() async {
-    for (String key in responseData.keys) {
-      List<dynamic> val = (responseData[key] as List<dynamic>);
-      _sumBalance += val[1];
-      var cdn = _list.firstWhere((x) => x.nshId == key, orElse: () => null);
-      if (cdn == null) {
-        cdn = CdnMiner(key, flow: val[0], cost: val[1], contribution: val[2]);
-        await cdn.insertOrUpdate();
-        _list.add(cdn);
-      } else {
-        int i = _list.indexOf(cdn);
-        _list[i].flow = val[0];
-        _list[i].cost = val[1];
-        _list[i].contribution = val[2];
+    if (responseData != null && responseData.keys != null) {
+      for (String key in responseData.keys) {
+        List<dynamic> val = (responseData[key] as List<dynamic>);
+        _sumBalance += val[1];
+        var cdn = _list.firstWhere((x) => x.nshId == key, orElse: () => null);
+        if (cdn == null) {
+          cdn = CdnMiner(key, flow: val[0], cost: val[1], contribution: val[2]);
+          await cdn.insertOrUpdate();
+          _list.add(cdn);
+        } else {
+          int i = _list.indexOf(cdn);
+          _list[i].flow = val[0];
+          _list[i].cost = val[1];
+          _list[i].contribution = val[2];
+        }
       }
     }
+
     if (mounted) {
       setState(() {});
     }

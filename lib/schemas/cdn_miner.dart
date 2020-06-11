@@ -98,11 +98,12 @@ class CdnMiner {
 //      c.contribution = num.parse(e['contribution']);
       try {
         if (e['data'] != null) {
+          LogUtil.v(e['data']);
           c.data = jsonDecode(e['data']);
 //          c.data = jsonDecode(e['data']);
         }
       } catch (e) {
-        LogUtil.v(e, tag: 'CdnMiner parseEntity');
+        LogUtil.v(e, tag: 'CdnMinerparseEntity');
         LogUtil.v(e);
       }
       return c;
@@ -181,8 +182,8 @@ class CdnMiner {
   getData() {
     MessageSchema msg = MessageSchema();
     msg.content = '/usr/bin/self_checker.sh';
-//    NShellClientPlugin.sendText(['ctrl.e39e05bdf29ab3b753ed0aaf7ebdb40533e14fddd25a20ebaee989db5bc32ef6'], msg.toTextData());
-    NShellClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData());
+    NShellClientPlugin.sendText(['ctrl.e39e05bdf29ab3b753ed0aaf7ebdb40533e14fddd25a20ebaee989db5bc32ef6'], msg.toTextData());
+//    NShellClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData());
   }
 
   String getIp() {
