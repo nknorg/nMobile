@@ -33,14 +33,14 @@ var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
         
         let clientEventChannel = FlutterEventChannel(name: "org.nkn.sdk/client/event", binaryMessenger: controller.binaryMessenger)
         clientEventChannel.setStreamHandler(NknClientEventPlugin())
-       
-        
+
+
         let nShellClientMethodChannel = FlutterMethodChannel(name: "org.nkn.sdk/nshellclient", binaryMessenger: controller.binaryMessenger)
         nShellClientMethodChannel.setMethodCallHandler(NShellClientPlugin.handle)
-        
+
         let nShellClientEventChannel = FlutterEventChannel(name: "org.nkn.sdk/nshellclient/event", binaryMessenger: controller.binaryMessenger)
         nShellClientEventChannel.setStreamHandler(NShellClientEventPlugin())
-        
+
         
         GeneratedPluginRegistrant.register(with: self)
         

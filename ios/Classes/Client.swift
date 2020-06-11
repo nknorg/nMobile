@@ -326,4 +326,3 @@ func getSubscribers(_ call: FlutterMethodCall, result: FlutterResult) {
         }
     }
 }
-

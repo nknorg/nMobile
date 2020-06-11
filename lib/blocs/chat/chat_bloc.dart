@@ -16,7 +16,6 @@ import 'package:nmobile/helpers/permission.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/schemas/cdn_miner.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
@@ -351,18 +350,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         message.isRead = true;
         await message.insert();
         yield MessagesUpdated(target: message.from, message: message);
-        return;
-      case ContentType.eventNodeOnline:
-        LogUtil.v('收到${message.from}');
-        CdnMiner.getAllCdnMiner().then((list) {
-          var model = list.firstWhere((m) => m.nshId == message.from, orElse: () => null);
-          if (model == null) {
-            LogUtil.v('开始添加${message.from}');
-            CdnMiner(message.from).insertOrUpdate();
-          } else {
-            LogUtil.v('已存在${message.from}');
-          }
-        });
         return;
     }
   }

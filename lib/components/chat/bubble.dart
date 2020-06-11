@@ -12,6 +12,7 @@ import 'package:nmobile/components/markdown.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/router/custom_router.dart';
@@ -411,7 +412,7 @@ class _ChatBubbleState extends State<ChatBubble> {
     if (widget.style != BubbleStyle.Me) {
       content = NMobileLocalizations.of(context).invites_desc_to;
     } else {
-      content = 'You invites ${widget.message.to.substring(0, 5)} to join channel';
+      content = 'You invites ${widget.message.to.substring(0, 5)} to join group';
     }
 
     return Container(
@@ -446,20 +447,27 @@ class _ChatBubbleState extends State<ChatBubble> {
                           showToast(NMobileLocalizations.of(context).accepted);
                           Navigator.pop(context);
                           var duration = 400000;
-                          var hash = await TopicSchema.subscribe(topic: widget.message.content, duration: duration);
-                          if (hash != null) {
-                            var sendMsg = MessageSchema.fromSendData(
-                              from: Global.currentClient.address,
-                              topic: widget.message.content,
-                              contentType: ContentType.dchatSubscribe,
-                            );
-                            sendMsg.isOutbound = true;
-                            sendMsg.content = sendMsg.toDchatSubscribeData();
-                            _chatBloc.add(SendMessage(sendMsg));
-                            DateTime now = DateTime.now();
-                            var topicSchema = TopicSchema(topic: widget.message.content, owner: getOwnerPubkeyByTopic(widget.message.content.toString()), expiresAt: now.add(blockToExpiresTime(duration)));
-                            await topicSchema.insertOrUpdate();
-                            topicSchema = await TopicSchema.getTopic(widget.message.content);
+                          List<TopicSchema> topic = await TopicSchema.getAllTopic();
+                          var t = topic.firstWhere((item) => item.topic == widget.message.content, orElse: () => null);
+                          if (t != null && !LocalStorage.getUnsubscribeTopicList().contains(widget.message.content)) {
+//                            LogUtil.v('joined');
+                          } else {
+                            LocalStorage.removeTopicFromUnsubscribeList(widget.message.content);
+                            var hash = await TopicSchema.subscribe(topic: widget.message.content, duration: duration);
+                            if (hash != null) {
+                              var sendMsg = MessageSchema.fromSendData(
+                                from: Global.currentClient.address,
+                                topic: widget.message.content,
+                                contentType: ContentType.dchatSubscribe,
+                              );
+                              sendMsg.isOutbound = true;
+                              sendMsg.content = sendMsg.toDchatSubscribeData();
+                              _chatBloc.add(SendMessage(sendMsg));
+                              DateTime now = DateTime.now();
+                              var topicSchema = TopicSchema(topic: widget.message.content, owner: getOwnerPubkeyByTopic(widget.message.content.toString()), expiresAt: now.add(blockToExpiresTime(duration)));
+                              await topicSchema.insertOrUpdate();
+                              topicSchema = await TopicSchema.getTopic(widget.message.content);
+                            }
                           }
                         });
                   },
@@ -475,24 +483,24 @@ class _ChatBubbleState extends State<ChatBubble> {
     );
   }
 
-  getJoinOrLeaveView() {
-    var groupName = " " + NMobileLocalizations.of(context).joined_channel;
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Column(
-            children: <Widget>[
-              Label(
-                groupName,
-                type: LabelType.bodyRegular,
-                color: DefaultTheme.primaryColor,
-              )
-            ],
-          )
-        ],
-      ),
-    );
-  }
+//  getJoinOrLeaveView() {
+//    var groupName = " " + NMobileLocalizations.of(context).joined_channel;
+//    return Container(
+//      padding: EdgeInsets.symmetric(vertical: 20),
+//      child: Row(
+//        mainAxisAlignment: MainAxisAlignment.center,
+//        children: <Widget>[
+//          Column(
+//            children: <Widget>[
+//              Label(
+//                groupName,
+//                type: LabelType.bodyRegular,
+//                color: DefaultTheme.primaryColor,
+//              )
+//            ],
+//          )
+//        ],
+//      ),
+//    );
+//  }
 }

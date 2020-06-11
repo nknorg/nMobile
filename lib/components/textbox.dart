@@ -33,6 +33,7 @@ class Textbox extends StatefulWidget {
   final int maxLength;
   final bool maxLengthEnforced;
   GestureTapCallback onTap;
+  final Color borderColor;
 
   Textbox({
     this.value,
@@ -62,6 +63,7 @@ class Textbox extends StatefulWidget {
     this.maxLengthEnforced = true,
     this.onTap,
     this.fontSize = 14,
+    this.borderColor,
   });
 
   @override
@@ -78,7 +80,7 @@ class _TextboxState extends State<Textbox> {
 
   @override
   Widget build(BuildContext context) {
-    InputBorder borderStyle = UnderlineInputBorder(borderSide: BorderSide(color: DefaultTheme.line, width: 0.8.h));
+    InputBorder borderStyle = UnderlineInputBorder(borderSide: BorderSide(color: widget.borderColor ?? DefaultTheme.line, width: 0.8.h));
     if (widget.password) {
       return Padding(
         padding: widget.padding,

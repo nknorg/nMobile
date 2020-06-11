@@ -372,7 +372,6 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
         onPressed: () => Navigator.of(context).pop(),
       ),
     );
-    if (result == true) {}
   }
 
   subscriberAction() {

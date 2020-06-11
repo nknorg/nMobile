@@ -22,7 +22,7 @@ class DefaultTheme {
   static final double h2FontSize = 22.sp;
   static final double h3FontSize = 16.sp;
   static final double h4FontSize = 14.sp;
-  static final double h5FontSize = 14.sp;
+  static final double h5FontSize = 12.sp;
   static final double displayFontSize = 14.sp;
   static final double bodyLargeFontSize = 16.sp;
   static final double bodyRegularFontSize = 14.sp;

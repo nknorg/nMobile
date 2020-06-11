@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nmobile/blocs/wallet/filtered_wallets_bloc.dart';
@@ -76,28 +75,44 @@ class _SendNknScreenState extends State<SendNknScreen> {
 
       var password = await wallet.getPassword();
       if (password != null) {
-        try {
-          Navigator.pop(context, true);
-          var w = await wallet.exportWallet(password);
-          var keystore = w['keystore'];
-          var hash = await NknWalletPlugin.transfer(keystore, password, _sendTo, _amount, _fee.toString());
-          showToast(NMobileLocalizations.of(context).success);
-        } catch (e) {
-          EasyLoading.dismiss();
-          if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-            showToast(NMobileLocalizations.of(context).password_wrong);
-          } else if (e.message == 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds') {
-            await ModalDialog.of(context).show(
-              height: 240,
-              content: Label(
-                e.message,
-                type: LabelType.bodyRegular,
-              ),
-            );
+        Navigator.pop(context);
+        Future.delayed(Duration(milliseconds: 200), () {
+          transferAction(password);
+        });
+      }
+    }
+  }
+
+  transferAction(password) async {
+    try {
+      wallet.exportWallet(password).then((v) {
+        NknWalletPlugin.transfer(v['keystore'], password, _sendTo, _amount, _fee.toString()).then((hash) {
+          if (hash != null) {
+            showToast(NMobileLocalizations.of(Global.appContext).success);
+            locator<TaskService>().queryNknWalletBalanceTask();
           } else {
-            showToast(NMobileLocalizations.of(context).failure);
+            showToast(NMobileLocalizations.of(Global.appContext).failure);
           }
-        }
+        });
+      });
+//          var w = await wallet.exportWallet(password);
+//          var keystore = w['keystore'];
+//          var hash = await NknWalletPlugin.transfer(keystore, password, _sendTo, _amount, _fee.toString());
+//          showToast(NMobileLocalizations.of(context).success);
+    } catch (e) {
+      if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+        showToast(NMobileLocalizations.of(Global.appContext).password_wrong);
+      } else if (e.message == 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds') {
+//            await ModalDialog.of(context).show(
+//              height: 240,
+//              content: Label(
+//                e.message,
+//                type: LabelType.bodyRegular,
+//              ),
+//            );
+        showToast(e.message);
+      } else {
+        showToast(NMobileLocalizations.of(Global.appContext).failure);
       }
     }
   }

@@ -145,12 +145,12 @@ class NMobileLocalizations {
     return Intl.message('Edit Name', name: 'edit_name', desc: '');
   }
 
-  String get edit_nick_name {
-    return Intl.message('Edit NickName', name: 'edit_nick_name', desc: '');
+  String get edit_nickname {
+    return Intl.message('Edit Nickname', name: 'edit_nickname', desc: '');
   }
 
   String get input_nickname {
-    return Intl.message('Please input NickName', name: 'input_nickname', desc: '');
+    return Intl.message('Please input Nickname', name: 'input_nickname', desc: '');
   }
 
   String get input_pubKey {
@@ -678,7 +678,7 @@ class NMobileLocalizations {
   }
 
   String get invites_desc_to {
-    return Intl.message('invites You to join group', name: 'invites_desc_to', desc: '');
+    return Intl.message('Invites You to join group', name: 'invites_desc_to', desc: '');
   }
 
   String get accept {
@@ -945,8 +945,8 @@ class NMobileLocalizations {
     return Intl.message('Scan the QR code pattern below to add me to the contact.', name: 'scan_show_me_desc', desc: '');
   }
 
-  String get nick_name {
-    return Intl.message('NickName', name: 'nick_name', desc: '');
+  String get nickname {
+    return Intl.message('Nickname', name: 'nickname', desc: '');
   }
 
   String get d_chat_address {
@@ -995,6 +995,8 @@ class NMobileLocalizations {
 
   String get go_backup => Intl.message('Go Backup', name: 'go_backup');
   String get select_asset_to_backup => Intl.message('Select Asset to Backup', name: 'select_asset_to_backup');
+  String get create_account => Intl.message('Create Account', name: 'create_account');
+  String get import_wallet_as_account => Intl.message('Import Wallet as Account', name: 'import_wallet_as_account');
   String get check_upgrade => Intl.message('Check Upgrade', name: 'check_upgrade');
   String get release_notes => Intl.message('Release Notes:', name: 'release_notes');
   String get download_now => Intl.message('Download Now', name: 'download_now');

@@ -247,7 +247,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                   children: <Widget>[
                                                     Label(
-                                                      NMobileLocalizations.of(context).nick_name,
+                                                      NMobileLocalizations.of(context).nickname,
                                                       type: LabelType.h3,
                                                       textAlign: TextAlign.start,
                                                     ),
@@ -409,407 +409,414 @@ class _ContactScreenState extends State<ContactScreen> {
         ),
       );
     } else {
-      return Scaffold(
-        appBar: Header(
-          title: '',
-          leading: BackButton(
-            onPressed: () {
-              _setContactOptions();
-              Navigator.of(context).pop();
-            },
+      return WillPopScope(
+        onWillPop: () async {
+          _setContactOptions();
+          return true;
+        },
+        child: Scaffold(
+          appBar: Header(
+            title: '',
+            leading: BackButton(
+              onPressed: () {
+                _setContactOptions();
+                Navigator.of(context).pop();
+              },
+            ),
+            backgroundColor: DefaultTheme.backgroundColor4,
+            action: widget.arguments.type == ContactType.stranger
+                ? IconButton(
+                    icon: loadAssetIconsImage(
+                      'user-plus',
+                      color: DefaultTheme.backgroundLightColor,
+                      width: 24,
+                    ),
+                    onPressed: () {
+                      showAction(true);
+                    },
+                  )
+                : IconButton(
+                    icon: loadAssetIconsImage(
+                      'user-delete',
+                      color: DefaultTheme.backgroundLightColor,
+                      width: 24,
+                    ),
+                    onPressed: () {
+                      showAction(false);
+                    },
+                  ),
           ),
-          backgroundColor: DefaultTheme.backgroundColor4,
-          action: widget.arguments.type == ContactType.stranger
-              ? IconButton(
-                  icon: loadAssetIconsImage(
-                    'user-plus',
-                    color: DefaultTheme.backgroundLightColor,
-                    width: 24,
-                  ),
-                  onPressed: () {
-                    showAction(true);
-                  },
-                )
-              : IconButton(
-                  icon: loadAssetIconsImage(
-                    'user-delete',
-                    color: DefaultTheme.backgroundLightColor,
-                    width: 24,
-                  ),
-                  onPressed: () {
-                    showAction(false);
-                  },
-                ),
-        ),
-        body: ConstrainedBox(
-          constraints: BoxConstraints.expand(),
-          child: Stack(
-            alignment: Alignment.bottomCenter,
-            children: <Widget>[
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height),
-                  color: DefaultTheme.backgroundColor4,
-                  child: Flex(direction: Axis.vertical, children: <Widget>[
-                    Expanded(
-                      flex: 0,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 24.h, left: 20.w, right: 20.w),
-                            child: Row(
-                              children: <Widget>[
-                                InkWell(
-                                  onTap: () {
-                                    if (widget.arguments.avatarFilePath != null) {
-                                      Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
-                                    }
-                                  },
-                                  child: Padding(
-                                    padding: EdgeInsets.only(right: 16.w),
-                                    child: widget.arguments.avatarWidget(
-                                      backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
-                                      size: 40,
-                                      bottomRight: Button(
-                                        padding: const EdgeInsets.all(0),
-                                        width: 28.w,
-                                        height: 28.w,
-                                        backgroundColor: DefaultTheme.primaryColor,
-                                        child: loadAssetIconsImage('camera', width: 18),
-                                        onPressed: () async {
-                                          File savedImg = await getHeaderImage();
-                                          setState(() {
-                                            widget.arguments.avatar = savedImg;
-                                          });
-                                          await widget.arguments.setAvatar(savedImg);
-                                          _chatBloc.add(RefreshMessages());
-                                        },
+          body: ConstrainedBox(
+            constraints: BoxConstraints.expand(),
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              children: <Widget>[
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height),
+                    color: DefaultTheme.backgroundColor4,
+                    child: Flex(direction: Axis.vertical, children: <Widget>[
+                      Expanded(
+                        flex: 0,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[
+                            Padding(
+                              padding: EdgeInsets.only(bottom: 24.h, left: 20.w, right: 20.w),
+                              child: Row(
+                                children: <Widget>[
+                                  InkWell(
+                                    onTap: () {
+                                      if (widget.arguments.avatarFilePath != null) {
+                                        Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
+                                      }
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.only(right: 16.w),
+                                      child: widget.arguments.avatarWidget(
+                                        backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
+                                        size: 40,
+                                        bottomRight: Button(
+                                          padding: const EdgeInsets.all(0),
+                                          width: 28.w,
+                                          height: 28.w,
+                                          backgroundColor: DefaultTheme.primaryColor,
+                                          child: loadAssetIconsImage('camera', width: 18),
+                                          onPressed: () async {
+                                            File savedImg = await getHeaderImage();
+                                            setState(() {
+                                              widget.arguments.avatar = savedImg;
+                                            });
+                                            await widget.arguments.setAvatar(savedImg);
+                                            _chatBloc.add(RefreshMessages());
+                                          },
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[Label(widget.arguments.name + '${_sourceProfile?.name != null && _sourceProfile.name.isNotEmpty && (widget.arguments.firstName != null && widget.arguments.firstName.isNotEmpty || widget.arguments.lastName != null && widget.arguments.lastName.isNotEmpty) ? '(${_sourceProfile?.name})' : ''}', type: LabelType.h2, dark: true), Label(NMobileLocalizations.of(context).updated_at + ' ' + Format.timeFormat(widget.arguments.updatedTime ?? widget.arguments.createdTime), type: LabelType.bodyRegular, color: DefaultTheme.successColor)],
-                                ),
-                              ],
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[Label(widget.arguments.name + '${_sourceProfile?.name != null && _sourceProfile.name.isNotEmpty && (widget.arguments.firstName != null && widget.arguments.firstName.isNotEmpty || widget.arguments.lastName != null && widget.arguments.lastName.isNotEmpty) ? '(${_sourceProfile?.name})' : ''}', type: LabelType.h2, dark: true), Label(NMobileLocalizations.of(context).updated_at + ' ' + Format.timeFormat(widget.arguments.updatedTime ?? widget.arguments.createdTime), type: LabelType.bodyRegular, color: DefaultTheme.successColor)],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ]),
+                    ]),
+                  ),
                 ),
-              ),
-              Container(
-                constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 220.h),
-                child: BodyBox(
-                  padding: const EdgeInsets.only(top: 32),
-                  color: DefaultTheme.backgroundLightColor,
-                  child: Flex(
-                    direction: Axis.vertical,
-                    children: <Widget>[
-                      Expanded(
-                        flex: 1,
-                        child: Padding(
-                          padding: EdgeInsets.only(top: 0),
-                          child: SingleChildScrollView(
-                            child: Flex(
-                              direction: Axis.vertical,
-                              children: <Widget>[
-                                Expanded(
-                                  flex: 0,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(top: 0),
-                                    child: Column(
-                                      children: <Widget>[
-                                        Expanded(
-                                          flex: 0,
-                                          child: Column(
-                                            children: <Widget>[
-                                              Flex(
-                                                direction: Axis.horizontal,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Expanded(
-                                                    flex: 1,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(top: 4, left: 20, right: 20),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: <Widget>[
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                            children: <Widget>[
-                                                              Label(
-                                                                NMobileLocalizations.of(context).nick_name,
-                                                                type: LabelType.h4,
-                                                                textAlign: TextAlign.start,
-                                                              ),
-                                                              InkWell(
-                                                                child: Label(
-                                                                  NMobileLocalizations.of(context).edit,
-                                                                  color: DefaultTheme.primaryColor,
-                                                                  type: LabelType.bodyRegular,
-                                                                ),
-                                                                onTap: () {
-                                                                  _firstNameController.text = widget.arguments.firstName;
-
-                                                                  BottomDialog.of(context).showBottomDialog(
-                                                                    title: NMobileLocalizations.of(context).edit_name,
-                                                                    child: Form(
-                                                                      key: _nameFormKey,
-                                                                      autovalidate: true,
-                                                                      onChanged: () {
-                                                                        _nameFormValid = (_nameFormKey.currentState as FormState).validate();
-                                                                      },
-                                                                      child: Flex(
-                                                                        direction: Axis.horizontal,
-                                                                        children: <Widget>[
-                                                                          Expanded(
-                                                                            flex: 1,
-                                                                            child: Padding(
-                                                                              padding: const EdgeInsets.only(right: 4),
-                                                                              child: Column(
-                                                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                                                children: <Widget>[
-                                                                                  Textbox(
-                                                                                    controller: _firstNameController,
-                                                                                    focusNode: _firstNameFocusNode,
-                                                                                    maxLength: 20,
-                                                                                  ),
-                                                                                ],
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                    ),
-                                                                    action: Padding(
-                                                                      padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
-                                                                      child: Button(
-                                                                        text: NMobileLocalizations.of(context).save,
-                                                                        width: double.infinity,
-                                                                        onPressed: () async {
-                                                                          _nameFormValid = (_nameFormKey.currentState as FormState).validate();
-                                                                          if (_nameFormValid) {
-                                                                            var contact = widget.arguments;
-                                                                            contact.firstName = _firstNameController.text.trim();
-                                                                            await contact.setName(contact.firstName);
-                                                                            _nameController.text = widget.arguments.name;
-                                                                            _chatBloc.add(RefreshMessages());
-                                                                            Navigator.of(context).pop();
-                                                                          }
-                                                                        },
-                                                                      ),
-                                                                    ),
-                                                                  );
-                                                                },
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          Textbox(
-                                                            controller: _nameController,
-                                                            readOnly: true,
-                                                            enabled: false,
-                                                            textInputAction: TextInputAction.next,
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Flex(
-                                                direction: Axis.horizontal,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Expanded(
-                                                    flex: 1,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(top: 4, left: 20, right: 20),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: <Widget>[
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                            children: <Widget>[
-                                                              Label(
-                                                                NMobileLocalizations.of(context).d_chat_address,
-                                                                type: LabelType.h4,
-                                                                textAlign: TextAlign.start,
-                                                              ),
-                                                              InkWell(
-                                                                child: Label(
-                                                                  NMobileLocalizations.of(context).copy,
-                                                                  color: DefaultTheme.primaryColor,
-                                                                  type: LabelType.bodyRegular,
-                                                                ),
-                                                                onTap: () {
-                                                                  copyAction(widget.arguments.publickKey);
-                                                                },
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          InkWell(
-                                                            onTap: () {
-                                                              copyAction(widget.arguments.publickKey);
-                                                            },
-                                                            child: Textbox(
-                                                              value: widget.arguments.publickKey,
-                                                              readOnly: true,
-                                                              enabled: false,
-                                                              textInputAction: TextInputAction.next,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Flex(
-                                                direction: Axis.horizontal,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Expanded(
-                                                    flex: 1,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(top: 4, left: 20, right: 20),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: <Widget>[
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                            children: <Widget>[
-                                                              Label(
-                                                                NMobileLocalizations.of(context).notes,
-                                                                type: LabelType.h4,
-                                                                textAlign: TextAlign.start,
-                                                              ),
-                                                              InkWell(
-                                                                child: Label(
-                                                                  NMobileLocalizations.of(context).edit,
-                                                                  color: DefaultTheme.primaryColor,
-                                                                  type: LabelType.bodyRegular,
-                                                                ),
-                                                                onTap: () {
-                                                                  changeName();
-                                                                },
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          Textbox(
-                                                            multi: true,
-                                                            minLines: 1,
-                                                            maxLines: 3,
-                                                            controller: _notesController,
-                                                            readOnly: true,
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Flex(
-                                                direction: Axis.horizontal,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Expanded(
-                                                    flex: 1,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(top: 4),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: <Widget>[
-                                                          Padding(
-                                                            padding: const EdgeInsets.only(left: 20, right: 16),
-                                                            child: Row(
+                Container(
+                  constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 220.h),
+                  child: BodyBox(
+                    padding: const EdgeInsets.only(top: 32),
+                    color: DefaultTheme.backgroundLightColor,
+                    child: Flex(
+                      direction: Axis.vertical,
+                      children: <Widget>[
+                        Expanded(
+                          flex: 1,
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 0),
+                            child: SingleChildScrollView(
+                              child: Flex(
+                                direction: Axis.vertical,
+                                children: <Widget>[
+                                  Expanded(
+                                    flex: 0,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 0),
+                                      child: Column(
+                                        children: <Widget>[
+                                          Expanded(
+                                            flex: 0,
+                                            child: Column(
+                                              children: <Widget>[
+                                                Flex(
+                                                  direction: Axis.horizontal,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: <Widget>[
+                                                    Expanded(
+                                                      flex: 1,
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.only(top: 4, left: 20, right: 20),
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: <Widget>[
+                                                            Row(
                                                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                               children: <Widget>[
                                                                 Label(
-                                                                  NMobileLocalizations.of(context).burn_after_reading + '${_burnValue != null ? ' (${Format.durationFormat(Duration(seconds: _burnValue))})' : ''}',
+                                                                  NMobileLocalizations.of(context).nickname,
                                                                   type: LabelType.h4,
                                                                   textAlign: TextAlign.start,
                                                                 ),
-                                                                CupertinoSwitch(
-                                                                  value: _burnSelected,
-                                                                  activeColor: DefaultTheme.primaryColor,
-                                                                  onChanged: (value) async {
-                                                                    if (value) {
-                                                                      _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
-                                                                    } else {
-                                                                      _burnValue = null;
-                                                                    }
-                                                                    setState(() {
-                                                                      _burnSelected = value;
-                                                                    });
+                                                                InkWell(
+                                                                  child: Label(
+                                                                    NMobileLocalizations.of(context).edit,
+                                                                    color: DefaultTheme.primaryColor,
+                                                                    type: LabelType.bodyRegular,
+                                                                  ),
+                                                                  onTap: () {
+                                                                    _firstNameController.text = widget.arguments.firstName;
+
+                                                                    BottomDialog.of(context).showBottomDialog(
+                                                                      title: NMobileLocalizations.of(context).edit_name,
+                                                                      child: Form(
+                                                                        key: _nameFormKey,
+                                                                        autovalidate: true,
+                                                                        onChanged: () {
+                                                                          _nameFormValid = (_nameFormKey.currentState as FormState).validate();
+                                                                        },
+                                                                        child: Flex(
+                                                                          direction: Axis.horizontal,
+                                                                          children: <Widget>[
+                                                                            Expanded(
+                                                                              flex: 1,
+                                                                              child: Padding(
+                                                                                padding: const EdgeInsets.only(right: 4),
+                                                                                child: Column(
+                                                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                  children: <Widget>[
+                                                                                    Textbox(
+                                                                                      controller: _firstNameController,
+                                                                                      focusNode: _firstNameFocusNode,
+                                                                                      maxLength: 20,
+                                                                                    ),
+                                                                                  ],
+                                                                                ),
+                                                                              ),
+                                                                            ),
+                                                                          ],
+                                                                        ),
+                                                                      ),
+                                                                      action: Padding(
+                                                                        padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
+                                                                        child: Button(
+                                                                          text: NMobileLocalizations.of(context).save,
+                                                                          width: double.infinity,
+                                                                          onPressed: () async {
+                                                                            _nameFormValid = (_nameFormKey.currentState as FormState).validate();
+                                                                            if (_nameFormValid) {
+                                                                              var contact = widget.arguments;
+                                                                              contact.firstName = _firstNameController.text.trim();
+                                                                              await contact.setName(contact.firstName);
+                                                                              _nameController.text = widget.arguments.name;
+                                                                              _chatBloc.add(RefreshMessages());
+                                                                              Navigator.of(context).pop();
+                                                                            }
+                                                                          },
+                                                                        ),
+                                                                      ),
+                                                                    );
                                                                   },
                                                                 ),
                                                               ],
                                                             ),
-                                                          ),
-                                                          Padding(
-                                                            padding: const EdgeInsets.only(left: 5, right: 10),
-                                                            child: Slider(
-                                                              value: _sliderBurnValue,
-                                                              onChanged: (v) async {
-                                                                setState(() {
-                                                                  _sliderBurnValue = v;
-                                                                  _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
-                                                                });
-                                                              },
-                                                              divisions: _burnTextArray.length - 1,
-                                                              max: _burnTextArray.length - 1.0,
-                                                              min: 0,
+                                                            Textbox(
+                                                              controller: _nameController,
+                                                              readOnly: true,
+                                                              enabled: false,
+                                                              textInputAction: TextInputAction.next,
                                                             ),
-                                                          ),
-                                                        ],
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        )
-                                      ],
+                                                  ],
+                                                ),
+                                                Flex(
+                                                  direction: Axis.horizontal,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: <Widget>[
+                                                    Expanded(
+                                                      flex: 1,
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.only(top: 4, left: 20, right: 20),
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: <Widget>[
+                                                            Row(
+                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                              children: <Widget>[
+                                                                Label(
+                                                                  NMobileLocalizations.of(context).d_chat_address,
+                                                                  type: LabelType.h4,
+                                                                  textAlign: TextAlign.start,
+                                                                ),
+                                                                InkWell(
+                                                                  child: Label(
+                                                                    NMobileLocalizations.of(context).copy,
+                                                                    color: DefaultTheme.primaryColor,
+                                                                    type: LabelType.bodyRegular,
+                                                                  ),
+                                                                  onTap: () {
+                                                                    copyAction(widget.arguments.publickKey);
+                                                                  },
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            InkWell(
+                                                              onTap: () {
+                                                                copyAction(widget.arguments.publickKey);
+                                                              },
+                                                              child: Textbox(
+                                                                value: widget.arguments.publickKey,
+                                                                readOnly: true,
+                                                                enabled: false,
+                                                                textInputAction: TextInputAction.next,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Flex(
+                                                  direction: Axis.horizontal,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: <Widget>[
+                                                    Expanded(
+                                                      flex: 1,
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.only(top: 4, left: 20, right: 20),
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: <Widget>[
+                                                            Row(
+                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                              children: <Widget>[
+                                                                Label(
+                                                                  NMobileLocalizations.of(context).notes,
+                                                                  type: LabelType.h4,
+                                                                  textAlign: TextAlign.start,
+                                                                ),
+                                                                InkWell(
+                                                                  child: Label(
+                                                                    NMobileLocalizations.of(context).edit,
+                                                                    color: DefaultTheme.primaryColor,
+                                                                    type: LabelType.bodyRegular,
+                                                                  ),
+                                                                  onTap: () {
+                                                                    changeName();
+                                                                  },
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            Textbox(
+                                                              multi: true,
+                                                              minLines: 1,
+                                                              maxLines: 3,
+                                                              controller: _notesController,
+                                                              readOnly: true,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Flex(
+                                                  direction: Axis.horizontal,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: <Widget>[
+                                                    Expanded(
+                                                      flex: 1,
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.only(top: 4),
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: <Widget>[
+                                                            Padding(
+                                                              padding: const EdgeInsets.only(left: 20, right: 16),
+                                                              child: Row(
+                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                children: <Widget>[
+                                                                  Label(
+                                                                    NMobileLocalizations.of(context).burn_after_reading + '${_burnValue != null ? ' (${Format.durationFormat(Duration(seconds: _burnValue))})' : ''}',
+                                                                    type: LabelType.h4,
+                                                                    textAlign: TextAlign.start,
+                                                                  ),
+                                                                  CupertinoSwitch(
+                                                                    value: _burnSelected,
+                                                                    activeColor: DefaultTheme.primaryColor,
+                                                                    onChanged: (value) async {
+                                                                      if (value) {
+                                                                        _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
+                                                                      } else {
+                                                                        _burnValue = null;
+                                                                      }
+                                                                      setState(() {
+                                                                        _burnSelected = value;
+                                                                      });
+                                                                    },
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            Padding(
+                                                              padding: const EdgeInsets.only(left: 5, right: 10),
+                                                              child: Slider(
+                                                                value: _sliderBurnValue,
+                                                                onChanged: (v) async {
+                                                                  setState(() {
+                                                                    _burnSelected = true;
+                                                                    _sliderBurnValue = v;
+                                                                    _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
+                                                                  });
+                                                                },
+                                                                divisions: _burnTextArray.length - 1,
+                                                                max: _burnTextArray.length - 1.0,
+                                                                min: 0,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          )
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              Positioned(
-                top: 83.h,
-                right: 20,
-                child: Button(
-                  padding: const EdgeInsets.all(0),
-                  width: 56,
-                  height: 56,
-                  backgroundColor: DefaultTheme.primaryColor,
-                  child: SvgPicture.asset(
-                    'assets/icons/chat.svg',
-                    width: 24,
+                Positioned(
+                  top: 83.h,
+                  right: 20,
+                  child: Button(
+                    padding: const EdgeInsets.all(0),
+                    width: 56,
+                    height: 56,
+                    backgroundColor: DefaultTheme.primaryColor,
+                    child: SvgPicture.asset(
+                      'assets/icons/chat.svg',
+                      width: 24,
+                    ),
+                    onPressed: () async {
+                      _setContactOptions();
+                      Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
+                    },
                   ),
-                  onPressed: () async {
-                    _setContactOptions();
-                    Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
-                  },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
@@ -894,7 +901,7 @@ class _ContactScreenState extends State<ContactScreen> {
     _firstNameController.text = widget.arguments.firstName;
 
     BottomDialog.of(context).showBottomDialog(
-      title: NMobileLocalizations.of(context).edit_nick_name,
+      title: NMobileLocalizations.of(context).edit_nickname,
       child: Form(
         key: _nameFormKey,
         autovalidate: true,
