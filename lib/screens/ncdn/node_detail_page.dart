@@ -243,38 +243,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                       ],
                     ),
                     SizedBox(height: 10.h),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Row(
-                          children: <Widget>[
-                            Label(
-                              '设备参数',
-                              type: LabelType.bodyRegular,
-                              color: DefaultTheme.fontColor2,
-                              textAlign: TextAlign.start,
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 4.h),
-                        InkWell(
-                          onTap: () {
-                            if (widget.arguments.data != null) CopyUtils.copyAction(context, json.encode(widget.arguments.data));
-                          },
-                          child: Container(
-                            padding: EdgeInsets.all(6),
-                            decoration: BoxDecoration(color: Color(0xFFE5E5E5), borderRadius: BorderRadius.circular(10)),
-                            child: Label(
-                              widget.arguments.data == null ? '未知' : widget.arguments.data.toString(),
-                              type: LabelType.bodyRegular,
-                              color: Colors.black,
-                              textAlign: TextAlign.start,
-                              softWrap: true,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    getParamsView(),
                   ],
                 ),
               ],
@@ -410,5 +379,44 @@ class NodeDetailPageState extends State<NodeDetailPage> {
   deleteAction() {
     widget.arguments.delete();
     Navigator.of(context).pop();
+  }
+
+  getParamsView() {
+    if (widget.arguments.data == null) {
+      return Container();
+    } else {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Label(
+                '设备参数',
+                type: LabelType.bodyRegular,
+                color: DefaultTheme.fontColor2,
+                textAlign: TextAlign.start,
+              ),
+            ],
+          ),
+          SizedBox(height: 4.h),
+          InkWell(
+            onTap: () {
+              if (widget.arguments.data != null) CopyUtils.copyAction(context, json.encode(widget.arguments.data));
+            },
+            child: Container(
+              padding: EdgeInsets.all(6),
+              decoration: BoxDecoration(color: Color(0xFFE5E5E5), borderRadius: BorderRadius.circular(10)),
+              child: Label(
+                widget.arguments.data == null ? '未知' : widget.arguments.data.toString(),
+                type: LabelType.bodyRegular,
+                color: Colors.black,
+                textAlign: TextAlign.start,
+                softWrap: true,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
   }
 }

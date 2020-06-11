@@ -20,6 +20,7 @@ import 'package:nmobile/schemas/cdn_miner.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/ncdn/node_detail_page.dart';
 import 'package:nmobile/screens/ncdn/node_list_page.dart';
+import 'package:oktoast/oktoast.dart';
 
 class NodeMainPage extends StatefulWidget {
   static const String routeName = '/ncdn/node/detail';
@@ -106,7 +107,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
     _api.post(url, params, isEncrypted: true).then((res) async {
       responseData = (res as Map);
       LogUtil.v(responseData);
-      if (res != null && responseData.keys.length > 0) {
+      if (res != null) {
         _sumBalance = 0;
         _list = await CdnMiner.getAllCdnMiner();
         await resetFormatData();
@@ -218,7 +219,10 @@ class _NodeMainPageState extends State<NodeMainPage> {
                       SizedBox(height: 10.h),
                       InkWell(
                         onTap: () {
-                          Navigator.pushNamed(context, NodeListPage.routeName, arguments: _list);
+                          Navigator.pushNamed(context, NodeListPage.routeName,
+                              arguments: _list.where((item) {
+                                return item.getStatus() != '运行中';
+                              }).toList());
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -505,7 +509,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
           text: '保存',
           width: double.infinity,
           onPressed: () async {
-            if (_nShellIdController.text.toString().length > 0) {
+            if (_nShellIdController.text.toString().length >= 60) {
               LogUtil.v(_list);
               var result = _list.firstWhere((v) => v.nshId == _nShellIdController.text.toString(), orElse: () => null);
               if (result == null) {
@@ -517,9 +521,14 @@ class _NodeMainPageState extends State<NodeMainPage> {
                     });
                   }
                 });
+                showToast('添加成功');
+              } else {
+                showToast('已存在');
               }
+              Navigator.of(context).pop();
+            } else {
+              showToast('请输入正确的ID');
             }
-            Navigator.of(context).pop();
           },
         ),
       ),

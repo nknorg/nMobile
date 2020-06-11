@@ -39,6 +39,8 @@ class Global {
 
   static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
 
+  static bool isAutoShowPassword = true;
+
   static Future init(VoidCallback callback) async {
     WidgetsFlutterBinding.ensureInitialized();
     await SpUtil.getInstance();
