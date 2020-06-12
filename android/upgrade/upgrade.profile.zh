@@ -1,0 +1,9 @@
+{
+  "apkUrl": "https://nmobile.nkn.org/downloads/nmobile-pro_v1.0.2.apk",
+  "version": "1.0.2-pro + (Build 102)",
+  "gatedLaunch": 0.8,
+  "title": "您有新版本可更新：",
+  "notes": "* 1.0.2-pro + (Build 102)\n # test notes:\n* ### 警告：该版本将删除消息数据库！\n  * 主要功能是测试收不到消息的问题：在 go-sdk 中加入日志输出，并增加循环自动发消息的功能。\n1. 中文；\n2. 中文；\n3. 中文。",
+  "sha-1": "a8e4a9d1dd404c4b4a073ac52ddd5d8a0a50306b",
+  "force": true
+}
