@@ -192,13 +192,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "edit_nick_name": "Edit NickName",
-  "@edit_nick_name": {
+  "edit_nickname": "Edit Nickname",
+  "@edit_nickname": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "input_nickname": "Please input NickName",
+  "input_nickname": "Please input Nickname",
   "@input_nickname": {
     "description": "",
     "type": "text",
@@ -990,7 +990,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "invites_desc_to": "invites You to join group",
+  "invites_desc_to": "Invites You to join group",
   "@invites_desc_to": {
     "description": "",
     "type": "text",
@@ -1397,8 +1397,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "nick_name": "NickName",
-  "@nick_name": {
+  "nickname": "Nickname",
+  "@nickname": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1501,6 +1501,16 @@
   },
   "already_the_latest_version": "Already the latest version",
   "@already_the_latest_version": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "create_account": "Create Account",
+  "@create_account": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "import_wallet_as_account": "Import Wallet as Account",
+  "@import_wallet_as_account": {
     "type": "text",
     "placeholders": {}
   }

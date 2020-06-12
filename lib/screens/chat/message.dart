@@ -79,19 +79,47 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
 
   _deleteTickHandle() {
     _deleteTick = Timer.periodic(Duration(seconds: 1), (timer) {
-      for (var i = 0, length = _messages.length; i < length; i++) {
-        var item = _messages[i];
+      _messages.removeWhere((item) {
         if (item.deleteTime != null) {
-          setState(() {
-            int afterSeconds = item.deleteTime.difference(DateTime.now()).inSeconds;
-            item.burnAfterSeconds = afterSeconds;
-            if (item.burnAfterSeconds < 0) {
-              _messages.removeAt(i);
-              item.deleteMessage();
-            }
-          });
+          int afterSeconds = item.deleteTime.difference(DateTime.now()).inSeconds;
+          item.burnAfterSeconds = afterSeconds;
+          if (item.burnAfterSeconds < 0) {
+            item.deleteMessage();
+            return true;
+          } else {
+            return false;
+          }
+        } else {
+          return false;
         }
-      }
+      });
+      setState(() {});
+//      for (var item in _messages) {
+//        setState(() {
+//          if (item.deleteTime != null) {
+//            int afterSeconds = item.deleteTime.difference(DateTime.now()).inSeconds;
+//            item.burnAfterSeconds = afterSeconds;
+//            if (item.burnAfterSeconds < 0) {
+//              _messages.remove(item);
+//              item.deleteMessage();
+//            }
+//          }
+//        });
+//      }
+
+//      for (var i = 0, length = _messages.length; i < length; i++) {
+//        var item = _messages[i];
+//        if (item.deleteTime != null) {
+//          setState(() {
+//            int afterSeconds = item.deleteTime.difference(DateTime.now()).inSeconds;
+//            item.burnAfterSeconds = afterSeconds;
+//            if (item.burnAfterSeconds < 0) {
+//              _messages.removeAt(i);
+//              item.deleteMessage();
+//            }
+//          });
+//        }
+//      }
     });
   }
 

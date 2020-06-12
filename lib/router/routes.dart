@@ -22,6 +22,8 @@ import 'package:nmobile/screens/ncdn/with_draw_page.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/screens/select.dart';
 import 'package:nmobile/screens/settings/app_version.dart';
+import 'package:nmobile/screens/scanner.dart';
+import 'package:nmobile/screens/select.dart';
 import 'package:nmobile/screens/settings/channel.dart';
 import 'package:nmobile/screens/wallet/create_nkn_wallet.dart';
 import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';

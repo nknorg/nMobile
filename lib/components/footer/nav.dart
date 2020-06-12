@@ -9,6 +9,7 @@ class Nav extends StatefulWidget {
   PageController controller;
   List<Widget> screens;
   int currentIndex = 0;
+
   Nav({
     this.screens,
     this.controller,
@@ -43,11 +44,11 @@ class _NavState extends State<Nav> {
       child: Padding(
         padding: EdgeInsets.only(top: 4),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             Button(
               icon: true,
-              size: 70,
+              size: 68,
               child: loadAssetIconsImage(
                 'chat',
                 color: widget.currentIndex == 0 ? _selectedColor : _color,
@@ -58,36 +59,25 @@ class _NavState extends State<Nav> {
             ),
             Button(
               icon: true,
-              size: 70,
+              size: 68,
               child: loadAssetIconsImage(
-                'news',
+                'wallet',
                 color: widget.currentIndex == 1 ? _selectedColor : _color,
               ),
-              text: NMobileLocalizations.of(context).menu_news,
+              text: NMobileLocalizations.of(context).menu_wallet,
               fontColor: widget.currentIndex == 1 ? _selectedColor : _color,
               onPressed: () => _onItemTapped(1),
             ),
             Button(
               icon: true,
-              size: 70,
-              child: loadAssetIconsImage(
-                'wallet',
-                color: widget.currentIndex == 2 ? _selectedColor : _color,
-              ),
-              text: NMobileLocalizations.of(context).menu_wallet,
-              fontColor: widget.currentIndex == 2 ? _selectedColor : _color,
-              onPressed: () => _onItemTapped(2),
-            ),
-            Button(
-              icon: true,
-              size: 70,
+              size: 68,
               child: loadAssetIconsImage(
                 'settings',
-                color: widget.currentIndex == 3 ? _selectedColor : _color,
+                color: widget.currentIndex == 2 ? _selectedColor : _color,
               ),
               text: NMobileLocalizations.of(context).menu_settings,
-              fontColor: widget.currentIndex == 3 ? _selectedColor : _color,
-              onPressed: () => _onItemTapped(3),
+              fontColor: widget.currentIndex == 2 ? _selectedColor : _color,
+              onPressed: () => _onItemTapped(2),
             ),
           ],
         ),

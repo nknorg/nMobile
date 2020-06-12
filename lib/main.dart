@@ -91,7 +91,9 @@ class AppState extends State<App> with WidgetsBindingObserver {
         child: BlocBuilder<GlobalBloc, GlobalState>(builder: (context, state) {
           return OKToast(
             position: ToastPosition.bottom,
-            textPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+            backgroundColor: Colors.black54,
+            radius: 100,
+            textPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 14),
             child: MaterialApp(
               builder: (context, child) {
                 return FlutterEasyLoading(child: child);

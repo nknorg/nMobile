@@ -31,7 +31,7 @@
   "rename": "修改",
   "edit": "编辑",
   "edit_name": "编辑",
-  "edit_nick_name": "编辑昵称",
+  "edit_nickname": "编辑昵称",
   "input_nickname": "请输入昵称",
   "input_pubKey": "请输入公钥",
   "input_name": "请输入名字",
@@ -927,8 +927,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "nick_name": "NickName",
-  "@nick_name": {
+  "nickname": "昵称",
+  "@nickname": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -958,6 +958,16 @@
   },
   "select_asset_to_backup": "选择要备份的钱包",
   "@select_asset_to_backup": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "create_account": "创建账户",
+  "@create_account": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "import_wallet_as_account": "导入钱包作为账户",
+  "@import_wallet_as_account": {
     "type": "text",
     "placeholders": {}
   },
