@@ -182,8 +182,7 @@ class CdnMiner {
   getData() {
     MessageSchema msg = MessageSchema();
     msg.content = '/usr/bin/self_checker.sh';
-    NShellClientPlugin.sendText(['ctrl.e39e05bdf29ab3b753ed0aaf7ebdb40533e14fddd25a20ebaee989db5bc32ef6'], msg.toTextData());
-//    NShellClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData());
+    NShellClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData());
   }
 
   String getIp() {
