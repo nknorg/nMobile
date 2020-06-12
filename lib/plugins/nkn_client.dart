@@ -164,6 +164,7 @@ class NknClientPlugin {
     String fee = '0',
     String meta = '',
   }) async {
+    LogUtil.v('subscribe', tag: TAG);
     Completer<String> completer = Completer<String>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;

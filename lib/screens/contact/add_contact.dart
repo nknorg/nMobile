@@ -173,7 +173,7 @@ class AddContactState extends State<AddContact> {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: <Widget>[
                                           Label(
-                                            NMobileLocalizations.of(context).nickname,
+                                            NMobileLocalizations.of(context).nick_name,
                                             type: LabelType.h3,
                                             textAlign: TextAlign.start,
                                           ),
@@ -305,7 +305,6 @@ class AddContactState extends State<AddContact> {
   _updatePic() async {
     File savedImg = await getHeaderImage();
     if (savedImg == null) return;
-
   }
 
   String createContactFilePath(File file) {

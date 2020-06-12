@@ -12,7 +12,7 @@ class NewHeaderPage {
       titleChild: Padding(
         padding: const EdgeInsets.only(left: 20),
         child: Label(
-          NMobileLocalizations.of(context).menu_news.toUpperCase(),
+          NMobileLocalizations.of(context).menu_news,
           type: LabelType.h2,
         ),
       ),

@@ -145,12 +145,12 @@ class NMobileLocalizations {
     return Intl.message('Edit Name', name: 'edit_name', desc: '');
   }
 
-  String get edit_nickname {
-    return Intl.message('Edit Nickname', name: 'edit_nickname', desc: '');
+  String get edit_nick_name {
+    return Intl.message('Edit NickName', name: 'edit_nick_name', desc: '');
   }
 
   String get input_nickname {
-    return Intl.message('Please input Nickname', name: 'input_nickname', desc: '');
+    return Intl.message('Please input NickName', name: 'input_nickname', desc: '');
   }
 
   String get input_pubKey {
@@ -945,8 +945,8 @@ class NMobileLocalizations {
     return Intl.message('Scan the QR code pattern below to add me to the contact.', name: 'scan_show_me_desc', desc: '');
   }
 
-  String get nickname {
-    return Intl.message('Nickname', name: 'nickname', desc: '');
+  String get nick_name {
+    return Intl.message('NickName', name: 'nick_name', desc: '');
   }
 
   String get d_chat_address {

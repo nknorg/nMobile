@@ -7,11 +7,9 @@ import 'package:nmobile/blocs/cdn/cdn_bloc.dart';
 import 'package:nmobile/blocs/cdn/cdn_state.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
-import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
-import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/api.dart';
 import 'package:nmobile/helpers/format.dart';
@@ -20,6 +18,7 @@ import 'package:nmobile/schemas/cdn_miner.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/ncdn/node_detail_page.dart';
 import 'package:nmobile/screens/ncdn/node_list_page.dart';
+import 'package:nmobile/screens/scanner.dart';
 import 'package:oktoast/oktoast.dart';
 
 class NodeMainPage extends StatefulWidget {
@@ -61,6 +60,10 @@ class _NodeMainPageState extends State<NodeMainPage> {
     _wallet = widget.arguments['wallet'];
     _publicKey = widget.arguments['publicKey'];
     _seed = widget.arguments['seed'];
+    _start = getStartOfDay(DateTime.now().add(Duration(days: -2)));
+    _end = getStartOfDay(DateTime.now().add(Duration(days: -1)));
+    _startText = DateUtil.formatDate(_start, format: 'yyyy-MM-dd');
+    _endText = DateUtil.formatDate(_end, format: 'yyyy-MM-dd');
 
     _cdnBloc = BlocProvider.of<CDNBloc>(context);
     _cdnBloc.listen((state) async {
@@ -80,19 +83,12 @@ class _NodeMainPageState extends State<NodeMainPage> {
     });
 
     Future.delayed(Duration(milliseconds: 500), () {
-      setState(() {
-        _start = getStartOfDay(DateTime.now().add(Duration(days: -2)));
-        _end = getStartOfDay(DateTime.now().add(Duration(days: -1)));
-        _startText = DateUtil.formatDate(_start, format: 'yyyy-MM-dd');
-        _endText = DateUtil.formatDate(_end, format: 'yyyy-MM-dd');
-      });
       initAsync();
     });
   }
 
   @override
   void dispose() {
-    _nShellIdController.dispose();
     super.dispose();
   }
 
@@ -466,74 +462,95 @@ class _NodeMainPageState extends State<NodeMainPage> {
     return '$size ${unitArr[index]}';
   }
 
-  TextEditingController _nShellIdController = TextEditingController();
-  GlobalKey _notesFormKey = new GlobalKey<FormState>();
+//  TextEditingController _nShellIdController = TextEditingController();
+//  GlobalKey _notesFormKey = new GlobalKey<FormState>();
 
-  addAction() {
-    BottomDialog.of(context).showBottomDialog(
-      height: 320,
-      title: '添加设备',
-      child: Form(
-        key: _notesFormKey,
-        autovalidate: true,
-        child: Flex(
-          direction: Axis.horizontal,
-          children: <Widget>[
-            Expanded(
-              flex: 1,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Label(
-                      '请输入nShell ID',
-                      type: LabelType.h4,
-                      textAlign: TextAlign.start,
-                    ),
-                    Textbox(
-                      minLines: 1,
-                      maxLines: 1,
-                      controller: _nShellIdController,
-                      textInputAction: TextInputAction.newline,
-                      maxLength: 200,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      action: Padding(
-        padding: EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
-        child: Button(
-          text: '保存',
-          width: double.infinity,
-          onPressed: () async {
-            if (_nShellIdController.text.toString().length >= 60) {
-              LogUtil.v(_list);
-              var result = _list.firstWhere((v) => v.nshId == _nShellIdController.text.toString(), orElse: () => null);
-              if (result == null) {
-                result = CdnMiner(_nShellIdController.text.toString());
-                result.insertOrUpdate().then((v) {
-                  if (v) {
-                    setState(() {
-                      _list.add(result);
-                    });
-                  }
-                });
-                showToast('添加成功');
-              } else {
-                showToast('已存在');
-              }
-              Navigator.of(context).pop();
-            } else {
-              showToast('请输入正确的ID');
-            }
-          },
-        ),
-      ),
-    );
+  addAction() async {
+    var qrData = await Navigator.of(context).pushNamed(ScannerScreen.routeName);
+    if (qrData != null && qrData.toString().length >= 60) {
+      LogUtil.v(_list);
+      var result = _list.firstWhere((v) => v.nshId == qrData, orElse: () => null);
+      if (result == null) {
+        result = CdnMiner(qrData);
+        result.insertOrUpdate().then((v) {
+          if (v) {
+            setState(() {
+              _list.add(result);
+            });
+          }
+        });
+        showToast('添加成功');
+      } else {
+        showToast('已存在');
+      }
+
+//    BottomDialog.of(context).showBottomDialog(
+//      height: 320,
+//      title: '添加设备',
+//      child: Form(
+//        key: _notesFormKey,
+//        autovalidate: true,
+//        child: Flex(
+//          direction: Axis.horizontal,
+//          children: <Widget>[
+//            Expanded(
+//              flex: 1,
+//              child: Padding(
+//                padding: const EdgeInsets.only(right: 4),
+//                child: Column(
+//                  crossAxisAlignment: CrossAxisAlignment.start,
+//                  children: <Widget>[
+//                    Label(
+//                      '请输入nShell ID',
+//                      type: LabelType.h4,
+//                      textAlign: TextAlign.start,
+//                    ),
+//                    Textbox(
+//                      minLines: 1,
+//                      maxLines: 1,
+//                      controller: _nShellIdController,
+//                      textInputAction: TextInputAction.newline,
+//                      maxLength: 200,
+//                    ),
+//                  ],
+//                ),
+//              ),
+//            ),
+//          ],
+//        ),
+//      ),
+//      action: Padding(
+//        padding: EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
+//        child: Button(
+//          text: '保存',
+//          width: double.infinity,
+//          onPressed: () async {
+//            if (_nShellIdController.text.toString().length >= 60) {
+//              LogUtil.v(_list);
+//              var result = _list.firstWhere((v) => v.nshId == _nShellIdController.text.toString(), orElse: () => null);
+//              if (result == null) {
+//                result = CdnMiner(_nShellIdController.text.toString());
+//                result.insertOrUpdate().then((v) {
+//                  if (v) {
+//                    setState(() {
+//                      _list.add(result);
+//                    });
+//                  }
+//                });
+//                showToast('添加成功');
+//              } else {
+//                showToast('已存在');
+//              }
+//              Navigator.of(context).pop();
+//            } else {
+//              showToast('请输入正确的ID');
+//            }
+//          },
+//        ),
+//      ),
+//    );
+    } else {
+      showToast('请输入正确的ID');
+    }
   }
 }

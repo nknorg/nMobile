@@ -118,7 +118,7 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Label(
-                                      NMobileLocalizations.of(context).nickname,
+                                      NMobileLocalizations.of(context).nick_name,
                                       type: LabelType.h3,
                                       textAlign: TextAlign.start,
                                     ),

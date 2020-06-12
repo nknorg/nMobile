@@ -41,7 +41,6 @@ android {
 
         ndk {
             abiFilters "arm64-v8a"
-//            abiFilters 'armeabi-v7a'
         }
     }
 
@@ -74,32 +73,9 @@ android {
         }
         debug {
             applicationIdSuffix ".flutter"
-            versionNameSuffix "-flutter"
+            versionNameSuffix ""
         }
     }
-
-//    splits {
-//        abi {
-//            reset()
-//            enable true
-//            universalApk false  // If true, also generate a universal APK
-//            include "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
-//        }
-//    }
-//    // applicationVariants are e.g. debug, release
-//    applicationVariants.all { variant ->
-//        variant.outputs.each { output ->
-//            // For each separate APK per architecture, set a unique version code as described here:
-//            // http://tools.android.com/tech-docs/new-build-system/user-guide/apk-splits
-//            def versionCodes = ["arm64-v8a": 1, "armeabi-v7a": 2, "x86": 3, "x86_64": 4]
-//            def abi = output.getFilter(OutputFile.ABI)
-//            def verCode = defaultConfig.versionCode
-//            if (abi != null) {  // null for the universal-debug, universal-release variants
-//                output.versionCodeOverride = versionCodes.get(abi) * version4Abi(verCode) + verCode
-//                println("versionCode: $output.versionCodeOverride : $variant.applicationId : $abi")
-//            }
-//        }
-//    }
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'

@@ -27,8 +27,7 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
       backgroundColor: DefaultTheme.primaryColor,
       appBar: Header(
         titleChild: Padding(
-          // It is consistent with other pages, and I read its source code, but it is not so adapted.
-          padding: EdgeInsets.only(left: 20),
+          padding: EdgeInsets.only(left: 20.w),
           child: Label(
             NMobileLocalizations.of(context).menu_chat.toUpperCase(),
             type: LabelType.h2,
@@ -57,7 +56,9 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                   child: Column(
                     children: <Widget>[
                       Padding(
-                        padding: EdgeInsets.only(top: 32),
+                        padding: EdgeInsets.only(
+                          top: 32.h,
+                        ),
                         child: Label(
                           NMobileLocalizations.of(context).chat_no_wallet_title,
                           type: LabelType.h2,
@@ -66,7 +67,7 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(top: 8, left: 48, right: 48),
+                        padding: EdgeInsets.only(top: 32.h, left: 0, right: 0),
                         child: Label(
                           NMobileLocalizations.of(context).chat_no_wallet_desc,
                           type: LabelType.bodySmall,
@@ -82,7 +83,9 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                   child: Column(
                     children: <Widget>[
                       Padding(
-                        padding: EdgeInsets.only(top: 48.h),
+                        padding: EdgeInsets.only(
+                          top: 48.h,
+                        ),
                         child: Button(
                           width: double.infinity,
                           text: NMobileLocalizations.of(context).no_wallet_create,
@@ -93,7 +96,9 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(top: 16.h),
+                        padding: EdgeInsets.only(
+                          top: 16.h,
+                        ),
                         child: Button(
                           width: double.infinity,
                           text: NMobileLocalizations.of(context).no_wallet_import,

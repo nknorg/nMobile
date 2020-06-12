@@ -79,6 +79,9 @@ class MessageSchema extends Equatable {
           case ContentType.eventSubscribe:
             content = msg['content'];
             break;
+          case ContentType.eventNodeOnline:
+            content = msg['content'];
+            break;
           case ContentType.media:
             break;
           default:
