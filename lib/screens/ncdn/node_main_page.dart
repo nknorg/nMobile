@@ -98,8 +98,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
 
   search() {
     LoadingDialog.of(context).show();
-    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/NKNFAPK9RHJJrR6h3UgBGwq85uAhccQdzyHY';
-//    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/${_wallet.address}';
+    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/${_wallet.address}';
     var params = {
       'start': _start.millisecondsSinceEpoch ~/ 1000,
       'end': _end.add(Duration(days: 1)).millisecondsSinceEpoch ~/ 1000,
