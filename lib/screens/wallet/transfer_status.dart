@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -6,22 +8,11 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/utils/extensions.dart';
 
+@deprecated
 class TransferStatusPopup extends PopupRoute {
   TransferStatusPopup.show(BuildContext context) {
     Navigator.push(context, this);
   }
-
-  @override
-  Color get barrierColor => null;
-
-  @override
-  bool get barrierDismissible => true;
-
-  @override
-  String get barrierLabel => null;
-
-  @override
-  Duration get transitionDuration => Duration(milliseconds: 30);
 
   @override
   Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
@@ -41,6 +32,7 @@ class TransferStatusPopup extends PopupRoute {
                 SvgPicture.asset('assets/wallet/dui_gou_yuan_quan.svg', color: Colours.white).pad(t: 16),
                 _buildText(context),
                 GestureDetector(
+                  behavior: HitTestBehavior.translucent,
                   child: SvgPicture.asset('assets/icons/x_cha.svg', color: Colours.white, width: 12, height: 12).center.sized(w: 48, h: 48),
                   onTap: () {
                     Navigator.pop(context);
@@ -72,4 +64,16 @@ class TransferStatusPopup extends PopupRoute {
       ),
     );
   }
+
+  @override
+  Color get barrierColor => null;
+
+  @override
+  bool get barrierDismissible => true;
+
+  @override
+  String get barrierLabel => null;
+
+  @override
+  Duration get transitionDuration => Duration(milliseconds: 30);
 }
