@@ -103,7 +103,6 @@ class _NodeMainPageState extends State<NodeMainPage> {
       responseData = (res as Map);
       LogUtil.v(responseData);
       if (res != null) {
-        _sumBalance = 0;
         _list = await CdnMiner.getAllCdnMiner();
         await resetFormatData();
         for (CdnMiner cdn in _list) {
@@ -117,6 +116,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
   }
 
   resetFormatData() async {
+    _sumBalance = 0;
     if (responseData != null && responseData.keys != null) {
       for (String key in responseData.keys) {
         List<dynamic> val = (responseData[key] as List<dynamic>);
