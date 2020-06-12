@@ -3,37 +3,34 @@ import 'package:bot_toast/src/toast_widget/animation.dart';
 import 'package:bot_toast/src/toast_widget/notification.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nmobile/components/button.dart';
+import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/utils/extensions.dart';
 
 class NotificationDialog extends StatefulWidget {
   @override
   _NotificationDialogState createState() => _NotificationDialogState();
-
   BuildContext context;
-  NotificationDialog();
 
   NotificationDialog.of(this.context);
 
-  Widget child;
-  Widget icon;
   Color color;
-  Widget title;
-  Widget content;
+  Widget icon;
+  String title;
+  String content;
   double height;
   CancelFunc cancelFunc;
 
   CancelFunc show({
-    Widget child,
-    Widget icon,
     Color color,
-    Widget title,
-    Widget content,
-    double height,
+    Widget icon,
+    String title,
+    String content,
+    double height = 143,
   }) {
-    this.child = child;
-    this.icon = icon;
     this.color = color;
+    this.icon = icon;
     this.title = title;
     this.content = content;
     this.height = height;
@@ -46,8 +43,9 @@ class NotificationDialog extends StatefulWidget {
         duration: const Duration(seconds: 5),
         animationDuration: const Duration(milliseconds: 256),
         wrapToastAnimation: (controller, cancel, child) {
-          if (notificationAnimation != null) {
-            child = notificationAnimation(controller, cancel, child);
+          final anim = notificationAnimation(controller, cancel, child);
+          if (anim != null) {
+            child = anim;
           }
           child = Align(alignment: Alignment.topCenter, child: child);
           return child;
@@ -74,63 +72,42 @@ class _NotificationDialogState extends State<NotificationDialog> {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.topCenter,
-      height: widget.height,
+      height: widget.height ?? 143,
       constraints: BoxConstraints(maxHeight: 200),
-      decoration: BoxDecoration(color: widget.color ?? DefaultTheme.notificationBackgroundColor),
+      decoration: BoxDecoration(color: widget.color ?? Colours.green_06),
       child: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
-          child: Flex(
-            direction: Axis.horizontal,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Expanded(
-                flex: 0,
-                child: widget.icon != null
-                    ? Padding(
-                        padding: const EdgeInsets.only(right: 18, top: 0),
-                        child: widget.icon,
-                      )
-                    : Padding(
-                        padding: const EdgeInsets.all(0),
-                      ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        widget.title,
-                        Button(
-                          icon: true,
-                          padding: const EdgeInsets.all(0),
-                          size: 30,
-                          child: SvgPicture.asset(
-                            'assets/icons/close.svg',
-                            width: 16,
-                            color: DefaultTheme.backgroundLightColor,
-                          ),
-                          onPressed: () => widget.cancelFunc(),
-                        )
-                      ],
-                    ),
-                    widget.content != null
-                        ? Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: widget.content,
-                          )
-                        : Padding(
-                            padding: const EdgeInsets.all(0),
-                          ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            (widget.icon ?? SvgPicture.asset('assets/wallet/dui_gou_yuan_quan.svg', color: Colours.white)).pad(t: 16),
+            _buildText(context),
+            GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              child: SvgPicture.asset('assets/icons/x_cha.svg', color: Colours.white, width: 12, height: 12).center.sized(w: 48, h: 48),
+              onTap: widget.cancelFunc,
+            ),
+          ],
+        ).pad(l: 24, t: 3, r: 6),
+      ),
+    );
+  }
+
+  Widget _buildText(BuildContext context) {
+    return Expanded(
+      flex: 1,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            widget.title,
+            style: TextStyle(fontSize: DefaultTheme.h4FontSize, fontWeight: FontWeight.bold, color: Colours.white),
+          ).pad(l: 16, t: 14),
+          Text(
+            widget.content,
+            style: TextStyle(fontSize: DefaultTheme.bodySmallFontSize, color: Colours.white),
+          ).pad(l: 16, t: 12),
+        ],
       ),
     );
   }

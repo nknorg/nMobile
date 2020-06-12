@@ -13,6 +13,7 @@ import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
+import 'package:nmobile/components/dialog/notification.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
@@ -27,7 +28,6 @@ import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
-import 'package:nmobile/screens/wallet/transfer_status.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/image_utils.dart';
@@ -63,9 +63,13 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
   _send() {
     Navigator.of(context).pushNamed(SendNknScreen.routeName, arguments: widget.arguments).then((v) {
       if (v != null) {
-        TransferStatusPopup.show(context);
+        NotificationDialog.of(context).show(
+          title: NMobileLocalizations.of(context).transfer_initiated,
+          content: NMobileLocalizations.of(context).transfer_initiated_desc,
+        );
+        // TransferStatusPopup.show(context);
         // see `SendNknScreen.transferAction()`
-        //locator<TaskService>().queryNknWalletBalanceTask();
+        // locator<TaskService>().queryNknWalletBalanceTask();
       }
     });
   }
