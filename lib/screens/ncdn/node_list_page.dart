@@ -84,7 +84,7 @@ class NodeListPageState extends State<NodeListPage> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
                                   Label(
-                                    '昨日收益: ${node.cost != null ? Format.currencyFormat(node.cost, decimalDigits: 3) : '-'} USDT',
+                                    '预估收益: ${node.cost != null ? Format.currencyFormat(node.cost, decimalDigits: 3) : '-'} USDT',
                                     color: DefaultTheme.fontColor1,
                                     type: LabelType.bodyRegular,
                                     softWrap: true,

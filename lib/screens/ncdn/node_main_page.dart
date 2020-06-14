@@ -60,7 +60,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
     _wallet = widget.arguments['wallet'];
     _publicKey = widget.arguments['publicKey'];
     _seed = widget.arguments['seed'];
-    _start = getStartOfDay(DateTime.now().add(Duration(days: -2)));
+    _start = getStartOfDay(DateTime.now().add(Duration(days: -1)));
     _end = getStartOfDay(DateTime.now().add(Duration(days: -1)));
     _startText = DateUtil.formatDate(_start, format: 'yyyy-MM-dd');
     _endText = DateUtil.formatDate(_end, format: 'yyyy-MM-dd');
@@ -284,7 +284,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
                             ),
                             SizedBox(width: 5.w),
                             Label(
-                              _startText,
+                              _startText + " 00:00",
                               color: DefaultTheme.fontColor1,
                               type: LabelType.bodyRegular,
                               softWrap: true,
@@ -323,7 +323,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
                             ),
                             SizedBox(width: 5.w),
                             Label(
-                              _endText,
+                              _endText + " 23:59",
                               color: DefaultTheme.fontColor1,
                               type: LabelType.bodyRegular,
                               softWrap: true,
@@ -332,23 +332,29 @@ class _NodeMainPageState extends State<NodeMainPage> {
                         ),
                       ),
                       SizedBox(width: 10.w),
-                      InkWell(
-                        onTap: () {
-                          search();
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 14.w),
-                          decoration: BoxDecoration(color: DefaultTheme.primaryColor, borderRadius: BorderRadius.circular(100)),
-                          child: Label(
-                            '搜索',
-                            color: Colors.white,
-                            type: LabelType.bodyRegular,
-                            softWrap: true,
-                          ),
-                        ),
-                      )
                     ],
                   ),
+                ),
+                SizedBox(height: 10.h),
+                Row(
+                  children: <Widget>[
+                    Spacer(),
+                    InkWell(
+                      onTap: () {
+                        search();
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 14.w),
+                        decoration: BoxDecoration(color: DefaultTheme.primaryColor, borderRadius: BorderRadius.circular(100)),
+                        child: Label(
+                          '搜索',
+                          color: Colors.white,
+                          type: LabelType.bodyRegular,
+                          softWrap: true,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(height: 10.h),
                 Row(
@@ -409,7 +415,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: <Widget>[
                                           Label(
-                                            '昨日收益: ${node.cost != null ? Format.currencyFormat(node.cost, decimalDigits: 3) : '-'} USDT',
+                                            '预估收益: ${node.cost != null ? Format.currencyFormat(node.cost, decimalDigits: 3) : '-'} USDT',
                                             color: DefaultTheme.fontColor1,
                                             type: LabelType.bodyRegular,
                                             softWrap: true,
