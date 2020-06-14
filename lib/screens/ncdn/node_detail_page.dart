@@ -63,7 +63,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
             child: Column(
               children: <Widget>[
                 Label(
-                  '昨日收益',
+                  '预估收益',
                   type: LabelType.bodyRegular,
                   color: DefaultTheme.fontColor2,
                   textAlign: TextAlign.start,
