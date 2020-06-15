@@ -82,31 +82,36 @@ class Api {
   }
 
   Future post(url, data, {bool isEncrypted}) async {
-    LogUtil.v(data);
+//    LogUtil.v(data);
     if (isEncrypted) {
       var encData = encryptData(jsonEncode(data));
       try {
+        var params = {'pub_key': hexEncode(myPublicKey), 'data': encData};
+        LogUtil.v(params);
         Response res = await dio.post(
           url,
-          data: {'pub_key': hexEncode(myPublicKey), 'data': encData},
+          data: params,
           options: Options(
             headers: {'Content-Type': 'application/json'},
             contentType: 'application/json',
             validateStatus: (_) => true,
           ),
         );
-        LogUtil.v(res);
         if (res.statusCode >= 200 && res.statusCode < 300 && res.data != null) {
           var msg;
+          LogUtil.v(res);
           if (res.data is String) {
             msg = decryptData(res.data);
           } else {
             if (res.data['success'] && res.data['result'] != null) {
               msg = decryptData(res.data['result']);
+              LogUtil.v(msg);
             }
           }
 
           return jsonDecode(msg);
+        } else {
+          LogUtil.v('===========');
         }
       } catch (e) {
         debugPrintStack();

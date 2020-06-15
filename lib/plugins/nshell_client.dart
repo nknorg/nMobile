@@ -55,14 +55,16 @@ class NShellClientPlugin {
     LogUtil.v(content['Result']);
     LogUtil.v(content['Type']);
     LogUtil.v(src);
+    var type = content['Type'];
     try {
-      var cdn = await CdnMiner.getModelFromNshid(src);
-      if (cdn == null) {
-        cdn = CdnMiner(src);
+      if (type != null && type.toString().contains('self_checker.sh')) {
+        var cdn = await CdnMiner.getModelFromNshid(src);
+        if (cdn != null) {
+          cdn.data = content;
+          await cdn.insertOrUpdate();
+          _cdnBloc.add(LoadData(data: cdn));
+        }
       }
-      cdn.data = content;
-      cdn.insertOrUpdate();
-      _cdnBloc.add(LoadData(data: cdn));
     } catch (e) {
       LogUtil.v(e.toString(), tag: 'onMessage');
     }
@@ -112,7 +114,7 @@ class NShellClientPlugin {
     }
   }
 
-  static Future<Uint8List> sendText(List<String> dests, String data) async {
+  static Future<Uint8List> sendText(List<String> dests, String data, {int maxHoldingSeconds = 0}) async {
     LogUtil.v('sendText  $data ', tag: TAG);
     Completer<Uint8List> completer = Completer<Uint8List>();
     String id = completer.hashCode.toString();
@@ -123,6 +125,7 @@ class NShellClientPlugin {
         '_id': id,
         'dests': dests,
         'data': data,
+        'maxHoldingSeconds': maxHoldingSeconds,
       });
     } catch (e) {
       LogUtil.v('send fault');
