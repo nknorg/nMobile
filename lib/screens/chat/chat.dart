@@ -20,20 +20,14 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMixin {
-  bool _autoChecking = false;
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
     return BlocBuilder<WalletsBloc, WalletsState>(
       builder: (context, state) {
-        if (!_autoChecking) {
-          _autoChecking = true;
-          Timer(Duration(seconds: 10), () {
-            _autoChecking = false;
-            UpgradeChecker.autoCheckUpgrade(context);
-          });
-        }
+        Timer(Duration(seconds: 2), () async {
+          UpgradeChecker.autoCheckUpgrade(context);
+        });
         if (state is WalletsLoaded) {
           if (state.wallets.length > 0) {
             return BlocBuilder<ClientBloc, ClientState>(

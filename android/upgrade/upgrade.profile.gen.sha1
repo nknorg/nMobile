@@ -1,0 +1,9 @@
+{
+  "apkUrl": "https://nmobile.nkn.org/downloads/nmobile-pro_v1.0.2_104.apk",
+  "version": "1.0.2-pro + (Build 104)",
+  "gatedLaunch": 0.1,
+  "title": "内部专用版：",
+  "notes": "专用于生成 sha-1 的内部版。",
+  "sha-1": "xxxxx",
+  "force": false
+}
