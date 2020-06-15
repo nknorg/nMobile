@@ -147,12 +147,12 @@ class UpgradeChecker {
             _dialogShowing = true;
             onShowNotes(version, title, notes, force, jsonMap);
           }
-        } else if (version == _currentVer) {
+        } else if (version.compareTo(_currentVer) <= 0) {
           if (onAlreadyTheLatestVersion != null) onAlreadyTheLatestVersion();
         } else {
           bool isIgnored = await _isVersionIgnored(version);
           bool isCurrVerCoverGatedL = await _isVersionCoverGatedLaunch(version, gatedLaunch);
-          if ((!auto || !isIgnored) && isCurrVerCoverGatedL && !_dialogShowing) {
+          if ((force || !auto || !isIgnored) && isCurrVerCoverGatedL && !_dialogShowing) {
             print('_isVersionCoverGatedLaunch: true');
             _dialogShowing = true;
             onShowNotes(version, title, notes, force, jsonMap);
