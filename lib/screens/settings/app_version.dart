@@ -43,19 +43,17 @@ class AppVersion extends StatelessWidget {
                       child: FlatButton(
                           onPressed: () {
                             showToast(NMobileLocalizations.of(context).check_upgrade, duration: Duration(seconds: 3));
-                            UpgradeChecker.checkUpgrade(context, false, (showNotes, version, title, notes, force, jsonMap) {
-                              if (showNotes) {
-                                var bloc;
-                                bloc = ApkUpgradeNotesDialog.of(context).show(version, title, notes, force, jsonMap, (jsonMap) {
-                                  UpgradeChecker.downloadApkFile(jsonMap, (progress) {
-                                    bloc.add(progress);
-                                  });
-                                }, (version) {
-                                  UpgradeChecker.setVersionIgnored(version);
-                                }, () {
-                                  UpgradeChecker.setDialogDismissed();
+                            UpgradeChecker.checkUpgrade(context, false, (version, title, notes, force, jsonMap) {
+                              var bloc;
+                              bloc = ApkUpgradeNotesDialog.of(context).show(version, title, notes, force, jsonMap, (jsonMap) {
+                                UpgradeChecker.downloadApkFile(jsonMap, (progress) {
+                                  bloc.add(progress);
                                 });
-                              }
+                              }, (version) {
+                                UpgradeChecker.setVersionIgnored(version);
+                              }, () {
+                                UpgradeChecker.setDialogDismissed();
+                              });
                             }, onAlreadyTheLatestVersion: () {
                               showToast(NMobileLocalizations.of(context).already_the_latest_version);
                             });

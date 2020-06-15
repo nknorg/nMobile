@@ -22,6 +22,7 @@ class UpgradeChecker {
   static String get _currentVer => Global.versionFull; // 1.0.1-pro + (Build 101);
 
   static bool _dialogShowing = false;
+  static bool _forGenSh1 = false;
 
   static void setDialogDismissed() {
     _dialogShowing = false;
@@ -87,23 +88,22 @@ class UpgradeChecker {
 
   static void autoCheckUpgrade(BuildContext context) async {
     print('autoCheckUpgrade --> isAndroid: $_isAndroid');
-    if (!_isAndroid) return;
+    if (!_isAndroid || _dialogShowing) return;
     var prevTime = await _getPrevTimeMillis();
     var prev = prevTime == null ? null : DateTime.fromMillisecondsSinceEpoch(prevTime);
-    if (prev == null || _isNowAfterOneDay(prev)) {
-      checkUpgrade(context, true, (showNotes, version, title, notes, force, jsonMap) {
-        if (showNotes) {
-          var bloc;
-          bloc = ApkUpgradeNotesDialog.of(context).show(version, title, notes, force, jsonMap, (jsonMap) {
-            downloadApkFile(jsonMap, (progress) {
-              bloc.add(progress);
-            });
-          }, (version) {
-            setVersionIgnored(version);
-          }, () {
-            setDialogDismissed();
+    if (_forGenSh1 || prev == null || _isNowAfterOneDay(prev)) {
+      print('autoCheckUpgrade --> checkUpgrade...');
+      checkUpgrade(context, true, (version, title, notes, force, jsonMap) {
+        var bloc;
+        bloc = ApkUpgradeNotesDialog.of(context).show(version, title, notes, force, jsonMap, (jsonMap) {
+          downloadApkFile(jsonMap, (progress) {
+            bloc.add(progress);
           });
-        }
+        }, (version) {
+          setVersionIgnored(version);
+        }, () {
+          setDialogDismissed();
+        });
       });
     }
   }
@@ -116,13 +116,15 @@ class UpgradeChecker {
   "sha-1": "${hash by sha-1}",
   "force": false
   }*/
-  static void checkUpgrade(BuildContext context, bool auto, onShowNotes(bool showNotes, String version, String title, String notes, bool force, Map jsonMap),
+  static void checkUpgrade(BuildContext context, bool auto, onShowNotes(String version, String title, String notes, bool force, Map jsonMap),
       {VoidCallback onAlreadyTheLatestVersion}) async {
     assert(_isAndroid);
 
     bool _isZh = Global.isLocaleZh();
-    bool _test = false; //_isRelease;
-    _dio.get(_isZh ? UPGRADE_PROFILE_URL_zh : UPGRADE_PROFILE_URL, queryParameters: _test ? {} : {"v": _random().toStringAsFixed(5)}).then((resp) async {
+    _dio
+        .get(_forGenSh1 ? UPGRADE_PROFILE_URL_gen_sha1 : _isZh ? UPGRADE_PROFILE_URL_zh : UPGRADE_PROFILE_URL,
+            queryParameters: _forGenSh1 ? {"v": _random().toStringAsFixed(5)} : {})
+        .then((resp) async {
       if (resp.statusCode == HttpStatus.ok) {
         final jsonMap = jsonDecode(resp.data);
         final String apkUrl = jsonMap['apkUrl'];
@@ -137,10 +139,15 @@ class UpgradeChecker {
         LogUtil.v('version: $version', tag: 'upgrade.profile');
         LogUtil.v('gatedLaunch: $gatedLaunch', tag: 'upgrade.profile');
         //LogUtil.v('notes: $notes', tag: 'upgrade.profile');
-        LogUtil.v('sha-1: $sha1Hash}', tag: 'upgrade.profile');
-        LogUtil.v('force: $force}', tag: 'upgrade.profile');
+        LogUtil.v('sha-1: $sha1Hash', tag: 'upgrade.profile');
+        LogUtil.v('force: $force', tag: 'upgrade.profile');
 
-        if (version == _currentVer) {
+        if (_forGenSh1) {
+          if (!_dialogShowing) {
+            _dialogShowing = true;
+            onShowNotes(version, title, notes, force, jsonMap);
+          }
+        } else if (version == _currentVer) {
           if (onAlreadyTheLatestVersion != null) onAlreadyTheLatestVersion();
         } else {
           bool isIgnored = await _isVersionIgnored(version);
@@ -148,8 +155,8 @@ class UpgradeChecker {
           if ((!auto || !isIgnored) && isCurrVerCoverGatedL && !_dialogShowing) {
             print('_isVersionCoverGatedLaunch: true');
             _dialogShowing = true;
-            onShowNotes(true, version, title, notes, force, jsonMap);
-            _setPrevTimeMillis();
+            onShowNotes(version, title, notes, force, jsonMap);
+            if (!force) _setPrevTimeMillis();
           }
         }
       }
@@ -157,7 +164,7 @@ class UpgradeChecker {
   }
 
   static void downloadApkFile(Map jsonMap, onProgress(double progress)) async {
-    setDialogDismissed();
+    // setDialogDismissed();
     final String apkUrl = jsonMap['apkUrl'];
     final String sha1Hash = jsonMap['sha-1'];
     final String version = jsonMap['version'];
@@ -194,7 +201,12 @@ class UpgradeChecker {
       if (sha1 == sha1f) {
         return true;
       } else {
-        f.deleteSync();
+        //f.deleteSync();
+        var list = f.parent.listSync(recursive: true, followLinks: true);
+        for (var tmp in list) {
+          tmp.deleteSync(recursive: true);
+          print('_checkApkFile deleteSync: $tmp');
+        }
         return false;
       }
     }
@@ -211,4 +223,5 @@ class UpgradeChecker {
   static final String UPGRADE_BASE_URL = 'https://nmobile.nkn.org/upgrade/pro/';
   static final String UPGRADE_PROFILE_URL = 'upgrade.profile';
   static final String UPGRADE_PROFILE_URL_zh = 'upgrade.profile.zh';
+  static final String UPGRADE_PROFILE_URL_gen_sha1 = 'upgrade.profile.gen.sha1';
 }

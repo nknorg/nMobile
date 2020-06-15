@@ -44,9 +44,14 @@ class ApkUpgradeNotesDialog extends StatefulWidget {
       context: _context,
       barrierDismissible: false,
       builder: (ctx) {
-        return Container(
-          alignment: Alignment.center,
-          child: this,
+        return WillPopScope(
+          child: Container(
+            alignment: Alignment.center,
+            child: this,
+          ),
+          onWillPop: () async {
+            return Future.value(!_force);
+          },
         );
       },
     );
@@ -93,8 +98,12 @@ class _ApkUpgradeNotesDialogState extends State<ApkUpgradeNotesDialog> {
                           size: 48,
                           child: loadAssetIconsImage('close', width: 16),
                           onPressed: () {
-                            widget.close();
-                            widget._onClose();
+                            if (widget._force) {
+                              // If it's a forced update, it cannot be turned off.
+                            } else {
+                              widget.close();
+                              widget._onClose();
+                            }
                           }).sized(h: 48).toList)),
               Expanded(
                 flex: 1,
@@ -123,6 +132,10 @@ class _ApkUpgradeNotesDialogState extends State<ApkUpgradeNotesDialog> {
                 flex: 0,
                 child: BlocBuilder<DownloadProgressBloc, DownloadState>(
                   builder: (context, state) {
+                    if (widget._force && !_showProgress) {
+                      widget._onDownload(widget._jsonMap);
+                      _showProgress = true;
+                    }
                     return (state.progress == null && !_showProgress) ? _buildButton(context) : _buildProgress(context, state);
                   },
                 ),
@@ -135,7 +148,8 @@ class _ApkUpgradeNotesDialogState extends State<ApkUpgradeNotesDialog> {
   }
 
   Widget _buildProgress(BuildContext context, DownloadState state) {
-    print('download apk: ${state.progress}%');
+    var progress = (state.progress == null ? '--' : (state.progress * 100).toStringAsFixed(0)) + '%';
+    print('download apk: $progress');
     if (state.progress != null && state.progress >= 1.0) {
       // Exception caught.
       // widget.close();
@@ -150,7 +164,7 @@ class _ApkUpgradeNotesDialogState extends State<ApkUpgradeNotesDialog> {
         state.progress == null
             ? Space.empty
             : Text(
-                (state.progress * 100).toStringAsFixed(0) + '%',
+                progress,
                 style: TextStyle(color: Colours.blue_0f, fontSize: DefaultTheme.bodySmallFontSize),
               ).pad(t: 3),
       ],
@@ -189,7 +203,7 @@ class _ApkUpgradeNotesDialogState extends State<ApkUpgradeNotesDialog> {
                   padding: 0.pad(l: 24, r: 24),
                   onPressed: () {
                     // widget.close();
-                    widget._onDownload(widget._jsonMap);
+                    if (!_showProgress) widget._onDownload(widget._jsonMap);
                     setState(() {
                       _showProgress = true;
                     });
