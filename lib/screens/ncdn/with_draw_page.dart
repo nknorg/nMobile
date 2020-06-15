@@ -117,7 +117,7 @@ class WithDrawPageState extends State<WithDrawPage> {
                                   focusNode: _commentFocus,
                                   validator: Validator.of(context).amount(max: widget.arguments['maxBalance']),
                                   keyboardType: TextInputType.number,
-                                  inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]*\.?[0-9]{0,3}'))],
+                                  inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]*\\.?[0-9]{0,3}'))],
                                   textInputAction: TextInputAction.next,
                                 ),
                               ),

@@ -67,7 +67,7 @@ class _WithdrawModalState extends State<WithdrawModal> {
                   showErrorMessage: true,
                   validator: Validator.of(context).amount(max: widget.maxBalance),
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]*\.?[0-9]{0,3}'))],
+                  inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]*\\.?[0-9]{0,3}'))],
                   textInputAction: TextInputAction.next,
                 ),
                 Row(
