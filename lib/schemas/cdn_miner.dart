@@ -18,11 +18,11 @@ class CdnMiner {
   num cost;
   num contribution;
 
-  CdnMiner(this.nshId, {String name = '', this.flow, this.cost, this.contribution}) {
+  CdnMiner(this.nshId, {String name = null, this.flow, this.cost, this.contribution}) {
     if (nshId.contains('ctrl.')) {
       nshId = nshId.split('ctrl.')[1];
     }
-    if (name == null) {
+    if (name == null || name.length == 0) {
       name = nshId.substring(0, 8);
     }
   }
@@ -80,7 +80,7 @@ class CdnMiner {
         return '故障';
       }
     } catch (e) {
-      LogUtil.v(e);
+      LogUtil.v(e, tag: 'getStatus');
       return '未知';
     }
   }
@@ -104,7 +104,6 @@ class CdnMiner {
         }
       } catch (e) {
         LogUtil.v(e, tag: 'CdnMinerparseEntity');
-        LogUtil.v(e);
       }
       return c;
     } catch (e) {
@@ -174,15 +173,10 @@ class CdnMiner {
       int id = await db.insert(CdnMiner.tableName, toEntity());
       return id;
     } catch (e) {
+      LogUtil.v(e, tag: 'insert');
       debugPrint(e);
       debugPrintStack();
     }
-  }
-
-  getData() {
-    MessageSchema msg = MessageSchema();
-    msg.content = '/usr/bin/self_checker.sh';
-    NShellClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData());
   }
 
   String getIp() {
@@ -192,6 +186,7 @@ class CdnMiner {
       }
       return '';
     } catch (e) {
+      LogUtil.v(e, tag: 'getIp');
       return '';
     }
   }
@@ -229,5 +224,17 @@ class CdnMiner {
     } catch (e) {
       return '';
     }
+  }
+
+  reboot() {
+    MessageSchema msg = MessageSchema();
+    msg.content = 'reboot';
+    NShellClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData(), maxHoldingSeconds: 1);
+  }
+
+  getMinerDetail() {
+    MessageSchema msg = MessageSchema();
+    msg.content = '/usr/bin/self_checker.sh';
+    NShellClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData());
   }
 }

@@ -35,7 +35,7 @@ class NodeListPageState extends State<NodeListPage> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: '节点详情',
+        title: '节点列表',
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: Builder(

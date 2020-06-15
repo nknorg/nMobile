@@ -70,15 +70,6 @@ class _NodeMainPageState extends State<NodeMainPage> {
       if (state is LoadSate) {
         _list = await CdnMiner.getAllCdnMiner();
         await resetFormatData();
-//        var index = _list.indexWhere((model) => model.nshId == state.data.nshId);
-//        if (index != -1) {
-//          if (mounted) {
-//            setState(() {
-//              _list[index].data = state.data.data;
-//              LogUtil.v(json.encode(state.data.data));
-//            });
-//          }
-//        }
       }
     });
 
@@ -89,11 +80,13 @@ class _NodeMainPageState extends State<NodeMainPage> {
 
   @override
   void dispose() {
+    _cdnBloc.close();
     super.dispose();
   }
 
   search() {
     LoadingDialog.of(context).show();
+//    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/NKNGVRacskwuKRzwVoNmJdjWS7mqB5VKAzju';
     String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/${_wallet.address}';
     var params = {
       'start': _start.millisecondsSinceEpoch ~/ 1000,
@@ -101,13 +94,11 @@ class _NodeMainPageState extends State<NodeMainPage> {
     };
     _api.post(url, params, isEncrypted: true).then((res) async {
       responseData = (res as Map);
-      LogUtil.v(responseData);
       if (res != null) {
         _list = await CdnMiner.getAllCdnMiner();
         await resetFormatData();
         for (CdnMiner cdn in _list) {
-          LogUtil.v(cdn.nshId + '====getData');
-          cdn.getData();
+          cdn.getMinerDetail();
         }
         setState(() {});
       }
@@ -116,16 +107,18 @@ class _NodeMainPageState extends State<NodeMainPage> {
   }
 
   resetFormatData() async {
-    _sumBalance = 0;
+    double totalAmount = 0;
     if (responseData != null && responseData.keys != null) {
       for (String key in responseData.keys) {
         List<dynamic> val = (responseData[key] as List<dynamic>);
-        _sumBalance += val[1];
+        totalAmount += val[1];
         var cdn = _list.firstWhere((x) => x.nshId == key, orElse: () => null);
         if (cdn == null) {
           cdn = CdnMiner(key, flow: val[0], cost: val[1], contribution: val[2]);
-          await cdn.insertOrUpdate();
-          _list.add(cdn);
+          var b = await cdn.insertOrUpdate();
+          if (b) {
+            _list.add(cdn);
+          }
         } else {
           int i = _list.indexOf(cdn);
           _list[i].flow = val[0];
@@ -136,7 +129,9 @@ class _NodeMainPageState extends State<NodeMainPage> {
     }
 
     if (mounted) {
-      setState(() {});
+      setState(() {
+        _sumBalance = totalAmount;
+      });
     }
   }
 
@@ -219,7 +214,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
                         onTap: () {
                           Navigator.pushNamed(context, NodeListPage.routeName,
                               arguments: _list.where((item) {
-                                return item.getStatus() != '运行中';
+                                return item.getStatus() == '故障';
                               }).toList());
                         },
                         child: Row(
@@ -235,7 +230,45 @@ class _NodeMainPageState extends State<NodeMainPage> {
                             Label(
                               _list
                                   .where((item) {
-                                    return item.getStatus() != '运行中';
+                                    return item.getStatus() == '故障';
+                                  })
+                                  .toList()
+                                  .length
+                                  .toString(),
+                              color: DefaultTheme.fontColor1,
+                              type: LabelType.bodyRegular,
+                              softWrap: true,
+                            ),
+                            SvgPicture.asset(
+                              'assets/icons/right.svg',
+                              width: 24,
+                              color: DefaultTheme.fontColor2,
+                            )
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 10.h),
+                      InkWell(
+                        onTap: () {
+                          Navigator.pushNamed(context, NodeListPage.routeName,
+                              arguments: _list.where((item) {
+                                return item.getStatus() == '未知';
+                              }).toList());
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Label(
+                              '未知数量',
+                              color: DefaultTheme.fontColor1,
+                              type: LabelType.bodyRegular,
+                              softWrap: true,
+                            ),
+                            Spacer(),
+                            Label(
+                              _list
+                                  .where((item) {
+                                    return item.getStatus() == '未知';
                                   })
                                   .toList()
                                   .length
@@ -489,72 +522,6 @@ class _NodeMainPageState extends State<NodeMainPage> {
       } else {
         showToast('已存在');
       }
-
-//    BottomDialog.of(context).showBottomDialog(
-//      height: 320,
-//      title: '添加设备',
-//      child: Form(
-//        key: _notesFormKey,
-//        autovalidate: true,
-//        child: Flex(
-//          direction: Axis.horizontal,
-//          children: <Widget>[
-//            Expanded(
-//              flex: 1,
-//              child: Padding(
-//                padding: const EdgeInsets.only(right: 4),
-//                child: Column(
-//                  crossAxisAlignment: CrossAxisAlignment.start,
-//                  children: <Widget>[
-//                    Label(
-//                      '请输入nShell ID',
-//                      type: LabelType.h4,
-//                      textAlign: TextAlign.start,
-//                    ),
-//                    Textbox(
-//                      minLines: 1,
-//                      maxLines: 1,
-//                      controller: _nShellIdController,
-//                      textInputAction: TextInputAction.newline,
-//                      maxLength: 200,
-//                    ),
-//                  ],
-//                ),
-//              ),
-//            ),
-//          ],
-//        ),
-//      ),
-//      action: Padding(
-//        padding: EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
-//        child: Button(
-//          text: '保存',
-//          width: double.infinity,
-//          onPressed: () async {
-//            if (_nShellIdController.text.toString().length >= 60) {
-//              LogUtil.v(_list);
-//              var result = _list.firstWhere((v) => v.nshId == _nShellIdController.text.toString(), orElse: () => null);
-//              if (result == null) {
-//                result = CdnMiner(_nShellIdController.text.toString());
-//                result.insertOrUpdate().then((v) {
-//                  if (v) {
-//                    setState(() {
-//                      _list.add(result);
-//                    });
-//                  }
-//                });
-//                showToast('添加成功');
-//              } else {
-//                showToast('已存在');
-//              }
-//              Navigator.of(context).pop();
-//            } else {
-//              showToast('请输入正确的ID');
-//            }
-//          },
-//        ),
-//      ),
-//    );
     } else {
       showToast('请输入正确的ID');
     }

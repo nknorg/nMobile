@@ -2,8 +2,11 @@ import 'dart:convert';
 
 import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:nmobile/blocs/cdn/cdn_bloc.dart';
+import 'package:nmobile/blocs/cdn/cdn_state.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -14,6 +17,7 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/schemas/cdn_miner.dart';
 import 'package:nmobile/utils/copy_utils.dart';
+import 'package:oktoast/oktoast.dart';
 
 class NodeDetailPage extends StatefulWidget {
   static final String routeName = "NodeDetailPage";
@@ -28,11 +32,33 @@ class NodeDetailPage extends StatefulWidget {
 class NodeDetailPageState extends State<NodeDetailPage> {
   GlobalKey _notesFormKey = new GlobalKey<FormState>();
   TextEditingController _nameController = TextEditingController();
-
+  CDNBloc _cdnBloc;
+  bool isRefresh = false;
   @override
   void initState() {
     super.initState();
     LogUtil.v('onCreate', tag: 'NodeDetailPage');
+    _cdnBloc = BlocProvider.of<CDNBloc>(context);
+    _cdnBloc.listen((state) async {
+      if (state is LoadSate) {
+        LogUtil.v(state.data.data);
+        if (mounted) {
+          setState(() {
+            widget.arguments.data = state.data.data;
+          });
+          if (isRefresh) showToast('刷新成功！');
+        }
+      } else {
+        LogUtil.v(state);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _cdnBloc.close();
+    super.dispose();
   }
 
   @override
@@ -58,195 +84,233 @@ class NodeDetailPageState extends State<NodeDetailPage> {
         builder: (BuildContext context) => BodyBox(
           padding: EdgeInsets.only(top: 2.h, left: 16.w, right: 16.w),
           color: DefaultTheme.backgroundLightColor,
-          child: Padding(
-            padding: EdgeInsets.only(top: 20.h),
-            child: Column(
-              children: <Widget>[
-                Label(
-                  '预估收益',
-                  type: LabelType.bodyRegular,
-                  color: DefaultTheme.fontColor2,
-                  textAlign: TextAlign.start,
-                ),
-                Label(
-                  '${widget.arguments.cost != null ? Format.currencyFormat(widget.arguments.cost, decimalDigits: 3) : '-'} USDT',
-                  type: LabelType.bodyLarge,
-                  color: Colors.black,
-                  fontSize: 20.sp,
-                  textAlign: TextAlign.start,
-                  fontWeight: FontWeight.bold,
-                ),
-                SizedBox(height: 20.h),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    InkWell(
-                      onTap: () {
-                        changeName();
-                      },
-                      child: Row(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.only(top: 20.h),
+              child: Column(
+                children: <Widget>[
+                  Label(
+                    '预估收益',
+                    type: LabelType.bodyRegular,
+                    color: DefaultTheme.fontColor2,
+                    textAlign: TextAlign.start,
+                  ),
+                  Label(
+                    '${widget.arguments.cost != null ? Format.currencyFormat(widget.arguments.cost, decimalDigits: 3) : '-'} USDT',
+                    type: LabelType.bodyLarge,
+                    color: Colors.black,
+                    fontSize: 20.sp,
+                    textAlign: TextAlign.start,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  SizedBox(height: 20.h),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      InkWell(
+                        onTap: () {
+                          changeName();
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Label(
+                              '名称',
+                              type: LabelType.bodyRegular,
+                              color: DefaultTheme.fontColor2,
+                              textAlign: TextAlign.start,
+                            ),
+                            Spacer(),
+                            Label(
+                              widget.arguments.name,
+                              type: LabelType.bodyRegular,
+                              color: Colors.black,
+                              textAlign: TextAlign.start,
+                            ),
+                            SvgPicture.asset(
+                              'assets/icons/right.svg',
+                              width: 24,
+                              color: DefaultTheme.fontColor2,
+                            )
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 10.h),
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           Label(
-                            '名称',
+                            '流量',
                             type: LabelType.bodyRegular,
                             color: DefaultTheme.fontColor2,
                             textAlign: TextAlign.start,
                           ),
                           Spacer(),
                           Label(
-                            widget.arguments.name,
+                            '${widget.arguments.flow != null ? getFormatSize(widget.arguments.flow.toDouble(), unitArr: ['Bytes', 'KBytes', 'MBytes', 'GBytes', 'TBytes']) : '-'}',
                             type: LabelType.bodyRegular,
                             color: Colors.black,
                             textAlign: TextAlign.start,
-                          ),
-                          SvgPicture.asset(
-                            'assets/icons/right.svg',
-                            width: 24,
-                            color: DefaultTheme.fontColor2,
                           )
                         ],
                       ),
-                    ),
-                    SizedBox(height: 10.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Label(
-                          '流量',
-                          type: LabelType.bodyRegular,
-                          color: DefaultTheme.fontColor2,
-                          textAlign: TextAlign.start,
-                        ),
-                        Spacer(),
-                        Label(
-                          '${widget.arguments.flow != null ? getFormatSize(widget.arguments.flow.toDouble(), unitArr: ['Bytes', 'KBytes', 'MBytes', 'GBytes', 'TBytes']) : '-'}',
-                          type: LabelType.bodyRegular,
-                          color: Colors.black,
-                          textAlign: TextAlign.start,
-                        )
-                      ],
-                    ),
-                    SizedBox(height: 10.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Label(
-                          '状态',
-                          type: LabelType.bodyRegular,
-                          color: DefaultTheme.fontColor2,
-                          textAlign: TextAlign.start,
-                        ),
-                        Spacer(),
-                        Label(
-                          widget.arguments.getStatus(),
-                          type: LabelType.bodyRegular,
-                          color: Colors.black,
-                          textAlign: TextAlign.start,
-                        )
-                      ],
-                    ),
-                    SizedBox(height: 10.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Label(
-                          'IP地址',
-                          type: LabelType.bodyRegular,
-                          color: DefaultTheme.fontColor2,
-                          textAlign: TextAlign.start,
-                        ),
-                        Spacer(),
-                        Label(
-                          widget.arguments.getIp(),
-                          type: LabelType.bodyRegular,
-                          color: Colors.black,
-                          textAlign: TextAlign.start,
-                        )
-                      ],
-                    ),
-                    SizedBox(height: 10.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Label(
-                          '磁盘总用量',
-                          type: LabelType.bodyRegular,
-                          color: DefaultTheme.fontColor2,
-                          textAlign: TextAlign.start,
-                        ),
-                        Spacer(),
-                        Label(
-                          widget.arguments.getCapacity(),
-                          type: LabelType.bodyRegular,
-                          color: Colors.black,
-                          textAlign: TextAlign.start,
-                        )
-                      ],
-                    ),
-                    SizedBox(height: 10.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Label(
-                          '已用空间数',
-                          type: LabelType.bodyRegular,
-                          color: DefaultTheme.fontColor2,
-                          textAlign: TextAlign.start,
-                        ),
-                        Spacer(),
-                        Label(
-                          widget.arguments.getUsed(),
-                          type: LabelType.bodyRegular,
-                          color: Colors.black,
-                          textAlign: TextAlign.start,
-                        )
-                      ],
-                    ),
-                    SizedBox(height: 10.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Label(
-                          'MAC地址',
-                          type: LabelType.bodyRegular,
-                          color: DefaultTheme.fontColor2,
-                          textAlign: TextAlign.start,
-                        ),
-                        Spacer(),
-                        Label(
-                          widget.arguments.getMacAddress(),
-                          type: LabelType.bodyRegular,
-                          color: Colors.black,
-                          textAlign: TextAlign.start,
-                        )
-                      ],
-                    ),
-                    SizedBox(height: 10.h),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Label(
-                          'NKN ID',
-                          type: LabelType.bodyRegular,
-                          color: DefaultTheme.fontColor2,
-                          textAlign: TextAlign.start,
-                        ),
-                        SizedBox(height: 4.h),
-                        Label(
-                          widget.arguments.nshId,
-                          type: LabelType.bodyRegular,
-                          color: Colors.black,
-                          textAlign: TextAlign.start,
-                          softWrap: true,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10.h),
-                    getParamsView(),
-                  ],
-                ),
-              ],
+                      SizedBox(height: 10.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Label(
+                            '状态',
+                            type: LabelType.bodyRegular,
+                            color: DefaultTheme.fontColor2,
+                            textAlign: TextAlign.start,
+                          ),
+                          Spacer(),
+                          Row(
+                            children: <Widget>[
+                              Label(
+                                widget.arguments.getStatus(),
+                                type: LabelType.bodyRegular,
+                                color: Colors.black,
+                                textAlign: TextAlign.start,
+                              )
+                            ],
+                          )
+                        ],
+                      ),
+                      SizedBox(height: 10.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Label(
+                            'IP地址',
+                            type: LabelType.bodyRegular,
+                            color: DefaultTheme.fontColor2,
+                            textAlign: TextAlign.start,
+                          ),
+                          Spacer(),
+                          Label(
+                            widget.arguments.getIp(),
+                            type: LabelType.bodyRegular,
+                            color: Colors.black,
+                            textAlign: TextAlign.start,
+                          )
+                        ],
+                      ),
+                      SizedBox(height: 10.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Label(
+                            '磁盘总用量',
+                            type: LabelType.bodyRegular,
+                            color: DefaultTheme.fontColor2,
+                            textAlign: TextAlign.start,
+                          ),
+                          Spacer(),
+                          Label(
+                            widget.arguments.getCapacity(),
+                            type: LabelType.bodyRegular,
+                            color: Colors.black,
+                            textAlign: TextAlign.start,
+                          )
+                        ],
+                      ),
+                      SizedBox(height: 10.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Label(
+                            '已用空间数',
+                            type: LabelType.bodyRegular,
+                            color: DefaultTheme.fontColor2,
+                            textAlign: TextAlign.start,
+                          ),
+                          Spacer(),
+                          Label(
+                            widget.arguments.getUsed(),
+                            type: LabelType.bodyRegular,
+                            color: Colors.black,
+                            textAlign: TextAlign.start,
+                          )
+                        ],
+                      ),
+                      SizedBox(height: 10.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Label(
+                            'MAC地址',
+                            type: LabelType.bodyRegular,
+                            color: DefaultTheme.fontColor2,
+                            textAlign: TextAlign.start,
+                          ),
+                          Spacer(),
+                          Label(
+                            widget.arguments.getMacAddress(),
+                            type: LabelType.bodyRegular,
+                            color: Colors.black,
+                            textAlign: TextAlign.start,
+                          )
+                        ],
+                      ),
+                      SizedBox(height: 10.h),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Label(
+                            'NKN ID',
+                            type: LabelType.bodyRegular,
+                            color: DefaultTheme.fontColor2,
+                            textAlign: TextAlign.start,
+                          ),
+                          SizedBox(height: 4.h),
+                          InkWell(
+                            onTap: () {
+                              if (widget.arguments.nshId != null) CopyUtils.copyAction(context, json.encode(widget.arguments.nshId));
+                            },
+                            child: Label(
+                              widget.arguments.nshId,
+                              type: LabelType.bodyRegular,
+                              color: Colors.black,
+                              textAlign: TextAlign.start,
+                              softWrap: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10.h),
+                      getParamsView(),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.only(top: 8.h),
+                            child: Button(
+                              width: double.infinity,
+                              text: '刷新状态',
+                              onPressed: () {
+                                isRefresh = true;
+                                widget.arguments.getMinerDetail();
+                              },
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 8.h),
+                            child: Button(
+                              width: double.infinity,
+                              text: '重启设备',
+                              onPressed: () async {
+                                showRebootDialog();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 30.h),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -324,6 +388,57 @@ class NodeDetailPageState extends State<NodeDetailPage> {
         ),
       ),
     );
+  }
+
+  showRebootDialog() {
+    showDialog<void>(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context) {
+          return Container(
+            child: AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.w)),
+              title: Label(
+                '提示',
+                type: LabelType.h2,
+                softWrap: true,
+              ),
+              content: Container(
+                constraints: BoxConstraints(minWidth: double.infinity / 4 * 5),
+                child: SingleChildScrollView(
+                  child: Label(
+                    '重启过程需要等待几分钟，您确定要重启该设备吗？',
+                    type: LabelType.bodyRegular,
+                    softWrap: true,
+                  ),
+                ),
+              ),
+              actions: <Widget>[
+                FlatButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      Navigator.pop(context);
+                      widget.arguments.reboot();
+                      showToast('已发送重启指令！');
+                    },
+                    child: Label(
+                      '确定',
+                      type: LabelType.h3,
+                    )),
+                FlatButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Label(
+                      '取消',
+                      type: LabelType.h3,
+                      color: DefaultTheme.fontColor2,
+                    )),
+              ],
+            ),
+          );
+        });
   }
 
   showDeleteDialog() {
