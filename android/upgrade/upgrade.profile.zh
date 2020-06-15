@@ -1,9 +1,9 @@
 {
-  "apkUrl": "https://nmobile.nkn.org/downloads/nmobile-pro_v1.0.2_104.apk",
-  "version": "1.0.2-pro + (Build 104)",
+  "apkUrl": "https://nmobile.nkn.org/downloads/nmobile-pro_v1.0.3_106.apk",
+  "version": "1.0.3-Pro + (Build 106)",
   "gatedLaunch": 1.0,
   "title": "您有新版本可更新：",
-  "notes": "* #### 1.0.2-pro + (Build 104)\n1. 支持矿工手动添加设备；\n2. 增加设备详情；\n3. 统计设备状态分类；\n4. 增加自动更新；\n5. 优化设备收益描述信息；\n6. 优化当天收益时间。",
-  "sha-1": "fc9d24568e61c66d88555896047fea0c028d0c06",
+  "notes": "* ### 1.0.3-Pro + (Build 106)\n1. 支持矿工手动添加设备；\n2. 增加设备详情；\n3. 统计设备状态分类；\n4. 增加自动更新；\n5. 优化设备收益描述信息；\n6. 优化当天收益时间；\n7. 修复 bug；\n8. 添加手动刷新设备状态功能；\n9. 添加远程一键重启设备功能。",
+  "sha-1": "47094d0d4b7221fe428014ef59580ad3438bac01",
   "force": true
 }
