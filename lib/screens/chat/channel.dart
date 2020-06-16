@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
@@ -61,7 +62,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   bool loading = false;
   bool _showBottomMenu = false;
   Timer _deleteTick;
-  int _topicCount = 0;
+  int _topicCount;
   bool isUnSubscribe;
 
   initAsync() async {
@@ -80,7 +81,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       if (mounted) {
         setState(() {
           if (topic.count == 0) {
-            _topicCount = 1;
+            // _topicCount = null;
           } else {
             _topicCount = topic.count;
           }
@@ -89,13 +90,13 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     }
 
     if (topic != null) {
-      topic.getTopicCount().then((v) {
+      topic.getTopicCount().then((tc) {
         if (mounted) {
           setState(() {
-            if (v == 0 || v == null) {
-              _topicCount = 1;
+            if (tc == 0 || tc == null) {
+              // _topicCount = null;
             } else {
-              _topicCount = v;
+              _topicCount = tc;
             }
           });
         }
@@ -254,7 +255,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     String contentType = ContentType.text;
     Duration deleteAfterSeconds;
 
-    var sendMsg = MessageSchema.fromSendData(from: currentAddress, topic: dest, content: text, contentType: contentType, deleteAfterSeconds: deleteAfterSeconds);
+    var sendMsg =
+        MessageSchema.fromSendData(from: currentAddress, topic: dest, content: text, contentType: contentType, deleteAfterSeconds: deleteAfterSeconds);
     sendMsg.isOutbound = true;
     try {
       _chatBloc.add(SendMessage(sendMsg));
@@ -314,18 +316,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> topicWidget = <Widget>[
-      Label(widget.arguments.topic.topicName, type: LabelType.h3, dark: true),
-    ];
+    List<Widget> topicWidget = [Label(widget.arguments.topic.topicName, type: LabelType.h3, dark: true)];
     if (widget.arguments.topic.type == TopicType.private) {
-      topicWidget.insert(
-        0,
-        loadAssetIconsImage(
-          'lock',
-          width: 18,
-          color: DefaultTheme.fontLightColor,
-        ),
-      );
+      topicWidget.insert(0, loadAssetIconsImage('lock', width: 18, color: DefaultTheme.fontLightColor));
     }
 
     return Scaffold(
@@ -333,53 +326,52 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       appBar: Header(
         titleChild: GestureDetector(
           onTap: () async {
-            Navigator.of(context)
-                .pushNamed(
-              ChannelSettingsScreen.routeName,
-              arguments: widget.arguments.topic,
-            )
-                .then((v) {
+            Navigator.of(context).pushNamed(ChannelSettingsScreen.routeName, arguments: widget.arguments.topic).then((v) {
               isUnSubscribe = LocalStorage.getUnsubscribeTopicList().contains(targetId);
             });
           },
-          child: Flex(
-            direction: Axis.horizontal,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
+          child: Flex(direction: Axis.horizontal, mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
 //              Label(
 //                '${widget.arguments.topic.topicName} （${_topicCount ?? 1}）',
 //                type: LabelType.bodyLarge,
 //                color: Colors.white,
 //              )
-              Expanded(
-                flex: 0,
-                child: Container(
-                  padding: EdgeInsets.only(right: 10.w),
-                  alignment: Alignment.center,
-                  child: Hero(
-                    tag: 'avatar:${targetId}',
-                    child: widget.arguments.topic.avatarWidget(
-                      size: 48,
-                      backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
-                      fontColor: DefaultTheme.primaryColor,
-                    ),
+            Expanded(
+              flex: 0,
+              child: Container(
+                padding: EdgeInsets.only(right: 10.w),
+                alignment: Alignment.center,
+                child: Hero(
+                  tag: 'avatar:${targetId}',
+                  child: widget.arguments.topic.avatarWidget(
+                    size: 48,
+                    backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
+                    fontColor: DefaultTheme.primaryColor,
                   ),
                 ),
               ),
-              Expanded(
-                flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      children: topicWidget,
-                    ),
-                    Label('${_topicCount ?? 1} ' + NMobileLocalizations.of(context).members, type: LabelType.bodySmall, color: DefaultTheme.riseColor)
-                  ],
-                ),
-              )
-            ],
-          ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(children: topicWidget),
+                  // TODO: This is actually not used yet.
+                  BlocBuilder<ChannelMembersBloc, ChannelMembersState>(builder: (context, state) {
+                    if (state.membersCount != null && state.membersCount.topicName == targetId) {
+                      _topicCount = state.membersCount.subscriberCount;
+                    }
+                    return Label(
+                      '${_topicCount ?? '--'} ' + NMobileLocalizations.of(context).members,
+                      type: LabelType.bodySmall,
+                      color: DefaultTheme.riseColor,
+                    );
+                  })
+                ],
+              ),
+            )
+          ]),
         ),
         backgroundColor: DefaultTheme.backgroundColor4,
         action: FlatButton(
@@ -505,7 +497,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     var sendMsg = MessageSchema.fromSendData(from: currentAddress, content: targetId, to: address, contentType: ContentType.ChannelInvitation);
     sendMsg.isOutbound = true;
 
-    var sendMsg1 = MessageSchema.fromSendData(from: currentAddress, topic: widget.arguments.topic.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
+    var sendMsg1 = MessageSchema.fromSendData(
+        from: currentAddress, topic: widget.arguments.topic.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
     sendMsg1.isOutbound = true;
 
     try {
