@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,7 +9,6 @@ import 'package:nmobile/blocs/cdn/cdn_bloc.dart';
 import 'package:nmobile/blocs/cdn/cdn_state.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
-import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
@@ -48,8 +49,17 @@ class _NodeMainPageState extends State<NodeMainPage> {
   double _sumBalance;
   CDNBloc _cdnBloc;
   Map<String, dynamic> responseData;
+  StreamSubscription _subscription;
 
   initAsync() async {
+    await CdnMiner.removeCacheData();
+    var listTemp = await CdnMiner.getAllCdnMiner();
+    if (mounted) {
+      setState(() {
+        _list = listTemp;
+      });
+    }
+
     _api = Api(mySecretKey: hexDecode(_seed), myPublicKey: hexDecode(_publicKey), otherPubkey: hexDecode(SERVER_PUBKEY));
     search();
   }
@@ -64,11 +74,17 @@ class _NodeMainPageState extends State<NodeMainPage> {
     _end = getStartOfDay(DateTime.now().add(Duration(days: -1)));
     _startText = DateUtil.formatDate(_start, format: 'yyyy-MM-dd');
     _endText = DateUtil.formatDate(_end, format: 'yyyy-MM-dd');
-
     _cdnBloc = BlocProvider.of<CDNBloc>(context);
-    _cdnBloc.listen((state) async {
+    _subscription = _cdnBloc.listen((state) async {
       if (state is LoadSate) {
-        _list = await CdnMiner.getAllCdnMiner();
+        LogUtil.v('======initState=====');
+        var tempList = await CdnMiner.getAllCdnMiner();
+        if (mounted) {
+          setState(() {
+            _list = tempList;
+          });
+        }
+
         await resetFormatData();
       }
     });
@@ -80,12 +96,13 @@ class _NodeMainPageState extends State<NodeMainPage> {
 
   @override
   void dispose() {
-    _cdnBloc.close();
+//    _cdnBloc.close();
+    _subscription.cancel();
     super.dispose();
   }
 
   search() {
-    LoadingDialog.of(context).show();
+//    LoadingDialog.of(context).show();
 //    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/NKNGVRacskwuKRzwVoNmJdjWS7mqB5VKAzju';
     String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/${_wallet.address}';
     var params = {
@@ -95,14 +112,18 @@ class _NodeMainPageState extends State<NodeMainPage> {
     _api.post(url, params, isEncrypted: true).then((res) async {
       responseData = (res as Map);
       if (res != null) {
-        _list = await CdnMiner.getAllCdnMiner();
-        await resetFormatData();
+        var tempList = await CdnMiner.getAllCdnMiner();
+        if (mounted) {
+          setState(() {
+            _list = tempList;
+          });
+        }
+        resetFormatData();
         for (CdnMiner cdn in _list) {
           cdn.getMinerDetail();
         }
-        setState(() {});
       }
-      LoadingDialog.of(context).close();
+//      LoadingDialog.of(context).close();
     });
   }
 
@@ -178,7 +199,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
                           ),
                           Spacer(),
                           Label(
-                            _list.length.toString(),
+                            responseData == null ? '获取中...' : _list.length.toString(),
                             color: DefaultTheme.fontColor1,
                             type: LabelType.bodyRegular,
                             softWrap: true,
@@ -196,13 +217,15 @@ class _NodeMainPageState extends State<NodeMainPage> {
                           ),
                           Spacer(),
                           Label(
-                            _list
-                                .where((item) {
-                                  return item.getStatus() == '运行中';
-                                })
-                                .toList()
-                                .length
-                                .toString(),
+                            responseData == null
+                                ? '获取中...'
+                                : _list
+                                    .where((item) {
+                                      return item.getStatus() == '运行中';
+                                    })
+                                    .toList()
+                                    .length
+                                    .toString(),
                             color: DefaultTheme.fontColor1,
                             type: LabelType.bodyRegular,
                             softWrap: true,
@@ -228,13 +251,15 @@ class _NodeMainPageState extends State<NodeMainPage> {
                             ),
                             Spacer(),
                             Label(
-                              _list
-                                  .where((item) {
-                                    return item.getStatus() == '故障';
-                                  })
-                                  .toList()
-                                  .length
-                                  .toString(),
+                              responseData == null
+                                  ? '获取中...'
+                                  : _list
+                                      .where((item) {
+                                        return item.getStatus() == '故障';
+                                      })
+                                      .toList()
+                                      .length
+                                      .toString(),
                               color: DefaultTheme.fontColor1,
                               type: LabelType.bodyRegular,
                               softWrap: true,
@@ -266,13 +291,15 @@ class _NodeMainPageState extends State<NodeMainPage> {
                             ),
                             Spacer(),
                             Label(
-                              _list
-                                  .where((item) {
-                                    return item.getStatus() == '未知';
-                                  })
-                                  .toList()
-                                  .length
-                                  .toString(),
+                              responseData == null
+                                  ? '获取中...'
+                                  : _list
+                                      .where((item) {
+                                        return item.getStatus() == '未知';
+                                      })
+                                      .toList()
+                                      .length
+                                      .toString(),
                               color: DefaultTheme.fontColor1,
                               type: LabelType.bodyRegular,
                               softWrap: true,
@@ -305,9 +332,11 @@ class _NodeMainPageState extends State<NodeMainPage> {
                           if (date != null) {
                             _start = date;
                           }
-                          setState(() {
-                            _startText = DateUtil.formatDate(_start, format: 'yyyy-MM-dd');
-                          });
+                          if (mounted) {
+                            setState(() {
+                              _startText = DateUtil.formatDate(_start, format: 'yyyy-MM-dd');
+                            });
+                          }
                         },
                         child: Row(
                           children: <Widget>[

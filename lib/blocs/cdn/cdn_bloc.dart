@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/cdn/cdn_event.dart';
@@ -14,6 +15,7 @@ class CDNBloc extends Bloc<CDNEvent, CDNState> {
 
   @override
   Stream<CDNState> mapEventToState(CDNEvent event) async* {
+    LogUtil.v(event);
     if (event is LoadData) {
       yield LoadSate(event.data);
     }

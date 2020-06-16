@@ -98,7 +98,7 @@ class CdnMiner {
 //      c.contribution = num.parse(e['contribution']);
       try {
         if (e['data'] != null) {
-          LogUtil.v(e['data']);
+//          LogUtil.v(e['data']);
           c.data = jsonDecode(e['data']);
 //          c.data = jsonDecode(e['data']);
         }
@@ -129,10 +129,7 @@ class CdnMiner {
           name = nshId.substring(0, 8);
         }
         var map = {'name': name};
-        if (data != null) {
-          map['data'] = (data != null ? jsonEncode(data) : null);
-        }
-
+        map['data'] = (data != null ? jsonEncode(data) : null);
         int n = await db.update(
           CdnMiner.tableName,
           map,
@@ -236,5 +233,13 @@ class CdnMiner {
     MessageSchema msg = MessageSchema();
     msg.content = '/usr/bin/self_checker.sh';
     NShellClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData());
+  }
+
+  static removeCacheData() async {
+    List<CdnMiner> _miner = await getAllCdnMiner();
+    for (var value in _miner) {
+      value.data = null;
+      await value.insertOrUpdate();
+    }
   }
 }

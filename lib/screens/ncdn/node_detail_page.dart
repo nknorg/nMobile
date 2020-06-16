@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:common_utils/common_utils.dart';
@@ -34,17 +35,19 @@ class NodeDetailPageState extends State<NodeDetailPage> {
   TextEditingController _nameController = TextEditingController();
   CDNBloc _cdnBloc;
   bool isRefresh = false;
+  StreamSubscription _subscription;
   @override
   void initState() {
     super.initState();
     LogUtil.v('onCreate', tag: 'NodeDetailPage');
     _cdnBloc = BlocProvider.of<CDNBloc>(context);
-    _cdnBloc.listen((state) async {
+    _subscription = _cdnBloc.listen((state) async {
       if (state is LoadSate) {
-        LogUtil.v(state.data.data);
         if (mounted) {
           setState(() {
-            widget.arguments.data = state.data.data;
+            if (widget.arguments.nshId == state.data.nshId) {
+              widget.arguments.data = state.data.data;
+            }
           });
           if (isRefresh) showToast('刷新成功！');
         }
@@ -57,7 +60,8 @@ class NodeDetailPageState extends State<NodeDetailPage> {
   @override
   void dispose() {
     // TODO: implement dispose
-    _cdnBloc.close();
+//    _cdnBloc.close();
+    _subscription.cancel();
     super.dispose();
   }
 

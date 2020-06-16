@@ -14,6 +14,7 @@ import 'package:nmobile/helpers/api.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/schemas/cdn_miner.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
@@ -143,6 +144,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
     _seed = widget.arguments['seed'];
     _chatBloc = BlocProvider.of<ChatBloc>(context);
     initAsync();
+    CdnMiner.removeCacheData();
   }
 
   @override
