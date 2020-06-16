@@ -59,7 +59,6 @@ class _NodeMainPageState extends State<NodeMainPage> {
         _list = listTemp;
       });
     }
-
     _api = Api(mySecretKey: hexDecode(_seed), myPublicKey: hexDecode(_publicKey), otherPubkey: hexDecode(SERVER_PUBKEY));
     search();
   }
@@ -78,14 +77,18 @@ class _NodeMainPageState extends State<NodeMainPage> {
     _subscription = _cdnBloc.listen((state) async {
       if (state is LoadSate) {
         LogUtil.v('======initState=====');
-        var tempList = await CdnMiner.getAllCdnMiner();
         if (mounted) {
           setState(() {
-            _list = tempList;
+            var cdn = _list.firstWhere((x) => x.nshId == state.data.nshId, orElse: () => null);
+            if (cdn != null) {
+              var index = _list.indexOf(cdn);
+              if (index != -1) {
+                _list[index].data = state.data.data;
+              }
+            }
           });
         }
-
-        await resetFormatData();
+//        await resetFormatData();
       }
     });
 
@@ -103,12 +106,13 @@ class _NodeMainPageState extends State<NodeMainPage> {
 
   search() {
 //    LoadingDialog.of(context).show();
-//    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/NKNGVRacskwuKRzwVoNmJdjWS7mqB5VKAzju';
+//    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/NKNCCYzbTDQWFgeYUZoNDCWVr7aU1DadKaZY';
     String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/${_wallet.address}';
     var params = {
       'start': _start.millisecondsSinceEpoch ~/ 1000,
       'end': _end.add(Duration(days: 1)).millisecondsSinceEpoch ~/ 1000,
     };
+
     _api.post(url, params, isEncrypted: true).then((res) async {
       responseData = (res as Map);
       if (res != null) {
@@ -118,7 +122,10 @@ class _NodeMainPageState extends State<NodeMainPage> {
             _list = tempList;
           });
         }
-        resetFormatData();
+//        resetFormatData();
+        resultData = await getRequestListData();
+        await mergeAction();
+        //循环获取设备详情
         for (CdnMiner cdn in _list) {
           cdn.getMinerDetail();
         }
@@ -127,33 +134,46 @@ class _NodeMainPageState extends State<NodeMainPage> {
     });
   }
 
-  resetFormatData() async {
-    double totalAmount = 0;
+  //合并数据库数据
+  mergeAction() async {
+    for (var n in resultData) {
+      var cdn = _list.firstWhere((x) => x.nshId == n.nshId, orElse: () => null);
+      if (cdn == null) {
+        cdn = CdnMiner(n.nshId, flow: n.flow, cost: n.cost, contribution: n.contribution);
+        await cdn.insertOrUpdate();
+        _list.add(cdn);
+      } else {
+        int i = _list.indexOf(cdn);
+        _list[i].flow = n.flow;
+        _list[i].cost = n.cost;
+        _list[i].contribution = n.contribution;
+      }
+    }
+    setState(() {});
+  }
+
+  List<CdnMiner> resultData = [];
+
+  //获取流量收益数据
+  getRequestListData() async {
+    resultData.clear();
+    double amount = 0;
     if (responseData != null && responseData.keys != null) {
+      LogUtil.v(responseData.keys);
+      LogUtil.v('===========');
       for (String key in responseData.keys) {
-        List<dynamic> val = (responseData[key] as List<dynamic>);
-        totalAmount += val[1];
-        var cdn = _list.firstWhere((x) => x.nshId == key, orElse: () => null);
-        if (cdn == null) {
-          cdn = CdnMiner(key, flow: val[0], cost: val[1], contribution: val[2]);
-          var b = await cdn.insertOrUpdate();
-          if (b) {
-            _list.add(cdn);
-          }
-        } else {
-          int i = _list.indexOf(cdn);
-          _list[i].flow = val[0];
-          _list[i].cost = val[1];
-          _list[i].contribution = val[2];
+        if (key != null && key.length > 0) {
+          List<dynamic> val = (responseData[key] as List<dynamic>);
+          amount += val[1];
+          LogUtil.v(key);
+          resultData.add(CdnMiner(key, flow: val[0], cost: val[1], contribution: val[2]));
         }
       }
     }
-
-    if (mounted) {
-      setState(() {
-        _sumBalance = totalAmount;
-      });
-    }
+    setState(() {
+      _sumBalance = amount;
+    });
+    return resultData;
   }
 
   @override
@@ -430,6 +450,23 @@ class _NodeMainPageState extends State<NodeMainPage> {
                     Label(
                       (_sumBalance != null ? Format.currencyFormat(_sumBalance, decimalDigits: 3) : '-') + ' USDT',
                       type: LabelType.h4,
+                    ),
+                    Spacer(),
+                    InkWell(
+                      onTap: () {
+                        fiflterAction();
+                      },
+                      child: Row(
+                        children: <Widget>[
+                          Label(
+                            '排序',
+                            type: LabelType.h4,
+                            color: DefaultTheme.fontColor2,
+                            textAlign: TextAlign.start,
+                          ),
+                          Icon(Icons.keyboard_arrow_down, color: DefaultTheme.fontColor2)
+                        ],
+                      ),
                     )
                   ],
                 ),
@@ -530,9 +567,6 @@ class _NodeMainPageState extends State<NodeMainPage> {
     return '$size ${unitArr[index]}';
   }
 
-//  TextEditingController _nShellIdController = TextEditingController();
-//  GlobalKey _notesFormKey = new GlobalKey<FormState>();
-
   addAction() async {
     var qrData = await Navigator.of(context).pushNamed(ScannerScreen.routeName);
     if (qrData != null && qrData.toString().length >= 60) {
@@ -553,6 +587,105 @@ class _NodeMainPageState extends State<NodeMainPage> {
       }
     } else {
       showToast('请输入正确的ID');
+    }
+  }
+
+  Widget _getPopItemView(text, {color = 0xFF2A2A3C}) {
+    return Container(
+      child: Center(
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Color(color), fontSize: 16.sp),
+        ),
+      ),
+      width: double.infinity,
+      height: 50.h,
+      color: Colors.white,
+    );
+  }
+
+  fiflterAction() {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return new Container(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Label(
+                      '请选择排序方式',
+                      color: DefaultTheme.fontColor1,
+                      type: LabelType.bodyRegular,
+                      softWrap: true,
+                    ),
+                  ),
+                  Spacer()
+                ],
+              ),
+              InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                    getFilterName();
+                  },
+                  child: _getPopItemView('名称')),
+              InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _list.sort((left, right) => (right.cost ?? 0).compareTo((left.cost ?? 0)));
+                    });
+                  },
+                  child: _getPopItemView('收益')),
+              InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _list.sort((left, right) => (right.flow ?? 0).compareTo((left.flow ?? 0)));
+                    });
+                  },
+                  child: _getPopItemView('流量')),
+              InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: _getPopItemView('取消')),
+            ],
+          ),
+        );
+      },
+    ).then((val) {
+      print(val);
+    });
+  }
+
+  getFilterName() {
+    try {
+      List<CdnMiner> numbers = [];
+      List<CdnMiner> texts = [];
+      for (CdnMiner m in _list) {
+        try {
+          num.parse(m.name);
+          numbers.add(m);
+        } catch (e) {
+          texts.add(m);
+        }
+      }
+      numbers.sort((a, b) => (num.parse(a.name).compareTo(num.parse(b.name))));
+      texts.sort((a, b) => (a.name.codeUnitAt(0) > b.name.codeUnitAt(0) ? 1 : 0));
+
+      numbers.addAll(texts);
+      if (numbers.length == _list.length) {
+        setState(() {
+          _list = numbers;
+        });
+      }
+    } catch (e) {
+      LogUtil.v(e);
     }
   }
 }

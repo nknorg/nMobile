@@ -44,7 +44,8 @@ class NShellClientPlugin {
           break;
       }
     }, onError: (err) {
-      LogUtil.e(err, tag: 'ClientEventChannel');
+      LogUtil.e('失败');
+      LogUtil.e(err, tag: TAG);
       if (_clientEventQueue[err.code] != null) {
         _clientEventQueue[err.code].completeError(err.message);
       }
@@ -67,7 +68,7 @@ class NShellClientPlugin {
         }
       }
     } catch (e) {
-      LogUtil.v(e.toString(), tag: 'onMessage');
+      LogUtil.v(e.toString(), tag: TAG + 'onMessage');
     }
   }
 

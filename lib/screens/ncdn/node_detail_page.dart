@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:nmobile/blocs/cdn/cdn_bloc.dart';
+import 'package:nmobile/blocs/cdn/cdn_event.dart';
 import 'package:nmobile/blocs/cdn/cdn_state.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
@@ -36,6 +37,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
   CDNBloc _cdnBloc;
   bool isRefresh = false;
   StreamSubscription _subscription;
+
   @override
   void initState() {
     super.initState();
@@ -72,17 +74,17 @@ class NodeDetailPageState extends State<NodeDetailPage> {
       appBar: Header(
         title: '节点详情',
         backgroundColor: DefaultTheme.backgroundColor4,
-//        action: Button(
-//          padding: EdgeInsets.zero,
-//          icon: true,
-//          child: Label(
-//            '删除',
-//            color: Colors.white,
-//          ),
-//          onPressed: () {
-//            showDeleteDialog();
-//          },
-//        ),
+        action: Button(
+          padding: EdgeInsets.zero,
+          icon: true,
+          child: Label(
+            '删除',
+            color: Colors.white,
+          ),
+          onPressed: () {
+            showDeleteDialog();
+          },
+        ),
       ),
       body: Builder(
         builder: (BuildContext context) => BodyBox(
@@ -459,7 +461,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                 softWrap: true,
               ),
               content: Container(
-                constraints: BoxConstraints(minHeight: 100.h, maxHeight: 400.h, minWidth: double.infinity / 4 * 5),
+                constraints: BoxConstraints(minWidth: double.infinity / 4 * 5),
                 child: SingleChildScrollView(
                   child: Label(
                     '您确定要删除该设备吗？',
@@ -497,7 +499,8 @@ class NodeDetailPageState extends State<NodeDetailPage> {
 
   deleteAction() {
     widget.arguments.delete();
-    Navigator.of(context).pop();
+    _cdnBloc.add(LoadData(data: widget.arguments));
+    Navigator.of(context).pop(widget.arguments);
   }
 
   getParamsView() {
