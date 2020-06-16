@@ -29,7 +29,9 @@ class NcdnHomeScreen extends StatefulWidget {
   static const String routeName = '/ncdn/home';
 
   final Map arguments;
+
   NcdnHomeScreen({Key key, this.arguments}) : super(key: key);
+
   @override
   _NcdnHomeScreenState createState() => _NcdnHomeScreenState();
 }
@@ -53,16 +55,12 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
 
   initAsync() async {
     _api = Api(mySecretKey: hexDecode(_seed), myPublicKey: hexDecode(_publicKey), otherPubkey: hexDecode(SERVER_PUBKEY));
-
-    _api
-        .post(
-            'http://138.68.29.1:3000/api/v1/sum/${_wallet.address}',
-            {
-              'where': {},
-              'sum': 'amount',
-            },
-            isEncrypted: true)
-        .then((res) {
+    String url = 'http://138.68.29.1:3000/api/v1/sum/${_wallet.address}';
+    var params = {
+      'where': {},
+      'sum': 'amount',
+    };
+    _api.post(url, params, isEncrypted: true).then((res) {
       if (res != null && res.length > 0) {
         var data = res[0]['total'];
         _balance = data;
@@ -145,11 +143,6 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
     _chatBloc = BlocProvider.of<ChatBloc>(context);
     initAsync();
     CdnMiner.removeCacheData();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -427,6 +420,8 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
         "address": _wallet.address,
         "publicKey": _publicKey,
         "seed": _seed,
+      }).then((v) {
+        initAsync();
       });
     }
   }

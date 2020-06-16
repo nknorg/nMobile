@@ -82,12 +82,12 @@ class Api {
   }
 
   Future post(url, data, {bool isEncrypted}) async {
-//    LogUtil.v(data);
     if (isEncrypted) {
       var encData = encryptData(jsonEncode(data));
       try {
         var params = {'pub_key': hexEncode(myPublicKey), 'data': encData};
-        LogUtil.v(params);
+        LogUtil.v('$params == $data');
+        LogUtil.v(url);
         Response res = await dio.post(
           url,
           data: params,
@@ -112,6 +112,7 @@ class Api {
           return jsonDecode(msg);
         } else {
           LogUtil.v('===========');
+          LogUtil.v(res);
         }
       } catch (e) {
         debugPrintStack();
@@ -119,7 +120,9 @@ class Api {
       }
     } else {
       try {
+        LogUtil.v('======post=====');
         Response res = await dio.post(url, data: data);
+
         if (res.statusCode >= 200 && res.statusCode < 300 && res.data != null) {
           return res.data;
         }

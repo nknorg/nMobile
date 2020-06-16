@@ -55,7 +55,13 @@ class NodeListPageState extends State<NodeListPage> {
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
                   child: InkWell(
                     onTap: () {
-                      Navigator.pushNamed(context, NodeDetailPage.routeName, arguments: node);
+                      Navigator.pushNamed(context, NodeDetailPage.routeName, arguments: node).then((v) {
+                        if (v != null) {
+                          setState(() {
+                            _list.remove(v);
+                          });
+                        }
+                      });
                     },
                     child: Row(
                       children: <Widget>[

@@ -22,7 +22,8 @@ class CdnMiner {
     if (nshId.contains('ctrl.')) {
       nshId = nshId.split('ctrl.')[1];
     }
-    if (name == null || name.length == 0) {
+    if ((name == null || name.length == 0)) {
+      LogUtil.v(nshId);
       name = nshId.substring(0, 8);
     }
   }
@@ -121,7 +122,7 @@ class CdnMiner {
         where: 'nsh_id = ?',
         whereArgs: [nshId],
       );
-      if (countQuery.length == 0) {
+      if (countQuery == null || countQuery.length == 0) {
         int n = await db.insert(CdnMiner.tableName, toEntity());
         return n > 0;
       } else {
@@ -199,7 +200,14 @@ class CdnMiner {
     }
   }
 
-  delete() {}
+  delete() {
+    Database db = SqliteStorage(db: Global.currentChatDb).db;
+    db.delete(
+      CdnMiner.tableName,
+      where: 'nsh_id = ?',
+      whereArgs: [nshId],
+    );
+  }
 
   String getUsed() {
     try {

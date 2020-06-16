@@ -179,6 +179,8 @@ class WithDrawPageState extends State<WithDrawPage> {
                                 }
                               });
                             }
+
+//                            verifyWithdraw();
                           },
                         ),
                       ],
@@ -191,5 +193,30 @@ class WithDrawPageState extends State<WithDrawPage> {
         ),
       ),
     );
+  }
+
+  verifyWithdraw() {
+    if ((_formKey.currentState as FormState).validate()) {
+      Api _api = Api(mySecretKey: hexDecode(_seed), myPublicKey: hexDecode(_publicKey), otherPubkey: hexDecode(SERVER_PUBKEY));
+      var data = {
+        'bennficiary': widget.arguments['address'],
+        'amount': num.parse(amountController.text),
+        'eth_beneficiary': addressController.text,
+        'id': uuid.v4(),
+      };
+
+      String url = 'http://39.100.108.44:6443/api/v2/verify_withdraw/';
+      _api.post(url, data, isEncrypted: true).then((res) {
+        LogUtil.v(res['success']);
+        if (res != null && res['success']) {
+          Navigator.of(context).pop(true);
+          showToast('提现申请提交成功，请等待工作人员处理。');
+        } else {
+          if (res != null && !res['success']) {
+            showToast(res['errors'][0]);
+          }
+        }
+      });
+    }
   }
 }
