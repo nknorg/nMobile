@@ -62,6 +62,7 @@ class NShellClientPlugin {
         if (cdn != null) {
           cdn.data = content;
           await cdn.insertOrUpdate();
+          LogUtil.v('onMessage add');
           _cdnBloc.add(LoadData(data: cdn));
         }
       }
