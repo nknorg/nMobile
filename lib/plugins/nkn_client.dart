@@ -35,6 +35,9 @@ class NknClientPlugin {
           LogUtil.v(data, tag: 'NknClientPlugin onMessage');
           _clientBloc.add(
             OnMessage(
+              // FIXME: wei.chou on 16/06/2020
+              // `to` The value of the field is very problematic,
+              // there will be problems with hot switching of multiple wallets.
               MessageSchema(from: data['src'], to: Global.currentClient.address, data: data['data'], pid: data['pid']),
             ),
           );
@@ -211,9 +214,7 @@ class NknClientPlugin {
     });
   }
 
-  static Future<int> getSubscribersCount({
-    String topic,
-  }) async {
+  static Future<int> getSubscribersCount(String topic) async {
     LogUtil.v('getSubscribersCount', tag: TAG);
     Completer<int> completer = Completer<int>();
     String id = completer.hashCode.toString();

@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nmobile/app.dart';
+import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
@@ -62,6 +63,9 @@ class AppState extends State<App> with WidgetsBindingObserver {
       create: (BuildContext context) => ClientBloc(
         chatBloc: BlocProvider.of<ChatBloc>(context),
       ),
+    ),
+    BlocProvider<ChannelMembersBloc>(
+      create: (BuildContext context) => ChannelMembersBloc(),
     ),
   ];
 

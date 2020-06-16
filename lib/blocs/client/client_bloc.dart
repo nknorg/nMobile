@@ -106,6 +106,7 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
   }
 
   Stream<ClientState> _mapOnMessageToState(OnMessage event) async* {
+    print('${event.message}');
     if (state is Connected) {
       Connected currentState = (state as Connected);
       currentState.message = event.message;
