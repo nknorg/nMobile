@@ -194,23 +194,29 @@ class UpgradeChecker {
   }
 
   static Future<bool> _checkApkFile(String path, String sha1) async {
+    _deleteApksExcept(path);
     var f = File(path);
     if (f.existsSync()) {
       final sha1f = await sha1File(f);
-      print('sha1File: $sha1f');
+      print('apk file sha1: $sha1f');
       if (sha1 == sha1f) {
         return true;
       } else {
-        //f.deleteSync();
-        var list = f.parent.listSync(recursive: true, followLinks: true);
-        for (var tmp in list) {
-          tmp.deleteSync(recursive: true);
-          print('_checkApkFile deleteSync: $tmp');
-        }
+        f.deleteSync();
         return false;
       }
     }
     return false;
+  }
+
+  static void _deleteApksExcept(String path) {
+    var list = File(path).parent.listSync(recursive: true, followLinks: true);
+    for (var tmp in list) {
+      if (tmp.path != path) {
+        tmp.deleteSync(recursive: true);
+        print('_deleteApksExcept deleteSync: $tmp');
+      }
+    }
   }
 
   static final _dio = Dio(BaseOptions(
