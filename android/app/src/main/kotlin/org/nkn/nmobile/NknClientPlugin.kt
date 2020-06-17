@@ -199,7 +199,12 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
 
         try {
             walletPluginHandler.post {
-                val hash = client?.subscribe(identifier, topic, duration.toLong(), meta, transactionConfig)
+                val hash = try {
+                    client?.subscribe(identifier, topic, duration.toLong(), meta, transactionConfig)
+                } catch (e: Exception) {
+                    print(e.message)
+                    ""
+                }
                 val map = hashMapOf(
                         "_id" to _id,
                         "result" to hash
@@ -308,17 +313,17 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
             try {
                 client!!.close();
                 client = null;
-                if(result !=null)
-                result.success(1)
+                if (result != null)
+                    result.success(1)
 
             } catch (e: Exception) {
                 client = null;
-                if(result !=null)
-                result.success(0)
+                if (result != null)
+                    result.success(0)
             }
         } else {
-            if(result !=null)
-            result.success(1)
+            if (result != null)
+                result.success(1)
         }
     }
 
@@ -402,12 +407,12 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
                         }
                         onMessage()
                     } else {
-                        disConnect(null,null);
+                        disConnect(null, null);
 //                        msgReceiveHandler.postDelayed({ onMessage() }, 5000)
                     }
                 }
             } catch (e: Exception) {
-                disConnect(null,null);
+                disConnect(null, null);
 //                msgReceiveHandler.postDelayed({ onMessage() }, 5000)
             }
         }

@@ -354,7 +354,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Row(children: topicWidget),
-                  // TODO: This is actually not used yet.
                   BlocBuilder<ChannelMembersBloc, ChannelMembersState>(builder: (context, state) {
                     if (state.membersCount != null && state.membersCount.topicName == targetId) {
                       _topicCount = state.membersCount.subscriberCount;
