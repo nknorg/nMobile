@@ -98,6 +98,8 @@ PODS:
     - Flutter
   - path_provider (0.0.1):
     - Flutter
+  - path_provider_linux (0.0.1):
+    - Flutter
   - path_provider_macos (0.0.1):
     - Flutter
   - qr_code_scanner (0.0.2):
@@ -165,6 +167,7 @@ DEPENDENCIES:
   - orientation (from `.symlinks/plugins/orientation/ios`)
   - package_info (from `.symlinks/plugins/package_info/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
+  - path_provider_linux (from `.symlinks/plugins/path_provider_linux/ios`)
   - path_provider_macos (from `.symlinks/plugins/path_provider_macos/ios`)
   - qr_code_scanner (from `.symlinks/plugins/qr_code_scanner/ios`)
   - share (from `.symlinks/plugins/share/ios`)
@@ -241,6 +244,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/package_info/ios"
   path_provider:
     :path: ".symlinks/plugins/path_provider/ios"
+  path_provider_linux:
+    :path: ".symlinks/plugins/path_provider_linux/ios"
   path_provider_macos:
     :path: ".symlinks/plugins/path_provider_macos/ios"
   qr_code_scanner:
@@ -297,6 +302,7 @@ SPEC CHECKSUMS:
   orientation: 6c9203efe86ce4cff379756910f18b2d745628c3
   package_info: 873975fc26034f0b863a300ad47e7f1ac6c7ec62
   path_provider: abfe2b5c733d04e238b0d8691db0cfd63a27a93c
+  path_provider_linux: 4d630dc393e1f20364f3e3b4a2ff41d9674a84e4
   path_provider_macos: f760a3c5b04357c380e2fddb6f9db6f3015897e0
   qr_code_scanner: 16107718bdad7d708cdf6a5eacdca24b56cdf471
   SDWebImage: 84000f962cbfa70c07f19d2234cbfcf5d779b5dc

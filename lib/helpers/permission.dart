@@ -73,7 +73,7 @@ class Permission {
       BlocProvider.of<ChannelMembersBloc>(Global.appContext).add(MembersCount(topic, res.length, true));
       return res;
     } catch (e) {
-      return getSubscribers();
+      return getSubscribers(topic: topic);
     }
   }
 
@@ -123,17 +123,21 @@ class Permission {
   }
 
   static Future<List<String>> getPrivateChannelDests(String topic) async {
-    TopicSchema topicSchema = TopicSchema(topic: topic);
-    Map<String, dynamic> meta = await topicSchema.getPrivateOwnerMeta();
-    Map<String, dynamic> subscribers = await getSubscribers(topic: topic);
-    Permission permission = Permission(accept: meta['accept'], reject: meta['reject']);
-    List<String> acceptedSubs = List<String>();
-    subscribers.forEach((key, val) {
-      String status = permission.getSubscriberStatus(key);
-      if (status == PermissionStatus.accepted) {
-        acceptedSubs.add(key);
-      }
-    });
-    return acceptedSubs;
+    try {
+      TopicSchema topicSchema = TopicSchema(topic: topic);
+      Map<String, dynamic> meta = await topicSchema.getPrivateOwnerMeta();
+      Map<String, dynamic> subscribers = await getSubscribers(topic: topic);
+      Permission permission = Permission(accept: meta['accept'], reject: meta['reject']);
+      List<String> acceptedSubs = List<String>();
+      subscribers.forEach((key, val) {
+        String status = permission.getSubscriberStatus(key);
+        if (status == PermissionStatus.accepted) {
+          acceptedSubs.add(key);
+        }
+      });
+      return acceptedSubs;
+    } catch (e) {
+      return List<String>();
+    }
   }
 }

@@ -26,12 +26,12 @@ class Global {
   static Directory applicationRootDirectory;
   static String version;
   static String buildVersion;
-  static Map<String, num> loadTopicTime = {};
+  static Map<String, DateTime> loadTopicDataTime = {};
   static Map<String, num> loadLoadSubscribers = {};
   static AppLifecycleState state = AppLifecycleState.resumed;
   static Map<String, DateTime> _loadProfileCache = {};
   static String currentChatId;
-
+  static bool isAutoShowPassword = true;
   static Future init(VoidCallback callback) async {
     WidgetsFlutterBinding.ensureInitialized();
     await SpUtil.getInstance();
@@ -68,22 +68,22 @@ class Global {
   }
 
   static bool isLoadTopic(String topic) {
-    num currentTime = num.parse(DateUtil.formatDate(DateTime.now(), format: "yyyyMMddHHmm"));
-    if (loadTopicTime.containsKey(topic)) {
-      if ((currentTime - loadTopicTime[topic]) >= 5) {
-        loadTopicTime[topic] = currentTime;
+    DateTime currentT = DateTime.now();
+    if (loadTopicDataTime.containsKey(topic)) {
+      if (currentT.isAfter(loadTopicDataTime[topic])) {
+        loadTopicDataTime[topic] = currentT.add(Duration(minutes: 1));
         return true;
       } else {
         return false;
       }
     } else {
-      loadTopicTime[topic] = currentTime;
+      loadTopicDataTime[topic] = currentT.add(Duration(minutes: 1));
       return true;
     }
   }
 
   static removeTopicCache(String topic) {
-    loadTopicTime.remove(topic);
+    loadTopicDataTime.remove(topic);
     loadLoadSubscribers.remove(topic);
   }
 
