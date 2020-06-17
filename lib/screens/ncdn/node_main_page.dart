@@ -105,9 +105,8 @@ class _NodeMainPageState extends State<NodeMainPage> {
   }
 
   search() {
-//    LoadingDialog.of(context).show();
-//    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/NKNCCYzbTDQWFgeYUZoNDCWVr7aU1DadKaZY';
-    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/${_wallet.address}';
+    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/NKNCCYzbTDQWFgeYUZoNDCWVr7aU1DadKaZY';
+//    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/${_wallet.address}';
     var params = {
       'start': _start.millisecondsSinceEpoch ~/ 1000,
       'end': _end.add(Duration(days: 1)).millisecondsSinceEpoch ~/ 1000,
@@ -122,7 +121,6 @@ class _NodeMainPageState extends State<NodeMainPage> {
             _list = tempList;
           });
         }
-//        resetFormatData();
         resultData = await getRequestListData();
         await mergeAction();
         //循环获取设备详情
@@ -130,7 +128,6 @@ class _NodeMainPageState extends State<NodeMainPage> {
           cdn.getMinerDetail();
         }
       }
-//      LoadingDialog.of(context).close();
     });
   }
 
@@ -164,8 +161,8 @@ class _NodeMainPageState extends State<NodeMainPage> {
       for (String key in responseData.keys) {
         if (key != null && key.length > 0) {
           List<dynamic> val = (responseData[key] as List<dynamic>);
+          LogUtil.v(val);
           amount += val[1];
-          LogUtil.v(key);
           resultData.add(CdnMiner(key, flow: val[0], cost: val[1], contribution: val[2]));
         }
       }
@@ -454,7 +451,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
                     Spacer(),
                     InkWell(
                       onTap: () {
-                        fiflterAction();
+                        filterAction();
                       },
                       child: Row(
                         children: <Widget>[
@@ -605,7 +602,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
     );
   }
 
-  fiflterAction() {
+  filterAction() {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {

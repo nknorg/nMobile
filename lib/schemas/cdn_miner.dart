@@ -10,7 +10,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class CdnMiner {
   String nshId;
-  String name;
+  String _name;
   Map<String, dynamic> data;
   bool status;
 
@@ -18,17 +18,27 @@ class CdnMiner {
   num cost;
   num contribution;
 
-  CdnMiner(this.nshId, {String name = null, this.flow, this.cost, this.contribution}) {
+  CdnMiner(this.nshId, {String name, this.flow, this.cost, this.contribution}) {
     if (nshId.contains('ctrl.')) {
       nshId = nshId.split('ctrl.')[1];
     }
-    if ((name == null || name.length == 0)) {
-      LogUtil.v(nshId);
-      name = nshId.substring(0, 8);
+    if (name == null || name.length == 0) {
+      _name = nshId.substring(0, 8);
+    } else {
+      _name = name;
     }
   }
 
-  static String getName() {}
+  String get name {
+    if (_name == null || _name.length == 0) {
+      _name = nshId.substring(0, 8);
+    }
+    return _name;
+  }
+
+  set name(String name) {
+    _name = name;
+  }
 
   static String get tableName => 'Nodes';
 
@@ -46,12 +56,12 @@ class CdnMiner {
   }
 
   toEntity() {
-    if (name == null) {
-      name = nshId.substring(0, 8);
+    if (_name == null) {
+      _name = nshId.substring(0, 8);
     }
     Map<String, dynamic> map = {
       'nsh_id': nshId,
-      'name': name,
+      'name': _name,
       'data': data,
     };
     return map;
@@ -90,9 +100,9 @@ class CdnMiner {
     try {
       var c = CdnMiner(e['nsh_id']);
       if (e.containsKey('name') && e['name'].toString().length > 0) {
-        c.name = e['name'];
+        c._name = e['name'];
       } else {
-        c.name = c.nshId.substring(0, 8);
+        c._name = c.nshId.substring(0, 8);
       }
 //      c.flow = num.parse(e['flow']);
 //      c.cost = num.parse(e['cost']);
@@ -126,10 +136,10 @@ class CdnMiner {
         int n = await db.insert(CdnMiner.tableName, toEntity());
         return n > 0;
       } else {
-        if (name == null) {
-          name = nshId.substring(0, 8);
+        if (_name == null) {
+          _name = nshId.substring(0, 8);
         }
-        var map = {'name': name};
+        var map = {'name': _name};
         map['data'] = (data != null ? jsonEncode(data) : null);
         int n = await db.update(
           CdnMiner.tableName,
