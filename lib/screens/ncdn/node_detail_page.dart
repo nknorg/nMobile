@@ -61,8 +61,6 @@ class NodeDetailPageState extends State<NodeDetailPage> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
-//    _cdnBloc.close();
     _subscription.cancel();
     super.dispose();
   }
