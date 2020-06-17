@@ -256,7 +256,7 @@ class NknClientPlugin {
     bool meta = true,
     bool txPool = true,
   }) async {
-    LogUtil.v('$topic  getSubscribers 没有缓存');
+    LogUtil.v('$topic  getSubscribers no cache');
     Completer<Map<String, dynamic>> completer = Completer<Map<String, dynamic>>();
     String id = completer.hashCode.toString();
     LogUtil.v('getSubscribers   $topicHash  $offset $limit $meta $txPool', tag: TAG);
@@ -291,7 +291,7 @@ class NknClientPlugin {
     if (!Global.isLoadSubscribers(topic)) {
       Map<String, dynamic> subscribers = await SubscribersSchema.getSubscribersByTopic(topic);
       if (subscribers != null && subscribers.length > 0) {
-        LogUtil.v('$topic  getSubscribers 使用缓存');
+        LogUtil.v('$topic  getSubscribers use cache');
         getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
         return subscribers;
       }
