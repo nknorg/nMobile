@@ -268,13 +268,9 @@ class TopicSchema {
     if (topicSchema != null && topicSchema.data != null && topicSchema.data.length > 0) {
       if (Global.isLoadTopic(topic)) {
         getPrivateOwnerMetaAction();
-        LogUtil.v('需要加载，先拿去数据库，然后异步进行获取新数据');
-      } else {
-        LogUtil.v('不需要加载，直接拿去数据库');
-      }
+      } else {}
       return topicSchema.data;
     } else {
-      LogUtil.v('数据库没有，直接异步进行获取新数据');
       return getPrivateOwnerMetaAction();
     }
   }
