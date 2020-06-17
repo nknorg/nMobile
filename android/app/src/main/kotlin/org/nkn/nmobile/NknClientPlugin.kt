@@ -94,19 +94,26 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
 
         result.success(null)
         walletPluginHandler.post {
-            val subscribers = client?.getSubscribers(topic, offset.toLong(), limit.toLong(), meta, txPool)
+            try {
+                val subscribers = client?.getSubscribers(topic, offset.toLong(), limit.toLong(), meta, txPool)
 
-            val map = HashMap<String, String>()
-            map.put("_id", _id!!);
+                val map = HashMap<String, String>()
+                map.put("_id", _id!!);
 
-            subscribers?.subscribers?.range { chatId, value ->
-                val meta = value?.trim() ?: ""
-                map.put(chatId, meta)
-                true
-            }
+                subscribers?.subscribers?.range { chatId, value ->
+                    val meta = value?.trim() ?: ""
+                    map.put(chatId, meta)
+                    true
+                }
 
-            App.handler().post {
-                clientEventSink?.success(map)
+                App.handler().post {
+                    clientEventSink?.success(map)
+                }
+            } catch (e: Exception) {
+                print(e.message)
+                App.handler().post {
+                    clientEventSink?.error(_id, e.message, null);
+                }
             }
         }
 
