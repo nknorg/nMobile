@@ -248,7 +248,7 @@ class NknClientPlugin {
     });
   }
 
-  static Future<Map<String, dynamic>> getSubscribers({
+  static Future<Map<String, dynamic>> getSubscribersAction({
     String topic,
     String topicHash,
     int offset = 0,
@@ -256,20 +256,7 @@ class NknClientPlugin {
     bool meta = true,
     bool txPool = true,
   }) async {
-    if (topic == null || topicHash == null) {
-      LogUtil.v('----- topic null -------');
-      return {};
-    }
-
-    if (meta && !Global.isLoadSubscribers(topic)) {
-      Map<String, dynamic> subscribers = await SubscribersSchema.getSubscribersByTopic(topic);
-      if (subscribers != null && subscribers.length > 0) {
-        LogUtil.v('$topic  getSubscribers 使用缓存');
-        return subscribers;
-      }
-    }
-
-    LogUtil.v('$topic  getSubscribers 没有缓存');
+    LogUtil.v('$topic  getSubscribers no cache');
     Completer<Map<String, dynamic>> completer = Completer<Map<String, dynamic>>();
     String id = completer.hashCode.toString();
     LogUtil.v('getSubscribers   $topicHash  $offset $limit $meta $txPool', tag: TAG);
@@ -286,5 +273,29 @@ class NknClientPlugin {
     return completer.future.whenComplete(() {
       _clientEventQueue.remove(id);
     });
+  }
+
+  static Future<Map<String, dynamic>> getSubscribers({
+    String topic,
+    String topicHash,
+    int offset = 0,
+    int limit = 10000,
+    bool meta = true,
+    bool txPool = true,
+  }) async {
+    if (topic == null || topicHash == null) {
+      LogUtil.v('----- topic null -------');
+      return {};
+    }
+
+    if (!Global.isLoadSubscribers(topic)) {
+      Map<String, dynamic> subscribers = await SubscribersSchema.getSubscribersByTopic(topic);
+      if (subscribers != null && subscribers.length > 0) {
+        LogUtil.v('$topic  getSubscribers use cache');
+        getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
+        return subscribers;
+      }
+    }
+    return getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
   }
 }

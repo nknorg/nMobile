@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:equatable/equatable.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/helpers/global.dart';
@@ -48,7 +47,6 @@ class WalletSchema extends Equatable {
           return password;
         } else {
           count++;
-          LogUtil.v(count.toString());
           return getPassword(count: count);
         }
       }

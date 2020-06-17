@@ -215,15 +215,7 @@ class TopicSchema {
     }
   }
 
-  Future<Map<String, dynamic>> getPrivateOwnerMeta() async {
-    LogUtil.v('address =========');
-    LogUtil.v(Global.currentClient.address);
-    if (!Global.isLoadTopic(topic)) {
-      TopicSchema topicSchema = await getTopic(topic);
-      if (topicSchema != null && topicSchema.data != null && topicSchema.data.length > 0) {
-        return topicSchema.data;
-      }
-    }
+  Future<Map<String, dynamic>> getPrivateOwnerMetaAction() async {
     String topicHash = genChannelId(topic);
     int i = 0;
     Map<String, dynamic> resultMeta = Map<String, dynamic>();
@@ -269,6 +261,18 @@ class TopicSchema {
     topicSchema.data = resultMeta;
     topicSchema.insertOrUpdate();
     return resultMeta;
+  }
+
+  Future<Map<String, dynamic>> getPrivateOwnerMeta() async {
+    TopicSchema topicSchema = await getTopic(topic);
+    if (topicSchema != null && topicSchema.data != null && topicSchema.data.length > 0) {
+      if (Global.isLoadTopic(topic)) {
+        getPrivateOwnerMetaAction();
+      } else {}
+      return topicSchema.data;
+    } else {
+      return getPrivateOwnerMetaAction();
+    }
   }
 
   Future<String> acceptPrivateMember({
