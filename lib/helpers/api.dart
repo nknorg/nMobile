@@ -81,7 +81,7 @@ class Api {
     }
   }
 
-  Future post(url, data, {bool isEncrypted}) async {
+  Future post(url, data, {bool isEncrypted, getResponse = false}) async {
     if (isEncrypted) {
       var encData = encryptData(jsonEncode(data));
       try {
@@ -97,9 +97,15 @@ class Api {
             validateStatus: (_) => true,
           ),
         );
+
+        if (getResponse) {
+          return res;
+        }
+
         if (res.statusCode >= 200 && res.statusCode < 300 && res.data != null) {
           var msg;
           LogUtil.v(res);
+
           if (res.data is String) {
             msg = decryptData(res.data);
           } else {
@@ -108,7 +114,6 @@ class Api {
               LogUtil.v(msg);
             }
           }
-
           return jsonDecode(msg);
         } else {
           LogUtil.v('===========');

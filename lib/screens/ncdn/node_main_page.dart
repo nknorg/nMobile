@@ -99,7 +99,6 @@ class _NodeMainPageState extends State<NodeMainPage> {
 
   @override
   void dispose() {
-//    _cdnBloc.close();
     _subscription.cancel();
     super.dispose();
   }

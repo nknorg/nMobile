@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,6 +25,7 @@ class WithDrawPage extends StatefulWidget {
   final Map arguments;
 
   const WithDrawPage({Key key, this.arguments}) : super(key: key);
+
   @override
   WithDrawPageState createState() => new WithDrawPageState();
 }
@@ -170,17 +173,7 @@ class WithDrawPageState extends State<WithDrawPage> {
                           backgroundColor: DefaultTheme.primaryColor,
                           width: double.infinity,
                           onPressed: () async {
-                            if ((_formKey.currentState as FormState).validate()) {
-                              Api _api = Api(mySecretKey: hexDecode(_seed), myPublicKey: hexDecode(_publicKey), otherPubkey: hexDecode(SERVER_PUBKEY));
-                              _api.post('http://138.68.29.1:3000/api/v1/send_nkn_message/${widget.arguments['address']}', {'id': uuid.v4(), 'message': '${widget.arguments['address']}申请提现${amountController.text}。提现地址${addressController.text}'}, isEncrypted: true).then((res) {
-                                if (res != null && res['code'] == 0) {
-                                  Navigator.of(context).pop();
-                                  showToast('申请成功, 请等待工作人员处理.');
-                                }
-                              });
-                            }
-
-//                            verifyWithdraw();
+                            verifyWithdraw();
                           },
                         ),
                       ],
@@ -199,24 +192,28 @@ class WithDrawPageState extends State<WithDrawPage> {
     if ((_formKey.currentState as FormState).validate()) {
       Api _api = Api(mySecretKey: hexDecode(_seed), myPublicKey: hexDecode(_publicKey), otherPubkey: hexDecode(SERVER_PUBKEY));
       var data = {
-        'bennficiary': widget.arguments['address'],
+        'beneficiary': widget.arguments['address'],
         'amount': num.parse(amountController.text),
         'eth_beneficiary': addressController.text,
         'id': uuid.v4(),
       };
 
+//      String url = 'http://10.0.1.4:6080/api/v2/verify_withdraw/';
       String url = 'http://39.100.108.44:6443/api/v2/verify_withdraw/';
-      _api.post(url, data, isEncrypted: true).then((res) {
-        LogUtil.v(res['success']);
-        if (res != null && res['success']) {
-          Navigator.of(context).pop(true);
-          showToast('提现申请提交成功，请等待工作人员处理。');
-        } else {
-          if (res != null && !res['success']) {
-            showToast(res['errors'][0]);
+      try {
+        _api.post(url, data, isEncrypted: true, getResponse: true).then((res) {
+          LogUtil.v(res);
+          if (res.data['success']) {
+            Navigator.of(context).pop(true);
+            showToast('提现申请提交成功，请等待工作人员处理。');
+          } else {
+            var s = _api.decryptData(res.data['result']);
+            showToast(jsonDecode(s)['err']);
           }
-        }
-      });
+        });
+      } catch (e) {
+        showToast('请稍后重试');
+      }
     }
   }
 }
