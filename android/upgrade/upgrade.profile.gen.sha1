@@ -1,9 +1,9 @@
 {
-  "apkUrl": "https://nmobile.nkn.org/downloads/nmobile-pro_v1.0.5_110.apk",
-  "version": "1.0.5-Pro + (Build 110)",
+  "apkUrl": "https://nmobile.nkn.org/downloads/nmobile-pro_v1.0.5_111.apk",
+  "version": "1.0.5-Pro + (Build 111)",
   "gatedLaunch": 0.1,
   "title": "内部专用版：",
-  "notes": "* ### 1.0.5-Pro + (Build 110)\n ## 专用于生成 sha-1 的内部版。",
-  "sha-1": "51a9b3e34cbf373d144c948efbc0c6cab6e6b4ce",
+  "notes": "* ### 1.0.5-Pro + (Build 111)\n ## 专用于生成 sha-1 的内部版。",
+  "sha-1": "75846486fb53d74ac21c2a170a3b19327243df9c",
   "force": false
 }
