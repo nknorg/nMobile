@@ -80,9 +80,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     if (topic != null && topic.count != 0) {
       if (mounted) {
         setState(() {
-          if (topic.count == 0) {
-            // _topicCount = null;
-          } else {
+          if (topic.count != 0) {
             _topicCount = topic.count;
           }
         });
@@ -255,8 +253,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     String contentType = ContentType.text;
     Duration deleteAfterSeconds;
 
-    var sendMsg =
-        MessageSchema.fromSendData(from: currentAddress, topic: dest, content: text, contentType: contentType, deleteAfterSeconds: deleteAfterSeconds);
+    var sendMsg = MessageSchema.fromSendData(from: currentAddress, topic: dest, content: text, contentType: contentType, deleteAfterSeconds: deleteAfterSeconds);
     sendMsg.isOutbound = true;
     try {
       _chatBloc.add(SendMessage(sendMsg));
@@ -497,8 +494,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     var sendMsg = MessageSchema.fromSendData(from: currentAddress, content: targetId, to: address, contentType: ContentType.ChannelInvitation);
     sendMsg.isOutbound = true;
 
-    var sendMsg1 = MessageSchema.fromSendData(
-        from: currentAddress, topic: widget.arguments.topic.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
+    var sendMsg1 = MessageSchema.fromSendData(from: currentAddress, topic: widget.arguments.topic.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
     sendMsg1.isOutbound = true;
 
     try {

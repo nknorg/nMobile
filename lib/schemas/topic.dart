@@ -215,15 +215,7 @@ class TopicSchema {
     }
   }
 
-  Future<Map<String, dynamic>> getPrivateOwnerMeta() async {
-    LogUtil.v('address =========');
-    LogUtil.v(Global.currentClient.address);
-    if (!Global.isLoadTopic(topic)) {
-      TopicSchema topicSchema = await getTopic(topic);
-      if (topicSchema != null && topicSchema.data != null && topicSchema.data.length > 0) {
-        return topicSchema.data;
-      }
-    }
+  Future<Map<String, dynamic>> getPrivateOwnerMetaAction() async {
     String topicHash = genChannelId(topic);
     int i = 0;
     Map<String, dynamic> resultMeta = Map<String, dynamic>();
@@ -269,6 +261,22 @@ class TopicSchema {
     topicSchema.data = resultMeta;
     topicSchema.insertOrUpdate();
     return resultMeta;
+  }
+
+  Future<Map<String, dynamic>> getPrivateOwnerMeta() async {
+    TopicSchema topicSchema = await getTopic(topic);
+    if (topicSchema != null && topicSchema.data != null && topicSchema.data.length > 0) {
+      if (Global.isLoadTopic(topic)) {
+        getPrivateOwnerMetaAction();
+        LogUtil.v('需要加载，先拿去数据库，然后异步进行获取新数据');
+      } else {
+        LogUtil.v('不需要加载，直接拿去数据库');
+      }
+      return topicSchema.data;
+    } else {
+      LogUtil.v('数据库没有，直接异步进行获取新数据');
+      return getPrivateOwnerMetaAction();
+    }
   }
 
   Future<String> acceptPrivateMember({
