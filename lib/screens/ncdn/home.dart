@@ -412,13 +412,17 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
   }
 
   showTip() {
-    Navigator.pushNamed(context, WithDrawPage.routeName, arguments: {
-      "maxBalance": _balance,
-      "address": _wallet.address,
-      "publicKey": _publicKey,
-      "seed": _seed,
-    }).then((v) {
-      initAsync();
-    });
+    if (_balance == null || _balance < 1) {
+      showToast('最小提现收益需大于1USDT');
+    } else {
+      Navigator.pushNamed(context, WithDrawPage.routeName, arguments: {
+        "maxBalance": _balance,
+        "address": _wallet.address,
+        "publicKey": _publicKey,
+        "seed": _seed,
+      }).then((v) {
+        initAsync();
+      });
+    }
   }
 }
