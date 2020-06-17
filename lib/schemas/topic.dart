@@ -6,6 +6,8 @@ import 'dart:ui';
 import 'package:common_utils/common_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
@@ -780,6 +782,7 @@ class TopicSchema {
           return key.contains('__permission__');
         });
       }
+      BlocProvider.of<ChannelMembersBloc>(Global.appContext).add(MembersCount(topic, res.length, true));
       await setSubscribers(res);
       return res;
     } catch (e) {
