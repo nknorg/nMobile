@@ -7,10 +7,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/box/body.dart';
-import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
+import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/permission.dart';
@@ -22,6 +22,7 @@ import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/subscribers.dart';
 import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/contact/contact.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:oktoast/oktoast.dart';
 
@@ -41,6 +42,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
   List<ContactSchema> _subs = List<ContactSchema>();
   Permission _permissionHelper;
   ChatBloc _chatBloc;
+
   _genContactList(List<SubscribersSchema> data) async {
     List<ContactSchema> list = List<ContactSchema>();
 
@@ -116,14 +118,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
       Label(widget.arguments.topicName, type: LabelType.h3, dark: true),
     ];
     if (widget.arguments.type == TopicType.private) {
-      topicWidget.insert(
-        0,
-        loadAssetIconsImage(
-          'lock',
-          width: 22,
-          color: DefaultTheme.fontLightColor,
-        ),
-      );
+      topicWidget.insert(0, loadAssetIconsImage('lock', width: 22, color: DefaultTheme.fontLightColor));
     }
 
     return Scaffold(
@@ -143,7 +138,8 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
             width: 24,
           ),
           onPressed: () async {
-            var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+            var address = await BottomDialog.of(context).showInputAddressDialog(
+                title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
             if (address != null) {
               acceptPrivateAction(address);
             }
@@ -153,7 +149,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
       body: Column(
         children: <Widget>[
           Container(
-            padding: EdgeInsets.only(bottom: 24.h, left: 16.w, right: 16.w),
+            padding: EdgeInsets.only(bottom: 20.h, left: 16.w, right: 16.w),
             child: Row(
               children: <Widget>[
                 Padding(
@@ -170,7 +166,8 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                     Row(
                       children: topicWidget,
                     ),
-                    Label('${widget.arguments.count ?? 0} ' + NMobileLocalizations.of(context).members, type: LabelType.bodyRegular, color: DefaultTheme.successColor)
+                    Label('${widget.arguments.count ?? 0} ' + NMobileLocalizations.of(context).members,
+                        type: LabelType.bodyRegular, color: DefaultTheme.successColor)
                   ],
                 ),
               ],
@@ -179,25 +176,22 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
           Expanded(
             child: Container(
               child: BodyBox(
-                padding: EdgeInsets.only(top: 2.h, left: 16.w, right: 16.w),
+                padding: EdgeInsets.only(left: 16.w, right: 16.w),
                 color: DefaultTheme.backgroundLightColor,
                 child: Flex(
                   direction: Axis.vertical,
                   children: <Widget>[
                     Expanded(
                       flex: 1,
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 0),
-                        child: ListView.builder(
-                          padding: EdgeInsets.only(bottom: 10.h),
-                          controller: _scrollController,
-                          itemCount: _subs.length,
-                          itemExtent: 72.h,
-                          itemBuilder: (BuildContext context, int index) {
-                            var contact = _subs[index];
-                            return getItemView(contact);
-                          },
-                        ),
+                      child: ListView.builder(
+                        padding: EdgeInsets.only(top: 4, bottom: 32),
+                        controller: _scrollController,
+                        itemCount: _subs.length,
+                        itemExtent: 72,
+                        itemBuilder: (BuildContext context, int index) {
+                          var contact = _subs[index];
+                          return getItemView(contact);
+                        },
                       ),
                     ),
                   ],
@@ -275,11 +269,8 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
-                            Container(
-                              child: Row(
-                                children: nameLabel,
-                              ),
-                            ),
+                            Row(children: nameLabel),
+                            SizedBox(height: 6),
                             Label(
                               contact.clientAddress,
                               type: LabelType.label,
@@ -293,9 +284,9 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                       flex: 0,
                       child: Container(
                         alignment: Alignment.centerRight,
-                        height: 44.h,
+                        height: double.infinity,
                         child: Padding(
-                          padding: EdgeInsets.only(left: 16.w),
+                          padding: EdgeInsets.only(left: 4),
                           child: Row(
                             mainAxisSize: MainAxisSize.max,
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -318,8 +309,9 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
     List<Widget> toolBtns = <Widget>[];
     if (widget.arguments.type == TopicType.private && widget.arguments.isOwner()) {
       var permissionStatus = _permissionHelper?.getSubscriberStatus(contact.clientAddress);
-      Widget checkBtn = Button(
-        onPressed: () async {
+      Widget checkBtn = GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () async {
           EasyLoading.show();
           if (permissionStatus == PermissionStatus.rejected) {
             await widget.arguments.removeRejectPrivateMember(addr: contact.clientAddress);
@@ -337,43 +329,37 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
             widget.arguments.acceptPrivateMember(addr: contact.clientAddress);
           });
         },
-        padding: const EdgeInsets.all(0),
-        size: 24,
-        icon: true,
         child: loadAssetIconsImage(
           'check',
-          width: 16,
+          width: 20,
           color: DefaultTheme.successColor,
-        ),
+        ).pad(l: 12).sized(w: 32, h: double.infinity),
       );
-      Widget trashBtn = Button(
-        onPressed: () async {
-          EasyLoading.show();
-          if (permissionStatus == PermissionStatus.accepted) {
-            await widget.arguments.removeAcceptPrivateMember(addr: contact.clientAddress);
-          }
-          EasyLoading.dismiss();
-          showToast(NMobileLocalizations.of(context).success);
-          setState(() {
-            _permissionHelper.accept.removeWhere((x) => x['addr'] == contact.clientAddress);
-            if (_permissionHelper.reject == null) {
-              _permissionHelper.reject = [];
+      Widget trashBtn = GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () async {
+            EasyLoading.show();
+            if (permissionStatus == PermissionStatus.accepted) {
+              await widget.arguments.removeAcceptPrivateMember(addr: contact.clientAddress);
             }
-            _permissionHelper.reject.add({'addr': contact.clientAddress});
-          });
-          Future.delayed(Duration(milliseconds: 500), () {
-            widget.arguments.rejectPrivateMember(addr: contact.clientAddress);
-          });
-        },
-        padding: const EdgeInsets.all(0),
-        size: 24,
-        icon: true,
-        child: loadAssetIconsImage(
-          'trash',
-          width: 16,
-          color: DefaultTheme.strongColor,
-        ),
-      );
+            EasyLoading.dismiss();
+            showToast(NMobileLocalizations.of(context).success);
+            setState(() {
+              _permissionHelper.accept.removeWhere((x) => x['addr'] == contact.clientAddress);
+              if (_permissionHelper.reject == null) {
+                _permissionHelper.reject = [];
+              }
+              _permissionHelper.reject.add({'addr': contact.clientAddress});
+            });
+            Future.delayed(Duration(milliseconds: 500), () {
+              widget.arguments.rejectPrivateMember(addr: contact.clientAddress);
+            });
+          },
+          child: Icon(
+            Icons.block,
+            size: 20,
+            color: Colours.red,
+          ).pad(l: 12).sized(w: 32, h: double.infinity));
       if (permissionStatus == PermissionStatus.accepted) {
         toolBtns.add(trashBtn);
       } else if (permissionStatus == PermissionStatus.rejected) {
@@ -383,7 +369,6 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
         toolBtns.add(trashBtn);
       }
     }
-
     return toolBtns;
   }
 
@@ -393,10 +378,12 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
       await widget.arguments.acceptPrivateMember(addr: address);
     }
 
-    var sendMsg = MessageSchema.fromSendData(from: Global.currentClient.address, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
+    var sendMsg = MessageSchema.fromSendData(
+        from: Global.currentClient.address, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
     sendMsg.isOutbound = true;
 
-    var sendMsg1 = MessageSchema.fromSendData(from: Global.currentClient.address, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
+    var sendMsg1 = MessageSchema.fromSendData(
+        from: Global.currentClient.address, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
     sendMsg1.isOutbound = true;
 
     try {
