@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nmobile/blocs/chat/channel_members.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
@@ -14,6 +17,7 @@ class PermissionStatus {
 class Permission {
   List accept;
   List reject;
+
   Permission({this.accept, this.reject});
 
   String getSubscriberStatus(String subscriber) {
@@ -66,6 +70,7 @@ class Permission {
           return key.contains('__permission__');
         });
       }
+      BlocProvider.of<ChannelMembersBloc>(Global.appContext).add(MembersCount(topic, res.length, true));
       return res;
     } catch (e) {
       return getSubscribers();
