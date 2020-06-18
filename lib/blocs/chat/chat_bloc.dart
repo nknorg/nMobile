@@ -75,6 +75,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           if (message.topic != null) {
             if (isPrivateTopic(message.topic)) {
               List<String> dests = await Permission.getPrivateChannelDests(message.topic);
+              if (!dests.contains(Global.currentClient.address)) {
+                dests.add(Global.currentClient.address);
+                TopicSchema(topic: message.topic).getPrivateOwnerMetaAction();
+                TopicSchema(topic: message.topic).getSubscribers(cache: false);
+              }
               pid = await NknClientPlugin.sendText(dests, message.toTextData());
             } else {
               pid = await NknClientPlugin.publish(genChannelId(message.topic), message.toTextData());
@@ -152,6 +157,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           var pid;
           if (message.topic != null) {
             if (isPrivateTopic(message.topic)) {
+//              LogUtil.v('开始发送私有群');
               List<String> dests = await Permission.getPrivateChannelDests(message.topic);
               pid = await NknClientPlugin.sendText(dests, message.toDchatSubscribeData());
             } else {
@@ -194,8 +200,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (message.topic != null && isPrivateTopic(message.topic)) {
       List<String> dests = await Permission.getPrivateChannelDests(message.topic);
       if (!dests.contains(message.from)) {
+        TopicSchema(topic: message.topic).getPrivateOwnerMetaAction();
+        TopicSchema(topic: message.topic).getSubscribers(cache: false);
         LogUtil.v('$dests not contains ${message.from}', tag: 'ReceiveMessage');
         return;
+      } else {
+        LogUtil.v('$dests contains ${message.from}', tag: 'ReceiveMessage');
       }
     }
 

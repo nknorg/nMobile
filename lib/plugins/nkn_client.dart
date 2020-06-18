@@ -256,7 +256,7 @@ class NknClientPlugin {
     bool meta = true,
     bool txPool = true,
   }) async {
-    LogUtil.v('$topic  getSubscribers no cache');
+    LogUtil.v('$topic  load getSubscribers ');
     Completer<Map<String, dynamic>> completer = Completer<Map<String, dynamic>>();
     String id = completer.hashCode.toString();
     LogUtil.v('getSubscribers   $topicHash  $offset $limit $meta $txPool', tag: TAG);
@@ -287,15 +287,21 @@ class NknClientPlugin {
       LogUtil.v('----- topic null -------');
       return {};
     }
+    Map<String, dynamic> subscribers = await SubscribersSchema.getSubscribersByTopic(topic);
+    if (subscribers != null && subscribers.length > 0) {
+      LogUtil.v('$topic  getSubscribers use cache');
+      LogUtil.v(subscribers);
 
-    if (!Global.isLoadSubscribers(topic)) {
-      Map<String, dynamic> subscribers = await SubscribersSchema.getSubscribersByTopic(topic);
-      if (subscribers != null && subscribers.length > 0) {
-        LogUtil.v('$topic  getSubscribers use cache');
-        getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
-        return subscribers;
-      }
+//      if (Global.isLoadSubscribers(topic)) {
+//        LogUtil.v('$topic  getSubscribers use cache');
+//        LogUtil.v('$subscribers ');
+//        getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool).then((v) {
+//          TopicSchema(topic: topic).setSubscribers(v);
+//        });
+//      }
+      return subscribers;
+    } else {
+      return getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
     }
-    return getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
   }
 }

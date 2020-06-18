@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:background_fetch/background_fetch.dart';
 import 'package:common_utils/common_utils.dart';
@@ -21,7 +20,6 @@ class BackgroundFetchService {
     final LocalStorage _localStorage = LocalStorage();
     final SecureStorage _secureStorage = SecureStorage();
     ClientBloc _clientBloc = BlocProvider.of<ClientBloc>(Global.appContext);
-//    BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
 
     BackgroundFetch.configure(BackgroundFetchConfig(minimumFetchInterval: 15, stopOnTerminate: false, requiredNetworkType: NetworkType.ANY), (String taskId) async {
       LogUtil.v("[BackgroundFetch] Event received $taskId");
@@ -49,19 +47,19 @@ class BackgroundFetchService {
         Timer(Duration(seconds: 20), () {
           // todo debug
           LocalNotification.debugNotification('[debug] background fetch end', taskId);
-          if (Platform.isIOS) {
-            NknClientPlugin.disConnect();
-            BackgroundFetch.finish(taskId);
-          }
+          BackgroundFetch.finish(taskId);
+//          if (Platform.isIOS) {
+//            NknClientPlugin.disConnect();
+//          }
         });
       }
     }).then((int status) {}).catchError((e) {
       print('[BackgroundFetch] configure ERROR: $e');
     });
   }
+}
 
-  void backgroundFetchHeadlessTask(String taskId) async {
-    LogUtil.v('[BackgroundFetch] Headless event received.');
-    BackgroundFetch.finish(taskId);
-  }
+void backgroundFetchHeadlessTask(String taskId) async {
+  LogUtil.v('[BackgroundFetch] Headless event received.');
+  BackgroundFetch.finish(taskId);
 }

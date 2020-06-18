@@ -5,9 +5,12 @@ import android.app.Application
 import android.os.*
 import android.os.StrictMode.VmPolicy
 import io.flutter.app.FlutterApplication
+import io.flutter.plugin.common.PluginRegistry
 import nkn.Account
+import com.transistorsoft.flutter.backgroundfetch.BackgroundFetchPlugin;
+import io.flutter.plugins.GeneratedPluginRegistrant
 
-class App : FlutterApplication() {
+class App : FlutterApplication()  {
 
     init {
         instance = this
@@ -15,6 +18,7 @@ class App : FlutterApplication() {
 
     override fun onCreate() {
         super.onCreate()
+
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             var onStartStopInsCount = 0
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
@@ -50,6 +54,7 @@ class App : FlutterApplication() {
             handler.looper.queue.addIdleHandler(MyIdleHandler(times, action))
         }
     }
+
 
     companion object {
         @Volatile
