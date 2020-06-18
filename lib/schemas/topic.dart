@@ -259,16 +259,15 @@ class TopicSchema {
       topicSchema = TopicSchema(topic: topic);
     }
     topicSchema.data = resultMeta;
+    LogUtil.v('$topic  $resultMeta');
     topicSchema.insertOrUpdate();
     return resultMeta;
   }
 
-  Future<Map<String, dynamic>> getPrivateOwnerMeta() async {
+  Future<Map<String, dynamic>> getPrivateOwnerMeta({cache: true}) async {
     TopicSchema topicSchema = await getTopic(topic);
-    if (topicSchema != null && topicSchema.data != null && topicSchema.data.length > 0) {
-      if (Global.isLoadTopic(topic)) {
-        getPrivateOwnerMetaAction();
-      } else {}
+    if (topicSchema != null && topicSchema.data != null && topicSchema.data.length > 0 && cache) {
+      LogUtil.v('use cache meta data');
       return topicSchema.data;
     } else {
       return getPrivateOwnerMetaAction();
@@ -776,18 +775,23 @@ class TopicSchema {
     }
   }
 
-  Future<Map<String, dynamic>> getSubscribers({meta: true, txPool: true}) async {
+  Future<Map<String, dynamic>> getSubscribers({meta: true, txPool: true, cache: true}) async {
     try {
+      Map<String, dynamic> res;
       String topicHash = genChannelId(topic);
-      Map<String, dynamic> res = await NknClientPlugin.getSubscribers(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
+      if (!cache) {
+        res = await NknClientPlugin.getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
+      } else {
+        res = await NknClientPlugin.getSubscribers(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
+      }
       LogUtil.v('getSubscribers   $res');
       if (type == TopicType.private) {
         res.removeWhere((key, val) {
           return key.contains('__permission__');
         });
       }
-      BlocProvider.of<ChannelMembersBloc>(Global.appContext).add(MembersCount(topic, res.length, true));
       await setSubscribers(res);
+      BlocProvider.of<ChannelMembersBloc>(Global.appContext).add(MembersCount(topic, res.length, true));
       return res;
     } catch (e) {
       return getSubscribers();
