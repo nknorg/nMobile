@@ -64,6 +64,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   Timer _deleteTick;
   int _topicCount;
   bool isUnSubscribe;
+  final String TAG = 'ChatGroupPage';
 
   initAsync() async {
     var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit);
@@ -356,7 +357,17 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                   Row(children: topicWidget),
                   BlocBuilder<ChannelMembersBloc, ChannelMembersState>(builder: (context, state) {
                     if (state.membersCount != null && state.membersCount.topicName == targetId) {
-                      _topicCount = state.membersCount.subscriberCount;
+                      if (state.membersCount.subscriberCount != 0) {
+                        _topicCount = state.membersCount.subscriberCount;
+                        LogUtil.v('count 0', tag: TAG);
+                      } else {
+                        Future.delayed(Duration(seconds: 15), () {
+                          if (_topicCount == 0) {
+                            widget.arguments.topic.getSubscribers(cache: false);
+                            widget.arguments.topic.getPrivateOwnerMeta(cache: false);
+                          }
+                        });
+                      }
                     }
                     return Label(
                       '${_topicCount ?? '--'} ' + NMobileLocalizations.of(context).members,
