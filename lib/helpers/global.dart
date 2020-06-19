@@ -34,11 +34,16 @@ class Global {
   static Map<String, DateTime> _loadProfileCache = {};
   static String currentChatId;
   static bool isAutoShowPassword = true;
+
+  static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
+  static bool isLocaleZh() => locale != null && locale.startsWith('zh');
+  static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
+
   static Future init(VoidCallback callback) async {
     WidgetsFlutterBinding.ensureInitialized();
     await SpUtil.getInstance();
     LogUtil.init(isDebug: true, tag: '@@nMobile@@');
-    LogUtil.v('start App');
+    LogUtil.v('start App | isRelease: $isRelease');
     setupLocator();
     await initData();
     callback();
