@@ -20,6 +20,7 @@ import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/schemas/subscribers.dart';
 import 'package:nmobile/utils/const_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -221,7 +222,7 @@ class TopicSchema {
     Map<String, dynamic> resultMeta = Map<String, dynamic>();
     while (true) {
       var res = await NknClientPlugin.getSubscription(topic: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
-      LogUtil.v(res);
+      NLog.d(res);
       if (res['meta'] == null || (res['meta'] as String).isEmpty) {
         break;
       }
@@ -259,7 +260,7 @@ class TopicSchema {
       topicSchema = TopicSchema(topic: topic);
     }
     topicSchema.data = resultMeta;
-    LogUtil.v('$topic  $resultMeta');
+    NLog.d('$topic  $resultMeta');
     topicSchema.insertOrUpdate();
     return resultMeta;
   }
@@ -267,7 +268,7 @@ class TopicSchema {
   Future<Map<String, dynamic>> getPrivateOwnerMeta({cache: true}) async {
     TopicSchema topicSchema = await getTopic(topic);
     if (topicSchema != null && topicSchema.data != null && topicSchema.data.length > 0 && cache) {
-      LogUtil.v('use cache meta data');
+      NLog.d('use cache meta data');
       return topicSchema.data;
     } else {
       return getPrivateOwnerMetaAction();
@@ -315,8 +316,8 @@ class TopicSchema {
         duration: duration,
         fee: fee,
       );
-      LogUtil.v('meta: ${jsonEncode(meta)}', tag: 'acceptPrivateMember');
-      LogUtil.v('hash: $hash', tag: 'acceptPrivateMember');
+      NLog.d('meta: ${jsonEncode(meta)}', tag: 'acceptPrivateMember');
+      NLog.d('hash: $hash', tag: 'acceptPrivateMember');
       return hash;
     }
   }
@@ -358,8 +359,8 @@ class TopicSchema {
         duration: duration,
         fee: fee,
       );
-      LogUtil.v('meta: ${jsonEncode(meta)}', tag: 'removeAcceptPrivateMember');
-      LogUtil.v('hash: $hash', tag: 'removeAcceptPrivateMember');
+      NLog.d('meta: ${jsonEncode(meta)}', tag: 'removeAcceptPrivateMember');
+      NLog.d('hash: $hash', tag: 'removeAcceptPrivateMember');
       return hash;
     }
   }
@@ -402,8 +403,8 @@ class TopicSchema {
         duration: duration,
         fee: fee,
       );
-      LogUtil.v('meta: ${jsonEncode(meta)}', tag: 'removeAcceptPrivateMember');
-      LogUtil.v('hash: $hash', tag: 'removeAcceptPrivateMember');
+      NLog.d('meta: ${jsonEncode(meta)}', tag: 'removeAcceptPrivateMember');
+      NLog.d('hash: $hash', tag: 'removeAcceptPrivateMember');
       return hash;
     }
   }
@@ -451,8 +452,8 @@ class TopicSchema {
         duration: duration,
         fee: fee,
       );
-      LogUtil.v('meta: ${jsonEncode(meta)}', tag: 'rejectPrivateMember');
-      LogUtil.v('hash: $hash', tag: 'rejectPrivateMember');
+      NLog.d('meta: ${jsonEncode(meta)}', tag: 'rejectPrivateMember');
+      NLog.d('hash: $hash', tag: 'rejectPrivateMember');
       return hash;
     }
   }
@@ -495,8 +496,8 @@ class TopicSchema {
         duration: duration,
         fee: fee,
       );
-      LogUtil.v('meta: ${jsonEncode(meta)}', tag: 'removeRejectPrivateMember');
-      LogUtil.v('hash: $hash', tag: 'removeRejectPrivateMember');
+      NLog.d('meta: ${jsonEncode(meta)}', tag: 'removeRejectPrivateMember');
+      NLog.d('hash: $hash', tag: 'removeRejectPrivateMember');
       return hash;
     }
   }
@@ -629,7 +630,7 @@ class TopicSchema {
       if (options == null) options = OptionsSchema();
       options.backgroundColor = backgroundColor;
       options.color = color;
-      LogUtil.v(options.toJson());
+      NLog.d(options.toJson());
       var count = await db.update(
         TopicSchema.tableName,
         {
@@ -697,7 +698,7 @@ class TopicSchema {
 
       return TopicSchema.parseEntity(res?.first);
     } catch (e) {
-      LogUtil.v(e, tag: 'getTopic');
+      NLog.e(e);
       return null;
     }
   }
@@ -712,7 +713,7 @@ class TopicSchema {
 
       return res.map((x) => parseEntity(x)).toList();
     } catch (e) {
-      LogUtil.v(e, tag: 'getAllTopic');
+      NLog.e(e);
       return null;
     }
   }
@@ -741,7 +742,7 @@ class TopicSchema {
 
       return count;
     } catch (e) {
-      LogUtil.v(e, tag: 'getTopicCount');
+      NLog.d(e);
       return getTopicCount();
     }
   }
@@ -784,7 +785,7 @@ class TopicSchema {
       } else {
         res = await NknClientPlugin.getSubscribers(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
       }
-      LogUtil.v('getSubscribers   $res');
+      NLog.d('$res');
       if (type == TopicType.private) {
         res.removeWhere((key, val) {
           return key.contains('__permission__');

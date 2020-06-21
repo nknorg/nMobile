@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,6 +18,7 @@ import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   @override
@@ -159,7 +159,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             if (isPrivateTopic(message.topic)) {
 //              LogUtil.v('开始发送私有群');
               List<String> dests = await Permission.getPrivateChannelDests(message.topic);
-              pid = await NknClientPlugin.sendText(dests, message.toDchatSubscribeData());
+              if (dests.length != 0) pid = await NknClientPlugin.sendText(dests, message.toDchatSubscribeData());
             } else {
               pid = await NknClientPlugin.publish(genChannelId(message.topic), message.toDchatSubscribeData());
             }
@@ -192,7 +192,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Stream<ChatState> _mapReceiveMessageToState(ReceiveMessage event) async* {
-    LogUtil.v('=======receive  message ==============');
+    NLog.d('=======receive  message ==============');
     var message = event.message;
     if (await message.isExist()) {
       return;
@@ -202,10 +202,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       if (!dests.contains(message.from)) {
         TopicSchema(topic: message.topic).getPrivateOwnerMetaAction();
         TopicSchema(topic: message.topic).getSubscribers(cache: false);
-        LogUtil.v('$dests not contains ${message.from}', tag: 'ReceiveMessage');
+        NLog.d('$dests not contains ${message.from}');
         return;
       } else {
-        LogUtil.v('$dests contains ${message.from}', tag: 'ReceiveMessage');
+        NLog.d('$dests contains ${message.from}');
       }
     }
 
@@ -328,7 +328,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               contactBloc.add(LoadContact(address: [message.from]));
             }
           } else {
-            LogUtil.v('no change profile');
+            NLog.d('no change profile');
           }
         } //
         return;

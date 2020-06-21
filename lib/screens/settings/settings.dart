@@ -26,7 +26,6 @@ import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/select.dart';
-import 'package:nmobile/screens/wallet/wallet.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/const_utils.dart';
@@ -86,8 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
     if (Settings.localNotificationType == null) {
       _currentLocalNotificationType = NMobileLocalizations.of(Global.appContext).local_notification_only_name;
     } else {
-      _currentLocalNotificationType = _localNotificationTypeList?.firstWhere((x) => x.value == Settings.localNotificationType, orElse: () => null)?.text ??
-          NMobileLocalizations.of(Global.appContext).local_notification_only_name;
+      _currentLocalNotificationType = _localNotificationTypeList?.firstWhere((x) => x.value == Settings.localNotificationType, orElse: () => null)?.text ?? NMobileLocalizations.of(Global.appContext).local_notification_only_name;
     }
     initAsync();
     _globalBloc = BlocProvider.of<GlobalBloc>(context);
@@ -231,31 +229,6 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                         ),
                       ),
                     ),
-//                    SizedBox(
-//                        width: double.infinity,
-//                        height: 48,
-//                        child: FlatButton(
-//                            padding: const EdgeInsets.only(left: 16, right: 16),
-//                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
-//                            onPressed: () async {
-//                              Navigator.pushNamed(context, WalletScreen.routeName);
-//                            },
-//                            child: Row(
-//                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                              children: <Widget>[
-//                                Label(
-//                                  NMobileLocalizations.of(context).my_wallets,
-//                                  type: LabelType.bodyRegular,
-//                                  color: DefaultTheme.fontColor1,
-//                                  height: 1,
-//                                ),
-//                                SvgPicture.asset(
-//                                  'assets/icons/right.svg',
-//                                  width: 24,
-//                                  color: DefaultTheme.fontColor2,
-//                                )
-//                              ],
-//                            )))
                   ])),
               _authTypeString == null
                   ? Container()
@@ -461,7 +434,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                             )
                           ],
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           launchURL('mailto:nmobile@nkn.org');
                         },
                       ),

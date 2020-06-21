@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:bs58check/bs58check.dart';
 import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
-import 'package:flustars/flustars.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
@@ -85,10 +84,6 @@ Future<File> compressAndGetFile(File file) async {
     dir.createSync(recursive: true);
   }
   var result = await FlutterImageCompress.compressAndGetFile(file.absolute.path, targetPath, quality: 30, minWidth: 640, minHeight: 1024, format: CompressFormat.jpeg);
-  LogUtil.v('File size before compress' + file.lengthSync().toString());
-  LogUtil.v('File size before compress' + file.absolute.path);
-  LogUtil.v('File size after compress' + result.lengthSync().toString());
-  LogUtil.v('File size after compress' + result.absolute.path);
   return result;
 }
 
