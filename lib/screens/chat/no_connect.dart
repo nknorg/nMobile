@@ -1,4 +1,3 @@
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -134,7 +133,6 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
 
   _next() async {
     var password = await _currentWallet.getPassword();
-    LogUtil.v(password);
     if (password != null) {
       _clientBloc.add(CreateClient(_currentWallet, password));
     }

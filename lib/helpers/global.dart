@@ -42,8 +42,6 @@ class Global {
   static Future init(VoidCallback callback) async {
     WidgetsFlutterBinding.ensureInitialized();
     await SpUtil.getInstance();
-    LogUtil.init(isDebug: true, tag: '@@nMobile@@');
-    LogUtil.v('start App | isRelease: $isRelease');
     setupLocator();
     await initData();
     callback();

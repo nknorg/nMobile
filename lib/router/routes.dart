@@ -1,4 +1,3 @@
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/app.dart';
@@ -23,9 +22,9 @@ import 'package:nmobile/screens/wallet/nkn_wallet_detail.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
-import 'package:nmobile/screens/wallet/transfer_status.dart';
 import 'package:nmobile/screens/wallet/wallet.dart';
 import 'package:nmobile/splash.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 Map<String, WidgetBuilder> routes = {
   SplashPage.routeName: (BuildContext context) => SplashPage(),
@@ -56,8 +55,8 @@ Map<String, WidgetBuilder> routes = {
 
 var onGenerateRoute = (RouteSettings settings) {
   final String name = settings.name;
-  LogUtil.v(name);
-  LogUtil.v(settings.arguments);
+  NLog.d(name);
+  NLog.d(settings.arguments);
   final Function pageContentBuilder = routes[name];
   if (pageContentBuilder != null) {
     if (settings.arguments != null) {

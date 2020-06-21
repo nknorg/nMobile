@@ -1,4 +1,3 @@
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,6 +30,7 @@ import 'package:nmobile/screens/wallet/send_nkn.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class NknWalletDetailScreen extends StatefulWidget {
@@ -159,10 +159,10 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                         if (Global?.currentClient?.address != null) {
                           var s = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(Global.currentClient?.publicKey));
                           if (s.toString() == widget.arguments.address) {
-                            LogUtil.v('delete client ');
+                            NLog.d('delete client ');
                             _clientBloc.add(DisConnected());
                           } else {
-                            LogUtil.v('no delete client ');
+                            NLog.d('no delete client ');
                           }
                         }
                         Navigator.popAndPushNamed(context, AppScreen.routeName);

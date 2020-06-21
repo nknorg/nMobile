@@ -11,7 +11,7 @@ description: nMobile
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.0.0+102
+version: 1.0.0+103
 
 environment:
   sdk: ">=2.6.0 <3.0.0"
@@ -77,6 +77,8 @@ dependencies:
   flutter_image_compress: ^0.6.8
   image_save: ^3.0.0
   flutter_vibrate: ^1.0.0
+    # Logger
+  logger: ^0.9.1
 
 
   # The following adds the Cupertino Icons font to your application.
