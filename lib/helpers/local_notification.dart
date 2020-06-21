@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -36,8 +34,6 @@ Future _onDidReceiveLocalNotification(int id, String title, String body, String 
   );
 }
 
-Future _onSelectNotification(String payload) async {}
-
 class LocalNotification {
   static FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   static int _notificationId = 0;
@@ -51,19 +47,9 @@ class LocalNotification {
       onDidReceiveLocalNotification: _onDidReceiveLocalNotification,
     );
     var initializationSettings = InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);
-    await _flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: _onSelectNotification);
-  }
-
-  static notification(String title, String content, {int badgeNumber}) async {
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(badgeNumber: badgeNumber);
-
-    var platformChannelSpecifics = NotificationDetails(null, iOSPlatformChannelSpecifics);
-    try {
-      await _flutterLocalNotificationsPlugin.show(_notificationId++, title, content, platformChannelSpecifics);
-    } catch (e) {
-      debugPrint(e);
-      debugPrintStack();
-    }
+    await _flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: (payload) async {
+      _flutterLocalNotificationsPlugin.cancelAll();
+    });
   }
 
   static debugNotification(String title, String content, {int badgeNumber}) async {
@@ -89,10 +75,8 @@ class LocalNotification {
         return;
       }
     }
-
     var iOSPlatformChannelSpecifics = IOSNotificationDetails(badgeNumber: badgeNumber);
-    var androidNotificationDetails = AndroidNotificationDetails('d_chat_notify_sound_vibration', 'Sound Vibration', 'channel description',
-        enableVibration: Global.isRelease/*does not work*/, vibrationPattern: Int64List.fromList([0, 30, 100, 30]));
+    var androidNotificationDetails = AndroidNotificationDetails('channel_ID', 'channel name', 'channel description', priority: Priority.High, importance: Importance.Max);
     var platformChannelSpecifics = NotificationDetails(androidNotificationDetails, iOSPlatformChannelSpecifics);
     try {
       switch (Settings.localNotificationType) {
