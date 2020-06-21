@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -33,6 +32,7 @@ import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/screens/settings/channel.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class ChatGroupPage extends StatefulWidget {
@@ -172,7 +172,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             } else if (state.message.contentType == ContentType.receipt && !state.message.isOutbound) {
               var msg = _messages.firstWhere((x) => x.msgId == state.message.content && x.isOutbound, orElse: () => null);
               if (msg != null) {
-                LogUtil.v('message send success');
+                NLog.d('message send success');
                 setState(() {
                   msg.isSuccess = true;
                 });
@@ -359,12 +359,12 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                     if (state.membersCount != null && state.membersCount.topicName == targetId) {
                       if (state.membersCount.subscriberCount != 0) {
                         _topicCount = state.membersCount.subscriberCount;
-                        LogUtil.v('count 0', tag: TAG);
                       } else {
                         Future.delayed(Duration(seconds: 15), () {
                           if (_topicCount == 0) {
                             widget.arguments.topic.getSubscribers(cache: false);
                             widget.arguments.topic.getPrivateOwnerMeta(cache: false);
+                            NLog.d('load topic count 0', tag: TAG);
                           }
                         });
                       }

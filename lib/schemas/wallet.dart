@@ -9,6 +9,7 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class WalletSchema extends Equatable {
@@ -24,7 +25,7 @@ class WalletSchema extends Equatable {
   double balanceEth = 0;
   bool isBackedUp = false;
 
-  final LocalStorage _localStorage = LocalStorage();
+//  final LocalStorage _localStorage = LocalStorage();
   final SecureStorage _secureStorage = SecureStorage();
   final LocalAuthenticationService _localAuth = locator<LocalAuthenticationService>();
 
@@ -36,18 +37,18 @@ class WalletSchema extends Equatable {
   @override
   String toString() => 'WalletSchema { address: $address }';
 
-  Future<String> getPassword({int count = 0}) async {
-    if (_localAuth.isProtectionEnabled && count < 1) {
+  Future<String> getPassword() async {
+    NLog.d('getPassword');
+    if (_localAuth.isProtectionEnabled) {
       final password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');
       if (password == null) {
         return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
       } else {
-        await _localAuth.authenticate();
-        if (_localAuth.isAuthenticated) {
+        bool auth = await _localAuth.authenticate();
+        if (auth) {
           return password;
         } else {
-          count++;
-          return getPassword(count: count);
+          return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
         }
       }
     } else {

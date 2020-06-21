@@ -1,4 +1,3 @@
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,6 +23,7 @@ import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class ChannelMembersScreen extends StatefulWidget {
@@ -63,7 +63,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
   }
 
   initAsync() async {
-    LogUtil.v('initAsync');
+    NLog.d('initAsync');
     widget.arguments.querySubscribers().then((data) async {
       List<ContactSchema> list = List<ContactSchema>();
 
@@ -94,10 +94,10 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
       // get private meta
       var meta = await widget.arguments.getPrivateOwnerMeta();
       print(meta);
-      LogUtil.v('==============$meta');
+      NLog.d('==============$meta');
       _permissionHelper = Permission(accept: meta['accept'] ?? [], reject: meta['reject'] ?? []);
     }
-    LogUtil.v('_permissionHelper');
+    NLog.d('_permissionHelper');
     if (mounted) {
       setState(() {});
     }
@@ -138,8 +138,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
             width: 24,
           ),
           onPressed: () async {
-            var address = await BottomDialog.of(context).showInputAddressDialog(
-                title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+            var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
             if (address != null) {
               acceptPrivateAction(address);
             }
@@ -166,8 +165,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                     Row(
                       children: topicWidget,
                     ),
-                    Label('${widget.arguments.count ?? 0} ' + NMobileLocalizations.of(context).members,
-                        type: LabelType.bodyRegular, color: DefaultTheme.successColor)
+                    Label('${widget.arguments.count ?? 0} ' + NMobileLocalizations.of(context).members, type: LabelType.bodyRegular, color: DefaultTheme.successColor)
                   ],
                 ),
               ],
@@ -378,12 +376,10 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
       await widget.arguments.acceptPrivateMember(addr: address);
     }
 
-    var sendMsg = MessageSchema.fromSendData(
-        from: Global.currentClient.address, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
+    var sendMsg = MessageSchema.fromSendData(from: Global.currentClient.address, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
     sendMsg.isOutbound = true;
 
-    var sendMsg1 = MessageSchema.fromSendData(
-        from: Global.currentClient.address, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
+    var sendMsg1 = MessageSchema.fromSendData(from: Global.currentClient.address, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
     sendMsg1.isOutbound = true;
 
     try {
