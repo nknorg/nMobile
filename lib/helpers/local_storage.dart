@@ -75,6 +75,8 @@ class LocalStorage {
 
   Future<Map<String, dynamic>> getItem(String key, int n) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    var result = prefs.get('$key:$n');
+    if (result == null) return null;
     return jsonDecode(prefs.get('$key:$n'));
   }
 

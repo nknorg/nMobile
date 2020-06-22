@@ -78,6 +78,7 @@ dependencies:
   image_save: ^3.0.0
   fixnum: ^0.10.11
   flutter_vibrate: ^1.0.0
+  logger: ^0.9.1
 
 
   # The following adds the Cupertino Icons font to your application.

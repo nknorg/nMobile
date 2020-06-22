@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
@@ -13,12 +11,10 @@ class LocalAuthenticationService {
   Future<BiometricType> getAuthType() async {
     try {
       List<BiometricType> availableBiometrics = await _localAuth.getAvailableBiometrics();
-      if (Platform.isIOS) {
-        if (availableBiometrics.contains(BiometricType.face)) {
-          return BiometricType.face;
-        } else if (availableBiometrics.contains(BiometricType.fingerprint)) {
-          return BiometricType.fingerprint;
-        }
+      if (availableBiometrics.contains(BiometricType.face)) {
+        return BiometricType.face;
+      } else if (availableBiometrics.contains(BiometricType.fingerprint)) {
+        return BiometricType.fingerprint;
       }
     } on PlatformException catch (e) {
       debugPrint(e.message);
@@ -26,19 +22,36 @@ class LocalAuthenticationService {
     }
   }
 
-  Future<bool> authenticate() async {
-    if (isProtectionEnabled) {
-      try {
-        isAuthenticated = await _localAuth.authenticateWithBiometrics(
-          localizedReason: 'authenticate to access',
-          useErrorDialogs: false,
-          stickyAuth: true,
-        );
-      } on PlatformException catch (e) {
-        debugPrint(e.message);
-        debugPrintStack();
-      }
-      return isAuthenticated;
+  ///
+  /// authenticateWithBiometrics()
+  ///
+  /// @param [message] Message shown to user in FaceID/TouchID popup
+  /// @returns [true] if successfully authenticated, [false] otherwise
+  Future<bool> authenticate({message: 'authenticate to access'}) async {
+    bool hasBiometricsEnrolled = await hasBiometrics();
+    if (hasBiometricsEnrolled) {
+      LocalAuthentication localAuth = new LocalAuthentication();
+      return await localAuth.authenticateWithBiometrics(localizedReason: message, useErrorDialogs: false);
     }
+    return false;
+  }
+
+  ///
+  /// hasBiometrics()
+  ///
+  /// @returns [true] if device has fingerprint/faceID available and registered, [false] otherwise
+  Future<bool> hasBiometrics() async {
+    LocalAuthentication localAuth = new LocalAuthentication();
+    bool canCheck = await localAuth.canCheckBiometrics;
+    if (canCheck) {
+      List<BiometricType> availableBiometrics = await localAuth.getAvailableBiometrics();
+
+      if (availableBiometrics.contains(BiometricType.face)) {
+        return true;
+      } else if (availableBiometrics.contains(BiometricType.fingerprint)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

@@ -6,6 +6,8 @@ import 'dart:ui';
 import 'package:common_utils/common_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
@@ -18,6 +20,7 @@ import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/schemas/subscribers.dart';
 import 'package:nmobile/utils/const_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -213,21 +216,13 @@ class TopicSchema {
     }
   }
 
-  Future<Map<String, dynamic>> getPrivateOwnerMeta() async {
-    LogUtil.v('address =========');
-    LogUtil.v(Global.currentClient.address);
-    if (!Global.isLoadTopic(topic)) {
-      TopicSchema topicSchema = await getTopic(topic);
-      if (topicSchema != null && topicSchema.data != null && topicSchema.data.length > 0) {
-        return topicSchema.data;
-      }
-    }
+  Future<Map<String, dynamic>> getPrivateOwnerMetaAction() async {
     String topicHash = genChannelId(topic);
     int i = 0;
     Map<String, dynamic> resultMeta = Map<String, dynamic>();
     while (true) {
       var res = await NknClientPlugin.getSubscription(topic: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
-      LogUtil.v(res);
+      NLog.d(res);
       if (res['meta'] == null || (res['meta'] as String).isEmpty) {
         break;
       }
@@ -265,8 +260,19 @@ class TopicSchema {
       topicSchema = TopicSchema(topic: topic);
     }
     topicSchema.data = resultMeta;
+    NLog.d('$topic  $resultMeta');
     topicSchema.insertOrUpdate();
     return resultMeta;
+  }
+
+  Future<Map<String, dynamic>> getPrivateOwnerMeta({cache: true}) async {
+    TopicSchema topicSchema = await getTopic(topic);
+    if (topicSchema != null && topicSchema.data != null && topicSchema.data.length > 0 && cache) {
+      NLog.d('use cache meta data');
+      return topicSchema.data;
+    } else {
+      return getPrivateOwnerMetaAction();
+    }
   }
 
   Future<String> acceptPrivateMember({
@@ -310,8 +316,8 @@ class TopicSchema {
         duration: duration,
         fee: fee,
       );
-      LogUtil.v('meta: ${jsonEncode(meta)}', tag: 'acceptPrivateMember');
-      LogUtil.v('hash: $hash', tag: 'acceptPrivateMember');
+      NLog.d('meta: ${jsonEncode(meta)}', tag: 'acceptPrivateMember');
+      NLog.d('hash: $hash', tag: 'acceptPrivateMember');
       return hash;
     }
   }
@@ -353,8 +359,8 @@ class TopicSchema {
         duration: duration,
         fee: fee,
       );
-      LogUtil.v('meta: ${jsonEncode(meta)}', tag: 'removeAcceptPrivateMember');
-      LogUtil.v('hash: $hash', tag: 'removeAcceptPrivateMember');
+      NLog.d('meta: ${jsonEncode(meta)}', tag: 'removeAcceptPrivateMember');
+      NLog.d('hash: $hash', tag: 'removeAcceptPrivateMember');
       return hash;
     }
   }
@@ -397,8 +403,8 @@ class TopicSchema {
         duration: duration,
         fee: fee,
       );
-      LogUtil.v('meta: ${jsonEncode(meta)}', tag: 'removeAcceptPrivateMember');
-      LogUtil.v('hash: $hash', tag: 'removeAcceptPrivateMember');
+      NLog.d('meta: ${jsonEncode(meta)}', tag: 'removeAcceptPrivateMember');
+      NLog.d('hash: $hash', tag: 'removeAcceptPrivateMember');
       return hash;
     }
   }
@@ -446,8 +452,8 @@ class TopicSchema {
         duration: duration,
         fee: fee,
       );
-      LogUtil.v('meta: ${jsonEncode(meta)}', tag: 'rejectPrivateMember');
-      LogUtil.v('hash: $hash', tag: 'rejectPrivateMember');
+      NLog.d('meta: ${jsonEncode(meta)}', tag: 'rejectPrivateMember');
+      NLog.d('hash: $hash', tag: 'rejectPrivateMember');
       return hash;
     }
   }
@@ -490,8 +496,8 @@ class TopicSchema {
         duration: duration,
         fee: fee,
       );
-      LogUtil.v('meta: ${jsonEncode(meta)}', tag: 'removeRejectPrivateMember');
-      LogUtil.v('hash: $hash', tag: 'removeRejectPrivateMember');
+      NLog.d('meta: ${jsonEncode(meta)}', tag: 'removeRejectPrivateMember');
+      NLog.d('hash: $hash', tag: 'removeRejectPrivateMember');
       return hash;
     }
   }
@@ -624,7 +630,7 @@ class TopicSchema {
       if (options == null) options = OptionsSchema();
       options.backgroundColor = backgroundColor;
       options.color = color;
-      LogUtil.v(options.toJson());
+      NLog.d(options.toJson());
       var count = await db.update(
         TopicSchema.tableName,
         {
@@ -692,7 +698,7 @@ class TopicSchema {
 
       return TopicSchema.parseEntity(res?.first);
     } catch (e) {
-      LogUtil.v(e, tag: 'getTopic');
+      NLog.e(e);
       return null;
     }
   }
@@ -707,7 +713,7 @@ class TopicSchema {
 
       return res.map((x) => parseEntity(x)).toList();
     } catch (e) {
-      LogUtil.v(e, tag: 'getAllTopic');
+      NLog.e(e);
       return null;
     }
   }
@@ -736,7 +742,7 @@ class TopicSchema {
 
       return count;
     } catch (e) {
-      LogUtil.v(e, tag: 'getTopicCount');
+      NLog.d(e);
       return getTopicCount();
     }
   }
@@ -770,17 +776,23 @@ class TopicSchema {
     }
   }
 
-  Future<Map<String, dynamic>> getSubscribers({meta: true, txPool: true}) async {
+  Future<Map<String, dynamic>> getSubscribers({meta: true, txPool: true, cache: true}) async {
     try {
+      Map<String, dynamic> res;
       String topicHash = genChannelId(topic);
-      Map<String, dynamic> res = await NknClientPlugin.getSubscribers(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
-      LogUtil.v('getSubscribers   $res');
+      if (!cache) {
+        res = await NknClientPlugin.getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
+      } else {
+        res = await NknClientPlugin.getSubscribers(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
+      }
+      NLog.d('$res');
       if (type == TopicType.private) {
         res.removeWhere((key, val) {
           return key.contains('__permission__');
         });
       }
       await setSubscribers(res);
+      BlocProvider.of<ChannelMembersBloc>(Global.appContext).add(MembersCount(topic, res.length, true));
       return res;
     } catch (e) {
       return getSubscribers();

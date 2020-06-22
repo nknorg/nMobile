@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
@@ -32,6 +32,7 @@ import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/screens/settings/channel.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class ChatGroupPage extends StatefulWidget {
@@ -61,8 +62,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   bool loading = false;
   bool _showBottomMenu = false;
   Timer _deleteTick;
-  int _topicCount = 0;
+  int _topicCount;
   bool isUnSubscribe;
+  final String TAG = 'ChatGroupPage';
 
   initAsync() async {
     var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit);
@@ -79,9 +81,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     if (topic != null && topic.count != 0) {
       if (mounted) {
         setState(() {
-          if (topic.count == 0) {
-            _topicCount = 1;
-          } else {
+          if (topic.count != 0) {
             _topicCount = topic.count;
           }
         });
@@ -89,13 +89,13 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     }
 
     if (topic != null) {
-      topic.getTopicCount().then((v) {
+      topic.getTopicCount().then((tc) {
         if (mounted) {
           setState(() {
-            if (v == 0 || v == null) {
-              _topicCount = 1;
+            if (tc == 0 || tc == null) {
+              // _topicCount = null;
             } else {
-              _topicCount = v;
+              _topicCount = tc;
             }
           });
         }
@@ -172,7 +172,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             } else if (state.message.contentType == ContentType.receipt && !state.message.isOutbound) {
               var msg = _messages.firstWhere((x) => x.msgId == state.message.content && x.isOutbound, orElse: () => null);
               if (msg != null) {
-                LogUtil.v('message send success');
+                NLog.d('message send success');
                 setState(() {
                   msg.isSuccess = true;
                 });
@@ -314,18 +314,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> topicWidget = <Widget>[
-      Label(widget.arguments.topic.topicName, type: LabelType.h3, dark: true),
-    ];
+    List<Widget> topicWidget = [Label(widget.arguments.topic.topicName, type: LabelType.h3, dark: true)];
     if (widget.arguments.topic.type == TopicType.private) {
-      topicWidget.insert(
-        0,
-        loadAssetIconsImage(
-          'lock',
-          width: 18,
-          color: DefaultTheme.fontLightColor,
-        ),
-      );
+      topicWidget.insert(0, loadAssetIconsImage('lock', width: 18, color: DefaultTheme.fontLightColor));
     }
 
     return Scaffold(
@@ -333,53 +324,61 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       appBar: Header(
         titleChild: GestureDetector(
           onTap: () async {
-            Navigator.of(context)
-                .pushNamed(
-              ChannelSettingsScreen.routeName,
-              arguments: widget.arguments.topic,
-            )
-                .then((v) {
+            Navigator.of(context).pushNamed(ChannelSettingsScreen.routeName, arguments: widget.arguments.topic).then((v) {
               isUnSubscribe = LocalStorage.getUnsubscribeTopicList().contains(targetId);
             });
           },
-          child: Flex(
-            direction: Axis.horizontal,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
+          child: Flex(direction: Axis.horizontal, mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
 //              Label(
 //                '${widget.arguments.topic.topicName} （${_topicCount ?? 1}）',
 //                type: LabelType.bodyLarge,
 //                color: Colors.white,
 //              )
-              Expanded(
-                flex: 0,
-                child: Container(
-                  padding: EdgeInsets.only(right: 10.w),
-                  alignment: Alignment.center,
-                  child: Hero(
-                    tag: 'avatar:${targetId}',
-                    child: widget.arguments.topic.avatarWidget(
-                      size: 48,
-                      backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
-                      fontColor: DefaultTheme.primaryColor,
-                    ),
+            Expanded(
+              flex: 0,
+              child: Container(
+                padding: EdgeInsets.only(right: 10.w),
+                alignment: Alignment.center,
+                child: Hero(
+                  tag: 'avatar:${targetId}',
+                  child: widget.arguments.topic.avatarWidget(
+                    size: 48,
+                    backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
+                    fontColor: DefaultTheme.primaryColor,
                   ),
                 ),
               ),
-              Expanded(
-                flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      children: topicWidget,
-                    ),
-                    Label('${_topicCount ?? 1} ' + NMobileLocalizations.of(context).members, type: LabelType.bodySmall, color: DefaultTheme.riseColor)
-                  ],
-                ),
-              )
-            ],
-          ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(children: topicWidget),
+                  BlocBuilder<ChannelMembersBloc, ChannelMembersState>(builder: (context, state) {
+                    if (state.membersCount != null && state.membersCount.topicName == targetId) {
+                      if (state.membersCount.subscriberCount != 0) {
+                        _topicCount = state.membersCount.subscriberCount;
+                      } else {
+                        Future.delayed(Duration(seconds: 15), () {
+                          if (_topicCount == 0) {
+                            widget.arguments.topic.getSubscribers(cache: false);
+                            widget.arguments.topic.getPrivateOwnerMeta(cache: false);
+                            NLog.d('load topic count 0', tag: TAG);
+                          }
+                        });
+                      }
+                    }
+                    return Label(
+                      '${_topicCount ?? '--'} ' + NMobileLocalizations.of(context).members,
+                      type: LabelType.bodySmall,
+                      color: DefaultTheme.riseColor,
+                    );
+                  })
+                ],
+              ),
+            )
+          ]),
         ),
         backgroundColor: DefaultTheme.backgroundColor4,
         action: FlatButton(

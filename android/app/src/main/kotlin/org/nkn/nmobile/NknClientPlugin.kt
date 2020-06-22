@@ -94,19 +94,26 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
 
         result.success(null)
         walletPluginHandler.post {
-            val subscribers = client?.getSubscribers(topic, offset.toLong(), limit.toLong(), meta, txPool)
+            try {
+                val subscribers = client?.getSubscribers(topic, offset.toLong(), limit.toLong(), meta, txPool)
 
-            val map = HashMap<String, String>()
-            map.put("_id", _id!!);
+                val map = HashMap<String, String>()
+                map.put("_id", _id!!);
 
-            subscribers?.subscribers?.range { chatId, value ->
-                val meta = value?.trim() ?: ""
-                map.put(chatId, meta)
-                true
-            }
+                subscribers?.subscribers?.range { chatId, value ->
+                    val meta = value?.trim() ?: ""
+                    map.put(chatId, meta)
+                    true
+                }
 
-            App.handler().post {
-                clientEventSink?.success(map)
+                App.handler().post {
+                    clientEventSink?.success(map)
+                }
+            } catch (e: Exception) {
+                print(e.message)
+                App.handler().post {
+                    clientEventSink?.error(_id, e.message, null);
+                }
             }
         }
 
@@ -199,7 +206,12 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
 
         try {
             walletPluginHandler.post {
-                val hash = client?.subscribe(identifier, topic, duration.toLong(), meta, transactionConfig)
+                val hash = try {
+                    client?.subscribe(identifier, topic, duration.toLong(), meta, transactionConfig)
+                } catch (e: Exception) {
+                    print(e.message)
+                    ""
+                }
                 val map = hashMapOf(
                         "_id" to _id,
                         "result" to hash
@@ -308,17 +320,17 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
             try {
                 client!!.close();
                 client = null;
-                if(result !=null)
-                result.success(1)
+                if (result != null)
+                    result.success(1)
 
             } catch (e: Exception) {
                 client = null;
-                if(result !=null)
-                result.success(0)
+                if (result != null)
+                    result.success(0)
             }
         } else {
-            if(result !=null)
-            result.success(1)
+            if (result != null)
+                result.success(1)
         }
     }
 
@@ -402,12 +414,12 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
                         }
                         onMessage()
                     } else {
-                        disConnect(null,null);
+                        disConnect(null, null);
 //                        msgReceiveHandler.postDelayed({ onMessage() }, 5000)
                     }
                 }
             } catch (e: Exception) {
-                disConnect(null,null);
+                disConnect(null, null);
 //                msgReceiveHandler.postDelayed({ onMessage() }, 5000)
             }
         }

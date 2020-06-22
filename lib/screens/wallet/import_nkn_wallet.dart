@@ -1,4 +1,3 @@
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/tabs.dart';
@@ -9,6 +8,7 @@ import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/screens/wallet/import_keystore_nkn_wallet.dart';
 import 'package:nmobile/screens/wallet/import_seed_nkn_wallet.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 class ImportNknWalletScreen extends StatefulWidget {
   static const String routeName = '/wallet/import_nkn_wallet';
@@ -42,7 +42,7 @@ class _ImportNknWalletScreenState extends State<ImportNknWalletScreen> with Sing
           onPressed: () async {
             var qrData = await Navigator.of(context).pushNamed(ScannerScreen.routeName);
             eventBus.fire(QMScan(qrData));
-            LogUtil.v(qrData);
+            NLog.d(qrData);
           },
         ),
       ),
