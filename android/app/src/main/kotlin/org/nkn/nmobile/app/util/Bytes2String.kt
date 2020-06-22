@@ -19,4 +19,7 @@ object Bytes2String {
     fun ByteArray.toMd5() = MD5.Digest().digest(this)
 
     fun String.suffix() = this.substring(this.lastIndexOf('.') + 1)
+
+
+    fun String.withAndroidPrefix() = "ANDROID | " + this
 }

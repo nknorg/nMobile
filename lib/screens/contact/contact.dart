@@ -220,23 +220,19 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                   width: double.infinity,
                   decoration: BoxDecoration(color: DefaultTheme.backgroundColor4),
                   child: BodyBox(
-                    padding: EdgeInsets.only(top: 32.h, left: 20.w, right: 20.w),
+                    padding: EdgeInsets.only(top: 32, left: 20, right: 20),
                     color: DefaultTheme.backgroundLightColor,
                     child: SingleChildScrollView(
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Padding(
                             padding: EdgeInsets.only(bottom: 20.h),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: <Widget>[
-                                Label(
-                                  NMobileLocalizations.of(context).my_details,
-                                  type: LabelType.h2,
-                                  fontWeight: FontWeight.bold,
-                                  height: 1,
-                                )
-                              ],
+                            child: Label(
+                              NMobileLocalizations.of(context).my_details,
+                              type: LabelType.h2,
+                              fontWeight: FontWeight.bold,
+                              height: 1,
                             ),
                           ),
                           Padding(
