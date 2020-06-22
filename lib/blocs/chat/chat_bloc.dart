@@ -362,14 +362,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         yield MessagesUpdated(target: message.from, message: message);
         return;
       case ContentType.eventNodeOnline:
-        LogUtil.v('收到${message.from}');
+        NLog.v('收到${message.from}');
         CdnMiner.getAllCdnMiner().then((list) {
           var model = list.firstWhere((m) => m.nshId == message.from, orElse: () => null);
           if (model == null) {
-            LogUtil.v('开始添加${message.from}');
+            NLog.v('开始添加${message.from}');
             CdnMiner(message.from).insertOrUpdate();
           } else {
-            LogUtil.v('已存在${message.from}');
+            NLog.v('已存在${message.from}');
           }
         });
 
