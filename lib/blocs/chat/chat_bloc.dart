@@ -157,7 +157,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           var pid;
           if (message.topic != null) {
             if (isPrivateTopic(message.topic)) {
-//              LogUtil.v('开始发送私有群');
               List<String> dests = await Permission.getPrivateChannelDests(message.topic);
               if (dests.length != 0) pid = await NknClientPlugin.sendText(dests, message.toDchatSubscribeData());
             } else {

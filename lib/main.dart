@@ -29,9 +29,6 @@ void main() async {
   Global.init(() {
     Catcher(App(), debugConfig: null, releaseConfig: releaseOptions);
   });
-//  Global.init(() {
-//    runApp(App());
-//  });
 }
 
 class App extends StatefulWidget {
