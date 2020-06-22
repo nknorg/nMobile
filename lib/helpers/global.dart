@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:background_fetch/background_fetch.dart';
 import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +11,7 @@ import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/plugins/nshell_client.dart';
 import 'package:nmobile/schemas/client.dart';
 import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/services/background_fetch_service.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:package_info/package_info.dart';
@@ -27,11 +29,16 @@ class Global {
   static Directory applicationRootDirectory;
   static String version;
   static String buildVersion;
-  static Map<String, num> loadTopicTime = {};
+  static Map<String, DateTime> loadTopicDataTime = {};
   static Map<String, num> loadLoadSubscribers = {};
   static AppLifecycleState state = AppLifecycleState.resumed;
   static Map<String, DateTime> _loadProfileCache = {};
   static String currentChatId;
+  static bool isAutoShowPassword = true;
+
+  static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
+  static bool isLocaleZh() => locale != null && locale.startsWith('zh');
+  static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
 
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
 
@@ -44,8 +51,6 @@ class Global {
   static Future init(VoidCallback callback) async {
     WidgetsFlutterBinding.ensureInitialized();
     await SpUtil.getInstance();
-    LogUtil.init(isDebug: true, tag: '@@nMobile@@');
-    LogUtil.v('start App');
     setupLocator();
     await initData();
     callback();
@@ -53,6 +58,7 @@ class Global {
       SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(statusBarColor: Colors.transparent);
       SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
     }
+    BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
   }
 
   static Future initData() async {
@@ -78,22 +84,22 @@ class Global {
   }
 
   static bool isLoadTopic(String topic) {
-    num currentTime = num.parse(DateUtil.formatDate(DateTime.now(), format: "yyyyMMddHHmm"));
-    if (loadTopicTime.containsKey(topic)) {
-      if ((currentTime - loadTopicTime[topic]) >= 5) {
-        loadTopicTime[topic] = currentTime;
+    DateTime currentT = DateTime.now();
+    if (loadTopicDataTime.containsKey(topic)) {
+      if (currentT.isAfter(loadTopicDataTime[topic])) {
+        loadTopicDataTime[topic] = currentT.add(Duration(minutes: 1));
         return true;
       } else {
         return false;
       }
     } else {
-      loadTopicTime[topic] = currentTime;
+      loadTopicDataTime[topic] = currentT.add(Duration(minutes: 1));
       return true;
     }
   }
 
   static removeTopicCache(String topic) {
-    loadTopicTime.remove(topic);
+    loadTopicDataTime.remove(topic);
     loadLoadSubscribers.remove(topic);
   }
 

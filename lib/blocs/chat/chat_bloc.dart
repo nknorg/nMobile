@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,6 +19,7 @@ import 'package:nmobile/schemas/cdn_miner.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   @override
@@ -76,6 +76,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           if (message.topic != null) {
             if (isPrivateTopic(message.topic)) {
               List<String> dests = await Permission.getPrivateChannelDests(message.topic);
+              if (!dests.contains(Global.currentClient.address)) {
+                dests.add(Global.currentClient.address);
+                TopicSchema(topic: message.topic).getPrivateOwnerMetaAction();
+                TopicSchema(topic: message.topic).getSubscribers(cache: false);
+              }
               pid = await NknClientPlugin.sendText(dests, message.toTextData());
             } else {
               pid = await NknClientPlugin.publish(genChannelId(message.topic), message.toTextData());
@@ -154,7 +159,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           if (message.topic != null) {
             if (isPrivateTopic(message.topic)) {
               List<String> dests = await Permission.getPrivateChannelDests(message.topic);
-              pid = await NknClientPlugin.sendText(dests, message.toDchatSubscribeData());
+              if (dests.length != 0) pid = await NknClientPlugin.sendText(dests, message.toDchatSubscribeData());
             } else {
               pid = await NknClientPlugin.publish(genChannelId(message.topic), message.toDchatSubscribeData());
             }
@@ -187,7 +192,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Stream<ChatState> _mapReceiveMessageToState(ReceiveMessage event) async* {
-    LogUtil.v('=======receive  message ==============');
+    NLog.d('=======receive  message ==============');
     var message = event.message;
     if (await message.isExist()) {
       return;
@@ -195,8 +200,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (message.topic != null && isPrivateTopic(message.topic)) {
       List<String> dests = await Permission.getPrivateChannelDests(message.topic);
       if (!dests.contains(message.from)) {
-        LogUtil.v('$dests not contains ${message.from}', tag: 'ReceiveMessage');
+        TopicSchema(topic: message.topic).getPrivateOwnerMetaAction();
+        TopicSchema(topic: message.topic).getSubscribers(cache: false);
+        NLog.d('$dests not contains ${message.from}');
         return;
+      } else {
+        NLog.d('$dests contains ${message.from}');
       }
     }
 
@@ -319,7 +328,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               contactBloc.add(LoadContact(address: [message.from]));
             }
           } else {
-            LogUtil.v('no change profile');
+            NLog.d('no change profile');
           }
         } //
         return;

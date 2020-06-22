@@ -1,5 +1,3 @@
-import 'package:common_utils/common_utils.dart';
-import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,6 +14,7 @@ import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
+import 'package:nmobile/components/dialog/notification.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
@@ -38,6 +37,7 @@ import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class NknWalletDetailScreen extends StatefulWidget {
@@ -63,14 +63,20 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     _nameController.text = widget.arguments.name;
   }
 
-  _recieve() {
+  _receive() {
     Navigator.of(context).pushNamed(ReceiveNknScreen.routeName, arguments: widget.arguments);
   }
 
   _send() {
     Navigator.of(context).pushNamed(SendNknScreen.routeName, arguments: widget.arguments).then((v) {
       if (v != null) {
-        locator<TaskService>().queryNknWalletBalanceTask();
+        NotificationDialog.of(context).show(
+          title: NMobileLocalizations.of(context).transfer_initiated,
+          content: NMobileLocalizations.of(context).transfer_initiated_desc,
+        );
+        // TransferStatusPopup.show(context);
+        // see `SendNknScreen.transferAction()`
+        // locator<TaskService>().queryNknWalletBalanceTask();
       }
     });
   }
@@ -160,10 +166,10 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                         if (Global?.currentClient?.address != null) {
                           var s = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(Global.currentClient?.publicKey));
                           if (s.toString() == widget.arguments.address) {
-                            LogUtil.v('delete client ');
+                            NLog.d('delete client ');
                             _clientBloc.add(DisConnected());
                           } else {
-                            LogUtil.v('no delete client ');
+                            NLog.d('no delete client ');
                           }
                         }
                         Navigator.popAndPushNamed(context, AppScreen.routeName);
@@ -273,7 +279,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                                   padding: const EdgeInsets.only(left: 8),
                                   child: Button(
                                     text: NMobileLocalizations.of(context).recieve,
-                                    onPressed: _recieve,
+                                    onPressed: _receive,
                                   ),
                                 ),
                               ),

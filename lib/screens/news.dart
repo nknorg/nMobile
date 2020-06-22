@@ -32,7 +32,6 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
   @override
   initState() {
     super.initState();
-    LogUtil.v('onCreate', tag: 'NewContentPage');
     _controller = EasyRefreshController();
     Future.delayed(Duration(milliseconds: 200), () {
       getData();

@@ -145,12 +145,12 @@ class NMobileLocalizations {
     return Intl.message('Edit Name', name: 'edit_name', desc: '');
   }
 
-  String get edit_nick_name {
-    return Intl.message('Edit NickName', name: 'edit_nick_name', desc: '');
+  String get edit_nickname {
+    return Intl.message('Edit Nickname', name: 'edit_nickname', desc: '');
   }
 
   String get input_nickname {
-    return Intl.message('Please input NickName', name: 'input_nickname', desc: '');
+    return Intl.message('Please input Nickname', name: 'input_nickname', desc: '');
   }
 
   String get input_pubKey {
@@ -802,11 +802,11 @@ class NMobileLocalizations {
   }
 
   String get chat_no_wallet_title {
-    return Intl.message('Private and Secure \nMessaging', name: 'chat_no_wallet_title', desc: '');
+    return Intl.message('Private and Secure\n Messaging', name: 'chat_no_wallet_title', desc: '');
   }
 
   String get chat_no_wallet_desc {
-    return Intl.message('You need a Mainnet compatible wallet before you\ncan use D-Chat.', name: 'chat_no_wallet_desc', desc: '');
+    return Intl.message('You need a Mainnet compatible wallet before you can use D-Chat.', name: 'chat_no_wallet_desc', desc: '');
   }
 
   String get chat_tab_messages {
@@ -945,8 +945,8 @@ class NMobileLocalizations {
     return Intl.message('Scan the QR code pattern below to add me to the contact.', name: 'scan_show_me_desc', desc: '');
   }
 
-  String get nick_name {
-    return Intl.message('NickName', name: 'nick_name', desc: '');
+  String get nickname {
+    return Intl.message('Nickname', name: 'nickname', desc: '');
   }
 
   String get d_chat_address {
@@ -997,6 +997,10 @@ class NMobileLocalizations {
   String get select_asset_to_backup => Intl.message('Select Asset to Backup', name: 'select_asset_to_backup');
   String get create_account => Intl.message('Create Account', name: 'create_account');
   String get import_wallet_as_account => Intl.message('Import Wallet as Account', name: 'import_wallet_as_account');
+
+  String get transfer_initiated => Intl.message('Transfer Initiated', name: 'transfer_initiated');
+  String get transfer_initiated_desc => Intl.message('Your transfer is in progress. It could take a few seconds to appear on the blockchain.', name: 'transfer_initiated_desc');
+
   String get check_upgrade => Intl.message('Check Upgrade', name: 'check_upgrade');
   String get release_notes => Intl.message('Release Notes:', name: 'release_notes');
   String get download_now => Intl.message('Download Now', name: 'download_now');

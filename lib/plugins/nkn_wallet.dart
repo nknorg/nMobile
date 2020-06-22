@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/services.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 class NknWalletPlugin {
   static const String TAG = 'NknWalletPlugin';
@@ -34,51 +34,53 @@ class NknWalletPlugin {
   }
 
   static Future<String> createWallet(String seed, String password) async {
-    LogUtil.v('createWallet   ', tag: TAG);
+    NLog.d('createWallet   ', tag: TAG);
     try {
       final String wallet = await _methodChannel.invokeMethod('createWallet', {
         'seed': seed,
         'password': password,
       });
 
-      LogUtil.v(wallet);
+      NLog.d(wallet);
       return wallet;
     } catch (e) {
+      NLog.e(e);
       throw e;
     }
   }
 
   static Future<String> restoreWallet(String keystore, String password) async {
     try {
-      LogUtil.v('restoreWallet   ', tag: TAG);
+      NLog.d('restoreWallet   ', tag: TAG);
       final String wallet = await _methodChannel.invokeMethod('restoreWallet', {
         'keystore': keystore,
         'password': password,
       });
       return wallet;
     } catch (e) {
+      NLog.e(e);
       throw e;
     }
   }
 
   static Future<Map<dynamic, dynamic>> openWallet(String keystore, String password) async {
     try {
-      LogUtil.v('openWallet   ', tag: TAG);
+      NLog.d('openWallet   ', tag: TAG);
       final Map<dynamic, dynamic> wallet = await _methodChannel.invokeMethod('openWallet', {
         'keystore': keystore,
         'password': password,
       });
-      LogUtil.v(wallet);
+      NLog.d(wallet);
       return wallet;
     } on PlatformException catch (e) {
-      LogUtil.v(e.message);
+      NLog.e(e.message);
       throw e;
     }
   }
 
   static Future<double> getBalance(String address) async {
     try {
-      LogUtil.v('getBalance   ', tag: TAG);
+      NLog.d('getBalance   ');
       final String balance = await _methodChannel.invokeMethod('getBalance', {
         'address': address,
       });
@@ -92,7 +94,7 @@ class NknWalletPlugin {
     Completer<double> completer = Completer<double>();
     String id = completer.hashCode.toString();
     _walletEventQueue[id] = completer;
-    LogUtil.v('getBalanceAsync   ', tag: TAG);
+    NLog.d('getBalanceAsync   ');
     _methodChannel.invokeMethod('getBalanceAsync', {
       '_id': id,
       'address': address,
@@ -105,7 +107,7 @@ class NknWalletPlugin {
 
   static Future<String> transfer(String keystore, String password, String address, String amount, String fee) async {
     try {
-      LogUtil.v('transfer   ', tag: TAG);
+      NLog.d('transfer   ');
       final String hash = await _methodChannel.invokeMethod('transfer', {
         'keystore': keystore,
         'password': password,

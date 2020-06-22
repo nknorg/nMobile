@@ -11,6 +11,7 @@ import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/schemas/client.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/subscribers.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 class NknClientPlugin {
   static const String TAG = 'NknClientPlugin';
@@ -22,8 +23,8 @@ class NknClientPlugin {
   static init() {
     _eventChannel.receiveBroadcastStream().listen((res) {
       String event = res['event'].toString();
-      LogUtil.v('====$event====', tag: TAG);
-      LogUtil.v(res, tag: TAG);
+      NLog.v('====$event====');
+      NLog.v(res);
       switch (event) {
         case 'send':
           String key = res['_id'];
@@ -32,9 +33,12 @@ class NknClientPlugin {
           break;
         case 'onMessage':
           Map data = res['data'];
-          LogUtil.v(data, tag: 'NknClientPlugin onMessage');
+          NLog.v(data);
           _clientBloc.add(
             OnMessage(
+              // FIXME: wei.chou on 16/06/2020
+              // `to` The value of the field is very problematic,
+              // there will be problems with hot switching of multiple wallets.
               MessageSchema(from: data['src'], to: Global.currentClient.address, data: data['data'], pid: data['pid']),
             ),
           );
@@ -80,16 +84,17 @@ class NknClientPlugin {
 
   static Future<bool> isConnected() async {
     try {
-      LogUtil.v('isConnected   ', tag: TAG);
+      NLog.d('isConnected   ');
       return await _methodChannel.invokeMethod('isConnected');
     } catch (e) {
+      NLog.d(e);
       throw e;
     }
   }
 
   static Future<void> createClient(String identifier, String keystore, String password) async {
     try {
-      LogUtil.v('createClient   ', tag: TAG);
+      NLog.d('createClient');
       await _methodChannel.invokeMethod('createClient', {
         'identifier': identifier,
         'keystore': keystore,
@@ -102,12 +107,12 @@ class NknClientPlugin {
 
   static Future<void> disConnect() async {
     try {
-      LogUtil.v('disConnect   ', tag: TAG);
+      NLog.d('disConnect   ');
       var status = await _methodChannel.invokeMethod('disConnect');
       if (status == 1) {
-        LogUtil.v('disConnect  success ', tag: TAG);
+        NLog.d('disConnect  success ');
       } else {
-        LogUtil.v('disConnect  failed ', tag: TAG);
+        NLog.d('disConnect  failed ');
       }
     } catch (e) {
       throw e;
@@ -115,8 +120,8 @@ class NknClientPlugin {
   }
 
   static Future<Uint8List> sendText(List<String> dests, String data) async {
-    LogUtil.v('sendText  $data ', tag: TAG);
-    LogUtil.v('sendText  $dests ', tag: TAG);
+    NLog.d('sendText  $data ');
+    NLog.d('sendText  $dests ');
     Completer<Uint8List> completer = Completer<Uint8List>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
@@ -127,7 +132,7 @@ class NknClientPlugin {
         'data': data,
       });
     } catch (e) {
-      LogUtil.v('send fault');
+      NLog.e(e);
       throw e;
     }
     return completer.future.whenComplete(() {
@@ -139,9 +144,7 @@ class NknClientPlugin {
     Completer<Uint8List> completer = Completer<Uint8List>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
-    LogUtil.v('publish   ', tag: TAG);
-    LogUtil.v('_id  $id   topic  $topic  data $data', tag: TAG);
-    LogUtil.v('publish   ', tag: TAG);
+    NLog.d('_id  $id   topic  $topic  data $data');
     try {
       await _methodChannel.invokeMethod('publish', {
         '_id': id,
@@ -177,10 +180,10 @@ class NknClientPlugin {
         'fee': fee,
         'meta': meta,
       };
-      LogUtil.v('subscribe  $data', tag: TAG);
+      NLog.d('subscribe  $data');
       _methodChannel.invokeMethod('subscribe', data);
     } catch (e) {
-      LogUtil.v('subscribe fault');
+      NLog.d(e);
     }
     return completer.future.whenComplete(() {
       _clientEventQueue.remove(id);
@@ -192,7 +195,7 @@ class NknClientPlugin {
     String topic,
     String fee = '0',
   }) async {
-    LogUtil.v('unsubscribe', tag: TAG);
+    NLog.d('unsubscribe');
     Completer<String> completer = Completer<String>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
@@ -204,7 +207,7 @@ class NknClientPlugin {
         'fee': fee,
       });
     } catch (v) {
-      LogUtil.v('unsubscribe fault');
+      NLog.e(v);
     }
 
     return completer.future.whenComplete(() {
@@ -212,10 +215,8 @@ class NknClientPlugin {
     });
   }
 
-  static Future<int> getSubscribersCount({
-    String topic,
-  }) async {
-    LogUtil.v('getSubscribersCount', tag: TAG);
+  static Future<int> getSubscribersCount(String topic) async {
+    NLog.d('getSubscribersCount');
     Completer<int> completer = Completer<int>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
@@ -233,7 +234,7 @@ class NknClientPlugin {
     String topic,
     String subscriber,
   }) async {
-    LogUtil.v('getSubscription    $topic $subscriber', tag: TAG);
+    NLog.d('getSubscription    $topic $subscriber');
     Completer<Map<String, dynamic>> completer = Completer<Map<String, dynamic>>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
@@ -241,6 +242,34 @@ class NknClientPlugin {
       '_id': id,
       'topic': topic,
       'subscriber': subscriber,
+    });
+
+    return completer.future.whenComplete(() {
+      _clientEventQueue.remove(id);
+    });
+  }
+
+  static Future<Map<String, dynamic>> getSubscribersAction({
+    String topic,
+    String topicHash,
+    int offset = 0,
+    int limit = 10000,
+    bool meta = true,
+    bool txPool = true,
+  }) async {
+    NLog.d('$topic');
+    Completer<Map<String, dynamic>> completer = Completer<Map<String, dynamic>>();
+    String id = completer.hashCode.toString();
+    NLog.d('getSubscribers');
+    NLog.d('$topicHash  $offset $limit $meta $txPool');
+    _clientEventQueue[id] = completer;
+    _methodChannel.invokeMethod('getSubscribers', {
+      '_id': id,
+      'topic': topicHash,
+      'offset': offset,
+      'limit': limit,
+      'meta': meta,
+      'txPool': txPool,
     });
 
     return completer.future.whenComplete(() {
@@ -257,34 +286,24 @@ class NknClientPlugin {
     bool txPool = true,
   }) async {
     if (topic == null || topicHash == null) {
-      LogUtil.v('----- topic null -------');
+      NLog.w('----- topic null -------');
       return {};
     }
+    Map<String, dynamic> subscribers = await SubscribersSchema.getSubscribersByTopic(topic);
+    if (subscribers != null && subscribers.length > 0) {
+      NLog.d('$topic  getSubscribers use cache');
+      NLog.d(subscribers);
 
-    if (meta && !Global.isLoadSubscribers(topic)) {
-      Map<String, dynamic> subscribers = await SubscribersSchema.getSubscribersByTopic(topic);
-      if (subscribers != null && subscribers.length > 0) {
-        LogUtil.v('$topic  getSubscribers 使用缓存');
-        return subscribers;
-      }
+//      if (Global.isLoadSubscribers(topic)) {
+//        LogUtil.v('$topic  getSubscribers use cache');
+//        LogUtil.v('$subscribers ');
+//        getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool).then((v) {
+//          TopicSchema(topic: topic).setSubscribers(v);
+//        });
+//      }
+      return subscribers;
+    } else {
+      return getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
     }
-
-    LogUtil.v('$topic  getSubscribers 没有缓存');
-    Completer<Map<String, dynamic>> completer = Completer<Map<String, dynamic>>();
-    String id = completer.hashCode.toString();
-    LogUtil.v('getSubscribers   $topicHash  $offset $limit $meta $txPool', tag: TAG);
-    _clientEventQueue[id] = completer;
-    _methodChannel.invokeMethod('getSubscribers', {
-      '_id': id,
-      'topic': topicHash,
-      'offset': offset,
-      'limit': limit,
-      'meta': meta,
-      'txPool': txPool,
-    });
-
-    return completer.future.whenComplete(() {
-      _clientEventQueue.remove(id);
-    });
   }
 }

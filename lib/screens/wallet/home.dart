@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -30,6 +29,7 @@ import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class WalletHome extends StatefulWidget {
@@ -59,11 +59,9 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
         _allBackedUp = true;
         state.wallets.forEach((w) => _totalNkn += w.balance ?? 0);
         state.wallets.forEach((w) {
-//          LogUtil.v('w.isBackedUp: ${w.isBackedUp}, w.name: ${w.name}');
           _allBackedUp = w.isBackedUp && _allBackedUp;
         });
         setState(() {
-//          LogUtil.v('_allBackedUp: $_allBackedUp');
         });
       }
     });
@@ -194,7 +192,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
   }
 
   _listen(WalletSchema ws) {
-    LogUtil.v(ws);
+    NLog.d(ws);
     Future(() {
       final future = ws.getPassword();
       future.then((password) async {
