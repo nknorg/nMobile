@@ -239,7 +239,7 @@ class _InputChannelDialogState extends State<InputChannelDialog> {
                                               decimal: true,
                                             ),
                                             textInputAction: TextInputAction.done,
-                                            inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]*\\.?[0-9]{0,8}'))],
+                                            inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
                                           ),
                                         ),
                                       ],
