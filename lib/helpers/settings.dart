@@ -6,5 +6,5 @@ class LocalNotificationType {
 
 class Settings {
   static int localNotificationType = LocalNotificationType.only_name;
-  static bool debug;
+  static bool debug = false;
 }
