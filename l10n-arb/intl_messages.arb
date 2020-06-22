@@ -1514,13 +1514,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "transfer_initiated": "Transfer Initiated",
-  "@transfer_initiated": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "transfer_initiated_desc": "Your transfer is in progress. It could take a few seconds to appear on the blockchain.",
-  "@transfer_initiated_desc": {
+  "tip": "Tips",
+  "@tip": {
     "type": "text",
     "placeholders": {}
   }

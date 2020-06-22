@@ -69,7 +69,7 @@ class CdnMiner {
 
   static Future<List<CdnMiner>> getAllCdnMiner() async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      Database db = SqliteStorage(db: Global.currentCDNDb).db;
       var res = await db.query(
         CdnMiner.tableName,
         columns: ['*'],
@@ -125,7 +125,7 @@ class CdnMiner {
 
   Future<bool> insertOrUpdate() async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      Database db = SqliteStorage(db: Global.currentCDNDb).db;
       var countQuery = await db.query(
         CdnMiner.tableName,
         columns: ['*'],
@@ -160,7 +160,7 @@ class CdnMiner {
       if (nshid.contains('ctrl.')) {
         nshid = nshid.split('ctrl.')[1];
       }
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      Database db = SqliteStorage(db: Global.currentCDNDb).db;
       var res = await db.query(
         CdnMiner.tableName,
         columns: ['*'],
@@ -177,7 +177,7 @@ class CdnMiner {
 
   Future<int> insert() async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      Database db = SqliteStorage(db: Global.currentCDNDb).db;
       int id = await db.insert(CdnMiner.tableName, toEntity());
       return id;
     } catch (e) {
@@ -211,7 +211,7 @@ class CdnMiner {
   }
 
   delete() {
-    Database db = SqliteStorage(db: Global.currentChatDb).db;
+    Database db = SqliteStorage(db: Global.currentCDNDb).db;
     db.delete(
       CdnMiner.tableName,
       where: 'nsh_id = ?',

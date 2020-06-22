@@ -26,6 +26,7 @@ class Global {
   static ClientSchema currentClient;
   static ContactSchema currentUser;
   static Database currentChatDb;
+  static Database currentCDNDb;
   static Directory applicationRootDirectory;
   static String version;
   static String buildVersion;

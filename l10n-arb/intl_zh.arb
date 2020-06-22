@@ -1005,5 +1005,10 @@
   "@already_the_latest_version": {
     "type": "text",
     "placeholders": {}
+  },
+  "tip": "提示",
+  "@tip": {
+    "type": "text",
+    "placeholders": {}
   }
 }
