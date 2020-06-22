@@ -48,8 +48,8 @@ class Global {
     if (Platform.isAndroid) {
       SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(statusBarColor: Colors.transparent);
       SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
+      BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
     }
-    BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
   }
 
   static Future initData() async {

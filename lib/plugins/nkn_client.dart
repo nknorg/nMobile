@@ -17,7 +17,7 @@ class NknClientPlugin {
   static const String TAG = 'NknClientPlugin';
   static const MethodChannel _methodChannel = MethodChannel('org.nkn.sdk/client');
   static const EventChannel _eventChannel = EventChannel('org.nkn.sdk/client/event');
-  static final ClientBloc _clientBloc = BlocProvider.of(Global.appContext);
+  static final ClientBloc _clientBloc = BlocProvider.of<ClientBloc>(Global.appContext);
   static Map<String, Completer> _clientEventQueue = Map<String, Completer>();
 
   static init() {
@@ -33,7 +33,7 @@ class NknClientPlugin {
           break;
         case 'onMessage':
           Map data = res['data'];
-          NLog.v(data);
+          NLog.v(data, tag: 'NknClientPlugin onMessage --> ClientBloc@${_clientBloc.hashCode.toString().substring(0, 3)}');
           _clientBloc.add(
             OnMessage(
               // FIXME: wei.chou on 16/06/2020
@@ -42,6 +42,7 @@ class NknClientPlugin {
               MessageSchema(from: data['src'], to: Global.currentClient.address, data: data['data'], pid: data['pid']),
             ),
           );
+          LogUtil.v('<<<--->>>', tag: 'NknClientPlugin onMessage clientBloc.add | DONE.');
           break;
         case 'onConnect':
           Map node = res['node'];

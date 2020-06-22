@@ -2,14 +2,19 @@ package org.nkn.nmobile
 
 import android.os.HandlerThread
 import android.os.Process
+import android.util.Log
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import nkn.*
 import org.nkn.nmobile.NknClientEventPlugin.Companion.clientEventSink
+import org.nkn.nmobile.app.util.Tag
 import org.nkn.nmobile.application.App
-import java.util.ArrayList
+import java.util.*
+import kotlin.collections.HashMap
+import kotlin.collections.hashMapOf
 
-class NknClientPlugin : MethodChannel.MethodCallHandler {
+class NknClientPlugin : MethodChannel.MethodCallHandler, Tag {
+    val TAG by lazy { tag() }
 
 
     private val walletPluginHandler by lazy {
@@ -78,10 +83,8 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
             else -> {
                 result.notImplemented()
             }
-
         }
     }
-
 
     private fun getSubscribers(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id") ?: null
@@ -91,39 +94,35 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
         val meta = call.argument<Boolean>("meta") ?: false
         val txPool = call.argument<Boolean>("txPool") ?: false
 
-
         result.success(null)
         walletPluginHandler.post {
             try {
                 val subscribers = client?.getSubscribers(topic, offset.toLong(), limit.toLong(), meta, txPool)
 
                 val map = HashMap<String, String>()
-                map.put("_id", _id!!);
+                map.put("_id", _id!!)
 
                 subscribers?.subscribers?.range { chatId, value ->
                     val meta = value?.trim() ?: ""
                     map.put(chatId, meta)
                     true
                 }
-
-                App.handler().post {
+                App.handler().post{
                     clientEventSink?.success(map)
                 }
             } catch (e: Exception) {
-                print(e.message)
+                Log.e(TAG, "getSubscribers | e:", e)
                 App.handler().post {
-                    clientEventSink?.error(_id, e.message, null);
+                    clientEventSink?.error(_id, e.message, null)
                 }
             }
         }
-
     }
 
     private fun getSubscription(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id") ?: null
         val topic = call.argument<String>("topic") ?: null
         val subscriber = call.argument<String>("subscriber") ?: null
-
 
         result.success(null)
         walletPluginHandler.post {
@@ -134,17 +133,16 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
                         "meta" to scription?.meta,
                         "expiresAt" to scription?.expiresAt
                 )
-                App.handler().post {
-                    clientEventSink?.success(map)
+                App.handler().post{
+                clientEventSink?.success(map)
                 }
             } catch (e: Exception) {
                 App.handler().post {
-                    clientEventSink?.error(_id, e.message, null);
+                    clientEventSink?.error(_id, e.message, null)
                 }
             }
         }
     }
-
 
     private fun getSubscribersCount(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id") ?: null
@@ -162,37 +160,42 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
                     clientEventSink?.success(map)
                 }
             } catch (e: Exception) {
-                clientEventSink?.error(_id, e.message, null);
+                App.handler().post {
+                    clientEventSink?.error(_id, e.message, null)
+                }
             }
         }
     }
-
 
     private fun unsubscribe(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id") ?: null
         val identifier = call.argument<String>("identifier") ?: null
         val topic = call.argument<String>("topic") ?: null
         val fee = call.argument<String>("fee") ?: null
-
+        result.success(null)
 
         val transactionConfig = TransactionConfig()
         transactionConfig.fee = fee
 
-        result.success(null)
         walletPluginHandler.post {
-            val hash = client?.unsubscribe(identifier, topic, transactionConfig)
-            val map = hashMapOf(
-                    "_id" to _id,
-                    "result" to hash
-            )
-            App.handler().post {
-                clientEventSink?.success(map)
+            try {
+                val hash = client?.unsubscribe(identifier, topic, transactionConfig)
+                val map = hashMapOf(
+                        "_id" to _id,
+                        "result" to hash
+                )
+                App.handler().post {
+                    clientEventSink?.success(map)
+                }
+            } catch (e: Exception) {
+                App.handler().post {
+                    clientEventSink?.error(_id, e.message, null)
+                }
             }
         }
     }
 
     private fun subscribe(call: MethodCall, result: MethodChannel.Result) {
-
         val _id = call.argument<String>("_id") ?: null
         val identifier = call.argument<String>("identifier") ?: null
         val topic = call.argument<String>("topic") ?: null
@@ -200,31 +203,24 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
         val meta = call.argument<String>("meta") ?: null
         val fee = call.argument<String>("fee") ?: null
         result.success(null)
-        if (clientEventSink == null) return
+
         val transactionConfig = TransactionConfig()
         transactionConfig.fee = fee
 
-        try {
-            walletPluginHandler.post {
-                val hash = try {
-                    client?.subscribe(identifier, topic, duration.toLong(), meta, transactionConfig)
-                } catch (e: Exception) {
-                    print(e.message)
-                    ""
-                }
+        walletPluginHandler.post {
+            try {
+                val hash = client?.subscribe(identifier, topic, duration.toLong(), meta, transactionConfig)
                 val map = hashMapOf(
                         "_id" to _id,
                         "result" to hash
                 )
                 App.handler().post {
-                    print(hash)
-                    print(map)
                     clientEventSink?.success(map)
                 }
-            }
-        } catch (e: Exception) {
-            App.handler().post {
-                clientEventSink?.error(_id, "subscribe failure", "")
+            } catch (e: Exception) {
+                App.handler().post {
+                    clientEventSink?.error(_id, e.message, null)
+                }
             }
         }
     }
@@ -234,7 +230,7 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
         val topic = call.argument<String>("topic") ?: null
         val data = call.argument<String>("data") ?: null
         result.success(null)
-        if (clientEventSink == null) return
+
         val config = MessageConfig()
         config.maxHoldingSeconds = Int.MAX_VALUE
         config.messageID = Nkn.randomBytes(Nkn.MessageIDSize)
@@ -264,7 +260,6 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
         val dests = call.argument<ArrayList<String>>("dests") ?: ArrayList()
         val data = call.argument<String>("data") ?: null
         result.success(null)
-        if (clientEventSink == null) return
 
         var nknDests: StringArray? = null
         for (v in dests) {
@@ -275,7 +270,9 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
             }
         }
         if (nknDests == null) {
-            clientEventSink!!.error(_id, "dest  null !!", "")
+            App.handler().post {
+                clientEventSink?.error(_id, "dest  null !!", "")
+            }
             return
         }
 
@@ -292,16 +289,15 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
                         "pid" to config.messageID
                 )
                 App.handler().post {
-                    clientEventSink!!.success(data)
+                    clientEventSink?.success(data)
                 }
             } catch (e: Exception) {
                 App.handler().post {
-                    clientEventSink!!.error(_id, "send failure", "")
+                    clientEventSink?.error(_id, "send failure", "")
                 }
             }
         }
     }
-
 
     private fun isConnected(call: MethodCall, result: MethodChannel.Result) {
         if (client != null) {
@@ -312,28 +308,20 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
     }
 
     private fun disConnect(call: MethodCall?, result: MethodChannel.Result?) {
-        try {
-            msgReceiveHandler.removeCallbacks(receiveMessagesRun);
-        } catch (e: Exception) {
-        }
+        msgReceiveHandler.removeCallbacks(receiveMessagesRun);
         if (client != null) {
             try {
-                client!!.close();
-                client = null;
-                if (result != null)
-                    result.success(1)
-
+                client?.close()
+                client = null
+                result?.success(1)
             } catch (e: Exception) {
                 client = null;
-                if (result != null)
-                    result.success(0)
+                result?.success(0)
             }
         } else {
-            if (result != null)
-                result.success(1)
+            result?.success(1)
         }
     }
-
 
     private fun createClient(call: MethodCall, result: MethodChannel.Result) {
         val identifier = call.argument<String>("identifier") ?: null
@@ -346,11 +334,8 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
         connectActionHandler.removeCallbacksAndMessages(null);
         result.success(null)
         if (client != null) {
-            try {
-                msgReceiveHandler.removeCallbacks(receiveMessagesRun);
-            } catch (e: Exception) {
-            }
-            client = null;
+            msgReceiveHandler.removeCallbacks(receiveMessagesRun)
+            client = null
         }
         connectActionHandler.post {
             try {
@@ -370,7 +355,6 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
             }
         }
     }
-
 
     private fun onConnect() {
 //        disConnect(null,null);
@@ -425,7 +409,6 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
         }
     }
 
-
     @Volatile
     private var client: MultiClient? = null
 
@@ -433,8 +416,8 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
         return client ?: synchronized(this) {
             try {
                 val conf = ClientConfig()
-                conf.seedRPCServerAddr =
-                        Nkn.newStringArrayFromString("https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
+//                conf.seedRPCServerAddr =
+//                        Nkn.newStringArrayFromString("https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
                 client = Nkn.newMultiClient(account, identifier, 3, true, conf)
                 client!!
             } catch (e: Exception) {
@@ -447,6 +430,4 @@ class NknClientPlugin : MethodChannel.MethodCallHandler {
             }
         }
     }
-
-
 }

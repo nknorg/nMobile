@@ -3,6 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 
 class LocalAuthenticationService {
+  LocalAuthenticationService._();
+
+  static LocalAuthenticationService _instance;
+
+  static LocalAuthenticationService get instance {
+    _instance ??= LocalAuthenticationService._();
+    return _instance;
+  }
+
   final _localAuth = LocalAuthentication();
   bool isProtectionEnabled = false;
   bool isAuthenticated = false;

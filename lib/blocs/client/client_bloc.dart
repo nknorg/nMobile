@@ -24,10 +24,19 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
   ClientState get initialState => NoConnect();
   final ChatBloc chatBloc;
 
-  ClientBloc({@required this.chatBloc});
+  ClientBloc({@required this.chatBloc}) {
+    this.listen((state) {
+      print('ClientBloc | onData | $state');
+    }, onDone: () {
+      print('ClientBloc | onDone.');
+    }, onError: (e) {
+      print('ClientBloc | onError | $e');
+    });
+  }
 
   @override
   Stream<ClientState> mapEventToState(ClientEvent event) async* {
+    print('ClientBloc | mapEventToState | ChatBloc@${chatBloc.hashCode.toString().substring(0, 3)}');
     if (event is CreateClient) {
       yield* _mapCreateClientToState(event);
     } else if (event is ConnectedClient) {
@@ -106,8 +115,9 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
   }
 
   Stream<ClientState> _mapOnMessageToState(OnMessage event) async* {
-    print('${event.message}');
+    print('ClientBloc | OnMessage | ${event.message}');
     if (state is Connected) {
+      print('ClientBloc | OnMessage | Connected -->');
       Connected currentState = (state as Connected);
       currentState.message = event.message;
       chatBloc.add(chatEvent.ReceiveMessage(currentState.message));
