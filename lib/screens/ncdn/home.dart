@@ -119,7 +119,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
               'where': {
                 'token_type': 'usdt',
                 'is_out': false,
-                'time': {'\$gte': monday ~/ 1000, '\$lte': sunday ~/ 1000}
+                'time': {'\$gt': monday ~/ 1000, '\$lte': sunday ~/ 1000}
               },
               'sum': 'amount',
             },
