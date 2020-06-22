@@ -34,19 +34,6 @@ class LocalAuthenticationService {
       return await localAuth.authenticateWithBiometrics(localizedReason: message, useErrorDialogs: false);
     }
     return false;
-//    if (isProtectionEnabled) {
-//      try {
-//        isAuthenticated = await _localAuth.authenticateWithBiometrics(
-//          localizedReason: 'authenticate to access',
-//          useErrorDialogs: false,
-//          stickyAuth: true,
-//        );
-//      } on PlatformException catch (e) {
-//        debugPrint(e.message);
-//        debugPrintStack();
-//      }
-//      return isAuthenticated;
-//    }
   }
 
   ///
@@ -58,10 +45,7 @@ class LocalAuthenticationService {
     bool canCheck = await localAuth.canCheckBiometrics;
     if (canCheck) {
       List<BiometricType> availableBiometrics = await localAuth.getAvailableBiometrics();
-//      availableBiometrics.forEach((type) {
-//        sl.get<Logger>().i(type.toString());
-//        sl.get<Logger>().i("${type == BiometricType.face ? 'face' : type == BiometricType.iris ? 'iris' : type == BiometricType.fingerprint ? 'fingerprint' : 'unknown'}");
-//      });
+
       if (availableBiometrics.contains(BiometricType.face)) {
         return true;
       } else if (availableBiometrics.contains(BiometricType.fingerprint)) {
