@@ -1006,6 +1006,7 @@ class NMobileLocalizations {
   String get download_now => Intl.message('Download Now', name: 'download_now');
   String get ignore => Intl.message('Ignore', name: 'ignore');
   String get already_the_latest_version => Intl.message('Already the latest version', name: 'already_the_latest_version');
+  String get tip => Intl.message('Tips', name: 'tip');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {

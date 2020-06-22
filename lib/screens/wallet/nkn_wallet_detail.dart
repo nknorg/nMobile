@@ -23,13 +23,16 @@ import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_storage.dart';
+import 'package:nmobile/helpers/sqlite_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/plugins/nshell_client.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/ncdn/home.dart';
+import 'package:nmobile/screens/view/dialog_alert.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
@@ -444,21 +447,28 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     if (password != null) {
       try {
         var wallet = await widget.arguments.exportWallet(password);
-        NShellClientPlugin.createClient(wallet['keystore'], password);
+
+        var keystore = wallet['keystore'];
+//        var walletAddr = wallet['address'];
+        var publicKey = wallet['publicKey'];
+        LogUtil.v(publicKey);
+        if (Global.currentClient == null || Global.currentClient.publicKey != publicKey) {
+          LogUtil.v('open wallet db');
+          Global.currentCDNDb = await SqliteStorage.open('${SqliteStorage.CHAT_DATABASE_NAME}_$publicKey', hexEncode(sha256(wallet['seed'])));
+        } else {
+          LogUtil.v('same wallet');
+        }
+
+        NShellClientPlugin.createClient(keystore, password);
         Navigator.of(context).pushNamed(NcdnHomeScreen.routeName, arguments: {
           'wallet': widget.arguments,
-          'publicKey': wallet['publicKey'],
+          'publicKey': publicKey,
           'seed': wallet['seed'],
         });
       } catch (e) {
-        if (e.message == 'password wrong') {
-          ModalDialog.of(context).show(
-            height: 240,
-            content: Label(
-              NMobileLocalizations.of(context).password_wrong,
-              type: LabelType.bodyRegular,
-            ),
-          );
+        LogUtil.v(e);
+        if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+          SimpleAlert(context: context, content: NMobileLocalizations.of(context).password_wrong).show();
         }
       }
     }
