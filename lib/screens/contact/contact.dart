@@ -80,13 +80,11 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // 添加监听订阅
     RouteUtils.routeObserver.subscribe(this, ModalRoute.of(context));
   }
 
   @override
   void dispose() {
-    // 移除监听订阅
     RouteUtils.routeObserver.unsubscribe(this);
     super.dispose();
   }
