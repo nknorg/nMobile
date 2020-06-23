@@ -100,7 +100,6 @@ class _NodeMainPageState extends State<NodeMainPage> {
   }
 
   search() {
-//    String url = Api.CDN_MINER_API + '/api/v2/quantity_flow/NKNCCYzbTDQWFgeYUZoNDCWVr7aU1DadKaZY';
     String url = Api.CDN_MINER_API + '/api/v2/quantity_flow/${Global.minerData.ads}';
     var params = {
       'start': _start.millisecondsSinceEpoch ~/ 1000,
@@ -133,7 +132,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
       var cdn = _list.firstWhere((x) => x.nshId == n.nshId, orElse: () => null);
       if (cdn == null) {
         cdn = CdnMiner(n.nshId, flow: n.flow, cost: n.cost, contribution: n.contribution);
-        await cdn.insertOrUpdate();
+//        await cdn.insertOrUpdate();
         _list.add(cdn);
       } else {
         int i = _list.indexOf(cdn);
