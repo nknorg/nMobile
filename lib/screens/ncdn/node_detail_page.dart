@@ -67,8 +67,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
   }
 
   initData() {
-//    String url = 'http://10.0.1.4:6080/api/v2/get_status_by_nshid/NKNVnLDSVhaw2DDRqDrKrWBL6ZanFy8ftTyf';
-    String url = 'http://39.100.108.44:6443/api/v2/get_status_by_nshid/${Global.minerData.ads}';
+    String url = Api.CDN_MINER_API + '/api/v2/get_status_by_nshid/${Global.minerData.ads}';
     var params = {
       "beneficiary": Global.minerData.ads,
       "nshid": widget.arguments.nshId,

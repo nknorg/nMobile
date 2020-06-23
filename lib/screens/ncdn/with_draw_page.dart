@@ -193,7 +193,7 @@ class WithDrawPageState extends State<WithDrawPage> {
         'id': uuid.v4(),
       };
 
-      String url = 'http://39.100.108.44:6443/api/v2/verify_withdraw/';
+      String url = Api.CDN_MINER_API + '/api/v2/verify_withdraw/';
       try {
         _api.post(url, data, isEncrypted: true, getResponse: true).then((res) {
           NLog.v(res);

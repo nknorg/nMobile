@@ -12,6 +12,9 @@ import 'ed2curve.dart';
 import 'utils.dart';
 
 class Api {
+  static final String CDN_MINER_API = 'https://cdn-miner-api.nkn.org';
+  static final String CDN_MINER_DB = 'https://cdn-miner-db.nkn.org';
+
   Dio dio;
   Uint8List mySecretKey;
   Uint8List myPublicKey;
