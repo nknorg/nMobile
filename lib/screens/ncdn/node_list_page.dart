@@ -1,4 +1,3 @@
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
@@ -26,7 +25,6 @@ class NodeListPageState extends State<NodeListPage> {
   @override
   void initState() {
     super.initState();
-    LogUtil.v('onCreate', tag: 'NodeListPage');
     _list = widget.arguments;
   }
 

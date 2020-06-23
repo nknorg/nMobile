@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:nmobile/helpers/encryption.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/schemas/news.dart';
 import 'package:nmobile/tweetnacl/tweetnaclfast.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 import 'ed2curve.dart';
 import 'utils.dart';
@@ -86,8 +85,8 @@ class Api {
       var encData = encryptData(jsonEncode(data));
       try {
         var params = {'pub_key': hexEncode(myPublicKey), 'data': encData};
-        LogUtil.v('$params == $data');
-        LogUtil.v(url);
+        NLog.v('$params == $data');
+        NLog.v(url);
         Response res = await dio.post(
           url,
           data: params,
@@ -104,30 +103,30 @@ class Api {
 
         if (res.statusCode >= 200 && res.statusCode < 300 && res.data != null) {
           var msg;
-          LogUtil.v(res);
+          NLog.v(res);
 
           if (res.data is String) {
             msg = decryptData(res.data);
+            NLog.v(msg);
           } else {
             if (res.data['success'] && res.data['result'] != null) {
               msg = decryptData(res.data['result']);
-              LogUtil.v(msg);
+              NLog.v(msg);
             }
           }
           return jsonDecode(msg);
         } else {
-          LogUtil.v('===========');
-          LogUtil.v(res);
+          NLog.v('===========');
+          NLog.v(res);
         }
       } catch (e) {
-        debugPrintStack();
-        print(e);
+        NLog.v(e);
       }
     } else {
       try {
-        LogUtil.v('======post=====');
+        NLog.v('======post=====');
         Response res = await dio.post(url, data: data);
-
+        NLog.v(res);
         if (res.statusCode >= 200 && res.statusCode < 300 && res.data != null) {
           return res.data;
         }

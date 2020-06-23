@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -609,7 +608,7 @@ class TopicSchema {
       }
       return false;
     } catch (e) {
-      LogUtil.e('insertOrUpdate', tag: 'SqliteStorage');
+      NLog.e('insertOrUpdate');
       return false;
     }
   }
@@ -677,7 +676,7 @@ class TopicSchema {
         return n > 0;
       }
     } catch (e) {
-      LogUtil.e('insertOrUpdate', tag: 'SqliteStorages');
+      NLog.e('insertOrUpdate');
       return false;
     }
   }

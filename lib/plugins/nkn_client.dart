@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
@@ -75,7 +74,7 @@ class NknClientPlugin {
           break;
       }
     }, onError: (err) {
-      LogUtil.e(err, tag: 'ClientEventChannel');
+      NLog.e(err);
       if (_clientEventQueue[err.code] != null) {
         _clientEventQueue[err.code].completeError(err.message);
       }
@@ -167,7 +166,7 @@ class NknClientPlugin {
     String fee = '0',
     String meta = '',
   }) async {
-    LogUtil.v('subscribe', tag: TAG);
+    NLog.v('subscribe', tag: TAG);
     Completer<String> completer = Completer<String>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;

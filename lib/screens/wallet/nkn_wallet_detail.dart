@@ -32,12 +32,11 @@ import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/plugins/nshell_client.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/ncdn/home.dart';
+import 'package:nmobile/screens/ncdn/miner_data.dart';
 import 'package:nmobile/screens/view/dialog_alert.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
-import 'package:nmobile/services/service_locator.dart';
-import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/image_utils.dart';
@@ -451,22 +450,25 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
         var keystore = wallet['keystore'];
 //        var walletAddr = wallet['address'];
         var publicKey = wallet['publicKey'];
-        LogUtil.v(publicKey);
+        NLog.v(publicKey);
         if (Global.currentClient == null || Global.currentClient.publicKey != publicKey) {
-          LogUtil.v('open wallet db');
+          NLog.v('open wallet db');
           Global.currentCDNDb = await SqliteStorage.open('${SqliteStorage.CHAT_DATABASE_NAME}_$publicKey', hexEncode(sha256(wallet['seed'])));
         } else {
-          LogUtil.v('same wallet');
+          NLog.v('same wallet');
         }
 
         NShellClientPlugin.createClient(keystore, password);
-        Navigator.of(context).pushNamed(NcdnHomeScreen.routeName, arguments: {
-          'wallet': widget.arguments,
-          'publicKey': publicKey,
-          'seed': wallet['seed'],
-        });
+        NLog.v('==============');
+
+        var minerData = MinerData();
+        minerData.ads = wallet['address'];
+        minerData.pub = wallet['publicKey'];
+        minerData.se = wallet['seed'];
+        Global.minerData = minerData;
+        Navigator.of(context).pushNamed(NcdnHomeScreen.routeName, arguments: wallet);
       } catch (e) {
-        LogUtil.v(e);
+        NLog.v(e.toString());
         if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
           SimpleAlert(context: context, content: NMobileLocalizations.of(context).password_wrong).show();
         }

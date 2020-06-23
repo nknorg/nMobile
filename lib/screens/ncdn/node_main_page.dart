@@ -14,31 +14,26 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/api.dart';
 import 'package:nmobile/helpers/format.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/schemas/cdn_miner.dart';
-import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/ncdn/node_detail_page.dart';
 import 'package:nmobile/screens/ncdn/node_list_page.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/screens/view/ncdn_main_header.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class NodeMainPage extends StatefulWidget {
   static const String routeName = '/ncdn/node/detail';
-
-  final Map arguments;
-
-  NodeMainPage({Key key, this.arguments}) : super(key: key);
+  NodeMainPage({Key key}) : super(key: key);
 
   @override
   _NodeMainPageState createState() => _NodeMainPageState();
 }
 
 class _NodeMainPageState extends State<NodeMainPage> {
-  final String SERVER_PUBKEY = 'eb08c2a27cb61fe414654a1e9875113d715737247addf01db06ea66cafe0b5c8';
-  WalletSchema _wallet;
-  String _publicKey;
-  String _seed;
+//  WalletSchema _wallet;
   Api _api;
   DateTime _start;
   DateTime _end;
@@ -61,7 +56,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
         _list = listTemp;
       });
     }
-    _api = Api(mySecretKey: hexDecode(_seed), myPublicKey: hexDecode(_publicKey), otherPubkey: hexDecode(SERVER_PUBKEY));
+    _api = Api(mySecretKey: hexDecode(Global.minerData.se), myPublicKey: hexDecode(Global.minerData.pub), otherPubkey: hexDecode(Global.SERVER_PUBKEY));
     search();
   }
 
@@ -69,9 +64,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
   void initState() {
     super.initState();
     _controller = EasyRefreshController();
-    _wallet = widget.arguments['wallet'];
-    _publicKey = widget.arguments['publicKey'];
-    _seed = widget.arguments['seed'];
+
     _start = getStartOfDay(DateTime.now().add(Duration(days: -1)));
     _end = getStartOfDay(DateTime.now().add(Duration(days: -1)));
     _startText = DateUtil.formatDate(_start, format: 'yyyy-MM-dd');
@@ -79,7 +72,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
     _cdnBloc = BlocProvider.of<CDNBloc>(context);
     _subscription = _cdnBloc.listen((state) async {
       if (state is LoadSate) {
-        LogUtil.v('======initState=====');
+        NLog.v('======initState=====');
         if (mounted) {
           setState(() {
             var cdn = _list.firstWhere((x) => x.nshId == state.data.nshId, orElse: () => null);
@@ -107,7 +100,8 @@ class _NodeMainPageState extends State<NodeMainPage> {
   }
 
   search() {
-    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/${_wallet.address}';
+    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/NKNCCYzbTDQWFgeYUZoNDCWVr7aU1DadKaZY';
+//    String url = 'http://39.100.108.44:6443/api/v2/quantity_flow/$_address';
     var params = {
       'start': _start.millisecondsSinceEpoch ~/ 1000,
       'end': _end.add(Duration(days: 1)).millisecondsSinceEpoch ~/ 1000,
@@ -124,6 +118,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
         }
         resultData = await getRequestListData();
         await mergeAction();
+        getFilterName();
         //循环获取设备详情
         for (CdnMiner cdn in _list) {
           cdn.getMinerDetail();
@@ -157,12 +152,10 @@ class _NodeMainPageState extends State<NodeMainPage> {
     resultData.clear();
     double amount = 0;
     if (responseData != null && responseData.keys != null) {
-      LogUtil.v(responseData.keys);
-      LogUtil.v('===========');
       for (String key in responseData.keys) {
         if (key != null && key.length > 0) {
           List<dynamic> val = (responseData[key] as List<dynamic>);
-          LogUtil.v(val);
+          NLog.v(val);
           amount += val[1];
           resultData.add(CdnMiner(key, flow: val[0], cost: val[1], contribution: val[2]));
         }
@@ -564,7 +557,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
   addAction() async {
     var qrData = await Navigator.of(context).pushNamed(ScannerScreen.routeName);
     if (qrData != null && qrData.toString().length >= 60) {
-      LogUtil.v(_list);
+      NLog.v(_list);
       var result = _list.firstWhere((v) => v.nshId == qrData, orElse: () => null);
       if (result == null) {
         result = CdnMiner(qrData);
@@ -679,7 +672,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
         });
       }
     } catch (e) {
-      LogUtil.v(e);
+      NLog.v(e);
     }
   }
 }
