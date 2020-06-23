@@ -18,7 +18,6 @@ import 'package:nmobile/schemas/cdn_miner.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
-import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/ncdn/with_draw_page.dart';
 import 'package:oktoast/oktoast.dart';
@@ -37,10 +36,6 @@ class NcdnHomeScreen extends StatefulWidget {
 }
 
 class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
-  final String SERVER_PUBKEY = 'eb08c2a27cb61fe414654a1e9875113d715737247addf01db06ea66cafe0b5c8';
-  WalletSchema _wallet;
-  String _publicKey;
-  String _seed;
   Api _api;
 
   TextEditingController _balanceController = TextEditingController(text: '- USDT');
@@ -54,8 +49,8 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
   ChatBloc _chatBloc;
 
   initAsync() async {
-    _api = Api(mySecretKey: hexDecode(_seed), myPublicKey: hexDecode(_publicKey), otherPubkey: hexDecode(SERVER_PUBKEY));
-    String url = 'http://138.68.29.1:3000/api/v1/sum/${_wallet.address}';
+    _api = Api(mySecretKey: hexDecode(Global.minerData.se), myPublicKey: hexDecode(Global.minerData.pub), otherPubkey: hexDecode(Global.SERVER_PUBKEY));
+    String url = 'http://138.68.29.1:3000/api/v1/sum/${Global.minerData.ads}';
     var params = {
       'where': {},
       'sum': 'amount',
@@ -71,7 +66,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
     });
     _api
         .post(
-            'http://138.68.29.1:3000/api/v1/sum/${_wallet.address}',
+            'http://138.68.29.1:3000/api/v1/sum/${Global.minerData.ads}',
             {
               'where': {
                 'token_type': 'usdt',
@@ -89,19 +84,19 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
       }
     });
 
-    _api.get('http://39.100.108.44:6443/api/v2/referral_income/${_wallet.address}').then((res) {
+    _api.get('http://39.100.108.44:6443/api/v2/referral_income/${Global.minerData.ads}').then((res) {
       var data = res;
       if (data != null && data['success']) {
         _referrerBalanceController.text = Format.currencyFormat(data['result'], decimalDigits: 3) + ' USDT';
       }
     });
-    _api.get('http://39.100.108.44:6443/api/v2/daily_estimate/${_wallet.address}').then((res) {
+    _api.get('http://39.100.108.44:6443/api/v2/daily_estimate/${Global.minerData.ads}').then((res) {
       var data = res;
       if (data != null && data['success']) {
         _dailyEstimateController.text = Format.currencyFormat(data['result'], decimalDigits: 3) + ' USDT';
       }
     });
-    _api.get('http://39.100.108.44:6443/api/v2/weekly_estimate/${_wallet.address}').then((res) {
+    _api.get('http://39.100.108.44:6443/api/v2/weekly_estimate/${Global.minerData.ads}').then((res) {
       var data = res;
       if (data != null && data['success']) {
         _weeklyEstimateController.text = Format.currencyFormat(data['result'], decimalDigits: 3) + ' USDT';
@@ -114,7 +109,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
     var sunday = getTimestampLatest(false, 7 - weekday + -1 * 7);
     _api
         .post(
-            'http://138.68.29.1:3000/api/v1/sum/${_wallet.address}',
+            'http://138.68.29.1:3000/api/v1/sum/${Global.minerData.ads}',
             {
               'where': {
                 'token_type': 'usdt',
@@ -137,9 +132,6 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
   @override
   void initState() {
     super.initState();
-    _wallet = widget.arguments['wallet'];
-    _publicKey = widget.arguments['publicKey'];
-    _seed = widget.arguments['seed'];
     _chatBloc = BlocProvider.of<ChatBloc>(context);
     initAsync();
     CdnMiner.removeCacheData();
@@ -349,11 +341,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                               width: double.infinity,
                               text: '查看节点',
                               onPressed: () {
-                                Navigator.of(context).pushNamed(NodeMainPage.routeName, arguments: {
-                                  'wallet': _wallet,
-                                  'publicKey': _publicKey,
-                                  'seed': _seed,
-                                });
+                                Navigator.of(context).pushNamed(NodeMainPage.routeName);
                               },
                             ),
                           ),
@@ -417,9 +405,6 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
     } else {
       Navigator.pushNamed(context, WithDrawPage.routeName, arguments: {
         "maxBalance": _balance,
-        "address": _wallet.address,
-        "publicKey": _publicKey,
-        "seed": _seed,
       }).then((v) {
         initAsync();
       });

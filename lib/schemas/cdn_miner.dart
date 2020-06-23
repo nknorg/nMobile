@@ -1,11 +1,11 @@
 import 'dart:convert';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/sqlite_storage.dart';
 import 'package:nmobile/plugins/nshell_client.dart';
 import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class CdnMiner {
@@ -77,7 +77,7 @@ class CdnMiner {
 
       return res.map((x) => parseEntity(x)).toList();
     } catch (e) {
-      LogUtil.v(e, tag: 'getAllCdnMiner');
+      NLog.v(e, tag: 'getAllCdnMiner');
       return <CdnMiner>[];
     }
   }
@@ -91,7 +91,7 @@ class CdnMiner {
         return '故障';
       }
     } catch (e) {
-      LogUtil.v(e, tag: 'getStatus');
+      NLog.v(e, tag: 'getStatus');
       return '未知';
     }
   }
@@ -114,11 +114,11 @@ class CdnMiner {
 //          c.data = jsonDecode(e['data']);
         }
       } catch (e) {
-        LogUtil.v(e, tag: 'CdnMinerparseEntity');
+        NLog.v(e, tag: 'CdnMinerparseEntity');
       }
       return c;
     } catch (e) {
-      LogUtil.v(e, tag: 'CdnMiner parseEntity');
+      NLog.v(e, tag: 'CdnMiner parseEntity');
       return null;
     }
   }
@@ -150,7 +150,7 @@ class CdnMiner {
         return n > 0;
       }
     } catch (e) {
-      LogUtil.e(e.toString(), tag: 'CDN insertOrUpdate');
+      NLog.e(e.toString());
       return false;
     }
   }
@@ -170,7 +170,7 @@ class CdnMiner {
       if (res.length == 0) return null;
       return res.map((x) => parseEntity(x)).toList()[0];
     } catch (e) {
-      LogUtil.v(e, tag: 'getModelFromNshid');
+      NLog.v(e, tag: 'getModelFromNshid');
       return null;
     }
   }
@@ -181,7 +181,7 @@ class CdnMiner {
       int id = await db.insert(CdnMiner.tableName, toEntity());
       return id;
     } catch (e) {
-      LogUtil.v(e, tag: 'insert');
+      NLog.v(e, tag: 'insert');
       debugPrint(e);
       debugPrintStack();
     }
@@ -194,7 +194,7 @@ class CdnMiner {
       }
       return '';
     } catch (e) {
-      LogUtil.v(e, tag: 'getIp');
+      NLog.v(e, tag: 'getIp');
       return '';
     }
   }

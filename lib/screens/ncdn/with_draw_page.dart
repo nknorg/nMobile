@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -12,10 +11,12 @@ import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/api.dart';
 import 'package:nmobile/helpers/format.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/tweetnacl/tools.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 import '../../consts/theme.dart';
@@ -32,20 +33,14 @@ class WithDrawPage extends StatefulWidget {
 
 class WithDrawPageState extends State<WithDrawPage> {
   bool _formValid = false;
-  final String SERVER_PUBKEY = 'eb08c2a27cb61fe414654a1e9875113d715737247addf01db06ea66cafe0b5c8';
   GlobalKey _formKey = new GlobalKey<FormState>();
   TextEditingController amountController;
   TextEditingController addressController;
-  String _publicKey;
-  String _seed;
   FocusNode _commentFocus = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    LogUtil.v('onCreate', tag: 'WithDrawPage');
-    _publicKey = widget.arguments['publicKey'];
-    _seed = widget.arguments['seed'];
     amountController = TextEditingController();
     addressController = TextEditingController();
     Future.delayed(Duration(milliseconds: 200), () {
@@ -190,19 +185,18 @@ class WithDrawPageState extends State<WithDrawPage> {
 
   verifyWithdraw() {
     if ((_formKey.currentState as FormState).validate()) {
-      Api _api = Api(mySecretKey: hexDecode(_seed), myPublicKey: hexDecode(_publicKey), otherPubkey: hexDecode(SERVER_PUBKEY));
+      Api _api = Api(mySecretKey: hexDecode(Global.minerData.se), myPublicKey: hexDecode(Global.minerData.pub), otherPubkey: hexDecode(Global.SERVER_PUBKEY));
       var data = {
-        'beneficiary': widget.arguments['address'],
+        'beneficiary': Global.minerData.ads,
         'amount': num.parse(amountController.text),
         'eth_beneficiary': addressController.text,
         'id': uuid.v4(),
       };
 
-//      String url = 'http://10.0.1.4:6080/api/v2/verify_withdraw/';
       String url = 'http://39.100.108.44:6443/api/v2/verify_withdraw/';
       try {
         _api.post(url, data, isEncrypted: true, getResponse: true).then((res) {
-          LogUtil.v(res);
+          NLog.v(res);
           if (res.data['success']) {
             Navigator.of(context).pop(true);
             showToast('提现申请提交成功，请等待工作人员处理。');

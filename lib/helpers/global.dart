@@ -11,6 +11,7 @@ import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/plugins/nshell_client.dart';
 import 'package:nmobile/schemas/client.dart';
 import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/screens/ncdn/miner_data.dart';
 import 'package:nmobile/services/background_fetch_service.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
@@ -36,10 +37,11 @@ class Global {
   static Map<String, DateTime> _loadProfileCache = {};
   static String currentChatId;
   static bool isAutoShowPassword = true;
-
+  static MinerData minerData;
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
   static bool isLocaleZh() => locale != null && locale.startsWith('zh');
   static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
+  static final String SERVER_PUBKEY = 'eb08c2a27cb61fe414654a1e9875113d715737247addf01db06ea66cafe0b5c8';
 
   static Future init(VoidCallback callback) async {
     WidgetsFlutterBinding.ensureInitialized();
