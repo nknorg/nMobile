@@ -50,7 +50,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
 
   initAsync() async {
     _api = Api(mySecretKey: hexDecode(Global.minerData.se), myPublicKey: hexDecode(Global.minerData.pub), otherPubkey: hexDecode(Global.SERVER_PUBKEY));
-    String url = 'http://138.68.29.1:3000/api/v1/sum/${Global.minerData.ads}';
+    String url = Api.CDN_MINER_DB + '/api/v1/sum/${Global.minerData.ads}';
     var params = {
       'where': {},
       'sum': 'amount',
@@ -66,7 +66,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
     });
     _api
         .post(
-            'http://138.68.29.1:3000/api/v1/sum/${Global.minerData.ads}',
+            Api.CDN_MINER_DB + '/api/v1/sum/${Global.minerData.ads}',
             {
               'where': {
                 'token_type': 'usdt',
@@ -84,19 +84,19 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
       }
     });
 
-    _api.get('http://39.100.108.44:6443/api/v2/referral_income/${Global.minerData.ads}').then((res) {
+    _api.get(Api.CDN_MINER_API + '/api/v2/referral_income/${Global.minerData.ads}').then((res) {
       var data = res;
       if (data != null && data['success']) {
         _referrerBalanceController.text = Format.currencyFormat(data['result'], decimalDigits: 3) + ' USDT';
       }
     });
-    _api.get('http://39.100.108.44:6443/api/v2/daily_estimate/${Global.minerData.ads}').then((res) {
+    _api.get(Api.CDN_MINER_API + '/api/v2/daily_estimate/${Global.minerData.ads}').then((res) {
       var data = res;
       if (data != null && data['success']) {
         _dailyEstimateController.text = Format.currencyFormat(data['result'], decimalDigits: 3) + ' USDT';
       }
     });
-    _api.get('http://39.100.108.44:6443/api/v2/weekly_estimate/${Global.minerData.ads}').then((res) {
+    _api.get(Api.CDN_MINER_API + '/api/v2/weekly_estimate/${Global.minerData.ads}').then((res) {
       var data = res;
       if (data != null && data['success']) {
         _weeklyEstimateController.text = Format.currencyFormat(data['result'], decimalDigits: 3) + ' USDT';
@@ -109,7 +109,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
     var sunday = getTimestampLatest(false, 7 - weekday + -1 * 7);
     _api
         .post(
-            'http://138.68.29.1:3000/api/v1/sum/${Global.minerData.ads}',
+            Api.CDN_MINER_DB + '/api/v1/sum/${Global.minerData.ads}',
             {
               'where': {
                 'token_type': 'usdt',
