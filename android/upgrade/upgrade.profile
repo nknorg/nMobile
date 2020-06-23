@@ -1,9 +1,9 @@
 {
-  "apkUrl": "https://nmobile.nkn.org/downloads/nmobile-pro_v1.0.7_113.apk",
-  "version": "1.0.7-Pro + (Build 113)",
+  "apkUrl": "https://nmobile.nkn.org/downloads/nmobile-pro_v1.1.3_119.apk",
+  "version": "1.1.3-Pro + (Build 119)",
   "gatedLaunch": 1.0,
   "title": "New Version to Update:",
-  "notes": "* ### 1.0.7-Pro + (Build 113)\n1. add the function of delete device;\n2. add the function of filter device;\n3. optimize the loading speed of the device list;\n4. optimize withdrawal process;\n5. add feature of the latest rate of device;\n6. sort device by name by default;\n7. device list drop down refresh;\n8. fingerprint identification.",
-  "sha-1": "11ce47de1171b708003988dd12d3863a5f3e68a6",
+  "notes": "* ### 1.1.3-Pro + (Build 119)\n1. optimize cdn link;\n2. fix bug with incorrect revenue display;\n3. update information ui display.",
+  "sha-1": "02e6e7fa48cbdd2103b9410e2016ee579d71f2c7",
   "force": false
 }
