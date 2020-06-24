@@ -34,6 +34,9 @@ class NknWalletPlugin : MethodChannel.MethodCallHandler {
             "transfer" -> {
                 transfer(call, result)
             }
+            "transferAsync" -> {
+                transferAsync(call, result)
+            }
             "openWallet" -> {
                 openWallet(call, result)
             }
@@ -93,6 +96,40 @@ class NknWalletPlugin : MethodChannel.MethodCallHandler {
         val hash = wallet.transfer(address, amount, transactionConfig)
         result.success(hash)
     }
+
+
+    private fun transferAsync(call: MethodCall, result: MethodChannel.Result) {
+        val keystore = call.argument<String>("keystore") ?: null
+        val password = call.argument<String>("password") ?: ""
+        val address = call.argument<String>("address") ?: null
+        val _id = call.argument<String>("_id") ?: null
+        val amount = call.argument<String>("amount") ?: null
+        val fee = call.argument<String>("fee") ?: null
+        val config = WalletConfig()
+        config.password = password;
+        result.success(null)
+        AsyncTask.SERIAL_EXECUTOR.execute {
+            try {
+                val wallet = Nkn.walletFromJSON(keystore, config)
+                val transactionConfig = TransactionConfig()
+                transactionConfig.fee = fee
+                val hash = wallet.transfer(address, amount, transactionConfig)
+                App.handler().post{
+                    var hash = hashMapOf(
+                            "_id" to _id,
+                            "result" to hash
+                    )
+                    walletEventSink?.success(hash)
+                }
+            }catch (e : Exception){
+                App.handler().post{
+                    walletEventSink?.error(_id,"","")
+                }
+
+            }
+        }
+    }
+
 
 
     private fun getBalanceAsync(call: MethodCall, result: MethodChannel.Result) {

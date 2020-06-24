@@ -67,9 +67,6 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
           title: NMobileLocalizations.of(context).transfer_initiated,
           content: NMobileLocalizations.of(context).transfer_initiated_desc,
         );
-        // TransferStatusPopup.show(context);
-        // see `SendNknScreen.transferAction()`
-        // locator<TaskService>().queryNknWalletBalanceTask();
       }
     });
   }

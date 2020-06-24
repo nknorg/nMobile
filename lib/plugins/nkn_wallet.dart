@@ -12,6 +12,7 @@ class NknWalletPlugin {
   static init() {
     _eventChannel.receiveBroadcastStream().listen((event) {
       Map data = event;
+      NLog.v(data);
       String key = data['_id'];
       var result;
       if (data.containsKey('result')) {
@@ -100,6 +101,24 @@ class NknWalletPlugin {
       'address': address,
     });
 
+    return completer.future.whenComplete(() {
+      _walletEventQueue.remove(id);
+    });
+  }
+
+  static Future<String> transferAsync(String keystore, String password, String address, String amount, String fee) async {
+    Completer<String> completer = Completer<String>();
+    String id = completer.hashCode.toString();
+    _walletEventQueue[id] = completer;
+    NLog.d('transferAsync   ');
+    _methodChannel.invokeMethod('transferAsync', {
+      'keystore': keystore,
+      '_id': id,
+      'password': password,
+      'address': address,
+      'amount': amount,
+      'fee': fee,
+    });
     return completer.future.whenComplete(() {
       _walletEventQueue.remove(id);
     });
