@@ -1,4 +1,3 @@
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
@@ -26,7 +25,6 @@ class NodeListPageState extends State<NodeListPage> {
   @override
   void initState() {
     super.initState();
-    LogUtil.v('onCreate', tag: 'NodeListPage');
     _list = widget.arguments;
   }
 
@@ -35,7 +33,7 @@ class NodeListPageState extends State<NodeListPage> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: '节点详情',
+        title: '节点列表',
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: Builder(
@@ -55,7 +53,13 @@ class NodeListPageState extends State<NodeListPage> {
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
                   child: InkWell(
                     onTap: () {
-                      Navigator.pushNamed(context, NodeDetailPage.routeName, arguments: node);
+                      Navigator.pushNamed(context, NodeDetailPage.routeName, arguments: node).then((v) {
+                        if (v != null) {
+                          setState(() {
+                            _list.remove(v);
+                          });
+                        }
+                      });
                     },
                     child: Row(
                       children: <Widget>[
@@ -84,7 +88,7 @@ class NodeListPageState extends State<NodeListPage> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
                                   Label(
-                                    '昨日收益: ${node.cost != null ? Format.currencyFormat(node.cost, decimalDigits: 3) : '-'} USDT',
+                                    '预估收益: ${node.cost != null ? Format.currencyFormat(node.cost, decimalDigits: 3) : '-'} USDT',
                                     color: DefaultTheme.fontColor1,
                                     type: LabelType.bodyRegular,
                                     softWrap: true,

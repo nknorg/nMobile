@@ -802,11 +802,11 @@ class NMobileLocalizations {
   }
 
   String get chat_no_wallet_title {
-    return Intl.message('Private and Secure \nMessaging', name: 'chat_no_wallet_title', desc: '');
+    return Intl.message('Private and Secure\n Messaging', name: 'chat_no_wallet_title', desc: '');
   }
 
   String get chat_no_wallet_desc {
-    return Intl.message('You need a Mainnet compatible wallet before you\ncan use D-Chat.', name: 'chat_no_wallet_desc', desc: '');
+    return Intl.message('You need a Mainnet compatible wallet before you can use D-Chat.', name: 'chat_no_wallet_desc', desc: '');
   }
 
   String get chat_tab_messages {
@@ -997,11 +997,16 @@ class NMobileLocalizations {
   String get select_asset_to_backup => Intl.message('Select Asset to Backup', name: 'select_asset_to_backup');
   String get create_account => Intl.message('Create Account', name: 'create_account');
   String get import_wallet_as_account => Intl.message('Import Wallet as Account', name: 'import_wallet_as_account');
+
+  String get transfer_initiated => Intl.message('Transfer Initiated', name: 'transfer_initiated');
+  String get transfer_initiated_desc => Intl.message('Your transfer is in progress. It could take a few seconds to appear on the blockchain.', name: 'transfer_initiated_desc');
+
   String get check_upgrade => Intl.message('Check Upgrade', name: 'check_upgrade');
   String get release_notes => Intl.message('Release Notes:', name: 'release_notes');
   String get download_now => Intl.message('Download Now', name: 'download_now');
   String get ignore => Intl.message('Ignore', name: 'ignore');
   String get already_the_latest_version => Intl.message('Already the latest version', name: 'already_the_latest_version');
+  String get tip => Intl.message('Tips', name: 'tip');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {

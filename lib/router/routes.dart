@@ -1,4 +1,3 @@
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/app.dart';
@@ -22,8 +21,6 @@ import 'package:nmobile/screens/ncdn/with_draw_page.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/screens/select.dart';
 import 'package:nmobile/screens/settings/app_version.dart';
-import 'package:nmobile/screens/scanner.dart';
-import 'package:nmobile/screens/select.dart';
 import 'package:nmobile/screens/settings/channel.dart';
 import 'package:nmobile/screens/wallet/create_nkn_wallet.dart';
 import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';
@@ -33,6 +30,7 @@ import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
 import 'package:nmobile/screens/wallet/wallet.dart';
 import 'package:nmobile/splash.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 Map<String, WidgetBuilder> routes = {
   SplashPage.routeName: (BuildContext context) => SplashPage(),
@@ -57,13 +55,9 @@ Map<String, WidgetBuilder> routes = {
   CommonWebViewPage.routeName: (BuildContext context, {arguments}) => CommonWebViewPage(arguments: arguments),
   ChangeUpdateContentPage.routeName: (BuildContext context, {arguments}) => ChangeUpdateContentPage(arguments: arguments),
   AddContact.routeName: (BuildContext context) => AddContact(),
-  NcdnHomeScreen.routeName: (BuildContext context, {arguments}) => NcdnHomeScreen(arguments: arguments),
-  NodeMainPage.routeName: (BuildContext context, {arguments}) => NodeMainPage(arguments: arguments),
+  NodeMainPage.routeName: (BuildContext context) => NodeMainPage(),
   WithDrawPage.routeName: (BuildContext context, {arguments}) => WithDrawPage(arguments: arguments),
-  PopularGroupPage.routeName: (BuildContext context) => PopularGroupPage(),
   NcdnHomeScreen.routeName: (BuildContext context, {arguments}) => NcdnHomeScreen(arguments: arguments),
-  NodeMainPage.routeName: (BuildContext context, {arguments}) => NodeMainPage(arguments: arguments),
-  WithDrawPage.routeName: (BuildContext context, {arguments}) => WithDrawPage(arguments: arguments),
   NodeDetailPage.routeName: (BuildContext context, {arguments}) => NodeDetailPage(arguments: arguments),
   NodeListPage.routeName: (BuildContext context, {arguments}) => NodeListPage(arguments: arguments),
   PopularGroupPage.routeName: (BuildContext context) => PopularGroupPage(),
@@ -71,10 +65,13 @@ Map<String, WidgetBuilder> routes = {
   AppVersion.routeName: (BuildContext context) => AppVersion(),
 };
 
+// ignore: missing_return
 var onGenerateRoute = (RouteSettings settings) {
   final String name = settings.name;
-  LogUtil.v(name);
-  LogUtil.v(settings.arguments);
+  NLog.d(name);
+  try {
+    NLog.d(settings.arguments);
+  } catch (e) {}
   final Function pageContentBuilder = routes[name];
   if (pageContentBuilder != null) {
     if (settings.arguments != null) {

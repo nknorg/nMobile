@@ -60,6 +60,7 @@ class NShellClientPlugin : MethodChannel.MethodCallHandler {
         val _id = call.argument<String>("_id") ?: null
         val dests = call.argument<ArrayList<String>>("dests") ?: ArrayList()
         val data = call.argument<String>("data") ?: null
+        val maxHoldingSeconds = call.argument<Int>("maxHoldingSeconds") ?: 0
         result.success(null)
         if (nshellClientEventSink == null) return
 
@@ -77,7 +78,11 @@ class NShellClientPlugin : MethodChannel.MethodCallHandler {
         }
 
         val config = MessageConfig()
-        config.maxHoldingSeconds = Int.MAX_VALUE
+        if(maxHoldingSeconds == 1){
+            config.maxHoldingSeconds = 0;
+        }else{
+            config.maxHoldingSeconds = Int.MAX_VALUE
+        }
         config.messageID = Nkn.randomBytes(Nkn.MessageIDSize)
         config.noReply = true
         msgSendHandler.post {

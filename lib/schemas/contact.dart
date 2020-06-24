@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/components/label.dart';
@@ -14,6 +13,7 @@ import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -393,9 +393,7 @@ class ContactSchema {
       }
       return 0;
     } catch (e) {
-      LogUtil.v(e);
-      debugPrint(e);
-      debugPrintStack();
+      NLog.d(e);
     }
   }
 
@@ -472,7 +470,7 @@ class ContactSchema {
       );
       return ContactSchema.parseEntity(res?.first);
     } catch (e) {
-      LogUtil.v(e.toString());
+      NLog.d(e.toString());
       debugPrintStack();
     }
   }
@@ -526,8 +524,7 @@ class ContactSchema {
         }
       }
     } catch (e) {
-      LogUtil.v(e);
-      LogUtil.v('profile fauilt');
+      NLog.d(e);
       debugPrint(e);
       debugPrintStack();
     }

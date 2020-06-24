@@ -75,7 +75,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
 
       var password = await wallet.getPassword();
       if (password != null) {
-        Navigator.pop(context);
+        Navigator.pop(context, true);
         Future.delayed(Duration(milliseconds: 200), () {
           transferAction(password);
         });
@@ -289,7 +289,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
                                                               ),
                                                               textInputAction: TextInputAction.next,
                                                               keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                                              inputFormatters: [WhitelistingTextInputFormatter(RegExp('^[0-9]*.?[0-9]{0,8}'))],
+                                                              inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
                                                             ),
                                                             Padding(
                                                               padding: const EdgeInsets.only(bottom: 20),
@@ -425,7 +425,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
                                                                         decimal: true,
                                                                       ),
                                                                       textInputAction: TextInputAction.done,
-                                                                      inputFormatters: [WhitelistingTextInputFormatter(RegExp('^[0-9]*.?[0-9]{0,8}'))],
+                                                                      inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
                                                                     ),
                                                                   ),
                                                                 ],

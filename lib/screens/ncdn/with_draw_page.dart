@@ -1,4 +1,5 @@
-import 'package:common_utils/common_utils.dart';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,10 +11,12 @@ import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/api.dart';
 import 'package:nmobile/helpers/format.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/tweetnacl/tools.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 import '../../consts/theme.dart';
@@ -23,26 +26,21 @@ class WithDrawPage extends StatefulWidget {
   final Map arguments;
 
   const WithDrawPage({Key key, this.arguments}) : super(key: key);
+
   @override
   WithDrawPageState createState() => new WithDrawPageState();
 }
 
 class WithDrawPageState extends State<WithDrawPage> {
   bool _formValid = false;
-  final String SERVER_PUBKEY = 'eb08c2a27cb61fe414654a1e9875113d715737247addf01db06ea66cafe0b5c8';
   GlobalKey _formKey = new GlobalKey<FormState>();
   TextEditingController amountController;
   TextEditingController addressController;
-  String _publicKey;
-  String _seed;
   FocusNode _commentFocus = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    LogUtil.v('onCreate', tag: 'WithDrawPage');
-    _publicKey = widget.arguments['publicKey'];
-    _seed = widget.arguments['seed'];
     amountController = TextEditingController();
     addressController = TextEditingController();
     Future.delayed(Duration(milliseconds: 200), () {
@@ -117,7 +115,7 @@ class WithDrawPageState extends State<WithDrawPage> {
                                   focusNode: _commentFocus,
                                   validator: Validator.of(context).amount(max: widget.arguments['maxBalance']),
                                   keyboardType: TextInputType.number,
-                                  inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]*\.?[0-9]{0,3}'))],
+                                  inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]+\.?[0-9]{0,3}'))],
                                   textInputAction: TextInputAction.next,
                                 ),
                               ),
@@ -170,15 +168,7 @@ class WithDrawPageState extends State<WithDrawPage> {
                           backgroundColor: DefaultTheme.primaryColor,
                           width: double.infinity,
                           onPressed: () async {
-                            if ((_formKey.currentState as FormState).validate()) {
-                              Api _api = Api(mySecretKey: hexDecode(_seed), myPublicKey: hexDecode(_publicKey), otherPubkey: hexDecode(SERVER_PUBKEY));
-                              _api.post('http://138.68.29.1:3000/api/v1/send_nkn_message/${widget.arguments['address']}', {'id': uuid.v4(), 'message': '${widget.arguments['address']}申请提现${amountController.text}。提现地址${addressController.text}'}, isEncrypted: true).then((res) {
-                                if (res != null && res['code'] == 0) {
-                                  Navigator.of(context).pop();
-                                  showToast('申请成功, 请等待工作人员处理.');
-                                }
-                              });
-                            }
+                            verifyWithdraw();
                           },
                         ),
                       ],
@@ -191,5 +181,33 @@ class WithDrawPageState extends State<WithDrawPage> {
         ),
       ),
     );
+  }
+
+  verifyWithdraw() {
+    if ((_formKey.currentState as FormState).validate()) {
+      Api _api = Api(mySecretKey: hexDecode(Global.minerData.se), myPublicKey: hexDecode(Global.minerData.pub), otherPubkey: hexDecode(Global.SERVER_PUBKEY));
+      var data = {
+        'beneficiary': Global.minerData.ads,
+        'amount': num.parse(amountController.text),
+        'eth_beneficiary': addressController.text,
+        'id': uuid.v4(),
+      };
+
+      String url = Api.CDN_MINER_API + '/api/v2/verify_withdraw/';
+      try {
+        _api.post(url, data, isEncrypted: true, getResponse: true).then((res) {
+          NLog.v(res);
+          if (res.data['success']) {
+            Navigator.of(context).pop(true);
+            showToast('提现申请提交成功，请等待工作人员处理。');
+          } else {
+            var s = _api.decryptData(res.data['result']);
+            showToast(jsonDecode(s)['err']);
+          }
+        });
+      } catch (e) {
+        showToast('请稍后重试');
+      }
+    }
   }
 }

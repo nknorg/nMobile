@@ -61,6 +61,7 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
       var walletAddr = w['address'];
       var publicKey = w['publicKey'];
       Global.currentChatDb = await SqliteStorage.open('${SqliteStorage.CHAT_DATABASE_NAME}_$publicKey', hexEncode(sha256(w['seed'])));
+      Global.currentCDNDb = Global.currentChatDb;
       Global.currentClient = ClientSchema(publicKey: publicKey, address: publicKey);
       Global.currentUser = await ContactSchema.getContactByAddress(publicKey);
       if (Global.currentUser == null) {
@@ -106,6 +107,7 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
   }
 
   Stream<ClientState> _mapOnMessageToState(OnMessage event) async* {
+    print('${event.message}');
     if (state is Connected) {
       Connected currentState = (state as Connected);
       currentState.message = event.message;

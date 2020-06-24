@@ -1,16 +1,16 @@
 import 'dart:convert';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/sqlite_storage.dart';
 import 'package:nmobile/plugins/nshell_client.dart';
 import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class CdnMiner {
   String nshId;
-  String name;
+  String _name;
   Map<String, dynamic> data;
   bool status;
 
@@ -18,16 +18,27 @@ class CdnMiner {
   num cost;
   num contribution;
 
-  CdnMiner(this.nshId, {String name = '', this.flow, this.cost, this.contribution}) {
+  CdnMiner(this.nshId, {String name, this.flow, this.cost, this.contribution}) {
     if (nshId.contains('ctrl.')) {
       nshId = nshId.split('ctrl.')[1];
     }
-    if (name == null) {
-      name = nshId.substring(0, 8);
+    if (name == null || name.length == 0) {
+      _name = nshId.substring(0, 8);
+    } else {
+      _name = name;
     }
   }
 
-  static String getName() {}
+  String get name {
+    if (_name == null || _name.length == 0) {
+      _name = nshId.substring(0, 8);
+    }
+    return _name;
+  }
+
+  set name(String name) {
+    _name = name;
+  }
 
   static String get tableName => 'Nodes';
 
@@ -45,12 +56,12 @@ class CdnMiner {
   }
 
   toEntity() {
-    if (name == null) {
-      name = nshId.substring(0, 8);
+    if (_name == null) {
+      _name = nshId.substring(0, 8);
     }
     Map<String, dynamic> map = {
       'nsh_id': nshId,
-      'name': name,
+      'name': _name,
       'data': data,
     };
     return map;
@@ -58,7 +69,7 @@ class CdnMiner {
 
   static Future<List<CdnMiner>> getAllCdnMiner() async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      Database db = SqliteStorage(db: Global.currentCDNDb).db;
       var res = await db.query(
         CdnMiner.tableName,
         columns: ['*'],
@@ -66,7 +77,7 @@ class CdnMiner {
 
       return res.map((x) => parseEntity(x)).toList();
     } catch (e) {
-      LogUtil.v(e, tag: 'getAllCdnMiner');
+      NLog.v(e, tag: 'getAllCdnMiner');
       return <CdnMiner>[];
     }
   }
@@ -80,7 +91,7 @@ class CdnMiner {
         return '故障';
       }
     } catch (e) {
-      LogUtil.v(e);
+      NLog.v(e, tag: 'getStatus');
       return '未知';
     }
   }
@@ -89,51 +100,47 @@ class CdnMiner {
     try {
       var c = CdnMiner(e['nsh_id']);
       if (e.containsKey('name') && e['name'].toString().length > 0) {
-        c.name = e['name'];
+        c._name = e['name'];
       } else {
-        c.name = c.nshId.substring(0, 8);
+        c._name = c.nshId.substring(0, 8);
       }
 //      c.flow = num.parse(e['flow']);
 //      c.cost = num.parse(e['cost']);
 //      c.contribution = num.parse(e['contribution']);
       try {
         if (e['data'] != null) {
-          LogUtil.v(e['data']);
+//          LogUtil.v(e['data']);
           c.data = jsonDecode(e['data']);
 //          c.data = jsonDecode(e['data']);
         }
       } catch (e) {
-        LogUtil.v(e, tag: 'CdnMinerparseEntity');
-        LogUtil.v(e);
+        NLog.v(e, tag: 'CdnMinerparseEntity');
       }
       return c;
     } catch (e) {
-      LogUtil.v(e, tag: 'CdnMiner parseEntity');
+      NLog.v(e, tag: 'CdnMiner parseEntity');
       return null;
     }
   }
 
   Future<bool> insertOrUpdate() async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      Database db = SqliteStorage(db: Global.currentCDNDb).db;
       var countQuery = await db.query(
         CdnMiner.tableName,
         columns: ['*'],
         where: 'nsh_id = ?',
         whereArgs: [nshId],
       );
-      if (countQuery.length == 0) {
+      if (countQuery == null || countQuery.length == 0) {
         int n = await db.insert(CdnMiner.tableName, toEntity());
         return n > 0;
       } else {
-        if (name == null) {
-          name = nshId.substring(0, 8);
+        if (_name == null) {
+          _name = nshId.substring(0, 8);
         }
-        var map = {'name': name};
-        if (data != null) {
-          map['data'] = (data != null ? jsonEncode(data) : null);
-        }
-
+        var map = {'name': _name};
+        map['data'] = (data != null ? jsonEncode(data) : null);
         int n = await db.update(
           CdnMiner.tableName,
           map,
@@ -143,7 +150,7 @@ class CdnMiner {
         return n > 0;
       }
     } catch (e) {
-      LogUtil.e(e.toString(), tag: 'CDN insertOrUpdate');
+      NLog.e(e.toString());
       return false;
     }
   }
@@ -153,7 +160,7 @@ class CdnMiner {
       if (nshid.contains('ctrl.')) {
         nshid = nshid.split('ctrl.')[1];
       }
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      Database db = SqliteStorage(db: Global.currentCDNDb).db;
       var res = await db.query(
         CdnMiner.tableName,
         columns: ['*'],
@@ -163,26 +170,21 @@ class CdnMiner {
       if (res.length == 0) return null;
       return res.map((x) => parseEntity(x)).toList()[0];
     } catch (e) {
-      LogUtil.v(e, tag: 'getModelFromNshid');
+      NLog.v(e, tag: 'getModelFromNshid');
       return null;
     }
   }
 
   Future<int> insert() async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      Database db = SqliteStorage(db: Global.currentCDNDb).db;
       int id = await db.insert(CdnMiner.tableName, toEntity());
       return id;
     } catch (e) {
+      NLog.v(e, tag: 'insert');
       debugPrint(e);
       debugPrintStack();
     }
-  }
-
-  getData() {
-    MessageSchema msg = MessageSchema();
-    msg.content = '/usr/bin/self_checker.sh';
-    NShellClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData());
   }
 
   String getIp() {
@@ -192,6 +194,7 @@ class CdnMiner {
       }
       return '';
     } catch (e) {
+      NLog.v(e, tag: 'getIp');
       return '';
     }
   }
@@ -207,7 +210,14 @@ class CdnMiner {
     }
   }
 
-  delete() {}
+  delete() {
+    Database db = SqliteStorage(db: Global.currentCDNDb).db;
+    db.delete(
+      CdnMiner.tableName,
+      where: 'nsh_id = ?',
+      whereArgs: [nshId],
+    );
+  }
 
   String getUsed() {
     try {
@@ -228,6 +238,26 @@ class CdnMiner {
       return '';
     } catch (e) {
       return '';
+    }
+  }
+
+  reboot() {
+    MessageSchema msg = MessageSchema();
+    msg.content = 'reboot';
+    NShellClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData(), maxHoldingSeconds: 1);
+  }
+
+  getMinerDetail() {
+    MessageSchema msg = MessageSchema();
+    msg.content = '/usr/bin/self_checker.sh';
+    NShellClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData());
+  }
+
+  static removeCacheData() async {
+    List<CdnMiner> _miner = await getAllCdnMiner();
+    for (var value in _miner) {
+      value.data = null;
+      await value.insertOrUpdate();
     }
   }
 }

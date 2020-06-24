@@ -305,7 +305,6 @@ class AddContactState extends State<AddContact> {
   _updatePic() async {
     File savedImg = await getHeaderImage();
     if (savedImg == null) return;
-
   }
 
   String createContactFilePath(File file) {

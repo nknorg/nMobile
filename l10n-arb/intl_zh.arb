@@ -971,6 +971,16 @@
     "type": "text",
     "placeholders": {}
   },
+  "transfer_initiated": "转账初始化",
+  "@transfer_initiated": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transfer_initiated_desc": "您的转帐正在进行中，可能需要花一些时间才能出现在区块链上。",
+  "@transfer_initiated_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
   "check_upgrade": "检查更新",
   "@check_upgrade": {
     "type": "text",
@@ -993,6 +1003,11 @@
   },
   "already_the_latest_version": "已是最新版本",
   "@already_the_latest_version": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "tip": "提示",
+  "@tip": {
     "type": "text",
     "placeholders": {}
   }

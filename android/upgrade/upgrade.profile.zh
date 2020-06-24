@@ -1,0 +1,9 @@
+{
+  "apkUrl": "https://nmobile.nkn.org/downloads/nmobile-pro_v1.0.5_111.apk",
+  "version": "1.0.5-Pro + (Build 111)",
+  "gatedLaunch": 1.0,
+  "title": "您有新版本可更新：",
+  "notes": "* ### 1.0.5-Pro + (Build 111)\n1. 增加删除设备功能；\n2. 增加筛选设备功能；\n3. 优化设备列表的加载速度；\n4. 优化提现流程。",
+  "sha-1": "75846486fb53d74ac21c2a170a3b19327243df9c",
+  "force": false
+}

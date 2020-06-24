@@ -1,18 +1,20 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:nmobile/helpers/encryption.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/schemas/news.dart';
 import 'package:nmobile/tweetnacl/tweetnaclfast.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 import 'ed2curve.dart';
 import 'utils.dart';
 
 class Api {
+  static final String CDN_MINER_API = 'https://cdn-miner-api.nkn.org';
+  static final String CDN_MINER_DB = 'https://cdn-miner-db.nkn.org';
+
   Dio dio;
   Uint8List mySecretKey;
   Uint8List myPublicKey;
@@ -81,40 +83,53 @@ class Api {
     }
   }
 
-  Future post(url, data, {bool isEncrypted}) async {
-    LogUtil.v(data);
+  Future post(url, data, {bool isEncrypted, getResponse = false}) async {
     if (isEncrypted) {
       var encData = encryptData(jsonEncode(data));
       try {
+        var params = {'pub_key': hexEncode(myPublicKey), 'data': encData};
+        NLog.v('$params == $data');
+        NLog.v(url);
         Response res = await dio.post(
           url,
-          data: {'pub_key': hexEncode(myPublicKey), 'data': encData},
+          data: params,
           options: Options(
             headers: {'Content-Type': 'application/json'},
             contentType: 'application/json',
             validateStatus: (_) => true,
           ),
         );
-        LogUtil.v(res);
+
+        if (getResponse) {
+          return res;
+        }
+
         if (res.statusCode >= 200 && res.statusCode < 300 && res.data != null) {
           var msg;
+          NLog.v(res);
+
           if (res.data is String) {
             msg = decryptData(res.data);
+            NLog.v(msg);
           } else {
             if (res.data['success'] && res.data['result'] != null) {
               msg = decryptData(res.data['result']);
+              NLog.v(msg);
             }
           }
-
           return jsonDecode(msg);
+        } else {
+          NLog.v('===========');
+          NLog.v(res);
         }
       } catch (e) {
-        debugPrintStack();
-        print(e);
+        NLog.v(e);
       }
     } else {
       try {
+        NLog.v('======post=====');
         Response res = await dio.post(url, data: data);
+        NLog.v(res);
         if (res.statusCode >= 200 && res.statusCode < 300 && res.data != null) {
           return res.data;
         }

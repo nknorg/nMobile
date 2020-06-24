@@ -1,4 +1,3 @@
-import 'package:common_utils/common_utils.dart';
 import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +15,7 @@ import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
+import 'package:nmobile/components/dialog/notification.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
@@ -23,21 +23,24 @@ import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_storage.dart';
+import 'package:nmobile/helpers/sqlite_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/plugins/nshell_client.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/ncdn/home.dart';
+import 'package:nmobile/screens/ncdn/miner_data.dart';
+import 'package:nmobile/screens/view/dialog_alert.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
-import 'package:nmobile/services/service_locator.dart';
-import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class NknWalletDetailScreen extends StatefulWidget {
@@ -63,14 +66,20 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     _nameController.text = widget.arguments.name;
   }
 
-  _recieve() {
+  _receive() {
     Navigator.of(context).pushNamed(ReceiveNknScreen.routeName, arguments: widget.arguments);
   }
 
   _send() {
     Navigator.of(context).pushNamed(SendNknScreen.routeName, arguments: widget.arguments).then((v) {
       if (v != null) {
-        locator<TaskService>().queryNknWalletBalanceTask();
+        NotificationDialog.of(context).show(
+          title: NMobileLocalizations.of(context).transfer_initiated,
+          content: NMobileLocalizations.of(context).transfer_initiated_desc,
+        );
+        // TransferStatusPopup.show(context);
+        // see `SendNknScreen.transferAction()`
+        // locator<TaskService>().queryNknWalletBalanceTask();
       }
     });
   }
@@ -160,10 +169,10 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                         if (Global?.currentClient?.address != null) {
                           var s = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(Global.currentClient?.publicKey));
                           if (s.toString() == widget.arguments.address) {
-                            LogUtil.v('delete client ');
+                            NLog.d('delete client ');
                             _clientBloc.add(DisConnected());
                           } else {
-                            LogUtil.v('no delete client ');
+                            NLog.d('no delete client ');
                           }
                         }
                         Navigator.popAndPushNamed(context, AppScreen.routeName);
@@ -273,7 +282,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                                   padding: const EdgeInsets.only(left: 8),
                                   child: Button(
                                     text: NMobileLocalizations.of(context).recieve,
-                                    onPressed: _recieve,
+                                    onPressed: _receive,
                                   ),
                                 ),
                               ),
@@ -437,21 +446,31 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     if (password != null) {
       try {
         var wallet = await widget.arguments.exportWallet(password);
-        NShellClientPlugin.createClient(wallet['keystore'], password);
-        Navigator.of(context).pushNamed(NcdnHomeScreen.routeName, arguments: {
-          'wallet': widget.arguments,
-          'publicKey': wallet['publicKey'],
-          'seed': wallet['seed'],
-        });
+
+        var keystore = wallet['keystore'];
+//        var walletAddr = wallet['address'];
+        var publicKey = wallet['publicKey'];
+        NLog.v(publicKey);
+        if (Global.currentClient == null || Global.currentClient.publicKey != publicKey) {
+          NLog.v('open wallet db');
+          Global.currentCDNDb = await SqliteStorage.open('${SqliteStorage.CHAT_DATABASE_NAME}_$publicKey', hexEncode(sha256(wallet['seed'])));
+        } else {
+          NLog.v('same wallet');
+        }
+
+        NShellClientPlugin.createClient(keystore, password);
+        NLog.v('==============');
+
+        var minerData = MinerData();
+        minerData.ads = wallet['address'];
+        minerData.pub = wallet['publicKey'];
+        minerData.se = wallet['seed'];
+        Global.minerData = minerData;
+        Navigator.of(context).pushNamed(NcdnHomeScreen.routeName, arguments: wallet);
       } catch (e) {
-        if (e.message == 'password wrong') {
-          ModalDialog.of(context).show(
-            height: 240,
-            content: Label(
-              NMobileLocalizations.of(context).password_wrong,
-              type: LabelType.bodyRegular,
-            ),
-          );
+        NLog.v(e.toString());
+        if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+          SimpleAlert(context: context, content: NMobileLocalizations.of(context).password_wrong).show();
         }
       }
     }

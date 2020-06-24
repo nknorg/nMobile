@@ -1,4 +1,3 @@
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/components/box/body.dart';
@@ -21,7 +20,6 @@ class PopularGroupPageState extends State<PopularGroupPage> {
   @override
   void initState() {
     super.initState();
-    LogUtil.v('onCreate', tag: 'PopularGroupPage');
     populars = PopularModel.defaultData();
   }
 

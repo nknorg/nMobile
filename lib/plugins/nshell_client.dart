@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:common_utils/common_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/cdn/cdn_bloc.dart';
 import 'package:nmobile/blocs/cdn/cdn_event.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/schemas/cdn_miner.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 class NShellClientPlugin {
   static const String TAG = 'NShellClientPlugin';
@@ -20,8 +20,8 @@ class NShellClientPlugin {
   static init() {
     _eventChannel.receiveBroadcastStream().listen((res) {
       String event = res['event'].toString();
-      LogUtil.v('====$event====', tag: TAG);
-      LogUtil.v(res, tag: TAG);
+      NLog.v('====$event====', tag: TAG);
+      NLog.v(res, tag: TAG);
       switch (event) {
         case 'send':
           String key = res['_id'];
@@ -33,7 +33,7 @@ class NShellClientPlugin {
             Map<String, dynamic> content = jsonDecode(jsonDecode(res['data']['data'])['content'].toString().replaceAll('```', ''));
             onMessage(res['data']['src'], content);
           } catch (e) {
-            LogUtil.v(e.toString(), tag: TAG);
+            NLog.v(e.toString(), tag: TAG);
           }
           break;
         case 'onConnect':
@@ -44,7 +44,8 @@ class NShellClientPlugin {
           break;
       }
     }, onError: (err) {
-      LogUtil.e(err, tag: 'ClientEventChannel');
+      NLog.e('失败');
+      NLog.e(err);
       if (_clientEventQueue[err.code] != null) {
         _clientEventQueue[err.code].completeError(err.message);
       }
@@ -52,25 +53,28 @@ class NShellClientPlugin {
   }
 
   static onMessage(String src, content) async {
-    LogUtil.v(content['Result']);
-    LogUtil.v(content['Type']);
-    LogUtil.v(src);
+    NLog.v(content['Result']);
+    NLog.v(content['Type']);
+    NLog.v(src);
+    var type = content['Type'];
     try {
-      var cdn = await CdnMiner.getModelFromNshid(src);
-      if (cdn == null) {
-        cdn = CdnMiner(src);
+      if (type != null && type.toString().contains('self_checker.sh')) {
+        var cdn = await CdnMiner.getModelFromNshid(src);
+        if (cdn != null) {
+          cdn.data = content;
+          await cdn.insertOrUpdate();
+          NLog.v('onMessage add');
+          _cdnBloc.add(LoadData(data: cdn));
+        }
       }
-      cdn.data = content;
-      cdn.insertOrUpdate();
-      _cdnBloc.add(LoadData(data: cdn));
     } catch (e) {
-      LogUtil.v(e.toString(), tag: 'onMessage');
+      NLog.v(e.toString(), tag: TAG + 'onMessage');
     }
   }
 
   static Future<bool> isConnected() async {
     try {
-      LogUtil.v('isConnected   ', tag: TAG);
+      NLog.v('isConnected   ', tag: TAG);
       return await _methodChannel.invokeMethod('isConnected');
     } catch (e) {
       throw e;
@@ -79,7 +83,7 @@ class NShellClientPlugin {
 
   static Future<void> createClient(String keystore, String password, {String identifier = 'nshell'}) async {
     try {
-      LogUtil.v('createClient   ', tag: TAG);
+      NLog.v('createClient   ', tag: TAG);
       for (int i = 0; i < 3; i++) {
         try {
           await _methodChannel.invokeMethod('createClient', {
@@ -89,43 +93,44 @@ class NShellClientPlugin {
           });
           break;
         } catch (e) {
-          LogUtil.v(e);
+          NLog.v(e);
         }
       }
     } catch (e) {
       throw e;
-      LogUtil.v(e);
+      NLog.v(e);
     }
   }
 
   static Future<void> disConnect() async {
     try {
-      LogUtil.v('disConnect   ', tag: TAG);
+      NLog.v('disConnect   ', tag: TAG);
       var status = await _methodChannel.invokeMethod('disConnect');
       if (status == 1) {
-        LogUtil.v('disConnect  success ', tag: TAG);
+        NLog.v('disConnect  success ', tag: TAG);
       } else {
-        LogUtil.v('disConnect  failed ', tag: TAG);
+        NLog.v('disConnect  failed ', tag: TAG);
       }
     } catch (e) {
       throw e;
     }
   }
 
-  static Future<Uint8List> sendText(List<String> dests, String data) async {
-    LogUtil.v('sendText  $data ', tag: TAG);
+  static Future<Uint8List> sendText(List<String> dests, String data, {int maxHoldingSeconds = 0}) async {
+    NLog.v('sendText  $data ', tag: TAG);
     Completer<Uint8List> completer = Completer<Uint8List>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
-    LogUtil.v(dests);
+    NLog.v(dests);
     try {
       await _methodChannel.invokeMethod('sendText', {
         '_id': id,
         'dests': dests,
         'data': data,
+        'maxHoldingSeconds': maxHoldingSeconds,
       });
     } catch (e) {
-      LogUtil.v('send fault');
+      NLog.v('send fault');
       throw e;
     }
     return completer.future.whenComplete(() {

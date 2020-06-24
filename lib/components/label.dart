@@ -23,19 +23,15 @@ class Label extends StatelessWidget {
   final TextAlign textAlign;
   final FontWeight fontWeight;
   final double height;
-  TextOverflow overflow;
+  final TextOverflow overflow;
   final int maxLines;
   final double fontSize;
 
-  Label(this.text, {this.fontSize, this.type = LabelType.label, this.maxLines, this.color, this.dark = false,
-    this.textAlign, this.fontWeight, this.height, this.overflow, this.softWrap = false}){
-    overflow ??= softWrap ? null : TextOverflow.ellipsis;
-  }
+  Label(this.text, {this.fontSize, this.type = LabelType.label, this.maxLines, this.color, this.dark = false, this.textAlign, this.fontWeight, this.height, this.overflow, this.softWrap = false});
 
   buildTextStyle({double fontSize, Color color, double letterSpacing, FontWeight fontWeight}) {
     if (dark) color = DefaultTheme.fontLightColor;
-    return TextStyle(fontSize: fontSize, height: this.height ?? 1.2, color: this.color ?? color,
-        letterSpacing: letterSpacing, fontWeight: this.fontWeight ?? fontWeight);
+    return TextStyle(fontSize: fontSize, height: this.height ?? 1.5, color: this.color ?? color, letterSpacing: letterSpacing, fontWeight: this.fontWeight ?? fontWeight);
   }
 
   @override

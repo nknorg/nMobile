@@ -57,10 +57,12 @@ extension SingleWidgetToList on Widget {
   List<Widget> get toList => [this];
 }
 
-extension SizedWidget on Widget {
-  SizedBox sized({double w, double h}) {
-    return SizedBox(width: w, height: h, child: this);
-  }
+extension SizedBoxWidget on Widget {
+  SizedBox sized({double w, double h}) => SizedBox(width: w, height: h, child: this);
+}
+
+extension CenterWidget on Widget {
+  Center get center => Center(child: this);
 }
 
 class Space {
