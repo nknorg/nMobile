@@ -1,12 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
-import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/local_storage.dart';
@@ -14,7 +11,6 @@ import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
-import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
 class BackgroundFetchService {
@@ -62,7 +58,6 @@ void backgroundFetchHeadlessTask(String taskId) async {
 }
 
 Future<ClientBloc> _doBackgroundFetchWork(String taskId) async {
-  // final ClientBloc clientBloc = BlocProvider.of<ClientBloc>(Global.appContext);
   try {
     // for debug
     LocalNotification.debugNotification('[debug] background fetch begin', taskId);
@@ -83,14 +78,17 @@ Future<ClientBloc> _doBackgroundFetchWork(String taskId) async {
             if (wallet != null) {
               var password = await secureStorage.get('${SecureStorage.PASSWORDS_KEY}:${wallet['address']}');
               if (password != null) {
-                final ClientBloc clientBloc = ClientBloc(chatBloc: ChatBloc(contactBloc: ContactBloc()));
+                // Can't work for Android `backgroundFetchHeadlessTask`. but it DOESN'T MATTER.
+                final ClientBloc clientBloc = BlocProvider.of<ClientBloc>(Global.appContext);
+//                final ClientBloc clientBloc = ClientBloc(chatBloc: ChatBloc(contactBloc: ContactBloc()));
                 NLog.v('[BackgroundFetch] scheduled: $taskId, ClientBloc@${clientBloc.hashCode.toString().substring(0, 3)}');
 
                 clientBloc.add(CreateClient(
                   WalletSchema(address: wallet['address'], type: wallet['type'], name: wallet['name']),
                   password,
                 ));
-                return clientBloc;
+                // Do NOT close `clientBloc`.
+                return null; // clientBloc;
               }
             }
           } else {
@@ -108,16 +106,11 @@ Future<ClientBloc> _doBackgroundFetchWork(String taskId) async {
 _ensureBackgroundFetchFinished(String taskId, ClientBloc clientBloc) {
   // IMPORTANT:  You must signal completion of your task or the OS can punish your app
   // for taking too long in the background.
-
-  if (clientBloc == null) {
+  Timer(Duration(seconds: 20), () {
+    clientBloc?.close();
+    // for debug
+    LocalNotification.debugNotification('[debug] background fetch end', taskId);
     BackgroundFetch.finish(taskId);
     NLog.e('[BackgroundFetch] FINISHED <<<----------------------------------');
-  } else
-    Timer(Duration(seconds: 20), () {
-      clientBloc?.close();
-      // for debug
-      LocalNotification.debugNotification('[debug] background fetch end', taskId);
-      BackgroundFetch.finish(taskId);
-      NLog.e('[BackgroundFetch] FINISHED <<<----------------------------------');
-    });
+  });
 }
