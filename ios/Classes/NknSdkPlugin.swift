@@ -15,6 +15,8 @@ public class NknWalletPlugin {
             getBalanceAsync(call, result: result)
         case "transfer":
             transfer(call, result: result)
+        case "transferAsync":
+            transferAsync(call, result: result)
         case "openWallet":
             openWallet(call, result: result)
         case "pubKeyToWalletAddr":
