@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/utils/extensions.dart';
 
 class NotificationDialog extends StatefulWidget {
@@ -40,7 +39,7 @@ class NotificationDialog extends StatefulWidget {
         clickClose: false,
         ignoreContentClick: false,
         onlyOne: true,
-        duration: const Duration(seconds: 5),
+        duration: const Duration(seconds: 6),
         animationDuration: const Duration(milliseconds: 256),
         wrapToastAnimation: (controller, cancel, child) {
           final anim = notificationAnimation(controller, cancel, child);
@@ -72,13 +71,15 @@ class _NotificationDialogState extends State<NotificationDialog> {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.topCenter,
-      height: widget.height ?? 143,
-      constraints: BoxConstraints(maxHeight: 200),
-      decoration: BoxDecoration(color: widget.color ?? Colours.green_06),
+      padding: EdgeInsets.all(0),
+      height: 140,
+      decoration: BoxDecoration(color: widget.color ?? DefaultTheme.primaryColor),
       child: SafeArea(
+        bottom: false,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             (widget.icon ?? SvgPicture.asset('assets/wallet/dui_gou_yuan_quan.svg', color: Colours.white)).pad(t: 16),
             _buildText(context),
@@ -88,7 +89,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
               onTap: widget.cancelFunc,
             ),
           ],
-        ).pad(l: 24, t: 3, r: 6),
+        ).pad(l: 24, t: 3, r: 6, b: 0),
       ),
     );
   }
@@ -106,7 +107,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
           Text(
             widget.content,
             style: TextStyle(fontSize: DefaultTheme.bodySmallFontSize, color: Colours.white),
-          ).pad(l: 16, t: 12),
+          ).pad(l: 16, t: 6),
         ],
       ),
     );
