@@ -28,12 +28,12 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
   void initState() {
     super.initState();
     _clientBloc = BlocProvider.of<ClientBloc>(context);
-    if (Global.isAutoShowPassword) {
-      Global.isAutoShowPassword = false;
-      Future.delayed(Duration(milliseconds: 500), () {
+    Future.delayed(Duration(milliseconds: 50), () {
+      if (Global.isAutoShowPassword) {
+        Global.isAutoShowPassword = false;
         _next();
-      });
-    }
+      }
+    });
   }
 
   @override

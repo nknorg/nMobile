@@ -9,9 +9,9 @@ import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/api.dart';
+import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/news.dart';
-import 'package:nmobile/screens/common_web_page.dart';
 import 'package:nmobile/screens/view/news_header_view.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/nkn_date_util.dart';
@@ -114,7 +114,7 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
                       children: <Widget>[
                         InkWell(
                           onTap: () {
-                            Navigator.pushNamed(context, CommonWebViewPage.routeName, arguments: {CommonWebViewPage.titleName: newsSchema.title, CommonWebViewPage.webUrl: getUri(newsSchema.newsId.toString())});
+                            launchURL(getUri(newsSchema.newsId.toString()));
                           },
                           child: Container(
                             padding: EdgeInsets.all(16.w),
@@ -224,7 +224,7 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
                   NewsSchema newsSchema = banners[index];
                   return InkWell(
                     onTap: () {
-                      Navigator.pushNamed(context, CommonWebViewPage.routeName, arguments: {CommonWebViewPage.titleName: newsSchema.title, CommonWebViewPage.webUrl: getUri(newsSchema.newsId.toString())});
+                      launchURL(getUri(newsSchema.newsId.toString()));
                     },
                     child: Column(
                       children: <Widget>[
