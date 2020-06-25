@@ -12,7 +12,6 @@ class NknWalletPlugin {
   static init() {
     _eventChannel.receiveBroadcastStream().listen((event) {
       Map data = event;
-      NLog.v(data);
       String key = data['_id'];
       var result;
       if (data.containsKey('result')) {

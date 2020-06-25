@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 import BackgroundTasks
+import Bugly
 
 var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
 
@@ -17,8 +18,9 @@ var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
             UIApplication.shared.cancelAllLocalNotifications()
             UserDefaults.standard.set(true, forKey: "Notification")
         }
+        Bugly.start(withAppId: "169cabe790")
         
-        
+
         let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
         
         
