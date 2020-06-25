@@ -1,6 +1,7 @@
 PODS:
   - background_fetch (0.5.6):
     - Flutter
+  - Bugly (2.5.5)
   - catcher (0.0.1):
     - Flutter
   - device_info (0.0.1):
@@ -145,6 +146,7 @@ PODS:
 
 DEPENDENCIES:
   - background_fetch (from `.symlinks/plugins/background_fetch/ios`)
+  - Bugly
   - catcher (from `.symlinks/plugins/catcher/ios`)
   - device_info (from `.symlinks/plugins/device_info/ios`)
   - esys_flutter_share (from `.symlinks/plugins/esys_flutter_share/ios`)
@@ -193,6 +195,7 @@ SPEC REPOS:
     - SQLCipher
     - TOCropViewController
   trunk:
+    - Bugly
     - libwebp
     - Mantle
     - SDWebImageWebPCoder
@@ -273,6 +276,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   background_fetch: 9e1c6c010f2bafe94108358405b7f2a08d6b5ab1
+  Bugly: eded937bbb1f731cacf689c2d934ddbd9ab34f83
   catcher: e5585ed31458c849f4fd9c3719b2fcb0188b8918
   device_info: d7d233b645a32c40dfdc212de5cf646ca482f175
   DKImagePickerController: 397702a3590d4958fad336e9a77079935c500ddb
@@ -321,6 +325,6 @@ SPEC CHECKSUMS:
   url_launcher_web: e5527357f037c87560776e36436bf2b0288b965c
   webview_flutter: d2b4d6c66968ad042ad94cbb791f5b72b4678a96
 
-PODFILE CHECKSUM: 02fa1c9f2e76ce022e4e3c64f8d0c1723d309785
+PODFILE CHECKSUM: dc61dbc1365b4c59fb378393ce6d108a061f6300
 
 COCOAPODS: 1.8.4
