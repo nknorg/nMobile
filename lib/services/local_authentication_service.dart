@@ -40,7 +40,7 @@ class LocalAuthenticationService {
     bool hasBiometricsEnrolled = await hasBiometrics();
     if (hasBiometricsEnrolled) {
       LocalAuthentication localAuth = new LocalAuthentication();
-      return await localAuth.authenticateWithBiometrics(localizedReason: message, useErrorDialogs: false);
+      return await localAuth.authenticateWithBiometrics(localizedReason: message, useErrorDialogs: false, stickyAuth: true);
     }
     return false;
   }
