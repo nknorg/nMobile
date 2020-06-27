@@ -15,8 +15,9 @@ import 'package:nmobile/utils/nlog_util.dart';
 
 class NknClientPlugin {
   static const String TAG = 'NknClientPlugin';
+  static const String EVENT_CHANNEL_NAME = 'org.nkn.sdk/client/event';
   static const MethodChannel _methodChannel = MethodChannel('org.nkn.sdk/client');
-  static const EventChannel _eventChannel = EventChannel('org.nkn.sdk/client/event');
+  static const EventChannel _eventChannel = EventChannel(EVENT_CHANNEL_NAME);
   static final ClientBloc _clientBloc = BlocProvider.of<ClientBloc>(Global.appContext);
   static Map<String, Completer> _clientEventQueue = Map<String, Completer>();
 

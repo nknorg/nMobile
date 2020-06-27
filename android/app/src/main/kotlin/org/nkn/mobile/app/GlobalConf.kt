@@ -29,6 +29,7 @@ object GlobalConf : Tag {
         companion object {
             private const val KEY_LANGUAGE_LOCALE = "language_locale"
             private const val KEY_PUSH_NOTIFICATION_STATE = "key.push_notification_state"
+            private const val KEY_REGISTERED_MESSAGING_CALLBACK_IDs = "key.registered_messaging_callback_ids"
         }
 
         //******************************************************//
@@ -51,6 +52,20 @@ object GlobalConf : Tag {
 
         fun clearPushNotificationSetting() {
             get().remove(KEY_PUSH_NOTIFICATION_STATE)
+        }
+
+        //******************************************************//
+        fun storeRegisteredMsgCallbackIds(value: List<String>) {
+            get().storeString(KEY_REGISTERED_MESSAGING_CALLBACK_IDs, value.joinToString(":"))
+        }
+
+        fun getRegisteredMsgCallbackIds(default: List<String> = emptyList()): List<String> {
+            val listStr = get().loadString(KEY_REGISTERED_MESSAGING_CALLBACK_IDs)
+            return listStr?.split(':') ?: default
+        }
+
+        fun clearRegisteredMsgCallbackIds() {
+            get().remove(KEY_REGISTERED_MESSAGING_CALLBACK_IDs)
         }
     }
 }
