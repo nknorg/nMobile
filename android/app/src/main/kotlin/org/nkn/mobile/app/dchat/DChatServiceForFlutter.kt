@@ -25,6 +25,8 @@ import org.nkn.mobile.app.R
 import org.nkn.mobile.app.abs.StartMe
 import org.nkn.mobile.app.MainActivity
 import org.nkn.mobile.app.util.Bytes2String.toHex
+import org.nkn.mobile.app.util.Bytes2String.withAndroidPrefix
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Wei.Chou
@@ -94,21 +96,17 @@ class DChatServiceForFlutter : AbsMsgrService(), Msgs.Resp, Const {
             msgReceiveHandler.looper.quitSafely()
         }
         notifyMgr.cancel(notificationID)
+        flutterPlugin?.destroy()
         super.onDestroy()
     }
 
-    private fun closeClientOnly() {
-        Log.d(TAG, "closeClientOnly")
+    private fun destroyAccountCorrelation() {
+        Log.d(TAG, "destroyAccountCorrelation")
         try {
             messagingClient?.close()
         } catch (ex: Exception) {
         }
         messagingClient = null
-    }
-
-    private fun destroyAccountCorrelation() {
-        Log.d(TAG, "destroyAccountCorrelation")
-        closeClientOnly()
         accountPubkeyHex = null
         changeConnectionState(false)
     }
@@ -141,40 +139,69 @@ class DChatServiceForFlutter : AbsMsgrService(), Msgs.Resp, Const {
         receiveMessages()
     }
 
+    @Volatile
     private var isActivityRunning: Boolean = true
-    private fun considerActivityIsRunning(): Boolean {
-        isActivityRunning = isMainActivityActive()
-        Log.e(TAG, "<<<--- isActivityRunning: $isActivityRunning --->>>")
-        if (isActivityRunning) {
-            closeClientOnly()
+    private fun considerActivityIsRunning(stopCheckLoop: Boolean = false): Boolean {
+        if (stopCheckLoop) {
+            msgSendHandler.removeCallbacks(checkIfMainActyActiveRun)
         } else {
-            onAccountGot(accountCache)
+            ensureWakeupWhenActivityNotRunning()
         }
+        checkIfMainActyActiveRun.run()
         return isActivityRunning
     }
 
+    private fun ensureWakeupWhenActivityNotRunning() {
+        Log.d(TAG, "ensureWakeupWhenActivityNotRunning".withAndroidPrefix())
+        msgSendHandler.removeCallbacks(checkIfMainActyActiveRun)
+        msgSendHandler.postDelayed(checkIfMainActyActiveRun, TimeUnit.MINUTES.toMillis(3))
+    }
+
+    private val checkIfMainActyActiveRun: Runnable by lazy {
+        Runnable {
+            Log.i(TAG, "checkIfMainActyActiveRun".withAndroidPrefix())
+            isActivityRunning = isMainActivityActive()
+            Log.e(TAG, "isActivityRunning: $isActivityRunning".withAndroidPrefix())
+            if (isActivityRunning) {
+                destroyAccountCorrelation()
+                Log.i(TAG, "accountCache: $accountCache".withAndroidPrefix())
+            } else {
+                Log.i(TAG, "accountCache: $accountCache".withAndroidPrefix())
+                onAccountGot(accountCache)
+            }
+            ensureWakeupWhenActivityNotRunning()
+        }
+    }
+
     private fun isMainActivityActive(): Boolean {
-        val activityManager = getSystemService(ActivityManager::class.java)
+        val actyManager = getSystemService(ActivityManager::class.java)
+        val i = packageName.lastIndexOf(':')
+        val mainPkgName = if (i <= 0) packageName else packageName.substring(0, i)
+        Log.w(TAG, "isMainActivityActive | $mainPkgName, $packageName")
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val tasks = activityManager.appTasks
+                val tasks = actyManager.appTasks
                 for (task in tasks) {
+                    Log.i(TAG, "isMainActivityActive | VERSION_CODES.Q | ${task.taskInfo.baseActivity?.className
+                    }, numActy: ${task.taskInfo.numActivities}")
                     if (task.taskInfo.isRunning) {
                         return true
                     }
                 }
             } else {
-                val tasks = activityManager.getRunningTasks(Int.MAX_VALUE)
+                val tasks = actyManager.getRunningTasks(Int.MAX_VALUE)
                 for (task in tasks) {
-                    if (packageName.equals(task.baseActivity?.packageName, ignoreCase = true)) {
+                    Log.i(TAG, "isMainActivityActive | ${task.baseActivity?.className}, numActy: ${task.numActivities}")
+                    if (mainPkgName.equals(task.baseActivity?.packageName, ignoreCase = true)) {
                         return true
                     }
                 }
             }
+            return false
         } catch (e: SecurityException) {
             Log.w(TAG, "Lack permission 'android.permission.GET_TASKS'")
+            throw e
         }
-        return false
     }
 
     // not main thread(clientHandler thread)
@@ -185,7 +212,7 @@ class DChatServiceForFlutter : AbsMsgrService(), Msgs.Resp, Const {
         account?.let {
             retryForceful(3 * 1000, increase = 2 * 1000) {
                 // Different threads, there is a reset situation.
-                if (account == null || considerActivityIsRunning()) {
+                if (account == null || isActivityRunning) {
                     true
                 } else {
                     if (genClient(account) != null) {
@@ -234,7 +261,7 @@ class DChatServiceForFlutter : AbsMsgrService(), Msgs.Resp, Const {
         msgSendHandler.post {
             retryForceful(6 * 1000, increase = 6 * 1000, custom = msgSendDelayer) {
                 Log.d(TAG, "doConnect | retryForceful")
-                considerActivityIsRunning()
+                if (isActivityRunning) return@retryForceful true
                 if (!clientConnected) {
                     Log.d(TAG, "doConnect | retryForceful | clientConnected: false")
                     val msgClient = messagingClient
@@ -266,9 +293,12 @@ class DChatServiceForFlutter : AbsMsgrService(), Msgs.Resp, Const {
         Log.i(TAG, "receiveMessages")
         msgReceiveHandler.removeCallbacks(receiveMessagesRun)
         if (isActivityRunning) {
+            Log.i(TAG, "receiveMessages | isActivityRunning: $isActivityRunning".withAndroidPrefix())
             // nothing...
         } else {
-            msgReceiveHandler.post(receiveMessagesRun)
+            if (ensureFlutterPluginInited()) {
+                msgReceiveHandler.post(receiveMessagesRun)
+            }
         }
     }
 
@@ -295,11 +325,31 @@ class DChatServiceForFlutter : AbsMsgrService(), Msgs.Resp, Const {
 
     private fun handleReceivedMessages(msgNkn: nkn.Message, myChatId: String) {
         val json = String(msgNkn.data, Charsets.UTF_8)
-        Log.i(
-                TAG, "receiveMessages | from: ${msgNkn.src}, json: ${
-        if (json.length > 100) json.substring(0, 100) else json}"
-        )
-        TODO()
+        Log.i(TAG, "receiveMessages | from: ${msgNkn.src}, json: ${if (json.length > 100) json.substring(0, 100) else json}")
+
+        App.handler().post {
+            flutterPlugin!!.onMessage(msgNkn, accountPubkeyHex!!, json)
+        }
+    }
+
+    @Volatile
+    private var flutterPlugin: MessagingServiceFlutterPlugin? = null
+
+    @Volatile
+    private var flutterPluginInited: Boolean = false
+
+    private fun ensureFlutterPluginInited(): Boolean {
+        flutterPlugin ?: synchronized(this) {
+            flutterPlugin ?: also {
+                val plugin = MessagingServiceFlutterPlugin(this) {
+                    Log.i(TAG, "ensureFlutterPluginInited | flutterPluginInited")
+                    flutterPluginInited = true
+                    receiveMessages()
+                }
+                flutterPlugin = plugin
+            }
+        }
+        return flutterPluginInited
     }
 
     override fun onStopWork(callCount: Int): Int {
@@ -308,15 +358,20 @@ class DChatServiceForFlutter : AbsMsgrService(), Msgs.Resp, Const {
 
     override fun onStartForeground() {
         Log.i(TAG, "onStartForeground")
+        if (accountCache == null) {
+            stopSelf()
+        } else {
+            considerActivityIsRunning()
+        }
         // preload channels, fix crash.
         notifyMgr.importance
+        // fix bug of `Context.startForegroundService, but not Service not call startForeground()`.
         startForeground(notificationID, buildForegroundNotification())
         foreground = true
-        considerActivityIsRunning()
     }
 
     override fun onStopForeground() {
-        considerActivityIsRunning()
+        considerActivityIsRunning(true)
         foreground = false
         super.onStopForeground()
     }

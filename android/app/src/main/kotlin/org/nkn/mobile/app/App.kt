@@ -6,16 +6,18 @@
 
 package org.nkn.mobile.app
 
-import android.app.Activity
-import android.app.Application
 import android.os.*
+import android.app.*
 import android.os.StrictMode.VmPolicy
 //import com.google.firebase.FirebaseApp
 import nkn.Wallet
 import org.nkn.mobile.app.abs.Tag
 import org.nkn.mobile.app.dchat.DChatServiceForFlutter
+import org.nkn.mobile.app.util.Bytes2String.withAndroidPrefix
 
 import io.flutter.app.FlutterApplication
+import java.util.concurrent.TimeUnit
+import android.util.Log
 
 /**
  * @author Wei.Chou
@@ -44,16 +46,45 @@ class App : FlutterApplication(), Tag {
             override fun onActivityPaused(activity: Activity) {}
             override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
             override fun onActivityStopped(activity: Activity) {
-                if (--onStartStopInsCount == 0) DChatServiceForFlutter.startFg(applicationContext)
+                if (--onStartStopInsCount == 0) {
+                    DChatServiceForFlutter.startFg(applicationContext)
+//                    postDelayed(TimeUnit.MINUTES.toMillis(10)) {
+//                        if (onStartStopInsCount <= 0 /*&& isMainProcess()*/) {
+//                            Log.e(TAG, "finish activity: ${activity.javaClass.name}".withAndroidPrefix())
+//                            activity.finish()
+//                            // Can't trigger appTasks not running.
+//                            //Process.killProcess(Process.myPid())
+//                        }
+//                    }
+                }
             }
 
-            override fun onActivityDestroyed(activity: Activity) {}
+            override fun onActivityDestroyed(activity: Activity) {
+                if (onStartStopInsCount <= 0) {
+                    // trigger service `onStartWork()`
+                    DChatServiceForFlutter.start(applicationContext)
+                }
+            }
         })
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             // android.os.FileUriExposedException: file:///storage/emulated/0/DCIM/Camera/IMG_xxx.jpg
             // exposed beyond app through Intent.getData()
             StrictMode.setVmPolicy(VmPolicy.Builder().build())
         }
+    }
+
+    fun isMainProcess(): Boolean {
+        fun getProcessName(pid: Int): String? {
+            val actyManager = getSystemService(ActivityManager::class.java)
+            for (info in actyManager.getRunningAppProcesses()) {
+                Log.i(TAG, String.format("[process]id: %s, name: %s.", info.pid, info.processName).withAndroidPrefix())
+                if (info.pid == pid) return info.processName
+            }
+            return null
+        }
+
+        val packageName = getProcessName(Process.myPid())
+        return packageName!!.indexOf(':') < 0
     }
 
     val handler by lazy { Handler(mainLooper) }
@@ -67,7 +98,7 @@ class App : FlutterApplication(), Tag {
         private lateinit var instance: App
 
         @Volatile
-        /*private*/ var wallet: Wallet? = null
+                /*private*/ var wallet: Wallet? = null
 
         fun get() = instance
 

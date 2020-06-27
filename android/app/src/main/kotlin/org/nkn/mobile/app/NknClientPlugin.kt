@@ -3,6 +3,7 @@ package org.nkn.mobile.app
 import android.os.HandlerThread
 import android.os.Process
 import android.util.Log
+import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.EventChannel
@@ -13,9 +14,18 @@ import java.util.*
 import kotlin.collections.HashMap
 import kotlin.collections.hashMapOf
 
-class NknClientPlugin(private val acty: MainActivity) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler, Tag {
+class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEngine) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler, Tag {
     val TAG by lazy { tag() }
 
+    companion object {
+        private const val N_MOBILE_SDK_CLIENT = "org.nkn.sdk/client"
+        private const val N_MOBILE_SDK_CLIENT_EVENT = "org.nkn.sdk/client/event"
+    }
+
+    init {
+        MethodChannel(flutterEngine.dartExecutor, N_MOBILE_SDK_CLIENT).setMethodCallHandler(this)
+        EventChannel(flutterEngine.dartExecutor, N_MOBILE_SDK_CLIENT_EVENT).setStreamHandler(this)
+    }
     var clientEventSink: EventChannel.EventSink? = null
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
@@ -356,7 +366,7 @@ class NknClientPlugin(private val acty: MainActivity) : MethodChannel.MethodCall
                         clientEventSink?.error("0", "", "")
                     }
                 } else {
-                    acty.sendAccount2Service(account)
+                    acty?.sendAccount2Service(account)
                     onConnect()
                 }
             } catch (e: Exception) {
@@ -439,10 +449,15 @@ class NknClientPlugin(private val acty: MainActivity) : MethodChannel.MethodCall
     }
 
     private fun closeClientIfExsits() {
+        Log.w(TAG, "closeClientIfExsits")
         try {
             client?.close()
         } catch (ex: Exception) {
         }
         client = null
+    }
+
+    fun close() {
+        closeClientIfExsits()
     }
 }
