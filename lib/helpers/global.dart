@@ -10,6 +10,7 @@ import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/client.dart';
 import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/services/android_messaging_service.dart';
 import 'package:nmobile/services/background_fetch_service.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
@@ -48,7 +49,8 @@ class Global {
     if (Platform.isAndroid) {
       SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(statusBarColor: Colors.transparent);
       SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
-      BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
+      //BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
+      AndroidMessagingService.registerOnMessage();
     }
   }
 

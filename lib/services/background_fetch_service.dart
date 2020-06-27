@@ -53,8 +53,11 @@ class BackgroundFetchService {
 }
 
 void backgroundFetchHeadlessTask(String taskId) async {
-  NLog.e('[BackgroundFetch] ----->>> for Android | Headless event received: $taskId');
-  _ensureBackgroundFetchFinished(taskId, await _doBackgroundFetchWork(taskId));
+  // Since the call back is in a newly created 'Flutter Engine(Dart VM)' environment, 'Global' is always uninitialized.
+  print('[BackgroundFetch] ----->>> for Android | Headless event received: $taskId');
+  print('[BackgroundFetch] <<<----- Done as deprecated.');
+  // @Deprecated
+  //_ensureBackgroundFetchFinished(taskId, await _doBackgroundFetchWork(taskId));
 }
 
 Future<ClientBloc> _doBackgroundFetchWork(String taskId) async {
@@ -64,6 +67,7 @@ Future<ClientBloc> _doBackgroundFetchWork(String taskId) async {
 
     switch (taskId) {
       case "com.foo.customtask":
+        NLog.d("[BackgroundFetch] test custom task: com.foo.customtask");
         break;
       default:
         final LocalAuthenticationService localAuth = LocalAuthenticationService.instance;

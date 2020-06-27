@@ -4,6 +4,7 @@ import android.os.AsyncTask
 import android.os.HandlerThread
 import android.os.Process
 import android.util.Log
+import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.EventChannel
@@ -15,7 +16,17 @@ import org.nkn.mobile.app.util.Bytes2String.toHex
 import org.nkn.mobile.app.util.WalletUtils
 import org.nkn.mobile.app.App
 
-class NknWalletPlugin : MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
+class NknWalletPlugin(flutterEngine: FlutterEngine) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
+    companion object {
+        private const val N_MOBILE_SDK_WALLET = "org.nkn.sdk/wallet"
+        private const val N_MOBILE_SDK_WALLET_EVENT = "org.nkn.sdk/wallet/event"
+    }
+
+    init {
+        MethodChannel(flutterEngine.dartExecutor, N_MOBILE_SDK_WALLET).setMethodCallHandler(this)
+        EventChannel(flutterEngine.dartExecutor, N_MOBILE_SDK_WALLET_EVENT).setStreamHandler(this)
+    }
+
     var walletEventSink: EventChannel.EventSink? = null
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
