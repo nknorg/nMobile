@@ -48,7 +48,7 @@ class App : FlutterApplication(), Tag {
             override fun onActivityStopped(activity: Activity) {
                 if (--onStartStopInsCount == 0) {
                     DChatServiceForFlutter.startFg(applicationContext)
-//                    postDelayed(TimeUnit.MINUTES.toMillis(10)) {
+//                    postDelayed(2000/*TimeUnit.MINUTES.toMillis(10)*/) {
 //                        if (onStartStopInsCount <= 0 /*&& isMainProcess()*/) {
 //                            Log.e(TAG, "finish activity: ${activity.javaClass.name}".withAndroidPrefix())
 //                            activity.finish()
