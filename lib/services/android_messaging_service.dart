@@ -8,8 +8,15 @@ import 'package:nmobile/blocs/client/client_bloc.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
+import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_notification.dart';
+import 'package:nmobile/helpers/sqlite_storage.dart';
+import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/schemas/client.dart';
+import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/services/service_locator.dart';
 
 const _PLUGIN_PATH = "org.nkn.mobile.app/android_messaging_service";
 const _CONFIG_CHANNEL_NAME = "$_PLUGIN_PATH/config";
@@ -41,8 +48,9 @@ class AndroidMessagingService {
 }
 
 ClientBloc _clientBloc = ClientBloc(chatBloc: ChatBloc(contactBloc: ContactBloc()));
+bool _inited = false;
 
-void _callback(Map eventAndData) {
+void _callback(Map eventAndData) async {
   print('[AndroidMessagingService _callback] $eventAndData');
   switch (eventAndData['event']) {
     case 'onMessage':
@@ -54,12 +62,26 @@ void _callback(Map eventAndData) {
 //          "encrypted" to msgNkn.encrypted,
 //          "pid" to msgNkn.messageID
 //      )
-      if (!(_clientBloc.state is Connected)) {
-        print('AndroidMessagingService | onMessage clientBloc.add(ConnectedClient)');
+      var data = eventAndData['data'];
+      if (!_inited && !(_clientBloc.state is Connected)) {
+        _inited = true;
+
+        print('AndroidMessagingService | onMessage init Global');
+
+        final publicKey = data['to'];
+        final seed = hexEncode(data['seed']);
+        final seed2sha256 = hexEncode(sha256(seed));
+        print('AndroidMessagingService | onMessage create db, seed2sha256 : $seed2sha256');
+
+        Global.currentChatDb = await SqliteStorage.open('${SqliteStorage.CHAT_DATABASE_NAME}_$publicKey', seed2sha256);
+        Global.currentClient = ClientSchema(publicKey: publicKey, address: publicKey);
+        Global.currentUser = await ContactSchema.getContactByAddress(publicKey);
+
         _clientBloc.add(ConnectedClient());
+
+        setupLocator();
         LocalNotification.init();
       }
-      var data = eventAndData['data'];
       print('AndroidMessagingService | onMessage --> ClientBloc@${_clientBloc.hashCode.toString().substring(0, 3)}');
       _clientBloc.add(
         OnMessage(
