@@ -129,12 +129,13 @@ class MessagingServiceFlutterPlugin(private val context: Context, private val on
         }
     }
 
-    fun onMessage(msgNkn: nkn.Message, myChatId: String, json: String) {
+    fun onMessage(msgNkn: nkn.Message, myChatId: String, seed: ByteArray, json: String) {
         val eventAndData = hashMapOf(
                 "event" to "onMessage",
                 "data" to hashMapOf(
                         "src" to msgNkn.src,
                         "to" to myChatId,
+                        "seed" to seed,
                         "data" to json,
                         "type" to msgNkn.type,
                         "encrypted" to msgNkn.encrypted,

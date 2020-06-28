@@ -328,7 +328,7 @@ class DChatServiceForFlutter : AbsMsgrService(), Msgs.Resp, Const {
         Log.i(TAG, "receiveMessages | from: ${msgNkn.src}, json: ${if (json.length > 100) json.substring(0, 100) else json}")
 
         App.handler().post {
-            flutterPlugin!!.onMessage(msgNkn, accountPubkeyHex!!, json)
+            flutterPlugin!!.onMessage(msgNkn, accountPubkeyHex!!, accountCache!!.seed(), json)
         }
     }
 
