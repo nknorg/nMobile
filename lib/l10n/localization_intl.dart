@@ -997,6 +997,8 @@ class NMobileLocalizations {
   String get transfer_initiated => Intl.message('Transfer Initiated', name: 'transfer_initiated');
   String get transfer_initiated_desc => Intl.message('Your transfer is in progress. It could take a few seconds to appear on the blockchain.', name: 'transfer_initiated_desc');
 
+  String get my_details_desc => Intl.message('All subscriptions and tipping will come from your selected wallet.', name: 'my_details_desc');
+
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {

@@ -185,6 +185,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "min" : MessageLookupByLibrary.simpleMessage("Min"),
     "my_contact" : MessageLookupByLibrary.simpleMessage("My Contact"),
     "my_details" : MessageLookupByLibrary.simpleMessage("My Details"),
+    "my_details_desc" : MessageLookupByLibrary.simpleMessage("All subscriptions and tipping will come from your selected wallet."),
     "my_group" : MessageLookupByLibrary.simpleMessage("My Group"),
     "my_wallets" : MessageLookupByLibrary.simpleMessage("My Wallets"),
     "name" : MessageLookupByLibrary.simpleMessage("Name"),
