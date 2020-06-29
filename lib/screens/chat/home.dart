@@ -253,9 +253,9 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Button(
-                                child: loadAssetIconsImage(
+                                child: loadAssetChatPng(
                                   'group',
-                                  width: 24,
+                                  width: 22,
                                   color: DefaultTheme.fontLightColor,
                                 ),
                                 padding: const EdgeInsets.only(),

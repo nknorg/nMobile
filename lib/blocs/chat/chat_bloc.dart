@@ -11,6 +11,7 @@ import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_notification.dart';
+import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/permission.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
@@ -196,6 +197,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (await message.isExist()) {
       return;
     }
+
+    if (message.topic != null && LocalStorage.isBlank(message.topic)) return;
+
     if (message.topic != null && isPrivateTopic(message.topic)) {
       List<String> dests = await Permission.getPrivateChannelDests(message.topic);
       if (!dests.contains(message.from)) {

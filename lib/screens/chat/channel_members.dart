@@ -132,10 +132,9 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
         ),
         backgroundColor: DefaultTheme.backgroundColor4,
         action: IconButton(
-          icon: loadAssetIconsImage(
-            'user-plus',
-            color: DefaultTheme.backgroundLightColor,
-            width: 24,
+          icon: Icon(
+            Icons.group_add,
+            size: 26,
           ),
           onPressed: () async {
             var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);

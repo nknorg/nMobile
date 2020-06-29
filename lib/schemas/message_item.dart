@@ -51,7 +51,6 @@ class MessageItem {
         limit: limit,
         offset: skip,
       );
-
       List<MessageItem> list = <MessageItem>[];
       for (var i = 0, length = res.length; i < length; i++) {
         var item = res[i];
