@@ -327,7 +327,10 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
         titleChild: GestureDetector(
           onTap: () async {
             Navigator.of(context).pushNamed(ChannelSettingsScreen.routeName, arguments: widget.arguments.topic).then((v) {
-              isUnSubscribe = LocalStorage.getUnsubscribeTopicList().contains(targetId);
+              setState(() {
+                isUnSubscribe = LocalStorage.getUnsubscribeTopicList().contains(targetId);
+                NLog.d(isUnSubscribe);
+              });
             });
           },
           child: Flex(direction: Axis.horizontal, mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[

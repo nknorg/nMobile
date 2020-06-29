@@ -1490,8 +1490,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "my_details_desc": "All subscriptions and tipping will come from your selected wallet.",
-  "@my_details_desc": {
+  "tip": "Tips",
+  "@tip": {
     "type": "text",
     "placeholders": {}
   },
