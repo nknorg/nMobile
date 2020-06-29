@@ -57,6 +57,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     if (mounted) {
       setState(() {
         try {
+          _skip = 20;
           _messagesList = (res);
         } catch (e) {
           debugPrint(e);
@@ -84,6 +85,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     var res = await MessageItem.getLastChat(limit: _limit, skip: _skip);
     if (res != null) {
       _skip += res.length;
+      _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
       setState(() {
         _messagesList.addAll(res);
       });

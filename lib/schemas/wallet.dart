@@ -42,7 +42,7 @@ class WalletSchema extends Equatable {
     if (_localAuth.isProtectionEnabled) {
       final password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');
       if (password == null) {
-        return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password + "：");
+        return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
       } else {
         bool auth = await _localAuth.authenticate();
         if (auth) {
@@ -52,7 +52,7 @@ class WalletSchema extends Equatable {
         }
       }
     } else {
-      return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password + ":");
+      return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
     }
   }
 
