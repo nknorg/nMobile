@@ -141,7 +141,7 @@ class LocalStorage {
     List<String> list = SpUtil.getStringList(UN_SUBSCRIBE_LIST + Global.currentClient.publicKey, defValue: <String>[]);
     if (!list.contains(topic)) {
       list.add(topic);
-      SpUtil.putStringList(UN_SUBSCRIBE_LIST, list);
+      SpUtil.putStringList(UN_SUBSCRIBE_LIST + Global.currentClient.publicKey, list);
     }
   }
 

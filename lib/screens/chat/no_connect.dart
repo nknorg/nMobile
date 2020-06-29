@@ -30,7 +30,7 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
     super.initState();
     _clientBloc = BlocProvider.of<ClientBloc>(context);
     Future.delayed(Duration(milliseconds: 50), () {
-      if (Global.isAutoShowPassword) {
+      if (Global.isAutoShowPassword && Global.state == AppLifecycleState.resumed) {
         Global.isAutoShowPassword = false;
         _next();
       }
