@@ -180,6 +180,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "min" : MessageLookupByLibrary.simpleMessage("最小"),
     "my_contact" : MessageLookupByLibrary.simpleMessage("我的联系人"),
     "my_details" : MessageLookupByLibrary.simpleMessage("我的"),
+    "my_details_desc" : MessageLookupByLibrary.simpleMessage("所有订阅和矿工费都将来自您选择的钱包。"),
     "my_group" : MessageLookupByLibrary.simpleMessage("我的群组"),
     "my_wallets" : MessageLookupByLibrary.simpleMessage("我的钱包"),
     "name" : MessageLookupByLibrary.simpleMessage("名字"),

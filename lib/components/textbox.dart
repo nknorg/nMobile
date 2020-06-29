@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 
 class Textbox extends StatefulWidget {
@@ -32,8 +33,9 @@ class Textbox extends StatefulWidget {
   final int maxLength;
   final bool maxLengthEnforced;
   final Color borderColor;
+  final Color color;
 
-  Textbox({this.value, this.padding = const EdgeInsets.only(bottom: 10), this.showErrorMessage = true,
+  Textbox({this.value, this.color = Colours.dark_2d, this.padding = const EdgeInsets.only(bottom: 10), this.showErrorMessage = true,
     this.enabled = true, this.readOnly = false, this.multi = false, this.minLines, this.maxLines = 3,
     this.autofocus = false, this.focusNode, this.controller, this.password = false, this.validator,
     this.hintText, this.helperText, this.keyboardType, this.textInputAction, this.suffixIcon,
@@ -66,7 +68,7 @@ class _TextboxState extends State<Textbox> {
           readOnly: widget.readOnly,
           enabled: widget.enabled,
           inputFormatters: widget.inputFormatters,
-          style: TextStyle(fontSize: widget.fontSize),
+          style: TextStyle(fontSize: widget.fontSize, color: widget.color),
           decoration: InputDecoration(
             disabledBorder: borderStyle,
             enabledBorder: borderStyle,
@@ -78,7 +80,7 @@ class _TextboxState extends State<Textbox> {
                   ),
             hintText: widget.hintText,
             helperMaxLines: 3,
-            hintStyle: TextStyle(fontSize: 14),
+            hintStyle: TextStyle(fontSize: widget.fontSize),
             helperText: widget.helperText,
             suffixIcon: GestureDetector(
               onTap: () {
@@ -117,7 +119,7 @@ class _TextboxState extends State<Textbox> {
           controller: widget.controller,
           readOnly: widget.readOnly,
           enabled: widget.enabled,
-          style: TextStyle(fontSize: widget.fontSize),
+          style: TextStyle(fontSize: widget.fontSize, color: widget.color),
           inputFormatters: widget.inputFormatters,
           decoration: InputDecoration(
               errorStyle: widget.showErrorMessage
@@ -127,7 +129,7 @@ class _TextboxState extends State<Textbox> {
                       fontSize: 0,
                     ),
               hintText: widget.hintText,
-              hintStyle: TextStyle(fontSize: 14),
+              hintStyle: TextStyle(fontSize: widget.fontSize),
               helperText: widget.helperText,
               suffixIcon: widget.suffixIcon,
               disabledBorder: borderStyle,
