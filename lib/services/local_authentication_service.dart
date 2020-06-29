@@ -31,24 +31,41 @@ class LocalAuthenticationService {
     }
   }
 
-  ///
-  /// authenticateWithBiometrics()
-  ///
-  /// @param [message] Message shown to user in FaceID/TouchID popup
-  /// @returns [true] if successfully authenticated, [false] otherwise
-  Future<bool> authenticate({message: 'authenticate to access'}) async {
-    bool hasBiometricsEnrolled = await hasBiometrics();
-    if (hasBiometricsEnrolled) {
-      LocalAuthentication localAuth = new LocalAuthentication();
-      return await localAuth.authenticateWithBiometrics(localizedReason: message, useErrorDialogs: false, stickyAuth: true);
+  Future<bool> authenticate() async {
+    if (isProtectionEnabled) {
+      try {
+        isAuthenticated = await _localAuth.authenticateWithBiometrics(
+          localizedReason: 'authenticate to access',
+          useErrorDialogs: false,
+          stickyAuth: true,
+        );
+      } on PlatformException catch (e) {
+        debugPrint(e.message);
+        debugPrintStack();
+      }
+      return isAuthenticated;
     }
-    return false;
   }
 
-  ///
-  /// hasBiometrics()
-  ///
-  /// @returns [true] if device has fingerprint/faceID available and registered, [false] otherwise
+//
+//  ///
+//  /// authenticateWithBiometrics()
+//  ///
+//  /// @param [message] Message shown to user in FaceID/TouchID popup
+//  /// @returns [true] if successfully authenticated, [false] otherwise
+//  Future<bool> authenticate({message: 'authenticate to access'}) async {
+//    bool hasBiometricsEnrolled = await hasBiometrics();
+//    if (hasBiometricsEnrolled) {
+//      LocalAuthentication localAuth = new LocalAuthentication();
+//      return await localAuth.authenticateWithBiometrics(localizedReason: message, useErrorDialogs: false, stickyAuth: true);
+//    }
+//    return false;
+//  }
+//
+//  ///
+//  /// hasBiometrics()
+//  ///
+//  /// @returns [true] if device has fingerprint/faceID available and registered, [false] otherwise
   Future<bool> hasBiometrics() async {
     LocalAuthentication localAuth = new LocalAuthentication();
     bool canCheck = await localAuth.canCheckBiometrics;

@@ -385,10 +385,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             onPressed: () {
               Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: widget.arguments.topic);
             },
-            child: Icon(
-              Icons.group,
-              color: Colors.white,
-            )),
+            child: loadAssetChatPng('group', width: 22.w)),
       ),
       body: GestureDetector(
         onTap: () {

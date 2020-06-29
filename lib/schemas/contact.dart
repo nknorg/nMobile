@@ -720,6 +720,7 @@ class ContactSchema {
         type = ContactType.stranger;
       }
     }
+
     try {
       Database db = SqliteStorage(db: Global.currentChatDb).db;
 

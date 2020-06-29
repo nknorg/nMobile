@@ -63,7 +63,7 @@ class _AppScreenState extends State<AppScreen> {
     locator<BackgroundFetchService>().init();
     return WillPopScope(
       onWillPop: () async {
-        AndroidBackTop.backToDesktop();
+        await AndroidBackTop.backToDesktop();
         return false;
       },
       child: getView(),

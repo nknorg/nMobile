@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/components/button.dart';
+import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 
 class ChangeUpdateContentPage extends StatefulWidget {
@@ -39,7 +40,7 @@ class ChangeUpdateContentPageState extends State<ChangeUpdateContentPage> {
                   child: TextField(
                     controller: _controller,
                     maxLines: 1,
-                    style: TextStyle(fontSize: 14.sp, color: Color(0xFF2A2A3C)),
+                    style: TextStyle(fontSize: DefaultTheme.bodyRegularFontSize, color: Color(0xFF2A2A3C)),
                     decoration: InputDecoration(
                         hintText: widget.arguments['hint'] ?? '',
                         enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFDFDFE2), width: 0.6.w)),

@@ -124,26 +124,31 @@ class _InputChannelDialogState extends State<InputChannelDialog> {
                               ],
                             ),
                           ),
-                          Padding(
+                          Container(
                             padding: EdgeInsets.only(left: 20, right: 20),
-                            child: Textbox(
-                              controller: _topicController,
-                              validator: Validator.of(context).required(),
-                              hintText: NMobileLocalizations.of(context).enter_topic,
-                              suffixIcon: InkWell(
-                                onTap: () {
-                                  Navigator.pushNamed(context, PopularGroupPage.routeName).then((v) {
-                                    if (v != null) {
-                                      _topicController.text = v;
-                                    }
-                                  });
-                                },
-                                child: Icon(
-                                  Icons.group,
-                                  size: 20,
-                                  color: DefaultTheme.primaryColor,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: <Widget>[
+                                Expanded(
+                                  child: Textbox(
+                                    controller: _topicController,
+                                    validator: Validator.of(context).required(),
+                                    hintText: NMobileLocalizations.of(context).enter_topic,
+                                  ),
                                 ),
-                              ),
+                                Container(
+                                  child: InkWell(
+                                    child: loadAssetChatPng('group_blue', width: 24),
+                                    onTap: () {
+                                      Navigator.pushNamed(context, PopularGroupPage.routeName).then((v) {
+                                        if (v != null) {
+                                          _topicController.text = v;
+                                        }
+                                      });
+                                    },
+                                  ),
+                                )
+                              ],
                             ),
                           ),
                           Padding(
