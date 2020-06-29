@@ -748,7 +748,7 @@ class ContactSchema {
     return count;
   }
 
-  String get publickKey {
+  String get publicKey {
     int n = clientAddress.lastIndexOf('.');
     if (n < 0) {
       return clientAddress;

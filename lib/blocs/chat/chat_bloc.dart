@@ -217,9 +217,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     var contact = await ContactSchema.getContactByAddress(message.from);
     var title = contact.name;
 
-    if (!contact.isMe && message.contentType != ContentType.contact && Global.isLoadProfile(contact.publickKey)) {
+    if (!contact.isMe && message.contentType != ContentType.contact && Global.isLoadProfile(contact.publicKey)) {
       if (contact.profileExpiresAt == null || DateTime.now().isAfter(contact.profileExpiresAt)) {
-        Global.saveLoadProfile(contact.publickKey);
+        Global.saveLoadProfile(contact.publicKey);
         contact.requestProfile();
       }
     }

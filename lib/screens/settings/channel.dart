@@ -191,7 +191,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                                   children: <Widget>[
                                     Container(
                                       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
-                                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.line))),
+                                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: <Widget>[
@@ -233,7 +233,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                                     ),
                                     Container(
                                       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
-                                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.line))),
+                                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
                                       child: InkWell(
                                         onTap: () {
                                           Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: widget.arguments);
@@ -301,7 +301,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
           width: double.infinity,
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.line))),
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
           child: Column(
             children: <Widget>[
               Label(
@@ -323,7 +323,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
           width: double.infinity,
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.line))),
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
           child: Column(
             children: <Widget>[
               Label(

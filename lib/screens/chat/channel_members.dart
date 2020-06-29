@@ -253,7 +253,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
               child: Container(
                 padding: const EdgeInsets.only(),
                 decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: DefaultTheme.line)),
+                  border: Border(bottom: BorderSide(color: DefaultTheme.lineColor)),
                 ),
                 child: Flex(
                   direction: Axis.horizontal,
