@@ -36,7 +36,7 @@ class DefaultTheme {
 
   static const Color riseColor = Color(0xFF00CC96);
   static const Color fallColor = Color(0xFFFC5D68);
-  static const Color line = Color(0xFFEFF2F9);
+  static const Color lineColor = Color(0xFFEFF2F9);
 
   static const Color chatNumberColor = Color(0xFF24F0B6);
 

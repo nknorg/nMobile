@@ -179,7 +179,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
 
                           return Container(
                             child: w,
-                            decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6.h, color: DefaultTheme.line))),
+                            decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6.h, color: DefaultTheme.lineColor))),
                           );
                         } else {
                           return Container();
