@@ -981,6 +981,11 @@
     "type": "text",
     "placeholders": {}
   },
+  "tip": "提示",
+  "@tip": {
+    "type": "text",
+    "placeholders": {}
+  },
   "my_details_desc": "所有订阅和矿工费都将来自您选择的钱包。",
   "@my_details_desc": {
     "type": "text",

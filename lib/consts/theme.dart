@@ -7,13 +7,15 @@ class DefaultTheme {
   static const Color backgroundColor1 = Color(0xFFF6F7FB);
   static const Color backgroundColor2 = Color(0xFFEFF2F9);
   static const Color backgroundColor3 = Color(0xFFE5E5E5);
-  static const Color backgroundColor4 = Color(0xFF0B163C);
+  static const Color backgroundColor4 = Color(0xFF11163C);
   static const Color backgroundColor5 = Color(0xFF2D2D2D);
 
   static const Color notificationBackgroundColor = Color(0xFF00CC96);
 
   static const Color fontColor1 = Color(0xFF2D2D2D);
   static const Color fontColor2 = Color(0xFF8F92A1);
+  static const Color fontColor3 = Color(0xFF9c9c9c);
+  static const Color fontColor4 = Color(0xFFb1b1b1);
   static const Color fontLightColor = Color(0xFFFFFFFF);
 
   static final double h1FontSize = 32;
