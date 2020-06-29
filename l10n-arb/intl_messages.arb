@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-06-12T01:49:24.581877",
+  "@@last_modified": "2020-06-29T15:40:54.031505",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1487,6 +1487,11 @@
   },
   "transfer_initiated_desc": "Your transfer is in progress. It could take a few seconds to appear on the blockchain.",
   "@transfer_initiated_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "my_details_desc": "All subscriptions and tipping will come from your selected wallet.",
+  "@my_details_desc": {
     "type": "text",
     "placeholders": {}
   }

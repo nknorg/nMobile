@@ -175,7 +175,7 @@ class ContactSchema {
           child: Align(
             alignment: Alignment.bottomRight,
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 5),
+              padding: const EdgeInsets.only(bottom: 2),
               child: bottomRight,
             ),
           ),
@@ -198,7 +198,7 @@ class ContactSchema {
         if (bottomRight != null) {
           wid.add(
             Positioned(
-              bottom: 0,
+              bottom: 2,
               right: 0,
               child: bottomRight,
             ),
@@ -214,7 +214,7 @@ class ContactSchema {
         child: Align(
           alignment: Alignment.bottomRight,
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 5),
+            padding: const EdgeInsets.only(bottom: 2),
             child: bottomRight,
           ),
         ),
