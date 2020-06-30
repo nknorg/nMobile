@@ -12,6 +12,7 @@ import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
+import 'package:nmobile/components/ButtonIcon.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/chat/bubble.dart';
@@ -254,7 +255,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     String contentType = ContentType.text;
     Duration deleteAfterSeconds;
 
-    var sendMsg = MessageSchema.fromSendData(from: currentAddress, topic: dest, content: text, contentType: contentType, deleteAfterSeconds: deleteAfterSeconds);
+    var sendMsg =
+        MessageSchema.fromSendData(from: currentAddress, topic: dest, content: text, contentType: contentType, deleteAfterSeconds: deleteAfterSeconds);
     sendMsg.isOutbound = true;
     try {
       _chatBloc.add(SendMessage(sendMsg));
@@ -501,7 +503,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     var sendMsg = MessageSchema.fromSendData(from: currentAddress, content: targetId, to: address, contentType: ContentType.ChannelInvitation);
     sendMsg.isOutbound = true;
 
-    var sendMsg1 = MessageSchema.fromSendData(from: currentAddress, topic: widget.arguments.topic.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
+    var sendMsg1 = MessageSchema.fromSendData(
+        from: currentAddress, topic: widget.arguments.topic.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
     sendMsg1.isOutbound = true;
 
     try {
@@ -706,14 +709,10 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
           flex: 0,
           child: Padding(
             padding: const EdgeInsets.only(left: 8, right: 8),
-            child: Button(
-              size: 50,
-              icon: true,
-              child: loadAssetIconsImage(
-                'grid',
-                width: 24,
-                color: DefaultTheme.primaryColor,
-              ),
+            child: ButtonIcon(
+              width: 50,
+              height: 50,
+              icon: loadAssetIconsImage('grid', width: 24, color: DefaultTheme.primaryColor),
               onPressed: () {
                 _toggleBottomMenu();
               },
@@ -763,15 +762,15 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
           flex: 0,
           child: Padding(
             padding: const EdgeInsets.only(left: 8, right: 8),
-            child: Button(
-              size: 50,
-              icon: true,
-              child: loadAssetIconsImage(
+            child: ButtonIcon(
+              width: 50,
+              height: 50,
+              icon: loadAssetIconsImage(
                 'send',
                 width: 24,
                 color: _canSend ? DefaultTheme.primaryColor : DefaultTheme.fontColor2,
               ),
-              disabled: !_canSend,
+              //disabled: !_canSend,
               onPressed: () {
                 _send();
               },

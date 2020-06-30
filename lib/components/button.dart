@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/consts/theme.dart';
 
 class Button extends StatefulWidget {
@@ -16,8 +15,8 @@ class Button extends StatefulWidget {
   final double height;
   final VoidCallback onPressed;
   bool disabled;
-  final bool icon;
   final bool outline;
+
   Button({
     this.text,
     this.child,
@@ -31,7 +30,6 @@ class Button extends StatefulWidget {
     this.backgroundColor = DefaultTheme.primaryColor,
     this.dark = true,
     this.textAlign,
-    this.icon = false,
     this.outline = false,
   });
 
@@ -42,31 +40,7 @@ class Button extends StatefulWidget {
 class _ButtonState extends State<Button> {
   @override
   Widget build(BuildContext context) {
-    if (widget.icon) {
-      List<Widget> children = <Widget>[
-        widget.child,
-      ];
-      if (widget.text != null) {
-        children.add(SizedBox(height: 5.h));
-        children.add(Text(
-          widget.text,
-          style: TextStyle(fontSize: 11.sp, color: widget.fontColor),
-        ));
-      }
-      return SizedBox(
-        width: widget.size,
-        height: widget.size,
-        child: RawMaterialButton(
-          padding: widget.padding ?? const EdgeInsets.all(8),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: children,
-          ),
-          onPressed: widget.disabled ? null : widget.onPressed,
-          shape: CircleBorder(),
-        ),
-      );
-    } else if (widget.outline) {
+    if (widget.outline) {
       return SizedBox(
         width: widget.width,
         child: OutlineButton(
@@ -76,7 +50,8 @@ class _ButtonState extends State<Button> {
           color: widget.backgroundColor,
           child: Text(
             widget.text,
-            style: TextStyle(fontSize: DefaultTheme.h3FontSize, fontWeight: FontWeight.bold, color: widget.dark ? DefaultTheme.fontLightColor : widget.fontColor),
+            style:
+                TextStyle(fontSize: DefaultTheme.h3FontSize, fontWeight: FontWeight.bold, color: widget.dark ? DefaultTheme.fontLightColor : widget.fontColor),
           ),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
           onPressed: widget.disabled ? null : widget.onPressed,
