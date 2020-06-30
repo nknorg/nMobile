@@ -281,18 +281,18 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Label(
-                                              NMobileLocalizations.of(context).wallet_address,
+                                              Global.currentWalletName ?? '(${NMobileLocalizations.of(context).wallet_address})',
                                               type: LabelType.h3,
                                               textAlign: TextAlign.start,
                                             ),
                                             InkWell(
                                               child: Label(
-                                                NMobileLocalizations.of(context).copy,
-                                                color: DefaultTheme.primaryColor,
+                                                NMobileLocalizations.of(context).change_default_chat_wallet,
+                                                color: Colours.blue_0f,
                                                 type: LabelType.bodyRegular,
                                               ),
                                               onTap: () {
-                                                copyAction(widget.arguments.nknWalletAddress);
+                                                showToast(NMobileLocalizations.of(context).coming_soon);
                                               },
                                             ),
                                           ],

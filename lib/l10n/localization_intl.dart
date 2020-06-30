@@ -999,6 +999,8 @@ class NMobileLocalizations {
 
   String get my_details_desc => Intl.message('All subscriptions and tipping will come from your selected wallet.', name: 'my_details_desc');
 
+  String get change_default_chat_wallet => Intl.message('Change', name: 'change_default_chat_wallet');
+  String get coming_soon => Intl.message('Coming Soon...', name: 'coming_soon');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {
