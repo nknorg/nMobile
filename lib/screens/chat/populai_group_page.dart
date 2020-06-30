@@ -88,7 +88,7 @@ class PopularItem extends StatelessWidget {
           Label(
             data.subTitle,
             type: LabelType.h4,
-            fontSize: DefaultTheme.h5FontSize,
+            fontSize: DefaultTheme.bodySmallFontSize,
           ),
         ],
       ),

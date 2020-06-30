@@ -985,5 +985,15 @@
   "@my_details_desc": {
     "type": "text",
     "placeholders": {}
+  },
+  "change_default_chat_wallet": "切换",
+  "@change_default_chat_wallet": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "coming_soon": "敬请期待...",
+  "@coming_soon": {
+    "type": "text",
+    "placeholders": {}
   }
 }

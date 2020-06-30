@@ -172,7 +172,7 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                                                       ),
                                                       Text(
                                                         NMobileLocalizations.of(context).wallet_password_mach,
-                                                        style: TextStyle(color: Color(0xFF8F92A1), fontSize: DefaultTheme.h5FontSize),
+                                                        style: TextStyle(color: Color(0xFF8F92A1), fontSize: DefaultTheme.bodySmallFontSize),
                                                       ),
                                                       SizedBox(height: 24.h),
                                                       Label(

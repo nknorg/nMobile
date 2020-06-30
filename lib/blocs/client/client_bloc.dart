@@ -71,6 +71,7 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
       var publicKey = w['publicKey'];
       Global.currentChatDb = await SqliteStorage.open('${SqliteStorage.CHAT_DATABASE_NAME}_$publicKey', hexEncode(sha256(w['seed'])));
       Global.currentClient = ClientSchema(publicKey: publicKey, address: publicKey);
+      Global.currentWalletName = wallet.name;
       Global.currentUser = await ContactSchema.getContactByAddress(publicKey);
       if (Global.currentUser == null) {
         DateTime now = DateTime.now();
