@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:nmobile/components/ButtonIcon.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
@@ -74,10 +75,9 @@ class ScannerScreenState extends State<ScannerScreen> {
             //            left: 20,
             top: 20,
             child: SafeArea(
-              child: Button(
+              child: ButtonIcon(
                 padding: const EdgeInsets.all(18),
-                icon: true,
-                child: Icon(
+                icon: Icon(
                   FontAwesomeIcons.arrowLeft,
                   size: 24,
                   color: DefaultTheme.fontColor2,
@@ -93,9 +93,8 @@ class ScannerScreenState extends State<ScannerScreen> {
             right: 0,
             bottom: 80,
             child: SafeArea(
-              child: Button(
-                icon: true,
-                child: Icon(
+              child: ButtonIcon(
+                icon: Icon(
                   _isFlashOn(flashState) ? FontAwesomeIcons.lightbulb : FontAwesomeIcons.solidLightbulb,
                   size: 50,
                   color: DefaultTheme.primaryColor,

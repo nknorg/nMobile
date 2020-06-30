@@ -11,8 +11,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
+import 'package:nmobile/components/ButtonIcon.dart';
 import 'package:nmobile/components/box/body.dart';
-import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/chat/bubble.dart';
 import 'package:nmobile/components/chat/system.dart';
 import 'package:nmobile/components/header/header.dart';
@@ -33,6 +33,7 @@ class ChatSinglePage extends StatefulWidget {
   static const String routeName = '/chat/message';
 
   final ChatSchema arguments;
+
   ChatSinglePage({this.arguments});
 
   @override
@@ -286,7 +287,8 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
     String dest = targetId;
     Duration deleteAfterSeconds;
     if (widget.arguments.contact?.options != null) {
-      if (widget.arguments.contact?.options?.deleteAfterSeconds != null) deleteAfterSeconds = Duration(seconds: widget.arguments.contact.options.deleteAfterSeconds);
+      if (widget.arguments.contact?.options?.deleteAfterSeconds != null)
+        deleteAfterSeconds = Duration(seconds: widget.arguments.contact.options.deleteAfterSeconds);
     }
     var sendMsg = MessageSchema.fromSendData(
       from: currentAddress,
@@ -360,7 +362,10 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                 flex: 1,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[Label(widget.arguments.contact.name, type: LabelType.h3, dark: true), Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor)],
+                  children: <Widget>[
+                    Label(widget.arguments.contact.name, type: LabelType.h3, dark: true),
+                    Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor)
+                  ],
                 ),
               )
             ],
@@ -419,7 +424,8 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                                     alignment: WrapAlignment.center,
                                     crossAxisAlignment: WrapCrossAlignment.center,
                                     children: <Widget>[
-                                      Label('${message.isOutbound ? Global.currentUser.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).update_burn_after_reading}'),
+                                      Label(
+                                          '${message.isOutbound ? Global.currentUser.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).update_burn_after_reading}'),
                                       Padding(
                                         padding: const EdgeInsets.only(left: 4, right: 4),
                                         child: Icon(
@@ -454,7 +460,8 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                                     alignment: WrapAlignment.center,
                                     crossAxisAlignment: WrapCrossAlignment.center,
                                     children: <Widget>[
-                                      Label('${message.isOutbound ? Global.currentUser.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).close_burn_after_reading}'),
+                                      Label(
+                                          '${message.isOutbound ? Global.currentUser.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).close_burn_after_reading}'),
                                       Padding(
                                         padding: const EdgeInsets.only(left: 8),
                                         child: InkWell(
@@ -508,10 +515,10 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                               flex: 0,
                               child: Padding(
                                 padding: const EdgeInsets.only(left: 8, right: 8),
-                                child: Button(
-                                  size: 50,
-                                  icon: true,
-                                  child: loadAssetIconsImage(
+                                child: ButtonIcon(
+                                  width: 50,
+                                  height: 50,
+                                  icon: loadAssetIconsImage(
                                     'grid',
                                     width: 24,
                                     color: DefaultTheme.primaryColor,
@@ -580,15 +587,15 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                               flex: 0,
                               child: Padding(
                                 padding: const EdgeInsets.only(left: 8, right: 8),
-                                child: Button(
-                                  size: 50,
-                                  icon: true,
-                                  child: loadAssetIconsImage(
+                                child: ButtonIcon(
+                                  width: 50,
+                                  height: 50,
+                                  icon: loadAssetIconsImage(
                                     'send',
                                     width: 24,
                                     color: _canSend ? DefaultTheme.primaryColor : DefaultTheme.fontColor2,
                                   ),
-                                  disabled: !_canSend,
+                                  //disabled: !_canSend,
                                   onPressed: () {
                                     _send();
                                   },

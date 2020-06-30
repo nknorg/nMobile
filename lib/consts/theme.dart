@@ -26,6 +26,7 @@ class DefaultTheme {
   static final double bodySmallFontSize = 14;
   static final double labelFontSize = bodySmallFontSize;
   static final double chatTimeSize = bodySmallFontSize;
+  static final double iconTextFontSize = 12;
 
   static final double headerHeight = 114;
 
