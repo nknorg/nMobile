@@ -20,13 +20,12 @@ class DefaultTheme {
   static final double h2FontSize = 24;
   static final double h3FontSize = 18;
   static final double h4FontSize = 16;
-  static final double h5FontSize = 14;
-  static final double displayFontSize = 16;
-  static final double bodyLargeFontSize = 18;
-  static final double bodyRegularFontSize = 16;
+  static final double displayFontSize = h4FontSize;
+  static final double bodyLargeFontSize = h3FontSize;
+  static final double bodyRegularFontSize = h4FontSize;
   static final double bodySmallFontSize = 14;
-  static final double labelFontSize = 14;
-  static final double chatTimeSize = 14;
+  static final double labelFontSize = bodySmallFontSize;
+  static final double chatTimeSize = bodySmallFontSize;
 
   static final double headerHeight = 114;
 

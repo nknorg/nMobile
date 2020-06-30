@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-06-29T15:40:54.031505",
+  "@@last_modified": "2020-06-30T14:37:29.392843",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1492,6 +1492,16 @@
   },
   "my_details_desc": "All subscriptions and tipping will come from your selected wallet.",
   "@my_details_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "change_default_chat_wallet": "Change",
+  "@change_default_chat_wallet": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "coming_soon": "Coming Soon...",
+  "@coming_soon": {
     "type": "text",
     "placeholders": {}
   }
