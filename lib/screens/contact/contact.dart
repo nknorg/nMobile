@@ -187,19 +187,19 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                       },
                       child: widget.arguments.avatarWidget(
                         backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
-                        size: 70,
+                        size: 60,
                         bottomRight: Button(
                           padding: const EdgeInsets.all(0),
-                          width: 40,
-                          height: 40,
+                          width: 32,
+                          height: 32,
                           backgroundColor: DefaultTheme.primaryColor,
-                          child: loadAssetIconsImage('camera', width: 24),
+                          child: loadAssetIconsImage('camera', width: 20),
                           onPressed: () async {
                             updatePic();
                           },
                         ),
                       ),
-                    ).pad(t: 16),
+                    ),
                     Label(widget.arguments.name, type: LabelType.h2, dark: true).pad(t: 16, b: 24),
                   ],
                 ),
