@@ -82,22 +82,18 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                   child: Column(
                     children: <Widget>[
                       Padding(
-                        padding: EdgeInsets.only(top: 48.h),
+                        padding: EdgeInsets.only(top: 48),
                         child: Button(
-                          width: double.infinity,
                           text: NMobileLocalizations.of(context).no_wallet_create,
-                          padding: EdgeInsets.only(top: 16, bottom: 16),
                           onPressed: () {
                             Navigator.pushNamed(context, CreateNknWalletScreen.routeName);
                           },
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(top: 16.h),
+                        padding: EdgeInsets.only(top: 16),
                         child: Button(
-                          width: double.infinity,
                           text: NMobileLocalizations.of(context).no_wallet_import,
-                          padding: EdgeInsets.only(top: 16, bottom: 16),
                           backgroundColor: DefaultTheme.primaryColor.withAlpha(20),
                           fontColor: DefaultTheme.primaryColor,
                           onPressed: () {

@@ -260,9 +260,7 @@ class AddContactState extends State<AddContact> {
                                   Padding(
                                     padding: EdgeInsets.only(left: 30, right: 30),
                                     child: Button(
-                                      width: double.infinity,
                                       text: NMobileLocalizations.of(context).save_contact,
-                                      padding: EdgeInsets.only(top: 16, bottom: 16),
                                       disabled: !_formValid,
                                       onPressed: () {
                                         _saveAction(context);

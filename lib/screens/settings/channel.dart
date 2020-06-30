@@ -90,7 +90,8 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
             width: 24,
           ),
           onPressed: () async {
-            var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+            var address = await BottomDialog.of(context).showInputAddressDialog(
+                title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
             if (address != null) {
               acceptPrivateAction(address);
             }
@@ -133,7 +134,8 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                                   Row(
                                     children: topicWidget,
                                   ),
-                                  Label('${widget.arguments.count} ' + NMobileLocalizations.of(context).members, type: LabelType.bodyRegular, color: DefaultTheme.successColor)
+                                  Label('${widget.arguments.count} ' + NMobileLocalizations.of(context).members,
+                                      type: LabelType.bodyRegular, color: DefaultTheme.successColor)
                                 ],
                               ),
                             ],
@@ -149,14 +151,10 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
               top: 30,
               left: 50,
               child: Button(
-                padding: const EdgeInsets.all(0),
                 width: 24,
                 height: 24,
                 backgroundColor: DefaultTheme.primaryColor,
-                child: SvgPicture.asset(
-                  'assets/icons/camera.svg',
-                  width: 16,
-                ),
+                child: SvgPicture.asset('assets/icons/camera.svg', width: 16),
                 onPressed: () async {
                   File savedImg = await getHeaderImage();
                   if (savedImg == null) return;
@@ -273,14 +271,10 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
               top: 60,
               right: 20,
               child: Button(
-                padding: const EdgeInsets.all(0),
                 width: 56,
                 height: 56,
                 backgroundColor: DefaultTheme.primaryColor,
-                child: SvgPicture.asset(
-                  'assets/icons/chat.svg',
-                  width: 24,
-                ),
+                child: SvgPicture.asset('assets/icons/chat.svg', width: 24),
                 onPressed: () async {
                   Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, topic: widget.arguments));
                 },
@@ -400,10 +394,12 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
       await widget.arguments.acceptPrivateMember(addr: address);
     }
 
-    var sendMsg = MessageSchema.fromSendData(from: Global.currentClient.address, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
+    var sendMsg = MessageSchema.fromSendData(
+        from: Global.currentClient.address, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
     sendMsg.isOutbound = true;
 
-    var sendMsg1 = MessageSchema.fromSendData(from: Global.currentClient.address, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
+    var sendMsg1 = MessageSchema.fromSendData(
+        from: Global.currentClient.address, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
     sendMsg1.isOutbound = true;
 
     try {

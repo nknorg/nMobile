@@ -9,6 +9,7 @@ import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';
 
 class NoWalletScreen extends StatefulWidget {
   static const String routeName = '/no_wallet';
+
   @override
   _NoWalletScreenState createState() => _NoWalletScreenState();
 }
@@ -75,9 +76,7 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                             Padding(
                               padding: EdgeInsets.only(top: 100, left: 30, right: 30),
                               child: Button(
-                                width: double.infinity,
                                 text: NMobileLocalizations.of(context).no_wallet_create,
-                                padding: EdgeInsets.only(top: 16, bottom: 16),
                                 onPressed: () {
 //                                  locator<NavigateService>().pushNamed(CreateNknWalletScreen.routeName);
                                   Navigator.pushNamed(context, CreateNknWalletScreen.routeName);
@@ -87,9 +86,7 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                             Padding(
                               padding: EdgeInsets.only(top: 16, left: 30, right: 30),
                               child: Button(
-                                width: double.infinity,
                                 text: NMobileLocalizations.of(context).no_wallet_import,
-                                padding: EdgeInsets.only(top: 16, bottom: 16),
                                 backgroundColor: Color(0xFF232D50),
                                 onPressed: () {
 //                                  locator<NavigateService>().pushNamed(ImportNknWalletScreen.routeName);
