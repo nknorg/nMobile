@@ -11,6 +11,7 @@ import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
+import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
@@ -172,7 +173,7 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                                                       ),
                                                       Text(
                                                         NMobileLocalizations.of(context).wallet_password_mach,
-                                                        style: TextStyle(color: Color(0xFF8F92A1), fontSize: DefaultTheme.bodySmallFontSize),
+                                                        style: TextStyle(color: Colours.gray_81, fontSize: DefaultTheme.bodySmallFontSize),
                                                       ),
                                                       SizedBox(height: 24.h),
                                                       Label(
@@ -207,9 +208,7 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                                           Padding(
                                             padding: EdgeInsets.only(left: 30, right: 30),
                                             child: Button(
-                                              width: double.infinity,
                                               text: NMobileLocalizations.of(context).create_wallet,
-                                              padding: EdgeInsets.only(top: 16, bottom: 16),
                                               disabled: !_formValid,
                                               onPressed: next,
                                             ),

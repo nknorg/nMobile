@@ -31,6 +31,7 @@ import 'package:nmobile/schemas/message_item.dart';
 import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/chat/message.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:oktoast/oktoast.dart';
 
@@ -204,29 +205,29 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
               child: Scrollbar(
                 child: SingleChildScrollView(
                   child: Padding(
-                    padding: EdgeInsets.only(top: 20.h),
+                    padding: EdgeInsets.only(top: 32),
                     child: Container(
                       child: Flex(
                         direction: Axis.vertical,
                         children: <Widget>[
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              SizedBox(width: 20.w),
+                            children: [
                               Label(
                                 NMobileLocalizations.of(context).popular_channels,
                                 type: LabelType.h3,
                                 textAlign: TextAlign.left,
-                              )
+                              ).pad(l: 20)
                             ],
                           ),
                           Container(
-                            height: 198.h,
+                            height: 180,
+                            margin: 0.pad(t: 8),
                             child: ListView.builder(
                                 itemCount: populars.length,
                                 scrollDirection: Axis.horizontal,
                                 itemBuilder: (context, index) {
-                                  return getPopularItemView(populars[index]);
+                                  return getPopularItemView(index, populars.length, populars[index]);
                                 }),
                           ),
                           Expanded(
@@ -234,9 +235,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                             child: Column(
                               children: <Widget>[
                                 Padding(
-                                  padding: EdgeInsets.only(
-                                    top: 32.h,
-                                  ),
+                                  padding: EdgeInsets.only(top: 32),
                                   child: Label(
                                     NMobileLocalizations.of(context).chat_no_messages_title,
                                     type: LabelType.h2,
@@ -244,7 +243,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                                   ),
                                 ),
                                 Padding(
-                                  padding: EdgeInsets.only(top: 8.h, left: 0, right: 0),
+                                  padding: EdgeInsets.only(top: 8, left: 0, right: 0),
                                   child: Label(
                                     NMobileLocalizations.of(context).chat_no_messages_desc,
                                     type: LabelType.bodyRegular,
@@ -254,43 +253,27 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                               ],
                             ),
                           ),
-                          Expanded(
-                            flex: 0,
-                            child: Column(
-                              children: <Widget>[
-                                Padding(
-                                  padding: EdgeInsets.only(
-                                    top: 50.h,
-                                  ),
-                                  child: Button(
-                                    width: 215.w,
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: <Widget>[
-                                        Padding(
-                                          padding: EdgeInsets.only(right: 8.w),
-                                          child: loadAssetIconsImage('pencil', width: 24.w, color: DefaultTheme.backgroundLightColor),
-                                        ),
-                                        Label(
-                                          NMobileLocalizations.of(context).new_message,
-                                          type: LabelType.h3,
-                                        )
-                                      ],
-                                    ),
-                                    padding: EdgeInsets.only(top: 16.h, bottom: 16.h),
-                                    onPressed: () async {
-                                      var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
-                                      if (address != null) {
-                                        ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
-                                        await contact.createContact();
-                                        Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
-                                      }
-                                    },
-                                  ),
-                                ),
+                          Button(
+                            width: -1,
+                            height: 54,
+                            padding: 0.pad(l: 36, r: 36),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                loadAssetIconsImage('pencil', width: 24, color: DefaultTheme.backgroundLightColor).pad(r: 12),
+                                Label(NMobileLocalizations.of(context).new_message, type: LabelType.h3)
                               ],
                             ),
-                          ),
+                            onPressed: () async {
+                              var address = await BottomDialog.of(context).showInputAddressDialog(
+                                  title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+                              if (address != null) {
+                                ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
+                                await contact.createContact();
+                                Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
+                              }
+                            },
+                          ).pad(t: 54),
                         ],
                       ),
                     ),
@@ -307,18 +290,19 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
   @override
   bool get wantKeepAlive => true;
 
-  Widget getPopularItemView(PopularModel model) {
+  Widget getPopularItemView(int index, int length, PopularModel model) {
     return Container(
       child: Container(
-        width: 160.h,
-        margin: EdgeInsets.only(left: 20.w, top: 20.h, right: 6.w),
-        decoration: BoxDecoration(color: DefaultTheme.backgroundColor2, borderRadius: BorderRadius.circular(8)),
+        width: 136,
+        height: 172,
+        margin: 8.pad(l: 20, r: index == length - 1 ? 20 : 12),
+        decoration: BoxDecoration(color: DefaultTheme.backgroundColor2, borderRadius: BorderRadius.circular(12)),
         child: Column(
-          children: <Widget>[
-            SizedBox(height: 20.h),
+          children: [
             Container(
-              width: 70.w,
-              height: 84.h,
+              margin: 0.pad(t: 20),
+              width: 60,
+              height: 60,
               decoration: BoxDecoration(color: model.titleBgColor, borderRadius: BorderRadius.circular(8)),
               child: Center(
                 child: Label(

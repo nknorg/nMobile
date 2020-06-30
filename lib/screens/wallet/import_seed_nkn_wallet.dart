@@ -185,9 +185,7 @@ class _ImportSeedNknWalletState extends State<ImportSeedNknWallet> with SingleTi
                     Padding(
                       padding: EdgeInsets.only(left: 30, right: 30),
                       child: Button(
-                        width: double.infinity,
                         text: NMobileLocalizations.of(context).import_wallet,
-                        padding: EdgeInsets.only(top: 16, bottom: 16),
                         disabled: !_formValid,
                         onPressed: next,
                       ),
