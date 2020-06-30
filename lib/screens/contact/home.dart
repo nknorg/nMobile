@@ -128,7 +128,7 @@ class _ContactHomeState extends State<ContactHome> {
                     alignment: Alignment.center,
                     child: Hero(
                       tag: 'header_avatar:${Global.currentUser.clientAddress}',
-                      child: Global.currentUser.avatarWidget(backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 24),
+                      child: Global.currentUser.avatarWidget(backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 28),
                     ),
                   ),
                 ),
@@ -136,7 +136,10 @@ class _ContactHomeState extends State<ContactHome> {
                   flex: 1,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[Label(Global.currentUser.name, type: LabelType.h3, dark: true), Label(NMobileLocalizations.of(context).connected, type: LabelType.bodyRegular, color: DefaultTheme.riseColor)],
+                    children: <Widget>[
+                      Label(Global.currentUser.name, type: LabelType.h3, dark: true),
+                      Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor),
+                    ],
                   ),
                 )
               ],
@@ -696,7 +699,6 @@ class _ContactHomeState extends State<ContactHome> {
                                 ],
                               ),
                               Label(
-
                                 item.topic,
                                 height: 1,
                                 type: LabelType.bodySmall,

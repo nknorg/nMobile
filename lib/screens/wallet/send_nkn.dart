@@ -35,6 +35,7 @@ import 'package:oktoast/oktoast.dart';
 class SendNknScreen extends StatefulWidget {
   static const String routeName = '/wallet/send_nkn';
   WalletSchema arguments;
+
   SendNknScreen({this.arguments});
 
   @override
@@ -61,6 +62,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
   double _sliderFee = 0.1;
   double _sliderFeeMin = 0;
   double _sliderFeeMax = 10;
+
   @override
   void initState() {
     super.initState();
@@ -477,9 +479,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
                                                 Padding(
                                                   padding: EdgeInsets.only(left: 30, right: 30),
                                                   child: Button(
-                                                    width: double.infinity,
                                                     text: NMobileLocalizations.of(context).continue_text,
-                                                    padding: EdgeInsets.only(top: 16, bottom: 16),
                                                     disabled: !_formValid,
                                                     onPressed: next,
                                                   ),

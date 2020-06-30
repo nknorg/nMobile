@@ -189,7 +189,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                         backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
                         size: 60,
                         bottomRight: Button(
-                          padding: const EdgeInsets.all(0),
                           width: 32,
                           height: 32,
                           backgroundColor: DefaultTheme.primaryColor,
@@ -440,7 +439,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                             backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
                             size: 40,
                             bottomRight: Button(
-                              padding: const EdgeInsets.all(0),
                               width: 24,
                               height: 24,
                               backgroundColor: DefaultTheme.primaryColor,
@@ -467,7 +465,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                               type: LabelType.bodyRegular, color: DefaultTheme.successColor)
                           .pad(t: 4)
                     ]),
-                  ]).pad(l: 20, t: 16, r: 20, b: 22)
+                  ]).pad(l: 20, t: 0, r: 20, b: 22)
                 ],
               ),
             ),
@@ -686,7 +684,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                     top: 0,
                     right: 20,
                     child: Button(
-                      padding: const EdgeInsets.all(0),
                       width: 56,
                       height: 56,
                       backgroundColor: DefaultTheme.primaryColor,

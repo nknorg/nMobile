@@ -205,12 +205,7 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
                     child: Column(
                       children: <Widget>[
                         Button(
-                          width: double.infinity,
-                          child: Label(
-                            NMobileLocalizations.of(context).done,
-                            type: LabelType.h3,
-                          ),
-                          padding: EdgeInsets.only(top: 16, bottom: 16),
+                          child: Label(NMobileLocalizations.of(context).done, type: LabelType.h3),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },

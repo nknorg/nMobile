@@ -13,6 +13,7 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/utils/extensions.dart';
 
 class NoConnectScreen extends StatefulWidget {
   static const String routeName = '/chat/no_connect';
@@ -109,9 +110,7 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
                           if (state is WalletsLoaded) {
                             _currentWallet = state.wallets.first;
                             return Button(
-                              width: double.infinity,
                               text: NMobileLocalizations.of(context).connect,
-                              padding: EdgeInsets.only(top: 16.h, bottom: 16.h),
                               onPressed: () {
                                 _next();
                               },

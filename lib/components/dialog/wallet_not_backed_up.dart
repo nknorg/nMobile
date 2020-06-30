@@ -88,7 +88,7 @@ class _WalletNotBackedUpDialogState extends State<WalletNotBackedUpDialog> {
                   fontColor: Colours.white,
                   text: NMobileLocalizations.of(context).go_backup,
                   width: double.infinity,
-                  size: 48,
+                  height: 51,
                   onPressed: () {
                     // E/flutter (12613): Tried calling: focusScopeNode
                     // E/flutter (12613): #0      Object.noSuchMethod (dart:core-patch/object_patch.dart:53:5)
