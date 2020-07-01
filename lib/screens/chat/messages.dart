@@ -420,7 +420,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                   isHideTip = true;
                 });
               },
-              child: loadAssetIconsImage('close', width: 12, color: DefaultTheme.primaryColor).center.sized(w: 48, h: 48),
+              child: loadAssetIconsImage('close', width: 16, color: Colours.gray_81).center.sized(w: 48, h: 48),
             )
           ],
         ),
