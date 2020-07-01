@@ -242,14 +242,14 @@ class _NodeMainPageState extends State<NodeMainPage> {
                             onTap: () {
                               Navigator.pushNamed(context, NodeListPage.routeName,
                                   arguments: _list.where((item) {
-                                    return item.getStatus() == '故障';
+                                    return item.getStatus() == '异常';
                                   }).toList());
                             },
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
                                 Label(
-                                  '故障数量',
+                                  '异常数量',
                                   color: DefaultTheme.fontColor1,
                                   type: LabelType.bodyRegular,
                                   softWrap: true,
@@ -260,7 +260,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
                                       ? '获取中...'
                                       : _list
                                           .where((item) {
-                                            return item.getStatus() == '故障';
+                                            return item.getStatus() == '异常';
                                           })
                                           .toList()
                                           .length

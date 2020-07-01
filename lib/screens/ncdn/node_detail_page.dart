@@ -246,7 +246,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                                     Label(
                                       widget.arguments.getStatus(),
                                       type: LabelType.bodyRegular,
-                                      color: Colors.black,
+                                      color: widget.arguments.getStatusColor(),
                                       textAlign: TextAlign.start,
                                     )
                                   ],
