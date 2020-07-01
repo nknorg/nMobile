@@ -101,7 +101,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
         hasBack: false,
         backgroundColor: DefaultTheme.primaryColor,
         action: IconButton(
-          icon: loadAssetIconsImage('addbook', color: Colors.white, width: 20),
+          icon: loadAssetIconsImage('addbook', color: Colors.white, width: 24),
           onPressed: () {
             Navigator.of(context).pushNamed(ContactHome.routeName);
           },
