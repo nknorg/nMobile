@@ -734,7 +734,7 @@ class NMobileLocalizations {
   }
 
   String get no_wallet_desc {
-    return Intl.message('Manage both your Mainnet and ERC-20 NKN tokens with our smart wallet manager.', name: 'no_wallet_desc', desc: '');
+    return Intl.message('Manage both your Mainnet and ERC-20 NKN\n tokens with our smart wallet manager.', name: 'no_wallet_desc', desc: '');
   }
 
   String get no_wallet_create {
