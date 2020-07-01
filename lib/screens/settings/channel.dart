@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/box/body.dart';
@@ -38,12 +39,12 @@ class ChannelSettingsScreen extends StatefulWidget {
   _ChannelSettingsScreenState createState() => _ChannelSettingsScreenState();
 }
 
-class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
+class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with AccountDependsBloc {
   ChatBloc _chatBloc;
   bool isUnSubscribe = false;
 
   initAsync() async {
-    widget.arguments.getTopicCount().then((count) {
+    widget.arguments.getTopicCount(account).then((count) {
       setState(() {});
     });
   }
@@ -51,7 +52,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
   @override
   void initState() {
     super.initState();
-    isUnSubscribe = LocalStorage.getUnsubscribeTopicList().contains(widget.arguments.topic);
+    isUnSubscribe = LocalStorage.getUnsubscribeTopicList(accountPubkey).contains(widget.arguments.topic);
     Global.removeTopicCache(widget.arguments.topic);
     initAsync();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
@@ -99,7 +100,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                     Stack(
                       children: <Widget>[
                         Container(
-                          child: widget.arguments.avatarWidget(
+                          child: widget.arguments.avatarWidget(db,
                             backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
                             size: 64,
                             fontColor: DefaultTheme.fontLightColor,
@@ -118,13 +119,13 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                               width: 16,
                             ),
                             onPressed: () async {
-                              File savedImg = await getHeaderImage();
+                              File savedImg = await getHeaderImage(accountPubkey);
                               if (savedImg == null) return;
 
                               setState(() {
                                 widget.arguments.avatar = savedImg;
                               });
-                              await widget.arguments.setAvatar(savedImg);
+                              await widget.arguments.setAvatar(await db, accountPubkey, savedImg);
                               _chatBloc.add(RefreshMessages());
                             },
                           ),
@@ -344,7 +345,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
             content: NMobileLocalizations.of(context).leave_group_confirm_title,
             callback: (b) {
               if (b) {
-                widget.arguments.unsubscribe();
+                widget.arguments.unsubscribe(account);
                 Navigator.of(context).pop(true);
               }
             },
@@ -355,11 +356,11 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
   subscriberAction() {
     var duration = 400000;
     String topic = widget.arguments.topic;
-    LocalStorage.removeTopicFromUnsubscribeList(topic);
+    LocalStorage.removeTopicFromUnsubscribeList(accountPubkey, topic);
     Navigator.pop(context);
-    TopicSchema.subscribe(topic: topic, duration: duration);
+    TopicSchema.subscribe(account, topic: topic, duration: duration);
     var sendMsg = MessageSchema.fromSendData(
-      from: Global.currentClient.address,
+      from: accountChatId,
       topic: topic,
       contentType: ContentType.dchatSubscribe,
     );
@@ -369,19 +370,21 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
     DateTime now = DateTime.now();
     // todo topic type
     var topicSchema = TopicSchema(topic: topic, expiresAt: now.add(blockToExpiresTime(duration)));
-    topicSchema.insertIfNoData();
+    topicSchema.insertIfNoData(db, accountPubkey);
   }
 
   acceptPrivateAction(address) async {
     showToast(NMobileLocalizations.of(context).invitation_sent);
     if (widget.arguments.type == TopicType.private) {
-      await widget.arguments.acceptPrivateMember(addr: address);
+      await widget.arguments.acceptPrivateMember(account, addr: address);
     }
 
-    var sendMsg = MessageSchema.fromSendData(from: Global.currentClient.address, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
+    var sendMsg = MessageSchema.fromSendData(
+        from: accountChatId, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
     sendMsg.isOutbound = true;
 
-    var sendMsg1 = MessageSchema.fromSendData(from: Global.currentClient.address, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
+    var sendMsg1 = MessageSchema.fromSendData(
+        from: accountChatId, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
     sendMsg1.isOutbound = true;
 
     try {

@@ -10,7 +10,7 @@ import 'package:nmobile/screens/wallet/wallet.dart';
 import 'package:nmobile/services/background_fetch_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/services/task_service.dart';
-import 'package:nmobile/utils/android_back_desktop.dart';
+import 'package:nmobile/plugins/android_back_desktop.dart';
 import 'package:orientation/orientation.dart';
 
 import 'components/footer/nav.dart';
@@ -59,8 +59,8 @@ class _AppScreenState extends State<AppScreen> {
     ScreenUtil.init(context, width: 375, height: 812);
     Global.appContext = context;
 
-    locator<TaskService>().init();
-    locator<BackgroundFetchService>().init();
+    instanceOf<TaskService>().init();
+    instanceOf<BackgroundFetchService>().init();
     return WillPopScope(
       onWillPop: () async {
         await AndroidBackTop.backToDesktop();

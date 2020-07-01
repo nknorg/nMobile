@@ -4,6 +4,7 @@ import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
+import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/local_storage.dart';
@@ -18,7 +19,7 @@ class BackgroundFetchService {
   bool isFirstStart = true; // init start
 
   init() {
-    final LocalAuthenticationService localAuth = locator<LocalAuthenticationService>();
+    final LocalAuthenticationService localAuth = instanceOf<LocalAuthenticationService>();
     final LocalStorage _localStorage = LocalStorage();
     final SecureStorage _secureStorage = SecureStorage();
     ClientBloc _clientBloc = BlocProvider.of<ClientBloc>(Global.appContext);
@@ -26,22 +27,23 @@ class BackgroundFetchService {
     var config = BackgroundFetchConfig(
       minimumFetchInterval: 15,
       stopOnTerminate: false,
-      enableHeadless: true,
+      enableHeadless: false,
       forceAlarmManager: false,
       startOnBoot: true,
       requiredNetworkType: NetworkType.ANY,
     );
 
     BackgroundFetch.configure(config, (String taskId) async {
-      NLog.d("[BackgroundFetch] Event received $taskId");
+      print("[BackgroundFetch] Event received $taskId");
       // todo debug
       LocalNotification.debugNotification('[debug] background fetch begin', taskId);
       if (!localAuth.isProtectionEnabled) {
+        print("[BackgroundFetch] isProtectionEnabled: false, finish $taskId");
         BackgroundFetch.finish(taskId);
       } else {
-        var isConnected = await NknClientPlugin.isConnected();
+        var isConnected = _clientBloc.state is Connected; // await NknClientPlugin.isConnected();
         if (!isConnected && !isFirstStart) {
-          NLog.d("[BackgroundFetch] no Connect");
+          print("[BackgroundFetch] no Connect");
           var wallet = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
           if (wallet != null) {
             var password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:${wallet['address']}');
@@ -55,12 +57,14 @@ class BackgroundFetchService {
           }
         } else {
           isFirstStart = false;
-          NLog.d("[BackgroundFetch] Connectting");
+          print("[BackgroundFetch] Connecting");
         }
 
         Timer(Duration(seconds: 20), () {
           // todo debug
           LocalNotification.debugNotification('[debug] background fetch end', taskId);
+
+          print("[BackgroundFetch] Timer finish $taskId");
           BackgroundFetch.finish(taskId);
 //          if (Platform.isIOS) {
 //            NknClientPlugin.disConnect();
@@ -73,6 +77,7 @@ class BackgroundFetchService {
   }
 }
 
+@deprecated
 void backgroundFetchHeadlessTask(String taskId) async {
   NLog.d('[BackgroundFetch] Headless event received.');
   BackgroundFetch.finish(taskId);

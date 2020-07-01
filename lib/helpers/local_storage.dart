@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flustars/flustars.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorage {
@@ -125,41 +124,41 @@ class LocalStorage {
     await Future.wait(futures);
   }
 
-  static String getChatUnSendContentFromId(String to) {
-    return SpUtil.getString(to + Global.currentClient.address);
+  static String getChatUnSendContentFromId(String accountPubkey, String to) {
+    return SpUtil.getString(to + accountPubkey);
   }
 
-  static saveChatUnSendContentFromId(String to, {String content}) async {
+  static saveChatUnSendContentFromId(String accountPubkey, String to, {String content}) async {
     if (to.length == 0) return;
     if (content == null || content.length == 0) {
-      SpUtil.remove(to + Global.currentClient.address);
+      SpUtil.remove(to + accountPubkey);
     }
-    SpUtil.putString(to + Global.currentClient.address, content);
+    SpUtil.putString(to + accountPubkey, content);
   }
 
-  static saveUnsubscribeTopic(String topic) {
-    List<String> list = SpUtil.getStringList(UN_SUBSCRIBE_LIST + Global.currentClient.publicKey, defValue: <String>[]);
+  static saveUnsubscribeTopic(String accountPubkey, String topic) {
+    List<String> list = SpUtil.getStringList(UN_SUBSCRIBE_LIST + accountPubkey, defValue: <String>[]);
     if (!list.contains(topic)) {
       list.add(topic);
-      SpUtil.putStringList(UN_SUBSCRIBE_LIST + Global.currentClient.publicKey, list);
+      SpUtil.putStringList(UN_SUBSCRIBE_LIST + accountPubkey, list);
     }
   }
 
-  static removeTopicFromUnsubscribeList(String topic) {
-    List<String> list = getUnsubscribeTopicList();
+  static removeTopicFromUnsubscribeList(String accountPubkey, String topic) {
+    List<String> list = getUnsubscribeTopicList(accountPubkey);
     if (list.contains(topic)) {
       list.remove(topic);
-      SpUtil.putStringList(UN_SUBSCRIBE_LIST + Global.currentClient.publicKey, list);
+      SpUtil.putStringList(UN_SUBSCRIBE_LIST + accountPubkey, list);
     }
   }
 
-  static List<String> getUnsubscribeTopicList() {
-    return SpUtil.getStringList(UN_SUBSCRIBE_LIST + Global.currentClient.publicKey, defValue: <String>[]);
+  static List<String> getUnsubscribeTopicList(String accountPubkey) {
+    return SpUtil.getStringList(UN_SUBSCRIBE_LIST + accountPubkey, defValue: <String>[]);
   }
 
   //leave group list cache
-  static bool isBlank(String topic) {
-    List<String> list = getUnsubscribeTopicList();
+  static bool isBlank(String accountPubkey, String topic) {
+    List<String> list = getUnsubscribeTopicList(accountPubkey);
     if (list == null || list.length == 0) return false;
 
     if (list.contains(topic)) {

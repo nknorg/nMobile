@@ -76,10 +76,10 @@ bool verifyAddress(String address) {
   }
 }
 
-Future<File> compressAndGetFile(File file) async {
+Future<File> compressAndGetFile(String accountPubkey, File file) async {
   final dir = Global.applicationRootDirectory;
 
-  final targetPath = createRandomWebPFile();
+  final targetPath = createRandomWebPFile(accountPubkey);
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
@@ -87,10 +87,10 @@ Future<File> compressAndGetFile(File file) async {
   return result;
 }
 
-String createRandomWebPFile() {
+String createRandomWebPFile(String accountPubkey) {
   var value = new DateTime.now().millisecondsSinceEpoch.toString();
   Directory rootDir = Global.applicationRootDirectory;
-  Directory dir = Directory(join(rootDir.path, '${Global.currentClient.publicKey}'));
+  Directory dir = Directory(join(rootDir.path, accountPubkey));
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
@@ -98,10 +98,10 @@ String createRandomWebPFile() {
   return path;
 }
 
-String createFileCachePath(File file) {
+String createFileCachePath(String accountPubkey, File file) {
   String name = hexEncode(md5.convert(file.readAsBytesSync()).bytes);
   Directory rootDir = Global.applicationRootDirectory;
-  Directory dir = Directory(join(rootDir.path, '${Global.currentClient.publicKey}'));
+  Directory dir = Directory(join(rootDir.path, accountPubkey));
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
@@ -115,10 +115,10 @@ String createFileCachePath(File file) {
   return path;
 }
 
-String createContactFilePath(File file) {
+String createContactFilePath(String accountPubkey, File file) {
   String name = hexEncode(md5.convert(file.readAsBytesSync()).bytes);
   Directory rootDir = Global.applicationRootDirectory;
-  String p = join(rootDir.path, '${Global.currentClient.publicKey}', 'contact');
+  String p = join(rootDir.path, accountPubkey, 'contact');
   Directory dir = Directory(p);
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
@@ -133,17 +133,17 @@ String createContactFilePath(File file) {
   return path;
 }
 
-String getCachePath() {
+String getCachePath(String accountPubkey) {
   Directory rootDir = Global.applicationRootDirectory;
-  Directory dir = Directory(join(rootDir.path, '${Global.currentClient.publicKey}'));
+  Directory dir = Directory(join(rootDir.path, accountPubkey));
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
   return dir.path;
 }
 
-String getContactCachePath() {
-  String root = getCachePath();
+String getContactCachePath(String accountPubkey) {
+  String root = getCachePath(accountPubkey);
   Directory dir = Directory(join(root, 'contact'));
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
@@ -164,18 +164,18 @@ String getFileName(String path) {
   return path?.split('/')?.last;
 }
 
-String getLocalPath(String path) {
-  return join('${Global.currentClient.publicKey}', getFileName(path));
+String getLocalPath(String accountPubkey, String path) {
+  return join(accountPubkey, getFileName(path));
 }
 
-String getLocalContactPath(String path) {
+String getLocalContactPath(String accountPubkey, String path) {
   Directory rootDir = Global.applicationRootDirectory;
-  Directory dir = Directory(join(rootDir.path, '${Global.currentClient.publicKey}', 'contact'));
+  Directory dir = Directory(join(rootDir.path, accountPubkey, 'contact'));
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
 
-  return join('${Global.currentClient.publicKey}', 'contact', getFileName(path));
+  return join(accountPubkey, 'contact', getFileName(path));
 }
 
 launchURL(String url) async {

@@ -6,10 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/settings.dart';
-import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/schemas/client.dart';
-import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/services/android_messaging_service.dart';
 import 'package:nmobile/services/background_fetch_service.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
@@ -17,17 +14,13 @@ import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:package_info/package_info.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite_sqlcipher/sqlite_api.dart';
 
 import 'local_notification.dart';
 
 class Global {
   static BuildContext appContext;
   static String locale;
-  static ClientSchema currentClient;
-  static ContactSchema currentUser;
-  static String currentWalletName;
-  static Database currentChatDb;
+  static String currentOtherChatId;
   static Directory applicationRootDirectory;
   static String version;
   static String buildVersion;
@@ -35,32 +28,33 @@ class Global {
   static Map<String, num> loadLoadSubscribers = {};
   static AppLifecycleState state = AppLifecycleState.resumed;
   static Map<String, DateTime> _loadProfileCache = {};
-  static String currentChatId;
   static bool isAutoShowPassword = true;
   static int currentPageIndex;
 
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
+
   static bool isLocaleZh() => locale != null && locale.startsWith('zh');
+
   static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
 
   static Future init(VoidCallback callback) async {
     WidgetsFlutterBinding.ensureInitialized();
     NLog.d('APP start');
     await SpUtil.getInstance();
-    setupLocator();
+    setupSingleton();
     await initData();
     callback();
     if (Platform.isAndroid) {
       SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(statusBarColor: Colors.transparent);
       SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
-      BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
+//      BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
       AndroidMessagingService.registerOnMessage();
     }
   }
 
   static Future initData() async {
     NknWalletPlugin.init();
-    NknClientPlugin.init();
+//    NknClientPlugin.init();
     LocalNotification.init();
     Global.applicationRootDirectory = await getApplicationDocumentsDirectory();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -74,7 +68,7 @@ class Global {
     Settings.localNotificationType = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.LOCAL_NOTIFICATION_TYPE_KEY}')) ?? 0;
     Settings.debug = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.DEBUG_KEY}')) ?? false;
 
-    final LocalAuthenticationService localAuth = locator<LocalAuthenticationService>();
+    final LocalAuthenticationService localAuth = instanceOf<LocalAuthenticationService>();
     localAuth.isProtectionEnabled = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}')) as bool ?? false;
     localAuth.authType = await localAuth.getAuthType();
   }

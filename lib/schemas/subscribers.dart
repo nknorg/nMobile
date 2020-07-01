@@ -62,9 +62,9 @@ class SubscribersSchema {
     return res;
   }
 
-  Future<bool> insert() async {
+  Future<bool> insert(Database db) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       int n = await db.insert(SubscribersSchema.tableName, toEntity());
       return n > 0;
     } catch (e) {
@@ -74,9 +74,9 @@ class SubscribersSchema {
     }
   }
 
-  static Future<bool> deleteSubscribersByTopic(String topic) async {
+  static Future<bool> deleteSubscribersByTopic(Database db, String topic) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       var count = await db.delete(
         SubscribersSchema.tableName,
         where: 'topic = ?',
@@ -89,11 +89,11 @@ class SubscribersSchema {
     }
   }
 
-  static Future<Map<String, dynamic>> getSubscribersByTopic(String topic) async {
+  static Future<Map<String, dynamic>> getSubscribersByTopic(Database db, String topic) async {
     Map<String, dynamic> subscribers = {};
     try {
       TopicSchema topicSchema = TopicSchema(topic: topic);
-      List<SubscribersSchema> list = await topicSchema.querySubscribers();
+      List<SubscribersSchema> list = await topicSchema.querySubscribers(db);
       if (list == null || list.length == 0) return subscribers;
       for (SubscribersSchema schema in list) {
         subscribers[schema.addr] = schema.meta;

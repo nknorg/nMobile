@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get_it/get_it.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/wallet/filtered_wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/filtered_wallets_state.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
@@ -42,7 +43,7 @@ class SendNknScreen extends StatefulWidget {
   _SendNknScreenState createState() => _SendNknScreenState();
 }
 
-class _SendNknScreenState extends State<SendNknScreen> {
+class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
   final GetIt locator = GetIt.instance;
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
@@ -332,7 +333,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
                                                               hintText: NMobileLocalizations.of(context).enter_receive_address,
                                                               suffixIcon: GestureDetector(
                                                                 onTap: () async {
-                                                                  if (Global.currentClient != null) {
+                                                                  if (account.client != null) {
                                                                     var contact = await Navigator.of(context).pushNamed(ContactHome.routeName, arguments: true);
                                                                     if (contact is ContactSchema) {
                                                                       _sendToController.text = contact.nknWalletAddress;

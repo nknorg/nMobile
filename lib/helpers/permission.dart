@@ -5,8 +5,10 @@ import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/utils.dart';
-import 'package:nmobile/plugins/nkn_client.dart';
+import 'package:nmobile/model/data/dchat_account.dart';
+import 'package:nmobile/schemas/subscribers.dart';
 import 'package:nmobile/schemas/topic.dart';
+import 'package:nmobile/utils/log_tag.dart';
 
 class PermissionStatus {
   static const String accepted = 'accepted';
@@ -61,10 +63,11 @@ class Permission {
     return PermissionStatus.pending;
   }
 
-  static Future<Map<String, dynamic>> getSubscribers({String topic, meta: true, txPool: true}) async {
+  static Future<Map<String, dynamic>> getSubscribers(DChatAccount account, {String topic, meta: true, txPool: true}) async {
     try {
       String topicHash = genChannelId(topic);
-      Map<String, dynamic> res = await NknClientPlugin.getSubscribers(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
+      Map<String, dynamic> res =
+          await getSubscribersFromDbOrNative(account, topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
       if (isPrivateTopic(topic)) {
         res.removeWhere((key, val) {
           return key.contains('__permission__');
@@ -73,17 +76,17 @@ class Permission {
       BlocProvider.of<ChannelMembersBloc>(Global.appContext).add(MembersCount(topic, res.length, true));
       return res;
     } catch (e) {
-      return getSubscribers(topic: topic);
+      return getSubscribers(account, topic: topic);
     }
   }
 
-  static Future<Map<String, dynamic>> getOwnerMeta(String topic) async {
+  static Future<Map<String, dynamic>> getOwnerMeta(DChatAccount account, String accountPubkey, String topic) async {
     String topicHash = genChannelId(topic);
     String owner = getOwnerPubkeyByTopic(topic);
     int i = 0;
     Map<String, dynamic> resultMeta = Map<String, dynamic>();
     while (true) {
-      var res = await NknClientPlugin.getSubscription(topic: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
+      var res = await account.client.getSubscription(topicHash: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
       if (res['meta'] == null || (res['meta'] as String).isEmpty) {
         break;
       }
@@ -116,17 +119,17 @@ class Permission {
       }
       i++;
     }
-    TopicSchema topicSchema = await TopicSchema.getTopic(topic);
+    TopicSchema topicSchema = await TopicSchema.getTopic(account.dbHolder.db, topic);
     topicSchema.data = resultMeta;
-    topicSchema.insertOrUpdate();
+    topicSchema.insertOrUpdate(account.dbHolder.db, accountPubkey);
     return resultMeta;
   }
 
-  static Future<List<String>> getPrivateChannelDests(String topic) async {
+  static Future<List<String>> getPrivateChannelDests(DChatAccount account, String topic) async {
     try {
       TopicSchema topicSchema = TopicSchema(topic: topic);
-      Map<String, dynamic> meta = await topicSchema.getPrivateOwnerMeta();
-      Map<String, dynamic> subscribers = await getSubscribers(topic: topic);
+      Map<String, dynamic> meta = await topicSchema.getPrivateOwnerMeta(account);
+      Map<String, dynamic> subscribers = await getSubscribers(account, topic: topic);
       Permission permission = Permission(accept: meta['accept'], reject: meta['reject']);
       List<String> acceptedSubs = List<String>();
       subscribers.forEach((key, val) {
@@ -140,4 +143,38 @@ class Permission {
       return List<String>();
     }
   }
+
+  static Future<Map<String, dynamic>> getSubscribersFromDbOrNative(
+    DChatAccount account, {
+    String topic,
+    String topicHash,
+    int offset = 0,
+    int limit = 10000,
+    bool meta = true,
+    bool txPool = true,
+  }) async {
+    if (topic == null || topicHash == null) {
+      _LOG.w('----- topic null -------');
+      return {};
+    }
+    Map<String, dynamic> subscribers = await SubscribersSchema.getSubscribersByTopic(await account.dbHolder.db, topic);
+    if (subscribers != null && subscribers.length > 0) {
+      _LOG.i('getSubscribers use cache | $topic');
+      _LOG.i(subscribers);
+
+//      if (Global.isLoadSubscribers(topic)) {
+//        LogUtil.v('$topic  getSubscribers use cache');
+//        LogUtil.v('$subscribers ');
+//        getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool).then((v) {
+//          TopicSchema(topic: topic).setSubscribers(v);
+//        });
+//      }
+      return subscribers;
+    } else {
+      return account.client.getSubscribers(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
+    }
+  }
+
+  // ignore: non_constant_identifier_names
+  static LOG _LOG = LOG('Permission');
 }

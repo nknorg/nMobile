@@ -38,7 +38,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAliveClientMixin {
-  final LocalAuthenticationService _localAuth = locator<LocalAuthenticationService>();
+  final LocalAuthenticationService _localAuth = instanceOf<LocalAuthenticationService>();
   final LocalStorage _localStorage = LocalStorage();
   final SecureStorage _secureStorage = SecureStorage();
   GlobalBloc _globalBloc;

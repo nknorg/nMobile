@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/box/body.dart';
@@ -37,7 +38,7 @@ class ChannelMembersScreen extends StatefulWidget {
   _ChannelMembersScreenState createState() => _ChannelMembersScreenState();
 }
 
-class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
+class _ChannelMembersScreenState extends State<ChannelMembersScreen> with AccountDependsBloc {
   ScrollController _scrollController = ScrollController();
   List<ContactSchema> _subs = List<ContactSchema>();
   Permission _permissionHelper;
@@ -50,12 +51,12 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
       SubscribersSchema item = data[i];
       var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(item.addr));
       String contactType = ContactType.stranger;
-      if (item.addr == Global.currentClient.address) {
+      if (item.addr == accountChatId) {
         contactType = ContactType.me;
       }
       ContactSchema contact = ContactSchema(clientAddress: item.addr, nknWalletAddress: walletAddress, type: contactType);
-      await contact.createContact();
-      var getContact = await ContactSchema.getContactByAddress(contact.clientAddress);
+      await contact.createContact(db);
+      var getContact = await ContactSchema.getContactByAddress(db, contact.clientAddress);
       list.add(getContact);
     }
 
@@ -64,18 +65,18 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
 
   initAsync() async {
     NLog.d('initAsync');
-    widget.arguments.querySubscribers().then((data) async {
+    widget.arguments.querySubscribers(await db).then((data) async {
       List<ContactSchema> list = List<ContactSchema>();
 
       for (var sub in data) {
         var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(sub.addr));
         String contactType = ContactType.stranger;
-        if (sub.addr == Global.currentClient.address) {
+        if (sub.addr == accountChatId) {
           contactType = ContactType.me;
         }
         ContactSchema contact = ContactSchema(clientAddress: sub.addr, nknWalletAddress: walletAddress, type: contactType);
-        await contact.createContact();
-        var getContact = await ContactSchema.getContactByAddress(contact.clientAddress);
+        await contact.createContact(db);
+        var getContact = await ContactSchema.getContactByAddress(db, contact.clientAddress);
         list.add(getContact);
       }
 
@@ -86,13 +87,13 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
       }
     });
 
-    await widget.arguments.getTopicCount();
+    await widget.arguments.getTopicCount(account);
 
-    var data = await widget.arguments.querySubscribers();
+    var data = await widget.arguments.querySubscribers(await db);
     _subs = await _genContactList(data);
     if (widget.arguments.type == TopicType.private) {
       // get private meta
-      var meta = await widget.arguments.getPrivateOwnerMeta();
+      var meta = await widget.arguments.getPrivateOwnerMeta(account);
       print(meta);
       NLog.d('==============$meta');
       _permissionHelper = Permission(accept: meta['accept'] ?? [], reject: meta['reject'] ?? []);
@@ -149,7 +150,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
               children: <Widget>[
                 Padding(
                   padding: EdgeInsets.only(right: 16.w),
-                  child: widget.arguments.avatarWidget(
+                  child: widget.arguments.avatarWidget(db,
                     backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
                     size: 48,
                     fontColor: DefaultTheme.fontLightColor,
@@ -200,7 +201,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
 
   getNameLabel(ContactSchema contact) {
     String name = contact.name;
-    if (widget.arguments.type == TopicType.private && contact.clientAddress != Global.currentClient.publicKey && widget.arguments.isOwner()) {
+    if (widget.arguments.type == TopicType.private && contact.clientAddress != accountChatId && widget.arguments.isOwner(accountPubkey)) {
       var permissionStatus = _permissionHelper?.getSubscriberStatus(contact.clientAddress);
       name = name + '(${permissionStatus ?? NMobileLocalizations.of(context).loading})';
     }
@@ -215,7 +216,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
 
   getItemView(ContactSchema contact) {
     List<Widget> toolBtns = [];
-    if (contact.clientAddress != Global.currentClient.publicKey) {
+    if (contact.clientAddress != accountChatId) {
       toolBtns = getToolBtn(contact);
     }
     List<Widget> nameLabel = <Widget>[
@@ -239,7 +240,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
               child: Container(
                 padding: EdgeInsets.only(right: 16.w),
                 alignment: Alignment.center,
-                child: contact.avatarWidget(
+                child: contact.avatarWidget(db,
                   size: 22,
                   backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
                 ),
@@ -301,14 +302,14 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
 
   getToolBtn(ContactSchema contact) {
     List<Widget> toolBtns = <Widget>[];
-    if (widget.arguments.type == TopicType.private && widget.arguments.isOwner()) {
+    if (widget.arguments.type == TopicType.private && widget.arguments.isOwner(accountPubkey)) {
       var permissionStatus = _permissionHelper?.getSubscriberStatus(contact.clientAddress);
       Widget checkBtn = GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () async {
           EasyLoading.show();
           if (permissionStatus == PermissionStatus.rejected) {
-            await widget.arguments.removeRejectPrivateMember(addr: contact.clientAddress);
+            await widget.arguments.removeRejectPrivateMember(account, addr: contact.clientAddress);
           }
           EasyLoading.dismiss();
           showToast(NMobileLocalizations.of(context).success);
@@ -320,7 +321,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
             _permissionHelper.accept.add({'addr': contact.clientAddress});
           });
           Future.delayed(Duration(milliseconds: 500), () {
-            widget.arguments.acceptPrivateMember(addr: contact.clientAddress);
+            widget.arguments.acceptPrivateMember(account, addr: contact.clientAddress);
           });
         },
         child: loadAssetIconsImage(
@@ -334,7 +335,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
           onTap: () async {
             EasyLoading.show();
             if (permissionStatus == PermissionStatus.accepted) {
-              await widget.arguments.removeAcceptPrivateMember(addr: contact.clientAddress);
+              await widget.arguments.removeAcceptPrivateMember(account, addr: contact.clientAddress);
             }
             EasyLoading.dismiss();
             showToast(NMobileLocalizations.of(context).success);
@@ -346,7 +347,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
               _permissionHelper.reject.add({'addr': contact.clientAddress});
             });
             Future.delayed(Duration(milliseconds: 500), () {
-              widget.arguments.rejectPrivateMember(addr: contact.clientAddress);
+              widget.arguments.rejectPrivateMember(account, addr: contact.clientAddress);
             });
           },
           child: Icon(
@@ -369,13 +370,13 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
   acceptPrivateAction(address) async {
     showToast(NMobileLocalizations.of(context).invitation_sent);
     if (widget.arguments.type == TopicType.private) {
-      await widget.arguments.acceptPrivateMember(addr: address);
+      await widget.arguments.acceptPrivateMember(account, addr: address);
     }
 
-    var sendMsg = MessageSchema.fromSendData(from: Global.currentClient.address, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
+    var sendMsg = MessageSchema.fromSendData(from: accountChatId, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
     sendMsg.isOutbound = true;
 
-    var sendMsg1 = MessageSchema.fromSendData(from: Global.currentClient.address, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
+    var sendMsg1 = MessageSchema.fromSendData(from: accountChatId, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
     sendMsg1.isOutbound = true;
 
     try {

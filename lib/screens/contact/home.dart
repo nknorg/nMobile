@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
 import 'package:nmobile/components/box/body.dart';
@@ -38,7 +39,7 @@ class ContactHome extends StatefulWidget {
   }
 }
 
-class _ContactHomeState extends State<ContactHome> {
+class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
   ScrollController _scrollController = ScrollController();
   List<ContactSchema> _friends = <ContactSchema>[];
   List<ContactSchema> _strangerContacts = <ContactSchema>[];
@@ -55,9 +56,9 @@ class _ContactHomeState extends State<ContactHome> {
   StreamSubscription _addContactSubscription;
 
   initAsync() async {
-    var topic = widget.arguments ? <TopicSchema>[] : await TopicSchema.getAllTopic();
-    var friends = await ContactSchema.getContacts(limit: _limit);
-    var stranger = await ContactSchema.getStrangerContacts(limit: 10);
+    var topic = widget.arguments ? <TopicSchema>[] : await TopicSchema.getAllTopic(db);
+    var friends = await ContactSchema.getContacts(db, limit: _limit);
+    var stranger = await ContactSchema.getStrangerContacts(db, limit: 10);
     setState(() {
       _friends = friends ?? [];
       _strangerContacts = stranger ?? [];
@@ -115,35 +116,39 @@ class _ContactHomeState extends State<ContactHome> {
         appBar: Header(
           titleChild: GestureDetector(
             onTap: () async {
-              Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: Global.currentUser);
+              accountUser.then((user) {
+                Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: user);
+              });
             },
-            child: Flex(
-              direction: Axis.horizontal,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Expanded(
-                  flex: 0,
-                  child: Container(
-                    padding: const EdgeInsets.only(right: 16),
-                    alignment: Alignment.center,
-                    child: Hero(
-                      tag: 'header_avatar:${Global.currentUser.clientAddress}',
-                      child: Global.currentUser.avatarWidget(backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 28),
+            child: accountUserBuilder(onUser: (ctx, user) {
+              return Flex(
+                direction: Axis.horizontal,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(
+                    flex: 0,
+                    child: Container(
+                      padding: const EdgeInsets.only(right: 16),
+                      alignment: Alignment.center,
+                      child: Hero(
+                        tag: 'header_avatar:$accountChatId',
+                        child: user.avatarWidget(db, backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 28),
+                      ),
                     ),
                   ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Label(Global.currentUser.name, type: LabelType.h3, dark: true),
-                      Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor),
-                    ],
-                  ),
-                )
-              ],
-            ),
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Label(user.name, type: LabelType.h3, dark: true),
+                        Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor),
+                      ],
+                    ),
+                  )
+                ],
+              );
+            }),
           ),
           backgroundColor: DefaultTheme.primaryColor,
           action: IconButton(
@@ -294,6 +299,7 @@ class _ContactHomeState extends State<ContactHome> {
                               child: Hero(
                                 tag: 'avatar:${item.clientAddress}',
                                 child: item.avatarWidget(
+                                  db,
                                   size: 24,
                                   backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
                                 ),
@@ -383,9 +389,9 @@ class _ContactHomeState extends State<ContactHome> {
           }
           return false;
         },
-        onDismissed: (direction) {
+        onDismissed: (direction) async {
           if (direction == DismissDirection.endToStart) {
-            item.deleteContact().then((count) {
+            item.deleteContact(db).then((count) {
               if (count > 0) {
                 setState(() {
                   _friends.remove(item);
@@ -430,6 +436,7 @@ class _ContactHomeState extends State<ContactHome> {
                     padding: const EdgeInsets.only(right: 16),
                     alignment: Alignment.center,
                     child: item.avatarWidget(
+                      db,
                       size: 24,
                       backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
                     ),
@@ -541,6 +548,7 @@ class _ContactHomeState extends State<ContactHome> {
                   padding: const EdgeInsets.only(right: 16),
                   alignment: Alignment.center,
                   child: item.avatarWidget(
+                    db,
                     size: 24,
                     backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
                   ),
@@ -640,7 +648,7 @@ class _ContactHomeState extends State<ContactHome> {
 
       topicList.add(InkWell(
         onTap: () async {
-          TopicSchema topic = await TopicSchema.getTopic(item.topic);
+          TopicSchema topic = await TopicSchema.getTopic(db, item.topic);
           Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
         },
         child: Container(
@@ -656,6 +664,7 @@ class _ContactHomeState extends State<ContactHome> {
                   padding: const EdgeInsets.only(right: 16),
                   alignment: Alignment.center,
                   child: item.avatarWidget(
+                    db,
                     size: 48,
                     fontColor: DefaultTheme.primaryColor,
                     backgroundColor: DefaultTheme.primaryColor.withAlpha(25),

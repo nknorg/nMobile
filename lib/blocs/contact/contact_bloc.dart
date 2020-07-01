@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/sqlite_storage.dart';
+import 'package:nmobile/model/data/dchat_account.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
-class ContactBloc extends Bloc<ContactEvent, ContactState> {
+class ContactBloc extends Bloc<ContactEvent, ContactState> with AccountDependsBloc {
   @override
   ContactState get initialState => ContactNotLoad();
 
@@ -28,8 +30,7 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
     if (state is ContactLoaded) {
       list = List.from((state as ContactLoaded).contacts);
     }
-    Database db = SqliteStorage(db: Global.currentChatDb).db;
-    var contactsRes = await db.rawQuery('SELECT * FROM ${ContactSchema.tableName} WHERE address IN (${address.map((x) => '\'$x\'').join(',')})');
+    var contactsRes = await (await db).rawQuery('SELECT * FROM ${ContactSchema.tableName} WHERE address IN (${address.map((x) => '\'$x\'').join(',')})');
     List<ContactSchema> contacts = contactsRes.map((x) => ContactSchema.parseEntity(x)).toList();
     for (var i = 0, length = contactsRes.length; i < length; i++) {
       var item = contacts[i];

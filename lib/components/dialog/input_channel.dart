@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
@@ -36,7 +37,7 @@ class InputChannelDialog extends StatefulWidget {
   });
 }
 
-class _InputChannelDialogState extends State<InputChannelDialog> {
+class _InputChannelDialogState extends State<InputChannelDialog> with AccountDependsBloc {
   ChatBloc _chatBloc;
   TextEditingController _topicController = TextEditingController();
   TextEditingController _feeController = TextEditingController();
@@ -409,8 +410,8 @@ class _InputChannelDialogState extends State<InputChannelDialog> {
     String owner;
     if (_privateSelected) {
       if (!isPrivateTopic(topic)) {
-        topic = '$topic.${Global.currentClient.publicKey}';
-        owner = Global.currentClient.publicKey;
+        topic = '$topic.$accountPubkey';
+        owner = accountPubkey;
       } else {
         owner = getOwnerPubkeyByTopic(topic);
       }
@@ -422,10 +423,10 @@ class _InputChannelDialogState extends State<InputChannelDialog> {
     });
     EasyLoading.show();
     var duration = 400000;
-    var hash = await TopicSchema.subscribe(topic: topic, duration: duration);
+    var hash = await TopicSchema.subscribe(account, topic: topic, duration: duration);
     if (hash != null) {
       var sendMsg = MessageSchema.fromSendData(
-        from: Global.currentClient.address,
+        from: accountChatId,
         topic: topic,
         contentType: ContentType.dchatSubscribe,
       );
@@ -436,11 +437,11 @@ class _InputChannelDialogState extends State<InputChannelDialog> {
       DateTime now = DateTime.now();
       var topicSchema = TopicSchema(topic: topic, type: type, owner: owner, expiresAt: now.add(blockToExpiresTime(duration)));
       if (type == TopicType.private) {
-        topicSchema.acceptPrivateMember(addr: Global.currentClient.publicKey);
+        topicSchema.acceptPrivateMember(account, addr: accountPubkey);
       }
 
-      await topicSchema.insertOrUpdate();
-      topicSchema = await TopicSchema.getTopic(topic);
+      await topicSchema.insertOrUpdate(db, accountPubkey);
+      topicSchema = await TopicSchema.getTopic(db, topic);
       EasyLoading.dismiss();
       if (type == TopicType.private) {
         Navigator.of(context).pushReplacementNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.PrivateChannel, topic: topicSchema));

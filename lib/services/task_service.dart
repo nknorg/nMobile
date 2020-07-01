@@ -42,15 +42,15 @@ class TaskService {
     }
   }
 
-  queryTopicCountTask() async {
-    if (Global.currentChatDb == null) {
-      return;
-    }
-    var topics = await TopicSchema.getAllTopic();
-    if (topics != null) {
-      topics.forEach((x) {
-        x.getTopicCount();
-      });
-    }
-  }
+//  queryTopicCountTask() async {
+//    if (Global.currentChatDb == null) {
+//      return;
+//    }
+//    var topics = await TopicSchema.getAllTopic();
+//    if (topics != null) {
+//      topics.forEach((x) {
+//        x.getTopicCount();
+//      });
+//    }
+//  }
 }
