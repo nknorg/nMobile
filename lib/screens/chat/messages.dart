@@ -17,6 +17,7 @@ import 'package:nmobile/blocs/contact/contact_state.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/label.dart';
+import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
@@ -374,73 +375,55 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     if (isHideTip) {
       return Container();
     } else {
-      return Column(
-        children: <Widget>[
-          SizedBox(height: 10),
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            width: double.infinity,
-            decoration: BoxDecoration(color: DefaultTheme.backgroundColor2, borderRadius: BorderRadius.circular(8)),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Container(
-                  width: 44,
-                  height: 44,
-                  margin: EdgeInsets.only(right: 14),
-                  decoration: BoxDecoration(color: Color(0x195458F7), borderRadius: BorderRadius.circular(8)),
-                  child: Center(
-                      child: loadAssetIconsImage(
-                    'lock',
-                    width: 24,
-                    color: DefaultTheme.primaryColor,
-                  )),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Label(
-                        NMobileLocalizations.of(context).private_messages,
-                        type: LabelType.h3,
-                      ),
-                      SizedBox(height: 4),
-                      Label(
-                        NMobileLocalizations.of(context).private_messages_desc,
-                        type: LabelType.bodyRegular,
-                        softWrap: true,
-                      ),
-                      SizedBox(height: 4),
-                      Label(
-                        NMobileLocalizations.of(context).learn_more,
-                        type: LabelType.bodySmall,
-                        color: DefaultTheme.primaryColor,
-                      ),
-                    ],
-                  ),
-                ),
-                InkWell(
-                  onTap: () {
-                    SpUtil.putBool(LocalStorage.WALLET_TIP_STATUS, true);
-                    setState(() {
-                      isHideTip = true;
-                    });
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(6.0),
-                    child: loadAssetIconsImage(
-                      'close',
-                      width: 16,
-                      color: DefaultTheme.primaryColor,
-                    ),
-                  ),
-                )
-              ],
+      return Container(
+        margin: 20.pad(t: 25, b: 0),
+        padding: 0.pad(),
+        width: double.infinity,
+        decoration: BoxDecoration(color: DefaultTheme.backgroundColor2, borderRadius: BorderRadius.circular(8)),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              width: 48,
+              height: 48,
+              margin: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: Colours.blue_0f_a1p, borderRadius: BorderRadius.circular(8)),
+              child: Center(child: loadAssetIconsImage('lock', width: 24, color: DefaultTheme.primaryColor)),
             ),
-          ),
-        ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Label(
+                    NMobileLocalizations.of(context).private_messages,
+                    type: LabelType.h3,
+                  ).pad(t: 16),
+                  Label(
+                    NMobileLocalizations.of(context).private_messages_desc,
+                    type: LabelType.bodyRegular,
+                    softWrap: true,
+                  ).pad(t: 4),
+                  Label(
+                    NMobileLocalizations.of(context).learn_more,
+                    type: LabelType.bodySmall,
+                    color: DefaultTheme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ).pad(t: 6),
+                ],
+              ),
+            ),
+            InkWell(
+              onTap: () {
+                SpUtil.putBool(LocalStorage.WALLET_TIP_STATUS, true);
+                setState(() {
+                  isHideTip = true;
+                });
+              },
+              child: loadAssetIconsImage('close', width: 12, color: DefaultTheme.primaryColor).center.sized(w: 48, h: 48),
+            )
+          ],
+        ),
       );
     }
   }
