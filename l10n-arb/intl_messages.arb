@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-06-30T14:37:29.392843",
+  "@@last_modified": "2020-07-01T13:54:30.040501",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1074,7 +1074,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "no_wallet_desc": "Manage both your Mainnet and ERC-20 NKN tokens with our smart wallet manager.",
+  "no_wallet_desc": "Manage both your Mainnet and ERC-20 NKN\n tokens with our smart wallet manager.",
   "@no_wallet_desc": {
     "description": "",
     "type": "text",

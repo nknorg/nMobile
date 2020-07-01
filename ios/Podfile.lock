@@ -184,21 +184,20 @@ DEPENDENCIES:
   - webview_flutter (from `.symlinks/plugins/webview_flutter/ios`)
 
 SPEC REPOS:
-  https://gitee.com/mirrors/CocoaPods-Specs.git:
+  trunk:
+    - Bugly
     - DKImagePickerController
     - DKPhotoGallery
     - FLAnimatedImage
     - FMDB
+    - libwebp
+    - Mantle
     - MTBBarcodeScanner
     - SDWebImage
     - SDWebImageFLPlugin
+    - SDWebImageWebPCoder
     - SQLCipher
     - TOCropViewController
-  trunk:
-    - Bugly
-    - libwebp
-    - Mantle
-    - SDWebImageWebPCoder
 
 EXTERNAL SOURCES:
   background_fetch:
@@ -327,4 +326,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: dc61dbc1365b4c59fb378393ce6d108a061f6300
 
-COCOAPODS: 1.8.4
+COCOAPODS: 1.9.3

@@ -9,6 +9,7 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/screens/contact/add_contact.dart';
 import 'package:nmobile/screens/contact/contact.dart';
+import 'package:nmobile/utils/extensions.dart';
 
 class NoContactScreen extends StatefulWidget {
   @override
@@ -46,7 +47,10 @@ class _NoContactScreenState extends State<NoContactScreen> {
                 flex: 1,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[Label(Global.currentUser.name, type: LabelType.h3, dark: true), Label(NMobileLocalizations.of(context).click_to_settings, type: LabelType.bodyRegular, color: DefaultTheme.fontLightColor.withAlpha(200))],
+                  children: <Widget>[
+                    Label(Global.currentUser.name, type: LabelType.h3, dark: true),
+                    Label(NMobileLocalizations.of(context).click_to_settings, type: LabelType.bodyRegular, color: DefaultTheme.fontLightColor.withAlpha(200))
+                  ],
                 ),
               )
             ],
@@ -77,22 +81,14 @@ class _NoContactScreenState extends State<NoContactScreen> {
                 children: <Widget>[
                   Expanded(
                     flex: 0,
-                    child: Padding(
-                      padding: EdgeInsets.only(),
-                      child: Image(
-                        image: AssetImage("assets/contact/no-contact.png"),
-                        width: 198,
-                      ),
-                    ),
+                    child: Image(image: AssetImage("assets/contact/no-contact.png"), width: 198),
                   ),
                   Expanded(
                     flex: 0,
                     child: Column(
                       children: <Widget>[
                         Padding(
-                          padding: EdgeInsets.only(
-                            top: 32,
-                          ),
+                          padding: EdgeInsets.only(top: 32),
                           child: Label(
                             NMobileLocalizations.of(context).cantact_no_contact_title,
                             type: LabelType.h2,
@@ -115,34 +111,24 @@ class _NoContactScreenState extends State<NoContactScreen> {
                     flex: 0,
                     child: Column(
                       children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.only(
-                            top: 100,
+                        Button(
+                          width: -1,
+                          height: 54,
+                          padding: 0.pad(l: 36, r: 36),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              SvgPicture.asset('assets/icons/user-plus.svg', color: DefaultTheme.backgroundLightColor, width: 24).pad(r: 12),
+                              Label(
+                                NMobileLocalizations.of(context).add_contact,
+                                type: LabelType.h3,
+                              )
+                            ],
                           ),
-                          child: Button(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: SvgPicture.asset(
-                                    'assets/icons/user-plus.svg',
-                                    color: DefaultTheme.backgroundLightColor,
-                                    width: 24,
-                                  ),
-                                ),
-                                Label(
-                                  NMobileLocalizations.of(context).add_contact,
-                                  type: LabelType.h3,
-                                )
-                              ],
-                            ),
-                            width: double.infinity,
-                            onPressed: () {
-                              Navigator.pushNamed(context, AddContact.routeName);
-                            },
-                          ),
-                        ),
+                          onPressed: () {
+                            Navigator.pushNamed(context, AddContact.routeName);
+                          },
+                        ).pad(t: 96),
                       ],
                     ),
                   ),

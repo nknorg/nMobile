@@ -199,7 +199,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "nkn" : MessageLookupByLibrary.simpleMessage("NKN"),
     "no" : MessageLookupByLibrary.simpleMessage("No"),
     "no_wallet_create" : MessageLookupByLibrary.simpleMessage("Create New Wallet"),
-    "no_wallet_desc" : MessageLookupByLibrary.simpleMessage("Manage both your Mainnet and ERC-20 NKN tokens with our smart wallet manager."),
+    "no_wallet_desc" : MessageLookupByLibrary.simpleMessage("Manage both your Mainnet and ERC-20 NKN\n tokens with our smart wallet manager."),
     "no_wallet_import" : MessageLookupByLibrary.simpleMessage("Import Exisiting Wallet"),
     "no_wallet_title" : MessageLookupByLibrary.simpleMessage("Keep your NKN organised"),
     "none" : MessageLookupByLibrary.simpleMessage("None"),
