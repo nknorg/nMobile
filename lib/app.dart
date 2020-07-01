@@ -117,7 +117,7 @@ class _AppScreenState extends State<AppScreen> {
             ),
           ),
           Container(
-            height: ScreenUtil.bottomBarHeight,
+            height: MediaQuery.of(context).padding.bottom,
             width: double.infinity,
             color: DefaultTheme.backgroundLightColor,
           )
