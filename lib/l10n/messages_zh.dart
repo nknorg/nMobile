@@ -162,7 +162,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "last_name" : MessageLookupByLibrary.simpleMessage("名字"),
     "latest" : MessageLookupByLibrary.simpleMessage("最新"),
     "latest_transactions" : MessageLookupByLibrary.simpleMessage("最新交易"),
-    "learn_more" : MessageLookupByLibrary.simpleMessage("更多"),
+    "learn_more" : MessageLookupByLibrary.simpleMessage("了解更多"),
     "loading" : MessageLookupByLibrary.simpleMessage("加载中"),
     "local_notification" : MessageLookupByLibrary.simpleMessage("本地通知"),
     "local_notification_both_name_message" : MessageLookupByLibrary.simpleMessage("显示名字和消息"),
