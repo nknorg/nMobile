@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:nmobile/app.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
@@ -44,7 +45,7 @@ class NknWalletDetailScreen extends StatefulWidget {
   _NknWalletDetailScreenState createState() => _NknWalletDetailScreenState();
 }
 
-class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
+class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with AccountDependsBloc {
   WalletsBloc _walletsBloc;
   ClientBloc _clientBloc;
   bool isDefault = false;
@@ -85,7 +86,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: isDefault ? NMobileLocalizations.of(context).main_wallet : widget.arguments.name,
+        title: NMobileLocalizations.of(context).main_wallet,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: PopupMenuButton(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -144,13 +145,13 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                         callback: (v) async {
                           if (v) {
                             _walletsBloc.add(DeleteWallet(widget.arguments));
-                            if (Global?.currentClient?.address != null) {
-                              var s = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(Global.currentClient?.publicKey));
-                              if (s.toString() == widget.arguments.address) {
-                                NLog.d('delete client ');
+                            if (account?.client?.pubkey != null) {
+                              var walletAddr = await NknWalletPlugin.pubKeyToWalletAddr(accountPubkey);
+                              if (walletAddr == widget.arguments.address) {
+                                NLog.d('delete client');
                                 _clientBloc.add(DisConnected());
                               } else {
-                                NLog.d('no delete client ');
+                                NLog.d('no delete client');
                               }
                             }
                             Navigator.popAndPushNamed(context, AppScreen.routeName);

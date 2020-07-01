@@ -73,13 +73,13 @@ void _callback(Map eventAndData) async {
         final seed2sha256 = hexEncode(sha256(seed));
         print('AndroidMessagingService | onMessage create db, seed2sha256 : $seed2sha256');
 
-        Global.currentChatDb = await SqliteStorage.open('${SqliteStorage.CHAT_DATABASE_NAME}_$publicKey', seed2sha256);
-        Global.currentClient = ClientSchema(publicKey: publicKey, address: publicKey);
-        Global.currentUser = await ContactSchema.getContactByAddress(publicKey);
+//        Global.currentChatDb = await SqliteStorage.open('${SqliteStorage.CHAT_DATABASE_NAME}_$publicKey', seed2sha256);
+//        Global.currentClient = ClientSchema(publicKey: publicKey, address: publicKey);
+//        Global.currentUser = await ContactSchema.getContactByAddress(publicKey);
 
         _clientBloc.add(ConnectedClient());
 
-        setupLocator();
+        setupSingleton();
         LocalNotification.init();
       }
       print('AndroidMessagingService | onMessage --> ClientBloc@${_clientBloc.hashCode.toString().substring(0, 3)}');

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/header/header.dart';
@@ -16,7 +17,7 @@ class NoContactScreen extends StatefulWidget {
   _NoContactScreenState createState() => _NoContactScreenState();
 }
 
-class _NoContactScreenState extends State<NoContactScreen> {
+class _NoContactScreenState extends State<NoContactScreen> with AccountDependsBloc {
   @override
   void initState() {
     super.initState();
@@ -29,32 +30,36 @@ class _NoContactScreenState extends State<NoContactScreen> {
       appBar: Header(
         titleChild: GestureDetector(
           onTap: () async {
-            Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: Global.currentUser);
+            accountUser.then((user) {
+              Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: user);
+            });
           },
-          child: Flex(
-            direction: Axis.horizontal,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              Expanded(
-                flex: 0,
-                child: Container(
-                  padding: const EdgeInsets.only(right: 16),
-                  alignment: Alignment.center,
-                  child: Global.currentUser.avatarWidget(backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 24),
+          child: accountUserBuilder(onUser: (ctx, user){
+            return  Flex(
+              direction: Axis.horizontal,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                Expanded(
+                  flex: 0,
+                  child: Container(
+                    padding: const EdgeInsets.only(right: 16),
+                    alignment: Alignment.center,
+                    child: user.avatarWidget(db, backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 24),
+                  ),
                 ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Label(Global.currentUser.name, type: LabelType.h3, dark: true),
-                    Label(NMobileLocalizations.of(context).click_to_settings, type: LabelType.bodyRegular, color: DefaultTheme.fontLightColor.withAlpha(200))
-                  ],
-                ),
-              )
-            ],
-          ),
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Label(user.name, type: LabelType.h3, dark: true),
+                      Label(NMobileLocalizations.of(context).click_to_settings, type: LabelType.bodyRegular, color: DefaultTheme.fontLightColor.withAlpha(200))
+                    ],
+                  ),
+                )
+              ],
+            );
+          }),
         ),
         backgroundColor: DefaultTheme.primaryColor,
         action: IconButton(

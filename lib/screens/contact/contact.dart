@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/box/body.dart';
@@ -16,7 +17,6 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/nkn_image_utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/router/custom_router.dart';
@@ -50,7 +50,7 @@ class ContactScreen extends StatefulWidget {
   _ContactScreenState createState() => _ContactScreenState();
 }
 
-class _ContactScreenState extends State<ContactScreen> with RouteAware {
+class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountDependsBloc {
   ChatBloc _chatBloc;
   TextEditingController _firstNameController = TextEditingController();
   TextEditingController _notesController = TextEditingController();
@@ -106,8 +106,9 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
   void initState() {
     super.initState();
     _sourceOptions = OptionsSchema(deleteAfterSeconds: widget.arguments?.options?.deleteAfterSeconds);
-    initAsync();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
+    initAsync();
+
     int burnAfterSeconds = widget.arguments.options?.deleteAfterSeconds;
     if (burnAfterSeconds != null) {
       _burnSelected = true;
@@ -129,12 +130,12 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
     if (_sourceOptions?.deleteAfterSeconds != _burnValue) {
       var contact = widget.arguments;
       if (_burnSelected) {
-        await contact.setBurnOptions(_burnValue);
+        await contact.setBurnOptions(db, _burnValue);
       } else {
-        await contact.setBurnOptions(null);
+        await contact.setBurnOptions(db, null);
       }
       var sendMsg = MessageSchema.fromSendData(
-        from: Global.currentClient.address,
+        from: accountChatId,
         to: widget.arguments.clientAddress,
         contentType: ContentType.eventContactOptions,
       );
@@ -225,7 +226,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
               var contact = widget.arguments;
               contact.notes = _notesController.text.trim();
 
-              await contact.setNotes(contact.notes);
+              await contact.setNotes(db, contact.notes);
               _chatBloc.add(RefreshMessages());
               Navigator.of(context).pop();
             }
@@ -276,7 +277,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
             if (_nameFormValid) {
               var contact = widget.arguments;
               contact.firstName = _firstNameController.text.trim();
-              await contact.setName(contact.firstName);
+              await contact.setName(db, contact.firstName);
               setState(() {
                 nickName = widget.arguments.name;
               });
@@ -294,9 +295,9 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
   }
 
   updatePic() async {
-    File savedImg = await getHeaderImage();
+    File savedImg = await getHeaderImage(accountPubkey);
     if (savedImg == null) return;
-    await widget.arguments.setAvatar(savedImg);
+    await widget.arguments.setAvatar(db, accountPubkey, savedImg);
     setState(() {
       widget.arguments.avatar = savedImg;
     });
@@ -349,7 +350,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
               setState(() {
                 nickName = widget.arguments.name;
               });
-              contact.setName(contact.firstName);
+              contact.setName(db, contact.firstName);
               Navigator.of(context).pop();
             }
           },
@@ -416,12 +417,12 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
           buttonColor: Colors.red,
           callback: (v) {
             if (v) {
-              widget.arguments.setFriend(isFriend: false);
+              widget.arguments.setFriend(db, isFriend: false);
               setState(() {});
             }
           }).show();
     } else {
-      widget.arguments.setFriend(isFriend: b);
+      widget.arguments.setFriend(db, isFriend: b);
       setState(() {});
       showToast(NMobileLocalizations.of(context).success);
     }
@@ -482,7 +483,8 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
   }
 
   String getName() {
-    String name = '${_sourceProfile?.name != null && _sourceProfile.name.isNotEmpty && (widget.arguments.firstName != null && widget.arguments.firstName.isNotEmpty || widget.arguments.lastName != null && widget.arguments.lastName.isNotEmpty) ? '(${_sourceProfile?.name})' : ''}';
+    String name =
+        '${_sourceProfile?.name != null && _sourceProfile.name.isNotEmpty && (widget.arguments.firstName != null && widget.arguments.firstName.isNotEmpty || widget.arguments.lastName != null && widget.arguments.lastName.isNotEmpty) ? '(${_sourceProfile?.name})' : ''}';
     return widget.arguments.name;
   }
 
@@ -505,6 +507,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                       },
                       child: Container(
                         child: widget.arguments.avatarWidget(
+                          db,
                           backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
                           size: 48,
                           fontColor: DefaultTheme.fontLightColor,
@@ -621,7 +624,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                   SizedBox(width: 20),
                                   Expanded(
                                     child: Label(
-                                      Global.currentClient.address.substring(0, 8) + "...",
+                                      accountChatId.substring(0, 8) + "...",
                                       type: LabelType.bodyRegular,
                                       textAlign: TextAlign.right,
                                       color: DefaultTheme.fontColor2,
@@ -722,6 +725,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                       },
                       child: Container(
                         child: widget.arguments.avatarWidget(
+                          db,
                           backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
                           size: 48,
                           fontColor: DefaultTheme.fontLightColor,
@@ -741,11 +745,11 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                           width: 16,
                         ),
                         onPressed: () async {
-                          File savedImg = await getHeaderImage();
+                          File savedImg = await getHeaderImage(accountPubkey);
                           setState(() {
                             widget.arguments.avatar = savedImg;
                           });
-                          await widget.arguments.setAvatar(savedImg);
+                          await widget.arguments.setAvatar(db, accountPubkey, savedImg);
                           _chatBloc.add(RefreshMessages());
                         },
                       ),

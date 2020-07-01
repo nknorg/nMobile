@@ -7,6 +7,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
@@ -19,11 +21,10 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/model/popular_model.dart';
+import 'package:nmobile/model/popular_channel.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
@@ -33,6 +34,7 @@ import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/log_tag.dart';
 import 'package:oktoast/oktoast.dart';
 
 class MessagesTab extends StatefulWidget {
@@ -40,7 +42,7 @@ class MessagesTab extends StatefulWidget {
   _MessagesTabState createState() => _MessagesTabState();
 }
 
-class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin, AccountDependsBloc, Tag {
   List<MessageItem> _messagesList = <MessageItem>[];
   ChatBloc _chatBloc;
   ContactBloc _contactBloc;
@@ -49,11 +51,11 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
   int _limit = 20;
   int _skip = 20;
   bool loading = false;
-  List<PopularModel> populars;
+  List<PopularChannel> populars;
   bool isHideTip = false;
 
   initAsync() async {
-    var res = await MessageItem.getLastChat(limit: _limit);
+    var res = await MessageItem.getLastChat(db, limit: _limit);
     _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
     if (mounted) {
       setState(() {
@@ -69,7 +71,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
   }
 
   _updateTargetChatItem(targetId) async {
-    var res = await MessageItem.getTargetChat(targetId);
+    var res = await MessageItem.getTargetChat(db, targetId);
     if (res != null) {
       var index = _messagesList.indexWhere((x) => x.targetId == res.targetId);
       setState(() {
@@ -83,7 +85,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
   }
 
   Future _loadMore() async {
-    var res = await MessageItem.getLastChat(limit: _limit, skip: _skip);
+    var res = await MessageItem.getLastChat(db, limit: _limit, skip: _skip);
     if (res != null) {
       _skip += res.length;
       _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
@@ -97,7 +99,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
   void initState() {
     super.initState();
     isHideTip = SpUtil.getBool(LocalStorage.WALLET_TIP_STATUS, defValue: false);
-    populars = PopularModel.defaultData();
+    populars = PopularChannel.defaultData();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
     _contactBloc = BlocProvider.of<ContactBloc>(context);
     if (_chatSubscription == null) {
@@ -245,13 +247,17 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                             padding: 0.pad(l: 36, r: 36),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
-                              children: [loadAssetIconsImage('pencil', width: 24, color: DefaultTheme.backgroundLightColor).pad(r: 12), Label(NMobileLocalizations.of(context).new_message, type: LabelType.h3)],
+                              children: [
+                                loadAssetIconsImage('pencil', width: 24, color: DefaultTheme.backgroundLightColor).pad(r: 12),
+                                Label(NMobileLocalizations.of(context).new_message, type: LabelType.h3)
+                              ],
                             ),
                             onPressed: () async {
-                              var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+                              var address = await BottomDialog.of(context).showInputAddressDialog(
+                                  title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
                               if (address != null) {
                                 ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
-                                await contact.createContact();
+                                await contact.createContact(db);
                                 Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
                               }
                             },
@@ -331,7 +337,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
   @override
   bool get wantKeepAlive => true;
 
-  Widget getPopularItemView(int index, int length, PopularModel model) {
+  Widget getPopularItemView(int index, int length, PopularChannel model) {
     return Container(
       child: Container(
         width: 136,
@@ -387,23 +393,23 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     );
   }
 
-  _subscription(PopularModel model) async {
+  _subscription(PopularChannel popular) async {
     var duration = 400000;
     try {
-      TopicSchema.subscribe(topic: model.topic, duration: duration);
+      TopicSchema.subscribe(account, topic: popular.topic, duration: duration);
 //      if (hash != null) {
       var sendMsg = MessageSchema.fromSendData(
-        from: Global.currentClient.address,
-        topic: model.topic,
+        from: accountChatId,
+        topic: popular.topic,
         contentType: ContentType.dchatSubscribe,
       );
       sendMsg.isOutbound = true;
       sendMsg.content = sendMsg.toDchatSubscribeData();
       _chatBloc.add(SendMessage(sendMsg));
       DateTime now = DateTime.now();
-      var topicSchema = TopicSchema(topic: model.topic, type: TopicType.public, expiresAt: now.add(blockToExpiresTime(duration)));
-      await topicSchema.insertOrUpdate();
-      topicSchema = await TopicSchema.getTopic(model.topic);
+      var topicSchema = TopicSchema(topic: popular.topic, type: TopicType.public, expiresAt: now.add(blockToExpiresTime(duration)));
+      await topicSchema.insertOrUpdate(db, accountPubkey);
+      topicSchema = await TopicSchema.getTopic(db, popular.topic);
       Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topicSchema));
 //      }
     } catch (e) {
@@ -474,7 +480,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
       return Container();
     }
     Widget contentWidget;
-    String draft = LocalStorage.getChatUnSendContentFromId(item.targetId);
+    String draft = LocalStorage.getChatUnSendContentFromId(_chatBloc.accountPubkey, item.targetId);
     if (draft != null && draft.length > 0) {
       contentWidget = Row(
         children: <Widget>[
@@ -565,7 +571,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     }
     return InkWell(
       onTap: () async {
-        TopicSchema topic = await TopicSchema.getTopic(item.topic.topic);
+        TopicSchema topic = await TopicSchema.getTopic(db, item.topic.topic);
         Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
       },
       child: Container(
@@ -577,6 +583,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
               padding: EdgeInsets.only(right: 16.w),
               alignment: Alignment.center,
               child: item.topic.avatarWidget(
+                db,
                 size: 48,
                 backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
                 fontColor: DefaultTheme.primaryColor,
@@ -647,7 +654,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     if (contact == null) return Container();
 
     Widget contentWidget;
-    String draft = LocalStorage.getChatUnSendContentFromId(item.targetId);
+    String draft = LocalStorage.getChatUnSendContentFromId(_chatBloc.accountPubkey, item.targetId);
     if (draft != null && draft.length > 0) {
       contentWidget = Row(
         children: <Widget>[
@@ -712,6 +719,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
               padding: EdgeInsets.only(right: 16.w),
               alignment: Alignment.center,
               child: contact.avatarWidget(
+                db,
                 size: 24,
                 backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
               ),
