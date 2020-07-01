@@ -85,158 +85,173 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
         decoration: BoxDecoration(color: DefaultTheme.backgroundColor4),
         child: ConstrainedBox(
           constraints: BoxConstraints.expand(),
-          child: Container(
-            child: BodyBox(
-              padding: const EdgeInsets.only(top: 20),
-              color: DefaultTheme.backgroundLightColor,
-              child: Column(
-                children: <Widget>[
-                  Stack(
-                    children: <Widget>[
-                      Container(
-                        child: widget.arguments.avatarWidget(
-                          backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
-                          size: 64,
-                          fontColor: DefaultTheme.fontLightColor,
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Button(
-                          padding: const EdgeInsets.all(0),
-                          width: 24,
-                          height: 24,
-                          backgroundColor: DefaultTheme.primaryColor,
-                          child: SvgPicture.asset(
-                            'assets/icons/camera.svg',
-                            width: 16,
+          child: Column(
+            children: <Widget>[
+              Container(
+                height: 100,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Stack(
+                      children: <Widget>[
+                        Container(
+                          child: widget.arguments.avatarWidget(
+                            backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
+                            size: 64,
+                            fontColor: DefaultTheme.fontLightColor,
                           ),
-                          onPressed: () async {
-                            File savedImg = await getHeaderImage();
-                            if (savedImg == null) return;
-
-                            setState(() {
-                              widget.arguments.avatar = savedImg;
-                            });
-                            await widget.arguments.setAvatar(savedImg);
-                            _chatBloc.add(RefreshMessages());
-                          },
                         ),
-                      )
-                    ],
-                  ),
-                  Column(
-                    children: <Widget>[
-                      SizedBox(
-                        height: 20.h,
-                      ),
-                      Container(
-                        padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
-                        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Button(
+                            padding: const EdgeInsets.all(0),
+                            width: 24,
+                            height: 24,
+                            backgroundColor: DefaultTheme.primaryColor,
+                            child: SvgPicture.asset(
+                              'assets/icons/camera.svg',
+                              width: 16,
+                            ),
+                            onPressed: () async {
+                              File savedImg = await getHeaderImage();
+                              if (savedImg == null) return;
+
+                              setState(() {
+                                widget.arguments.avatar = savedImg;
+                              });
+                              await widget.arguments.setAvatar(savedImg);
+                              _chatBloc.add(RefreshMessages());
+                            },
+                          ),
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  child: BodyBox(
+                    padding: const EdgeInsets.only(top: 20),
+                    color: DefaultTheme.backgroundLightColor,
+                    child: Column(
+                      children: <Widget>[
+                        Column(
                           children: <Widget>[
-                            InkWell(
-                              onTap: () {
-                                CopyUtils.copyAction(context, widget.arguments.topic);
-                              },
-                              child: Row(
+                            SizedBox(
+                              height: 20.h,
+                            ),
+                            Container(
+                              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
+                              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
-                                  Label(
-                                    NMobileLocalizations.of(context).name,
-                                    type: LabelType.bodyRegular,
-                                    color: DefaultTheme.fontColor1,
-                                    height: 1,
+                                  InkWell(
+                                    onTap: () {
+                                      CopyUtils.copyAction(context, widget.arguments.topic);
+                                    },
+                                    child: Row(
+                                      children: <Widget>[
+                                        Label(
+                                          NMobileLocalizations.of(context).name,
+                                          type: LabelType.bodyRegular,
+                                          color: DefaultTheme.fontColor1,
+                                          height: 1,
+                                        ),
+                                        SizedBox(width: 60),
+                                        Expanded(
+                                          child: Label(
+                                            widget.arguments.topic,
+                                            type: LabelType.bodyRegular,
+                                            color: DefaultTheme.fontColor2,
+                                            overflow: TextOverflow.fade,
+                                            textAlign: TextAlign.right,
+                                            height: 1,
+                                          ),
+                                        ),
+                                        SizedBox(width: 10),
+                                        Icon(Icons.content_copy, size: 22, color: DefaultTheme.fontColor4)
+                                      ],
+                                    ),
                                   ),
-                                  SizedBox(width: 60),
-                                  Expanded(
-                                    child: Label(
-                                      widget.arguments.topic,
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 16.h),
+                              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
+                              child: InkWell(
+                                onTap: () async {
+                                  Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: widget.arguments);
+                                },
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Label(
+                                      NMobileLocalizations.of(context).view_channel_members,
+                                      type: LabelType.bodyRegular,
+                                      color: DefaultTheme.fontColor1,
+                                      height: 1,
+                                    ),
+                                    Spacer(),
+                                    Label(
+                                      '${widget.arguments.count} ' + NMobileLocalizations.of(context).members,
                                       type: LabelType.bodyRegular,
                                       color: DefaultTheme.fontColor2,
                                       overflow: TextOverflow.fade,
                                       textAlign: TextAlign.right,
                                       height: 1,
                                     ),
-                                  ),
-                                  SizedBox(width: 10),
-                                  Icon(Icons.content_copy, size: 22, color: DefaultTheme.fontColor4)
-                                ],
+                                    SvgPicture.asset(
+                                      'assets/icons/right.svg',
+                                      width: 24,
+                                      color: DefaultTheme.fontColor2,
+                                    )
+                                  ],
+                                ),
                               ),
                             ),
+                            Container(
+                              padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 16.h),
+                              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
+                              child: InkWell(
+                                onTap: () async {
+                                  var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+                                  if (address != null) {
+                                    acceptPrivateAction(address);
+                                  }
+                                },
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Label(
+                                      NMobileLocalizations.of(context).invite_members,
+                                      type: LabelType.bodyRegular,
+                                      color: DefaultTheme.fontColor1,
+                                      height: 1,
+                                    ),
+                                    Spacer(),
+                                    SvgPicture.asset(
+                                      'assets/icons/right.svg',
+                                      width: 24,
+                                      color: DefaultTheme.fontColor2,
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                            getTopicStatusView()
                           ],
                         ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 16.h),
-                        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
-                        child: InkWell(
-                          onTap: () async {
-                            Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: widget.arguments);
-                          },
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Label(
-                                NMobileLocalizations.of(context).view_channel_members,
-                                type: LabelType.bodyRegular,
-                                color: DefaultTheme.fontColor1,
-                                height: 1,
-                              ),
-                              Spacer(),
-                              Label(
-                                '${widget.arguments.count} ' + NMobileLocalizations.of(context).members,
-                                type: LabelType.bodyRegular,
-                                color: DefaultTheme.fontColor2,
-                                overflow: TextOverflow.fade,
-                                textAlign: TextAlign.right,
-                                height: 1,
-                              ),
-                              SvgPicture.asset(
-                                'assets/icons/right.svg',
-                                width: 24,
-                                color: DefaultTheme.fontColor2,
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 16.h),
-                        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
-                        child: InkWell(
-                          onTap: () async {
-                            var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
-                            if (address != null) {
-                              acceptPrivateAction(address);
-                            }
-                          },
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Label(
-                                NMobileLocalizations.of(context).invite_members,
-                                type: LabelType.bodyRegular,
-                                color: DefaultTheme.fontColor1,
-                                height: 1,
-                              ),
-                              Spacer(),
-                              SvgPicture.asset(
-                                'assets/icons/right.svg',
-                                width: 24,
-                                color: DefaultTheme.fontColor2,
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-                      getTopicStatusView()
-                    ],
+                      ],
+                    ),
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),

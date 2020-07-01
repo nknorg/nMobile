@@ -50,7 +50,6 @@ class ContactScreen extends StatefulWidget {
 class _ContactScreenState extends State<ContactScreen> with RouteAware {
   ChatBloc _chatBloc;
   TextEditingController _firstNameController = TextEditingController();
-  TextEditingController _nameController = TextEditingController();
   TextEditingController _notesController = TextEditingController();
   FocusNode _firstNameFocusNode = FocusNode();
   GlobalKey _nameFormKey = new GlobalKey<FormState>();
@@ -73,6 +72,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
   int _burnValue;
   SourceProfile _sourceProfile;
   OptionsSchema _sourceOptions;
+  String nickName;
 
   initAsync() async {
     _sourceProfile = widget.arguments.sourceProfile;
@@ -117,7 +117,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
     }
     _burnValue = burnAfterSeconds;
 
-    _nameController.text = widget.arguments.name;
+    nickName = widget.arguments.name;
     _notesController.text = widget.arguments.notes;
   }
 
@@ -159,16 +159,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
         appBar: Header(
           title: '',
           backgroundColor: DefaultTheme.backgroundColor4,
-          action: IconButton(
-            icon: loadAssetIconsImage(
-              'scan',
-              width: 24,
-              color: DefaultTheme.backgroundLightColor,
-            ),
-            onPressed: () async {
-              showQRDialog();
-            },
-          ),
         ),
         body: Container(
           child: Column(
@@ -179,27 +169,64 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
-                    InkWell(
-                      onTap: () {
-                        if (widget?.arguments?.avatarFilePath != null) {
-                          Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
-                        }
-                      },
-                      child: widget.arguments.avatarWidget(
-                        backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
-                        size: 60,
-                        bottomRight: Button(
-                          width: 32,
-                          height: 32,
-                          backgroundColor: DefaultTheme.primaryColor,
-                          child: loadAssetIconsImage('camera', width: 20),
-                          onPressed: () async {
-                            updatePic();
+                    Stack(
+                      children: <Widget>[
+                        InkWell(
+                          onTap: () {
+                            if (widget?.arguments?.avatarFilePath != null) {
+                              Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
+                            }
                           },
+                          child: Container(
+                            child: widget.arguments.avatarWidget(
+                              backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
+                              size: 48,
+                              fontColor: DefaultTheme.fontLightColor,
+                            ),
+                          ),
                         ),
-                      ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Button(
+                            padding: const EdgeInsets.all(0),
+                            width: 24,
+                            height: 24,
+                            backgroundColor: DefaultTheme.primaryColor,
+                            child: SvgPicture.asset(
+                              'assets/icons/camera.svg',
+                              width: 16,
+                            ),
+                            onPressed: () async {
+                              updatePic();
+                            },
+                          ),
+                        )
+                      ],
                     ),
-                    Label(widget.arguments.name, type: LabelType.h2, dark: true).pad(t: 16, b: 24),
+                    SizedBox(height: 40)
+//                    InkWell(
+//                      onTap: () {
+//                        if (widget?.arguments?.avatarFilePath != null) {
+//                          Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
+//                        }
+//                      },
+//                      child: widget.arguments.avatarWidget(
+//                        backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
+//                        size: 70,
+//                        bottomRight: Button(
+//                          padding: const EdgeInsets.all(0),
+//                          width: 40,
+//                          height: 40,
+//                          backgroundColor: DefaultTheme.primaryColor,
+//                          child: loadAssetIconsImage('camera', width: 24),
+//                          onPressed: () async {
+//                            updatePic();
+//                          },
+//                        ),
+//                      ),
+//                    ).pad(t: 16),
+//                    Label(widget.arguments.name, type: LabelType.h2, dark: true).pad(t: 16, b: 24),
                   ],
                 ),
               ),
@@ -208,172 +235,340 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                   width: double.infinity,
                   decoration: BoxDecoration(color: DefaultTheme.backgroundColor4),
                   child: BodyBox(
-                    padding: EdgeInsets.only(top: 32, left: 20, right: 20),
+                    padding: EdgeInsets.only(
+                      top: 10,
+                    ),
                     color: DefaultTheme.backgroundLightColor,
                     child: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Label(
-                            NMobileLocalizations.of(context).my_details,
-                            type: LabelType.h2,
-                          ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  loadAssetIconsImage('user', color: DefaultTheme.primaryColor, width: 24).pad(r: 16),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Column(
+                              Container(
+                                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
+                                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    InkWell(
+                                      onTap: showChangeNameDialog,
+                                      child: Row(
+                                        children: <Widget>[
+                                          Label(
+                                            NMobileLocalizations.of(context).nickname,
+                                            type: LabelType.bodyRegular,
+                                            color: DefaultTheme.fontColor1,
+                                            height: 1,
+                                          ),
+                                          SizedBox(width: 60),
+                                          Expanded(
+                                            child: Label(
+                                              nickName,
+                                              type: LabelType.bodyRegular,
+                                              color: DefaultTheme.fontColor2,
+                                              overflow: TextOverflow.fade,
+                                              textAlign: TextAlign.right,
+                                              height: 1,
+                                            ),
+                                          ),
+                                          SizedBox(width: 10),
+                                          SvgPicture.asset(
+                                            'assets/icons/right.svg',
+                                            width: 24,
+                                            color: DefaultTheme.fontColor2,
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
+                                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    InkWell(
+                                      onTap: showQRDialog,
+                                      child: Row(
+                                        children: <Widget>[
+                                          Label(
+                                            'QR Code',
+                                            type: LabelType.bodyRegular,
+                                            color: DefaultTheme.fontColor1,
+                                            height: 1,
+                                          ),
+                                          Spacer(),
+                                          loadAssetIconsImage(
+                                            'scan',
+                                            width: 22,
+                                            color: DefaultTheme.fontColor2,
+                                          ),
+                                          SizedBox(width: 10),
+                                          SvgPicture.asset(
+                                            'assets/icons/right.svg',
+                                            width: 24,
+                                            color: DefaultTheme.fontColor2,
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 10.h),
+                                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
+                                      children: <Widget>[
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: <Widget>[
                                             Label(
-                                              NMobileLocalizations.of(context).nickname,
-                                              type: LabelType.h3,
-                                              textAlign: TextAlign.start,
+                                              NMobileLocalizations.of(context).wallet_address,
+                                              type: LabelType.bodyRegular,
+                                              color: DefaultTheme.fontColor1,
+                                              height: 1,
                                             ),
                                             InkWell(
-                                              child: Label(
-                                                NMobileLocalizations.of(context).edit,
-                                                color: DefaultTheme.primaryColor,
-                                                type: LabelType.bodyRegular,
-                                              ),
-                                              onTap: showChangeNameDialog,
-                                            ),
-                                          ],
-                                        ),
-                                        Textbox(
-                                          padding: 0.pad(),
-                                          controller: _nameController,
-                                          readOnly: true,
-                                          enabled: false,
-                                          textInputAction: TextInputAction.next,
-                                          fontSize: DefaultTheme.bodyLargeFontSize,
-                                          color: Colours.gray_81,
-                                          borderColor: Colours.transparent,
-                                        ),
-                                      ],
-                                    ).pad(t: 2),
-                                  ),
-                                ],
-                              ),
-                              Container(
-                                color: DefaultTheme.lineColor,
-                                constraints: BoxConstraints(maxHeight: 1, minHeight: 1, maxWidth: double.infinity, minWidth: double.infinity),
-                              ),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  loadAssetIconsImage('wallet', color: DefaultTheme.primaryColor, width: 24).pad(r: 16),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Label(
-                                              Global.currentWalletName ?? '(${NMobileLocalizations.of(context).wallet_address})',
-                                              type: LabelType.h3,
-                                              textAlign: TextAlign.start,
-                                            ),
-                                            InkWell(
-                                              child: Label(
-                                                NMobileLocalizations.of(context).change_default_chat_wallet,
-                                                color: Colours.blue_0f,
-                                                type: LabelType.bodyRegular,
-                                              ),
                                               onTap: () {
-                                                showToast(NMobileLocalizations.of(context).coming_soon);
+                                                copyAction(widget.arguments.nknWalletAddress);
                                               },
+                                              child: Icon(
+                                                Icons.content_copy,
+                                                size: 16,
+                                                color: DefaultTheme.fontColor2,
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                        SizedBox(height: 20),
+                                        Row(
+                                          children: <Widget>[
+                                            Expanded(
+                                              child: Label(
+                                                widget.arguments.nknWalletAddress,
+                                                type: LabelType.bodyRegular,
+                                                color: DefaultTheme.fontColor2,
+                                                overflow: TextOverflow.fade,
+                                                textAlign: TextAlign.left,
+                                                height: 1,
+                                              ),
                                             ),
                                           ],
                                         ),
-                                        InkWell(
-                                          onTap: () {
-                                            copyAction(widget.arguments.nknWalletAddress);
-                                          },
-                                          child: Text(
-                                            widget.arguments.nknWalletAddress,
-                                            softWrap: false,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(color: Colours.gray_81, fontSize: DefaultTheme.bodySmallFontSize),
-                                          ).pad(t: 8),
-                                        ),
                                       ],
-                                    ).pad(t: 2),
-                                  ),
-                                ],
-                              ).pad(t: 24),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  loadAssetIconsImage('key', color: DefaultTheme.primaryColor, width: 24).pad(r: 16),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Column(
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 10.h),
+                                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Label(
-                                          NMobileLocalizations.of(context).d_chat_address,
-                                          type: LabelType.h4,
-                                          textAlign: TextAlign.start,
-                                        ),
+                                      children: <Widget>[
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              flex: 1,
-                                              child: InkWell(
-                                                onTap: () {
-                                                  copyAction(widget.arguments.clientAddress);
-                                                },
-                                                child: Text(
-                                                  widget.arguments.clientAddress,
-                                                  softWrap: false,
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: TextStyle(color: Colours.gray_81, fontSize: DefaultTheme.bodySmallFontSize),
-                                                ),
-                                              ),
+                                          children: <Widget>[
+                                            Label(
+                                              NMobileLocalizations.of(context).d_chat_address,
+                                              type: LabelType.bodyRegular,
+                                              color: DefaultTheme.fontColor1,
+                                              height: 1,
                                             ),
+                                            InkWell(
+                                              onTap: () {
+                                                copyAction(widget.arguments.clientAddress);
+                                              },
+                                              child: Icon(
+                                                Icons.content_copy,
+                                                size: 16,
+                                                color: DefaultTheme.fontColor2,
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                        SizedBox(height: 20),
+                                        Row(
+                                          children: <Widget>[
                                             Expanded(
-                                              flex: 0,
-                                              child: InkWell(
-                                                child: Label(
-                                                  NMobileLocalizations.of(context).copy,
-                                                  color: DefaultTheme.primaryColor,
-                                                  type: LabelType.bodyRegular,
-                                                ).pad(l: 3),
-                                                onTap: () {
-                                                  copyAction(widget.arguments.clientAddress);
-                                                },
+                                              child: Label(
+                                                widget.arguments.clientAddress,
+                                                type: LabelType.bodyRegular,
+                                                color: DefaultTheme.fontColor2,
+                                                maxLines: 2,
                                               ),
                                             ),
                                           ],
-                                        ).pad(t: 8),
+                                        ),
                                       ],
-                                    ).pad(t: 2),
-                                  ),
-                                ],
-                              ).pad(t: 12, b: 16),
-                              Container(
-                                color: DefaultTheme.lineColor,
-                                constraints: BoxConstraints(maxHeight: 1, minHeight: 1, maxWidth: double.infinity, minWidth: double.infinity),
+                                    ),
+                                  ],
+                                ),
                               ),
+
+//                              Row(
+//                                crossAxisAlignment: CrossAxisAlignment.start,
+//                                children: [
+//                                  loadAssetIconsImage('user', color: DefaultTheme.primaryColor, width: 24).pad(r: 16),
+//                                  Expanded(
+//                                    flex: 1,
+//                                    child: Column(
+//                                      crossAxisAlignment: CrossAxisAlignment.start,
+//                                      children: [
+//                                        Row(
+//                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                                          children: <Widget>[
+//                                            Label(
+//                                              NMobileLocalizations.of(context).nickname,
+//                                              type: LabelType.h3,
+//                                              textAlign: TextAlign.start,
+//                                            ),
+//                                            InkWell(
+//                                              child: Label(
+//                                                NMobileLocalizations.of(context).edit,
+//                                                color: DefaultTheme.primaryColor,
+//                                                type: LabelType.bodyRegular,
+//                                              ),
+//                                              onTap: showChangeNameDialog,
+//                                            ),
+//                                          ],
+//                                        ),
+//                                        Label(
+//                                          widget.arguments.name,
+//                                          type: LabelType.bodyRegular,
+//                                          color: DefaultTheme.fontColor2,
+//                                          overflow: TextOverflow.fade,
+//                                          textAlign: TextAlign.right,
+//                                          height: 1,
+//                                        ),
+//                                      ],
+//                                    ).pad(t: 2),
+//                                  ),
+//                                ],
+//                              ),
+//                              Container(
+//                                color: DefaultTheme.lineColor,
+//                                constraints: BoxConstraints(maxHeight: 1, minHeight: 1, maxWidth: double.infinity, minWidth: double.infinity),
+//                              ),
+//                              Row(
+//                                crossAxisAlignment: CrossAxisAlignment.start,
+//                                children: [
+//                                  loadAssetIconsImage('wallet', color: DefaultTheme.primaryColor, width: 24).pad(r: 16),
+//                                  Expanded(
+//                                    flex: 1,
+//                                    child: Column(
+//                                      crossAxisAlignment: CrossAxisAlignment.start,
+//                                      children: [
+//                                        Row(
+//                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                                          children: [
+//                                            Label(
+//                                              NMobileLocalizations.of(context).wallet_address,
+//                                              type: LabelType.h3,
+//                                              textAlign: TextAlign.start,
+//                                            ),
+//                                            InkWell(
+//                                              child: Label(
+//                                                NMobileLocalizations.of(context).copy,
+//                                                color: DefaultTheme.primaryColor,
+//                                                type: LabelType.bodyRegular,
+//                                              ),
+//                                              onTap: () {
+//                                                copyAction(widget.arguments.nknWalletAddress);
+//                                              },
+//                                            ),
+//                                          ],
+//                                        ),
+//                                        InkWell(
+//                                          onTap: () {
+//                                            copyAction(widget.arguments.nknWalletAddress);
+//                                          },
+//                                          child: Text(
+//                                            widget.arguments.nknWalletAddress,
+//                                            softWrap: false,
+//                                            maxLines: 1,
+//                                            overflow: TextOverflow.ellipsis,
+//                                            style: TextStyle(color: Colours.gray_81, fontSize: DefaultTheme.bodySmallFontSize),
+//                                          ).pad(t: 8),
+//                                        ),
+//                                      ],
+//                                    ).pad(t: 2),
+//                                  ),
+//                                ],
+//                              ).pad(t: 24),
+//                              Row(
+//                                crossAxisAlignment: CrossAxisAlignment.start,
+//                                children: [
+//                                  loadAssetIconsImage('key', color: DefaultTheme.primaryColor, width: 24).pad(r: 16),
+//                                  Expanded(
+//                                    flex: 1,
+//                                    child: Column(
+//                                      crossAxisAlignment: CrossAxisAlignment.start,
+//                                      children: [
+//                                        Label(
+//                                          NMobileLocalizations.of(context).d_chat_address,
+//                                          type: LabelType.h4,
+//                                          textAlign: TextAlign.start,
+//                                        ),
+//                                        Row(
+//                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                                          children: [
+//                                            Expanded(
+//                                              flex: 1,
+//                                              child: InkWell(
+//                                                onTap: () {
+//                                                  copyAction(widget.arguments.clientAddress);
+//                                                },
+//                                                child: Text(
+//                                                  widget.arguments.clientAddress,
+//                                                  softWrap: false,
+//                                                  maxLines: 1,
+//                                                  overflow: TextOverflow.ellipsis,
+//                                                  style: TextStyle(color: Colours.gray_81, fontSize: DefaultTheme.bodySmallFontSize),
+//                                                ),
+//                                              ),
+//                                            ),
+//                                            Expanded(
+//                                              flex: 0,
+//                                              child: InkWell(
+//                                                child: Label(
+//                                                  NMobileLocalizations.of(context).copy,
+//                                                  color: DefaultTheme.primaryColor,
+//                                                  type: LabelType.bodyRegular,
+//                                                ).pad(l: 3),
+//                                                onTap: () {
+//                                                  copyAction(widget.arguments.clientAddress);
+//                                                },
+//                                              ),
+//                                            ),
+//                                          ],
+//                                        ).pad(t: 8),
+//                                      ],
+//                                    ).pad(t: 2),
+//                                  ),
+//                                ],
+//                              ).pad(t: 12, b: 16),
+//                              Container(
+//                                color: DefaultTheme.lineColor,
+//                                constraints: BoxConstraints(maxHeight: 1, minHeight: 1, maxWidth: double.infinity, minWidth: double.infinity),
+//                              ),
                               Text(
                                 NMobileLocalizations.of(context).my_details_desc,
                                 softWrap: true,
                                 style: TextStyle(color: Colours.gray_81, fontSize: DefaultTheme.bodySmallFontSize),
-                              ).pad(l: 40, t: 8)
+                              ).pad(l: 20, t: 8)
                             ],
                           ).pad(t: 24)
                         ],
@@ -427,45 +622,46 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Row(children: [
-                    InkWell(
-                      onTap: () {
-                        if (widget.arguments.avatarFilePath != null) {
-                          Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
-                        }
-                      },
-                      child: widget.arguments
-                          .avatarWidget(
-                            backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
-                            size: 40,
-                            bottomRight: Button(
-                              width: 24,
-                              height: 24,
-                              backgroundColor: DefaultTheme.primaryColor,
-                              child: loadAssetIconsImage('camera', width: 16),
-                              onPressed: () async {
-                                File savedImg = await getHeaderImage();
-                                setState(() {
-                                  widget.arguments.avatar = savedImg;
-                                });
-                                await widget.arguments.setAvatar(savedImg);
-                                _chatBloc.add(RefreshMessages());
-                              },
-                            ),
-                          )
-                          .pad(r: 16),
-                    ),
-                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Label(
-                          widget.arguments.name +
-                              '${_sourceProfile?.name != null && _sourceProfile.name.isNotEmpty && (widget.arguments.firstName != null && widget.arguments.firstName.isNotEmpty || widget.arguments.lastName != null && widget.arguments.lastName.isNotEmpty) ? '(${_sourceProfile?.name})' : ''}',
-                          type: LabelType.h2,
-                          dark: true),
-                      Label(NMobileLocalizations.of(context).updated_at + ' ' + Format.timeFormat(widget.arguments.updatedTime ?? widget.arguments.createdTime),
-                              type: LabelType.bodyRegular, color: DefaultTheme.successColor)
-                          .pad(t: 4)
-                    ]),
-                  ]).pad(l: 20, t: 0, r: 20, b: 22)
+                  Stack(
+                    children: <Widget>[
+                      InkWell(
+                        onTap: () {
+                          if (widget.arguments.avatarFilePath != null) {
+                            Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
+                          }
+                        },
+                        child: Container(
+                          child: widget.arguments.avatarWidget(
+                            backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
+                            size: 48,
+                            fontColor: DefaultTheme.fontLightColor,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Button(
+                          padding: const EdgeInsets.all(0),
+                          width: 24,
+                          height: 24,
+                          backgroundColor: DefaultTheme.primaryColor,
+                          child: SvgPicture.asset(
+                            'assets/icons/camera.svg',
+                            width: 16,
+                          ),
+                          onPressed: () async {
+                            File savedImg = await getHeaderImage();
+                            setState(() {
+                              widget.arguments.avatar = savedImg;
+                            });
+                            await widget.arguments.setAvatar(savedImg);
+                            _chatBloc.add(RefreshMessages());
+                          },
+                        ),
+                      )
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -485,67 +681,97 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Label(
-                                      NMobileLocalizations.of(context).nickname,
-                                      type: LabelType.h3,
-                                      textAlign: TextAlign.start,
-                                    ),
-                                    InkWell(
-                                      child: Label(
-                                        NMobileLocalizations.of(context).edit,
-                                        color: DefaultTheme.primaryColor,
-                                        type: LabelType.bodyRegular,
+                                Container(
+                                  padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
+                                  decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      InkWell(
+                                        onTap: () {
+                                          _firstNameController.text = widget.arguments.name;
+                                          _detailChangeName(context);
+                                        },
+                                        child: Row(
+                                          children: <Widget>[
+                                            Label(
+                                              NMobileLocalizations.of(context).nickname,
+                                              type: LabelType.bodyRegular,
+                                              color: DefaultTheme.fontColor1,
+                                              height: 1,
+                                            ),
+                                            SizedBox(width: 60),
+                                            Expanded(
+                                              child: Label(
+                                                nickName,
+                                                type: LabelType.bodyRegular,
+                                                color: DefaultTheme.fontColor2,
+                                                overflow: TextOverflow.fade,
+                                                textAlign: TextAlign.right,
+                                                height: 1,
+                                              ),
+                                            ),
+                                            SizedBox(width: 10),
+                                            SvgPicture.asset(
+                                              'assets/icons/right.svg',
+                                              width: 24,
+                                              color: DefaultTheme.fontColor2,
+                                            )
+                                          ],
+                                        ),
                                       ),
-                                      onTap: () {
-                                        _firstNameController.text = widget.arguments.firstName;
-                                        _detailChangeName(context);
-                                      },
-                                    ),
-                                  ],
-                                ).pad(l: 20, r: 20),
-                                Textbox(
-                                  controller: _nameController,
-                                  readOnly: true,
-                                  enabled: false,
-                                  color: Colours.gray_81,
-                                  fontSize: DefaultTheme.bodyRegularFontSize,
-                                  textInputAction: TextInputAction.next,
-                                  padding: 0.pad(b: 16),
-                                ).pad(l: 20, r: 20),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Label(
-                                      NMobileLocalizations.of(context).d_chat_address,
-                                      type: LabelType.h3,
-                                      textAlign: TextAlign.start,
-                                    ),
-                                    InkWell(
-                                      child: Label(
-                                        NMobileLocalizations.of(context).copy,
-                                        color: DefaultTheme.primaryColor,
-                                        type: LabelType.bodyRegular,
-                                      ),
-                                      onTap: () {
-                                        copyAction(widget.arguments.publicKey);
-                                      },
-                                    ),
-                                  ],
-                                ).pad(l: 20, r: 20),
-                                InkWell(
-                                  onTap: () {
-                                    copyAction(widget.arguments.publicKey);
-                                  },
-                                  child: Text(
-                                    widget.arguments.publicKey,
-                                    softWrap: false,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(color: Colours.gray_81, fontSize: DefaultTheme.bodyRegularFontSize),
-                                  ).pad(l: 20, r: 20, t: 8, b: 16),
+                                    ],
+                                  ),
                                 ),
+                                Container(
+                                  padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 10.h),
+                                  decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: <Widget>[
+                                              Label(
+                                                NMobileLocalizations.of(context).d_chat_address,
+                                                type: LabelType.bodyRegular,
+                                                color: DefaultTheme.fontColor1,
+                                                height: 1,
+                                              ),
+                                              InkWell(
+                                                onTap: () {
+                                                  copyAction(widget.arguments.publicKey);
+                                                },
+                                                child: Icon(
+                                                  Icons.content_copy,
+                                                  color: DefaultTheme.fontColor2,
+                                                  size: 18,
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                          SizedBox(height: 20),
+                                          Row(
+                                            children: <Widget>[
+                                              Expanded(
+                                                child: Label(
+                                                  widget.arguments.publicKey,
+                                                  type: LabelType.bodyRegular,
+                                                  color: DefaultTheme.fontColor2,
+                                                  maxLines: 2,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
                                 Container(
                                   color: DefaultTheme.lineColor,
                                   constraints: BoxConstraints(maxHeight: 1, minHeight: 1, maxWidth: double.infinity, minWidth: double.infinity),
@@ -555,15 +781,12 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                   children: <Widget>[
                                     Label(
                                       NMobileLocalizations.of(context).notes,
-                                      type: LabelType.h3,
-                                      textAlign: TextAlign.start,
+                                      type: LabelType.bodyRegular,
+                                      color: DefaultTheme.fontColor1,
+                                      height: 1,
                                     ),
                                     InkWell(
-                                      child: Label(
-                                        NMobileLocalizations.of(context).edit,
-                                        color: DefaultTheme.primaryColor,
-                                        type: LabelType.bodyRegular,
-                                      ),
+                                      child: Icon(Icons.edit, color: DefaultTheme.fontColor2),
                                       onTap: () {
                                         changeName();
                                       },
@@ -576,15 +799,16 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                   maxLines: 3,
                                   controller: _notesController,
                                   readOnly: true,
+                                  color: DefaultTheme.fontColor2,
                                   padding: 0.pad(b: 16),
                                 ).pad(l: 20, r: 20),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Label(
-                                      NMobileLocalizations.of(context).burn_after_reading +
-                                          '${_burnValue != null ? ' (${Format.durationFormat(Duration(seconds: _burnValue))})' : ''}',
-                                      type: LabelType.h3,
+                                      NMobileLocalizations.of(context).burn_after_reading + '${_burnValue != null ? ' (${Format.durationFormat(Duration(seconds: _burnValue))})' : ''}',
+                                      type: LabelType.bodyRegular,
+                                      color: DefaultTheme.fontColor1,
                                       textAlign: TextAlign.start,
                                     ),
                                     CupertinoSwitch(
@@ -625,19 +849,20 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                 (widget.arguments.type == ContactType.stranger
                                         ? FlatButton(
                                             padding: 0.pad(),
+                                            color: DefaultTheme.primaryColor,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                             child: Row(
                                               mainAxisAlignment: MainAxisAlignment.center,
                                               children: <Widget>[
-                                                /*loadAssetIconsImage(
-                                                  'user-plus',
-                                                  color: Colours.gray_81,
-                                                  width: 24,
-                                                ).pad(r: 8),*/
+                                                Icon(
+                                                  Icons.person_add,
+                                                  color: Colors.white,
+                                                  size: 20,
+                                                ).pad(r: 8),
                                                 Text(
                                                   NMobileLocalizations.of(context).add_contact,
                                                   softWrap: false,
-                                                  style: TextStyle(
-                                                      color: Colours.blue_0f, fontSize: DefaultTheme.bodyRegularFontSize, fontWeight: FontWeight.bold),
+                                                  style: TextStyle(color: Colors.white, fontSize: DefaultTheme.bodyRegularFontSize),
                                                 )
                                               ],
                                             ),
@@ -647,19 +872,20 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                           )
                                         : FlatButton(
                                             padding: 0.pad(),
+                                            color: Colors.red,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                             child: Row(
                                               mainAxisAlignment: MainAxisAlignment.center,
                                               children: <Widget>[
                                                 Icon(
                                                   Icons.delete,
-                                                  color: Colours.pink_f8,
+                                                  color: Colors.white,
                                                   size: 20,
                                                 ).pad(r: 8),
                                                 Text(
                                                   NMobileLocalizations.of(context).delete,
                                                   softWrap: false,
-                                                  style: TextStyle(
-                                                      color: Colours.pink_f8, fontSize: DefaultTheme.bodyRegularFontSize, fontWeight: FontWeight.bold),
+                                                  style: TextStyle(color: Colors.white, fontSize: DefaultTheme.bodyRegularFontSize),
                                                 ),
                                               ],
                                             ),
@@ -684,6 +910,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                     top: 0,
                     right: 20,
                     child: Button(
+                      padding: const EdgeInsets.all(0),
                       width: 56,
                       height: 56,
                       backgroundColor: DefaultTheme.primaryColor,
@@ -806,7 +1033,9 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
               var contact = widget.arguments;
               contact.firstName = _firstNameController.text.trim();
               await contact.setName(contact.firstName);
-              _nameController.text = widget.arguments.name;
+              setState(() {
+                nickName = contact.firstName;
+              });
               _chatBloc.add(RefreshMessages());
               Navigator.of(context).pop();
             }
@@ -873,7 +1102,10 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
             if (_nameFormValid) {
               var contact = widget.arguments;
               contact.firstName = _firstNameController.text.trim();
-              _nameController.text = widget.arguments.name;
+              setState(() {
+                nickName = contact.firstName;
+              });
+//              _nameController.text = widget.arguments.name;
               contact.setName(contact.firstName);
               Navigator.of(context).pop();
             }

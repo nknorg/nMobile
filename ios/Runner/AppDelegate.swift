@@ -20,9 +20,8 @@ var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
         }
         Bugly.start(withAppId: "169cabe790")
         
-
-        let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
         
+        let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
         
         let walletMethodChannel = FlutterMethodChannel(name: "org.nkn.sdk/wallet", binaryMessenger: controller.binaryMessenger)
         walletMethodChannel.setMethodCallHandler(NknWalletPlugin.handle)
@@ -36,8 +35,18 @@ var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
         let clientEventChannel = FlutterEventChannel(name: "org.nkn.sdk/client/event", binaryMessenger: controller.binaryMessenger)
         clientEventChannel.setStreamHandler(NknClientEventPlugin())
         
-        GeneratedPluginRegistrant.register(with: self)
         
+       let commontChannel = FlutterMethodChannel(name: "ios/nmobile/native/common", binaryMessenger: controller.binaryMessenger)
+        commontChannel.setMethodCallHandler { (call, result) in
+              if "isActive" == call.method{
+                 result(application.applicationState != UIApplication.State.background)
+              }else{
+                  result(FlutterMethodNotImplemented)
+              }
+          }
+        
+        
+        GeneratedPluginRegistrant.register(with: self)
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
     

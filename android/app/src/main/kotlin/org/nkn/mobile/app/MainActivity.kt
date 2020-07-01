@@ -36,6 +36,8 @@ class MainActivity : AbsMsgrActy(), Msgs.Req, Msgs.Req.Callback, Tag {
     }
 
     private var clientPlugin: NknClientPlugin? = null
+    private var isActive : Boolean =  false;
+    
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine);
         Log.e(TAG, "<<<---configureFlutterEngine--->>>".withAndroidPrefix())
@@ -48,6 +50,8 @@ class MainActivity : AbsMsgrActy(), Msgs.Req, Msgs.Req.Callback, Tag {
             if (methodCall.method == "backDesktop") {
                 result.success(true)
                 moveTaskToBack(false)
+            }else if (methodCall.method == "isActive") {
+                result.success(isActive)
             } else {
                 result.success(true)
             }
@@ -78,11 +82,13 @@ class MainActivity : AbsMsgrActy(), Msgs.Req, Msgs.Req.Callback, Tag {
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "<<<---onResume--->>>".withAndroidPrefix())
+        isActive = true;
     }
 
     override fun onPause() {
         Log.d(TAG, ">>>---onPause---<<<".withAndroidPrefix())
         super.onPause()
+        isActive = false;
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -98,6 +104,7 @@ class MainActivity : AbsMsgrActy(), Msgs.Req, Msgs.Req.Callback, Tag {
     override fun onStop() {
         Log.d(TAG, ">>>---onStop---<<<".withAndroidPrefix())
         super.onStop()
+        isActive = false;
     }
 
     override fun onDestroy() {

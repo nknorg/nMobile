@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-07-01T13:54:30.040501",
+  "@@last_modified": "2020-07-01T16:56:01.033644",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1492,6 +1492,11 @@
   },
   "tip": "Tips",
   "@tip": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "my_details_desc": "All subscriptions and tipping will come from your selected wallet.",
+  "@my_details_desc": {
     "type": "text",
     "placeholders": {}
   },
