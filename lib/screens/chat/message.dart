@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
@@ -28,6 +29,7 @@ import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/screens/view/burn_view_utils.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class ChatSinglePage extends StatefulWidget {
   static const String routeName = '/chat/message';
@@ -40,14 +42,13 @@ class ChatSinglePage extends StatefulWidget {
   _ChatSinglePageState createState() => _ChatSinglePageState();
 }
 
-class _ChatSinglePageState extends State<ChatSinglePage> {
+class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc{
   ChatBloc _chatBloc;
   String targetId;
   StreamSubscription _chatSubscription;
   ScrollController _scrollController = ScrollController();
   FocusNode _sendFocusNode = FocusNode();
   TextEditingController _sendController = TextEditingController();
-  String currentAddress = Global.currentClient.address;
   List<MessageSchema> _messages = <MessageSchema>[];
   bool _canSend = false;
   int _limit = 20;
@@ -57,18 +58,18 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
   Timer _deleteTick;
 
   initAsync() async {
-    var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit);
+    var res = await MessageSchema.getAndReadTargetMessages(db, targetId, limit: _limit);
     _chatBloc.add(RefreshMessages(target: targetId));
     if (res != null) {
       setState(() {
         _messages = res;
       });
     }
-    widget.arguments.contact.requestProfile();
+    widget.arguments.contact.requestProfile(account.client);
   }
 
   Future _loadMore() async {
-    var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit, skip: _skip);
+    var res = await MessageSchema.getAndReadTargetMessages(db, targetId, limit: _limit, skip: _skip);
     _chatBloc.add(RefreshMessages(target: targetId));
     if (res != null) {
       _skip += res.length;
@@ -85,7 +86,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
           int afterSeconds = item.deleteTime.difference(DateTime.now()).inSeconds;
           item.burnAfterSeconds = afterSeconds;
           if (item.burnAfterSeconds < 0) {
-            item.deleteMessage();
+            item.deleteMessage(db);
             return true;
           } else {
             return false;
@@ -128,7 +129,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
   void initState() {
     super.initState();
     targetId = widget.arguments.contact.clientAddress;
-    Global.currentChatId = targetId;
+    Global.currentOtherChatId = targetId;
     _deleteTickHandle();
     initAsync();
     _sendFocusNode.addListener(() {
@@ -148,7 +149,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
           if (state.message.from == targetId && state.message.contentType == ContentType.text) {
             state.message.isSuccess = true;
             state.message.isRead = true;
-            state.message.readMessage().then((n) {
+            state.message.readMessage(db).then((n) {
               _chatBloc.add(RefreshMessages());
             });
             setState(() {
@@ -157,7 +158,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
           } else if (state.message.from == targetId && state.message.contentType == ContentType.ChannelInvitation) {
             state.message.isSuccess = true;
             state.message.isRead = true;
-            state.message.readMessage().then((n) {
+            state.message.readMessage(db).then((n) {
               _chatBloc.add(RefreshMessages());
             });
             setState(() {
@@ -181,7 +182,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
             if (state.message.options['deleteAfterSeconds'] != null) {
               state.message.deleteTime = DateTime.now().add(Duration(seconds: state.message.options['deleteAfterSeconds'] + 1));
             }
-            state.message.readMessage().then((n) {
+            state.message.readMessage(db).then((n) {
               _chatBloc.add(RefreshMessages());
             });
             setState(() {
@@ -193,7 +194,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
             if (state.message.options != null && state.message.options['deleteAfterSeconds'] != null) {
               state.message.deleteTime = DateTime.now().add(Duration(seconds: state.message.options['deleteAfterSeconds'] + 1));
             }
-            state.message.readMessage().then((n) {
+            state.message.readMessage(db).then((n) {
               _chatBloc.add(RefreshMessages());
             });
             setState(() {
@@ -223,7 +224,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
       }
     });
     Future.delayed(Duration(milliseconds: 100), () {
-      String content = LocalStorage.getChatUnSendContentFromId(targetId) ?? '';
+      String content = LocalStorage.getChatUnSendContentFromId(accountPubkey, targetId) ?? '';
 
       if (mounted)
         setState(() {
@@ -235,8 +236,8 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
 
   @override
   void dispose() {
-    Global.currentChatId = null;
-    LocalStorage.saveChatUnSendContentFromId(targetId, content: _sendController.text);
+    Global.currentOtherChatId = null;
+    LocalStorage.saveChatUnSendContentFromId(accountPubkey, targetId, content: _sendController.text);
     _chatBloc.add(RefreshMessages());
     _chatSubscription?.cancel();
     _scrollController?.dispose();
@@ -253,7 +254,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
   }
 
   _send() async {
-    LocalStorage.saveChatUnSendContentFromId(targetId);
+    LocalStorage.saveChatUnSendContentFromId(accountPubkey, targetId);
     String text = _sendController.text;
     if (text == null || text.length == 0) return;
     _sendController.clear();
@@ -271,7 +272,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
         }
       }
 
-      var sendMsg = MessageSchema.fromSendData(from: currentAddress, to: dest, content: text, contentType: contentType, deleteAfterSeconds: deleteAfterSeconds);
+      var sendMsg = MessageSchema.fromSendData(from: accountChatId, to: dest, content: text, contentType: contentType, deleteAfterSeconds: deleteAfterSeconds);
       sendMsg.isOutbound = true;
       try {
         _chatBloc.add(SendMessage(sendMsg));
@@ -291,7 +292,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
       if (widget.arguments.contact?.options?.deleteAfterSeconds != null) deleteAfterSeconds = Duration(seconds: widget.arguments.contact.options.deleteAfterSeconds);
     }
     var sendMsg = MessageSchema.fromSendData(
-      from: currentAddress,
+      from: accountChatId,
       to: dest,
       content: savedImg,
       contentType: ContentType.media,
@@ -311,7 +312,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
   getImageFile({@required ImageSource source}) async {
     FocusScope.of(context).requestFocus(FocusNode());
     try {
-      File image = await getCameraFile(source: source);
+      File image = await getCameraFile(accountPubkey, source: source);
       if (image != null) {
         _sendImage(image);
       }
@@ -355,7 +356,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                 child: Container(
                   padding: EdgeInsets.only(right: 14.w),
                   alignment: Alignment.center,
-                  child: widget.arguments.contact.avatarWidget(backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 24),
+                  child: widget.arguments.contact.avatarWidget(db, backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 24),
                 ),
               ),
               Expanded(
@@ -460,7 +461,10 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                                             ],
                                           ),
                                           SizedBox(height: 6),
-                                          Label('${message.isOutbound ? Global.currentUser.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).update_burn_after_reading}'),
+                                          accountUserBuilder(onUser: (context, user) {
+                                            return Label(
+                                                '${message.isOutbound ? user.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).update_burn_after_reading}');
+                                          }),
                                         ],
                                       ),
 //                                      Padding(
@@ -506,7 +510,10 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                                               Label('off'),
                                             ],
                                           ),
-                                          Label('${message.isOutbound ? NMobileLocalizations.of(context).you : widget.arguments.contact.name} ${NMobileLocalizations.of(context).close_burn_after_reading}'),
+                                          accountUserBuilder(onUser: (context, user) {
+                                            return Label(
+                                                '${message.isOutbound ? user.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).close_burn_after_reading}');
+                                          }),
                                         ],
                                       ),
 //                                      Padding(

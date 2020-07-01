@@ -81,7 +81,7 @@ class _NoConnectScreenState extends State<NoConnectScreen> with WidgetsBindingOb
       ),
       body: Builder(
         builder: (BuildContext context) => BodyBox(
-          padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
+          padding: EdgeInsets.only(left: 20.w, right: 20.w),
           color: DefaultTheme.backgroundColor1,
           child: Container(
             child: Flex(
