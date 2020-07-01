@@ -14,6 +14,7 @@ import 'package:nmobile/services/android_messaging_service.dart';
 import 'package:nmobile/services/background_fetch_service.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:package_info/package_info.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_sqlcipher/sqlite_api.dart';
@@ -43,6 +44,7 @@ class Global {
 
   static Future init(VoidCallback callback) async {
     WidgetsFlutterBinding.ensureInitialized();
+    NLog.d('APP start');
     await SpUtil.getInstance();
     setupLocator();
     await initData();
