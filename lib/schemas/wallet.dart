@@ -21,13 +21,12 @@ class WalletSchema extends Equatable {
   double balance = 0;
   String keystore;
   String publicKey;
-  String seed;
   double balanceEth = 0;
   bool isBackedUp = false;
 
 //  final LocalStorage _localStorage = LocalStorage();
   final SecureStorage _secureStorage = SecureStorage();
-  final LocalAuthenticationService _localAuth = locator<LocalAuthenticationService>();
+  final LocalAuthenticationService _localAuth = instanceOf<LocalAuthenticationService>();
 
   WalletSchema({this.address, this.type, this.name, this.balance = 0, this.balanceEth = 0, this.isBackedUp = false});
 
@@ -39,20 +38,23 @@ class WalletSchema extends Equatable {
 
   Future<String> getPassword() async {
     NLog.d('getPassword');
+    Future<String> _showDialog() {
+      return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
+    }
     if (_localAuth.isProtectionEnabled) {
       final password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');
       if (password == null) {
-        return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
+        return _showDialog();
       } else {
         bool auth = await _localAuth.authenticate();
         if (auth) {
           return password;
         } else {
-          return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
+          return _showDialog();
         }
       }
     } else {
-      return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
+      return _showDialog();
     }
   }
 

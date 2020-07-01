@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -54,7 +55,7 @@ class ChatBubble extends StatefulWidget {
   _ChatBubbleState createState() => _ChatBubbleState();
 }
 
-class _ChatBubbleState extends State<ChatBubble> {
+class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
   GlobalKey popupMenuKey = GlobalKey();
   ChatBloc _chatBloc;
 
@@ -199,7 +200,7 @@ class _ChatBubbleState extends State<ChatBubble> {
     EdgeInsetsGeometry contentPadding = EdgeInsets.zero;
 
     if (widget.message.contentType == ContentType.ChannelInvitation) {
-      return getChannelInviteView();
+      return getChannelInviteView(accountChatId);
     } else if (widget.message.contentType == ContentType.eventSubscribe) {
       return Container();
     }
@@ -340,6 +341,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                 child: Opacity(
                   opacity: !widget.hideHeader ? 1.0 : 0.0,
                   child: widget.contact.avatarWidget(
+                    _chatBloc.db,
                     size: 20,
                     backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
                   ),
@@ -400,7 +402,7 @@ class _ChatBubbleState extends State<ChatBubble> {
     }
   }
 
-  getChannelInviteView() {
+  getChannelInviteView(String myChatId) {
     var name;
     var groupName;
     TopicSchema topicSchema = TopicSchema(topic: widget.message.content);
@@ -451,16 +453,16 @@ class _ChatBubbleState extends State<ChatBubble> {
                           showToast(NMobileLocalizations.of(context).accepted);
                           Navigator.pop(context);
                           var duration = 400000;
-                          List<TopicSchema> topic = await TopicSchema.getAllTopic();
+                          List<TopicSchema> topic = await TopicSchema.getAllTopic(db);
                           var t = topic.firstWhere((item) => item.topic == widget.message.content, orElse: () => null);
-                          if (t != null && !LocalStorage.getUnsubscribeTopicList().contains(widget.message.content)) {
+                          if (t != null && !LocalStorage.getUnsubscribeTopicList(myChatId).contains(widget.message.content)) {
 //                            LogUtil.v('joined');
                           } else {
-                            LocalStorage.removeTopicFromUnsubscribeList(widget.message.content);
-                            var hash = await TopicSchema.subscribe(topic: widget.message.content, duration: duration);
+                            LocalStorage.removeTopicFromUnsubscribeList(myChatId, widget.message.content);
+                            var hash = await TopicSchema.subscribe(account, topic: widget.message.content, duration: duration);
                             if (hash != null) {
                               var sendMsg = MessageSchema.fromSendData(
-                                from: Global.currentClient.address,
+                                from: myChatId,
                                 topic: widget.message.content,
                                 contentType: ContentType.dchatSubscribe,
                               );
@@ -469,8 +471,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                               _chatBloc.add(SendMessage(sendMsg));
                               DateTime now = DateTime.now();
                               var topicSchema = TopicSchema(topic: widget.message.content, owner: getOwnerPubkeyByTopic(widget.message.content.toString()), expiresAt: now.add(blockToExpiresTime(duration)));
-                              await topicSchema.insertOrUpdate();
-                              topicSchema = await TopicSchema.getTopic(widget.message.content);
+                              await topicSchema.insertOrUpdate(db, accountPubkey);
+                              topicSchema = await TopicSchema.getTopic(db, widget.message.content);
                             }
                           }
                         });
