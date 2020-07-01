@@ -377,7 +377,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     } else {
       return Container(
         margin: 20.pad(t: 25, b: 0),
-        padding: 0.pad(),
+        padding: 0.pad(b: 16),
         width: double.infinity,
         decoration: BoxDecoration(color: DefaultTheme.backgroundColor2, borderRadius: BorderRadius.circular(8)),
         child: Row(
