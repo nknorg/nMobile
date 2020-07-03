@@ -7,9 +7,10 @@ class SimpleConfirm {
   final String title;
   final String content;
   final String buttonText;
+  final Color buttonColor;
   final ValueChanged<bool> callback;
 
-  SimpleConfirm({@required this.context, this.title, @required this.content, this.callback, this.buttonText});
+  SimpleConfirm({@required this.context, this.title, @required this.content, this.callback, this.buttonText, this.buttonColor});
 
   Future<void> show() {
     String title = this.title;
@@ -33,7 +34,7 @@ class SimpleConfirm {
                 },
               ),
               FlatButton(
-                child: Text(buttonText.toUpperCase(), style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                child: Text(buttonText.toUpperCase(), style: TextStyle(color: buttonColor, fontSize: 14, fontWeight: FontWeight.bold)),
                 onPressed: () {
                   Navigator.of(context).pop();
                   if (callback != null) callback(true);
