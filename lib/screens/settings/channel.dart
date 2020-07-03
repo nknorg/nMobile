@@ -173,7 +173,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                                           ),
                                         ),
                                         SizedBox(width: 10),
-                                        Icon(Icons.content_copy, size: 22, color: DefaultTheme.fontColor4)
+//                                        Icon(Icons.content_copy, size: 22, color: DefaultTheme.fontColor4)
                                       ],
                                     ),
                                   ),
@@ -265,7 +265,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
           unSubscriberAction();
         },
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
           width: double.infinity,
           decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
           child: Column(
@@ -286,7 +286,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
           subscriberAction();
         },
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
           width: double.infinity,
           decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
           child: Column(
@@ -307,6 +307,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
   unSubscriberAction() async {
     SimpleConfirm(
             context: context,
+            buttonColor: Colors.red,
             content: NMobileLocalizations.of(context).leave_group_confirm_title,
             callback: (b) {
               if (b) {

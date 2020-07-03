@@ -1145,16 +1145,10 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
     if (widget.arguments.type == ContactType.stranger) {
       return FlatButton(
         padding: EdgeInsets.zero,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            SizedBox(width: 20),
-            Text(
-              NMobileLocalizations.of(context).add_contact,
-              textAlign: TextAlign.left,
-              style: TextStyle(color: DefaultTheme.primaryColor, fontSize: DefaultTheme.bodyRegularFontSize),
-            ),
-          ],
+        child: Text(
+          NMobileLocalizations.of(context).add_contact,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: DefaultTheme.primaryColor, fontSize: DefaultTheme.bodyRegularFontSize),
         ),
         onPressed: () {
           showAction(true);
@@ -1163,17 +1157,11 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
     } else {
       return FlatButton(
         padding: EdgeInsets.zero,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            SizedBox(width: 20),
-            Text(
-              NMobileLocalizations.of(context).delete,
-              softWrap: false,
-              textAlign: TextAlign.left,
-              style: TextStyle(color: Colors.red, fontSize: DefaultTheme.bodyRegularFontSize),
-            ),
-          ],
+        child: Text(
+          NMobileLocalizations.of(context).delete,
+          softWrap: false,
+          textAlign: TextAlign.left,
+          style: TextStyle(color: Colors.red, fontSize: DefaultTheme.bodyRegularFontSize),
         ),
         onPressed: () {
           showAction(false);
