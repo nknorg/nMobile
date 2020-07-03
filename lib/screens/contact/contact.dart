@@ -11,11 +11,9 @@ import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
-import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
-import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
@@ -29,9 +27,9 @@ import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/screens/chat/photo_page.dart';
+import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
-import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -205,28 +203,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                       ],
                     ),
                     SizedBox(height: 40)
-//                    InkWell(
-//                      onTap: () {
-//                        if (widget?.arguments?.avatarFilePath != null) {
-//                          Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
-//                        }
-//                      },
-//                      child: widget.arguments.avatarWidget(
-//                        backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
-//                        size: 70,
-//                        bottomRight: Button(
-//                          padding: const EdgeInsets.all(0),
-//                          width: 40,
-//                          height: 40,
-//                          backgroundColor: DefaultTheme.primaryColor,
-//                          child: loadAssetIconsImage('camera', width: 24),
-//                          onPressed: () async {
-//                            updatePic();
-//                          },
-//                        ),
-//                      ),
-//                    ).pad(t: 16),
-//                    Label(widget.arguments.name, type: LabelType.h2, dark: true).pad(t: 16, b: 24),
                   ],
                 ),
               ),
@@ -302,11 +278,11 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                             height: 1,
                                           ),
                                           Spacer(),
-                                          loadAssetIconsImage(
-                                            'scan',
-                                            width: 22,
-                                            color: DefaultTheme.fontColor2,
-                                          ),
+//                                          loadAssetIconsImage(
+//                                            'scan',
+//                                            width: 22,
+//                                            color: DefaultTheme.fontColor2,
+//                                          ),
                                           SizedBox(width: 10),
                                           SvgPicture.asset(
                                             'assets/icons/right.svg',
@@ -315,6 +291,49 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                           )
                                         ],
                                       ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 10.h),
+                                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Label(
+                                          NMobileLocalizations.of(context).d_chat_address,
+                                          type: LabelType.bodyRegular,
+                                          color: DefaultTheme.fontColor1,
+                                          height: 1,
+                                        ),
+                                        SizedBox(height: 10),
+                                        InkWell(
+                                          onTap: () {
+                                            copyAction(widget.arguments.clientAddress);
+                                          },
+                                          child: Row(
+                                            children: <Widget>[
+                                              Expanded(
+                                                child: Label(
+                                                  widget.arguments.clientAddress,
+                                                  type: LabelType.bodyRegular,
+                                                  color: DefaultTheme.fontColor2,
+                                                  maxLines: 2,
+                                                ),
+                                              ),
+//                                              SvgPicture.asset(
+//                                                'assets/icons/right.svg',
+//                                                width: 24,
+//                                                color: DefaultTheme.fontColor2,
+//                                              )
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -337,80 +356,42 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                               color: DefaultTheme.fontColor1,
                                               height: 1,
                                             ),
-                                            InkWell(
-                                              onTap: () {
-                                                copyAction(widget.arguments.nknWalletAddress);
-                                              },
-                                              child: Icon(
-                                                Icons.content_copy,
-                                                size: 16,
-                                                color: DefaultTheme.fontColor2,
-                                              ),
-                                            )
+//                                            InkWell(
+//                                              onTap: () {
+//                                                copyAction(widget.arguments.nknWalletAddress);
+//                                              },
+//                                              child: Icon(
+//                                                Icons.content_copy,
+//                                                size: 16,
+//                                                color: DefaultTheme.fontColor2,
+//                                              ),
+//                                            )
                                           ],
                                         ),
-                                        SizedBox(height: 20),
-                                        Row(
-                                          children: <Widget>[
-                                            Expanded(
-                                              child: Label(
-                                                widget.arguments.nknWalletAddress,
-                                                type: LabelType.bodyRegular,
-                                                color: DefaultTheme.fontColor2,
-                                                overflow: TextOverflow.fade,
-                                                textAlign: TextAlign.left,
-                                                height: 1,
+                                        SizedBox(height: 10),
+                                        InkWell(
+                                          onTap: () {
+                                            copyAction(widget.arguments.nknWalletAddress);
+                                          },
+                                          child: Row(
+                                            children: <Widget>[
+                                              Expanded(
+                                                child: Label(
+                                                  widget.arguments.nknWalletAddress,
+                                                  type: LabelType.bodyRegular,
+                                                  color: DefaultTheme.fontColor2,
+                                                  overflow: TextOverflow.fade,
+                                                  textAlign: TextAlign.left,
+                                                  height: 1,
+                                                ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 10.h),
-                                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: <Widget>[
-                                            Label(
-                                              NMobileLocalizations.of(context).d_chat_address,
-                                              type: LabelType.bodyRegular,
-                                              color: DefaultTheme.fontColor1,
-                                              height: 1,
-                                            ),
-                                            InkWell(
-                                              onTap: () {
-                                                copyAction(widget.arguments.clientAddress);
-                                              },
-                                              child: Icon(
-                                                Icons.content_copy,
-                                                size: 16,
-                                                color: DefaultTheme.fontColor2,
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                        SizedBox(height: 20),
-                                        Row(
-                                          children: <Widget>[
-                                            Expanded(
-                                              child: Label(
-                                                widget.arguments.clientAddress,
-                                                type: LabelType.bodyRegular,
-                                                color: DefaultTheme.fontColor2,
-                                                maxLines: 2,
-                                              ),
-                                            ),
-                                          ],
+//                                            SvgPicture.asset(
+//                                              'assets/icons/right.svg',
+//                                              width: 24,
+//                                              color: DefaultTheme.fontColor2,
+//                                            )
+                                            ],
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -564,11 +545,11 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
 //                                color: DefaultTheme.lineColor,
 //                                constraints: BoxConstraints(maxHeight: 1, minHeight: 1, maxWidth: double.infinity, minWidth: double.infinity),
 //                              ),
-                              Text(
-                                NMobileLocalizations.of(context).my_details_desc,
-                                softWrap: true,
-                                style: TextStyle(color: Colours.gray_81, fontSize: DefaultTheme.bodySmallFontSize),
-                              ).pad(l: 20, t: 8)
+//                              Text(
+//                                NMobileLocalizations.of(context).my_details_desc,
+//                                softWrap: true,
+//                                style: TextStyle(color: Colours.gray_81, fontSize: DefaultTheme.bodySmallFontSize),
+//                              ).pad(l: 20, t: 8)
                             ],
                           ).pad(t: 24)
                         ],
@@ -741,30 +722,35 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                                 color: DefaultTheme.fontColor1,
                                                 height: 1,
                                               ),
-                                              InkWell(
-                                                onTap: () {
-                                                  copyAction(widget.arguments.publicKey);
-                                                },
-                                                child: Icon(
-                                                  Icons.content_copy,
-                                                  color: DefaultTheme.fontColor2,
-                                                  size: 18,
-                                                ),
-                                              )
+//                                              InkWell(
+//                                                onTap: () {
+//                                                  copyAction(widget.arguments.publicKey);
+//                                                },
+//                                                child: Icon(
+//                                                  Icons.content_copy,
+//                                                  color: DefaultTheme.fontColor2,
+//                                                  size: 18,
+//                                                ),
+//                                              )
                                             ],
                                           ),
                                           SizedBox(height: 20),
-                                          Row(
-                                            children: <Widget>[
-                                              Expanded(
-                                                child: Label(
-                                                  widget.arguments.publicKey,
-                                                  type: LabelType.bodyRegular,
-                                                  color: DefaultTheme.fontColor2,
-                                                  maxLines: 2,
+                                          InkWell(
+                                            onTap: () {
+                                              copyAction(widget.arguments.publicKey);
+                                            },
+                                            child: Row(
+                                              children: <Widget>[
+                                                Expanded(
+                                                  child: Label(
+                                                    widget.arguments.publicKey,
+                                                    type: LabelType.bodyRegular,
+                                                    color: DefaultTheme.fontColor2,
+                                                    maxLines: 2,
+                                                  ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -773,35 +759,51 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                 ),
 
                                 Container(
-                                  color: DefaultTheme.lineColor,
-                                  constraints: BoxConstraints(maxHeight: 1, minHeight: 1, maxWidth: double.infinity, minWidth: double.infinity),
-                                ).pad(l: 20, r: 20, b: 16),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Label(
-                                      NMobileLocalizations.of(context).notes,
-                                      type: LabelType.bodyRegular,
-                                      color: DefaultTheme.fontColor1,
-                                      height: 1,
-                                    ),
-                                    InkWell(
-                                      child: Icon(Icons.edit, color: DefaultTheme.fontColor2),
-                                      onTap: () {
-                                        changeName();
-                                      },
-                                    ),
-                                  ],
-                                ).pad(l: 20, r: 20),
-                                Textbox(
-                                  multi: true,
-                                  minLines: 1,
-                                  maxLines: 3,
-                                  controller: _notesController,
-                                  readOnly: true,
-                                  color: DefaultTheme.fontColor2,
-                                  padding: 0.pad(b: 16),
-                                ).pad(l: 20, r: 20),
+                                  width: double.infinity,
+                                  padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
+                                  child: Column(
+                                    children: <Widget>[
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          Label(
+                                            NMobileLocalizations.of(context).notes,
+                                            type: LabelType.bodyRegular,
+                                            color: DefaultTheme.fontColor1,
+                                            height: 1,
+                                          ),
+                                        ],
+                                      ),
+                                      InkWell(
+                                        onTap: () {
+                                          changeName();
+                                        },
+                                        child: Row(
+                                          children: <Widget>[
+                                            Expanded(
+                                              child: Textbox(
+                                                multi: true,
+                                                minLines: 1,
+                                                enabled: false,
+                                                maxLines: 3,
+                                                controller: _notesController,
+                                                readOnly: true,
+                                                color: DefaultTheme.fontColor2,
+                                              ),
+                                            ),
+                                            SizedBox(width: 10),
+                                            SvgPicture.asset(
+                                              'assets/icons/right.svg',
+                                              width: 24,
+                                              color: DefaultTheme.fontColor2,
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: 10),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
@@ -840,65 +842,20 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                   max: _burnTextArray.length - 1.0,
                                   min: 0,
                                 ).pad(l: 4, r: 4),
+                                SizedBox(height: 40),
 
+                                Container(
+                                  color: DefaultTheme.lineColor,
+                                  width: double.infinity,
+                                  height: 0.8,
+                                ),
+                                getStatusView(),
+                                Container(
+                                  color: DefaultTheme.lineColor,
+                                  width: double.infinity,
+                                  height: 0.8,
+                                ),
                                 //////////////////////////////////////////////////////////////////
-                                Container(
-                                  color: DefaultTheme.lineColor,
-                                  constraints: BoxConstraints(maxHeight: 1, minHeight: 1, maxWidth: double.infinity, minWidth: double.infinity),
-                                ).pad(l: 20, t: 56, r: 20),
-                                (widget.arguments.type == ContactType.stranger
-                                        ? FlatButton(
-                                            padding: 0.pad(),
-                                            color: DefaultTheme.primaryColor,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: <Widget>[
-                                                Icon(
-                                                  Icons.person_add,
-                                                  color: Colors.white,
-                                                  size: 20,
-                                                ).pad(r: 8),
-                                                Text(
-                                                  NMobileLocalizations.of(context).add_contact,
-                                                  softWrap: false,
-                                                  style: TextStyle(color: Colors.white, fontSize: DefaultTheme.bodyRegularFontSize),
-                                                )
-                                              ],
-                                            ),
-                                            onPressed: () {
-                                              showAction(true);
-                                            },
-                                          )
-                                        : FlatButton(
-                                            padding: 0.pad(),
-                                            color: Colors.red,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: <Widget>[
-                                                Icon(
-                                                  Icons.delete,
-                                                  color: Colors.white,
-                                                  size: 20,
-                                                ).pad(r: 8),
-                                                Text(
-                                                  NMobileLocalizations.of(context).delete,
-                                                  softWrap: false,
-                                                  style: TextStyle(color: Colors.white, fontSize: DefaultTheme.bodyRegularFontSize),
-                                                ),
-                                              ],
-                                            ),
-                                            onPressed: () {
-                                              showAction(false);
-                                            },
-                                          ))
-                                    .sized(w: double.infinity, h: 48)
-                                    .pad(l: 20, r: 20),
-                                Container(
-                                  color: DefaultTheme.lineColor,
-                                  constraints: BoxConstraints(maxHeight: 1, minHeight: 1, maxWidth: double.infinity, minWidth: double.infinity),
-                                ).pad(l: 20, r: 20),
                               ],
                             ),
                           ),
@@ -1165,42 +1122,63 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
 
   showAction(bool b) async {
     if (!b) {
-      await ModalDialog.of(context).confirm(
-        height: 350.h,
-        title: Label(
-          NMobileLocalizations.of(context).delete_friend_confirm_title,
-          type: LabelType.h2,
-          softWrap: true,
-        ),
-        content: Container(),
-        agree: Padding(
-          padding: EdgeInsets.only(bottom: 8),
-          child: Button(
-            child: Label(
-              NMobileLocalizations.of(context).delete,
-              type: LabelType.h3,
-            ),
-            backgroundColor: DefaultTheme.strongColor,
-            width: double.infinity,
-            onPressed: () {
-              Navigator.pop(context);
-              widget.arguments.setFriend(isFriend: b);
+      //delete
+      SimpleConfirm(
+          context: context,
+          content: NMobileLocalizations.of(context).delete_friend_confirm_title,
+          buttonText: NMobileLocalizations.of(context).delete,
+          buttonColor: Colors.red,
+          callback: (v) {
+            if (v) {
+              widget.arguments.setFriend(isFriend: false);
               setState(() {});
-            },
-          ),
-        ),
-        reject: Button(
-          backgroundColor: DefaultTheme.backgroundLightColor,
-          fontColor: DefaultTheme.fontColor2,
-          text: NMobileLocalizations.of(context).cancel,
-          width: double.infinity,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      );
+            }
+          }).show();
     } else {
       widget.arguments.setFriend(isFriend: b);
       setState(() {});
       showToast(NMobileLocalizations.of(context).success);
+    }
+  }
+
+  getStatusView() {
+    if (widget.arguments.type == ContactType.stranger) {
+      return FlatButton(
+        padding: EdgeInsets.zero,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            SizedBox(width: 20),
+            Text(
+              NMobileLocalizations.of(context).add_contact,
+              textAlign: TextAlign.left,
+              style: TextStyle(color: DefaultTheme.primaryColor, fontSize: DefaultTheme.bodyRegularFontSize),
+            ),
+          ],
+        ),
+        onPressed: () {
+          showAction(true);
+        },
+      ).sized(h: 50, w: double.infinity);
+    } else {
+      return FlatButton(
+        padding: EdgeInsets.zero,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            SizedBox(width: 20),
+            Text(
+              NMobileLocalizations.of(context).delete,
+              softWrap: false,
+              textAlign: TextAlign.left,
+              style: TextStyle(color: Colors.red, fontSize: DefaultTheme.bodyRegularFontSize),
+            ),
+          ],
+        ),
+        onPressed: () {
+          showAction(false);
+        },
+      ).sized(h: 50, w: double.infinity);
     }
   }
 }
