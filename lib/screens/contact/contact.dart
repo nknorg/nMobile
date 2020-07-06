@@ -30,6 +30,7 @@ import 'package:nmobile/screens/chat/photo_page.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
+import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -141,6 +142,11 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
+//    NLog.d(widget.arguments.name);
+//    NLog.d(widget.arguments.firstName);
+//    NLog.d(widget.arguments.sourceProfile.name);
+//    NLog.d(widget.arguments.sourceProfile.firstName);
+//    NLog.d(widget.arguments.toEntity());
     _burnTextArray = <String>[
       NMobileLocalizations.of(context).burn_5_seconds,
       NMobileLocalizations.of(context).burn_10_seconds,
@@ -229,7 +235,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
                                     InkWell(
-                                      onTap: showChangeNameDialog,
+                                      onTap: showChangeSelfNameDialog,
                                       child: Row(
                                         children: <Widget>[
                                           Label(
@@ -241,7 +247,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                           SizedBox(width: 60),
                                           Expanded(
                                             child: Label(
-                                              nickName,
+                                              nickName ?? '',
                                               type: LabelType.bodyRegular,
                                               color: DefaultTheme.fontColor2,
                                               overflow: TextOverflow.fade,
@@ -250,10 +256,10 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                             ),
                                           ),
                                           SizedBox(width: 10),
-                                          SvgPicture.asset(
-                                            'assets/icons/right.svg',
-                                            width: 24,
+                                          Icon(
+                                            Icons.edit,
                                             color: DefaultTheme.fontColor2,
+                                            size: 18,
                                           )
                                         ],
                                       ),
@@ -278,17 +284,11 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                             height: 1,
                                           ),
                                           Spacer(),
-//                                          loadAssetIconsImage(
-//                                            'scan',
-//                                            width: 22,
-//                                            color: DefaultTheme.fontColor2,
-//                                          ),
-                                          SizedBox(width: 10),
-                                          SvgPicture.asset(
-                                            'assets/icons/right.svg',
-                                            width: 24,
+                                          loadAssetIconsImage(
+                                            'scan',
+                                            width: 22,
                                             color: DefaultTheme.fontColor2,
-                                          )
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -298,258 +298,96 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                               Container(
                                 padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 10.h),
                                 decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                        Label(
-                                          NMobileLocalizations.of(context).d_chat_address,
-                                          type: LabelType.bodyRegular,
-                                          color: DefaultTheme.fontColor1,
-                                          height: 1,
-                                        ),
-                                        SizedBox(height: 10),
-                                        InkWell(
-                                          onTap: () {
-                                            copyAction(widget.arguments.clientAddress);
-                                          },
-                                          child: Row(
-                                            children: <Widget>[
-                                              Expanded(
-                                                child: Label(
-                                                  widget.arguments.clientAddress,
-                                                  type: LabelType.bodyRegular,
-                                                  color: DefaultTheme.fontColor2,
-                                                  maxLines: 2,
-                                                ),
-                                              ),
-//                                              SvgPicture.asset(
-//                                                'assets/icons/right.svg',
-//                                                width: 24,
-//                                                color: DefaultTheme.fontColor2,
-//                                              )
-                                            ],
+                                child: InkWell(
+                                  onTap: () {
+                                    copyAction(Global.currentClient.address);
+                                  },
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          Label(
+                                            NMobileLocalizations.of(context).d_chat_address,
+                                            type: LabelType.bodyRegular,
+                                            color: DefaultTheme.fontColor1,
+                                            height: 1,
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                          Icon(
+                                            Icons.content_copy,
+                                            color: DefaultTheme.fontColor2,
+                                            size: 18,
+                                          )
+                                        ],
+                                      ),
+                                      SizedBox(height: 10),
+                                      Row(
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: Label(
+                                              Global.currentClient.address,
+                                              type: LabelType.bodyRegular,
+                                              color: DefaultTheme.fontColor2,
+                                              maxLines: 2,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                               Container(
                                 padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 10.h),
                                 decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: <Widget>[
-                                            Label(
-                                              NMobileLocalizations.of(context).wallet_address,
+                                child: InkWell(
+                                  onTap: () {
+                                    copyAction(widget.arguments.nknWalletAddress);
+                                  },
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          Label(
+                                            NMobileLocalizations.of(context).wallet_address,
+                                            type: LabelType.bodyRegular,
+                                            color: DefaultTheme.fontColor1,
+                                            height: 1,
+                                          ),
+                                          Icon(
+                                            Icons.content_copy,
+                                            size: 16,
+                                            color: DefaultTheme.fontColor2,
+                                          )
+                                        ],
+                                      ),
+                                      SizedBox(height: 10),
+                                      Row(
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: Label(
+                                              widget.arguments.nknWalletAddress,
                                               type: LabelType.bodyRegular,
-                                              color: DefaultTheme.fontColor1,
+                                              color: DefaultTheme.fontColor2,
+                                              overflow: TextOverflow.fade,
+                                              textAlign: TextAlign.left,
                                               height: 1,
                                             ),
-//                                            InkWell(
-//                                              onTap: () {
-//                                                copyAction(widget.arguments.nknWalletAddress);
-//                                              },
-//                                              child: Icon(
-//                                                Icons.content_copy,
-//                                                size: 16,
-//                                                color: DefaultTheme.fontColor2,
-//                                              ),
-//                                            )
-                                          ],
-                                        ),
-                                        SizedBox(height: 10),
-                                        InkWell(
-                                          onTap: () {
-                                            copyAction(widget.arguments.nknWalletAddress);
-                                          },
-                                          child: Row(
-                                            children: <Widget>[
-                                              Expanded(
-                                                child: Label(
-                                                  widget.arguments.nknWalletAddress,
-                                                  type: LabelType.bodyRegular,
-                                                  color: DefaultTheme.fontColor2,
-                                                  overflow: TextOverflow.fade,
-                                                  textAlign: TextAlign.left,
-                                                  height: 1,
-                                                ),
-                                              ),
+                                          ),
 //                                            SvgPicture.asset(
 //                                              'assets/icons/right.svg',
 //                                              width: 24,
 //                                              color: DefaultTheme.fontColor2,
 //                                            )
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-
-//                              Row(
-//                                crossAxisAlignment: CrossAxisAlignment.start,
-//                                children: [
-//                                  loadAssetIconsImage('user', color: DefaultTheme.primaryColor, width: 24).pad(r: 16),
-//                                  Expanded(
-//                                    flex: 1,
-//                                    child: Column(
-//                                      crossAxisAlignment: CrossAxisAlignment.start,
-//                                      children: [
-//                                        Row(
-//                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                                          children: <Widget>[
-//                                            Label(
-//                                              NMobileLocalizations.of(context).nickname,
-//                                              type: LabelType.h3,
-//                                              textAlign: TextAlign.start,
-//                                            ),
-//                                            InkWell(
-//                                              child: Label(
-//                                                NMobileLocalizations.of(context).edit,
-//                                                color: DefaultTheme.primaryColor,
-//                                                type: LabelType.bodyRegular,
-//                                              ),
-//                                              onTap: showChangeNameDialog,
-//                                            ),
-//                                          ],
-//                                        ),
-//                                        Label(
-//                                          widget.arguments.name,
-//                                          type: LabelType.bodyRegular,
-//                                          color: DefaultTheme.fontColor2,
-//                                          overflow: TextOverflow.fade,
-//                                          textAlign: TextAlign.right,
-//                                          height: 1,
-//                                        ),
-//                                      ],
-//                                    ).pad(t: 2),
-//                                  ),
-//                                ],
-//                              ),
-//                              Container(
-//                                color: DefaultTheme.lineColor,
-//                                constraints: BoxConstraints(maxHeight: 1, minHeight: 1, maxWidth: double.infinity, minWidth: double.infinity),
-//                              ),
-//                              Row(
-//                                crossAxisAlignment: CrossAxisAlignment.start,
-//                                children: [
-//                                  loadAssetIconsImage('wallet', color: DefaultTheme.primaryColor, width: 24).pad(r: 16),
-//                                  Expanded(
-//                                    flex: 1,
-//                                    child: Column(
-//                                      crossAxisAlignment: CrossAxisAlignment.start,
-//                                      children: [
-//                                        Row(
-//                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                                          children: [
-//                                            Label(
-//                                              NMobileLocalizations.of(context).wallet_address,
-//                                              type: LabelType.h3,
-//                                              textAlign: TextAlign.start,
-//                                            ),
-//                                            InkWell(
-//                                              child: Label(
-//                                                NMobileLocalizations.of(context).copy,
-//                                                color: DefaultTheme.primaryColor,
-//                                                type: LabelType.bodyRegular,
-//                                              ),
-//                                              onTap: () {
-//                                                copyAction(widget.arguments.nknWalletAddress);
-//                                              },
-//                                            ),
-//                                          ],
-//                                        ),
-//                                        InkWell(
-//                                          onTap: () {
-//                                            copyAction(widget.arguments.nknWalletAddress);
-//                                          },
-//                                          child: Text(
-//                                            widget.arguments.nknWalletAddress,
-//                                            softWrap: false,
-//                                            maxLines: 1,
-//                                            overflow: TextOverflow.ellipsis,
-//                                            style: TextStyle(color: Colours.gray_81, fontSize: DefaultTheme.bodySmallFontSize),
-//                                          ).pad(t: 8),
-//                                        ),
-//                                      ],
-//                                    ).pad(t: 2),
-//                                  ),
-//                                ],
-//                              ).pad(t: 24),
-//                              Row(
-//                                crossAxisAlignment: CrossAxisAlignment.start,
-//                                children: [
-//                                  loadAssetIconsImage('key', color: DefaultTheme.primaryColor, width: 24).pad(r: 16),
-//                                  Expanded(
-//                                    flex: 1,
-//                                    child: Column(
-//                                      crossAxisAlignment: CrossAxisAlignment.start,
-//                                      children: [
-//                                        Label(
-//                                          NMobileLocalizations.of(context).d_chat_address,
-//                                          type: LabelType.h4,
-//                                          textAlign: TextAlign.start,
-//                                        ),
-//                                        Row(
-//                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                                          children: [
-//                                            Expanded(
-//                                              flex: 1,
-//                                              child: InkWell(
-//                                                onTap: () {
-//                                                  copyAction(widget.arguments.clientAddress);
-//                                                },
-//                                                child: Text(
-//                                                  widget.arguments.clientAddress,
-//                                                  softWrap: false,
-//                                                  maxLines: 1,
-//                                                  overflow: TextOverflow.ellipsis,
-//                                                  style: TextStyle(color: Colours.gray_81, fontSize: DefaultTheme.bodySmallFontSize),
-//                                                ),
-//                                              ),
-//                                            ),
-//                                            Expanded(
-//                                              flex: 0,
-//                                              child: InkWell(
-//                                                child: Label(
-//                                                  NMobileLocalizations.of(context).copy,
-//                                                  color: DefaultTheme.primaryColor,
-//                                                  type: LabelType.bodyRegular,
-//                                                ).pad(l: 3),
-//                                                onTap: () {
-//                                                  copyAction(widget.arguments.clientAddress);
-//                                                },
-//                                              ),
-//                                            ),
-//                                          ],
-//                                        ).pad(t: 8),
-//                                      ],
-//                                    ).pad(t: 2),
-//                                  ),
-//                                ],
-//                              ).pad(t: 12, b: 16),
-//                              Container(
-//                                color: DefaultTheme.lineColor,
-//                                constraints: BoxConstraints(maxHeight: 1, minHeight: 1, maxWidth: double.infinity, minWidth: double.infinity),
-//                              ),
-//                              Text(
-//                                NMobileLocalizations.of(context).my_details_desc,
-//                                softWrap: true,
-//                                style: TextStyle(color: Colours.gray_81, fontSize: DefaultTheme.bodySmallFontSize),
-//                              ).pad(l: 20, t: 8)
                             ],
                           ).pad(t: 24)
                         ],
@@ -573,27 +411,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
             },
           ),
           backgroundColor: DefaultTheme.backgroundColor4,
-          /*action: widget.arguments.type == ContactType.stranger
-              ? IconButton(
-                  icon: loadAssetIconsImage(
-                    'user-plus',
-                    color: DefaultTheme.backgroundLightColor,
-                    width: 24,
-                  ),
-                  onPressed: () {
-                    showAction(true);
-                  },
-                )
-              : IconButton(
-                  icon: loadAssetIconsImage(
-                    'user-delete',
-                    color: Colours.pink_8,
-                    width: 24,
-                  ),
-                  onPressed: () {
-                    showAction(false);
-                  },
-                ),*/
         ),
         body: Container(
           color: DefaultTheme.backgroundColor4,
@@ -643,6 +460,31 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                       )
                     ],
                   ),
+                  SizedBox(height: 20),
+                  InkWell(
+                    onTap: () {
+                      _firstNameController.text = widget.arguments.name;
+                      _detailChangeName(context);
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Label(
+                          getName(),
+                          type: LabelType.bodyLarge,
+                          color: Colors.white,
+                          overflow: TextOverflow.fade,
+                          textAlign: TextAlign.right,
+                        ),
+                        SizedBox(width: 10),
+                        Icon(
+                          Icons.edit,
+                          color: DefaultTheme.fontColor2,
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                  )
                 ],
               ),
             ),
@@ -668,38 +510,26 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: <Widget>[
-                                      InkWell(
-                                        onTap: () {
-                                          _firstNameController.text = widget.arguments.name;
-                                          _detailChangeName(context);
-                                        },
-                                        child: Row(
-                                          children: <Widget>[
-                                            Label(
-                                              NMobileLocalizations.of(context).nickname,
+                                      Row(
+                                        children: <Widget>[
+                                          Label(
+                                            NMobileLocalizations.of(context).nickname,
+                                            type: LabelType.bodyRegular,
+                                            color: DefaultTheme.fontColor1,
+                                            height: 1,
+                                          ),
+                                          SizedBox(width: 60),
+                                          Expanded(
+                                            child: Label(
+                                              widget.arguments.nickName,
                                               type: LabelType.bodyRegular,
-                                              color: DefaultTheme.fontColor1,
-                                              height: 1,
-                                            ),
-                                            SizedBox(width: 60),
-                                            Expanded(
-                                              child: Label(
-                                                nickName,
-                                                type: LabelType.bodyRegular,
-                                                color: DefaultTheme.fontColor2,
-                                                overflow: TextOverflow.fade,
-                                                textAlign: TextAlign.right,
-                                                height: 1,
-                                              ),
-                                            ),
-                                            SizedBox(width: 10),
-                                            SvgPicture.asset(
-                                              'assets/icons/right.svg',
-                                              width: 24,
                                               color: DefaultTheme.fontColor2,
-                                            )
-                                          ],
-                                        ),
+                                              overflow: TextOverflow.fade,
+                                              textAlign: TextAlign.right,
+                                            ),
+                                          ),
+                                          SizedBox(width: 10),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -722,16 +552,16 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                                 color: DefaultTheme.fontColor1,
                                                 height: 1,
                                               ),
-//                                              InkWell(
-//                                                onTap: () {
-//                                                  copyAction(widget.arguments.publicKey);
-//                                                },
-//                                                child: Icon(
-//                                                  Icons.content_copy,
-//                                                  color: DefaultTheme.fontColor2,
-//                                                  size: 18,
-//                                                ),
-//                                              )
+                                              InkWell(
+                                                onTap: () {
+                                                  copyAction(widget.arguments.publicKey);
+                                                },
+                                                child: Icon(
+                                                  Icons.content_copy,
+                                                  color: DefaultTheme.fontColor2,
+                                                  size: 18,
+                                                ),
+                                              )
                                             ],
                                           ),
                                           SizedBox(height: 20),
@@ -743,7 +573,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                               children: <Widget>[
                                                 Expanded(
                                                   child: Label(
-                                                    widget.arguments.publicKey,
+                                                    widget.arguments.clientAddress,
                                                     type: LabelType.bodyRegular,
                                                     color: DefaultTheme.fontColor2,
                                                     maxLines: 2,
@@ -757,7 +587,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                     ],
                                   ),
                                 ),
-
                                 Container(
                                   width: double.infinity,
                                   padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
@@ -776,7 +605,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                       ),
                                       InkWell(
                                         onTap: () {
-                                          changeName();
+                                          changeNotes();
                                         },
                                         child: Row(
                                           children: <Widget>[
@@ -792,11 +621,11 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                               ),
                                             ),
                                             SizedBox(width: 10),
-                                            SvgPicture.asset(
-                                              'assets/icons/right.svg',
-                                              width: 24,
+                                            Icon(
+                                              Icons.edit,
                                               color: DefaultTheme.fontColor2,
-                                            )
+                                              size: 18,
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -843,7 +672,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                   min: 0,
                                 ).pad(l: 4, r: 4),
                                 SizedBox(height: 40),
-
                                 Container(
                                   color: DefaultTheme.lineColor,
                                   width: double.infinity,
@@ -855,7 +683,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                   width: double.infinity,
                                   height: 0.8,
                                 ),
-                                //////////////////////////////////////////////////////////////////
                               ],
                             ),
                           ),
@@ -887,7 +714,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
     }
   }
 
-  changeName() {
+  changeNotes() {
     BottomDialog.of(context).showBottomDialog(
       height: 320,
       title: NMobileLocalizations.of(context).edit_notes,
@@ -991,7 +818,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
               contact.firstName = _firstNameController.text.trim();
               await contact.setName(contact.firstName);
               setState(() {
-                nickName = contact.firstName;
+                nickName = widget.arguments.name;
               });
               _chatBloc.add(RefreshMessages());
               Navigator.of(context).pop();
@@ -1015,7 +842,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
     });
   }
 
-  showChangeNameDialog() {
+  showChangeSelfNameDialog() {
     _firstNameController.text = widget.arguments.firstName;
 
     BottomDialog.of(context).showBottomDialog(
@@ -1060,9 +887,8 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
               var contact = widget.arguments;
               contact.firstName = _firstNameController.text.trim();
               setState(() {
-                nickName = contact.firstName;
+                nickName = widget.arguments.name;
               });
-//              _nameController.text = widget.arguments.name;
               contact.setName(contact.firstName);
               Navigator.of(context).pop();
             }
@@ -1168,5 +994,10 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
         },
       ).sized(h: 50, w: double.infinity);
     }
+  }
+
+  String getName() {
+    String name = '${_sourceProfile?.name != null && _sourceProfile.name.isNotEmpty && (widget.arguments.firstName != null && widget.arguments.firstName.isNotEmpty || widget.arguments.lastName != null && widget.arguments.lastName.isNotEmpty) ? '(${_sourceProfile?.name})' : ''}';
+    return widget.arguments.name;
   }
 }

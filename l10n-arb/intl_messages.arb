@@ -300,7 +300,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "recieve": "Recieve",
+  "recieve": "Receive",
   "@recieve": {
     "description": "",
     "type": "text",
@@ -618,7 +618,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "select_asset_to_recieve": "Select Asset to Recieve",
+  "select_asset_to_recieve": "Select Asset to Receive",
   "@select_asset_to_recieve": {
     "description": "",
     "type": "text",
