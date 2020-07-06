@@ -47,7 +47,7 @@ class _ContactHomeState extends State<ContactHome> {
   List<ContactSchema> _allFriends = <ContactSchema>[];
   List<ContactSchema> _allStrangerContacts = <ContactSchema>[];
   List<TopicSchema> _allTopic = <TopicSchema>[];
-  int _limit = 20;
+  int _limit = 100;
   int _skip = 20;
   bool loading = false;
   String searchText = '';

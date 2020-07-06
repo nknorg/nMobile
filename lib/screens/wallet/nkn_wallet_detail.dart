@@ -11,12 +11,10 @@ import 'package:nmobile/blocs/wallet/wallets_state.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
-import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/dialog/notification.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
-import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
@@ -24,6 +22,7 @@ import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
@@ -46,6 +45,7 @@ class NknWalletDetailScreen extends StatefulWidget {
 class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
   WalletsBloc _walletsBloc;
   ClientBloc _clientBloc;
+//  bool isDefault = false;
   TextEditingController _nameController = TextEditingController();
 
   @override
@@ -54,6 +54,13 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     _walletsBloc = BlocProvider.of<WalletsBloc>(context);
     _clientBloc = BlocProvider.of<ClientBloc>(context);
     _nameController.text = widget.arguments.name;
+//    widget.arguments.isDefaultWallet().then((v) {
+//      if (mounted) {
+//        setState(() {
+//          isDefault = v;
+//        });
+//      }
+//    });
   }
 
   _receive() {
@@ -76,7 +83,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).main_wallet.toUpperCase(),
+        title: NMobileLocalizations.of(context).main_wallet,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: PopupMenuButton(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -110,63 +117,85 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                 }
                 break;
               case 1:
-                ModalDialog.of(context).show(
-                  height: 450,
-                  title: Label(
-                    NMobileLocalizations.of(context).delete_wallet_confirm_title,
-                    type: LabelType.h2,
-                    softWrap: true,
-                  ),
-                  content: Column(
-                    children: <Widget>[
-                      WalletItem(
-                        schema: widget.arguments,
-                        onTap: () {},
-                      ),
-                      Label(
-                        NMobileLocalizations.of(context).delete_wallet_confirm_text,
-                        type: LabelType.bodyRegular,
-                        softWrap: true,
-                      ),
-                    ],
-                  ),
-                  actions: <Widget>[
-                    Button(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: loadAssetIconsImage(
-                              'trash',
-                              color: DefaultTheme.backgroundLightColor,
-                              width: 24,
-                            ),
-                          ),
-                          Label(
-                            NMobileLocalizations.of(context).delete_wallet,
-                            type: LabelType.h3,
-                          )
-                        ],
-                      ),
-                      backgroundColor: DefaultTheme.strongColor,
-                      width: double.infinity,
-                      onPressed: () async {
-                        _walletsBloc.add(DeleteWallet(widget.arguments));
-                        if (Global?.currentClient?.address != null) {
-                          var s = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(Global.currentClient?.publicKey));
-                          if (s.toString() == widget.arguments.address) {
-                            NLog.d('delete client ');
-                            _clientBloc.add(DisConnected());
-                          } else {
-                            NLog.d('no delete client ');
+                SimpleConfirm(
+                        context: context,
+                        title: NMobileLocalizations.of(context).delete_wallet_confirm_title,
+                        content: NMobileLocalizations.of(context).delete_wallet_confirm_text,
+                        callback: (v) async {
+                          if (v) {
+                            _walletsBloc.add(DeleteWallet(widget.arguments));
+                            if (Global?.currentClient?.address != null) {
+                              var s = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(Global.currentClient?.publicKey));
+                              if (s.toString() == widget.arguments.address) {
+                                NLog.d('delete client ');
+                                _clientBloc.add(DisConnected());
+                              } else {
+                                NLog.d('no delete client ');
+                              }
+                            }
+                            Navigator.popAndPushNamed(context, AppScreen.routeName);
                           }
-                        }
-                        Navigator.popAndPushNamed(context, AppScreen.routeName);
-                      },
-                    ),
-                  ],
-                );
+                        },
+                        buttonColor: Colors.red,
+                        buttonText: NMobileLocalizations.of(context).delete_wallet)
+                    .show();
+//                ModalDialog.of(context).show(
+//                  height: 450,
+//                  title: Label(
+//                    NMobileLocalizations.of(context).delete_wallet_confirm_title,
+//                    type: LabelType.h2,
+//                    softWrap: true,
+//                  ),
+//                  content: Column(
+//                    children: <Widget>[
+//                      WalletItem(
+//                        schema: widget.arguments,
+//                        onTap: () {},
+//                      ),
+//                      Label(
+//                        NMobileLocalizations.of(context).delete_wallet_confirm_text,
+//                        type: LabelType.bodyRegular,
+//                        softWrap: true,
+//                      ),
+//                    ],
+//                  ),
+//                  actions: <Widget>[
+//                    Button(
+//                      child: Row(
+//                        mainAxisAlignment: MainAxisAlignment.center,
+//                        children: <Widget>[
+//                          Padding(
+//                            padding: const EdgeInsets.only(right: 8),
+//                            child: loadAssetIconsImage(
+//                              'trash',
+//                              color: DefaultTheme.backgroundLightColor,
+//                              width: 24,
+//                            ),
+//                          ),
+//                          Label(
+//                            NMobileLocalizations.of(context).delete_wallet,
+//                            type: LabelType.h3,
+//                          )
+//                        ],
+//                      ),
+//                      backgroundColor: DefaultTheme.strongColor,
+//                      width: double.infinity,
+//                      onPressed: () async {
+//                        _walletsBloc.add(DeleteWallet(widget.arguments));
+//                        if (Global?.currentClient?.address != null) {
+//                          var s = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(Global.currentClient?.publicKey));
+//                          if (s.toString() == widget.arguments.address) {
+//                            NLog.d('delete client ');
+//                            _clientBloc.add(DisConnected());
+//                          } else {
+//                            NLog.d('no delete client ');
+//                          }
+//                        }
+//                        Navigator.popAndPushNamed(context, AppScreen.routeName);
+//                      },
+//                    ),
+//                  ],
+//                );
                 break;
             }
           },

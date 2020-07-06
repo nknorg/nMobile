@@ -19,7 +19,7 @@ class _BodyBoxState extends State<BodyBox> {
       constraints: BoxConstraints.expand(),
       decoration: BoxDecoration(
         color: widget.color ?? DefaultTheme.backgroundColor1,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
       ),
       child: Flex(
         direction: Axis.vertical,
@@ -29,7 +29,7 @@ class _BodyBoxState extends State<BodyBox> {
             child: Container(
               padding: widget.padding ?? const EdgeInsets.only(top: 32, left: 20, right: 20),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
               ),
               child: widget.child,
             ),
