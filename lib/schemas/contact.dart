@@ -380,18 +380,20 @@ class ContactSchema {
       Database db = SqliteStorage(db: Global.currentChatDb).db;
       var countQuery = await db.query(
         ContactSchema.tableName,
-        columns: ['COUNT(id) as count'],
+//        columns: ['COUNT(id) as count'],
+        columns: ['*'],
         where: 'address = ?',
         whereArgs: [clientAddress],
       );
-      var count = countQuery != null ? Sqflite.firstIntValue(countQuery) : 0;
-      if (count == 0) {
+      if (countQuery != null && countQuery.length > 0) {
+        id = ContactSchema.parseEntity(countQuery?.first).id;
+        return 0;
+      } else {
         if (nknWalletAddress == null || nknWalletAddress.isEmpty) {
           nknWalletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
         }
         return await db.insert(ContactSchema.tableName, toEntity());
       }
-      return 0;
     } catch (e) {
       NLog.d(e);
     }
@@ -581,6 +583,7 @@ class ContactSchema {
       'type': type,
       'updated_time': DateTime.now().millisecondsSinceEpoch,
     };
+    this.firstName = firstName;
     if (type != ContactType.me) {
       type = ContactType.friend;
       data['type'] = type;
@@ -597,7 +600,6 @@ class ContactSchema {
         where: 'id = ?',
         whereArgs: [id],
       );
-
       return count > 0;
     } catch (e) {
       debugPrint(e);
@@ -755,5 +757,20 @@ class ContactSchema {
     } else {
       return clientAddress.substring(n + 1);
     }
+  }
+
+  String get nickName {
+    String name;
+    if (sourceProfile?.firstName == null || sourceProfile.firstName.isEmpty) {
+      var index = clientAddress.lastIndexOf('.');
+      if (index < 0) {
+        name = clientAddress.substring(0, 6);
+      } else {
+        name = clientAddress.substring(0, index + 7);
+      }
+    } else {
+      name = sourceProfile.firstName;
+    }
+    return '${name ?? ''} '.trim();
   }
 }

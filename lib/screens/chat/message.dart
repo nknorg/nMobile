@@ -287,8 +287,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
     String dest = targetId;
     Duration deleteAfterSeconds;
     if (widget.arguments.contact?.options != null) {
-      if (widget.arguments.contact?.options?.deleteAfterSeconds != null)
-        deleteAfterSeconds = Duration(seconds: widget.arguments.contact.options.deleteAfterSeconds);
+      if (widget.arguments.contact?.options?.deleteAfterSeconds != null) deleteAfterSeconds = Duration(seconds: widget.arguments.contact.options.deleteAfterSeconds);
     }
     var sendMsg = MessageSchema.fromSendData(
       from: currentAddress,
@@ -364,7 +363,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Label(widget.arguments.contact.name, type: LabelType.h3, dark: true),
-                    Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor)
+//                    Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor)
                   ],
                 ),
               )
@@ -424,8 +423,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                                     alignment: WrapAlignment.center,
                                     crossAxisAlignment: WrapCrossAlignment.center,
                                     children: <Widget>[
-                                      Label(
-                                          '${message.isOutbound ? Global.currentUser.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).update_burn_after_reading}'),
+                                      Label('${message.isOutbound ? Global.currentUser.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).update_burn_after_reading}'),
                                       Padding(
                                         padding: const EdgeInsets.only(left: 4, right: 4),
                                         child: Icon(
@@ -460,8 +458,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                                     alignment: WrapAlignment.center,
                                     crossAxisAlignment: WrapCrossAlignment.center,
                                     children: <Widget>[
-                                      Label(
-                                          '${message.isOutbound ? Global.currentUser.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).close_burn_after_reading}'),
+                                      Label('${message.isOutbound ? Global.currentUser.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).close_burn_after_reading}'),
                                       Padding(
                                         padding: const EdgeInsets.only(left: 8),
                                         child: InkWell(

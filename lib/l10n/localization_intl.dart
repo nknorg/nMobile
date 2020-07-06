@@ -218,7 +218,7 @@ class NMobileLocalizations {
   }
 
   String get recieve {
-    return Intl.message('Recieve', name: 'recieve', desc: '');
+    return Intl.message('Receive', name: 'receive', desc: '');
   }
 
   String get keystore {
@@ -430,7 +430,7 @@ class NMobileLocalizations {
   }
 
   String get select_asset_to_recieve {
-    return Intl.message('Select Asset to Recieve', name: 'select_asset_to_recieve', desc: '');
+    return Intl.message('Select Asset to Receive', name: 'select_asset_to_recieve', desc: '');
   }
 
   String get select_another_wallet {

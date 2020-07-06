@@ -196,6 +196,8 @@ class AddContactState extends State<AddContact> {
                                           Textbox(
                                             focusNode: _pubKeyFocusNode,
                                             controller: _pubKeyController,
+                                            maxLines: 2,
+                                            multi: true,
                                             hintText: NMobileLocalizations.of(context).input_pubKey,
                                             onFieldSubmitted: (_) {
                                               FocusScope.of(context).requestFocus(_addressFocusNode);
@@ -292,10 +294,9 @@ class AddContactState extends State<AddContact> {
       String address = _addressController.text;
       String note = _notesController.text;
       ContactSchema contact = ContactSchema(firstName: name, clientAddress: pubKey, nknWalletAddress: address, type: ContactType.friend, notes: note);
-      await contact.createContact();
+      var result = await contact.createContact();
       contact.setFriend();
       eventBus.fire(AddContactEvent());
-
       Navigator.pop(context);
     }
   }
@@ -303,7 +304,6 @@ class AddContactState extends State<AddContact> {
   _updatePic() async {
     File savedImg = await getHeaderImage();
     if (savedImg == null) return;
-
   }
 
   String createContactFilePath(File file) {
