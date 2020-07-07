@@ -6,7 +6,8 @@ class BodyBox extends StatefulWidget {
   final Widget child;
   final Color color;
   final EdgeInsetsGeometry padding;
-  BodyBox({this.child, this.color, this.padding});
+  final double radius;
+  BodyBox({this.child, this.color, this.padding, this.radius = 22});
 
   @override
   _BodyBoxState createState() => _BodyBoxState();
@@ -19,7 +20,7 @@ class _BodyBoxState extends State<BodyBox> {
       constraints: BoxConstraints.expand(),
       decoration: BoxDecoration(
         color: widget.color ?? DefaultTheme.backgroundColor1,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(widget.radius)),
       ),
       child: Flex(
         direction: Axis.vertical,
@@ -29,7 +30,7 @@ class _BodyBoxState extends State<BodyBox> {
             child: Container(
               padding: widget.padding ?? const EdgeInsets.only(top: 32, left: 20, right: 20),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(widget.radius)),
               ),
               child: widget.child,
             ),

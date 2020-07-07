@@ -22,7 +22,8 @@ import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
-import 'package:nmobile/utils/copy_utils.dart';
+import 'package:nmobile/utils/extensions.dart';
+import 'package:nmobile/utils/image_utils.dart';
 import 'package:oktoast/oktoast.dart';
 
 class ChannelSettingsScreen extends StatefulWidget {
@@ -72,6 +73,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
       );
     }
     return Scaffold(
+      backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
         title: NMobileLocalizations.of(context).channel_settings,
         leading: BackButton(
@@ -135,7 +137,6 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                 child: Container(
                   child: BodyBox(
                     padding: const EdgeInsets.only(top: 20),
-                    color: DefaultTheme.backgroundLightColor,
                     child: Column(
                       children: <Widget>[
                         Column(
@@ -144,24 +145,31 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                               height: 20.h,
                             ),
                             Container(
-                              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
-                              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
+                              decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
+                              margin: EdgeInsets.symmetric(horizontal: 12),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: <Widget>[
-                                  InkWell(
-                                    onTap: () {
-                                      CopyUtils.copyAction(context, widget.arguments.topic);
-                                    },
+                                  FlatButton(
+                                    padding: EdgeInsets.only(left: 16, right: 16, top: 10),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                                    onPressed: () {},
                                     child: Row(
                                       children: <Widget>[
+                                        loadAssetIconsImage(
+                                          'user',
+                                          color: DefaultTheme.primaryColor,
+                                          width: 24,
+                                        ),
+                                        SizedBox(width: 10),
                                         Label(
                                           NMobileLocalizations.of(context).name,
                                           type: LabelType.bodyRegular,
                                           color: DefaultTheme.fontColor1,
                                           height: 1,
                                         ),
-                                        SizedBox(width: 60),
+                                        SizedBox(width: 20),
                                         Expanded(
                                           child: Label(
                                             widget.arguments.topic,
@@ -171,78 +179,82 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                                             textAlign: TextAlign.right,
                                             height: 1,
                                           ),
-                                        ),
-                                        SizedBox(width: 10),
-//                                        Icon(Icons.content_copy, size: 22, color: DefaultTheme.fontColor4)
+                                        )
                                       ],
                                     ),
-                                  ),
+                                  ).sized(h: 48),
+                                  FlatButton(
+                                    padding: const EdgeInsets.only(left: 16, right: 16),
+                                    onPressed: () {
+                                      Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: widget.arguments);
+                                    },
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: <Widget>[
+                                        loadAssetChatPng('group_blue', width: 22.w),
+                                        SizedBox(width: 10),
+                                        Label(
+                                          NMobileLocalizations.of(context).view_channel_members,
+                                          type: LabelType.bodyRegular,
+                                          color: DefaultTheme.fontColor1,
+                                          height: 1,
+                                        ),
+                                        SizedBox(width: 20),
+                                        Expanded(
+                                          child: Label(
+                                            '${widget.arguments.count} ' + NMobileLocalizations.of(context).members,
+                                            type: LabelType.bodyRegular,
+                                            textAlign: TextAlign.right,
+                                            color: DefaultTheme.fontColor2,
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                        SvgPicture.asset(
+                                          'assets/icons/right.svg',
+                                          width: 24,
+                                          color: DefaultTheme.fontColor2,
+                                        )
+                                      ],
+                                    ),
+                                  ).sized(h: 48),
+                                  FlatButton(
+                                    padding: const EdgeInsets.only(
+                                      left: 16,
+                                      right: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
+                                    onPressed: () async {
+                                      var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+                                      if (address != null) {
+                                        acceptPrivateAction(address);
+                                      }
+                                    },
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        loadAssetChatPng('invisit_blue', width: 22.w),
+                                        SizedBox(width: 10),
+                                        Label(
+                                          NMobileLocalizations.of(context).invite_members,
+                                          type: LabelType.bodyRegular,
+                                          color: DefaultTheme.fontColor1,
+                                          height: 1,
+                                        ),
+                                        SizedBox(width: 20),
+                                        Spacer(),
+                                        SvgPicture.asset(
+                                          'assets/icons/right.svg',
+                                          width: 24,
+                                          color: DefaultTheme.fontColor2,
+                                        )
+                                      ],
+                                    ),
+                                  ).sized(h: 48),
                                 ],
                               ),
                             ),
-                            Container(
-                              padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 16.h),
-                              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
-                              child: InkWell(
-                                onTap: () async {
-                                  Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: widget.arguments);
-                                },
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Label(
-                                      NMobileLocalizations.of(context).view_channel_members,
-                                      type: LabelType.bodyRegular,
-                                      color: DefaultTheme.fontColor1,
-                                      height: 1,
-                                    ),
-                                    Spacer(),
-                                    Label(
-                                      '${widget.arguments.count} ' + NMobileLocalizations.of(context).members,
-                                      type: LabelType.bodyRegular,
-                                      color: DefaultTheme.fontColor2,
-                                      overflow: TextOverflow.fade,
-                                      textAlign: TextAlign.right,
-                                      height: 1,
-                                    ),
-                                    SvgPicture.asset(
-                                      'assets/icons/right.svg',
-                                      width: 24,
-                                      color: DefaultTheme.fontColor2,
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 16.h),
-                              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
-                              child: InkWell(
-                                onTap: () async {
-                                  var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
-                                  if (address != null) {
-                                    acceptPrivateAction(address);
-                                  }
-                                },
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Label(
-                                      NMobileLocalizations.of(context).invite_members,
-                                      type: LabelType.bodyRegular,
-                                      color: DefaultTheme.fontColor1,
-                                      height: 1,
-                                    ),
-                                    Spacer(),
-                                    SvgPicture.asset(
-                                      'assets/icons/right.svg',
-                                      width: 24,
-                                      color: DefaultTheme.fontColor2,
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ),
+                            SizedBox(height: 20),
                             getTopicStatusView()
                           ],
                         ),
@@ -260,46 +272,72 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
 
   getTopicStatusView() {
     if (!isUnSubscribe) {
-      return InkWell(
-        onTap: () async {
-          unSubscriberAction();
-        },
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-          width: double.infinity,
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
-          child: Column(
-            children: <Widget>[
-              Label(
-                NMobileLocalizations.of(context).unsubscribe,
-                type: LabelType.bodyLarge,
-                color: Colors.red,
-                height: 1,
-              )
-            ],
+      return Container(
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        margin: EdgeInsets.only(left: 16, right: 16, top: 10),
+        child: FlatButton(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+          child: Container(
+            width: double.infinity,
+            child: Row(
+              children: <Widget>[
+                Icon(
+                  Icons.exit_to_app,
+                  color: Colors.red,
+                ),
+                SizedBox(width: 10),
+                Text(
+                  NMobileLocalizations.of(context).unsubscribe,
+                  textAlign: TextAlign.left,
+                  style: TextStyle(color: Colors.red, fontSize: DefaultTheme.bodyRegularFontSize),
+                ),
+                Spacer(),
+                SvgPicture.asset(
+                  'assets/icons/right.svg',
+                  width: 24,
+                  color: DefaultTheme.fontColor2,
+                )
+              ],
+            ),
           ),
-        ),
+          onPressed: () {
+            unSubscriberAction();
+          },
+        ).sized(h: 50, w: double.infinity),
       );
     } else {
-      return InkWell(
-        onTap: () {
-          subscriberAction();
-        },
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-          width: double.infinity,
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.lineColor))),
-          child: Column(
-            children: <Widget>[
-              Label(
-                NMobileLocalizations.of(context).subscribe,
-                type: LabelType.bodyLarge,
-                color: DefaultTheme.primaryColor,
-                height: 1,
-              )
-            ],
+      return Container(
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        margin: EdgeInsets.only(left: 16, right: 16, top: 10),
+        child: FlatButton(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+          child: Container(
+            width: double.infinity,
+            child: Row(
+              children: <Widget>[
+                Icon(
+                  Icons.person_add,
+                  color: DefaultTheme.primaryColor,
+                ),
+                SizedBox(width: 10),
+                Text(
+                  NMobileLocalizations.of(context).subscribe,
+                  textAlign: TextAlign.left,
+                  style: TextStyle(color: DefaultTheme.primaryColor, fontSize: DefaultTheme.bodyRegularFontSize),
+                ),
+                Spacer(),
+                SvgPicture.asset(
+                  'assets/icons/right.svg',
+                  width: 24,
+                  color: DefaultTheme.fontColor2,
+                )
+              ],
+            ),
           ),
-        ),
+          onPressed: () {
+            subscriberAction();
+          },
+        ).sized(h: 50, w: double.infinity),
       );
     }
   }

@@ -10,8 +10,11 @@ import 'package:nmobile/screens/chat/populai_group_page.dart';
 import 'package:nmobile/screens/common/page/change_update_content.dart';
 import 'package:nmobile/screens/common_web_page.dart';
 import 'package:nmobile/screens/contact/add_contact.dart';
+import 'package:nmobile/screens/contact/chat_profile.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/screens/contact/home.dart';
+import 'package:nmobile/screens/contact/show_chat_id.dart';
+import 'package:nmobile/screens/contact/show_my_chat_address.dart';
 import 'package:nmobile/screens/home.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/screens/select.dart';
@@ -50,7 +53,10 @@ Map<String, WidgetBuilder> routes = {
   ChangeUpdateContentPage.routeName: (BuildContext context, {arguments}) => ChangeUpdateContentPage(arguments: arguments),
   AddContact.routeName: (BuildContext context) => AddContact(),
   PopularGroupPage.routeName: (BuildContext context) => PopularGroupPage(),
+  ShowMyChatID.routeName: (BuildContext context) => ShowMyChatID(),
   WalletScreen.routeName: (BuildContext context) => WalletScreen(),
+  ChatProfile.routeName: (BuildContext context, {arguments}) => ChatProfile(arguments: arguments),
+  ShowMyChatAddress.routeName: (BuildContext context, {arguments}) => ShowMyChatAddress(arguments: arguments),
 };
 
 var onGenerateRoute = (RouteSettings settings) {
