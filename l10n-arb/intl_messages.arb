@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-07-01T16:56:01.033644",
+  "@@last_modified": "2020-07-07T20:39:39.342823",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1382,7 +1382,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "scan_show_me_desc": "Scan the QR code pattern below to add me to the contact.",
+  "scan_show_me_desc": "Scan the QR code pattern to add friends to your contacts.",
   "@scan_show_me_desc": {
     "description": "",
     "type": "text",
@@ -1394,13 +1394,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "d_chat_address": "D-Chat Address",
+  "d_chat_address": "D-Chat ID",
   "@d_chat_address": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "input_d_chat_address": "Please input D-Chat Address",
+  "input_d_chat_address": "Please input D-Chat ID",
   "@input_d_chat_address": {
     "description": "",
     "type": "text",
@@ -1507,6 +1507,21 @@
   },
   "coming_soon": "Coming Soon...",
   "@coming_soon": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "my_profile": "My Profile",
+  "@my_profile": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "profile": "Profile",
+  "@profile": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "show_wallet_address_desc": "Scan the QR code, you can transfer it to me",
+  "@show_wallet_address_desc": {
     "type": "text",
     "placeholders": {}
   }
