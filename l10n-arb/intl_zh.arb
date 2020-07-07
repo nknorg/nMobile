@@ -909,7 +909,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "scan_show_me_desc": "扫一扫下面的二维码图案，添加我到联系人。",
+  "scan_show_me_desc": "扫一扫二维码图案，添加到联系人。",
   "@scan_show_me_desc": {
     "description": "",
     "type": "text",
@@ -998,6 +998,21 @@
   },
   "coming_soon": "敬请期待...",
   "@coming_soon": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "my_profile": "个人资料",
+  "@my_profile": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "profile": "个人资料",
+  "@profile": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "show_wallet_address_desc": "扫一扫二维码，可以转账给我",
+  "@show_wallet_address_desc": {
     "type": "text",
     "placeholders": {}
   }

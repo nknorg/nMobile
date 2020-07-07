@@ -218,7 +218,7 @@ class NMobileLocalizations {
   }
 
   String get recieve {
-    return Intl.message('Receive', name: 'receive', desc: '');
+    return Intl.message('Receive', name: 'recieve', desc: '');
   }
 
   String get keystore {
@@ -938,7 +938,7 @@ class NMobileLocalizations {
   }
 
   String get scan_show_me_desc {
-    return Intl.message('Scan the QR code pattern below to add me to the contact.', name: 'scan_show_me_desc', desc: '');
+    return Intl.message('Scan the QR code pattern to add friends to your contacts.', name: 'scan_show_me_desc', desc: '');
   }
 
   String get nickname {
@@ -946,11 +946,11 @@ class NMobileLocalizations {
   }
 
   String get d_chat_address {
-    return Intl.message('D-Chat Address', name: 'd_chat_address', desc: '');
+    return Intl.message('D-Chat ID', name: 'd_chat_address', desc: '');
   }
 
   String get input_d_chat_address {
-    return Intl.message('Please input D-Chat Address', name: 'input_d_chat_address', desc: '');
+    return Intl.message('Please input D-Chat ID', name: 'input_d_chat_address', desc: '');
   }
 
   String get tip_password_error {
@@ -1001,6 +1001,9 @@ class NMobileLocalizations {
 
   String get change_default_chat_wallet => Intl.message('Change', name: 'change_default_chat_wallet');
   String get coming_soon => Intl.message('Coming Soon...', name: 'coming_soon');
+  String get my_profile => Intl.message('My Profile', name: 'my_profile');
+  String get profile => Intl.message('Profile', name: 'profile');
+  String get show_wallet_address_desc => Intl.message('Scan the QR code, you can transfer it to me', name: 'show_wallet_address_desc');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {
