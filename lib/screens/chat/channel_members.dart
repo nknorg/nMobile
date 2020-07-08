@@ -131,11 +131,8 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
           },
         ),
         backgroundColor: DefaultTheme.backgroundColor4,
-        action: IconButton(
-          icon: Icon(
-            Icons.group_add,
-            size: 26,
-          ),
+        action: FlatButton(
+          child: loadAssetChatPng('group_add', width: 20.w),
           onPressed: () async {
             var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
             if (address != null) {
