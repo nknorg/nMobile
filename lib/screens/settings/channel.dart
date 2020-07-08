@@ -233,7 +233,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: <Widget>[
-                                        loadAssetChatPng('invisit_blue', width: 22.w),
+                                        loadAssetChatPng('invisit_blue', width: 20.w),
                                         SizedBox(width: 10),
                                         Label(
                                           NMobileLocalizations.of(context).invite_members,

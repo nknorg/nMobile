@@ -188,7 +188,7 @@ class ContactSchema {
             radius: size,
             backgroundColor: Color(getOptions().backgroundColor),
             child: Label(
-              name.substring(0, 2).toUpperCase(),
+              name.length > 2 ? name.substring(0, 2).toUpperCase() : name,
               type: fontType,
               color: Color(getOptions().color),
             ),
