@@ -6,7 +6,7 @@ class ChatUtil {
   static List getFormatString(String str) {
     RegExp reg = new RegExp("@[^ \\s!-,/:-?\\[-^`{-~，。？！（）【】《》“”：；、]+");
     List result = [];
-    if (str == null || str.length == 0) return result;
+    if (str == null || str.length == 0 || str.contains('&status=approve')) return result;
 
     if (str.contains(reg) && !str.contains(emailReg)) {
       List spp = str.split(" ");
