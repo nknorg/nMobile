@@ -136,7 +136,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
               Expanded(
                 child: Container(
                   child: BodyBox(
-                    padding: const EdgeInsets.only(top: 20),
+                    padding: const EdgeInsets.only(top: 10),
                     child: Column(
                       children: <Widget>[
                         Column(
@@ -292,11 +292,6 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                   style: TextStyle(color: Colors.red, fontSize: DefaultTheme.bodyRegularFontSize),
                 ),
                 Spacer(),
-                SvgPicture.asset(
-                  'assets/icons/right.svg',
-                  width: 24,
-                  color: DefaultTheme.fontColor2,
-                )
               ],
             ),
           ),
@@ -326,11 +321,6 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                   style: TextStyle(color: DefaultTheme.primaryColor, fontSize: DefaultTheme.bodyRegularFontSize),
                 ),
                 Spacer(),
-                SvgPicture.asset(
-                  'assets/icons/right.svg',
-                  width: 24,
-                  color: DefaultTheme.fontColor2,
-                )
               ],
             ),
           ),
