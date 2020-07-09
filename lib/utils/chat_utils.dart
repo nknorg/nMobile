@@ -20,7 +20,8 @@ class ChatUtil {
         result.add(" ");
       }
     } else {
-      result.add(str);
+      return result;
+//      result.add(str);
     }
     return result;
   }
