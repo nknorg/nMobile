@@ -34,7 +34,7 @@ class _WalletItemState extends State<WalletItem> {
             borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 21),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
             child: Flex(
               direction: Axis.horizontal,
               children: <Widget>[
