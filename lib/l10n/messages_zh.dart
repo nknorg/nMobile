@@ -102,6 +102,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "delete_wallet" : MessageLookupByLibrary.simpleMessage("删除钱包"),
     "delete_wallet_confirm_text" : MessageLookupByLibrary.simpleMessage("这将从您的设备中删除钱包。请确保您的钱包已备份，否则您的资金将丢失且无法找回。"),
     "delete_wallet_confirm_title" : MessageLookupByLibrary.simpleMessage("您确定要删除此钱包吗?"),
+    "disappear_desc" : MessageLookupByLibrary.simpleMessage("接受和发送的消息将在设定的时间后消失。"),
     "done" : MessageLookupByLibrary.simpleMessage("完成"),
     "edit" : MessageLookupByLibrary.simpleMessage("编辑"),
     "edit_contact" : MessageLookupByLibrary.simpleMessage("编辑"),

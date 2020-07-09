@@ -104,6 +104,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "delete_wallet" : MessageLookupByLibrary.simpleMessage("Delete Wallet"),
     "delete_wallet_confirm_text" : MessageLookupByLibrary.simpleMessage("This will remove the wallet off your local device. Please make sure your wallet is fully backed up or you will lose your funds."),
     "delete_wallet_confirm_title" : MessageLookupByLibrary.simpleMessage("Are you sure you want to delete this wallet?"),
+    "disappear_desc" : MessageLookupByLibrary.simpleMessage("Messages received and sent will disappear after the set time."),
     "done" : MessageLookupByLibrary.simpleMessage("Done"),
     "edit" : MessageLookupByLibrary.simpleMessage("Edit"),
     "edit_contact" : MessageLookupByLibrary.simpleMessage("Edit Contact"),

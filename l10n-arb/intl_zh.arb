@@ -1015,5 +1015,10 @@
   "@show_wallet_address_desc": {
     "type": "text",
     "placeholders": {}
+  },
+  "disappear_desc": "接受和发送的消息将在设定的时间后消失。",
+  "@disappear_desc": {
+    "type": "text",
+    "placeholders": {}
   }
 }

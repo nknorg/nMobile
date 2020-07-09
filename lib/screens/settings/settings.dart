@@ -10,7 +10,6 @@ import 'package:nmobile/blocs/global/global_bloc.dart';
 import 'package:nmobile/blocs/global/global_event.dart';
 import 'package:nmobile/blocs/global/global_state.dart';
 import 'package:nmobile/components/box/body.dart';
-import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/header/header.dart';
@@ -26,6 +25,7 @@ import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/select.dart';
+import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/const_utils.dart';
@@ -382,21 +382,12 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                               color: DefaultTheme.fontColor1,
                               height: 1,
                             ),
-                            Row(
-                              children: <Widget>[
-                                Label(
-                                  Global.versionFull,
-                                  type: LabelType.bodyRegular,
-                                  color: DefaultTheme.fontColor2,
-                                  height: 1,
-                                ),
-                                SvgPicture.asset(
-                                  'assets/icons/right.svg',
-                                  width: 24,
-                                  color: DefaultTheme.fontColor2,
-                                ),
-                              ],
-                            )
+                            Label(
+                              Global.versionFull,
+                              type: LabelType.bodyRegular,
+                              color: DefaultTheme.fontColor2,
+                              height: 1,
+                            ),
                           ],
                         ),
                         onPressed: () {},
@@ -425,17 +416,17 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                                   color: DefaultTheme.fontColor2,
                                   height: 1,
                                 ),
-                                SvgPicture.asset(
-                                  'assets/icons/right.svg',
-                                  width: 24,
-                                  color: DefaultTheme.fontColor2,
-                                ),
+//                                SvgPicture.asset(
+//                                  'assets/icons/right.svg',
+//                                  width: 24,
+//                                  color: DefaultTheme.fontColor2,
+//                                ),
                               ],
                             )
                           ],
                         ),
                         onPressed: () async {
-                          launchURL('mailto:nmobile@nkn.org');
+//                          launchURL('mailto:nmobile@nkn.org');
                         },
                       ),
                     ),
@@ -507,79 +498,40 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
                         onPressed: () async {
-                          var confirm = await ModalDialog.of(context).confirm(
-                            height: 300,
-                            title: Label(
-                              NMobileLocalizations.of(context).delete_cache_confirm_title,
-                              type: LabelType.h2,
-                            ),
-                            content: Column(
-                              children: <Widget>[],
-                            ),
-                            agree: Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Button(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: <Widget>[
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 8),
-                                      child: SvgPicture.asset(
-                                        'assets/icons/trash.svg',
-                                        color: DefaultTheme.backgroundLightColor,
-                                        width: 24,
-                                      ),
-                                    ),
-                                    Label(
-                                      NMobileLocalizations.of(context).delete,
-                                      type: LabelType.h3,
-                                    )
-                                  ],
-                                ),
-                                backgroundColor: DefaultTheme.strongColor,
-                                width: double.infinity,
-                                onPressed: () {
-                                  Navigator.of(context).pop(true);
-                                },
-                              ),
-                            ),
-                            reject: Button(
-                              backgroundColor: DefaultTheme.backgroundLightColor,
-                              fontColor: DefaultTheme.fontColor2,
-                              text: NMobileLocalizations.of(context).cancel,
-                              width: double.infinity,
-                              onPressed: () => Navigator.of(context).pop(),
-                            ),
-                          );
-
-                          if (confirm != true) {
-                            return;
-                          }
-                          Timer(Duration(milliseconds: 200), () async {
-                            var walletData = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
-                            var wallet = WalletSchema(name: walletData['name'], address: walletData['address']);
-                            var password = await wallet.getPassword();
-                            if (password != null) {
-                              try {
-                                var w = await wallet.exportWallet(password);
-                                await clearCacheFile(Global.applicationRootDirectory);
-                                var size = await getTotalSizeOfCacheFile(Global.applicationRootDirectory);
-                                setState(() {
-                                  _cacheSize = Format.formatSize(size);
-                                });
-                              } catch (e) {
-                                if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-                                  ModalDialog.of(context).show(
-                                    height: 240,
-                                    content: Label(
-                                      NMobileLocalizations.of(context).password_wrong,
-                                      type: LabelType.bodyRegular,
-                                    ),
-                                  );
+                          SimpleConfirm(
+                              context: context,
+                              content: NMobileLocalizations.of(context).delete_cache_confirm_title,
+                              buttonText: NMobileLocalizations.of(context).delete,
+                              buttonColor: Colors.red,
+                              callback: (v) {
+                                if (v) {
+                                  Timer(Duration(milliseconds: 200), () async {
+                                    var walletData = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
+                                    var wallet = WalletSchema(name: walletData['name'], address: walletData['address']);
+                                    var password = await wallet.getPassword();
+                                    if (password != null) {
+                                      try {
+                                        var w = await wallet.exportWallet(password);
+                                        await clearCacheFile(Global.applicationRootDirectory);
+                                        var size = await getTotalSizeOfCacheFile(Global.applicationRootDirectory);
+                                        setState(() {
+                                          _cacheSize = Format.formatSize(size);
+                                        });
+                                      } catch (e) {
+                                        if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+                                          ModalDialog.of(context).show(
+                                            height: 240,
+                                            content: Label(
+                                              NMobileLocalizations.of(context).password_wrong,
+                                              type: LabelType.bodyRegular,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    }
+                                  });
                                 }
-                              }
-                            }
-                          });
+                              }).show();
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -615,79 +567,40 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         onPressed: () async {
-                          var confirm = await ModalDialog.of(context).confirm(
-                            height: 300,
-                            title: Label(
-                              NMobileLocalizations.of(context).delete_cache_confirm_title,
-                              type: LabelType.h2,
-                            ),
-                            content: Column(
-                              children: <Widget>[],
-                            ),
-                            agree: Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Button(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: <Widget>[
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 8),
-                                      child: SvgPicture.asset(
-                                        'assets/icons/trash.svg',
-                                        color: DefaultTheme.backgroundLightColor,
-                                        width: 24,
-                                      ),
-                                    ),
-                                    Label(
-                                      NMobileLocalizations.of(context).delete,
-                                      type: LabelType.h3,
-                                    )
-                                  ],
-                                ),
-                                backgroundColor: DefaultTheme.strongColor,
-                                width: double.infinity,
-                                onPressed: () {
-                                  Navigator.of(context).pop(true);
-                                },
-                              ),
-                            ),
-                            reject: Button(
-                              backgroundColor: DefaultTheme.backgroundLightColor,
-                              fontColor: DefaultTheme.fontColor2,
-                              text: NMobileLocalizations.of(context).cancel,
-                              width: double.infinity,
-                              onPressed: () => Navigator.of(context).pop(),
-                            ),
-                          );
-
-                          if (confirm != true) {
-                            return;
-                          }
-                          Timer(Duration(milliseconds: 200), () async {
-                            var walletData = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
-                            var wallet = WalletSchema(name: walletData['name'], address: walletData['address']);
-                            var password = await wallet.getPassword();
-                            if (password != null) {
-                              try {
-                                var w = await wallet.exportWallet(password);
-                                await clearDbFile(Global.applicationRootDirectory);
-                                var size = await getTotalSizeOfDbFile(Global.applicationRootDirectory);
-                                setState(() {
-                                  _dbSize = Format.formatSize(size);
-                                });
-                              } catch (e) {
-                                if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-                                  ModalDialog.of(context).show(
-                                    height: 240,
-                                    content: Label(
-                                      NMobileLocalizations.of(context).password_wrong,
-                                      type: LabelType.bodyRegular,
-                                    ),
-                                  );
+                          SimpleConfirm(
+                              context: context,
+                              content: NMobileLocalizations.of(context).delete_cache_confirm_title,
+                              buttonText: NMobileLocalizations.of(context).delete,
+                              buttonColor: Colors.red,
+                              callback: (v) {
+                                if (v) {
+                                  Timer(Duration(milliseconds: 200), () async {
+                                    var walletData = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
+                                    var wallet = WalletSchema(name: walletData['name'], address: walletData['address']);
+                                    var password = await wallet.getPassword();
+                                    if (password != null) {
+                                      try {
+                                        var w = await wallet.exportWallet(password);
+                                        await clearDbFile(Global.applicationRootDirectory);
+                                        var size = await getTotalSizeOfDbFile(Global.applicationRootDirectory);
+                                        setState(() {
+                                          _dbSize = Format.formatSize(size);
+                                        });
+                                      } catch (e) {
+                                        if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+                                          ModalDialog.of(context).show(
+                                            height: 240,
+                                            content: Label(
+                                              NMobileLocalizations.of(context).password_wrong,
+                                              type: LabelType.bodyRegular,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    }
+                                  });
                                 }
-                              }
-                            }
-                          });
+                              }).show();
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
