@@ -1004,6 +1004,7 @@ class NMobileLocalizations {
   String get my_profile => Intl.message('My Profile', name: 'my_profile');
   String get profile => Intl.message('Profile', name: 'profile');
   String get show_wallet_address_desc => Intl.message('Scan the QR code, you can transfer it to me', name: 'show_wallet_address_desc');
+  String get disappear_desc => Intl.message('Messages received and sent will disappear after the set time.', name: 'disappear_desc');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {

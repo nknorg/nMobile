@@ -238,7 +238,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
 
   _detailChangeName(BuildContext context) {
     BottomDialog.of(context).showBottomDialog(
-      title: NMobileLocalizations.of(context).edit_name,
+      title: NMobileLocalizations.of(context).edit_contact,
       child: Form(
         key: _nameFormKey,
         autovalidate: true,
@@ -450,11 +450,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                   style: TextStyle(color: DefaultTheme.primaryColor, fontSize: DefaultTheme.bodyRegularFontSize),
                 ),
                 Spacer(),
-                SvgPicture.asset(
-                  'assets/icons/right.svg',
-                  width: 24,
-                  color: DefaultTheme.fontColor2,
-                )
               ],
             ),
           ),
@@ -484,11 +479,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                   style: TextStyle(color: Colors.red, fontSize: DefaultTheme.bodyRegularFontSize),
                 ),
                 Spacer(),
-                SvgPicture.asset(
-                  'assets/icons/right.svg',
-                  width: 24,
-                  color: DefaultTheme.fontColor2,
-                )
               ],
             ),
           ),
@@ -773,29 +763,23 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                   ],
                 ),
                 SizedBox(height: 10),
-                InkWell(
-                  onTap: () {
-                    _firstNameController.text = widget.arguments.name;
-                    _detailChangeName(context);
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Label(
-                        getName(),
-                        type: LabelType.bodyLarge,
-                        color: Colors.white,
-                        overflow: TextOverflow.fade,
-                        textAlign: TextAlign.right,
-                      ),
-                      SizedBox(width: 10),
-                      Icon(
-                        Icons.edit,
-                        color: DefaultTheme.fontColor2,
-                        size: 18,
-                      ),
-                    ],
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Label(
+                      widget.arguments.nickName ?? '',
+                      type: LabelType.bodyLarge,
+                      color: Colors.white,
+                      overflow: TextOverflow.fade,
+                      textAlign: TextAlign.center,
+                    ),
+//                      SizedBox(width: 10),
+//                      Icon(
+//                        Icons.edit,
+//                        color: DefaultTheme.fontColor2,
+//                        size: 18,
+//                      ),
+                  ],
                 )
               ],
             ),
@@ -806,7 +790,8 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
               alignment: Alignment.bottomCenter,
               children: <Widget>[
                 BodyBox(
-                  padding: EdgeInsets.only(top: 50),
+                  color: DefaultTheme.backgroundColor6,
+                  padding: EdgeInsets.only(top: 30),
                   child: Column(
                     children: <Widget>[
                       Expanded(
@@ -824,7 +809,10 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                   FlatButton(
                                     padding: EdgeInsets.only(left: 16, right: 16, top: 10),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      _firstNameController.text = widget.arguments.name;
+                                      _detailChangeName(context);
+                                    },
                                     child: Row(
                                       children: <Widget>[
                                         loadAssetIconsImage(
@@ -834,7 +822,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                         ),
                                         SizedBox(width: 10),
                                         Label(
-                                          NMobileLocalizations.of(context).nickname,
+                                          NMobileLocalizations.of(context).edit_contact,
                                           type: LabelType.bodyRegular,
                                           color: DefaultTheme.fontColor1,
                                           height: 1,
@@ -842,7 +830,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                         SizedBox(width: 20),
                                         Expanded(
                                           child: Label(
-                                            widget.arguments.nickName ?? '',
+                                            getName(),
                                             type: LabelType.bodyRegular,
                                             color: DefaultTheme.fontColor2,
                                             overflow: TextOverflow.fade,
@@ -850,6 +838,11 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                             height: 1,
                                           ),
                                         ),
+                                        SvgPicture.asset(
+                                          'assets/icons/right.svg',
+                                          width: 24,
+                                          color: DefaultTheme.fontColor2,
+                                        )
                                       ],
                                     ),
                                   ).sized(h: 48),
@@ -904,6 +897,59 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                               padding: EdgeInsets.only(top: 10),
                               child: getBurnView(),
                             ),
+                            Container(
+                              margin: EdgeInsets.symmetric(horizontal: 14),
+                              padding: EdgeInsets.only(top: 6),
+                              child: Row(
+                                children: <Widget>[
+                                  Expanded(
+                                    child: Label(
+                                      NMobileLocalizations.of(context).disappear_desc,
+                                      type: LabelType.bodyRegular,
+                                      color: DefaultTheme.fontDescColor,
+                                      softWrap: true,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                              margin: EdgeInsets.only(left: 16, right: 16, top: 10),
+                              child: FlatButton(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                                child: Container(
+                                  width: double.infinity,
+                                  child: Row(
+                                    children: <Widget>[
+                                      SvgPicture.asset(
+                                        'assets/icons/chat.svg',
+                                        width: 24,
+                                        color: DefaultTheme.primaryColor,
+                                      ),
+//                                      loadAssetChatPng('send_message', width: 22),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        'Send Message',
+                                        textAlign: TextAlign.left,
+                                        style: TextStyle(color: DefaultTheme.fontColor1, fontSize: DefaultTheme.bodyRegularFontSize),
+                                      ),
+                                      Spacer(),
+                                      SvgPicture.asset(
+                                        'assets/icons/right.svg',
+                                        width: 24,
+                                        color: DefaultTheme.fontColor2,
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                onPressed: () {
+                                  _setContactOptions();
+                                  Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
+                                },
+                              ).sized(h: 50, w: double.infinity),
+                            ),
+                            SizedBox(height: 40),
                             getStatusView(),
                           ],
                         ),
@@ -911,21 +957,21 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                     ],
                   ),
                 ).pad(t: 28),
-                Positioned(
-                  top: 0,
-                  right: 20,
-                  child: Button(
-                    padding: const EdgeInsets.all(0),
-                    width: 56,
-                    height: 56,
-                    backgroundColor: DefaultTheme.primaryColor,
-                    child: SvgPicture.asset('assets/icons/chat.svg', width: 24),
-                    onPressed: () async {
-                      _setContactOptions();
-                      Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
-                    },
-                  ),
-                ),
+//                Positioned(
+//                  top: 0,
+//                  right: 20,
+//                  child: Button(
+//                    padding: const EdgeInsets.all(0),
+//                    width: 56,
+//                    height: 56,
+//                    backgroundColor: DefaultTheme.primaryColor,
+//                    child: SvgPicture.asset('assets/icons/chat.svg', width: 24),
+//                    onPressed: () async {
+//                      _setContactOptions();
+//                      Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
+//                    },
+//                  ),
+//                ),
               ],
             ),
           )
