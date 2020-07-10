@@ -729,7 +729,7 @@ class _ContactHomeState extends State<ContactHome> {
       });
     } else {
       setState(() {
-        _strangerContacts = _allStrangerContacts.where((ContactSchema e) => e.name.contains(val)).toList();
+        _strangerContacts = _allStrangerContacts.where((ContactSchema e) => e.name.toLowerCase().contains(val.toLowerCase())).toList();
         _friends = _allFriends.where((ContactSchema e) => e.name.contains(val)).toList();
         _topic = _allTopic.where((TopicSchema e) => e.topic.contains(val)).toList();
       });

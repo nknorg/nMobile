@@ -615,10 +615,10 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: <Widget>[
-                                  loadAssetIconsImage(
-                                    'key',
+                                  loadAssetChatPng(
+                                    'chat_id',
                                     color: DefaultTheme.primaryColor,
-                                    width: 24,
+                                    width: 22,
                                   ),
                                   SizedBox(width: 10),
                                   Label(
@@ -856,10 +856,10 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: <Widget>[
-                                        loadAssetIconsImage(
-                                          'key',
+                                        loadAssetChatPng(
+                                          'chat_id',
                                           color: DefaultTheme.primaryColor,
-                                          width: 24,
+                                          width: 22,
                                         ),
                                         SizedBox(width: 10),
                                         Label(
