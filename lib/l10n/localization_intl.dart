@@ -934,7 +934,7 @@ class NMobileLocalizations {
   }
 
   String get enter_or_select_a_user_pubkey {
-    return Intl.message('Enter/Select a user public key', name: 'enter_or_select_a_user_pubkey', desc: '');
+    return Intl.message('Enter/Select a user D-Chat ID', name: 'enter_or_select_a_user_pubkey', desc: '');
   }
 
   String get scan_show_me_desc {

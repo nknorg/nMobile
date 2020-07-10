@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyrefresh/bezier_bounce_footer.dart';
@@ -7,6 +8,7 @@ import 'package:nmobile/blocs/client/client_bloc.dart';
 import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/create_input_group.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/colors.dart';
@@ -77,8 +79,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: <Widget>[
-                                Label(NMobileLocalizations.of(context).connecting,
-                                    type: LabelType.bodySmall, color: DefaultTheme.fontLightColor.withAlpha(200)),
+                                Label(NMobileLocalizations.of(context).connecting, type: LabelType.bodySmall, color: DefaultTheme.fontLightColor.withAlpha(200)),
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 2, left: 4),
                                   child: SpinKitThreeBounce(
@@ -253,7 +254,14 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                 width: 48,
                                 height: 48,
                                 onPressed: () async {
-                                  var address = await BottomDialog.of(context).showInputChannelDialog(title: NMobileLocalizations.of(context).create_channel);
+                                  showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12))),
+                                      builder: (context) {
+                                        return CreateGroupDialog();
+                                      });
+//                                  await BottomDialog.of(context).showInputChannelDialog(title: NMobileLocalizations.of(context).create_channel);
                                 },
                               ),
                               Button(
@@ -263,19 +271,15 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                 width: 48,
                                 height: 48,
                                 onPressed: () async {
-                                  var address = await BottomDialog.of(context).showInputAddressDialog(
-                                      title: NMobileLocalizations.of(context).new_whisper,
-                                      hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+                                  var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
                                   if (address != null) {
                                     ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
                                     await contact.createContact();
                                     var c = await ContactSchema.getContactByAddress(address);
                                     if (c != null) {
-                                      Navigator.of(context)
-                                          .pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: c));
+                                      Navigator.of(context).pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: c));
                                     } else {
-                                      Navigator.of(context)
-                                          .pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
+                                      Navigator.of(context).pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
                                     }
                                   }
                                 },

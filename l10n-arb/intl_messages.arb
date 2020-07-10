@@ -1376,7 +1376,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "enter_or_select_a_user_pubkey": "Enter/Select a user public key",
+  "enter_or_select_a_user_pubkey": "Enter/Select a user D-Chat ID",
   "@enter_or_select_a_user_pubkey": {
     "description": "",
     "type": "text",
