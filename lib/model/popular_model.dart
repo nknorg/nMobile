@@ -16,7 +16,7 @@ class PopularModel {
     List<PopularModel> lists = [];
     lists.add(PopularModel(Color(DefaultTheme.headerColor1), Color(DefaultTheme.headerBackgroundColor1), 'DC', '#d-chat', "d-chat", 'Welcome to join the D-Chat group'));
     lists.add(PopularModel(Color(DefaultTheme.headerColor2), Color(DefaultTheme.headerBackgroundColor2), 'NC', '#nkn-chat', "nkn-chat", 'To join the developer group'));
-    lists.add(PopularModel(Color(DefaultTheme.headerColor4), Color(DefaultTheme.headerBackgroundColor4), 'M', '#music', "中文", 'Love music'));
+//    lists.add(PopularModel(Color(DefaultTheme.headerColor4), Color(DefaultTheme.headerBackgroundColor4), 'M', '#music', "Music", 'Love music'));
     lists.add(PopularModel(Color(DefaultTheme.headerColor5), Color(DefaultTheme.headerBackgroundColor5), 'S', '#sport', "sport", "Let's play together"));
     lists.add(PopularModel(Color(DefaultTheme.headerColor6), Color(DefaultTheme.headerBackgroundColor6), '中', '#中文', "中文", "Chinese group"));
     return lists;

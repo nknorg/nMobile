@@ -68,7 +68,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 14),
                 child: Label(
                   NMobileLocalizations.of(context).create_channel,
-                  type: LabelType.h2,
+                  type: LabelType.h3,
                 ),
               ),
               Column(
@@ -83,14 +83,15 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                       children: <Widget>[
                         Label(
                           NMobileLocalizations.of(context).name,
-                          type: LabelType.h4,
+                          type: LabelType.bodyRegular,
+                          color: DefaultTheme.fontColor1,
                           textAlign: TextAlign.start,
                         ),
                         Row(
                           children: <Widget>[
                             Label(
                               NMobileLocalizations.of(context).private_channel,
-                              type: LabelType.h4,
+                              type: LabelType.bodyRegular,
                               color: DefaultTheme.fontColor1,
                             ),
                             CupertinoSwitch(
@@ -155,8 +156,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                                 children: <Widget>[
                                   Label(
                                     NMobileLocalizations.of(context).advanced,
-                                    color: DefaultTheme.primaryColor,
-                                    type: LabelType.h4,
+                                    type: LabelType.bodyRegular,
+                                    color: DefaultTheme.fontColor1,
                                     textAlign: TextAlign.start,
                                   ),
                                   RotatedBox(
@@ -170,14 +171,6 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                         ),
                       ),
                     ],
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(left: 16, top: 16),
-                    child: Label(
-                      NMobileLocalizations.of(context).popular_channels,
-                      type: LabelType.h4,
-                      textAlign: TextAlign.start,
-                    ),
                   ),
                   ExpansionLayout(
                     isExpanded: _showFeeLayout,
@@ -196,8 +189,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                                   children: <Widget>[
                                     Label(
                                       NMobileLocalizations.of(context).fee,
+                                      type: LabelType.bodyRegular,
                                       color: DefaultTheme.fontColor1,
-                                      type: LabelType.h4,
                                       textAlign: TextAlign.start,
                                     ),
                                   ],
@@ -282,6 +275,14 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                       ),
                     ),
                   ),
+                  Padding(
+                    padding: EdgeInsets.only(left: 16, top: 16),
+                    child: Label(
+                      NMobileLocalizations.of(context).popular_channels,
+                      type: LabelType.h4,
+                      textAlign: TextAlign.start,
+                    ),
+                  ),
                 ],
               ),
               SizedBox(height: 10),
@@ -346,7 +347,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                         children: <Widget>[
                           Label(
                             item.topic,
-                            type: LabelType.h3,
+                            type: LabelType.bodyRegular,
+                            color: DefaultTheme.fontColor1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Label(
