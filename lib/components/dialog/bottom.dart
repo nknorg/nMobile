@@ -212,7 +212,7 @@ class BottomDialog extends StatefulWidget {
                     padding: const EdgeInsets.only(top: 24, bottom: 24),
                     child: Label(
                       title,
-                      type: LabelType.h2,
+                      type: LabelType.h3,
                     ),
                   ),
                 ),
@@ -223,7 +223,8 @@ class BottomDialog extends StatefulWidget {
                     children: <Widget>[
                       Label(
                         NMobileLocalizations.of(context).send_to,
-                        type: LabelType.h4,
+                        type: LabelType.bodyRegular,
+                        color: DefaultTheme.fontColor1,
                         textAlign: TextAlign.start,
                       ),
                       Textbox(
