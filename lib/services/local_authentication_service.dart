@@ -1,14 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:nmobile/helpers/local_storage.dart';
+import 'package:synchronized/synchronized.dart';
 
 class LocalAuthenticationService {
   LocalAuthenticationService._();
 
   static LocalAuthenticationService _instance;
+  static Lock _lock = Lock();
 
-  static LocalAuthenticationService get instance {
-    _instance ??= LocalAuthenticationService._();
+  static Future<LocalAuthenticationService> get instance async {
+    if (_instance == null)
+      await _lock.synchronized(() async {
+        if (_instance == null) {
+          final ins = LocalAuthenticationService._();
+          final localStorage = LocalStorage();
+          ins.isProtectionEnabled = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}')) as bool ?? false;
+          ins.authType = await ins.getAuthType();
+          _instance = ins;
+        }
+      });
     return _instance;
   }
 
@@ -26,25 +38,25 @@ class LocalAuthenticationService {
         return BiometricType.fingerprint;
       }
     } on PlatformException catch (e) {
-      debugPrint(e.message);
-      debugPrintStack();
+      debugPrintStack(label: e.message);
     }
+    return null;
   }
 
   Future<bool> authenticate() async {
     if (isProtectionEnabled) {
       try {
-        return isAuthenticated = await _localAuth.authenticateWithBiometrics(
+        isAuthenticated = await _localAuth.authenticateWithBiometrics(
           localizedReason: 'authenticate to access',
           useErrorDialogs: false,
           stickyAuth: true,
         );
+        return isAuthenticated;
       } on PlatformException catch (e) {
-        debugPrint(e.message);
-        debugPrintStack();
+        debugPrintStack(label: e.message);
       }
-      return false;
     }
+    return false;
   }
 
 //

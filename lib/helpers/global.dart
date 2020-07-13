@@ -67,10 +67,6 @@ class Global {
     // load settings
     Settings.localNotificationType = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.LOCAL_NOTIFICATION_TYPE_KEY}')) ?? 0;
     Settings.debug = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.DEBUG_KEY}')) ?? false;
-
-    final LocalAuthenticationService localAuth = instanceOf<LocalAuthenticationService>();
-    localAuth.isProtectionEnabled = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}')) as bool ?? false;
-    localAuth.authType = await localAuth.getAuthType();
   }
 
   static bool isLoadTopic(String topic) {
