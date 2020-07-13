@@ -9,17 +9,14 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
-import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
-import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
 class BackgroundFetchService {
   bool isFirstStart = true; // init start
 
   init() {
-    final LocalAuthenticationService localAuth = instanceOf<LocalAuthenticationService>();
     final LocalStorage _localStorage = LocalStorage();
     final SecureStorage _secureStorage = SecureStorage();
     ClientBloc _clientBloc = BlocProvider.of<ClientBloc>(Global.appContext);
@@ -37,6 +34,8 @@ class BackgroundFetchService {
       print("[BackgroundFetch] Event received $taskId");
       // todo debug
       LocalNotification.debugNotification('[debug] background fetch begin', taskId);
+
+      final localAuth = await LocalAuthenticationService.instance;
       if (!localAuth.isProtectionEnabled) {
         print("[BackgroundFetch] isProtectionEnabled: false, finish $taskId");
         BackgroundFetch.finish(taskId);
