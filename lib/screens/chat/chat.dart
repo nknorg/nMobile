@@ -8,6 +8,7 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
 import 'package:nmobile/screens/chat/no_wallet_account.dart';
+import 'package:nmobile/utils/log_tag.dart';
 
 class ChatScreen extends StatefulWidget {
   static const String routeName = '/chat';
@@ -16,7 +17,9 @@ class ChatScreen extends StatefulWidget {
   _ChatScreenState createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMixin {
+class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMixin, Tag {
+  bool firstShow = true;
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -27,15 +30,17 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
             return BlocBuilder<ClientBloc, ClientState>(
               builder: (context, clientState) {
                 if (clientState is NoConnect) {
+                  LOG(tag).w('firstShow:$firstShow');
+                  firstShow = false;
                   return NoConnectScreen();
                 } else {
-                  Global.isAutoShowPassword = true;
+                  Global.shouldAutoShowGetPassword = true;
                   return ChatHome();
                 }
               },
             );
           } else {
-            Global.isAutoShowPassword = true;
+            Global.shouldAutoShowGetPassword = true;
             return NoWalletAccount();
           }
         }

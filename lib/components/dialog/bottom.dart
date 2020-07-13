@@ -53,7 +53,7 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  showInputPasswordDialog({@required String title}) {
+  Future<String> showInputPasswordDialog({@required String title}) {
     TextEditingController _passwordController = TextEditingController();
     double height = 280;
     return show<String>(

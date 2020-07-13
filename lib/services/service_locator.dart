@@ -12,6 +12,5 @@ void setupSingleton() {
 //    ..registerSingleton<NavigateService>(NavigateService())
     ..registerSingleton(BackgroundFetchService())
     ..registerSingleton(TaskService())
-    ..registerLazySingleton<Logger>(() => Logger(printer: PrettyPrinter()))
-    ..registerLazySingleton(() => LocalAuthenticationService.instance);
+    ..registerLazySingleton<Logger>(() => Logger(printer: PrettyPrinter()));
 }
