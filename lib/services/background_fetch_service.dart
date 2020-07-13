@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,15 +24,23 @@ class BackgroundFetchService {
 
     var config = BackgroundFetchConfig(
       minimumFetchInterval: 15,
-      stopOnTerminate: false,
+      // __Android only__: but android use `AndroidMessagingService` instead.
+      stopOnTerminate: true,
+      // if the above `stopOnTerminate: false`, this should be true.
       enableHeadless: false,
       forceAlarmManager: false,
-      startOnBoot: true,
+      // __Android only__: but android use `AndroidMessagingService` instead.
+      startOnBoot: false,
       requiredNetworkType: NetworkType.ANY,
     );
 
     BackgroundFetch.configure(config, (String taskId) async {
       print("[BackgroundFetch] Event received $taskId");
+      if (Platform.isAndroid) {
+        print("[BackgroundFetch] isAndroid: true, finish $taskId");
+        BackgroundFetch.finish(taskId);
+        return;
+      }
       // todo debug
       LocalNotification.debugNotification('[debug] background fetch begin', taskId);
 
@@ -47,6 +56,7 @@ class BackgroundFetchService {
           if (wallet != null) {
             var password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:${wallet['address']}');
 
+            // if(localAuth.isAuthenticated)
             if (password != null) {
               _clientBloc.add(CreateClient(
                 WalletSchema(address: wallet['address'], type: wallet['type'], name: wallet['name']),

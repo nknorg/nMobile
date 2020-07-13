@@ -77,10 +77,7 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
         Uint8List.fromList(hexDecode(w['seed'])),
         ClientEventListener(this),
       );
-      changeAccount(currUser);
-
-//      Global.currentClient = ClientSchema(publicKey: publicKey, address: publicKey);
-//      Global.currentUser = await ContactSchema.getContactByAddress(publicKey);
+      changeAccount(currUser, force: true);
 
       final currentUser = await ContactSchema.getContactByAddress(db, publicKey);
       if (currentUser == null) {
@@ -93,8 +90,6 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
           updatedTime: now,
           profileVersion: uuid.v4(),
         ).createContact(db);
-
-//        Global.currentUser = await ContactSchema.getContactByAddress(publicKey);
       }
       yield Connecting();
 
@@ -133,20 +128,29 @@ class ClientEventListener extends ClientEventDispatcher {
 
   @override
   void onConnect(String myChatId) {
-    _clientBloc.add(ConnectedClient());
+    // To avoid confusion, since multi-account uses same `_clientBloc`.
+    if (myChatId == _clientBloc.accountChatId) {
+      _clientBloc.add(ConnectedClient());
+    }
   }
 
   @override
   void onDisConnect(String myChatId) {
-    _clientBloc.add(DisConnected());
+    // To avoid confusion, since multi-account uses same `_clientBloc`.
+    if (myChatId == _clientBloc.accountChatId) {
+      _clientBloc.add(DisConnected());
+    }
   }
 
   @override
   void onMessage(String myChatId, Map data) {
-    _clientBloc.add(
-      OnMessage(
-        MessageSchema(from: data['src'], to: myChatId, data: data['data'], pid: data['pid']),
-      ),
-    );
+    // To avoid confusion, since multi-account uses same `_clientBloc`.
+    if (myChatId == _clientBloc.accountChatId) {
+      _clientBloc.add(
+        OnMessage(
+          MessageSchema(from: data['src'], to: myChatId, data: data['data'], pid: data['pid']),
+        ),
+      );
+    }
   }
 }

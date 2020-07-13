@@ -1018,6 +1018,8 @@ class NMobileLocalizations {
   String get send_message => Intl.message('Send Message', name: 'send_message');
   String get show_wallet_address_desc => Intl.message('Scan the QR code, you can transfer it to me', name: 'show_wallet_address_desc');
   String get disappear_desc => Intl.message('Messages received and sent will disappear after the set time.', name: 'disappear_desc');
+
+  String get account_switching_completed => Intl.message('Account switching Completed', name: 'account_switching_completed');
   String get storage_text => Intl.message('Storage', name: 'storage_text');
 
   String get export => Intl.message('Export', name: 'export');

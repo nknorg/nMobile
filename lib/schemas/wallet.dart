@@ -20,13 +20,12 @@ class WalletSchema extends Equatable {
   String name;
   double balance = 0;
   String keystore;
-  String publicKey;
+  //String publicKey; // fixme: null!!!
   double balanceEth = 0;
   bool isBackedUp = false;
 
 //  final LocalStorage _localStorage = LocalStorage();
   final SecureStorage _secureStorage = SecureStorage();
-  final LocalAuthenticationService _localAuth = instanceOf<LocalAuthenticationService>();
 
   WalletSchema({this.address, this.type, this.name, this.balance = 0, this.balanceEth = 0, this.isBackedUp = false});
 
@@ -36,11 +35,13 @@ class WalletSchema extends Equatable {
   @override
   String toString() => 'WalletSchema { address: $address }';
 
-  Future<String> getPassword() async {
+  Future<String> getPassword({bool showDialogIfCanceledAuth = true}) async {
     NLog.d('getPassword');
     Future<String> _showDialog() {
       return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
     }
+
+    final _localAuth = await LocalAuthenticationService.instance;
     if (_localAuth.isProtectionEnabled) {
       final password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');
       if (password == null) {
@@ -49,8 +50,10 @@ class WalletSchema extends Equatable {
         bool auth = await _localAuth.authenticate();
         if (auth) {
           return password;
-        } else {
+        } else if (showDialogIfCanceledAuth) {
           return _showDialog();
+        } else {
+          return null;
         }
       }
     } else {

@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-07-22T19:18:10.633956",
+  "@@last_modified": "2020-07-16T17:47:21.221870",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1590,6 +1590,11 @@
   },
   "week": "week",
   "@week": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "account_switching_completed": "Account switching Completed",
+  "@account_switching_completed": {
     "type": "text",
     "placeholders": {}
   }

@@ -28,8 +28,7 @@ class Global {
   static Map<String, num> loadLoadSubscribers = {};
   static AppLifecycleState state = AppLifecycleState.resumed;
   static Map<String, DateTime> _loadProfileCache = {};
-  static bool isAutoShowPassword = true;
-  static int currentPageIndex;
+  static bool shouldAutoShowGetPassword = false;
 
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
 
@@ -38,6 +37,7 @@ class Global {
   static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
 
   static Future init(VoidCallback callback) async {
+    shouldAutoShowGetPassword = true;
     WidgetsFlutterBinding.ensureInitialized();
     NLog.d('APP start');
     await SpUtil.getInstance();

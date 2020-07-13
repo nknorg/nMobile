@@ -21,6 +21,7 @@ import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/screens/contact/home.dart';
+import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 
@@ -39,6 +40,14 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _ensureCancelAuthentication();
+  }
+
+  _ensureCancelAuthentication() async {
+    LocalAuthenticationService.instance.then((instance) {
+      instance.cancelAuthentication();
+    });
+    // TODO: cancel input password dialog.
   }
 
   @override
@@ -277,7 +286,9 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                 width: 48,
                                 height: 48,
                                 onPressed: () async {
-                                  var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+                                  var address = await BottomDialog.of(context).showInputAddressDialog(
+                                      title: NMobileLocalizations.of(context).new_whisper,
+                                      hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
                                   if (address != null) {
                                     ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
                                     await contact.createContact(db);

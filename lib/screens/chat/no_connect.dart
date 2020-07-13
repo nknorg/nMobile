@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -12,54 +10,77 @@ import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/event/eventbus.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/router/route_observer.dart';
 import 'package:nmobile/schemas/wallet.dart';
-import 'package:nmobile/utils/common_native.dart';
-import 'package:nmobile/utils/nlog_util.dart';
+import 'package:nmobile/utils/log_tag.dart';
 
 class NoConnectScreen extends StatefulWidget {
-  static const String routeName = '/chat/no_connect';
+//  static const String routeName = '/chat/no_connect';
 
   @override
   _NoConnectScreenState createState() => _NoConnectScreenState();
 }
 
-class _NoConnectScreenState extends State<NoConnectScreen> with WidgetsBindingObserver {
+class _NoConnectScreenState extends State<NoConnectScreen> with RouteAware, WidgetsBindingObserver, Tag {
   ClientBloc _clientBloc;
   WalletSchema _currentWallet;
-  bool isShow = true;
-  AppLifecycleState state;
-  StreamSubscription tabSubscription;
+  bool canShow = false;
+  String _walletAddr;
+
+  // ignore: non_constant_identifier_names
+  LOG _LOG;
+
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    canShow = true;
+    if (canShow) {
+      _LOG.i('canShow:$canShow, call _ensureAutoShowAuthentication()');
+      _ensureAutoShowAuthentication();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _LOG.i('didChangeAppLifecycleState($state)');
+    if (state == AppLifecycleState.resumed) {
+      _ensureAutoShowAuthentication();
+    }
+  }
+
+  @override
+  void didPushNext() {
+    _LOG.i('didPushNext()');
+    super.didPushNext();
+  }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
-    tabSubscription = eventBus.on<MainTabIndex>().listen((event) {
-//      NLog.d(event.index);
-//      getPassword();
-    });
+    _LOG = LOG(tag);
     _clientBloc = BlocProvider.of<ClientBloc>(context);
-    initData();
+    LocalStorage().get(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS).then((addr) {
+      setState(() {
+        _walletAddr = addr;
+      });
+    });
+//    initData();
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    if (this.state == AppLifecycleState.inactive && state == AppLifecycleState.resumed) {
-      getPassword();
-    }
-    this.state = state;
-    NLog.d(state.toString());
+  void didChangeDependencies() {
+    RouteUtils.routeObserver.subscribe(this, ModalRoute.of(context));
+    super.didChangeDependencies();
   }
 
   @override
   void dispose() {
+    RouteUtils.routeObserver.unsubscribe(this);
     WidgetsBinding.instance.removeObserver(this);
-    tabSubscription.cancel();
     super.dispose();
   }
 
@@ -129,17 +150,18 @@ class _NoConnectScreenState extends State<NoConnectScreen> with WidgetsBindingOb
                   child: Column(
                     children: <Widget>[
                       Padding(
-                        padding: EdgeInsets.only(
-                          top: 80,
-                        ),
+                        padding: EdgeInsets.only(top: 80),
                         child: BlocBuilder<WalletsBloc, WalletsState>(builder: (context, state) {
                           if (state is WalletsLoaded) {
-                            _currentWallet = state.wallets.first;
+                            _currentWallet = state.wallets.firstWhere((w) => w.address == _walletAddr, orElse: () => state.wallets.first);
+                            if (_walletAddr != null) {
+                              _ensureAutoShowAuthentication();
+                            }
                             return Button(
                               width: double.infinity,
                               text: NMobileLocalizations.of(context).connect,
                               onPressed: () {
-                                _next();
+                                _prepareConnect();
                               },
                             );
                           }
@@ -157,28 +179,34 @@ class _NoConnectScreenState extends State<NoConnectScreen> with WidgetsBindingOb
     );
   }
 
-  _next() async {
-    var password = await _currentWallet.getPassword();
+  bool _authenticating = false;
+
+  _prepareConnect() async {
+    if (_authenticating) return;
+    _authenticating = true;
+    var password = await _currentWallet.getPassword(showDialogIfCanceledAuth: false);
+    _authenticating = false;
     if (password != null) {
+      Global.shouldAutoShowGetPassword = false;
+      canShow = false;
       _clientBloc.add(CreateClient(_currentWallet, password));
-    } else {
-      isShow = true;
     }
   }
 
   initData() async {
     WidgetsBinding.instance.addPostFrameCallback((mag) async {
-      await getPassword();
+//      bool isActive = await CommonNative.isActive();
+//      if (Global.isAutoShowPassword && canShow && isActive && _currentWallet != null) {
+//        Global.isAutoShowPassword = false;
+//        canShow = false;
+//        _next();
+//      }
     });
   }
 
-  getPassword() async {
-    bool isActive = await CommonNative.isActive();
-    if (ModalRoute.of(context).settings.name == '/' && Global.currentPageIndex == 0) {
-      if (isShow && isActive && _currentWallet != null) {
-        isShow = false;
-        _next();
-      }
+  _ensureAutoShowAuthentication() async {
+    if ((Global.shouldAutoShowGetPassword || canShow) && _currentWallet != null) {
+      _prepareConnect();
     }
   }
 }

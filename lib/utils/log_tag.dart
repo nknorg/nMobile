@@ -21,7 +21,7 @@ mixin Tag {
     if (name.length > length) {
       return name.substring(name.length - length);
     } else
-      return name.padLeft((length - name.length), ' ');
+      return name.padLeft((length - name.length), '|');
   }
 }
 
@@ -35,7 +35,7 @@ class LOG {
 
   void i(dynamic message) {
     if (!Global.isRelease) {
-      final msg = '$tag |<I>| ${message.toString()}';
+      final msg = '$tag |<I>| ${message?.toString()}';
       if (usePrint)
         print(msg);
       else
@@ -45,7 +45,7 @@ class LOG {
 
   void d(dynamic message) {
     if (!Global.isRelease) {
-      final msg = '$tag |<D>| ${message.toString()}';
+      final msg = '$tag |<D>| ${message?.toString()}';
       if (usePrint)
         print(msg);
       else
@@ -55,7 +55,7 @@ class LOG {
 
   void w(dynamic message) {
     /*if (!Global.isRelease)*/
-    final msg = '$tag |<W>| ${message.toString()}';
+    final msg = '$tag |<W>| ${message?.toString()}';
     /*if (usePrint)
       print(msg);
     else*/
@@ -64,7 +64,7 @@ class LOG {
 
   void e(dynamic message, dynamic error) {
     /*if (!Global.isRelease)*/
-    final msg = '$tag |<E>| ${message.toString()} |###| error: ${error.toString()}';
+    final msg = '$tag |<E>| ${message?.toString()} |###| error: ${error?.toString()}';
     /*if (usePrint)
       print(msg);
     else*/

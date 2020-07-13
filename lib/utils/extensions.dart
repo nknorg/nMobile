@@ -56,7 +56,7 @@ extension CenterWidget on Widget {
 }
 
 class Space {
-  static Padding get empty => Padding(padding: EdgeInsets.all(0));
+  static Padding get empty => Padding(padding: const EdgeInsets.all(0));
 }
 
 main() {
