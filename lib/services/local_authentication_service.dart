@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:nmobile/helpers/local_storage.dart';
+import 'package:nmobile/utils/log_tag.dart';
 import 'package:synchronized/synchronized.dart';
 
-class LocalAuthenticationService {
-  LocalAuthenticationService._();
+class LocalAuthenticationService with Tag {
+  // ignore: non_constant_identifier_names
+  LOG _LOG;
+
+  LocalAuthenticationService._() {
+    _LOG = LOG(tag);
+  }
 
   static LocalAuthenticationService _instance;
   static Lock _lock = Lock();
@@ -38,7 +44,7 @@ class LocalAuthenticationService {
         return BiometricType.fingerprint;
       }
     } on PlatformException catch (e) {
-      debugPrintStack(label: e.message);
+      _LOG.e('getAuthType', e);
     }
     return null;
   }
@@ -53,10 +59,18 @@ class LocalAuthenticationService {
         );
         return isAuthenticated;
       } on PlatformException catch (e) {
-        debugPrintStack(label: e.message);
+        _LOG.e('authenticate', e);
+        return false;
       }
     }
     return false;
+  }
+
+  Future<bool> cancelAuthentication() {
+    if (isProtectionEnabled) {
+      return _localAuth.stopAuthentication();
+    } else
+      return Future.value(true);
   }
 
 //

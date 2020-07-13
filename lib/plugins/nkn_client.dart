@@ -59,8 +59,9 @@ class NknClientProxy with Tag {
 
   String get myChatId => identifier == null ? pubkey : '$identifier.$pubkey';
 
-  String get dbCipherPassphrase => hexEncode(sha256(hexEncode(_seed.toList(growable: false))));
+  String get dbCipherPassphrase => isSeedMocked ? throw "db cipher invalid." : hexEncode(sha256(hexEncode(_seed.toList(growable: false))));
 
+  bool get isSeedMocked => _seed.isEmpty;
 ///////////////////////////////////////////////////////////////////////////
   bool _isConnected = false;
   bool _disConnect = true;
@@ -73,9 +74,12 @@ class NknClientProxy with Tag {
   }
 
   void disConnect() {
+    if (_disConnect) return;
     _LOG.i('<<<disConnect<<<');
-    _disConnect = true;
     _NknClientPlugin.disConnect();
+    onDisConnect();
+    // must after `onDisConnect()`.
+    _disConnect = true;
   }
 
   bool startReceiveMessages() {
@@ -171,6 +175,7 @@ class NknClientProxy with Tag {
     _clientCreated = false;
     // An error occurred, not proactive call.
     // _disConnect = true;
+    if (_disConnect) return;
     final asyncCall = () async {
       _clientEvent.onDisConnect(myChatId);
     };

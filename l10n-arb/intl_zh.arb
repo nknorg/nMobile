@@ -1512,6 +1512,11 @@
     "type": "text",
     "placeholders": {}
   },
+  "account_switching_completed": "已完成账号切换",
+  "@account_switching_completed": {
+    "type": "text",
+    "placeholders": {}
+  },
   "leave_group_confirm_title": "您确定要离开该群组吗？",
   "@leave_group_confirm_title": {
     "description": "",

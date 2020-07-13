@@ -11,10 +11,12 @@ import 'package:nmobile/blocs/global/global_event.dart';
 import 'package:nmobile/blocs/global/global_state.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/select_list/select_list_item.dart';
 import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
@@ -24,6 +26,7 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/advice_page.dart';
 import 'package:nmobile/screens/select.dart';
+import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/const_utils.dart';
@@ -38,7 +41,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAliveClientMixin {
-  final LocalAuthenticationService _localAuth = instanceOf<LocalAuthenticationService>();
   final LocalStorage _localStorage = LocalStorage();
   final SecureStorage _secureStorage = SecureStorage();
   GlobalBloc _globalBloc;
@@ -527,6 +529,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
       try {
         var w = await wallet.exportWallet(password);
         _localStorage.set('${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}', value);
+        final _localAuth = await LocalAuthenticationService.instance;
         _localAuth.isProtectionEnabled = value;
         setState(() {
           _authSelected = value;

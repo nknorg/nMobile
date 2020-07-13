@@ -28,6 +28,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "accept" : MessageLookupByLibrary.simpleMessage("接受"),
     "accept_invitation" : MessageLookupByLibrary.simpleMessage("接受邀请"),
     "accepted" : MessageLookupByLibrary.simpleMessage("已接受"),
+    "account_switching_completed" : MessageLookupByLibrary.simpleMessage("已完成账号切换"),
     "add_contact" : MessageLookupByLibrary.simpleMessage("添加联系人"),
     "add_new_contact" : MessageLookupByLibrary.simpleMessage("添加联系人"),
     "address_book" : MessageLookupByLibrary.simpleMessage("查看地址簿"),
