@@ -21,6 +21,7 @@ class LocalStorage {
   static const String RN_WALLET_UPGRADED = 'RN_WALLET_UPGRADED';
 
   static const String UN_SUBSCRIBE_LIST = 'UN_SUBSCRIBE_LIST';
+  static const String DEFAULT_D_CHAT_WALLET_ADDRESS = 'default_d_chat_wallet_address';
 
   set(String key, val) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -37,7 +38,7 @@ class LocalStorage {
     }
   }
 
-  get(key) async {
+  Future<dynamic> get(key) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.get(key);
   }
