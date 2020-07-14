@@ -288,7 +288,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
               SizedBox(height: 10),
               getPopularView(),
               Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 0),
+                padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 10),
                 child: Button(
                   text: NMobileLocalizations.of(context).continue_text,
                   width: double.infinity,
