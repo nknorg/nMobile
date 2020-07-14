@@ -15,6 +15,7 @@ import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
+import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/label.dart';
@@ -30,6 +31,7 @@ import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/message_item.dart';
 import 'package:nmobile/schemas/topic.dart';
+import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/utils/extensions.dart';
@@ -42,7 +44,8 @@ class MessagesTab extends StatefulWidget {
   _MessagesTabState createState() => _MessagesTabState();
 }
 
-class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin, AccountDependsBloc, Tag {
+class _MessagesTabState extends State<MessagesTab>
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin, WidgetsBindingObserver, AccountDependsBloc, Tag {
   List<MessageItem> _messagesList = <MessageItem>[];
   ChatBloc _chatBloc;
   ContactBloc _contactBloc;
@@ -53,6 +56,82 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
   bool loading = false;
   List<PopularChannel> populars;
   bool isHideTip = false;
+
+  // ignore: non_constant_identifier_names
+  LOG _LOG;
+  bool _enabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _LOG = LOG(tag);
+
+    isHideTip = SpUtil.getBool(LocalStorage.WALLET_TIP_STATUS, defValue: false);
+    populars = PopularChannel.defaultData();
+    _chatBloc = BlocProvider.of<ChatBloc>(context);
+    _contactBloc = BlocProvider.of<ContactBloc>(context);
+    if (_chatSubscription == null) {
+      _chatSubscription = _chatBloc.listen((state) async {
+        if (state is MessagesUpdated) {
+          if (state.target != null) {
+            initAsync();
+          } else {
+            initAsync();
+          }
+        } else if (state is Connected) {
+          initAsync();
+        } else if (state is NotConnect) {
+          initAsync();
+        }
+      });
+    }
+    _scrollController.addListener(() {
+      double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
+      if (offsetFromBottom < 50 && !loading) {
+        loading = true;
+        _loadMore().then((v) {
+          loading = false;
+        });
+      }
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _LOG.i('didChangeAppLifecycleState($state)');
+    if (state == AppLifecycleState.resumed) {
+      setState(() {
+        _enabled = false;
+      });
+      _ensureVerifyPassword();
+    }
+  }
+
+  _ensureVerifyPassword() {
+    DChatAuthenticationHelper.loadDChatUseWallet(BlocProvider.of<WalletsBloc>(context), (wallet) {
+      DChatAuthenticationHelper.authToVerifyPassword(
+          wallet: wallet,
+          onGot: (nw) {
+            setState(() {
+              _enabled = true;
+            });
+          },
+          onError: (pwdIncorrect, e) {
+            _LOG.e('onError($pwdIncorrect)', e);
+            if (pwdIncorrect) {
+              showToast(NMobileLocalizations.of(context).tip_password_error);
+            }
+          });
+    });
+  }
+
+  @override
+  void dispose() {
+    _chatSubscription?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
   initAsync() async {
     var res = await MessageItem.getLastChat(db, limit: _limit);
@@ -93,45 +172,6 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         _messagesList.addAll(res);
       });
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    isHideTip = SpUtil.getBool(LocalStorage.WALLET_TIP_STATUS, defValue: false);
-    populars = PopularChannel.defaultData();
-    _chatBloc = BlocProvider.of<ChatBloc>(context);
-    _contactBloc = BlocProvider.of<ContactBloc>(context);
-    if (_chatSubscription == null) {
-      _chatSubscription = _chatBloc.listen((state) async {
-        if (state is MessagesUpdated) {
-          if (state.target != null) {
-            initAsync();
-          } else {
-            initAsync();
-          }
-        } else if (state is Connected) {
-          initAsync();
-        } else if (state is NotConnect) {
-          initAsync();
-        }
-      });
-    }
-    _scrollController.addListener(() {
-      double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
-      if (offsetFromBottom < 50 && !loading) {
-        loading = true;
-        _loadMore().then((v) {
-          loading = false;
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _chatSubscription?.cancel();
-    super.dispose();
   }
 
   @override
@@ -571,8 +611,12 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     }
     return InkWell(
       onTap: () async {
-        TopicSchema topic = await TopicSchema.getTopic(db, item.topic.topic);
-        Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
+        if (_enabled) {
+          TopicSchema topic = await TopicSchema.getTopic(db, item.topic.topic);
+          Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
+        } else {
+          _ensureVerifyPassword();
+        }
       },
       child: Container(
         height: 72.h,
@@ -708,7 +752,11 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     }
     return InkWell(
       onTap: () {
-        Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
+        if (_enabled) {
+          Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
+        } else {
+          _ensureVerifyPassword();
+        }
       },
       child: Container(
         height: 72.h,
