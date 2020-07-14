@@ -1,8 +1,16 @@
+/*
+ * Copyright (C) NKN Labs, Inc. - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ */
+
 import 'dart:typed_data';
 
 import 'package:nmobile/helpers/sqlite_storage.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
 
+/// @author Chenai
+/// @version 1.0, 03/07/2020
 class DChatAccount {
   final Wallet wallet;
   final NknClientProxy client;

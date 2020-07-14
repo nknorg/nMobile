@@ -21,9 +21,9 @@ import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/screens/contact/home.dart';
-import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/log_tag.dart';
 
 class ChatHome extends StatefulWidget {
   static const String routeName = '/chat/home';
@@ -32,7 +32,7 @@ class ChatHome extends StatefulWidget {
   _ChatHomeState createState() => _ChatHomeState();
 }
 
-class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin, AccountDependsBloc {
+class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin, AccountDependsBloc, Tag {
   GlobalKey _floatingActionKey = GlobalKey();
   TabController _tabController;
 
@@ -40,14 +40,6 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _ensureCancelAuthentication();
-  }
-
-  _ensureCancelAuthentication() async {
-    LocalAuthenticationService.instance.then((instance) {
-      instance.cancelAuthentication();
-    });
-    // TODO: cancel input password dialog.
   }
 
   @override
@@ -94,7 +86,8 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: <Widget>[
-                                Label(NMobileLocalizations.of(context).connecting, type: LabelType.bodySmall, color: DefaultTheme.fontLightColor.withAlpha(200)),
+                                Label(NMobileLocalizations.of(context).connecting,
+                                    type: LabelType.bodySmall, color: DefaultTheme.fontLightColor.withAlpha(200)),
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 2, left: 4),
                                   child: SpinKitThreeBounce(
@@ -272,7 +265,8 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                   showModalBottomSheet(
                                       context: context,
                                       isScrollControlled: true,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12))),
+                                      shape:
+                                          RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12))),
                                       builder: (context) {
                                         return CreateGroupDialog();
                                       });
@@ -294,9 +288,11 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                     await contact.createContact(db);
                                     var c = await ContactSchema.getContactByAddress(db, address);
                                     if (c != null) {
-                                      Navigator.of(context).pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: c));
+                                      Navigator.of(context)
+                                          .pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: c));
                                     } else {
-                                      Navigator.of(context).pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
+                                      Navigator.of(context)
+                                          .pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
                                     }
                                   }
                                 },

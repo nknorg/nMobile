@@ -36,6 +36,7 @@ import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/screens/chat/photo_page.dart';
 import 'package:nmobile/screens/contact/chat_profile.dart';
@@ -44,7 +45,6 @@ import 'package:nmobile/screens/contact/show_my_chat_address.dart';
 import 'package:nmobile/screens/view/burn_view_utils.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
-import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
@@ -509,54 +509,55 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
   }
 
   _changeAccount(WalletSchema wallet) async {
-    try {
-      final password = await BottomDialog.of(context).showInputPasswordDialog(title: NMobileLocalizations.of(context).verify_wallet_password);
-      final w = await wallet.exportWallet(password);
-      final walletAddr = w['address'];
-      final publicKey = w['publicKey'];
+    DChatAuthenticationHelper.authToVerifyPassword(
+        wallet: wallet,
+        onGot: (nw) async {
+          final walletAddr = nw['address'];
+          final publicKey = nw['publicKey'];
 
-      final accountNew = DChatAccount(
-        walletAddr,
-        publicKey,
-        Uint8List.fromList(hexDecode(w['seed'])),
-        ClientEventListener(BlocProvider.of<ClientBloc>(context)),
-      );
-      final localStorage = LocalStorage();
-      await localStorage.set(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS, accountNew.wallet.address);
+          final accountNew = DChatAccount(
+            walletAddr,
+            publicKey,
+            Uint8List.fromList(hexDecode(nw['seed'])),
+            ClientEventListener(BlocProvider.of<ClientBloc>(context)),
+          );
+          final localStorage = LocalStorage();
+          await localStorage.set(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS, accountNew.wallet.address);
 
-      final localAuth = await LocalAuthenticationService.instance;
-      if (localAuth.isProtectionEnabled) {
-        // nothing, since the above
-        // `await wallet.exportWallet(password)`
-        // steps have saved the password.
-      }
+          final localAuth = await LocalAuthenticationService.instance;
+          if (localAuth.isProtectionEnabled) {
+            // nothing, since the above
+            // `await wallet.exportWallet(password)`
+            // steps have saved the password.
+          }
 
-      Global.shouldAutoShowGetPassword = false;
-      account.client.disConnect();
-      changeAccount(accountNew);
-      // Must be behind `changeAccount()`, since you need to use the new `db` object.
-      final currentUser = await ContactSchema.getContactByAddress(db, publicKey);
-      if (currentUser == null) {
-        DateTime now = DateTime.now();
-        await ContactSchema(
-          type: ContactType.me,
-          clientAddress: publicKey,
-          nknWalletAddress: walletAddr,
-          createdTime: now,
-          updatedTime: now,
-          profileVersion: uuid.v4(),
-        ).createContact(db);
-      }
-      showToast(NMobileLocalizations.of(context).account_switching_completed);
-      setState(() {
-        nickName = accountNew.client.myChatId.substring(0, 6);
-        _walletDefault = wallet;
-      });
-    } catch (e) {
-      if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-        showToast(NMobileLocalizations.of(context).tip_password_error);
-      }
-    }
+          Global.shouldAutoShowGetPassword = false;
+          account.client.disConnect();
+          changeAccount(accountNew);
+          // Must be behind `changeAccount()`, since you need to use the new `db` object.
+          final currentUser = await ContactSchema.getContactByAddress(db, publicKey);
+          if (currentUser == null) {
+            DateTime now = DateTime.now();
+            await ContactSchema(
+              type: ContactType.me,
+              clientAddress: publicKey,
+              nknWalletAddress: walletAddr,
+              createdTime: now,
+              updatedTime: now,
+              profileVersion: uuid.v4(),
+            ).createContact(db);
+          }
+          showToast(NMobileLocalizations.of(context).account_switching_completed);
+          setState(() {
+            nickName = accountNew.client.myChatId.substring(0, 6);
+            _walletDefault = wallet;
+          });
+        },
+        onError: (pwdIncorrect, e) {
+          if (pwdIncorrect) {
+            showToast(NMobileLocalizations.of(context).tip_password_error);
+          }
+        });
   }
 
   getSelfView() {
