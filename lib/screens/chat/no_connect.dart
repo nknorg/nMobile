@@ -10,11 +10,11 @@ import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/router/route_observer.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/utils/log_tag.dart';
 
 class NoConnectScreen extends StatefulWidget {
@@ -27,8 +27,9 @@ class NoConnectScreen extends StatefulWidget {
 class _NoConnectScreenState extends State<NoConnectScreen> with RouteAware, WidgetsBindingObserver, Tag {
   ClientBloc _clientBloc;
   WalletSchema _currentWallet;
-  bool canShow = false;
   String _walletAddr;
+
+  DChatAuthenticationHelper _authHelper = DChatAuthenticationHelper();
 
   // ignore: non_constant_identifier_names
   LOG _LOG;
@@ -36,18 +37,16 @@ class _NoConnectScreenState extends State<NoConnectScreen> with RouteAware, Widg
   @override
   void didPopNext() {
     super.didPopNext();
-    canShow = true;
-    if (canShow) {
-      _LOG.i('canShow:$canShow, call _ensureAutoShowAuthentication()');
-      _ensureAutoShowAuthentication();
-    }
+    _authHelper.canShow = true;
+    _LOG.i('canShow:true, call _authHelper.ensureAutoShowAuthentication()');
+    _authHelper.ensureAutoShowAuthentication(onGetPassword);
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _LOG.i('didChangeAppLifecycleState($state)');
     if (state == AppLifecycleState.resumed) {
-      _ensureAutoShowAuthentication();
+      _authHelper.ensureAutoShowAuthentication(onGetPassword);
     }
   }
 
@@ -81,6 +80,7 @@ class _NoConnectScreenState extends State<NoConnectScreen> with RouteAware, Widg
   void dispose() {
     RouteUtils.routeObserver.unsubscribe(this);
     WidgetsBinding.instance.removeObserver(this);
+    DChatAuthenticationHelper.cancelAuthentication();
     super.dispose();
   }
 
@@ -155,13 +155,15 @@ class _NoConnectScreenState extends State<NoConnectScreen> with RouteAware, Widg
                           if (state is WalletsLoaded) {
                             _currentWallet = state.wallets.firstWhere((w) => w.address == _walletAddr, orElse: () => state.wallets.first);
                             if (_walletAddr != null) {
-                              _ensureAutoShowAuthentication();
+                              _authHelper.wallet = _currentWallet;
+                              _authHelper.ensureAutoShowAuthentication(onGetPassword);
                             }
                             return Button(
                               width: double.infinity,
                               text: NMobileLocalizations.of(context).connect,
                               onPressed: () {
-                                _prepareConnect();
+                                _authHelper.wallet = _currentWallet;
+                                _authHelper.prepareConnect(onGetPassword);
                               },
                             );
                           }
@@ -179,20 +181,6 @@ class _NoConnectScreenState extends State<NoConnectScreen> with RouteAware, Widg
     );
   }
 
-  bool _authenticating = false;
-
-  _prepareConnect() async {
-    if (_authenticating) return;
-    _authenticating = true;
-    var password = await _currentWallet.getPassword(showDialogIfCanceledAuth: false);
-    _authenticating = false;
-    if (password != null) {
-      Global.shouldAutoShowGetPassword = false;
-      canShow = false;
-      _clientBloc.add(CreateClient(_currentWallet, password));
-    }
-  }
-
   initData() async {
     WidgetsBinding.instance.addPostFrameCallback((mag) async {
 //      bool isActive = await CommonNative.isActive();
@@ -204,9 +192,7 @@ class _NoConnectScreenState extends State<NoConnectScreen> with RouteAware, Widg
     });
   }
 
-  _ensureAutoShowAuthentication() async {
-    if ((Global.shouldAutoShowGetPassword || canShow) && _currentWallet != null) {
-      _prepareConnect();
-    }
+  void onGetPassword(WalletSchema wallet, String password) {
+    _clientBloc.add(CreateClient(wallet, password));
   }
 }

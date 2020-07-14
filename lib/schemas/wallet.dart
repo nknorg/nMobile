@@ -35,7 +35,7 @@ class WalletSchema extends Equatable {
   @override
   String toString() => 'WalletSchema { address: $address }';
 
-  Future<String> getPassword({bool showDialogIfCanceledAuth = true}) async {
+  Future<String> getPassword({bool showDialogIfCanceledBiometrics = true}) async {
     NLog.d('getPassword');
     Future<String> _showDialog() {
       return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
@@ -50,7 +50,7 @@ class WalletSchema extends Equatable {
         bool auth = await _localAuth.authenticate();
         if (auth) {
           return password;
-        } else if (showDialogIfCanceledAuth) {
+        } else if (showDialogIfCanceledBiometrics) {
           return _showDialog();
         } else {
           return null;
