@@ -17,6 +17,7 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/contact/contact.dart';
@@ -27,6 +28,10 @@ import 'package:nmobile/utils/log_tag.dart';
 
 class ChatHome extends StatefulWidget {
   static const String routeName = '/chat/home';
+
+  final ActivePage activePage;
+
+  ChatHome(this.activePage);
 
   @override
   _ChatHomeState createState() => _ChatHomeState();
@@ -156,7 +161,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                   flex: 1,
                                   child: Padding(
                                     padding: EdgeInsets.only(top: 0.2),
-                                    child: MessagesTab(),
+                                    child: MessagesTab(widget.activePage),
                                   ),
                                 ),
                               ],
