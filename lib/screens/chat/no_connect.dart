@@ -14,23 +14,47 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/utils/common_native.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 class NoConnectScreen extends StatefulWidget {
   static const String routeName = '/chat/no_connect';
+
   @override
   _NoConnectScreenState createState() => _NoConnectScreenState();
 }
 
-class _NoConnectScreenState extends State<NoConnectScreen> {
+class _NoConnectScreenState extends State<NoConnectScreen> with WidgetsBindingObserver {
   ClientBloc _clientBloc;
   WalletSchema _currentWallet;
   bool isShow = true;
+  AppLifecycleState state;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _clientBloc = BlocProvider.of<ClientBloc>(context);
     initData();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // NLog.d(ModalRoute.of(context).settings.name);
+    //    NLog.d(Global.currentPageIndex);
+    if (this.state == AppLifecycleState.inactive && state == AppLifecycleState.resumed) {
+      if (ModalRoute.of(context).settings.name == '/' && Global.currentPageIndex == 0) {
+        NLog.d('show');
+        getPassword();
+      }
+    }
+    this.state = state;
+    NLog.d(state.toString());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override
@@ -131,17 +155,28 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
     var password = await _currentWallet.getPassword();
     if (password != null) {
       _clientBloc.add(CreateClient(_currentWallet, password));
+    } else {
+      isShow = true;
     }
   }
 
   initData() async {
     WidgetsBinding.instance.addPostFrameCallback((mag) async {
-      bool isActive = await CommonNative.isActive();
-      if (Global.isAutoShowPassword && isShow && isActive && _currentWallet != null) {
-        Global.isAutoShowPassword = false;
-        isShow = false;
-        _next();
-      }
+      await getPassword();
     });
+  }
+
+  getPassword() async {
+    bool isActive = await CommonNative.isActive();
+//    if (Global.isAutoShowPassword && isShow && isActive && _currentWallet != null) {
+//      Global.isAutoShowPassword = false;
+//      isShow = false;
+//      _next();
+//    }
+
+    if (isShow && isActive && _currentWallet != null) {
+      isShow = false;
+      _next();
+    }
   }
 }

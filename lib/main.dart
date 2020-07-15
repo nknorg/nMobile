@@ -17,7 +17,6 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/router/route_observer.dart';
 import 'package:nmobile/router/routes.dart';
 import 'package:nmobile/theme/slider_theme.dart';
-import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 import 'blocs/wallet/wallets_bloc.dart';
@@ -75,7 +74,7 @@ class AppState extends State<App> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    NLog.d(state.toString());
+//    NLog.d(state.toString());
     Global.state = state;
   }
 

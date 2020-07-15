@@ -37,6 +37,7 @@ class Global {
   static Map<String, DateTime> _loadProfileCache = {};
   static String currentChatId;
   static bool isAutoShowPassword = true;
+  static int currentPageIndex;
 
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
   static bool isLocaleZh() => locale != null && locale.startsWith('zh');

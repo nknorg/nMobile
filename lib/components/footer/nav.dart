@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/components/ButtonIcon.dart';
 import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 
 class Nav extends StatefulWidget {
@@ -29,6 +29,7 @@ class _NavState extends State<Nav> {
     setState(() {
       widget.currentIndex = index;
       widget.controller.jumpToPage(index);
+      Global.currentPageIndex = index;
     });
   }
 
