@@ -791,7 +791,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
               children: <Widget>[
                 BodyBox(
                   color: DefaultTheme.backgroundColor6,
-                  padding: EdgeInsets.only(top: 30),
+                  padding: EdgeInsets.only(top: 20),
                   child: Column(
                     children: <Widget>[
                       Expanded(
