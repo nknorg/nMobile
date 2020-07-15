@@ -8,3 +8,8 @@ class QMScan {
 }
 
 class AddContactEvent {}
+
+class MainTabIndex {
+  int index;
+  MainTabIndex(this.index);
+}
