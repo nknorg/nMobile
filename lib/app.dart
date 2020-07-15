@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/event/eventbus.dart';
@@ -29,7 +30,7 @@ class _AppScreenState extends State<AppScreen> {
   PageController _pageController;
   int _currentIndex = 0;
   List<Widget> screens = <Widget>[
-    ChatScreen(),
+    ChatScreen(ActivePage(0)),
 //    NewsScreen(),
     WalletScreen(),
     SettingsScreen(),
@@ -38,6 +39,7 @@ class _AppScreenState extends State<AppScreen> {
   @override
   void initState() {
     super.initState();
+    (screens[0] as ChatScreen).activePage.setCurrActivePageIndex(_currentIndex);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
@@ -84,12 +86,13 @@ class _AppScreenState extends State<AppScreen> {
                   Expanded(
                     flex: 1,
                     child: PageView(
-                      onPageChanged: (n) {
+                      onPageChanged: (n) async {
                         setState(() {
                           _currentIndex = n;
                           Global.currentPageIndex = _currentIndex;
                           eventBus.fire(MainTabIndex(Global.currentPageIndex));
                         });
+                        (screens[0] as ChatScreen).activePage.setCurrActivePageIndex(_currentIndex);
                       },
                       controller: _pageController,
                       children: screens,
