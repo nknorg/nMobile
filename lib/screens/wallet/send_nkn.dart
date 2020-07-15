@@ -107,7 +107,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: Header(
-        title: NMobileLocalizations.of(context).send_nkn.toUpperCase(),
+        title: NMobileLocalizations.of(context).send_nkn,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: IconButton(
           icon: loadAssetIconsImage(

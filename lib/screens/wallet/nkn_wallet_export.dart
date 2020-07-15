@@ -32,6 +32,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
   String publicKey;
   String seed;
   String address;
+  String name;
   WalletsBloc _walletsBloc;
 
   _setBackupFlag() {
@@ -45,6 +46,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
     address = widget.arguments['address'];
     publicKey = widget.arguments['publicKey'];
     seed = widget.arguments['seed'];
+    name = widget.arguments['name'];
 
     _walletsBloc = BlocProvider.of<WalletsBloc>(Global.appContext);
   }
@@ -54,7 +56,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).export_wallet.toUpperCase(),
+        title: NMobileLocalizations.of(context).export_wallet,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: Builder(
@@ -98,7 +100,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: <Widget>[
                                       Label(
-                                        NMobileLocalizations.of(context).main_wallet,
+                                        name ?? '',
                                         type: LabelType.h2,
                                       ),
                                     ],

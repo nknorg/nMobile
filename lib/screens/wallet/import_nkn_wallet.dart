@@ -31,7 +31,7 @@ class _ImportNknWalletScreenState extends State<ImportNknWalletScreen> with Sing
     List<String> tabs = [NMobileLocalizations.of(context).tab_keystore, NMobileLocalizations.of(context).tab_seed];
     return Scaffold(
       appBar: Header(
-        title: NMobileLocalizations.of(context).create_nkn_wallet_title.toUpperCase(),
+        title: NMobileLocalizations.of(context).create_nkn_wallet_title,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: IconButton(
           icon: loadAssetIconsImage(
