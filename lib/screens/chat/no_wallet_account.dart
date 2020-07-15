@@ -18,6 +18,7 @@ import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';
 import 'package:nmobile/utils/extensions.dart';
@@ -25,6 +26,10 @@ import 'package:nmobile/utils/image_utils.dart';
 
 class NoWalletAccount extends StatefulWidget {
   static const String routeName = '/chat/no_wallet_account';
+
+  final ActivePage activePage;
+
+  NoWalletAccount(this.activePage);
 
   @override
   _NoWalletAccountState createState() => _NoWalletAccountState();
@@ -56,7 +61,7 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
       String address = json['Address'];
       _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
       EasyLoading.dismiss();
-      Navigator.of(context).pushReplacementNamed(ChatHome.routeName);
+      Navigator.of(context).pushReplacementNamed(ChatHome.routeName, arguments: widget.activePage);
     }
   }
 

@@ -25,13 +25,14 @@ class SqliteStorage {
     return _db;
   }
 
-  close() async {
-    _db?.close();
+  Future<void> close() {
+    final db = _db;
     _db = null;
+    return db?.close();
   }
 
-  delete() async {
-    _delete(name);
+  Future delete() {
+    return _delete(name);
   }
 
   static String publicKey2DbName(String publicKey) {

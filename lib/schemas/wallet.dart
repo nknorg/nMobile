@@ -8,7 +8,6 @@ import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
-import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,6 +19,7 @@ class WalletSchema extends Equatable {
   String name;
   double balance = 0;
   String keystore;
+
   //String publicKey; // fixme: null!!!
   double balanceEth = 0;
   bool isBackedUp = false;
@@ -35,12 +35,15 @@ class WalletSchema extends Equatable {
   @override
   String toString() => 'WalletSchema { address: $address }';
 
-  Future<String> getPassword({bool showDialogIfCanceledBiometrics = true}) async {
+  Future<String> getPassword({bool showDialogIfCanceledBiometrics = true, bool forceShowInputDialog = false}) async {
     NLog.d('getPassword');
     Future<String> _showDialog() {
       return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
     }
 
+    if (forceShowInputDialog) {
+      return _showDialog();
+    }
     final _localAuth = await LocalAuthenticationService.instance;
     if (_localAuth.isProtectionEnabled) {
       final password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');

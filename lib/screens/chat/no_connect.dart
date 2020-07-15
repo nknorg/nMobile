@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,11 +16,16 @@ import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/router/route_observer.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/utils/log_tag.dart';
 
 class NoConnectScreen extends StatefulWidget {
 //  static const String routeName = '/chat/no_connect';
+
+  final ActivePage activePage;
+
+  NoConnectScreen(this.activePage);
 
   @override
   _NoConnectScreenState createState() => _NoConnectScreenState();
@@ -39,13 +46,28 @@ class _NoConnectScreenState extends State<NoConnectScreen> with RouteAware, Widg
     super.didPopNext();
     _authHelper.canShow = true;
     _LOG.i('canShow:true, call _authHelper.ensureAutoShowAuthentication()');
-    _authHelper.ensureAutoShowAuthentication(onGetPassword);
+    Timer(Duration(milliseconds: 600), () {
+      _authHelper.ensureAutoShowAuthentication(onGetPassword);
+    });
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _LOG.i('didChangeAppLifecycleState($state)');
     if (state == AppLifecycleState.resumed) {
+      _authHelper.ensureAutoShowAuthentication(onGetPassword);
+    } else if (state == AppLifecycleState.paused) {
+      // When app brought to foreground again,
+      // lifecycle state order is: inactive -> resumed.
+      // so...only judge if is `inactive` not enough.
+      _authHelper.canShow = true;
+    }
+  }
+
+  void onCurrPageActive(active) {
+    _LOG.i('onCurrPageActive($active)');
+    _authHelper.isPageActive = active;
+    if (active) {
       _authHelper.ensureAutoShowAuthentication(onGetPassword);
     }
   }
@@ -62,12 +84,14 @@ class _NoConnectScreenState extends State<NoConnectScreen> with RouteAware, Widg
     WidgetsBinding.instance.addObserver(this);
     _LOG = LOG(tag);
     _clientBloc = BlocProvider.of<ClientBloc>(context);
+    _authHelper.isPageActive = widget.activePage.isCurrPageActive;
     LocalStorage().get(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS).then((addr) {
+      _LOG.i('DEFAULT_D_CHAT_WALLET_ADDRESS:$addr');
       setState(() {
-        _walletAddr = addr;
+        _walletAddr = addr ?? '';
       });
     });
-//    initData();
+    widget.activePage.addOnCurrPageActive(onCurrPageActive);
   }
 
   @override
@@ -81,6 +105,7 @@ class _NoConnectScreenState extends State<NoConnectScreen> with RouteAware, Widg
     RouteUtils.routeObserver.unsubscribe(this);
     WidgetsBinding.instance.removeObserver(this);
     DChatAuthenticationHelper.cancelAuthentication();
+    widget.activePage.removeOnCurrPageActive(onCurrPageActive);
     super.dispose();
   }
 
@@ -182,7 +207,7 @@ class _NoConnectScreenState extends State<NoConnectScreen> with RouteAware, Widg
   }
 
   initData() async {
-    WidgetsBinding.instance.addPostFrameCallback((mag) async {
+    WidgetsBinding.instance.addPostFrameCallback((timestamp) async {
 //      bool isActive = await CommonNative.isActive();
 //      if (Global.isAutoShowPassword && canShow && isActive && _currentWallet != null) {
 //        Global.isAutoShowPassword = false;
