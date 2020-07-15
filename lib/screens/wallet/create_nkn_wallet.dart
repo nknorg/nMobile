@@ -59,7 +59,7 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: Header(
-        title: NMobileLocalizations.of(context).create_nkn_wallet_title.toUpperCase(),
+        title: NMobileLocalizations.of(context).create_nkn_wallet_title,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: ConstrainedBox(

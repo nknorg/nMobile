@@ -50,7 +50,7 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: (NMobileLocalizations.of(context).recieve + ' ' + NMobileLocalizations.of(context).nkn).toUpperCase(),
+        title: (NMobileLocalizations.of(context).recieve + ' ' + NMobileLocalizations.of(context).nkn),
         backgroundColor: DefaultTheme.backgroundColor4,
         action: IconButton(
           icon: loadAssetIconsImage(

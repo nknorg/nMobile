@@ -45,7 +45,7 @@ class NknWalletDetailScreen extends StatefulWidget {
 class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
   WalletsBloc _walletsBloc;
   ClientBloc _clientBloc;
-//  bool isDefault = false;
+  bool isDefault = false;
   TextEditingController _nameController = TextEditingController();
 
   @override
@@ -54,13 +54,13 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     _walletsBloc = BlocProvider.of<WalletsBloc>(context);
     _clientBloc = BlocProvider.of<ClientBloc>(context);
     _nameController.text = widget.arguments.name;
-//    widget.arguments.isDefaultWallet().then((v) {
-//      if (mounted) {
-//        setState(() {
-//          isDefault = v;
-//        });
-//      }
-//    });
+    widget.arguments.isDefaultWallet().then((v) {
+      if (mounted) {
+        setState(() {
+          isDefault = v;
+        });
+      }
+    });
   }
 
   _receive() {
@@ -83,7 +83,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).main_wallet,
+        title: isDefault ? NMobileLocalizations.of(context).main_wallet : widget.arguments.name,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: PopupMenuButton(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -105,6 +105,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                         'address': wallet['address'],
                         'publicKey': wallet['publicKey'],
                         'seed': wallet['seed'],
+                        'name': isDefault ? NMobileLocalizations.of(context).main_wallet : widget.arguments.name,
                       });
                     } else {
                       showToast(NMobileLocalizations.of(context).password_wrong);
@@ -235,8 +236,8 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                         Hero(
                           tag: 'avatar:${widget.arguments.address}',
                           child: Container(
-                            width: 48,
-                            height: 48,
+                            width: 60,
+                            height: 60,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: Color(0xFFF1F4FF),
@@ -318,16 +319,16 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                                     type: LabelType.h3,
                                     textAlign: TextAlign.start,
                                   ),
-                                  InkWell(
-                                    child: Label(
-                                      NMobileLocalizations.of(context).rename,
-                                      color: DefaultTheme.primaryColor,
-                                      type: LabelType.bodyLarge,
-                                    ),
-                                    onTap: () {
-                                      showChangeNameDialog();
-                                    },
-                                  ),
+//                                  InkWell(
+//                                    child: Label(
+//                                      NMobileLocalizations.of(context).rename,
+//                                      color: DefaultTheme.primaryColor,
+//                                      type: LabelType.bodyLarge,
+//                                    ),
+//                                    onTap: () {
+//                                      showChangeNameDialog();
+//                                    },
+//                                  ),
                                 ],
                               ),
                               Textbox(
