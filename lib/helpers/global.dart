@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:background_fetch/background_fetch.dart';
 import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,8 +7,6 @@ import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/services/android_messaging_service.dart';
-import 'package:nmobile/services/background_fetch_service.dart';
-import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:package_info/package_info.dart';
@@ -28,7 +25,6 @@ class Global {
   static Map<String, num> loadLoadSubscribers = {};
   static AppLifecycleState state = AppLifecycleState.resumed;
   static Map<String, DateTime> _loadProfileCache = {};
-  static bool shouldAutoShowGetPassword = false;
 
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
 
@@ -37,7 +33,6 @@ class Global {
   static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
 
   static Future init(VoidCallback callback) async {
-    shouldAutoShowGetPassword = true;
     WidgetsFlutterBinding.ensureInitialized();
     NLog.d('APP start');
     await SpUtil.getInstance();
