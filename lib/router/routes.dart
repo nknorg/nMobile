@@ -10,8 +10,11 @@ import 'package:nmobile/screens/chat/populai_group_page.dart';
 import 'package:nmobile/screens/common/page/change_update_content.dart';
 import 'package:nmobile/screens/common_web_page.dart';
 import 'package:nmobile/screens/contact/add_contact.dart';
+import 'package:nmobile/screens/contact/chat_profile.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/screens/contact/home.dart';
+import 'package:nmobile/screens/contact/show_chat_id.dart';
+import 'package:nmobile/screens/contact/show_my_chat_address.dart';
 import 'package:nmobile/screens/home.dart';
 import 'package:nmobile/screens/ncdn/home.dart';
 import 'package:nmobile/screens/ncdn/node_detail_page.dart';
@@ -57,15 +60,17 @@ Map<String, WidgetBuilder> routes = {
   AddContact.routeName: (BuildContext context) => AddContact(),
   NodeMainPage.routeName: (BuildContext context) => NodeMainPage(),
   WithDrawPage.routeName: (BuildContext context, {arguments}) => WithDrawPage(arguments: arguments),
-  NcdnHomeScreen.routeName: (BuildContext context, {arguments}) => NcdnHomeScreen(arguments: arguments),
   NodeDetailPage.routeName: (BuildContext context, {arguments}) => NodeDetailPage(arguments: arguments),
   NodeListPage.routeName: (BuildContext context, {arguments}) => NodeListPage(arguments: arguments),
   PopularGroupPage.routeName: (BuildContext context) => PopularGroupPage(),
+  ShowMyChatID.routeName: (BuildContext context) => ShowMyChatID(),
   WalletScreen.routeName: (BuildContext context) => WalletScreen(),
   AppVersion.routeName: (BuildContext context) => AppVersion(),
+  NcdnHomeScreen.routeName: (BuildContext context) => NcdnHomeScreen(),
+  ChatProfile.routeName: (BuildContext context, {arguments}) => ChatProfile(arguments: arguments),
+  ShowMyChatAddress.routeName: (BuildContext context, {arguments}) => ShowMyChatAddress(arguments: arguments),
 };
 
-// ignore: missing_return
 var onGenerateRoute = (RouteSettings settings) {
   final String name = settings.name;
   NLog.d(name);

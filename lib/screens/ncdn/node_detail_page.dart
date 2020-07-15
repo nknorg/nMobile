@@ -67,9 +67,9 @@ class NodeDetailPageState extends State<NodeDetailPage> {
   }
 
   initData() {
-    String url = Api.CDN_MINER_API + '/api/v2/get_status_by_nshid/${Global.minerData.ads}';
+    String url = Api.CDN_MINER_API + '/api/v3/get_status_by_nshid/';
     var params = {
-      "beneficiary": Global.minerData.ads,
+      "beneficiary": Global.minerData.pub,
       "nshid": widget.arguments.nshId,
     };
     //[1592824857, "1771969.6916666667"]
@@ -139,16 +139,12 @@ class NodeDetailPageState extends State<NodeDetailPage> {
       appBar: Header(
         title: '节点详情',
         backgroundColor: DefaultTheme.backgroundColor4,
-        action: Button(
-          padding: EdgeInsets.zero,
-          icon: true,
+        action: FlatButton(
           child: Label(
             '删除',
             color: Colors.white,
           ),
-          onPressed: () {
-            showDeleteDialog();
-          },
+          onPressed: showDeleteDialog,
         ),
       ),
       body: Builder(
@@ -246,7 +242,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                                     Label(
                                       widget.arguments.getStatus(),
                                       type: LabelType.bodyRegular,
-                                      color: Colors.black,
+                                      color: widget.arguments.getStatusColor(),
                                       textAlign: TextAlign.start,
                                     )
                                   ],
@@ -358,6 +354,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                           ],
                         ),
                       ),
+                      SizedBox(height: 10.h),
                       getParamsView(),
                       SizedBox(height: 10.h),
                       Container(
@@ -397,6 +394,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                               showToast('已发送指令');
                               isRefresh = true;
                               widget.arguments.getMinerDetail();
+                              initData();
                             },
                             child: Container(
                               decoration: BoxDecoration(color: DefaultTheme.primaryColor, borderRadius: BorderRadius.circular(10)),

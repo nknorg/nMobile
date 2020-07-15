@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 import BackgroundTasks
+import Bugly
 
 var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
 
@@ -17,10 +18,10 @@ var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
             UIApplication.shared.cancelAllLocalNotifications()
             UserDefaults.standard.set(true, forKey: "Notification")
         }
+        Bugly.start(withAppId: "169cabe790")
         
         
         let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
-        
         
         let walletMethodChannel = FlutterMethodChannel(name: "org.nkn.sdk/wallet", binaryMessenger: controller.binaryMessenger)
         walletMethodChannel.setMethodCallHandler(NknWalletPlugin.handle)
@@ -40,10 +41,17 @@ var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
 
         let nShellClientEventChannel = FlutterEventChannel(name: "org.nkn.sdk/nshellclient/event", binaryMessenger: controller.binaryMessenger)
         nShellClientEventChannel.setStreamHandler(NShellClientEventPlugin())
-
+        
+       let commontChannel = FlutterMethodChannel(name: "ios/nmobile/native/common", binaryMessenger: controller.binaryMessenger)
+        commontChannel.setMethodCallHandler { (call, result) in
+              if "isActive" == call.method{
+                 result(application.applicationState != UIApplication.State.background)
+              }else{
+                  result(FlutterMethodNotImplemented)
+              }
+          }
         
         GeneratedPluginRegistrant.register(with: self)
-        
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
     

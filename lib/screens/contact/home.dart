@@ -47,7 +47,7 @@ class _ContactHomeState extends State<ContactHome> {
   List<ContactSchema> _allFriends = <ContactSchema>[];
   List<ContactSchema> _allStrangerContacts = <ContactSchema>[];
   List<TopicSchema> _allTopic = <TopicSchema>[];
-  int _limit = 20;
+  int _limit = 100;
   int _skip = 20;
   bool loading = false;
   String searchText = '';
@@ -128,7 +128,7 @@ class _ContactHomeState extends State<ContactHome> {
                     alignment: Alignment.center,
                     child: Hero(
                       tag: 'header_avatar:${Global.currentUser.clientAddress}',
-                      child: Global.currentUser.avatarWidget(backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 24),
+                      child: Global.currentUser.avatarWidget(backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 28),
                     ),
                   ),
                 ),
@@ -136,7 +136,10 @@ class _ContactHomeState extends State<ContactHome> {
                   flex: 1,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[Label(Global.currentUser.name, type: LabelType.h3, dark: true), Label(NMobileLocalizations.of(context).connected, type: LabelType.bodyRegular, color: DefaultTheme.riseColor)],
+                    children: <Widget>[
+                      Label(Global.currentUser.name, type: LabelType.h3, dark: true),
+                      Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor),
+                    ],
                   ),
                 )
               ],
@@ -696,7 +699,6 @@ class _ContactHomeState extends State<ContactHome> {
                                 ],
                               ),
                               Label(
-
                                 item.topic,
                                 height: 1,
                                 type: LabelType.bodySmall,
@@ -727,7 +729,7 @@ class _ContactHomeState extends State<ContactHome> {
       });
     } else {
       setState(() {
-        _strangerContacts = _allStrangerContacts.where((ContactSchema e) => e.name.contains(val)).toList();
+        _strangerContacts = _allStrangerContacts.where((ContactSchema e) => e.name.toLowerCase().contains(val.toLowerCase())).toList();
         _friends = _allFriends.where((ContactSchema e) => e.name.contains(val)).toList();
         _topic = _allTopic.where((TopicSchema e) => e.topic.contains(val)).toList();
       });

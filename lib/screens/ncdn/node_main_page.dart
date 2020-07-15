@@ -99,8 +99,8 @@ class _NodeMainPageState extends State<NodeMainPage> {
     super.dispose();
   }
 
-  search() {
-    String url = Api.CDN_MINER_API + '/api/v2/quantity_flow/${Global.minerData.ads}';
+  search() async {
+    String url = Api.CDN_MINER_API + '/api/v3/quantity_flow/${Global.minerData.pub}';
     var params = {
       'start': _start.millisecondsSinceEpoch ~/ 1000,
       'end': _end.add(Duration(days: 1)).millisecondsSinceEpoch ~/ 1000,
@@ -212,44 +212,17 @@ class _NodeMainPageState extends State<NodeMainPage> {
                             ],
                           ),
                           SizedBox(height: 10.h),
-                          Row(
-                            children: <Widget>[
-                              Label(
-                                '运行中',
-                                color: DefaultTheme.fontColor1,
-                                type: LabelType.bodyRegular,
-                                softWrap: true,
-                              ),
-                              Spacer(),
-                              Label(
-                                responseData == null
-                                    ? '获取中...'
-                                    : _list
-                                        .where((item) {
-                                          return item.getStatus() == '运行中';
-                                        })
-                                        .toList()
-                                        .length
-                                        .toString(),
-                                color: DefaultTheme.fontColor1,
-                                type: LabelType.bodyRegular,
-                                softWrap: true,
-                              )
-                            ],
-                          ),
-                          SizedBox(height: 10.h),
                           InkWell(
                             onTap: () {
                               Navigator.pushNamed(context, NodeListPage.routeName,
                                   arguments: _list.where((item) {
-                                    return item.getStatus() == '故障';
+                                    return item.getStatus() == '运行中';
                                   }).toList());
                             },
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
                                 Label(
-                                  '故障数量',
+                                  '运行中',
                                   color: DefaultTheme.fontColor1,
                                   type: LabelType.bodyRegular,
                                   softWrap: true,
@@ -260,7 +233,47 @@ class _NodeMainPageState extends State<NodeMainPage> {
                                       ? '获取中...'
                                       : _list
                                           .where((item) {
-                                            return item.getStatus() == '故障';
+                                            return item.getStatus() == '运行中';
+                                          })
+                                          .toList()
+                                          .length
+                                          .toString(),
+                                  color: DefaultTheme.fontColor1,
+                                  type: LabelType.bodyRegular,
+                                  softWrap: true,
+                                ),
+                                SvgPicture.asset(
+                                  'assets/icons/right.svg',
+                                  width: 24,
+                                  color: DefaultTheme.fontColor2,
+                                )
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 10.h),
+                          InkWell(
+                            onTap: () {
+                              Navigator.pushNamed(context, NodeListPage.routeName,
+                                  arguments: _list.where((item) {
+                                    return item.getStatus() == '异常';
+                                  }).toList());
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Label(
+                                  '异常数量',
+                                  color: DefaultTheme.fontColor1,
+                                  type: LabelType.bodyRegular,
+                                  softWrap: true,
+                                ),
+                                Spacer(),
+                                Label(
+                                  responseData == null
+                                      ? '获取中...'
+                                      : _list
+                                          .where((item) {
+                                            return item.getStatus() == '异常';
                                           })
                                           .toList()
                                           .length
@@ -499,15 +512,15 @@ class _NodeMainPageState extends State<NodeMainPage> {
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: <Widget>[
                                             Label(
-                                              '预估收益: ${node.cost != null ? Format.currencyFormat(node.cost, decimalDigits: 3) : '-'} USDT',
+                                              '预估收益:${node.cost != null ? Format.currencyFormat(node.cost, decimalDigits: 3) : '-'}USDT',
                                               color: DefaultTheme.fontColor1,
-                                              type: LabelType.bodyRegular,
+                                              type: LabelType.bodySmall,
                                               softWrap: true,
                                             ),
                                             Label(
                                               '流量: ${node.flow != null ? getFormatSize(node.flow.toDouble(), unitArr: ['Bytes', 'KBytes', 'MBytes', 'GBytes', 'TBytes']) : '-'}',
                                               color: DefaultTheme.fontColor1,
-                                              type: LabelType.bodyRegular,
+                                              type: LabelType.bodySmall,
                                               softWrap: true,
                                             )
                                           ],

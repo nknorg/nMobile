@@ -79,15 +79,16 @@ class PopularItem extends StatelessWidget {
             child: Center(
               child: Label(
                 data.title,
-                type: LabelType.h3,
+                type: LabelType.h4,
                 color: data.titleColor,
               ),
             ),
           ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 4.h),
           Label(
             data.subTitle,
             type: LabelType.h4,
+            fontSize: DefaultTheme.bodySmallFontSize,
           ),
         ],
       ),

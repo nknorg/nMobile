@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -90,8 +88,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                       color: Color(0xFFF1F4FF),
                                       borderRadius: BorderRadius.all(Radius.circular(8)),
                                     ),
-                                    child: SvgPicture.asset('assets/logo.svg',
-                                        color: Color(0xFF253A7E)),
+                                    child: SvgPicture.asset('assets/logo.svg', color: Color(0xFF253A7E)),
                                   ),
                                 ),
                                 Padding(
@@ -134,12 +131,10 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: <Widget>[
                                                   Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.spaceBetween,
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     children: <Widget>[
                                                       Label(
-                                                        NMobileLocalizations.of(context)
-                                                            .wallet_address,
+                                                        NMobileLocalizations.of(context).wallet_address,
                                                         type: LabelType.h4,
                                                         textAlign: TextAlign.start,
                                                       ),
@@ -195,8 +190,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: <Widget>[
                                                   Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.spaceBetween,
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     children: <Widget>[
                                                       Label(
                                                         NMobileLocalizations.of(context).public_key,
@@ -256,8 +250,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: <Widget>[
                                                   Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.spaceBetween,
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     children: <Widget>[
                                                       Label(
                                                         NMobileLocalizations.of(context).seed,
@@ -319,8 +312,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: <Widget>[
                                                   Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.spaceBetween,
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     children: <Widget>[
                                                       Label(
                                                         NMobileLocalizations.of(context).keystore,
@@ -380,19 +372,16 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                     child: Column(
                       children: <Widget>[
                         Button(
-                          width: double.infinity,
                           child: Label(
                             NMobileLocalizations.of(context).view_qrcode,
                             type: LabelType.h3,
                             color: DefaultTheme.primaryColor,
                           ),
-                          padding: EdgeInsets.only(top: 16, bottom: 16),
                           backgroundColor: DefaultTheme.primaryColor.withAlpha(20),
                           fontColor: DefaultTheme.primaryColor,
                           onPressed: () {
                             BottomDialog.of(context).showQrcodeDialog(
-                              title: NMobileLocalizations.of(context).seed +
-                                  NMobileLocalizations.of(context).qrcode,
+                              title: NMobileLocalizations.of(context).seed + NMobileLocalizations.of(context).qrcode,
                               data: seed,
                             );
                             _setBackupFlag();

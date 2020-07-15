@@ -77,6 +77,49 @@ func getBalanceAsync(_ call: FlutterMethodCall, result: FlutterResult) {
     }
 }
 
+func transferAsync(_ call: FlutterMethodCall, result: FlutterResult) {
+        result(nil)
+        guard let eventSink = walletEventSink else {
+            return
+        }
+
+        let args = call.arguments as! [String: Any]
+           let keystore = args["keystore"] as? String
+           let password = args["password"] as? String
+            let _id = args["_id"] as? String
+           let address = args["address"] as? String
+           let amount = args["amount"] as? String
+           let fee = args["fee"] as! String
+           let config = NknWalletConfig.init()
+        walletQueue.async {
+            do {
+               
+                config.password = password ?? ""
+                config.seedRPCServerAddr = NknStringArray.init(from: "https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
+                var error: NSError?
+                let wallet = NknWalletFromJSON(keystore, config, &error)
+                if (error != nil) {
+                       eventSink(FlutterError(code: _id ?? "_id", message: "", details: nil))
+                                  return
+                 }
+
+                let transactionConfig: NknTransactionConfig = NknTransactionConfig.init()
+                transactionConfig.fee = fee
+                let hash = wallet?.transfer(address, amount: amount, config: transactionConfig, error: &error)
+                if (error != nil) {
+                      eventSink(FlutterError(code: _id ?? "_id", message: "", details: nil))
+                                 return
+                }
+                var data:[String:Any] = [String:Any]()
+                            data["_id"] = _id
+                            data["result"] = hash
+                eventSink(data)
+            } catch let error {
+                eventSink(FlutterError(code: _id ?? "_id", message: error.localizedDescription, details: nil))
+            }
+        }
+}
+
 func transfer(_ call: FlutterMethodCall, result: FlutterResult) {
     let args = call.arguments as! [String: Any]
     let keystore = args["keystore"] as? String
@@ -93,7 +136,7 @@ func transfer(_ call: FlutterMethodCall, result: FlutterResult) {
         result(FlutterError.init(code: String(error?.code ?? 0), message: error?.localizedDescription, details: nil))
         return
     }
-    
+
     let transactionConfig: NknTransactionConfig = NknTransactionConfig.init()
     transactionConfig.fee = fee
     let hash = wallet?.transfer(address, amount: amount, config: transactionConfig, error: &error)
@@ -101,7 +144,7 @@ func transfer(_ call: FlutterMethodCall, result: FlutterResult) {
         result(FlutterError.init(code: String(error?.code ?? 0), message: error?.localizedDescription, details: nil))
         return
     }
-    
+
     result(hash)
 }
 

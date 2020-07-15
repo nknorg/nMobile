@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/button.dart';
@@ -14,6 +15,7 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/popular_model.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
@@ -27,6 +29,7 @@ class InputChannelDialog extends StatefulWidget {
 
   final String title;
   Function updateHeight;
+
   InputChannelDialog({
     @required this.title,
     this.updateHeight,
@@ -124,26 +127,31 @@ class _InputChannelDialogState extends State<InputChannelDialog> {
                               ],
                             ),
                           ),
-                          Padding(
+                          Container(
                             padding: EdgeInsets.only(left: 20, right: 20),
-                            child: Textbox(
-                              controller: _topicController,
-                              validator: Validator.of(context).required(),
-                              hintText: NMobileLocalizations.of(context).enter_topic,
-                              suffixIcon: InkWell(
-                                onTap: () {
-                                  Navigator.pushNamed(context, PopularGroupPage.routeName).then((v) {
-                                    if (v != null) {
-                                      _topicController.text = v;
-                                    }
-                                  });
-                                },
-                                child: Icon(
-                                  Icons.group,
-                                  size: 20,
-                                  color: DefaultTheme.primaryColor,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: <Widget>[
+                                Expanded(
+                                  child: Textbox(
+                                    controller: _topicController,
+                                    validator: Validator.of(context).required(),
+                                    hintText: NMobileLocalizations.of(context).enter_topic,
+                                  ),
                                 ),
-                              ),
+                                Container(
+                                  child: InkWell(
+                                    child: loadAssetChatPng('group_blue', width: 24),
+                                    onTap: () {
+                                      Navigator.pushNamed(context, PopularGroupPage.routeName).then((v) {
+                                        if (v != null) {
+                                          _topicController.text = v;
+                                        }
+                                      });
+                                    },
+                                  ),
+                                )
+                              ],
                             ),
                           ),
                           Padding(
@@ -286,6 +294,10 @@ class _InputChannelDialogState extends State<InputChannelDialog> {
                               ),
                             ),
                           ),
+                          ExpansionLayout(
+                            isExpanded: true,
+                            child: getPopularView(),
+                          )
                         ],
                       ),
                     ),
@@ -303,56 +315,7 @@ class _InputChannelDialogState extends State<InputChannelDialog> {
                   disabled: _loading,
                   onPressed: () async {
                     if (_formValid) {
-                      String topic = _topicController.text;
-                      if (topic == null || topic.isEmpty) {
-                        return;
-                      }
-                      String type = TopicType.public;
-                      String owner;
-                      if (_privateSelected) {
-                        if (!isPrivateTopic(topic)) {
-                          topic = '$topic.${Global.currentClient.publicKey}';
-                          owner = Global.currentClient.publicKey;
-                        } else {
-                          owner = getOwnerPubkeyByTopic(topic);
-                        }
-                        type = TopicType.private;
-                      }
-
-                      setState(() {
-                        _loading = true;
-                      });
-                      EasyLoading.show();
-                      var duration = 400000;
-                      var hash = await TopicSchema.subscribe(topic: topic, duration: duration);
-                      if (hash != null) {
-                        var sendMsg = MessageSchema.fromSendData(
-                          from: Global.currentClient.address,
-                          topic: topic,
-                          contentType: ContentType.dchatSubscribe,
-                        );
-                        sendMsg.isOutbound = true;
-                        sendMsg.content = sendMsg.toDchatSubscribeData();
-                        _chatBloc.add(SendMessage(sendMsg));
-
-                        DateTime now = DateTime.now();
-                        var topicSchema = TopicSchema(topic: topic, type: type, owner: owner, expiresAt: now.add(blockToExpiresTime(duration)));
-                        if (type == TopicType.private) {
-                          topicSchema.acceptPrivateMember(addr: Global.currentClient.publicKey);
-                        }
-
-                        await topicSchema.insertOrUpdate();
-                        topicSchema = await TopicSchema.getTopic(topic);
-                        EasyLoading.dismiss();
-                        if (type == TopicType.private) {
-                          Navigator.of(context).pushReplacementNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.PrivateChannel, topic: topicSchema));
-                        } else {
-                          Navigator.of(context).pushReplacementNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topicSchema));
-                        }
-                      }
-                      setState(() {
-                        _loading = false;
-                      });
+                      createOrJoinGroup(_topicController.text);
                     }
                   },
                 ),
@@ -362,5 +325,131 @@ class _InputChannelDialogState extends State<InputChannelDialog> {
         ),
       ),
     );
+  }
+
+  getPopularView() {
+    List<Widget> list = [];
+    for (PopularModel item in PopularModel.defaultData()) {
+      list.add(InkWell(
+        onTap: () async {
+          createOrJoinGroup(item.topic);
+        },
+        child: Container(
+          height: 40.h,
+          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+          width: double.infinity,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Container(
+                height: 40.h,
+                width: 50.w,
+                decoration: BoxDecoration(color: item.titleBgColor, borderRadius: BorderRadius.circular(8)),
+                child: Center(
+                  child: Label(
+                    item.title,
+                    type: LabelType.h4,
+                    color: item.titleColor,
+                  ),
+                ),
+              ),
+              SizedBox(width: 20),
+              Container(
+                padding: const EdgeInsets.only(),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: DefaultTheme.backgroundColor2)),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                      alignment: Alignment.centerLeft,
+                      height: 44,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Row(
+                            children: <Widget>[
+                              Container(),
+                              Label(
+                                item.topic,
+                                type: LabelType.h3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                          Label(
+                            item.topic,
+                            height: 1,
+                            type: LabelType.bodySmall,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ));
+    }
+    return Column(
+      children: list,
+    );
+  }
+
+  createOrJoinGroup(topic) async {
+    if (topic == null || topic.isEmpty) {
+      return;
+    }
+    String type = TopicType.public;
+    String owner;
+    if (_privateSelected) {
+      if (!isPrivateTopic(topic)) {
+        topic = '$topic.${Global.currentClient.publicKey}';
+        owner = Global.currentClient.publicKey;
+      } else {
+        owner = getOwnerPubkeyByTopic(topic);
+      }
+      type = TopicType.private;
+    }
+
+    setState(() {
+      _loading = true;
+    });
+    EasyLoading.show();
+    var duration = 400000;
+    var hash = await TopicSchema.subscribe(topic: topic, duration: duration);
+    if (hash != null) {
+      var sendMsg = MessageSchema.fromSendData(
+        from: Global.currentClient.address,
+        topic: topic,
+        contentType: ContentType.dchatSubscribe,
+      );
+      sendMsg.isOutbound = true;
+      sendMsg.content = sendMsg.toDchatSubscribeData();
+      _chatBloc.add(SendMessage(sendMsg));
+
+      DateTime now = DateTime.now();
+      var topicSchema = TopicSchema(topic: topic, type: type, owner: owner, expiresAt: now.add(blockToExpiresTime(duration)));
+      if (type == TopicType.private) {
+        topicSchema.acceptPrivateMember(addr: Global.currentClient.publicKey);
+      }
+
+      await topicSchema.insertOrUpdate();
+      topicSchema = await TopicSchema.getTopic(topic);
+      EasyLoading.dismiss();
+      if (type == TopicType.private) {
+        Navigator.of(context).pushReplacementNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.PrivateChannel, topic: topicSchema));
+      } else {
+        Navigator.of(context).pushReplacementNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topicSchema));
+      }
+    }
+    setState(() {
+      _loading = false;
+    });
   }
 }

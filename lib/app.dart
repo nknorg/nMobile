@@ -28,11 +28,11 @@ class AppScreen extends StatefulWidget {
 class _AppScreenState extends State<AppScreen> {
   WalletsBloc _walletsBloc;
   PageController _pageController;
-  int _currentIndex = 0;
+  int _currentIndex = 1;
   List<Widget> screens = <Widget>[
     ChatScreen(),
-    NewsScreen(),
     HomeScreen(),
+    NewsScreen(),
     SettingsScreen(),
   ];
 
@@ -43,8 +43,7 @@ class _AppScreenState extends State<AppScreen> {
       DeviceOrientation.portraitUp,
     ]);
     OrientationPlugin.forceOrientation(DeviceOrientation.portraitUp);
-    _pageController = PageController();
-
+    _pageController = PageController(initialPage: 1);
     _walletsBloc = BlocProvider.of<WalletsBloc>(context);
     _walletsBloc.add(LoadWallets());
   }
@@ -64,7 +63,7 @@ class _AppScreenState extends State<AppScreen> {
     locator<BackgroundFetchService>().init();
     return WillPopScope(
       onWillPop: () async {
-        AndroidBackTop.backToDesktop();
+        await AndroidBackTop.backToDesktop();
         return false;
       },
       child: getView(),
@@ -118,7 +117,7 @@ class _AppScreenState extends State<AppScreen> {
             ),
           ),
           Container(
-            height: ScreenUtil.bottomBarHeight,
+            height: MediaQuery.of(context).padding.bottom,
             width: double.infinity,
             color: DefaultTheme.backgroundLightColor,
           )

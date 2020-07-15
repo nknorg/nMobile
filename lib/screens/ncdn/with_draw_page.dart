@@ -36,6 +36,8 @@ class WithDrawPageState extends State<WithDrawPage> {
   GlobalKey _formKey = new GlobalKey<FormState>();
   TextEditingController amountController;
   TextEditingController addressController;
+  TextEditingController emailController;
+  TextEditingController noteController;
   FocusNode _commentFocus = FocusNode();
 
   @override
@@ -43,9 +45,15 @@ class WithDrawPageState extends State<WithDrawPage> {
     super.initState();
     amountController = TextEditingController();
     addressController = TextEditingController();
-    Future.delayed(Duration(milliseconds: 200), () {
-      FocusScope.of(context).requestFocus(_commentFocus);
-    });
+    emailController = TextEditingController();
+    noteController = TextEditingController();
+    try {
+      amountController.text = widget.arguments['maxBalance'].floor().toString();
+    } catch (e) {}
+
+//    Future.delayed(Duration(milliseconds: 200), () {
+//      FocusScope.of(context).requestFocus(_commentFocus);
+//    });
   }
 
   @override
@@ -75,6 +83,7 @@ class WithDrawPageState extends State<WithDrawPage> {
                   direction: Axis.vertical,
                   children: <Widget>[
                     Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Padding(
                           padding: const EdgeInsets.only(bottom: 20),
@@ -113,46 +122,71 @@ class WithDrawPageState extends State<WithDrawPage> {
                                   showErrorMessage: true,
                                   padding: EdgeInsets.zero,
                                   focusNode: _commentFocus,
+                                  enabled: false,
+                                  hintText: '暂无可提现数量',
+                                  readOnly: true,
                                   validator: Validator.of(context).amount(max: widget.arguments['maxBalance']),
-                                  keyboardType: TextInputType.number,
-                                  inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]+\.?[0-9]{0,3}'))],
+//                                  inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]+\.?[0-9]{0,3}'))],
                                   textInputAction: TextInputAction.next,
                                 ),
                               ),
                             ),
-                            SizedBox(width: 10.w),
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  amountController.text = widget.arguments['maxBalance'].floor().toString();
-                                });
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.only(bottom: 5),
-                                child: Label(
-                                  '全部',
-                                  color: DefaultTheme.primaryColor,
-                                  type: LabelType.bodyLarge,
-                                ),
-                              ),
-                            ),
+//                            SizedBox(width: 10.w),
+//                            InkWell(
+//                              onTap: () {
+//                                setState(() {
+//                                  amountController.text = widget.arguments['maxBalance'].floor().toString();
+//                                });
+//                              },
+//                              child: Padding(
+//                                padding: EdgeInsets.only(bottom: 5),
+//                                child: Label(
+//                                  '全部',
+//                                  color: DefaultTheme.primaryColor,
+//                                  type: LabelType.bodyLarge,
+//                                ),
+//                              ),
+//                            ),
                           ],
                         ),
-                        Row(
-                          children: <Widget>[
-                            Label(
-                              '提现地址(ERC-20)',
-                              type: LabelType.h4,
-                              color: DefaultTheme.fontColor2,
-                              textAlign: TextAlign.start,
-                            ),
-                          ],
+                        SizedBox(height: 20),
+                        Label(
+                          '提现地址(ERC-20)',
+                          type: LabelType.h4,
+                          color: DefaultTheme.fontColor2,
+                          textAlign: TextAlign.start,
                         ),
                         Textbox(
                           controller: addressController,
                           showErrorMessage: true,
                           validator: Validator.of(context).ethIdentifier(),
 //                inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'/^0x[a-fA-F0-9]{40}$/'))],
+                        ),
+                        SizedBox(height: 20),
+                        Label(
+                          '邮箱',
+                          type: LabelType.h4,
+                          color: DefaultTheme.fontColor2,
+                          textAlign: TextAlign.start,
+                        ),
+                        Textbox(
+                          controller: emailController,
+                          showErrorMessage: true,
+                          validator: Validator.of(context).email(),
+                          inputFormatters: [WhitelistingTextInputFormatter(RegExp('[a-zA-Z0-9_.@]'))],
+                        ),
+                        SizedBox(height: 20),
+                        Label(
+                          '备注',
+                          type: LabelType.h4,
+                          color: DefaultTheme.fontColor2,
+                          textAlign: TextAlign.start,
+                        ),
+                        Textbox(
+                          controller: noteController,
+                          showErrorMessage: false,
+                          multi: true,
+                          maxLength: 200,
                         ),
                         SizedBox(height: 20.h),
                         Button(
@@ -187,13 +221,15 @@ class WithDrawPageState extends State<WithDrawPage> {
     if ((_formKey.currentState as FormState).validate()) {
       Api _api = Api(mySecretKey: hexDecode(Global.minerData.se), myPublicKey: hexDecode(Global.minerData.pub), otherPubkey: hexDecode(Global.SERVER_PUBKEY));
       var data = {
-        'beneficiary': Global.minerData.ads,
+        'beneficiary': Global.minerData.pub,
         'amount': num.parse(amountController.text),
         'eth_beneficiary': addressController.text,
         'id': uuid.v4(),
+        'memo': noteController.text,
+        'email': emailController.text,
       };
 
-      String url = Api.CDN_MINER_API + '/api/v2/verify_withdraw/';
+      String url = Api.CDN_MINER_API + '/api/v3/verify_withdraw/';
       try {
         _api.post(url, data, isEncrypted: true, getResponse: true).then((res) {
           NLog.v(res);

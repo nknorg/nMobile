@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/components/ButtonIcon.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
@@ -10,6 +11,7 @@ class ModalDialog extends StatefulWidget {
   _ModalDialogState createState() => _ModalDialogState();
 
   BuildContext context;
+
   ModalDialog();
 
   ModalDialog.of(this.context);
@@ -19,6 +21,7 @@ class ModalDialog extends StatefulWidget {
   List<Widget> actions;
   double height;
   bool hasCloseButton;
+
   show({
     Widget title,
     Widget close,
@@ -112,14 +115,11 @@ class _ModalDialogState extends State<ModalDialog> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: <Widget>[
-                      Button(
-                        icon: true,
+                      ButtonIcon(
                         padding: const EdgeInsets.all(0),
-                        size: 30,
-                        child: loadAssetIconsImage(
-                          'close',
-                          width: 16,
-                        ),
+                        width: 30,
+                        height: 30,
+                        icon: loadAssetIconsImage('close', width: 16),
                         onPressed: () => widget.close(),
                       )
                     ],

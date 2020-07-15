@@ -84,4 +84,10 @@ class WalletSchema extends Equatable {
       return null;
     }
   }
+
+  Future<bool> isDefaultWallet() async {
+    WalletSchema wallet = await getWallet();
+    if (wallet == null || address == null) return false;
+    return wallet.address == address;
+  }
 }

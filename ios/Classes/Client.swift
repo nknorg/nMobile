@@ -133,6 +133,7 @@ func sendText(_ call: FlutterMethodCall, result: FlutterResult) {
     let _id = args["_id"] as? String
     let dests = args["dests"] as? [String]
     let data = args["data"] as? String
+    let maxHoldingSeconds = args["maxHoldingSeconds"] as! Int
     result(nil)
     
     guard let eventSink = clientEventSink else {
@@ -148,7 +149,7 @@ func sendText(_ call: FlutterMethodCall, result: FlutterResult) {
     }
     
     let config: NknMessageConfig = NknMessageConfig.init()
-    config.maxHoldingSeconds = Int32.max
+    config.maxHoldingSeconds = maxHoldingSeconds == 1 ? Int32.init(0) : Int32.max
     config.messageID = NknRandomBytes(Int(NknMessageIDSize), nil)
     config.noReply = true
     clientSendQueue.async {

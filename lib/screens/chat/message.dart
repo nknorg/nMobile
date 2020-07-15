@@ -11,8 +11,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
+import 'package:nmobile/components/ButtonIcon.dart';
 import 'package:nmobile/components/box/body.dart';
-import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/chat/bubble.dart';
 import 'package:nmobile/components/chat/system.dart';
 import 'package:nmobile/components/header/header.dart';
@@ -33,6 +33,7 @@ class ChatSinglePage extends StatefulWidget {
   static const String routeName = '/chat/message';
 
   final ChatSchema arguments;
+
   ChatSinglePage({this.arguments});
 
   @override
@@ -360,7 +361,10 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                 flex: 1,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[Label(widget.arguments.contact.name, type: LabelType.h3, dark: true), Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor)],
+                  children: <Widget>[
+                    Label(widget.arguments.contact.name, type: LabelType.h3, dark: true),
+//                    Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor)
+                  ],
                 ),
               )
             ],
@@ -508,10 +512,10 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                               flex: 0,
                               child: Padding(
                                 padding: const EdgeInsets.only(left: 8, right: 8),
-                                child: Button(
-                                  size: 50,
-                                  icon: true,
-                                  child: loadAssetIconsImage(
+                                child: ButtonIcon(
+                                  width: 50,
+                                  height: 50,
+                                  icon: loadAssetIconsImage(
                                     'grid',
                                     width: 24,
                                     color: DefaultTheme.primaryColor,
@@ -580,15 +584,15 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                               flex: 0,
                               child: Padding(
                                 padding: const EdgeInsets.only(left: 8, right: 8),
-                                child: Button(
-                                  size: 50,
-                                  icon: true,
-                                  child: loadAssetIconsImage(
+                                child: ButtonIcon(
+                                  width: 50,
+                                  height: 50,
+                                  icon: loadAssetIconsImage(
                                     'send',
                                     width: 24,
                                     color: _canSend ? DefaultTheme.primaryColor : DefaultTheme.fontColor2,
                                   ),
-                                  disabled: !_canSend,
+                                  //disabled: !_canSend,
                                   onPressed: () {
                                     _send();
                                   },

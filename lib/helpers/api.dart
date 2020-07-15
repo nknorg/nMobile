@@ -73,6 +73,7 @@ class Api {
   }
 
   Future get(url) async {
+    NLog.d(url);
     try {
       Response res = await dio.get(url);
       if (res.statusCode >= 200 && res.statusCode < 300 && res.data != null) {
@@ -84,12 +85,12 @@ class Api {
   }
 
   Future post(url, data, {bool isEncrypted, getResponse = false}) async {
+    NLog.v(url);
     if (isEncrypted) {
       var encData = encryptData(jsonEncode(data));
       try {
         var params = {'pub_key': hexEncode(myPublicKey), 'data': encData};
         NLog.v('$params == $data');
-        NLog.v(url);
         Response res = await dio.post(
           url,
           data: params,

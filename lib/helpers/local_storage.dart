@@ -144,10 +144,10 @@ class LocalStorage {
   }
 
   static saveUnsubscribeTopic(String topic) {
-    List<String> list = SpUtil.getStringList(UN_SUBSCRIBE_LIST, defValue: <String>[]);
+    List<String> list = SpUtil.getStringList(UN_SUBSCRIBE_LIST + Global.currentClient.publicKey, defValue: <String>[]);
     if (!list.contains(topic)) {
       list.add(topic);
-      SpUtil.putStringList(UN_SUBSCRIBE_LIST, list);
+      SpUtil.putStringList(UN_SUBSCRIBE_LIST + Global.currentClient.publicKey, list);
     }
   }
 
@@ -155,11 +155,23 @@ class LocalStorage {
     List<String> list = getUnsubscribeTopicList();
     if (list.contains(topic)) {
       list.remove(topic);
-      SpUtil.putStringList(UN_SUBSCRIBE_LIST, list);
+      SpUtil.putStringList(UN_SUBSCRIBE_LIST + Global.currentClient.publicKey, list);
     }
   }
 
   static List<String> getUnsubscribeTopicList() {
-    return SpUtil.getStringList(UN_SUBSCRIBE_LIST, defValue: <String>[]);
+    return SpUtil.getStringList(UN_SUBSCRIBE_LIST + Global.currentClient.publicKey, defValue: <String>[]);
+  }
+
+  //leave group list cache
+  static bool isBlank(String topic) {
+    List<String> list = getUnsubscribeTopicList();
+    if (list == null || list.length == 0) return false;
+
+    if (list.contains(topic)) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }

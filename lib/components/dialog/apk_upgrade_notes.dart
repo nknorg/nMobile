@@ -30,8 +30,7 @@ class ApkUpgradeNotesDialog extends StatefulWidget {
 
   ApkUpgradeNotesDialog.of(this._context);
 
-  DownloadProgressBloc show(
-      String version, String title, String notes, bool force, Map jsonMap, OnDownload onDownload, OnIgnore onIgnore, VoidCallback onClose) {
+  DownloadProgressBloc show(String version, String title, String notes, bool force, Map jsonMap, OnDownload onDownload, OnIgnore onIgnore, VoidCallback onClose) {
     this._title = title;
     this._version = version;
     this._notes = notes;
@@ -93,9 +92,7 @@ class _ApkUpgradeNotesDialogState extends State<ApkUpgradeNotesDialog> {
                   child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: Button(
-                          icon: true,
                           padding: 0.pad().pad(t: 6, r: 6),
-                          size: 48,
                           child: loadAssetIconsImage('close', width: 16),
                           onPressed: () {
                             if (widget._force) {

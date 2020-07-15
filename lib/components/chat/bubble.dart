@@ -208,7 +208,7 @@ class _ChatBubbleState extends State<ChatBubble> {
     switch (widget.message.contentType) {
       case ContentType.text:
         List chatContent = ChatUtil.getFormatString(widget.message.content);
-        if (chatContent.length > 1) {
+        if (chatContent.length > 0) {
           List<InlineSpan> children = [];
           for (String s in chatContent) {
             if (s.contains(ChatUtil.reg)) {
@@ -226,7 +226,7 @@ class _ChatBubbleState extends State<ChatBubble> {
               padding: contentPadding,
               child: RichText(
                 text: TextSpan(
-                  style: TextStyle(fontSize: DefaultTheme.bodyLargeFontSize),
+                  style: TextStyle(fontSize: DefaultTheme.bodyRegularFontSize),
                   text: '',
                   children: children,
                 ),

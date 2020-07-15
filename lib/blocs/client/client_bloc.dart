@@ -16,6 +16,7 @@ import 'package:nmobile/schemas/client.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/ncdn/miner_data.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:oktoast/oktoast.dart';
 
@@ -24,10 +25,19 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
   ClientState get initialState => NoConnect();
   final ChatBloc chatBloc;
 
-  ClientBloc({@required this.chatBloc});
+  ClientBloc({@required this.chatBloc}) {
+    this.listen((state) {
+      print('ClientBloc | onData | $state');
+    }, onDone: () {
+      print('ClientBloc | onDone.');
+    }, onError: (e) {
+      print('ClientBloc | onError | $e');
+    });
+  }
 
   @override
   Stream<ClientState> mapEventToState(ClientEvent event) async* {
+    print('ClientBloc | mapEventToState | ChatBloc@${chatBloc.hashCode.toString().substring(0, 3)}');
     if (event is CreateClient) {
       yield* _mapCreateClientToState(event);
     } else if (event is ConnectedClient) {
@@ -60,9 +70,19 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
       var keystore = await wallet.getKeystore();
       var walletAddr = w['address'];
       var publicKey = w['publicKey'];
+
+      var minerData = MinerData();
+      minerData.ads = walletAddr;
+      minerData.pub = publicKey;
+      minerData.se = w['seed'];
+      minerData.key = keystore;
+      minerData.psd = password;
+      Global.minerData = minerData;
+
       Global.currentChatDb = await SqliteStorage.open('${SqliteStorage.CHAT_DATABASE_NAME}_$publicKey', hexEncode(sha256(w['seed'])));
       Global.currentCDNDb = Global.currentChatDb;
       Global.currentClient = ClientSchema(publicKey: publicKey, address: publicKey);
+      Global.currentWalletName = wallet.name;
       Global.currentUser = await ContactSchema.getContactByAddress(publicKey);
       if (Global.currentUser == null) {
         DateTime now = DateTime.now();
@@ -107,8 +127,9 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
   }
 
   Stream<ClientState> _mapOnMessageToState(OnMessage event) async* {
-    print('${event.message}');
+    print('ClientBloc | OnMessage | ${event.message}');
     if (state is Connected) {
+      print('ClientBloc | OnMessage | Connected -->');
       Connected currentState = (state as Connected);
       currentState.message = event.message;
       chatBloc.add(chatEvent.ReceiveMessage(currentState.message));

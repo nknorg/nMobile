@@ -13,6 +13,7 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/utils/common_native.dart';
 
 class NoConnectScreen extends StatefulWidget {
   static const String routeName = '/chat/no_connect';
@@ -23,17 +24,13 @@ class NoConnectScreen extends StatefulWidget {
 class _NoConnectScreenState extends State<NoConnectScreen> {
   ClientBloc _clientBloc;
   WalletSchema _currentWallet;
+  bool isShow = true;
 
   @override
   void initState() {
     super.initState();
     _clientBloc = BlocProvider.of<ClientBloc>(context);
-    if (Global.isAutoShowPassword) {
-      Global.isAutoShowPassword = false;
-      Future.delayed(Duration(milliseconds: 500), () {
-        _next();
-      });
-    }
+    initData();
   }
 
   @override
@@ -111,7 +108,6 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
                             return Button(
                               width: double.infinity,
                               text: NMobileLocalizations.of(context).connect,
-                              padding: EdgeInsets.only(top: 16.h, bottom: 16.h),
                               onPressed: () {
                                 _next();
                               },
@@ -136,5 +132,16 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
     if (password != null) {
       _clientBloc.add(CreateClient(_currentWallet, password));
     }
+  }
+
+  initData() async {
+    WidgetsBinding.instance.addPostFrameCallback((mag) async {
+      bool isActive = await CommonNative.isActive();
+      if (Global.isAutoShowPassword && isShow && isActive && _currentWallet != null) {
+        Global.isAutoShowPassword = false;
+        isShow = false;
+        _next();
+      }
+    });
   }
 }

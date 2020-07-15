@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -75,8 +77,10 @@ class LocalNotification {
         return;
       }
     }
+
     var iOSPlatformChannelSpecifics = IOSNotificationDetails(badgeNumber: badgeNumber);
-    var androidNotificationDetails = AndroidNotificationDetails('channel_ID', 'channel name', 'channel description', priority: Priority.High, importance: Importance.Max);
+    var androidNotificationDetails = AndroidNotificationDetails('d_chat_notify_sound_vibration', 'Sound Vibration', 'channel description',
+        vibrationPattern: Int64List.fromList([0, 30, 100, 30]));
     var platformChannelSpecifics = NotificationDetails(androidNotificationDetails, iOSPlatformChannelSpecifics);
     try {
       switch (Settings.localNotificationType) {

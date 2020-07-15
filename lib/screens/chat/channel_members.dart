@@ -131,12 +131,8 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
           },
         ),
         backgroundColor: DefaultTheme.backgroundColor4,
-        action: IconButton(
-          icon: loadAssetIconsImage(
-            'user-plus',
-            color: DefaultTheme.backgroundLightColor,
-            width: 24,
-          ),
+        action: FlatButton(
+          child: loadAssetChatPng('group_add', width: 20.w),
           onPressed: () async {
             var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
             if (address != null) {
@@ -254,7 +250,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
               child: Container(
                 padding: const EdgeInsets.only(),
                 decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: DefaultTheme.line)),
+                  border: Border(bottom: BorderSide(color: DefaultTheme.lineColor)),
                 ),
                 child: Flex(
                   direction: Axis.horizontal,

@@ -218,7 +218,7 @@ class NMobileLocalizations {
   }
 
   String get recieve {
-    return Intl.message('Recieve', name: 'recieve', desc: '');
+    return Intl.message('Receive', name: 'recieve', desc: '');
   }
 
   String get keystore {
@@ -430,7 +430,7 @@ class NMobileLocalizations {
   }
 
   String get select_asset_to_recieve {
-    return Intl.message('Select Asset to Recieve', name: 'select_asset_to_recieve', desc: '');
+    return Intl.message('Select Asset to Receive', name: 'select_asset_to_recieve', desc: '');
   }
 
   String get select_another_wallet {
@@ -734,7 +734,7 @@ class NMobileLocalizations {
   }
 
   String get no_wallet_desc {
-    return Intl.message('Manage both your Mainnet and ERC-20 NKN tokens with our smart wallet manager.', name: 'no_wallet_desc', desc: '');
+    return Intl.message('Manage both your Mainnet and ERC-20 NKN\n tokens with our smart wallet manager.', name: 'no_wallet_desc', desc: '');
   }
 
   String get no_wallet_create {
@@ -938,11 +938,11 @@ class NMobileLocalizations {
   }
 
   String get enter_or_select_a_user_pubkey {
-    return Intl.message('Enter/Select a user public key', name: 'enter_or_select_a_user_pubkey', desc: '');
+    return Intl.message('Enter/Select a user D-Chat ID', name: 'enter_or_select_a_user_pubkey', desc: '');
   }
 
   String get scan_show_me_desc {
-    return Intl.message('Scan the QR code pattern below to add me to the contact.', name: 'scan_show_me_desc', desc: '');
+    return Intl.message('Scan the QR code pattern to add friends to your contacts.', name: 'scan_show_me_desc', desc: '');
   }
 
   String get nickname {
@@ -950,11 +950,11 @@ class NMobileLocalizations {
   }
 
   String get d_chat_address {
-    return Intl.message('D-Chat Address', name: 'd_chat_address', desc: '');
+    return Intl.message('D-Chat ID', name: 'd_chat_address', desc: '');
   }
 
   String get input_d_chat_address {
-    return Intl.message('Please input D-Chat Address', name: 'input_d_chat_address', desc: '');
+    return Intl.message('Please input D-Chat ID', name: 'input_d_chat_address', desc: '');
   }
 
   String get tip_password_error {
@@ -1000,13 +1000,21 @@ class NMobileLocalizations {
 
   String get transfer_initiated => Intl.message('Transfer Initiated', name: 'transfer_initiated');
   String get transfer_initiated_desc => Intl.message('Your transfer is in progress. It could take a few seconds to appear on the blockchain.', name: 'transfer_initiated_desc');
+  String get tip => Intl.message('Tips', name: 'tip');
+  String get my_details_desc => Intl.message('All subscriptions and tipping will come from your selected wallet.', name: 'my_details_desc');
 
   String get check_upgrade => Intl.message('Check Upgrade', name: 'check_upgrade');
   String get release_notes => Intl.message('Release Notes:', name: 'release_notes');
   String get download_now => Intl.message('Download Now', name: 'download_now');
   String get ignore => Intl.message('Ignore', name: 'ignore');
   String get already_the_latest_version => Intl.message('Already the latest version', name: 'already_the_latest_version');
-  String get tip => Intl.message('Tips', name: 'tip');
+  String get change_default_chat_wallet => Intl.message('Change', name: 'change_default_chat_wallet');
+  String get coming_soon => Intl.message('Coming Soon...', name: 'coming_soon');
+  String get message_text => Intl.message('Messages', name: 'message_text');
+  String get my_profile => Intl.message('My Profile', name: 'my_profile');
+  String get profile => Intl.message('Profile', name: 'profile');
+  String get show_wallet_address_desc => Intl.message('Scan the QR code, you can transfer it to me', name: 'show_wallet_address_desc');
+  String get disappear_desc => Intl.message('Messages received and sent will disappear after the set time.', name: 'disappear_desc');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {
