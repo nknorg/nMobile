@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,6 +12,7 @@ import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/event/eventbus.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
@@ -28,24 +31,28 @@ class _NoConnectScreenState extends State<NoConnectScreen> with WidgetsBindingOb
   WalletSchema _currentWallet;
   bool isShow = true;
   AppLifecycleState state;
+  StreamSubscription tabSubscription;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    tabSubscription = eventBus.on<MainTabIndex>().listen((event) {
+      NLog.d(event.index);
+      getPassword();
+    });
     _clientBloc = BlocProvider.of<ClientBloc>(context);
     initData();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
     // NLog.d(ModalRoute.of(context).settings.name);
     //    NLog.d(Global.currentPageIndex);
     if (this.state == AppLifecycleState.inactive && state == AppLifecycleState.resumed) {
-      if (ModalRoute.of(context).settings.name == '/' && Global.currentPageIndex == 0) {
-        NLog.d('show');
-        getPassword();
-      }
+      getPassword();
     }
     this.state = state;
     NLog.d(state.toString());
@@ -54,6 +61,7 @@ class _NoConnectScreenState extends State<NoConnectScreen> with WidgetsBindingOb
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    tabSubscription.cancel();
     super.dispose();
   }
 
@@ -168,15 +176,11 @@ class _NoConnectScreenState extends State<NoConnectScreen> with WidgetsBindingOb
 
   getPassword() async {
     bool isActive = await CommonNative.isActive();
-//    if (Global.isAutoShowPassword && isShow && isActive && _currentWallet != null) {
-//      Global.isAutoShowPassword = false;
-//      isShow = false;
-//      _next();
-//    }
-
-    if (isShow && isActive && _currentWallet != null) {
-      isShow = false;
-      _next();
+    if (ModalRoute.of(context).settings.name == '/' && Global.currentPageIndex == 0) {
+      if (isShow && isActive && _currentWallet != null) {
+        isShow = false;
+        _next();
+      }
     }
   }
 }
