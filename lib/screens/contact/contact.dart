@@ -509,7 +509,9 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
   }
 
   _changeAccount(WalletSchema wallet) async {
+    if (wallet.address == widget.arguments.nknWalletAddress) return;
     DChatAuthenticationHelper.authToVerifyPassword(
+        forceShowInputDialog: true,
         wallet: wallet,
         onGot: (nw) async {
           final walletAddr = nw['address'];
@@ -531,7 +533,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
             // steps have saved the password.
           }
 
-          Global.shouldAutoShowGetPassword = false;
           account.client.disConnect();
           changeAccount(accountNew);
           // Must be behind `changeAccount()`, since you need to use the new `db` object.

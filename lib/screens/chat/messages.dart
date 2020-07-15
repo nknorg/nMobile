@@ -31,6 +31,7 @@ import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/message_item.dart';
 import 'package:nmobile/schemas/topic.dart';
+import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/chat/message.dart';
@@ -40,6 +41,10 @@ import 'package:nmobile/utils/log_tag.dart';
 import 'package:oktoast/oktoast.dart';
 
 class MessagesTab extends StatefulWidget {
+  final ActivePage activePage;
+
+  MessagesTab(this.activePage);
+
   @override
   _MessagesTabState createState() => _MessagesTabState();
 }
@@ -60,11 +65,13 @@ class _MessagesTabState extends State<MessagesTab>
   // ignore: non_constant_identifier_names
   LOG _LOG;
   bool _enabled = true;
+  bool canDisable = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.activePage.addOnCurrPageActive(onCurrPageActive);
     _LOG = LOG(tag);
 
     isHideTip = SpUtil.getBool(LocalStorage.WALLET_TIP_STATUS, defValue: false);
@@ -99,16 +106,26 @@ class _MessagesTabState extends State<MessagesTab>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    _LOG.i('didChangeAppLifecycleState($state)');
-    if (state == AppLifecycleState.resumed) {
+    _LOG.i('didChangeAppLifecycleState($state), $canDisable');
+    if (canDisable && state == AppLifecycleState.resumed) {
+      canDisable = false;
       setState(() {
         _enabled = false;
       });
       _ensureVerifyPassword();
     }
+    if (state == AppLifecycleState.paused) {
+      canDisable = true;
+    }
   }
 
-  _ensureVerifyPassword() {
+  void onCurrPageActive(active) {
+    _LOG.i('onCurrPageActive($active)');
+    _ensureVerifyPassword();
+  }
+
+  _ensureVerifyPassword() async {
+    if (_enabled || !widget.activePage.isCurrPageActive) return;
     DChatAuthenticationHelper.loadDChatUseWallet(BlocProvider.of<WalletsBloc>(context), (wallet) {
       DChatAuthenticationHelper.authToVerifyPassword(
           wallet: wallet,
@@ -130,6 +147,7 @@ class _MessagesTabState extends State<MessagesTab>
   void dispose() {
     _chatSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
+    widget.activePage.removeOnCurrPageActive(onCurrPageActive);
     super.dispose();
   }
 
@@ -177,7 +195,7 @@ class _MessagesTabState extends State<MessagesTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (_messagesList != null && _messagesList.length > 0) {
+    if (_enabled && _messagesList != null && _messagesList.length > 0) {
       return Flex(
         direction: Axis.vertical,
         children: <Widget>[
@@ -293,12 +311,17 @@ class _MessagesTabState extends State<MessagesTab>
                               ],
                             ),
                             onPressed: () async {
-                              var address = await BottomDialog.of(context).showInputAddressDialog(
-                                  title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
-                              if (address != null) {
-                                ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
-                                await contact.createContact(db);
-                                Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
+                              if (_enabled) {
+                                var address = await BottomDialog.of(context).showInputAddressDialog(
+                                    title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+                                if (address != null) {
+                                  ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
+                                  await contact.createContact(db);
+                                  Navigator.of(context)
+                                      .pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
+                                }
+                              } else {
+                                _ensureVerifyPassword();
                               }
                             },
                           ).pad(t: 54),
@@ -611,12 +634,8 @@ class _MessagesTabState extends State<MessagesTab>
     }
     return InkWell(
       onTap: () async {
-        if (_enabled) {
-          TopicSchema topic = await TopicSchema.getTopic(db, item.topic.topic);
-          Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
-        } else {
-          _ensureVerifyPassword();
-        }
+        TopicSchema topic = await TopicSchema.getTopic(db, item.topic.topic);
+        Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
       },
       child: Container(
         height: 72.h,
@@ -752,11 +771,7 @@ class _MessagesTabState extends State<MessagesTab>
     }
     return InkWell(
       onTap: () {
-        if (_enabled) {
-          Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
-        } else {
-          _ensureVerifyPassword();
-        }
+        Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
       },
       child: Container(
         height: 72.h,

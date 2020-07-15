@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
 import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
 import 'package:nmobile/screens/chat/no_wallet_account.dart';
@@ -12,6 +12,10 @@ import 'package:nmobile/utils/log_tag.dart';
 
 class ChatScreen extends StatefulWidget {
   static const String routeName = '/chat';
+
+  final ActivePage activePage;
+
+  ChatScreen(this.activePage);
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -32,16 +36,14 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                 if (clientState is NoConnect) {
                   LOG(tag).w('firstShow:$firstShow');
                   firstShow = false;
-                  return NoConnectScreen();
+                  return NoConnectScreen(widget.activePage);
                 } else {
-                  Global.shouldAutoShowGetPassword = true;
-                  return ChatHome();
+                  return ChatHome(widget.activePage);
                 }
               },
             );
           } else {
-            Global.shouldAutoShowGetPassword = true;
-            return NoWalletAccount();
+            return NoWalletAccount(widget.activePage);
           }
         }
         return Container();

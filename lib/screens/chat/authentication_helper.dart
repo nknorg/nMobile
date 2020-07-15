@@ -15,17 +15,15 @@ import 'package:nmobile/utils/const_utils.dart';
 /// @author Chenai
 /// @version 1.0, 14/07/2020
 class DChatAuthenticationHelper {
-  static bool _firstLaunch = true;
+  // For account switch.
+  static bool _initLaunch = true;
 
   bool canShow = false;
+  bool isPageActive = true; // e.g. isTabOnCurrentPageIndex
   WalletSchema wallet;
 
-  static void done() {
-    _firstLaunch = false;
-  }
-
   ensureAutoShowAuthentication(void onGetPassword(WalletSchema wallet, String password)) {
-    if ((_firstLaunch || canShow) && wallet != null) {
+    if ((_initLaunch || canShow) && isPageActive && wallet != null) {
       prepareConnect(onGetPassword);
     }
   }
@@ -34,7 +32,7 @@ class DChatAuthenticationHelper {
     final _wallet = wallet;
     final _password = await authToGetPassword(_wallet);
     if (_password != null) {
-      _firstLaunch = false;
+      _initLaunch = false;
       canShow = false;
       onGetPassword(_wallet, _password);
     }
@@ -42,10 +40,10 @@ class DChatAuthenticationHelper {
 
   static bool _authenticating = false;
 
-  static Future<String> authToGetPassword(WalletSchema wallet) async {
+  static Future<String> authToGetPassword(WalletSchema wallet, {bool forceShowInputDialog = false}) async {
     if (_authenticating) return null;
     _authenticating = true;
-    final _password = await wallet.getPassword(showDialogIfCanceledBiometrics: false);
+    final _password = await wallet.getPassword(showDialogIfCanceledBiometrics: true /*default*/, forceShowInputDialog: forceShowInputDialog);
     _authenticating = false;
     return _password;
   }
@@ -75,8 +73,9 @@ class DChatAuthenticationHelper {
     @required WalletSchema wallet,
     @required void onGot(Map nknWallet),
     void onError(bool pwdIncorrect, dynamic e),
+    bool forceShowInputDialog = false,
   }) async {
-    final _password = await authToGetPassword(wallet);
+    final _password = await authToGetPassword(wallet, forceShowInputDialog: forceShowInputDialog);
     if (_password != null) {
       verifyPassword(wallet: wallet, password: _password, onGot: onGot, onError: onError);
     } else {
