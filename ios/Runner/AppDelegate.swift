@@ -28,12 +28,14 @@ var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
         
         let walletEventChannel = FlutterEventChannel(name: "org.nkn.sdk/wallet/event", binaryMessenger: controller.binaryMessenger)
         walletEventChannel.setStreamHandler(NknWalletEventPlugin())
-        
-        let clientMethodChannel = FlutterMethodChannel(name: "org.nkn.sdk/client", binaryMessenger: controller.binaryMessenger)
-        clientMethodChannel.setMethodCallHandler(NknClientPlugin.handle)
-        
-        let clientEventChannel = FlutterEventChannel(name: "org.nkn.sdk/client/event", binaryMessenger: controller.binaryMessenger)
-        clientEventChannel.setStreamHandler(NknClientEventPlugin())
+
+        NknClientPlugin(controller: controller)
+
+//        let clientMethodChannel = FlutterMethodChannel(name: "org.nkn.sdk/client", binaryMessenger: controller.binaryMessenger)
+//        clientMethodChannel.setMethodCallHandler(NknClientPlugin.handle)
+//
+//        let clientEventChannel = FlutterEventChannel(name: "org.nkn.sdk/client/event", binaryMessenger: controller.binaryMessenger)
+//        clientEventChannel.setStreamHandler(NknClientEventPlugin())
         
         
        let commontChannel = FlutterMethodChannel(name: "ios/nmobile/native/common", binaryMessenger: controller.binaryMessenger)
