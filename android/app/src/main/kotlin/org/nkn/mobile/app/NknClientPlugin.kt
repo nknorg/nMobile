@@ -61,9 +61,11 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             }
             "connect" -> {
                 connect()
+                result.success(null)
             }
             "startReceiveMessages" -> {
                 receiveMessages()
+                result.success(null)
             }
             "isConnected" -> {
                 isConnected(call, result)
