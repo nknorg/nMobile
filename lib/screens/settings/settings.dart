@@ -11,7 +11,6 @@ import 'package:nmobile/blocs/global/global_event.dart';
 import 'package:nmobile/blocs/global/global_state.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
-import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/select_list/select_list_item.dart';
@@ -24,8 +23,8 @@ import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/advice_page.dart';
 import 'package:nmobile/screens/select.dart';
-import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/const_utils.dart';
@@ -76,17 +75,6 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
     }
     initData();
 
-    if (Global.locale == null) {
-      _currentLanguage = NMobileLocalizations.of(Global.appContext).auto;
-    } else {
-      _currentLanguage = _languageList.firstWhere((x) => x.value == Global.locale, orElse: () => null)?.text ?? NMobileLocalizations.of(Global.appContext).auto;
-    }
-
-    if (Settings.localNotificationType == null) {
-      _currentLocalNotificationType = NMobileLocalizations.of(Global.appContext).local_notification_only_name;
-    } else {
-      _currentLocalNotificationType = _localNotificationTypeList?.firstWhere((x) => x.value == Settings.localNotificationType, orElse: () => null)?.text ?? NMobileLocalizations.of(Global.appContext).local_notification_only_name;
-    }
     initAsync();
     _globalBloc = BlocProvider.of<GlobalBloc>(context);
     _globalBlocSubs = _globalBloc.listen((state) {
@@ -133,6 +121,22 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
         value: 2,
       ),
     ];
+
+    if (Global.locale == null) {
+      _currentLanguage = NMobileLocalizations.of(Global.appContext).auto;
+    } else {
+      _currentLanguage = _languageList.firstWhere((x) => x.value == Global.locale, orElse: () => null)?.text ?? NMobileLocalizations.of(Global.appContext).auto;
+    }
+
+    if (Settings.localNotificationType == null) {
+      _currentLocalNotificationType = NMobileLocalizations.of(Global.appContext).local_notification_only_name;
+    } else {
+      _currentLocalNotificationType = _localNotificationTypeList?.firstWhere((x) => x.value == Settings.localNotificationType, orElse: () => null)?.text ?? NMobileLocalizations.of(Global.appContext).local_notification_only_name;
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -159,7 +163,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
         backgroundColor: DefaultTheme.primaryColor,
       ),
       body: BodyBox(
-        padding: const EdgeInsets.only(top: 4, left: 20, right: 20),
+        padding: const EdgeInsets.only(top: 4, left: 16, right: 16),
         child: SafeArea(
           bottom: false,
           child: ListView(
@@ -498,134 +502,22 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
                         onPressed: () async {
-                          SimpleConfirm(
-                              context: context,
-                              content: NMobileLocalizations.of(context).delete_cache_confirm_title,
-                              buttonText: NMobileLocalizations.of(context).delete,
-                              buttonColor: Colors.red,
-                              callback: (v) {
-                                if (v) {
-                                  Timer(Duration(milliseconds: 200), () async {
-                                    var walletData = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
-                                    var wallet = WalletSchema(name: walletData['name'], address: walletData['address']);
-                                    var password = await wallet.getPassword();
-                                    if (password != null) {
-                                      try {
-                                        var w = await wallet.exportWallet(password);
-                                        await clearCacheFile(Global.applicationRootDirectory);
-                                        var size = await getTotalSizeOfCacheFile(Global.applicationRootDirectory);
-                                        setState(() {
-                                          _cacheSize = Format.formatSize(size);
-                                        });
-                                      } catch (e) {
-                                        if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-                                          ModalDialog.of(context).show(
-                                            height: 240,
-                                            content: Label(
-                                              NMobileLocalizations.of(context).password_wrong,
-                                              type: LabelType.bodyRegular,
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    }
-                                  });
-                                }
-                              }).show();
+                          Navigator.pushNamed(context, AdvancePage.routeName);
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Label(
-                              NMobileLocalizations.of(context).clear_cache,
+                              NMobileLocalizations.of(context).storage_text,
                               type: LabelType.bodyRegular,
                               color: DefaultTheme.fontColor1,
                               height: 1,
                             ),
-                            Row(
-                              children: <Widget>[
-                                Label(
-                                  _cacheSize ?? '',
-                                  type: LabelType.bodyRegular,
-                                  color: DefaultTheme.fontColor2,
-                                  height: 1,
-                                ),
-                                SvgPicture.asset(
-                                  'assets/icons/right.svg',
-                                  width: 24,
-                                  color: DefaultTheme.fontColor2,
-                                ),
-                              ],
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: FlatButton(
-                        padding: const EdgeInsets.only(left: 16, right: 16),
-                        onPressed: () async {
-                          SimpleConfirm(
-                              context: context,
-                              content: NMobileLocalizations.of(context).delete_cache_confirm_title,
-                              buttonText: NMobileLocalizations.of(context).delete,
-                              buttonColor: Colors.red,
-                              callback: (v) {
-                                if (v) {
-                                  Timer(Duration(milliseconds: 200), () async {
-                                    var walletData = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
-                                    var wallet = WalletSchema(name: walletData['name'], address: walletData['address']);
-                                    var password = await wallet.getPassword();
-                                    if (password != null) {
-                                      try {
-                                        var w = await wallet.exportWallet(password);
-                                        await clearDbFile(Global.applicationRootDirectory);
-                                        var size = await getTotalSizeOfDbFile(Global.applicationRootDirectory);
-                                        setState(() {
-                                          _dbSize = Format.formatSize(size);
-                                        });
-                                      } catch (e) {
-                                        if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-                                          ModalDialog.of(context).show(
-                                            height: 240,
-                                            content: Label(
-                                              NMobileLocalizations.of(context).password_wrong,
-                                              type: LabelType.bodyRegular,
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    }
-                                  });
-                                }
-                              }).show();
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Label(
-                              NMobileLocalizations.of(context).clear_database + ' [debug]',
-                              type: LabelType.bodyRegular,
-                              color: DefaultTheme.fontColor1,
-                              height: 1,
+                            SvgPicture.asset(
+                              'assets/icons/right.svg',
+                              width: 24,
+                              color: DefaultTheme.fontColor2,
                             ),
-                            Row(
-                              children: <Widget>[
-                                Label(
-                                  _dbSize ?? '',
-                                  type: LabelType.bodyRegular,
-                                  color: DefaultTheme.fontColor2,
-                                  height: 1,
-                                ),
-                                SvgPicture.asset(
-                                  'assets/icons/right.svg',
-                                  width: 24,
-                                  color: DefaultTheme.fontColor2,
-                                ),
-                              ],
-                            )
                           ],
                         ),
                       ),

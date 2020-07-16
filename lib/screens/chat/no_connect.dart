@@ -39,8 +39,8 @@ class _NoConnectScreenState extends State<NoConnectScreen> with WidgetsBindingOb
     WidgetsBinding.instance.addObserver(this);
 
     tabSubscription = eventBus.on<MainTabIndex>().listen((event) {
-      NLog.d(event.index);
-      getPassword();
+//      NLog.d(event.index);
+//      getPassword();
     });
     _clientBloc = BlocProvider.of<ClientBloc>(context);
     initData();
@@ -49,8 +49,6 @@ class _NoConnectScreenState extends State<NoConnectScreen> with WidgetsBindingOb
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    // NLog.d(ModalRoute.of(context).settings.name);
-    //    NLog.d(Global.currentPageIndex);
     if (this.state == AppLifecycleState.inactive && state == AppLifecycleState.resumed) {
       getPassword();
     }
