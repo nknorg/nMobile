@@ -444,11 +444,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                   color: DefaultTheme.primaryColor,
                 ),
                 SizedBox(width: 10),
-                Text(
-                  NMobileLocalizations.of(context).add_contact,
-                  textAlign: TextAlign.left,
-                  style: TextStyle(color: DefaultTheme.primaryColor, fontSize: DefaultTheme.bodyRegularFontSize),
-                ),
+                Label(NMobileLocalizations.of(context).add_contact, type: LabelType.bodyRegular, color: DefaultTheme.primaryColor),
                 Spacer(),
               ],
             ),
@@ -473,11 +469,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                   color: Colors.red,
                 ),
                 SizedBox(width: 10),
-                Text(
-                  NMobileLocalizations.of(context).delete,
-                  textAlign: TextAlign.left,
-                  style: TextStyle(color: Colors.red, fontSize: DefaultTheme.bodyRegularFontSize),
-                ),
+                Label(NMobileLocalizations.of(context).delete, type: LabelType.bodyRegular, color: Colors.red),
                 Spacer(),
               ],
             ),
@@ -905,7 +897,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                   Expanded(
                                     child: Label(
                                       NMobileLocalizations.of(context).disappear_desc,
-                                      type: LabelType.bodyRegular,
+                                      type: LabelType.bodySmall,
                                       color: DefaultTheme.fontDescColor,
                                       softWrap: true,
                                     ),
@@ -929,11 +921,8 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                       ),
 //                                      loadAssetChatPng('send_message', width: 22),
                                       SizedBox(width: 10),
-                                      Text(
-                                        'Send Message',
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(color: DefaultTheme.fontColor1, fontSize: DefaultTheme.bodyRegularFontSize),
-                                      ),
+                                      Label(NMobileLocalizations.of(context).send_message, type: LabelType.bodyRegular, color: DefaultTheme.fontColor1),
+
                                       Spacer(),
                                       SvgPicture.asset(
                                         'assets/icons/right.svg',
@@ -981,56 +970,60 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
   }
 
   getBurnView() {
-    return Container(
-      child: Column(children: <Widget>[
-        Row(
-          children: <Widget>[
-            loadAssetWalletImage(
-              'xiaohui',
-              color: DefaultTheme.primaryColor,
-              width: 24,
-            ),
-            SizedBox(width: 10),
-            Label(
-              NMobileLocalizations.of(context).burn_after_reading + '${_burnValue != null ? ' (${Format.durationFormat(Duration(seconds: _burnValue))})' : ''}',
-              type: LabelType.bodyRegular,
-              color: DefaultTheme.fontColor1,
-              textAlign: TextAlign.start,
-            ),
-            Spacer(),
-            CupertinoSwitch(
-              value: _burnSelected,
-              activeColor: DefaultTheme.primaryColor,
-              onChanged: (value) async {
-                if (value) {
-                  _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
-                } else {
-                  _burnValue = null;
-                }
-                setState(() {
-                  _burnSelected = value;
-                });
-              },
-            ),
-          ],
-        ).pad(l: 20, r: 16),
-        _burnSelected
-            ? Slider(
-                value: _sliderBurnValue,
-                onChanged: (v) async {
-                  setState(() {
-                    _burnSelected = true;
-                    _sliderBurnValue = v;
+    return FlatButton(
+      onPressed: null,
+      padding: EdgeInsets.zero,
+      child: Container(
+        child: Column(children: <Widget>[
+          Row(
+            children: <Widget>[
+              loadAssetWalletImage(
+                'xiaohui',
+                color: DefaultTheme.primaryColor,
+                width: 24,
+              ),
+              SizedBox(width: 10),
+              Label(
+                NMobileLocalizations.of(context).burn_after_reading + '${_burnValue != null ? ' (${Format.durationFormat(Duration(seconds: _burnValue))})' : ''}',
+                type: LabelType.bodyRegular,
+                color: DefaultTheme.fontColor1,
+                textAlign: TextAlign.start,
+              ),
+              Spacer(),
+              CupertinoSwitch(
+                value: _burnSelected,
+                activeColor: DefaultTheme.primaryColor,
+                onChanged: (value) async {
+                  if (value) {
                     _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
+                  } else {
+                    _burnValue = null;
+                  }
+                  setState(() {
+                    _burnSelected = value;
                   });
                 },
-                divisions: _burnTextArray.length - 1,
-                max: _burnTextArray.length - 1.0,
-                min: 0,
-              ).pad(l: 4, r: 4)
-            : Container(),
-        SizedBox(height: 10),
-      ]),
+              ),
+            ],
+          ).pad(l: 20, r: 16),
+          _burnSelected
+              ? Slider(
+                  value: _sliderBurnValue,
+                  onChanged: (v) async {
+                    setState(() {
+                      _burnSelected = true;
+                      _sliderBurnValue = v;
+                      _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
+                    });
+                  },
+                  divisions: _burnTextArray.length - 1,
+                  max: _burnTextArray.length - 1.0,
+                  min: 0,
+                ).pad(l: 4, r: 4)
+              : Container(),
+          SizedBox(height: 10),
+        ]),
+      ),
     );
   }
 }

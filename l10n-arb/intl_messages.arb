@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-07-09T08:52:04.327870",
+  "@@last_modified": "2020-07-16T17:47:21.221870",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -470,6 +470,12 @@
   },
   "delete_cache_confirm_title": "Are you sure you want to delete cache?",
   "@delete_cache_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "delete_db_confirm_title": "Are you sure you want to clear the database?",
+  "@delete_db_confirm_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1520,6 +1526,11 @@
     "type": "text",
     "placeholders": {}
   },
+  "send_message": "Send Message",
+  "@send_message": {
+    "type": "text",
+    "placeholders": {}
+  },
   "show_wallet_address_desc": "Scan the QR code, you can transfer it to me",
   "@show_wallet_address_desc": {
     "type": "text",
@@ -1527,6 +1538,11 @@
   },
   "disappear_desc": "Messages received and sent will disappear after the set time.",
   "@disappear_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "storage_text": "Storage",
+  "@storage_text": {
     "type": "text",
     "placeholders": {}
   }

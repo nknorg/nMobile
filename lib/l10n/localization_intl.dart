@@ -333,6 +333,10 @@ class NMobileLocalizations {
     return Intl.message('Are you sure you want to delete cache?', name: 'delete_cache_confirm_title', desc: '');
   }
 
+  String get delete_db_confirm_title {
+    return Intl.message('Are you sure you want to clear the database?', name: 'delete_db_confirm_title', desc: '');
+  }
+
   String get click_to_settings {
     return Intl.message('Click to settings', name: 'click_to_settings', desc: '');
   }
@@ -1003,8 +1007,10 @@ class NMobileLocalizations {
   String get coming_soon => Intl.message('Coming Soon...', name: 'coming_soon');
   String get my_profile => Intl.message('My Profile', name: 'my_profile');
   String get profile => Intl.message('Profile', name: 'profile');
+  String get send_message => Intl.message('Send Message', name: 'send_message');
   String get show_wallet_address_desc => Intl.message('Scan the QR code, you can transfer it to me', name: 'show_wallet_address_desc');
   String get disappear_desc => Intl.message('Messages received and sent will disappear after the set time.', name: 'disappear_desc');
+  String get storage_text => Intl.message('Storage', name: 'storage_text');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {
