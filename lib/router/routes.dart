@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/app.dart';
+import 'package:nmobile/screens/advice_page.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/screens/chat/message.dart';
@@ -55,6 +56,7 @@ Map<String, WidgetBuilder> routes = {
   PopularGroupPage.routeName: (BuildContext context) => PopularGroupPage(),
   ShowMyChatID.routeName: (BuildContext context) => ShowMyChatID(),
   WalletScreen.routeName: (BuildContext context) => WalletScreen(),
+  AdvancePage.routeName: (BuildContext context) => AdvancePage(),
   ChatProfile.routeName: (BuildContext context, {arguments}) => ChatProfile(arguments: arguments),
   ShowMyChatAddress.routeName: (BuildContext context, {arguments}) => ShowMyChatAddress(arguments: arguments),
 };

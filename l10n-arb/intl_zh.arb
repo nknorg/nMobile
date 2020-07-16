@@ -1,96 +1,551 @@
 {
   "@@last_modified": "2020-05-12T15:55:43.214456",
   "nkn": "NKN",
+  "@nkn": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "loading": "加载中",
+  "@loading": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "connecting": "连接中",
+  "@connecting": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "connected": "已连接",
+  "@connected": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "click_connect": "点击连接",
+  "@click_connect": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "connect": "连接",
+  "@connect": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "ok": "好的",
+  "@ok": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "done": "完成",
+  "@done": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "close": "关闭",
+  "@close": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "cancel": "取消",
+  "@cancel": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "yes": "是的",
+  "@main_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "no": "不",
+  "@no": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "warning": "警告",
+  "@warning": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "continue_text": "下一步",
+  "@continue_text": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "accept_invitation": "接受邀请",
+  "@accept_invitation": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "channel_invitation": "群聊邀请",
+  "@channel_invitation": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "save": "保存",
+  "@save": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "max": "全部",
+  "@max": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "min": "最小",
+  "@min": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "slow": "慢",
+  "@slow": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "average": "平均",
+  "@average": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "fast": "快",
+  "@fast": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "copy": "复制",
+  "@copy": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "copy_success": "已复制",
+  "@copy_success": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "invitation_sent": "已发出邀请",
+  "@invitation_sent": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "success": "成功",
+  "@success": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "copied": "已复制",
+  "@copied": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "copy_to_clipboard": "复制到剪贴板",
+  "@copy_to_clipboard": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "rename": "修改",
+  "@rename": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "edit": "编辑",
+  "@edit": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "edit_name": "编辑",
+  "@edit_name": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "edit_nickname": "编辑昵称",
+  "@edit_nickname": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "input_nickname": "请输入昵称",
+  "@input_nickname": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "input_pubKey": "请输入公钥",
+  "@input_pubKey": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "input_name": "请输入名字",
+  "@input_name": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "input_wallet_address": "请输入钱包地址",
+  "@input_wallet_address": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "input_notes": "备注",
+  "@input_notes": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "edit_notes": "编辑备注",
+  "@edit_notes": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "view_all": "查看全部",
+  "@view_all": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "latest_transactions": "最新交易",
+  "@latest_transactions": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "day": "天",
+  "@day": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "today": "今天",
+  "@today": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete": "删除",
+  "@delete": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "notes": "备注",
+  "@notes": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "none": "无",
+  "@none": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "failure": "失败",
+  "@failure": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "title": "nMobile",
+  "@title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "send": "发送",
+  "@send": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "send_nkn": "发送 NKN",
+  "@send_nkn": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "recieve": "接收",
+  "@recieve": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "keystore": "Keystore",
+  "@keystore": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "seed": "Seed",
+  "@seed": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "private_key": "私钥",
+  "@private_key": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "public_key": "公钥",
+  "@public_key": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "my_wallets": "我的钱包",
+  "@my_wallets": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "my_details": "我的",
-  "mainnet": "MAINNET",
+  "@my_details": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "mainnet": "主网",
+  "@mainnet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "ERC_20": "ERC-20",
+  "@ERC_20": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "wallet_name": "钱包名称",
+  "@wallet_name": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "wallet_address": "钱包地址",
+  "@wallet_address": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "wallet_password": "密码",
+  "@wallet_password": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "wallet_password_mach": "密码必须包含至少8位字符。建议使用大、小写和特殊字符的组合。",
+  "@wallet_password_mach": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "wallet_password_helper_text": "密码必须包含至少8位字符。建议使用大、小写和特殊字符的组合。",
+  "@wallet_password_helper_text": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "wallet_password_error": "密码必须包含至少8位字符。建议使用大、小写和特殊字符的组合。",
+  "@wallet_password_error": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "password_wrong": "钱包密码或keystore错误",
+  "@password_wrong": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "confirm_password": "确认密码",
+  "@confirm_password": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "create": "创建",
+  "@create": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "create_wallet": "创建钱包",
+  "@create_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "save_contact": "保存联系人",
+  "@save_contact": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_wallet": "删除钱包",
+  "@delete_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_wallet_confirm_title": "您确定要删除此钱包吗?",
+  "@delete_wallet_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_wallet_confirm_text": "这将从您的设备中删除钱包。请确保您的钱包已备份，否则您的资金将丢失且无法找回。",
+  "@delete_wallet_confirm_text": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_message_confirm_title": "您确定要删除此消息吗?",
+  "@delete_message_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_contact_confirm_title": "您确定要删除联系人吗?",
+  "@delete_contact_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_chennel_confirm_title": "您确定要退出该群吗？",
+  "@delete_chennel_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_cache_confirm_title": "您确定要删除缓存吗?",
+  "@delete_cache_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "click_to_settings": "点击设置",
+  "@click_to_settings": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "import_wallet": "导入钱包",
+  "@import_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "export_wallet": "导出钱包",
+  "@export_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "view_channel_members": "查看群成员",
+  "@view_channel_members": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "invite_members": "邀请加入",
+  "@invite_members": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "total_balance": "余额",
+  "@total_balance": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "main_wallet": "主钱包",
+  "@main_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "view_qrcode": "查看二维码",
+  "@view_qrcode": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "qrcode": "二维码",
+  "@qrcode": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "verify_wallet_password": "验证钱包密码",
+  "@verify_wallet_password": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "seed_qrcode_dec": "请安全地保存和备份您的种子。如果丢失，您将失去对资产的访问权限。",
+  "@seed_qrcode_dec": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "to": "到",
+  "@to": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "send_to": "发送给",
+  "@send_to": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "from": "从",
+  "@from": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "fee": "矿工费",
+  "@fee": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "amount": "数量",
   "@amount": {
     "description": "",
@@ -289,7 +744,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "stranger": "Stranger",
+  "stranger": "陌生人",
   "@stranger": {
     "description": "",
     "type": "text",
@@ -475,7 +930,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "client_address": "Client Address",
+  "client_address": "地址",
   "@client_address": {
     "description": "",
     "type": "text",
@@ -499,7 +954,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "updated_at": "Updated at",
+  "updated_at": "更新",
   "@updated_at": {
     "description": "",
     "type": "text",
@@ -681,7 +1136,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "error_client_address_format": "Client address format does not match.",
+  "error_client_address_format": "地址不正确",
   "@error_client_address_format": {
     "description": "",
     "type": "text",
@@ -693,7 +1148,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "error_unknow_nkn_qrcode": "Unknow NKN qr code.",
+  "error_unknow_nkn_qrcode": "识别失败",
   "@error_unknow_nkn_qrcode": {
     "description": "",
     "type": "text",
@@ -723,7 +1178,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "chat_tab_group": "Group",
+  "chat_tab_group": "群",
   "@chat_tab_group": {
     "description": "",
     "type": "text",
@@ -939,8 +1394,38 @@
     "type": "text",
     "placeholders": {}
   },
+  "type_a_message": "请输入",
+  "@type_a_message": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "placeholder_draft": "[草稿]",
+  "@placeholder_draft": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "d_not_backed_up_title": "重要提示：请备份您的钱包！",
   "@d_not_backed_up_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "friends": "好友",
+  "@friends": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "group_chat": "群",
+  "@group_chat": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "d_chat_not_login": "D-Chat 未登陆",
+  "@d_chat_not_login": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -953,6 +1438,12 @@
   },
   "go_backup": "去备份",
   "@go_backup": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "tip_password_error": "密码错误",
+  "@tip_password_error": {
+    "description": "",
     "type": "text",
     "placeholders": {}
   },
@@ -1018,6 +1509,28 @@
   },
   "disappear_desc": "接受和发送的消息将在设定的时间后消失。",
   "@disappear_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "leave_group_confirm_title": "您确定要离开该群组吗？",
+  "@leave_group_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "send_message": "发送消息",
+  "@send_message": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "delete_db_confirm_title": "您确定要清除数据库吗?",
+  "@delete_db_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "storage_text": "存储",
+  "@storage_text": {
     "type": "text",
     "placeholders": {}
   }
