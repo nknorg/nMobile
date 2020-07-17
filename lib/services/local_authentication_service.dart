@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:nmobile/helpers/local_storage.dart';
@@ -32,7 +31,6 @@ class LocalAuthenticationService with Tag {
 
   final _localAuth = LocalAuthentication();
   bool isProtectionEnabled = false;
-  bool isAuthenticated = false;
   BiometricType authType;
 
   Future<BiometricType> getAuthType() async {
@@ -52,15 +50,13 @@ class LocalAuthenticationService with Tag {
   Future<bool> authenticate() async {
     if (isProtectionEnabled) {
       try {
-        isAuthenticated = await _localAuth.authenticateWithBiometrics(
+        return await _localAuth.authenticateWithBiometrics(
           localizedReason: 'authenticate to access',
           useErrorDialogs: false,
           stickyAuth: true,
         );
-        return isAuthenticated;
       } on PlatformException catch (e) {
         _LOG.e('authenticate', e);
-        return false;
       }
     }
     return false;

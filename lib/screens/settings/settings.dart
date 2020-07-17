@@ -11,12 +11,10 @@ import 'package:nmobile/blocs/global/global_event.dart';
 import 'package:nmobile/blocs/global/global_state.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
-import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/select_list/select_list_item.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
@@ -26,9 +24,7 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/advice_page.dart';
 import 'package:nmobile/screens/select.dart';
-import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
-import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:oktoast/oktoast.dart';
@@ -55,12 +51,6 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
   @override
   void initState() {
     super.initState();
-    _authSelected = _localAuth.isProtectionEnabled;
-    if (_localAuth.authType == BiometricType.face) {
-      _authTypeString = NMobileLocalizations.of(Global.appContext).face_id;
-    } else if (_localAuth.authType == BiometricType.fingerprint) {
-      _authTypeString = NMobileLocalizations.of(Global.appContext).touch_id;
-    }
     initData();
     _globalBloc = BlocProvider.of<GlobalBloc>(context);
     _globalBlocSubs = _globalBloc.listen((state) {
@@ -75,6 +65,18 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
         }
       }
     });
+    initAsync();
+  }
+
+  initAsync() async {
+    final _localAuth = await LocalAuthenticationService.instance;
+    _authSelected = _localAuth.isProtectionEnabled;
+    if (_localAuth.authType == BiometricType.face) {
+      _authTypeString = NMobileLocalizations.of(Global.appContext).face_id;
+    } else if (_localAuth.authType == BiometricType.fingerprint) {
+      _authTypeString = NMobileLocalizations.of(Global.appContext).touch_id;
+    }
+    setState(() {});
   }
 
   initData() {
@@ -117,7 +119,8 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
     if (Settings.localNotificationType == null) {
       _currentLocalNotificationType = NMobileLocalizations.of(Global.appContext).local_notification_only_name;
     } else {
-      _currentLocalNotificationType = _localNotificationTypeList?.firstWhere((x) => x.value == Settings.localNotificationType, orElse: () => null)?.text ?? NMobileLocalizations.of(Global.appContext).local_notification_only_name;
+      _currentLocalNotificationType = _localNotificationTypeList?.firstWhere((x) => x.value == Settings.localNotificationType, orElse: () => null)?.text ??
+          NMobileLocalizations.of(Global.appContext).local_notification_only_name;
     }
 
     if (mounted) {

@@ -45,7 +45,7 @@ class _AppScreenState extends State<AppScreen> {
     ]);
     OrientationPlugin.forceOrientation(DeviceOrientation.portraitUp);
     _pageController = PageController();
-    Global.currentPageIndex = _currentIndex;
+//    Global.currentPageIndex = _currentIndex;
     _walletsBloc = BlocProvider.of<WalletsBloc>(context);
     _walletsBloc.add(LoadWallets());
   }
@@ -89,8 +89,8 @@ class _AppScreenState extends State<AppScreen> {
                       onPageChanged: (n) async {
                         setState(() {
                           _currentIndex = n;
-                          Global.currentPageIndex = _currentIndex;
-                          eventBus.fire(MainTabIndex(Global.currentPageIndex));
+//                          Global.currentPageIndex = _currentIndex;
+//                          eventBus.fire(MainTabIndex(Global.currentPageIndex));
                         });
                         (screens[0] as ChatScreen).activePage.setCurrActivePageIndex(_currentIndex);
                       },
