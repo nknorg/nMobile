@@ -255,6 +255,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
   _send() async {
     LocalStorage.saveChatUnSendContentFromId(targetId);
     String text = _sendController.text;
+    if (text == null || text.length == 0) return;
     _sendController.clear();
     _canSend = false;
 
