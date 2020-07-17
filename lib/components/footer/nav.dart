@@ -26,7 +26,7 @@ class _NavState extends State<Nav> {
     setState(() {
       widget.currentIndex = index;
       widget.controller.jumpToPage(index);
-      Global.currentPageIndex = index;
+//      Global.currentPageIndex = index;
     });
   }
 
