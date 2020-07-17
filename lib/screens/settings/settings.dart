@@ -15,7 +15,6 @@ import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/select_list/select_list_item.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
@@ -50,23 +49,10 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
   String _currentLocalNotificationType;
   String _authTypeString;
   bool _authSelected = false;
-  bool _debugSelected = false;
-  String _cacheSize;
-  String _dbSize;
-
-  initAsync() async {
-    var size = await getTotalSizeOfCacheFile(Global.applicationRootDirectory);
-    var dbs = await getTotalSizeOfDbFile(Global.applicationRootDirectory);
-    setState(() {
-      _cacheSize = Format.formatSize(size);
-      _dbSize = Format.formatSize(dbs);
-    });
-  }
 
   @override
   void initState() {
     super.initState();
-    _debugSelected = Settings.debug;
     _authSelected = _localAuth.isProtectionEnabled;
     if (_localAuth.authType == BiometricType.face) {
       _authTypeString = NMobileLocalizations.of(Global.appContext).face_id;
@@ -74,8 +60,6 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
       _authTypeString = NMobileLocalizations.of(Global.appContext).touch_id;
     }
     initData();
-
-    initAsync();
     _globalBloc = BlocProvider.of<GlobalBloc>(context);
     _globalBlocSubs = _globalBloc.listen((state) {
       if (state is LocaleUpdated) {
@@ -500,7 +484,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                       height: 48,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
                         onPressed: () async {
                           Navigator.pushNamed(context, AdvancePage.routeName);
                         },
@@ -508,7 +492,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Label(
-                              NMobileLocalizations.of(context).storage_text,
+                              NMobileLocalizations.of(context).debug,
                               type: LabelType.bodyRegular,
                               color: DefaultTheme.fontColor1,
                               height: 1,
@@ -520,41 +504,6 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: FlatButton(
-                        padding: const EdgeInsets.only(left: 16, right: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Label(
-                              NMobileLocalizations.of(context).debug,
-                              type: LabelType.bodyRegular,
-                              color: DefaultTheme.fontColor1,
-                              height: 1,
-                            ),
-                            Row(
-                              children: <Widget>[
-                                CupertinoSwitch(
-                                  value: _debugSelected,
-                                  activeColor: DefaultTheme.primaryColor,
-                                  onChanged: (value) async {
-                                    _localStorage.set('${LocalStorage.SETTINGS_KEY}:${LocalStorage.DEBUG_KEY}', value);
-                                    Settings.debug = value;
-                                    setState(() {
-                                      _debugSelected = value;
-                                    });
-                                  },
-                                ),
-                              ],
-                            )
-                          ],
-                        ),
-                        onPressed: () {},
                       ),
                     ),
                   ],

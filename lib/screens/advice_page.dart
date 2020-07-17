@@ -12,6 +12,7 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
+import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
@@ -30,10 +31,12 @@ class _AdvancedPageState extends State<AdvancePage> {
   String selectedValue;
   List<SelectListItem> list;
   final LocalStorage _localStorage = LocalStorage();
+  bool _debugSelected = false;
 
   @override
   void initState() {
     super.initState();
+    _debugSelected = Settings.debug;
     initAsync();
   }
 
@@ -54,7 +57,7 @@ class _AdvancedPageState extends State<AdvancePage> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).storage_text,
+        title: NMobileLocalizations.of(context).debug,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: Builder(
@@ -145,7 +148,6 @@ class _AdvancedPageState extends State<AdvancePage> {
                       height: 48,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
                         onPressed: () async {
                           SimpleConfirm(
                               context: context,
@@ -208,6 +210,41 @@ class _AdvancedPageState extends State<AdvancePage> {
                             )
                           ],
                         ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: FlatButton(
+                        padding: const EdgeInsets.only(left: 16, right: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Label(
+                              NMobileLocalizations.of(context).notification + '[debug]',
+                              type: LabelType.bodyRegular,
+                              color: DefaultTheme.fontColor1,
+                              height: 1,
+                            ),
+                            Row(
+                              children: <Widget>[
+                                CupertinoSwitch(
+                                  value: _debugSelected,
+                                  activeColor: DefaultTheme.primaryColor,
+                                  onChanged: (value) async {
+                                    _localStorage.set('${LocalStorage.SETTINGS_KEY}:${LocalStorage.DEBUG_KEY}', value);
+                                    Settings.debug = value;
+                                    setState(() {
+                                      _debugSelected = value;
+                                    });
+                                  },
+                                ),
+                              ],
+                            )
+                          ],
+                        ),
+                        onPressed: () {},
                       ),
                     ),
                   ],
