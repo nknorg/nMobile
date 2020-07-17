@@ -126,6 +126,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "error_required" : MessageLookupByLibrary.simpleMessage("必填"),
     "error_seed_format" : MessageLookupByLibrary.simpleMessage("Seed 错误"),
     "error_unknow_nkn_qrcode" : MessageLookupByLibrary.simpleMessage("识别失败"),
+    "eth_keystore_export_desc" : MessageLookupByLibrary.simpleMessage("当前版本暂不支持ERC20 Token交易，请立刻导出此钱包Keystore进行备份。"),
+    "export" : MessageLookupByLibrary.simpleMessage("导出"),
     "export_wallet" : MessageLookupByLibrary.simpleMessage("导出钱包"),
     "face_id" : MessageLookupByLibrary.simpleMessage("Face ID"),
     "failure" : MessageLookupByLibrary.simpleMessage("失败"),
