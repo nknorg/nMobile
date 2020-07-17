@@ -1011,6 +1011,9 @@ class NMobileLocalizations {
   String get show_wallet_address_desc => Intl.message('Scan the QR code, you can transfer it to me', name: 'show_wallet_address_desc');
   String get disappear_desc => Intl.message('Messages received and sent will disappear after the set time.', name: 'disappear_desc');
   String get storage_text => Intl.message('Storage', name: 'storage_text');
+
+  String get export => Intl.message('Export', name: 'export');
+  String get eth_keystore_export_desc => Intl.message('The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.', name: 'eth_keystore_export_desc');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {

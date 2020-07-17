@@ -1533,5 +1533,15 @@
   "@storage_text": {
     "type": "text",
     "placeholders": {}
+  },
+  "export": "导出",
+  "@export": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "eth_keystore_export_desc": "当前版本暂不支持ERC20 Token交易，请立刻导出此钱包Keystore进行备份。",
+  "@eth_keystore_export_desc": {
+    "type": "text",
+    "placeholders": {}
   }
 }
