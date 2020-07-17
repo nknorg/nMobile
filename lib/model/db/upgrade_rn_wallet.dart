@@ -53,7 +53,7 @@ class UpgradeRnWallet {
             data.type = walletDataMap['type'];
             data.address = walletDataMap['address'];
             data.publicKey = walletDataMap['publicKey'];
-            data.keystore = jsonEncode(walletDataMap['keystore']);
+            data.keystore = walletDataMap['keystore'];
             data.name = walletDataMap['name'];
             data.balance = walletDataMap['balance'];
             data.tokenBalance = walletDataMap['tokenBalance'];
