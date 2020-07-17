@@ -371,7 +371,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                   ),
                 ),
               ),
-              Expanded(
+              seed == null ? Space.empty : Expanded(
                 flex: 0,
                 child: SafeArea(
                   child: Padding(
