@@ -15,6 +15,7 @@ import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/utils/image_utils.dart';
@@ -47,10 +48,14 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
   next() async {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
-      String keystore = await NknWalletPlugin.createWallet(null, _password);
-      var json = jsonDecode(keystore);
-      String address = json['Address'];
-      _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
+//      String keystore = await NknWalletPlugin.createWallet(null, _password);
+//      var json = jsonDecode(keystore);
+//      String address = json['Address'];
+//      _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
+
+      final eth = Ethereum.createWallet(name: _name, password: _password);
+      Ethereum.saveWallet(ethWallet: eth, walletsBloc: _walletsBloc);
+
       Navigator.of(context).pushReplacementNamed(AppScreen.routeName);
     }
   }
