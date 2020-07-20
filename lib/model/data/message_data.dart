@@ -1,4 +1,11 @@
+/*
+ * Copyright (C) NKN Labs, Inc. - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ */
 
+/// @author Chenai
+/// @version 1.0, 03/07/2020
 class MessageStd {
   String id; // random uuid
   String contentType; // text/image/audio/video/event[:custom_action]/customize
