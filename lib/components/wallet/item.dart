@@ -4,9 +4,12 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_detail.dart';
+import 'package:nmobile/utils/log_tag.dart';
+import 'package:web3dart/web3dart.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 
 enum WalletType { nkn, eth }
@@ -14,7 +17,7 @@ enum WalletType { nkn, eth }
 class WalletItem extends StatefulWidget {
   final WalletSchema schema;
   final WalletType type;
-  GestureTapCallback onTap;
+  final GestureTapCallback onTap;
 
   WalletItem({this.schema, this.type = WalletType.nkn, this.onTap});
 
@@ -22,7 +25,18 @@ class WalletItem extends StatefulWidget {
   _WalletItemState createState() => _WalletItemState();
 }
 
-class _WalletItemState extends State<WalletItem> {
+class _WalletItemState extends State<WalletItem> with Tag {
+  EthErc20Client ethClient = EthErc20Client();
+
+  // ignore: non_constant_identifier_names
+  LOG _LOG;
+
+  @override
+  void initState() {
+    super.initState();
+    _LOG = LOG(tag);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.type == WalletType.nkn) {
@@ -109,28 +123,12 @@ class _WalletItemState extends State<WalletItem> {
           ),
         ),
       );
-    } else if (widget.type == WalletType.eth) {
+    } else {
+      assert(widget.type == WalletType.eth);
       return InkWell(
         onTap: widget.onTap ??
-            () {
-              SimpleConfirm(
-                  context: context,
-                  content: NMobileLocalizations.of(context).eth_keystore_export_desc,
-                  buttonText: NMobileLocalizations.of(context).export,
-                  buttonColor: DefaultTheme.primaryColor,
-                  callback: (b) async {
-                    if (b) {
-                      Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
-                        'wallet': null,
-                        'keystore': await widget.schema.getKeystore(),
-                        'address': widget.schema.address,
-                        'publicKey': null,
-                        'seed': null,
-                        'name': widget.schema.name,
-                      });
-                    }
-                  }).show();
-//              Navigator.of(context).pushNamed(NknWalletDetailScreen.routeName, arguments: widget.schema);
+                () {
+              Navigator.of(context).pushNamed(NknWalletDetailScreen.routeName, arguments: widget.schema);
             },
         child: Stack(
           children: <Widget>[
@@ -198,7 +196,8 @@ class _WalletItemState extends State<WalletItem> {
                                 alignment: Alignment.center,
                                 padding: const EdgeInsets.only(left: 8, right: 8),
                                 decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(8)), color: Color(0x155F7AE3)),
-                                child: Text(NMobileLocalizations.of(context).ERC_20, style: TextStyle(color: Color(0xFF5F7AE3), fontSize: 10, fontWeight: FontWeight.bold)),
+                                child: Text(NMobileLocalizations.of(context).ERC_20,
+                                    style: TextStyle(color: Color(0xFF5F7AE3), fontSize: 10, fontWeight: FontWeight.bold)),
                               ),
                               Label(
                                 Format.nknFormat(widget.schema.balanceEth, symbol: 'ETH'),

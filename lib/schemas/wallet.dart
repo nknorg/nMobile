@@ -65,14 +65,12 @@ class WalletSchema extends Equatable {
   }
 
   Future<String> getKeystore() async {
-    var keystore = await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
-    return keystore;
+    return await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
   }
 
   Future exportWallet(password) async {
-    var keystore = await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
     try {
-      var wallet = await NknWalletPlugin.openWallet(keystore, password);
+      var wallet = await NknWalletPlugin.openWallet(await getKeystore(), password);
       await _secureStorage.set('${SecureStorage.PASSWORDS_KEY}:$address', password);
       return wallet;
     } catch (e) {
