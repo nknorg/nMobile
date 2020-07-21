@@ -22,6 +22,7 @@ import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
+import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:oktoast/oktoast.dart';
@@ -136,14 +137,11 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
               Expanded(
                 child: Container(
                   child: BodyBox(
-                    padding: const EdgeInsets.only(top: 10),
+                    padding: const EdgeInsets.only(top: 20),
                     child: Column(
                       children: <Widget>[
                         Column(
                           children: <Widget>[
-                            SizedBox(
-                              height: 20.h,
-                            ),
                             Container(
                               decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
                               margin: EdgeInsets.symmetric(horizontal: 12),
@@ -154,7 +152,9 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                                   FlatButton(
                                     padding: EdgeInsets.only(left: 16, right: 16, top: 10),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      CopyUtils.copyAction(context, widget.arguments.topic);
+                                    },
                                     child: Row(
                                       children: <Widget>[
                                         loadAssetIconsImage(
@@ -179,6 +179,11 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                                             textAlign: TextAlign.right,
                                             height: 1,
                                           ),
+                                        ),
+                                        SvgPicture.asset(
+                                          'assets/icons/right.svg',
+                                          width: 24,
+                                          color: DefaultTheme.fontColor2,
                                         )
                                       ],
                                     ),
@@ -274,7 +279,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
     if (!isUnSubscribe) {
       return Container(
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-        margin: EdgeInsets.only(left: 16, right: 16, top: 10),
+        margin: EdgeInsets.only(left: 12, right: 12, top: 10),
         child: FlatButton(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
           child: Container(

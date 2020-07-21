@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/event/eventbus.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/screens/news.dart';
 import 'package:nmobile/services/background_fetch_service.dart';
@@ -28,7 +29,7 @@ class AppScreen extends StatefulWidget {
 class _AppScreenState extends State<AppScreen> {
   WalletsBloc _walletsBloc;
   PageController _pageController;
-  int _currentIndex = 1;
+  int _currentIndex = 0;
   List<Widget> screens = <Widget>[
     ChatScreen(),
     HomeScreen(),
@@ -43,7 +44,8 @@ class _AppScreenState extends State<AppScreen> {
       DeviceOrientation.portraitUp,
     ]);
     OrientationPlugin.forceOrientation(DeviceOrientation.portraitUp);
-    _pageController = PageController(initialPage: 1);
+    _pageController = PageController(initialPage: 0);
+    Global.currentPageIndex = _currentIndex;
     _walletsBloc = BlocProvider.of<WalletsBloc>(context);
     _walletsBloc.add(LoadWallets());
   }
@@ -87,6 +89,8 @@ class _AppScreenState extends State<AppScreen> {
                       onPageChanged: (n) {
                         setState(() {
                           _currentIndex = n;
+                          Global.currentPageIndex = _currentIndex;
+                          eventBus.fire(MainTabIndex(Global.currentPageIndex));
                         });
                       },
                       controller: _pageController,

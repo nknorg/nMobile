@@ -333,6 +333,10 @@ class NMobileLocalizations {
     return Intl.message('Are you sure you want to delete cache?', name: 'delete_cache_confirm_title', desc: '');
   }
 
+  String get delete_db_confirm_title {
+    return Intl.message('Are you sure you want to clear the database?', name: 'delete_db_confirm_title', desc: '');
+  }
+
   String get click_to_settings {
     return Intl.message('Click to settings', name: 'click_to_settings', desc: '');
   }
@@ -1003,18 +1007,23 @@ class NMobileLocalizations {
   String get tip => Intl.message('Tips', name: 'tip');
   String get my_details_desc => Intl.message('All subscriptions and tipping will come from your selected wallet.', name: 'my_details_desc');
 
+  String get change_default_chat_wallet => Intl.message('Change', name: 'change_default_chat_wallet');
+  String get coming_soon => Intl.message('Coming Soon...', name: 'coming_soon');
+  String get my_profile => Intl.message('My Profile', name: 'my_profile');
+  String get profile => Intl.message('Profile', name: 'profile');
+  String get send_message => Intl.message('Send Message', name: 'send_message');
+  String get show_wallet_address_desc => Intl.message('Scan the QR code, you can transfer it to me', name: 'show_wallet_address_desc');
+  String get disappear_desc => Intl.message('Messages received and sent will disappear after the set time.', name: 'disappear_desc');
+  String get storage_text => Intl.message('Storage', name: 'storage_text');
+
+  String get export => Intl.message('Export', name: 'export');
+  String get eth_keystore_export_desc => Intl.message('The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.', name: 'eth_keystore_export_desc');
   String get check_upgrade => Intl.message('Check Upgrade', name: 'check_upgrade');
   String get release_notes => Intl.message('Release Notes:', name: 'release_notes');
   String get download_now => Intl.message('Download Now', name: 'download_now');
   String get ignore => Intl.message('Ignore', name: 'ignore');
   String get already_the_latest_version => Intl.message('Already the latest version', name: 'already_the_latest_version');
-  String get change_default_chat_wallet => Intl.message('Change', name: 'change_default_chat_wallet');
-  String get coming_soon => Intl.message('Coming Soon...', name: 'coming_soon');
   String get message_text => Intl.message('Messages', name: 'message_text');
-  String get my_profile => Intl.message('My Profile', name: 'my_profile');
-  String get profile => Intl.message('Profile', name: 'profile');
-  String get show_wallet_address_desc => Intl.message('Scan the QR code, you can transfer it to me', name: 'show_wallet_address_desc');
-  String get disappear_desc => Intl.message('Messages received and sent will disappear after the set time.', name: 'disappear_desc');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {

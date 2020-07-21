@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-07-13T16:32:34.422092",
+  "@@last_modified": "2020-07-21T11:01:57.574685",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -470,6 +470,12 @@
   },
   "delete_cache_confirm_title": "Are you sure you want to delete cache?",
   "@delete_cache_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "delete_db_confirm_title": "Are you sure you want to clear the database?",
+  "@delete_db_confirm_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1509,6 +1515,56 @@
     "type": "text",
     "placeholders": {}
   },
+  "change_default_chat_wallet": "Change",
+  "@change_default_chat_wallet": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "coming_soon": "Coming Soon...",
+  "@coming_soon": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "my_profile": "My Profile",
+  "@my_profile": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "profile": "Profile",
+  "@profile": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "send_message": "Send Message",
+  "@send_message": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "show_wallet_address_desc": "Scan the QR code, you can transfer it to me",
+  "@show_wallet_address_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "disappear_desc": "Messages received and sent will disappear after the set time.",
+  "@disappear_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "storage_text": "Storage",
+  "@storage_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "export": "Export",
+  "@export": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "eth_keystore_export_desc": "The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.",
+  "@eth_keystore_export_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
   "check_upgrade": "Check Upgrade",
   "@check_upgrade": {
     "type": "text",
@@ -1534,38 +1590,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "change_default_chat_wallet": "Change",
-  "@change_default_chat_wallet": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "coming_soon": "Coming Soon...",
-  "@coming_soon": {
-    "type": "text",
-    "placeholders": {}
-  },
   "message_text": "Messages",
   "@message_text": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "my_profile": "My Profile",
-  "@my_profile": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "profile": "Profile",
-  "@profile": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "show_wallet_address_desc": "Scan the QR code, you can transfer it to me",
-  "@show_wallet_address_desc": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "disappear_desc": "Messages received and sent will disappear after the set time.",
-  "@disappear_desc": {
     "type": "text",
     "placeholders": {}
   }

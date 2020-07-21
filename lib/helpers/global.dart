@@ -39,10 +39,13 @@ class Global {
   static Map<String, DateTime> _loadProfileCache = {};
   static String currentChatId;
   static bool isAutoShowPassword = true;
-  static MinerData minerData;
+  static int currentPageIndex;
+
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
   static bool isLocaleZh() => locale != null && locale.startsWith('zh');
   static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
+
+  static MinerData minerData;
   static final String SERVER_PUBKEY = 'eb08c2a27cb61fe414654a1e9875113d715737247addf01db06ea66cafe0b5c8';
 
   static Future init(VoidCallback callback) async {
@@ -63,7 +66,6 @@ class Global {
   static Future initData() async {
     NknWalletPlugin.init();
     NknClientPlugin.init();
-//    NShellClientPlugin.init();
     LocalNotification.init();
     Global.applicationRootDirectory = await getApplicationDocumentsDirectory();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();

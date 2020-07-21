@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,27 +12,55 @@ import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/event/eventbus.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/utils/common_native.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 class NoConnectScreen extends StatefulWidget {
   static const String routeName = '/chat/no_connect';
+
   @override
   _NoConnectScreenState createState() => _NoConnectScreenState();
 }
 
-class _NoConnectScreenState extends State<NoConnectScreen> {
+class _NoConnectScreenState extends State<NoConnectScreen> with WidgetsBindingObserver {
   ClientBloc _clientBloc;
   WalletSchema _currentWallet;
   bool isShow = true;
+  AppLifecycleState state;
+  StreamSubscription tabSubscription;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    tabSubscription = eventBus.on<MainTabIndex>().listen((event) {
+//      NLog.d(event.index);
+//      getPassword();
+    });
     _clientBloc = BlocProvider.of<ClientBloc>(context);
     initData();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (this.state == AppLifecycleState.inactive && state == AppLifecycleState.resumed) {
+      getPassword();
+    }
+    this.state = state;
+    NLog.d(state.toString());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    tabSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -131,17 +161,24 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
     var password = await _currentWallet.getPassword();
     if (password != null) {
       _clientBloc.add(CreateClient(_currentWallet, password));
+    } else {
+      isShow = true;
     }
   }
 
   initData() async {
     WidgetsBinding.instance.addPostFrameCallback((mag) async {
-      bool isActive = await CommonNative.isActive();
-      if (Global.isAutoShowPassword && isShow && isActive && _currentWallet != null) {
-        Global.isAutoShowPassword = false;
+      await getPassword();
+    });
+  }
+
+  getPassword() async {
+    bool isActive = await CommonNative.isActive();
+    if (ModalRoute.of(context).settings.name == '/' && Global.currentPageIndex == 0) {
+      if (isShow && isActive && _currentWallet != null) {
         isShow = false;
         _next();
       }
-    });
+    }
   }
 }

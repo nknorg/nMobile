@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
@@ -14,6 +13,7 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/utils/copy_utils.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 
 class NknWalletExportScreen extends StatefulWidget {
@@ -32,6 +32,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
   String publicKey;
   String seed;
   String address;
+  String name;
   WalletsBloc _walletsBloc;
 
   _setBackupFlag() {
@@ -45,6 +46,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
     address = widget.arguments['address'];
     publicKey = widget.arguments['publicKey'];
     seed = widget.arguments['seed'];
+    name = widget.arguments['name'];
 
     _walletsBloc = BlocProvider.of<WalletsBloc>(Global.appContext);
   }
@@ -54,7 +56,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).export_wallet.toUpperCase(),
+        title: NMobileLocalizations.of(context).export_wallet,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: Builder(
@@ -98,7 +100,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: <Widget>[
                                       Label(
-                                        NMobileLocalizations.of(context).main_wallet,
+                                        name ?? '',
                                         type: LabelType.h2,
                                       ),
                                     ],
@@ -167,128 +169,132 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                           ),
                                         ],
                                       ),
-                                      Flex(
-                                        direction: Axis.horizontal,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          Expanded(
-                                            flex: 0,
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(left: 0, right: 20),
-                                              child: loadAssetIconsImage(
-                                                'key',
-                                                color: DefaultTheme.primaryColor,
-                                                width: 24,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(top: 4),
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                    children: <Widget>[
-                                                      Label(
-                                                        NMobileLocalizations.of(context).public_key,
-                                                        type: LabelType.h4,
-                                                        textAlign: TextAlign.start,
-                                                      ),
-                                                      InkWell(
-                                                        child: Label(
-                                                          NMobileLocalizations.of(context).copy,
-                                                          color: DefaultTheme.primaryColor,
-                                                          type: LabelType.bodyRegular,
-                                                        ),
-                                                        onTap: () {
-                                                          CopyUtils.copyAction(context, publicKey);
-                                                        },
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  InkWell(
-                                                    onTap: () {
-                                                      CopyUtils.copyAction(context, publicKey);
-                                                    },
-                                                    child: Textbox(
-                                                      multi: true,
-                                                      enabled: false,
-                                                      value: publicKey,
-                                                      readOnly: true,
-                                                      textInputAction: TextInputAction.next,
+                                      publicKey == null
+                                          ? Space.empty
+                                          : Flex(
+                                              direction: Axis.horizontal,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: <Widget>[
+                                                Expanded(
+                                                  flex: 0,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(left: 0, right: 20),
+                                                    child: loadAssetIconsImage(
+                                                      'key',
+                                                      color: DefaultTheme.primaryColor,
+                                                      width: 24,
                                                     ),
                                                   ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Flex(
-                                        direction: Axis.horizontal,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          Expanded(
-                                            flex: 0,
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(left: 0, right: 20),
-                                              child: loadAssetIconsImage(
-                                                'key',
-                                                color: DefaultTheme.primaryColor,
-                                                width: 24,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(top: 4),
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                    children: <Widget>[
-                                                      Label(
-                                                        NMobileLocalizations.of(context).seed,
-                                                        type: LabelType.h4,
-                                                        textAlign: TextAlign.start,
-                                                      ),
-                                                      InkWell(
-                                                        child: Label(
-                                                          NMobileLocalizations.of(context).copy,
-                                                          color: DefaultTheme.primaryColor,
-                                                          type: LabelType.bodyRegular,
+                                                ),
+                                                Expanded(
+                                                  flex: 1,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(top: 4),
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: <Widget>[
+                                                        Row(
+                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          children: <Widget>[
+                                                            Label(
+                                                              NMobileLocalizations.of(context).public_key,
+                                                              type: LabelType.h4,
+                                                              textAlign: TextAlign.start,
+                                                            ),
+                                                            InkWell(
+                                                              child: Label(
+                                                                NMobileLocalizations.of(context).copy,
+                                                                color: DefaultTheme.primaryColor,
+                                                                type: LabelType.bodyRegular,
+                                                              ),
+                                                              onTap: () {
+                                                                CopyUtils.copyAction(context, publicKey);
+                                                              },
+                                                            ),
+                                                          ],
                                                         ),
-                                                        onTap: () {
-                                                          CopyUtils.copyAction(context, seed);
-                                                          _setBackupFlag();
-                                                        },
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  InkWell(
-                                                    onTap: () {
-                                                      CopyUtils.copyAction(context, seed);
-                                                      _setBackupFlag();
-                                                    },
-                                                    child: Textbox(
-                                                      multi: true,
-                                                      value: seed,
-                                                      readOnly: true,
-                                                      enabled: false,
-                                                      textInputAction: TextInputAction.next,
+                                                        InkWell(
+                                                          onTap: () {
+                                                            CopyUtils.copyAction(context, publicKey);
+                                                          },
+                                                          child: Textbox(
+                                                            multi: true,
+                                                            enabled: false,
+                                                            value: publicKey,
+                                                            readOnly: true,
+                                                            textInputAction: TextInputAction.next,
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ),
-                                                ],
-                                              ),
+                                                ),
+                                              ],
                                             ),
-                                          ),
-                                        ],
-                                      ),
+                                      seed == null
+                                          ? Space.empty
+                                          : Flex(
+                                              direction: Axis.horizontal,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: <Widget>[
+                                                Expanded(
+                                                  flex: 0,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(left: 0, right: 20),
+                                                    child: loadAssetIconsImage(
+                                                      'key',
+                                                      color: DefaultTheme.primaryColor,
+                                                      width: 24,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 1,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(top: 4),
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: <Widget>[
+                                                        Row(
+                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          children: <Widget>[
+                                                            Label(
+                                                              NMobileLocalizations.of(context).seed,
+                                                              type: LabelType.h4,
+                                                              textAlign: TextAlign.start,
+                                                            ),
+                                                            InkWell(
+                                                              child: Label(
+                                                                NMobileLocalizations.of(context).copy,
+                                                                color: DefaultTheme.primaryColor,
+                                                                type: LabelType.bodyRegular,
+                                                              ),
+                                                              onTap: () {
+                                                                CopyUtils.copyAction(context, seed);
+                                                                _setBackupFlag();
+                                                              },
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        InkWell(
+                                                          onTap: () {
+                                                            CopyUtils.copyAction(context, seed);
+                                                            _setBackupFlag();
+                                                          },
+                                                          child: Textbox(
+                                                            multi: true,
+                                                            value: seed,
+                                                            readOnly: true,
+                                                            enabled: false,
+                                                            textInputAction: TextInputAction.next,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                       Flex(
                                         direction: Axis.horizontal,
                                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,34 +370,36 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                   ),
                 ),
               ),
-              Expanded(
-                flex: 0,
-                child: SafeArea(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 8, top: 8),
-                    child: Column(
-                      children: <Widget>[
-                        Button(
-                          child: Label(
-                            NMobileLocalizations.of(context).view_qrcode,
-                            type: LabelType.h3,
-                            color: DefaultTheme.primaryColor,
+              seed == null
+                  ? Space.empty
+                  : Expanded(
+                      flex: 0,
+                      child: SafeArea(
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 8, top: 8),
+                          child: Column(
+                            children: <Widget>[
+                              Button(
+                                child: Label(
+                                  NMobileLocalizations.of(context).view_qrcode,
+                                  type: LabelType.h3,
+                                  color: DefaultTheme.primaryColor,
+                                ),
+                                backgroundColor: DefaultTheme.primaryColor.withAlpha(20),
+                                fontColor: DefaultTheme.primaryColor,
+                                onPressed: () {
+                                  BottomDialog.of(context).showQrcodeDialog(
+                                    title: NMobileLocalizations.of(context).seed + NMobileLocalizations.of(context).qrcode,
+                                    data: seed,
+                                  );
+                                  _setBackupFlag();
+                                },
+                              ),
+                            ],
                           ),
-                          backgroundColor: DefaultTheme.primaryColor.withAlpha(20),
-                          fontColor: DefaultTheme.primaryColor,
-                          onPressed: () {
-                            BottomDialog.of(context).showQrcodeDialog(
-                              title: NMobileLocalizations.of(context).seed + NMobileLocalizations.of(context).qrcode,
-                              data: seed,
-                            );
-                            _setBackupFlag();
-                          },
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
             ],
           ),
         ),

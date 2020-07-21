@@ -255,6 +255,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
   _send() async {
     LocalStorage.saveChatUnSendContentFromId(targetId);
     String text = _sendController.text;
+    if (text == null || text.length == 0) return;
     _sendController.clear();
     _canSend = false;
 
@@ -617,7 +618,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                         ),
                         child: Flex(
                           direction: Axis.horizontal,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: <Widget>[
                             Expanded(
                               flex: 0,
@@ -681,65 +682,65 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                                 ],
                               ),
                             ),
-                            Expanded(
-                              flex: 0,
-                              child: Column(
-                                children: <Widget>[
-                                  SizedBox(
-                                    width: 71,
-                                    height: 71,
-                                    child: FlatButton(
-                                      padding: const EdgeInsets.all(0),
-                                      color: DefaultTheme.backgroundColor1,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-                                      child: loadAssetIconsImage(
-                                        'paperclip2',
-                                        width: 35,
-                                        color: DefaultTheme.fontColor2,
-                                      ),
-                                      onPressed: () {},
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: Label(
-                                      NMobileLocalizations.of(context).files,
-                                      type: LabelType.bodySmall,
-                                      color: DefaultTheme.fontColor2,
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              flex: 0,
-                              child: Column(
-                                children: <Widget>[
-                                  SizedBox(
-                                    width: 71,
-                                    height: 71,
-                                    child: FlatButton(
-                                      color: DefaultTheme.backgroundColor1,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-                                      child: loadAssetIconsImage(
-                                        'pin',
-                                        width: 24,
-                                        color: DefaultTheme.fontColor2,
-                                      ),
-                                      onPressed: () {},
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: Label(
-                                      NMobileLocalizations.of(context).location,
-                                      type: LabelType.bodySmall,
-                                      color: DefaultTheme.fontColor2,
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
+//                            Expanded(
+//                              flex: 0,
+//                              child: Column(
+//                                children: <Widget>[
+//                                  SizedBox(
+//                                    width: 71,
+//                                    height: 71,
+//                                    child: FlatButton(
+//                                      padding: const EdgeInsets.all(0),
+//                                      color: DefaultTheme.backgroundColor1,
+//                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+//                                      child: loadAssetIconsImage(
+//                                        'paperclip2',
+//                                        width: 35,
+//                                        color: DefaultTheme.fontColor2,
+//                                      ),
+//                                      onPressed: () {},
+//                                    ),
+//                                  ),
+//                                  Padding(
+//                                    padding: const EdgeInsets.only(top: 8),
+//                                    child: Label(
+//                                      NMobileLocalizations.of(context).files,
+//                                      type: LabelType.bodySmall,
+//                                      color: DefaultTheme.fontColor2,
+//                                    ),
+//                                  )
+//                                ],
+//                              ),
+//                            ),
+//                            Expanded(
+//                              flex: 0,
+//                              child: Column(
+//                                children: <Widget>[
+//                                  SizedBox(
+//                                    width: 71,
+//                                    height: 71,
+//                                    child: FlatButton(
+//                                      color: DefaultTheme.backgroundColor1,
+//                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+//                                      child: loadAssetIconsImage(
+//                                        'pin',
+//                                        width: 24,
+//                                        color: DefaultTheme.fontColor2,
+//                                      ),
+//                                      onPressed: () {},
+//                                    ),
+//                                  ),
+//                                  Padding(
+//                                    padding: const EdgeInsets.only(top: 8),
+//                                    child: Label(
+//                                      NMobileLocalizations.of(context).location,
+//                                      type: LabelType.bodySmall,
+//                                      color: DefaultTheme.fontColor2,
+//                                    ),
+//                                  )
+//                                ],
+//                              ),
+//                            ),
                           ],
                         ),
                       ),

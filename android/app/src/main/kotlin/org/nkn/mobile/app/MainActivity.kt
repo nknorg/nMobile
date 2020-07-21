@@ -39,6 +39,7 @@ class MainActivity : AbsMsgrActy(), Msgs.Req, Msgs.Req.Callback, Tag {
     private var clientPlugin: NknClientPlugin? = null
     private var isActive : Boolean =  false;
 
+
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine);
         Log.e(TAG, "<<<---configureFlutterEngine--->>>".withAndroidPrefix())
@@ -47,12 +48,6 @@ class MainActivity : AbsMsgrActy(), Msgs.Req, Msgs.Req.Callback, Tag {
 
         NknWalletPlugin(flutterEngine)
         clientPlugin = NknClientPlugin(this, flutterEngine)
-
-
-        MethodChannel(flutterEngine.dartExecutor, "org.nkn.sdk/nshellclient").setMethodCallHandler(NShellClientPlugin())
-        EventChannel(flutterEngine.dartExecutor, "org.nkn.sdk/nshellclient/event").setStreamHandler(NShellClientEventPlugin())
-        MethodChannel(flutterEngine.dartExecutor, "org.nkn.native.call/apk_installer").setMethodCallHandler(InstallApkMethodPlugin())
-
         MethodChannel(flutterEngine.dartExecutor, N_MOBILE_NATIVE).setMethodCallHandler { methodCall, result ->
             if (methodCall.method == "backDesktop") {
                 result.success(true)

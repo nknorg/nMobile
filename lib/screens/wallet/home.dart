@@ -59,9 +59,11 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
         _allBackedUp = true;
         state.wallets.forEach((w) => _totalNkn += w.balance ?? 0);
         state.wallets.forEach((w) {
+//          NLog.d('w.isBackedUp: ${w.isBackedUp}, w.name: ${w.name}');
           _allBackedUp = w.isBackedUp && _allBackedUp;
         });
         setState(() {
+//          NLog.d('_allBackedUp: $_allBackedUp');
         });
       }
     });

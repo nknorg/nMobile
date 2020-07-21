@@ -28,6 +28,7 @@ import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/copy_utils.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
@@ -45,7 +46,7 @@ class NknWalletDetailScreen extends StatefulWidget {
 class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
   WalletsBloc _walletsBloc;
   ClientBloc _clientBloc;
-//  bool isDefault = false;
+  bool isDefault = false;
   TextEditingController _nameController = TextEditingController();
 
   @override
@@ -54,6 +55,13 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     _walletsBloc = BlocProvider.of<WalletsBloc>(context);
     _clientBloc = BlocProvider.of<ClientBloc>(context);
     _nameController.text = widget.arguments.name;
+    widget.arguments.isDefaultWallet().then((v) {
+      if (mounted) {
+        setState(() {
+          isDefault = v;
+        });
+      }
+    });
   }
 
   _receive() {
@@ -76,7 +84,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).main_wallet,
+        title: isDefault ? NMobileLocalizations.of(context).main_wallet : widget.arguments.name,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: PopupMenuButton(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -87,24 +95,36 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
           onSelected: (int result) async {
             switch (result) {
               case 0:
-                var password = await widget.arguments.getPassword();
-                if (password != null) {
-                  try {
-                    var wallet = await widget.arguments.exportWallet(password);
-                    if (wallet['address'] == widget.arguments.address) {
-                      Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
-                        'wallet': wallet,
-                        'keystore': wallet['keystore'],
-                        'address': wallet['address'],
-                        'publicKey': wallet['publicKey'],
-                        'seed': wallet['seed'],
-                      });
-                    } else {
-                      showToast(NMobileLocalizations.of(context).password_wrong);
-                    }
-                  } catch (e) {
-                    if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-                      showToast(NMobileLocalizations.of(context).password_wrong);
+                if (widget.arguments.type == WalletSchema.ETH_WALLET) {
+                  Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+                    'wallet': null,
+                    'keystore': await widget.arguments.getKeystore(),
+                    'address': widget.arguments.address,
+                    'publicKey': null,
+                    'seed': null,
+                    'name': widget.arguments.name,
+                  });
+                } else {
+                  var password = await widget.arguments.getPassword();
+                  if (password != null) {
+                    try {
+                      var wallet = await widget.arguments.exportWallet(password);
+                      if (wallet['address'] == widget.arguments.address) {
+                        Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+                          'wallet': wallet,
+                          'keystore': wallet['keystore'],
+                          'address': wallet['address'],
+                          'publicKey': wallet['publicKey'],
+                          'seed': wallet['seed'],
+                          'name': isDefault ? NMobileLocalizations.of(context).main_wallet : widget.arguments.name,
+                        });
+                      } else {
+                        showToast(NMobileLocalizations.of(context).password_wrong);
+                      }
+                    } catch (e) {
+                      if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+                        showToast(NMobileLocalizations.of(context).password_wrong);
+                      }
                     }
                   }
                 }
@@ -228,8 +248,8 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                         Hero(
                           tag: 'avatar:${widget.arguments.address}',
                           child: Container(
-                            width: 48,
-                            height: 48,
+                            width: 60,
+                            height: 60,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: Color(0xFFF1F4FF),
@@ -264,7 +284,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                               Padding(
                                 padding: const EdgeInsets.only(top: 4, left: 4),
                                 child: Label(
-                                  'NKN',
+                                  widget.arguments.type == WalletSchema.ETH_WALLET ? "ETH" : 'NKN',
                                   type: LabelType.bodySmall,
                                   color: DefaultTheme.fontColor1,
                                 ),
@@ -274,29 +294,31 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                         ),
                         Padding(
                           padding: const EdgeInsets.only(top: 24, bottom: 40),
-                          child: Flex(
-                            direction: Axis.horizontal,
-                            children: <Widget>[
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: Button(
-                                    text: NMobileLocalizations.of(context).send,
-                                    onPressed: _send,
-                                  ),
+                          child: widget.arguments.type == WalletSchema.ETH_WALLET
+                              ? Space.empty
+                              : Flex(
+                                  direction: Axis.horizontal,
+                                  children: <Widget>[
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(right: 8),
+                                        child: Button(
+                                          text: NMobileLocalizations.of(context).send,
+                                          onPressed: _send,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(left: 8),
+                                        child: Button(
+                                          text: NMobileLocalizations.of(context).recieve,
+                                          onPressed: _receive,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 8),
-                                  child: Button(
-                                    text: NMobileLocalizations.of(context).recieve,
-                                    onPressed: _receive,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
                         Expanded(
                           flex: 0,
@@ -311,16 +333,16 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                                     type: LabelType.h3,
                                     textAlign: TextAlign.start,
                                   ),
-                                  InkWell(
-                                    child: Label(
-                                      NMobileLocalizations.of(context).rename,
-                                      color: DefaultTheme.primaryColor,
-                                      type: LabelType.bodyLarge,
-                                    ),
-                                    onTap: () {
-                                      showChangeNameDialog();
-                                    },
-                                  ),
+//                                  InkWell(
+//                                    child: Label(
+//                                      NMobileLocalizations.of(context).rename,
+//                                      color: DefaultTheme.primaryColor,
+//                                      type: LabelType.bodyLarge,
+//                                    ),
+//                                    onTap: () {
+//                                      showChangeNameDialog();
+//                                    },
+//                                  ),
                                 ],
                               ),
                               Textbox(

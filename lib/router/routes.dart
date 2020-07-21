@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/app.dart';
+import 'package:nmobile/screens/advice_page.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/screens/chat/message.dart';
@@ -69,11 +70,15 @@ Map<String, WidgetBuilder> routes = {
   NcdnHomeScreen.routeName: (BuildContext context) => NcdnHomeScreen(),
   ChatProfile.routeName: (BuildContext context, {arguments}) => ChatProfile(arguments: arguments),
   ShowMyChatAddress.routeName: (BuildContext context, {arguments}) => ShowMyChatAddress(arguments: arguments),
+  AdvancePage.routeName: (BuildContext context) => AdvancePage(),
+  ChatProfile.routeName: (BuildContext context, {arguments}) => ChatProfile(arguments: arguments),
+  ShowMyChatAddress.routeName: (BuildContext context, {arguments}) => ShowMyChatAddress(arguments: arguments),
 };
 
 var onGenerateRoute = (RouteSettings settings) {
   final String name = settings.name;
   NLog.d(name);
+  NLog.d(settings.arguments);
   try {
     NLog.d(settings.arguments);
   } catch (e) {}

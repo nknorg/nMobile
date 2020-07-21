@@ -41,7 +41,6 @@ class NknClientPlugin {
           NLog.v(data, tag: 'NknClientPlugin onMessage --> ClientBloc@${_clientBloc.hashCode.toString().substring(0, 3)}');
 
           try {
-            //nshell
             if (jsonDecode(data['data'])['contentType'].toString() == ContentType.text && jsonDecode(data['data'])['content'].toString().startsWith('```')) {
               Map<String, dynamic> content = jsonDecode(jsonDecode(res['data']['data'])['content'].toString().replaceAll('```', ''));
               onMessageNshell(data['src'], content);
@@ -55,7 +54,6 @@ class NknClientPlugin {
           } catch (e) {
             NLog.v(e.toString(), tag: TAG);
           }
-
           break;
         case 'onConnect':
           Map node = res['node'];
@@ -293,36 +291,6 @@ class NknClientPlugin {
     });
   }
 
-  static Future<Map<String, dynamic>> getSubscribers({
-    String topic,
-    String topicHash,
-    int offset = 0,
-    int limit = 10000,
-    bool meta = true,
-    bool txPool = true,
-  }) async {
-    if (topic == null || topicHash == null) {
-      NLog.w('----- topic null -------');
-      return {};
-    }
-    Map<String, dynamic> subscribers = await SubscribersSchema.getSubscribersByTopic(topic);
-    if (subscribers != null && subscribers.length > 0) {
-      NLog.d('$topic  getSubscribers use cache');
-      NLog.d(subscribers);
-
-//      if (Global.isLoadSubscribers(topic)) {
-//        LogUtil.v('$topic  getSubscribers use cache');
-//        LogUtil.v('$subscribers ');
-//        getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool).then((v) {
-//          TopicSchema(topic: topic).setSubscribers(v);
-//        });
-//      }
-      return subscribers;
-    } else {
-      return getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
-    }
-  }
-
   static onMessageNshell(String src, content) async {
     NLog.v(content['Result']);
     NLog.v(content['Type']);
@@ -340,6 +308,28 @@ class NknClientPlugin {
       }
     } catch (e) {
       NLog.v(e.toString(), tag: TAG + 'onMessage');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getSubscribers({
+    String topic,
+    String topicHash,
+    int offset = 0,
+    int limit = 10000,
+    bool meta = true,
+    bool txPool = true,
+  }) async {
+    if (topic == null || topicHash == null) {
+      NLog.w('----- topic null -------');
+      return {};
+    }
+    Map<String, dynamic> subscribers = await SubscribersSchema.getSubscribersByTopic(topic);
+    if (subscribers != null && subscribers.length > 0) {
+      NLog.d('$topic  getSubscribers use cache');
+      NLog.d(subscribers);
+      return subscribers;
+    } else {
+      return getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
     }
   }
 }

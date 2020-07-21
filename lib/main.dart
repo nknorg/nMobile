@@ -79,6 +79,7 @@ class AppState extends State<App> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+//    NLog.d(state.toString());
     NLog.d(state.toString());
     Global.state = state;
   }
