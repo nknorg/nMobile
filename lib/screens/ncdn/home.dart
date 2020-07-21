@@ -14,6 +14,7 @@ import 'package:nmobile/helpers/api.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/cdn_miner.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/message.dart';
@@ -141,11 +142,11 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: '挖矿收益',
+        title: NMobileLocalizations.of(context).mining_fee_text,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: FlatButton(
           child: Label(
-            '提现',
+            NMobileLocalizations.of(context).withdraw_fee,
             color: Colors.white,
           ),
           onPressed: () {
@@ -174,7 +175,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Label(
-                                '昨日预估收益',
+                                NMobileLocalizations.of(context).yesterday_fee,
                                 type: LabelType.h4,
                                 textAlign: TextAlign.start,
                               ),
@@ -201,7 +202,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Label(
-                                '本周预估收益',
+                                NMobileLocalizations.of(context).week_fee,
                                 type: LabelType.h4,
                                 textAlign: TextAlign.start,
                               ),
@@ -228,7 +229,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Label(
-                                '上周收益',
+                                NMobileLocalizations.of(context).pre_week_fee,
                                 type: LabelType.h4,
                                 textAlign: TextAlign.start,
                               ),
@@ -255,7 +256,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Label(
-                                '历史总收益',
+                                NMobileLocalizations.of(context).total_historical_fee,
                                 type: LabelType.h4,
                                 textAlign: TextAlign.start,
                               ),
@@ -282,7 +283,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Label(
-                                '当前可提现收益',
+                                NMobileLocalizations.of(context).current_cashable_income,
                                 type: LabelType.h4,
                                 textAlign: TextAlign.start,
                               ),
@@ -309,7 +310,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Label(
-                                '推荐收益',
+                                NMobileLocalizations.of(context).recommended_income,
                                 type: LabelType.h4,
                                 textAlign: TextAlign.start,
                               ),
@@ -336,7 +337,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             padding: const EdgeInsets.only(top: 8),
                             child: Button(
                               width: double.infinity,
-                              text: '查看节点',
+                              text: NMobileLocalizations.of(context).see_node,
                               onPressed: () {
                                 Navigator.of(context).pushNamed(NodeMainPage.routeName);
                               },
@@ -346,7 +347,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             padding: const EdgeInsets.only(top: 8),
                             child: Button(
                               width: double.infinity,
-                              text: '获取邀请码',
+                              text: NMobileLocalizations.of(context).get_invitation_code,
                               onPressed: () async {
                                 if (Global.currentClient == null) {
                                   showToast('请先连接D-Chat');

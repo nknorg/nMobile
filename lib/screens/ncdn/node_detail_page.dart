@@ -20,6 +20,7 @@ import 'package:nmobile/helpers/api.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/cdn_miner.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/nlog_util.dart';
@@ -254,7 +255,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
                                 Label(
-                                  'IP地址',
+                                  NMobileLocalizations.of(context).ip_address,
                                   type: LabelType.bodyRegular,
                                   color: DefaultTheme.fontColor2,
                                   textAlign: TextAlign.start,
@@ -273,7 +274,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
                                 Label(
-                                  '磁盘总容量',
+                                  NMobileLocalizations.of(context).total_disk_capacity,
                                   type: LabelType.bodyRegular,
                                   color: DefaultTheme.fontColor2,
                                   textAlign: TextAlign.start,
@@ -292,7 +293,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
                                 Label(
-                                  '已用空间数',
+                                  NMobileLocalizations.of(context).number_of_used_space,
                                   type: LabelType.bodyRegular,
                                   color: DefaultTheme.fontColor2,
                                   textAlign: TextAlign.start,
@@ -311,7 +312,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
                                 Label(
-                                  'MAC地址',
+                                  NMobileLocalizations.of(context).mac_address,
                                   type: LabelType.bodyRegular,
                                   color: DefaultTheme.fontColor2,
                                   textAlign: TextAlign.start,
@@ -371,7 +372,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
                                   Label(
-                                    '近期速率',
+                                    NMobileLocalizations.of(context).recent_rate,
                                     type: LabelType.bodyRegular,
                                     color: DefaultTheme.fontColor2,
                                     textAlign: TextAlign.start,
@@ -402,7 +403,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                               child: Row(
                                 children: <Widget>[
                                   Label(
-                                    '刷新状态',
+                                    NMobileLocalizations.of(context).refresh_status,
                                     type: LabelType.bodyRegular,
                                     color: Colors.white,
                                     textAlign: TextAlign.start,
@@ -421,7 +422,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                               child: Row(
                                 children: <Widget>[
                                   Label(
-                                    '重启设备',
+                                    NMobileLocalizations.of(context).reboot_device,
                                     type: LabelType.bodyRegular,
                                     color: Colors.white,
                                     textAlign: TextAlign.start,
@@ -694,7 +695,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
             Row(
               children: <Widget>[
                 Label(
-                  '设备参数',
+                  NMobileLocalizations.of(context).device_parameters,
                   type: LabelType.bodyRegular,
                   color: DefaultTheme.fontColor2,
                   textAlign: TextAlign.start,

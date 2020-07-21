@@ -1621,5 +1621,209 @@
       "min": {},
       "max": {}
     }
+  }, "niot_text": "nIOT",
+  "@niot_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "mining_fee_text": "挖矿收益",
+  "@mining_fee_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdraw_fee": "提现",
+  "@withdraw_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "yesterday_fee": "昨日预估收益",
+  "@yesterday_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "week_fee": "本周预估收益",
+  "@week_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "pre_week_fee": "上周收益",
+  "@pre_week_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "total_historical_fee": "历史总收益",
+  "@total_historical_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "current_cashable_income": "当前可提现收益",
+  "@current_cashable_income": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recommended_income": "推荐收益",
+  "@recommended_income": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "see_node": "查看节点",
+  "@see_node": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "get_invitation_code": "获取邀请码",
+  "@get_invitation_code": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "node_detail": "节点明细",
+  "@node_detail": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "add_text": "添加",
+  "@add_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "device_total": "设备总数",
+  "@device_total": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "running_text": "运行中",
+  "@running_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "abnormalities_text": "异常数量",
+  "@abnormalities_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "none_num_text": "未知数量",
+  "@none_num_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "search_text": "搜索",
+  "@search_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "total_fee": "总收益",
+  "@total_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdrawable_balance_fee": "可提现余额",
+  "@withdrawable_balance_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdrawable_amount": "提现金额",
+  "@withdrawable_amount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdrawable_address": "提现地址",
+  "@withdrawable_address": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "email_text": "邮箱",
+  "@email_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "note_text": "备注",
+  "@note_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "sort_text": "排序",
+  "@sort_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "miner_name": "名称",
+  "@miner_name": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "status_text": "状态",
+  "@status_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "estimated_income": "预估收益",
+  "@estimated_income": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "flow_text": "流量",
+  "@flow_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "select_sort_title": "请选择排序方式",
+  "@select_sort_title": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "fee_text": "收益",
+  "@fee_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "node_list": "节点列表",
+  "@node_list": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "ip_address": "IP地址",
+  "@ip_address": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "total_disk_capacity": "磁盘总容量",
+  "@total_disk_capacity": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "number_of_used_space": "已用空间数",
+  "@number_of_used_space": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "mac_address": "MAC地址",
+  "@mac_address": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "device_parameters": "设备参数",
+  "@device_parameters": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recent_rate": "近期速率",
+  "@recent_rate": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "refresh_status": "刷新状态",
+  "@refresh_status": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "reboot_device": "重启设备",
+  "@reboot_device": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "apply_for_withdrawal": "申请提现",
+  "@apply_for_withdrawal": {
+    "type": "text",
+    "placeholders": {}
   }
 }

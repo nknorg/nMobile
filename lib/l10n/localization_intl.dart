@@ -1024,6 +1024,48 @@ class NMobileLocalizations {
   String get ignore => Intl.message('Ignore', name: 'ignore');
   String get already_the_latest_version => Intl.message('Already the latest version', name: 'already_the_latest_version');
   String get message_text => Intl.message('Messages', name: 'message_text');
+
+  String get niot_text => Intl.message('nIOT', name: 'niot_text');
+  String get mining_fee_text => Intl.message('Mining income', name: 'mining_fee_text');
+  String get withdraw_fee => Intl.message('Withdrawal', name: 'withdraw_fee');
+  String get yesterday_fee => Intl.message('Previous estimated income', name: 'yesterday_fee');
+  String get week_fee => Intl.message('Weekly estimated income', name: 'week_fee');
+  String get pre_week_fee => Intl.message('Last week’s earnings', name: 'pre_week_fee');
+  String get total_historical_fee => Intl.message('Historical gross income', name: 'total_historical_fee');
+  String get current_cashable_income => Intl.message('Current cashable income', name: 'current_cashable_income');
+  String get recommended_income => Intl.message('Recommended income', name: 'recommended_income');
+  String get see_node => Intl.message('View nodes', name: 'see_node');
+  String get get_invitation_code => Intl.message('Access invitation code', name: 'get_invitation_code');
+  String get node_detail => Intl.message('Nodes Detail', name: 'node_detail');
+  String get add_text => Intl.message('Add', name: 'add_text');
+  String get device_total => Intl.message('Total Devices', name: 'device_total');
+  String get running_text => Intl.message('Running', name: 'running_text');
+  String get abnormalities_text => Intl.message('Abnormal', name: 'abnormalities_text');
+  String get none_num_text => Intl.message('Unknown', name: 'none_num_text');
+  String get search_text => Intl.message('Search', name: 'search_text');
+  String get total_fee => Intl.message('Total Income', name: 'total_fee');
+  String get withdrawable_balance_fee => Intl.message('Cashable Balance', name: 'withdrawable_balance_fee');
+  String get withdrawable_amount => Intl.message('Amount of withdraw', name: 'withdrawable_amount');
+  String get withdrawable_address => Intl.message('Address of withdraw', name: 'withdrawable_address');
+  String get email_text => Intl.message('E-mail address', name: 'email_text');
+  String get note_text => Intl.message('Note', name: 'note_text');
+  String get sort_text => Intl.message('Sort', name: 'sort_text');
+  String get miner_name => Intl.message('Name', name: 'miner_name');
+  String get status_text => Intl.message('Status', name: 'status_text');
+  String get estimated_income => Intl.message('Estimated Income', name: 'estimated_income');
+  String get flow_text => Intl.message('Flow', name: 'flow_text');
+  String get select_sort_title => Intl.message('Please select a sorting method', name: 'select_sort_title');
+  String get fee_text => Intl.message('Income', name: 'fee_text');
+  String get node_list => Intl.message('Node List', name: 'node_list');
+  String get ip_address => Intl.message('IP Addrese', name: 'ip_address');
+  String get total_disk_capacity => Intl.message('Total disk capacity', name: 'total_disk_capacity');
+  String get number_of_used_space => Intl.message('Used space', name: 'number_of_used_space');
+  String get mac_address => Intl.message('MAC Address', name: 'mac_address');
+  String get device_parameters => Intl.message('Device Params', name: 'device_parameters');
+  String get recent_rate => Intl.message('Recent rate', name: 'recent_rate');
+  String get refresh_status => Intl.message('Refresh', name: 'refresh_status');
+  String get reboot_device => Intl.message('Reboot', name: 'reboot_device');
+  String get apply_for_withdrawal => Intl.message('Apply for withdrawal', name: 'apply_for_withdrawal');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {

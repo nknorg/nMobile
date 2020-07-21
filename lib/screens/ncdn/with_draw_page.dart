@@ -61,7 +61,7 @@ class WithDrawPageState extends State<WithDrawPage> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: '申请提现',
+        title: NMobileLocalizations.of(context).apply_for_withdrawal,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: Builder(
@@ -90,7 +90,7 @@ class WithDrawPageState extends State<WithDrawPage> {
                           child: Row(
                             children: <Widget>[
                               Label(
-                                '可提现余额: ',
+                                NMobileLocalizations.of(context).withdrawable_balance_fee + ': ',
                                 type: LabelType.h4,
                                 color: DefaultTheme.fontColor2,
                               ),
@@ -105,7 +105,7 @@ class WithDrawPageState extends State<WithDrawPage> {
                         Row(
                           children: <Widget>[
                             Label(
-                              '提现金额（USDT）',
+                              NMobileLocalizations.of(context).withdrawable_amount + '（USDT）',
                               type: LabelType.h4,
                               color: DefaultTheme.fontColor2,
                               textAlign: TextAlign.start,
@@ -151,7 +151,7 @@ class WithDrawPageState extends State<WithDrawPage> {
                         ),
                         SizedBox(height: 20),
                         Label(
-                          '提现地址(ERC-20)',
+                          NMobileLocalizations.of(context).withdrawable_address + '(ERC-20)',
                           type: LabelType.h4,
                           color: DefaultTheme.fontColor2,
                           textAlign: TextAlign.start,
@@ -164,7 +164,7 @@ class WithDrawPageState extends State<WithDrawPage> {
                         ),
                         SizedBox(height: 20),
                         Label(
-                          '邮箱',
+                          NMobileLocalizations.of(context).email_text,
                           type: LabelType.h4,
                           color: DefaultTheme.fontColor2,
                           textAlign: TextAlign.start,
@@ -177,7 +177,7 @@ class WithDrawPageState extends State<WithDrawPage> {
                         ),
                         SizedBox(height: 20),
                         Label(
-                          '备注',
+                          NMobileLocalizations.of(context).note_text,
                           type: LabelType.h4,
                           color: DefaultTheme.fontColor2,
                           textAlign: TextAlign.start,

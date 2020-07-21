@@ -35,7 +35,7 @@ class ChatMainPageState extends State<ChatMainPage> with SingleTickerProviderSta
         SizedBox(height: 2),
         TabBar(controller: _tabController, indicatorSize: TabBarIndicatorSize.label, labelColor: DefaultTheme.primaryColor, unselectedLabelColor: DefaultTheme.fontColor1, tabs: [
           Tab(text: NMobileLocalizations.of(context).message_text),
-          Tab(text: "nIOT"),
+          Tab(text: NMobileLocalizations.of(context).niot_text),
         ]),
         Expanded(
           child: TabBarView(

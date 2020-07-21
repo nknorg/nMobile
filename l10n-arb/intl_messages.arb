@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-07-21T11:01:57.574685",
+  "@@last_modified": "2020-07-21T15:59:24.149830",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1592,6 +1592,211 @@
   },
   "message_text": "Messages",
   "@message_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "niot_text": "nIOT",
+  "@niot_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "mining_fee_text": "Mining income",
+  "@mining_fee_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdraw_fee": "Withdrawal",
+  "@withdraw_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "yesterday_fee": "Previous estimated income",
+  "@yesterday_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "week_fee": "Weekly estimated income",
+  "@week_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "pre_week_fee": "Last week’s earnings",
+  "@pre_week_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "total_historical_fee": "Historical gross income",
+  "@total_historical_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "current_cashable_income": "Current cashable income",
+  "@current_cashable_income": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recommended_income": "Recommended income",
+  "@recommended_income": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "see_node": "View nodes",
+  "@see_node": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "get_invitation_code": "Access invitation code",
+  "@get_invitation_code": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "node_detail": "Nodes Detail",
+  "@node_detail": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "add_text": "Add",
+  "@add_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "device_total": "Total Devices",
+  "@device_total": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "running_text": "Running",
+  "@running_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "abnormalities_text": "Abnormal",
+  "@abnormalities_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "none_num_text": "Unknown",
+  "@none_num_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "search_text": "Search",
+  "@search_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "total_fee": "Total Income",
+  "@total_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdrawable_balance_fee": "Cashable Balance",
+  "@withdrawable_balance_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdrawable_amount": "Amount of withdraw",
+  "@withdrawable_amount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdrawable_address": "Address of withdraw",
+  "@withdrawable_address": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "email_text": "E-mail address",
+  "@email_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "note_text": "Note",
+  "@note_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "sort_text": "Sort",
+  "@sort_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "miner_name": "Name",
+  "@miner_name": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "status_text": "Status",
+  "@status_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "estimated_income": "Estimated Income",
+  "@estimated_income": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "flow_text": "Flow",
+  "@flow_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "select_sort_title": "Please select a sorting method",
+  "@select_sort_title": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "fee_text": "Income",
+  "@fee_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "node_list": "Node List",
+  "@node_list": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "ip_address": "IP Addrese",
+  "@ip_address": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "total_disk_capacity": "Total disk capacity",
+  "@total_disk_capacity": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "number_of_used_space": "Used space",
+  "@number_of_used_space": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "mac_address": "MAC Address",
+  "@mac_address": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "device_parameters": "Device Params",
+  "@device_parameters": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recent_rate": "Recent rate",
+  "@recent_rate": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "refresh_status": "Refresh",
+  "@refresh_status": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "reboot_device": "Reboot",
+  "@reboot_device": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "apply_for_withdrawal": "Apply for withdrawal",
+  "@apply_for_withdrawal": {
     "type": "text",
     "placeholders": {}
   }

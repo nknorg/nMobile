@@ -16,6 +16,7 @@ import 'package:nmobile/helpers/api.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/cdn_miner.dart';
 import 'package:nmobile/screens/ncdn/node_detail_page.dart';
 import 'package:nmobile/screens/ncdn/node_list_page.dart';
@@ -197,7 +198,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
                           Row(
                             children: <Widget>[
                               Label(
-                                '设备总数',
+                                NMobileLocalizations.of(context).device_total,
                                 color: DefaultTheme.fontColor1,
                                 type: LabelType.bodyRegular,
                                 softWrap: true,
@@ -617,7 +618,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Label(
-                      '请选择排序方式',
+                      NMobileLocalizations.of(context).select_sort_title,
                       color: DefaultTheme.fontColor1,
                       type: LabelType.bodyRegular,
                       softWrap: true,
@@ -639,7 +640,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
                       _list.sort((left, right) => (right.cost ?? 0).compareTo((left.cost ?? 0)));
                     });
                   },
-                  child: _getPopItemView('收益')),
+                  child: _getPopItemView(NMobileLocalizations.of(context).fee_text)),
               InkWell(
                   onTap: () {
                     Navigator.pop(context);
@@ -647,7 +648,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
                       _list.sort((left, right) => (right.flow ?? 0).compareTo((left.flow ?? 0)));
                     });
                   },
-                  child: _getPopItemView('流量')),
+                  child: _getPopItemView(NMobileLocalizations.of(context).flow_text)),
               InkWell(
                   onTap: () {
                     Navigator.pop(context);
