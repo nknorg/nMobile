@@ -1,12 +1,11 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
-import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
@@ -15,18 +14,17 @@ import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/schemas/wallet.dart';
-import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/model/eth_erc20_token.dart';
+import 'package:nmobile/utils/extensions.dart';
 
-class CreateNknWalletScreen extends StatefulWidget {
-  static const String routeName = '/wallet/create_nkn_wallet';
+class CreateEthWalletScreen extends StatefulWidget {
+  static const String routeName = '/wallet/create_eth_wallet';
 
   @override
-  _CreateNknWalletScreenState createState() => _CreateNknWalletScreenState();
+  _CreateEthWalletScreenState createState() => _CreateEthWalletScreenState();
 }
 
-class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
+class _CreateEthWalletScreenState extends State<CreateEthWalletScreen> {
   final GetIt locator = GetIt.instance;
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
@@ -47,10 +45,9 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
   next() async {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
-      String keystore = await NknWalletPlugin.createWallet(null, _password);
-      var json = jsonDecode(keystore);
-      String address = json['Address'];
-      _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
+      final eth = Ethereum.createWallet(name: _name, password: _password);
+      Ethereum.saveWallet(ethWallet: eth, walletsBloc: _walletsBloc);
+
       Navigator.of(context).pushReplacementNamed(AppScreen.routeName);
     }
   }
@@ -59,7 +56,7 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: Header(
-        title: NMobileLocalizations.of(context).create_nkn_wallet_title,
+        title: NMobileLocalizations.of(context).create_ethereum_wallet,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: ConstrainedBox(
@@ -76,21 +73,15 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                 left: 0,
                 right: 0,
                 child: Container(
+                  alignment: Alignment.topCenter,
                   constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height),
                   color: DefaultTheme.backgroundColor4,
-                  child: Flex(direction: Axis.vertical, children: <Widget>[
-                    Expanded(
-                      flex: 0,
-                      child: Column(
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 32),
-                            child: loadAssetWalletImage('create-wallet', width: 142),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ]),
+                  child: SvgPicture.asset(
+                    'assets/icon_eth_68_108.svg',
+                    color: Colours.white,
+                    width: 68,
+                    height: 108,
+                  ).pad(t: 12),
                 ),
               ),
               ConstrainedBox(
