@@ -518,7 +518,7 @@
 					"$(PROJECT_DIR)/Flutter",
 				);
 				NEW_SETTING = "";
-				PRODUCT_BUNDLE_IDENTIFIER = org.nkn.nmobile;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.nkn.nmobile-pro";
 				PRODUCT_NAME = Runner;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -663,7 +663,7 @@
 					"$(PROJECT_DIR)/Flutter",
 				);
 				NEW_SETTING = "";
-				PRODUCT_BUNDLE_IDENTIFIER = org.nkn.nmobile;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.nkn.nmobile-pro";
 				PRODUCT_NAME = Runner;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -701,7 +701,7 @@
 					"$(PROJECT_DIR)/Flutter",
 				);
 				NEW_SETTING = "";
-				PRODUCT_BUNDLE_IDENTIFIER = org.nkn.nmobile;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.nkn.nmobile-pro";
 				PRODUCT_NAME = Runner;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
