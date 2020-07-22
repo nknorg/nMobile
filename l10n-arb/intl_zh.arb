@@ -342,6 +342,18 @@
     "type": "text",
     "placeholders": {}
   },
+  "nkn_mainnet": "NKN Mainnet",
+  "@nkn_mainnet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "ethereum": "Ethereum",
+  "@ethereum": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "ERC_20": "ERC-20",
   "@ERC_20": {
     "description": "",
@@ -608,6 +620,18 @@
   },
   "select_another_wallet": "选择其他钱包",
   "@select_another_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "select_wallet_type": "选择钱包类型",
+  "@select_wallet_type": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "select_wallet_type_desc": "选择创建 NKN 主网钱包还是用来保存 NKN ERC-20 通证的以太坊钱包。两者是不兼容的。",
+  "@select_wallet_type_desc": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1076,6 +1100,12 @@
   },
   "create_nkn_wallet_title": "创建主网钱包",
   "@create_nkn_wallet_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "create_ethereum_wallet": "创建以太坊钱包",
+  "@create_ethereum_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}

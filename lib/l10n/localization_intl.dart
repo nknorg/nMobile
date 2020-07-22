@@ -249,6 +249,14 @@ class NMobileLocalizations {
     return Intl.message('MAINNET', name: 'mainnet', desc: '');
   }
 
+  String get nkn_mainnet {
+    return Intl.message('NKN Mainnet', name: 'nkn_mainnet', desc: '');
+  }
+
+  String get ethereum {
+    return Intl.message('Ethereum', name: 'ethereum', desc: '');
+  }
+
   String get ERC_20 {
     return Intl.message('ERC-20', name: 'ERC_20', desc: '');
   }
@@ -439,6 +447,15 @@ class NMobileLocalizations {
 
   String get select_another_wallet {
     return Intl.message('Select Another Wallet', name: 'select_another_wallet', desc: '');
+  }
+
+  String get select_wallet_type {
+    return Intl.message('Select Wallet Type', name: 'select_wallet_type', desc: '');
+  }
+
+  String get select_wallet_type_desc {
+    return Intl.message('Select whether to create a NKN Mainnet wallet or an Ethereum based wallet to hold ERC-20 tokens. The two are not compatible.',
+        name: 'select_wallet_type_desc', desc: '',);
   }
 
   String get new_message {
@@ -751,6 +768,10 @@ class NMobileLocalizations {
 
   String get create_nkn_wallet_title {
     return Intl.message('CREATE MAINNET WALLET', name: 'create_nkn_wallet_title', desc: '');
+  }
+
+  String get create_ethereum_wallet {
+    return Intl.message('CREATE ETHEREUM WALLET', name: 'create_ethereum_wallet', desc: '');
   }
 
   String get import_keystore_nkn_wallet_title {

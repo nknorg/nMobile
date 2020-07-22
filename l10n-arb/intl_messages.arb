@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-07-16T17:47:21.221870",
+  "@@last_modified": "2020-07-23T23:06:07.605022",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -348,6 +348,18 @@
     "type": "text",
     "placeholders": {}
   },
+  "nkn_mainnet": "NKN Mainnet",
+  "@nkn_mainnet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "ethereum": "Ethereum",
+  "@ethereum": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "ERC_20": "ERC-20",
   "@ERC_20": {
     "description": "",
@@ -632,6 +644,18 @@
   },
   "select_another_wallet": "Select Another Wallet",
   "@select_another_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "select_wallet_type": "Select Wallet Type",
+  "@select_wallet_type": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "select_wallet_type_desc": "Select whether to create a NKN Mainnet wallet or an Ethereum based wallet to hold ERC-20 tokens. The two are not compatible.",
+  "@select_wallet_type_desc": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1104,6 +1128,12 @@
     "type": "text",
     "placeholders": {}
   },
+  "create_ethereum_wallet": "CREATE ETHEREUM WALLET",
+  "@create_ethereum_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "import_keystore_nkn_wallet_title": "Import with Keystore",
   "@import_keystore_nkn_wallet_title": {
     "description": "",
@@ -1553,6 +1583,11 @@
     "type": "text",
     "placeholders": {}
   },
+  "account_switching_completed": "Account switching Completed",
+  "@account_switching_completed": {
+    "type": "text",
+    "placeholders": {}
+  },
   "storage_text": "Storage",
   "@storage_text": {
     "type": "text",
@@ -1590,11 +1625,6 @@
   },
   "week": "week",
   "@week": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "account_switching_completed": "Account switching Completed",
-  "@account_switching_completed": {
     "type": "text",
     "placeholders": {}
   }

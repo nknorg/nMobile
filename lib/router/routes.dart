@@ -20,6 +20,7 @@ import 'package:nmobile/screens/home.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/screens/select.dart';
 import 'package:nmobile/screens/settings/channel.dart';
+import 'package:nmobile/screens/wallet/create_eth_wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn_wallet.dart';
 import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_detail.dart';
@@ -38,6 +39,7 @@ Map<String, WidgetBuilder> routes = {
   SelectScreen.routeName: (BuildContext context, {arguments}) => SelectScreen(arguments: arguments),
   PhotoPage.routeName: (BuildContext context, {arguments}) => PhotoPage(arguments: arguments),
   CreateNknWalletScreen.routeName: (BuildContext context) => CreateNknWalletScreen(),
+  CreateEthWalletScreen.routeName: (BuildContext context) => CreateEthWalletScreen(),
   ImportNknWalletScreen.routeName: (BuildContext context) => ImportNknWalletScreen(),
   NknWalletDetailScreen.routeName: (BuildContext context, {arguments}) => NknWalletDetailScreen(arguments: arguments),
   NknWalletExportScreen.routeName: (BuildContext context, {arguments}) => NknWalletExportScreen(arguments: arguments),

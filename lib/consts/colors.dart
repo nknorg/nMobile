@@ -16,6 +16,7 @@ class Colours {
 
   static const Color light_e5 = Color(0xFFE5E5E5);
   static const Color light_ff = Color(0xFFF1F4FF);
+  static const Color purple_2e = Color(0xFF253A7E);
   static const Color purple_53 = Color(0xFF5F7AE3);
   static const Color purple_57 = Color(0xFF5458F7);
 
