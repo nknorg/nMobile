@@ -95,32 +95,6 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
         }
       });
       setState(() {});
-//      for (var item in _messages) {
-//        setState(() {
-//          if (item.deleteTime != null) {
-//            int afterSeconds = item.deleteTime.difference(DateTime.now()).inSeconds;
-//            item.burnAfterSeconds = afterSeconds;
-//            if (item.burnAfterSeconds < 0) {
-//              _messages.remove(item);
-//              item.deleteMessage();
-//            }
-//          }
-//        });
-//      }
-
-//      for (var i = 0, length = _messages.length; i < length; i++) {
-//        var item = _messages[i];
-//        if (item.deleteTime != null) {
-//          setState(() {
-//            int afterSeconds = item.deleteTime.difference(DateTime.now()).inSeconds;
-//            item.burnAfterSeconds = afterSeconds;
-//            if (item.burnAfterSeconds < 0) {
-//              _messages.removeAt(i);
-//              item.deleteMessage();
-//            }
-//          });
-//        }
-//      }
     });
   }
 
@@ -364,7 +338,6 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Label(widget.arguments.contact.name, type: LabelType.h3, dark: true),
-//                    Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor)
                   ],
                 ),
               )
@@ -372,10 +345,6 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
           ),
         ),
         backgroundColor: DefaultTheme.backgroundColor4,
-//        action: IconButton(
-//          icon: Icon(CupertinoIcons.phone_solid),
-//          onPressed: () {},
-//        ),
       ),
       body: GestureDetector(
         onTap: () {
@@ -424,7 +393,8 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                                     alignment: WrapAlignment.center,
                                     crossAxisAlignment: WrapCrossAlignment.center,
                                     children: <Widget>[
-                                      Label('${message.isOutbound ? Global.currentUser.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).update_burn_after_reading}'),
+                                      Label('${message.isOutbound ? NMobileLocalizations.of(context).you : widget.arguments.contact.name} ${NMobileLocalizations.of(context).update_burn_after_reading}'),
+//                                      Label('${message.isOutbound ? Global.currentUser.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).update_burn_after_reading}'),
                                       Padding(
                                         padding: const EdgeInsets.only(left: 4, right: 4),
                                         child: Icon(

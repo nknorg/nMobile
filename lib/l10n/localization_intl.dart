@@ -1014,6 +1014,7 @@ class NMobileLocalizations {
 
   String get export => Intl.message('Export', name: 'export');
   String get eth_keystore_export_desc => Intl.message('The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.', name: 'eth_keystore_export_desc');
+  String get you => Intl.message('You', name: 'you');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {
