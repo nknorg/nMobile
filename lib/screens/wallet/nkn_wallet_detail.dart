@@ -17,6 +17,7 @@ import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/components/wallet/item.dart';
+import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
@@ -98,6 +99,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
             switch (result) {
               case 0:
                 if (widget.arguments.type == WalletSchema.ETH_WALLET) {
+                  TODO
                   Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
                     'wallet': null,
                     'keystore': await widget.arguments.getKeystore(),
@@ -250,20 +252,35 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
                 Expanded(
                   flex: 0,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 32),
+                    padding: const EdgeInsets.only(top: 12),
                     child: Column(
                       children: <Widget>[
                         Hero(
                           tag: 'avatar:${widget.arguments.address}',
-                          child: Container(
-                            width: 60,
-                            height: 60,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFF1F4FF),
-                              borderRadius: BorderRadius.all(Radius.circular(8)),
-                            ),
-                            child: SvgPicture.asset('assets/logo.svg', color: Color(0xFF253A7E)),
+                          child: Stack(
+                            children: [
+                              Container(
+                                width: 60,
+                                height: 60,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Colours.light_ff,
+                                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                                ),
+                                child: SvgPicture.asset('assets/logo.svg', color: Colours.purple_2e),
+                              ).symm(h: 16, v: 20),
+                              widget.arguments.type == WalletSchema.NKN_WALLET ? Space.empty : Positioned(
+                                top: 16,
+                                left: 60,
+                                child: Container(
+                                  width: 20,
+                                  height: 20,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
+                                  child: SvgPicture.asset('assets/ethereum-logo.svg'),
+                                ),
+                              )
+                            ],
                           ),
                         ),
                         Padding(
@@ -302,7 +319,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
                         ),
                         Padding(
                           padding: const EdgeInsets.only(top: 24, bottom: 40),
-                          child: widget.arguments.type == WalletSchema.ETH_WALLET ? Space.empty : Flex(
+                          child: Flex(
                             direction: Axis.horizontal,
                             children: <Widget>[
                               Expanded(
