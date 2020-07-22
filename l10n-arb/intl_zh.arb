@@ -1543,5 +1543,10 @@
   "@eth_keystore_export_desc": {
     "type": "text",
     "placeholders": {}
+  },
+  "you": "您",
+  "@you": {
+    "type": "text",
+    "placeholders": {}
   }
 }
