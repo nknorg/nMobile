@@ -149,7 +149,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           debugPrint(e);
           debugPrintStack();
         }
-
+        await message.insert();
+        yield MessagesUpdated(target: message.to, message: message);
         return;
       case ContentType.dchatSubscribe:
         message.isOutbound = true;

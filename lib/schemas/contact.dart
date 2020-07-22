@@ -684,10 +684,8 @@ class ContactSchema {
   }
 
   Future<bool> setBurnOptions(int seconds) async {
-    if (type != ContactType.me) {
-      type = ContactType.friend;
-    }
-
+//
+    NLog.d('===============   $seconds');
     try {
       Database db = SqliteStorage(db: Global.currentChatDb).db;
       if (options == null) options = OptionsSchema();
