@@ -40,7 +40,7 @@ abstract class AccountDependsBloc /* extends Bloc<AccountEvent, DChatAccount>*/ 
   Future<ContactSchema> get accountUser => ContactSchema.getContactByAddress(db, accountChatId);
 
   bool isAccountValid() {
-    return account == null || account.client.isSeedMocked;
+    return account != null && !account.client.isSeedMocked;
   }
 
 // Not needed, can override this instead.
@@ -79,8 +79,9 @@ abstract class AccountDependsBloc /* extends Bloc<AccountEvent, DChatAccount>*/ 
   void changeAccount(DChatAccount account, {bool force = false}) {
     if (force || _account == null || _account.client.myChatId != account.client.myChatId) {
       // don't close it.
-//      _account?.dbHolder?.close();
+      // _account?.dbHolder?.close();
       _account = account;
+      _accountUser = null;
       _notifyOnAccountChanged();
     }
   }
