@@ -701,7 +701,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
         title: '',
         leading: BackButton(
           onPressed: () {
-            _setContactOptions();
             Navigator.of(context).pop();
           },
         ),
@@ -946,21 +945,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                     ],
                   ),
                 ).pad(t: 28),
-//                Positioned(
-//                  top: 0,
-//                  right: 20,
-//                  child: Button(
-//                    padding: const EdgeInsets.all(0),
-//                    width: 56,
-//                    height: 56,
-//                    backgroundColor: DefaultTheme.primaryColor,
-//                    child: SvgPicture.asset('assets/icons/chat.svg', width: 24),
-//                    onPressed: () async {
-//                      _setContactOptions();
-//                      Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
-//                    },
-//                  ),
-//                ),
               ],
             ),
           )

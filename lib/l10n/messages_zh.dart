@@ -282,6 +282,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "wallet_password_mach" : MessageLookupByLibrary.simpleMessage("密码必须包含至少8位字符。建议使用大、小写和特殊字符的组合。"),
     "warning" : MessageLookupByLibrary.simpleMessage("警告"),
     "yes" : MessageLookupByLibrary.simpleMessage("是的"),
+    "you" : MessageLookupByLibrary.simpleMessage("您"),
     "you_have_new_message" : MessageLookupByLibrary.simpleMessage("新消息")
   };
 }

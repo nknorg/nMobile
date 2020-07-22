@@ -284,6 +284,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "wallet_password_mach" : MessageLookupByLibrary.simpleMessage("Your password must be at least 8 characters. It is recommended to use a mix of different characters."),
     "warning" : MessageLookupByLibrary.simpleMessage("Warning"),
     "yes" : MessageLookupByLibrary.simpleMessage("Yes"),
+    "you" : MessageLookupByLibrary.simpleMessage("You"),
     "you_have_new_message" : MessageLookupByLibrary.simpleMessage("You have a new message")
   };
 }
