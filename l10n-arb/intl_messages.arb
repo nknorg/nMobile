@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-07-17T16:24:33.275192",
+  "@@last_modified": "2020-07-21T20:13:01.592821",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1553,6 +1553,11 @@
   },
   "eth_keystore_export_desc": "The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.",
   "@eth_keystore_export_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "you": "You",
+  "@you": {
     "type": "text",
     "placeholders": {}
   }
