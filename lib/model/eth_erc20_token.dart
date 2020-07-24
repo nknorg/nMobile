@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart'; //You can also import the browser version
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
+import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:web3dart/crypto.dart';
@@ -48,9 +49,17 @@ class EthWallet {
   @Deprecated('Be careful, not needed in general.')
   Uint8List get privateKeyBytes => raw.privateKey.privateKey;
 
-  Uint8List get pubkey => privateKeyBytesToPublic(privateKeyBytes);
+  @Deprecated('Be careful, not needed in general.')
+  String get privateKeyHex => hexEncode(privateKeyBytes);
 
-  BigInt get pubkeyInt => bytesToInt(privateKeyBytesToPublic(raw.privateKey.privateKey));
+  @Deprecated('Be careful, not needed in general.')
+  BigInt get privateKeyInt => bytesToInt(privateKeyBytes);
+
+  Uint8List get pubkeyBytes => privateKeyBytesToPublic(privateKeyBytes);
+
+  String get pubkeyHex => hexEncode(pubkeyBytes);
+
+  BigInt get pubkeyInt => bytesToInt(pubkeyBytes);
 
   String get keystore => raw.toJson();
 }
@@ -64,10 +73,8 @@ class EthErc20Client with Tag {
   // of 5 calls per sec/IP.
   //
   // https://infura.io/dashboard/ethereum/3fc946dd60524031a13ab94738cfa6ce/settings
-  static const RPC_SERVER_URL = 'https://mainnet.infura.io/v3/3fc946dd60524031a13ab94738cfa6ce';
-  static const RPC_SERVER_URL_test = 'https://ropsten.infura.io/v3/3fc946dd60524031a13ab94738cfa6ce';
-
-  static const address = '0x32a37d137A3a92900fB4f45C1Bc3713A9D81e407';
+  static const RPC_SERVER_URL = 'https://mainnet.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
+  static const RPC_SERVER_URL_test = 'https://ropsten.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
 
   // ignore: non_constant_identifier_names
   LOG _LOG;
@@ -82,18 +89,25 @@ class EthErc20Client with Tag {
 
   Web3Client get client => _web3client;
 
+  Future<EtherAmount> get getGasPrice => _web3client.getGasPrice();
+
   Future<EtherAmount> getBalance({@required String address}) {
     // var credentials = _web3client.credentialsFromPrivateKey("0x...");
     return _web3client.getBalance(EthereumAddress.fromHex(address));
   }
 
   Future<EtherAmount> getNknBalance({@required String address}) async {
-    final balance = await _web3client.call(
-      contract: Erc20Nkn.contract,
-      function: Erc20Nkn.balanceOf,
-      params: [EthereumAddress.fromHex(address)],
-    );
-    return EtherAmount.inWei(balance.first);
+    try {
+      final balance = await _web3client.call(
+        contract: Erc20Nkn.contract,
+        function: Erc20Nkn.balanceOf,
+        params: [EthereumAddress.fromHex(address)],
+      );
+      return EtherAmount.inWei(balance.first);
+    } catch (e) {
+      _LOG.e('getNknBalance', e);
+      return null;
+    }
   }
 
   /// Returns a hash of the transaction.
@@ -233,8 +247,10 @@ class Ethereum {
       return EtherAmount.fromUnitAndValue(EtherUnit.ether, amount as int);
     } else {
       final int len = amoStr.length - dot - 1;
-      final toBigInt = BigInt.parse(amoStr.substring(dot + 1));
-      return EtherAmount.inWei((BigInt.from(10).pow(18) * toBigInt) ~/ BigInt.from(10).pow(len));
+      final intPart = dot == 0 ? BigInt.from(0) : BigInt.parse(amoStr.substring(0, dot));
+      final floatPart = BigInt.parse(amoStr.substring(dot + 1));
+//      _LOG.w('intPart:$intPart, floatPart:$floatPart');
+      return EtherAmount.inWei((BigInt.from(10).pow(18) * intPart) + ((BigInt.from(10).pow(18) * floatPart) ~/ BigInt.from(10).pow(len)));
     }
   }
 }
@@ -245,4 +261,14 @@ extension EtherAmountNum on num {
 
   // ignore: non_constant_identifier_names
   EtherAmount get NKN => Ethereum.etherToWei(this);
+}
+
+extension EtherAmountInt on int {
+  EtherAmount get gwei => EtherAmount.fromUnitAndValue(EtherUnit.gwei, this);
+}
+
+extension DoubleEtherAmount on EtherAmount {
+  double get ether => this.getValueInUnit(EtherUnit.ether);
+
+  double get gwei => this.getValueInUnit(EtherUnit.gwei);
 }

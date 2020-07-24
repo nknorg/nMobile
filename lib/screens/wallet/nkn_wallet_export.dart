@@ -10,6 +10,7 @@ import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
+import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
@@ -83,15 +84,32 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                               children: <Widget>[
                                 Hero(
                                   tag: 'avatar:${address}',
-                                  child: Container(
-                                    width: 48,
-                                    height: 48,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: Color(0xFFF1F4FF),
-                                      borderRadius: BorderRadius.all(Radius.circular(8)),
-                                    ),
-                                    child: SvgPicture.asset('assets/logo.svg', color: Color(0xFF253A7E)),
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        width: 48,
+                                        height: 48,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: Colours.light_ff,
+                                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                                        ),
+                                        child: SvgPicture.asset('assets/logo.svg', color: Colours.purple_2e),
+                                      ).symm(h: 16, v: 20),
+                                      address.contains('NKN')
+                                          ? Space.empty
+                                          : Positioned(
+                                              top: 16,
+                                              left: 48,
+                                              child: Container(
+                                                width: 20,
+                                                height: 20,
+                                                alignment: Alignment.center,
+                                                decoration: BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
+                                                child: SvgPicture.asset('assets/ethereum-logo.svg'),
+                                              ),
+                                            )
+                                    ],
                                   ),
                                 ),
                                 Padding(
