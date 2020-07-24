@@ -30,6 +30,7 @@ import 'package:nmobile/screens/chat/photo_page.dart';
 import 'package:nmobile/screens/contact/chat_profile.dart';
 import 'package:nmobile/screens/contact/show_chat_id.dart';
 import 'package:nmobile/screens/contact/show_my_chat_address.dart';
+import 'package:nmobile/screens/view/burn_view_utils.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
@@ -69,7 +70,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
     Duration(minutes: 30),
     Duration(hours: 1),
     Duration(days: 1),
-    Duration(days: 7),
   ];
   List<String> _burnTextArray;
   double _sliderBurnValue = 0;
@@ -97,7 +97,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
 
   @override
   void didPop() {
-    _setContactOptions();
+//    _setContactOptions();
     NLog.d('didPop');
     super.didPop();
   }
@@ -147,11 +147,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
-//    NLog.d(widget.arguments.name);
-//    NLog.d(widget.arguments.firstName);
-//    NLog.d(widget.arguments.sourceProfile.name);
-//    NLog.d(widget.arguments.sourceProfile.firstName);
-//    NLog.d(widget.arguments.toEntity());
     _burnTextArray = <String>[
       NMobileLocalizations.of(context).burn_5_seconds,
       NMobileLocalizations.of(context).burn_10_seconds,
@@ -888,9 +883,51 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                             SizedBox(height: 10),
                             Container(
                               decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
-                              margin: EdgeInsets.symmetric(horizontal: 12),
-                              padding: EdgeInsets.only(top: 10),
-                              child: getBurnView(),
+                              margin: EdgeInsets.only(left: 16, right: 16, top: 10),
+                              child: FlatButton(
+                                onPressed: () async {
+                                  _burnValue = await BurnViewUtil.showBurnViewDialog(context, widget.arguments, _chatBloc);
+                                  setState(() {});
+                                },
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                                child: Container(
+                                  width: double.infinity,
+                                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+                                    Row(
+                                      children: <Widget>[
+                                        loadAssetWalletImage(
+                                          'xiaohui',
+                                          color: DefaultTheme.primaryColor,
+                                          width: 24,
+                                        ),
+                                        SizedBox(width: 10),
+                                        Label(
+                                          NMobileLocalizations.of(context).burn_after_reading,
+                                          type: LabelType.bodyRegular,
+                                          color: DefaultTheme.fontColor1,
+                                          textAlign: TextAlign.start,
+                                        ),
+                                        SizedBox(width: 10),
+                                        Expanded(
+                                          child: Label(
+                                            _burnValue == null ? NMobileLocalizations.of(context).close : '${_burnValue != null ? '${BurnViewUtil.getStringFromSeconds(context, _burnValue)}' : ''}',
+                                            type: LabelType.bodyRegular,
+                                            color: DefaultTheme.fontColor2,
+                                            textAlign: TextAlign.right,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        SvgPicture.asset(
+                                          'assets/icons/right.svg',
+                                          width: 24,
+                                          color: DefaultTheme.fontColor2,
+                                        )
+                                      ],
+                                    ),
+                                  ]),
+                                ),
+                              ).sized(h: 50, w: double.infinity),
                             ),
                             Container(
                               margin: EdgeInsets.symmetric(horizontal: 14),
@@ -936,7 +973,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                   ),
                                 ),
                                 onPressed: () {
-                                  _setContactOptions();
+//                                  _setContactOptions();
                                   Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
                                 },
                               ).sized(h: 50, w: double.infinity),
@@ -959,8 +996,8 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
 
   getBurnView() {
     return FlatButton(
-      onPressed: null,
-      padding: EdgeInsets.zero,
+      onPressed: () {},
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
       child: Container(
         child: Column(children: <Widget>[
           Row(
@@ -977,39 +1014,24 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                 color: DefaultTheme.fontColor1,
                 textAlign: TextAlign.start,
               ),
-              Spacer(),
-              CupertinoSwitch(
-                value: _burnSelected,
-                activeColor: DefaultTheme.primaryColor,
-                onChanged: (value) async {
-                  if (value) {
-                    _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
-                  } else {
-                    _burnValue = null;
-                  }
-                  setState(() {
-                    _burnSelected = value;
-                  });
-                },
+              SizedBox(width: 20),
+              Expanded(
+                child: Label(
+                  _burnValue == null ? NMobileLocalizations.of(context).close : BurnViewUtil.getStringFromSeconds(context, _burnValueArray[_sliderBurnValue.toInt()].inSeconds),
+                  type: LabelType.bodyRegular,
+                  color: DefaultTheme.fontColor2,
+                  textAlign: TextAlign.right,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              SvgPicture.asset(
+                'assets/icons/right.svg',
+                width: 24,
+                color: DefaultTheme.fontColor2,
+              )
             ],
-          ).pad(l: 20, r: 16),
-          _burnSelected
-              ? Slider(
-                  value: _sliderBurnValue,
-                  onChanged: (v) async {
-                    setState(() {
-                      _burnSelected = true;
-                      _sliderBurnValue = v;
-                      _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
-                    });
-                  },
-                  divisions: _burnTextArray.length - 1,
-                  max: _burnTextArray.length - 1.0,
-                  min: 0,
-                ).pad(l: 4, r: 4)
-              : Container(),
-          SizedBox(height: 10),
+          ),
         ]),
       ),
     );
