@@ -10,6 +10,7 @@ import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/input_channel.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
+import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/validation.dart';
@@ -17,6 +18,7 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/contact/home.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class BottomDialog extends StatefulWidget {
@@ -364,6 +366,7 @@ class BottomDialog extends StatefulWidget {
                         itemBuilder: (BuildContext context, int index) {
                           var wallet = state.wallets[index];
                           return GestureDetector(
+                            behavior: HitTestBehavior.opaque,
                             onTap: () {
                               if (callback != null) {
                                 callback(wallet);
@@ -371,102 +374,105 @@ class BottomDialog extends StatefulWidget {
                               _filteredWalletsBloc.add(LoadWalletFilter((x) => x.address == wallet.address));
                               close();
                             },
-                            child: Container(
-                              padding: const EdgeInsets.only(),
-                              child: Flex(
-                                direction: Axis.horizontal,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Expanded(
-                                    flex: 0,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(right: 16),
-                                      child: Container(
-                                        width: 48,
-                                        height: 48,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          color: Color(0xFFF1F4FF),
-                                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                                        ),
-                                        child: SvgPicture.asset('assets/logo.svg', color: Color(0xFF253A7E)),
+                            child: Column(
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      flex: 0,
+                                      child: Stack(
+                                        children: [
+                                          Container(
+                                            width: 48,
+                                            height: 48,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color: Colours.light_ff,
+                                              borderRadius: BorderRadius.all(Radius.circular(8)),
+                                            ),
+                                            child: SvgPicture.asset('assets/logo.svg', color: Colours.purple_2e),
+                                          ).pad(r: 16, t: 12, b: 12),
+                                          wallet.type == WalletSchema.NKN_WALLET
+                                              ? Space.empty
+                                              : Positioned(
+                                                  top: 8,
+                                                  left: 32,
+                                                  child: Container(
+                                                    width: 20,
+                                                    height: 20,
+                                                    alignment: Alignment.center,
+                                                    decoration: BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
+                                                    child: SvgPicture.asset('assets/ethereum-logo.svg'),
+                                                  ),
+                                                )
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Container(
-                                      padding: const EdgeInsets.only(bottom: 20),
-                                      decoration: BoxDecoration(
-                                        border: Border(bottom: BorderSide(color: DefaultTheme.backgroundColor2)),
-                                      ),
-                                      child: Flex(
-                                        direction: Axis.horizontal,
+                                    Expanded(
+                                      flex: 1,
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: <Widget>[
-                                          Expanded(
-                                            flex: 1,
-                                            child: Container(
-                                              alignment: Alignment.centerLeft,
-                                              height: 50,
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.max,
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Label(
-                                                    wallet.name,
-                                                    type: LabelType.h3,
-                                                  ),
-                                                  BlocBuilder<WalletsBloc, WalletsState>(
-                                                    builder: (context, state) {
-                                                      if (state is WalletsLoaded) {
-                                                        var w = state.wallets.firstWhere((x) => x == wallet);
-                                                        if (w != null) {
-                                                          return Label(
-                                                            Format.nknFormat(w.balance, decimalDigits: 4, symbol: 'NKN'),
-                                                            type: LabelType.bodySmall,
-                                                          );
-                                                        }
-                                                      }
-                                                      return Label(
-                                                        '- NKN',
-                                                        type: LabelType.bodySmall,
-                                                      );
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 0,
-                                            child: Container(
-                                              alignment: Alignment.centerRight,
-                                              height: 44,
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(left: 16),
-                                                child: Column(
-                                                  mainAxisSize: MainAxisSize.max,
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                  children: <Widget>[
-                                                    Container(
-                                                      height: 18,
-                                                      alignment: Alignment.center,
-                                                      padding: const EdgeInsets.only(left: 8, right: 8),
-                                                      decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(8)), color: Color(0x1500CC96)),
-                                                      child: Text(NMobileLocalizations.of(context).mainnet, style: TextStyle(color: Color(0xFF00CC96), fontSize: 10, fontWeight: FontWeight.bold)),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
+                                          Label(wallet.name, type: LabelType.h3).pad(b: 4),
+                                          BlocBuilder<WalletsBloc, WalletsState>(
+                                            builder: (context, state) {
+                                              if (state is WalletsLoaded) {
+                                                var w = state.wallets.firstWhere((x) => x == wallet);
+                                                if (w != null) {
+                                                  return Label(
+                                                    Format.nknFormat(w.balance, decimalDigits: 4, symbol: 'NKN'),
+                                                    type: LabelType.bodySmall,
+                                                  );
+                                                }
+                                              }
+                                              return Label('-- NKN', type: LabelType.bodySmall);
+                                            },
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
+                                    Expanded(
+                                      flex: 0,
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          wallet.type == WalletSchema.NKN_WALLET
+                                              ? Container(
+                                                  alignment: Alignment.center,
+                                                  padding: 2.pad(l: 8, r: 8),
+                                                  decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.green_06_a1p),
+                                                  child: Text(
+                                                    NMobileLocalizations.of(context).mainnet,
+                                                    style: TextStyle(color: Colours.green_06, fontSize: 10, fontWeight: FontWeight.bold),
+                                                  ),
+                                                )
+                                              : Container(
+                                                  alignment: Alignment.center,
+                                                  padding: 2.pad(l: 8, r: 8),
+                                                  decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.purple_53_a1p),
+                                                  child: Text(
+                                                    NMobileLocalizations.of(context).ERC_20,
+                                                    style: TextStyle(color: Colours.purple_53, fontSize: 10, fontWeight: FontWeight.bold),
+                                                  ),
+                                                ),
+                                          (wallet.type == WalletSchema.NKN_WALLET
+                                                  ? Space.empty
+                                                  : BlocBuilder<WalletsBloc, WalletsState>(builder: (context, state) {
+                                                      return Label(
+                                                        Format.nknFormat(wallet.balanceEth, symbol: 'ETH'),
+                                                        type: LabelType.bodySmall,
+                                                      );
+                                                    }))
+                                              .pad(t: 8),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Container(height: 1, color: Colours.light_e9).pad(l: 64),
+                              ],
                             ),
                           );
                         },

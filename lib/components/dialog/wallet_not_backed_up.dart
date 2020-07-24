@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/components/ButtonIcon.dart';
+import 'package:nmobile/components/button_icon.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';

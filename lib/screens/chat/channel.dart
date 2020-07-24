@@ -13,7 +13,7 @@ import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
-import 'package:nmobile/components/ButtonIcon.dart';
+import 'package:nmobile/components/button_icon.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/chat/bubble.dart';

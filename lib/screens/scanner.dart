@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:nmobile/components/ButtonIcon.dart';
+import 'package:nmobile/components/button_icon.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';

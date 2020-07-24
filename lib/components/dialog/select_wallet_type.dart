@@ -63,15 +63,9 @@ class _SelectWalletTypeDialogState extends State<SelectWalletTypeDialog> {
                 style: TextStyle(fontSize: DefaultTheme.h4FontSize, color: Colours.gray_81),
               ).pad(t: 8),
               _getItemNkn(context),
-              Container(
-                height: 1,
-                color: Colours.light_e9,
-              ).pad(l: 64, t: 16),
+              Container(height: 1, color: Colours.light_e9).pad(l: 64, t: 16),
               _getItemEth(context),
-              Container(
-                height: 1,
-                color: Colours.light_e9,
-              ).pad(l: 64, t: 16),
+              Container(height: 1, color: Colours.light_e9).pad(l: 64, t: 16),
             ],
           ).pad(l: 20, t: 32, r: 20),
         ],

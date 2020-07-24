@@ -8,6 +8,7 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:path/path.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:web3dart/credentials.dart';
 
 const ADDRESS_GEN_PREFIX = '02b825';
 const ADDRESS_GEN_PREFIX_LEN = ADDRESS_GEN_PREFIX.length ~/ 2;
@@ -72,6 +73,15 @@ bool verifyAddress(String address) {
     var programHashVerifyCode = genAddressVerifyCodeFromProgramHash(programHash);
     return addressVerifyCode == programHashVerifyCode;
   } catch (e) {
+    return false;
+  }
+}
+
+bool isValidEthAddress(String address) {
+  try {
+    EthereumAddress.fromHex(address);
+    return true;
+  }catch (e) {
     return false;
   }
 }

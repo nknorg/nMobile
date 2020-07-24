@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/wallet/filtered_wallets_bloc.dart';
+import 'package:nmobile/blocs/wallet/filtered_wallets_event.dart';
 import 'package:nmobile/blocs/wallet/filtered_wallets_state.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
@@ -17,34 +17,32 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/components/wallet/dropdown.dart';
+import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/schemas/wallet.dart';
-import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/services/task_service.dart';
-import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/log_tag.dart';
 import 'package:oktoast/oktoast.dart';
 
-class SendNknScreen extends StatefulWidget {
-  static const String routeName = '/wallet/send_nkn';
+class SendErc20Screen extends StatefulWidget {
+  static const String routeName = '/wallet/send_erc_20';
   final WalletSchema arguments;
 
-  SendNknScreen({this.arguments});
+  SendErc20Screen({this.arguments});
 
   @override
-  _SendNknScreenState createState() => _SendNknScreenState();
+  _SendErc20ScreenState createState() => _SendErc20ScreenState();
 }
 
-class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
+class _SendErc20ScreenState extends State<SendErc20Screen> with AccountDependsBloc, Tag {
   final GetIt locator = GetIt.instance;
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
@@ -57,18 +55,63 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
 
   WalletSchema wallet;
   bool _showFeeLayout = false;
-  var _amount;
-  var _sendTo;
-  double _fee = 0.1;
-  double _sliderFee = 0.1;
-  double _sliderFeeMin = 0;
-  double _sliderFeeMax = 10;
+  FilteredWalletsBloc _filteredWalletsBloc;
+  num _amount;
+  String _sendTo;
+  int _gasPriceInGwei = 72;
+  int _sliderGasPriceMin = 10;
+  int _sliderGasPriceMax = 1000;
+  int _maxGas = 60000; // default: 90000
+  int _sliderMaxGasMinEth = 21000;  // Actual: 21,000
+  int _sliderMaxGasMinNkn = 30000;  // Actual: 29,561
+  int _sliderMaxGasMax = 300000;
+  bool _ethTrueTokenFalse = false;
+
+  // ignore: non_constant_identifier_names
+  LOG _LOG;
+
+  _initAsync() async {
+    final gasPrice = await EthErc20Client().getGasPrice;
+    _gasPriceInGwei = (gasPrice.gwei * 0.8).round();
+    _LOG.i('gasPrice:$_gasPriceInGwei GWei');
+    _updateFee();
+  }
+
+  _updateFee() {
+    _feeController.text = Format.nknFormat((_gasPriceInGwei.gwei.ether * _maxGas), decimalDigits: 8).trim();
+    if (_ethTrueTokenFalse && _amountController.text.isNotEmpty) {
+      _amountController.text = Format.nknFormat(
+        (wallet.balanceEth - (_gasPriceInGwei.gwei.ether * _maxGas)),
+        decimalDigits: 8,
+      ).trim();
+    }
+  }
+
+  double get _maxGasGet {
+    final min = _ethTrueTokenFalse ? _sliderMaxGasMinEth : _sliderMaxGasMinNkn;
+    _maxGas = _maxGas < min ? min : _maxGas > _sliderMaxGasMax ? _sliderMaxGasMax : _maxGas;
+    return _maxGas.toDouble();
+  }
+
+  _updateAmount() {
+    if (wallet != null) {
+      _amountController.text = Format.nknFormat(
+        _ethTrueTokenFalse ? (wallet.balanceEth - (_gasPriceInGwei.gwei.ether * _maxGas)) : wallet.balance,
+        decimalDigits: 8,
+      ).trim();
+    } else {
+      _amountController.text = '';
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    _LOG = LOG(tag);
+    _initAsync();
     locator<TaskService>().queryNknWalletBalanceTask();
-    _feeController.text = _fee.toString();
+    _filteredWalletsBloc = BlocProvider.of<FilteredWalletsBloc>(context);
+    _updateFee();
   }
 
   next() async {
@@ -85,20 +128,14 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
 
   Future<bool> transferAction(password) async {
     try {
-      final nw = await wallet.exportWallet(password);
-      final txHash = await NknWalletPlugin.transferAsync(nw['keystore'], password, _sendTo, _amount, _fee.toString());
-      if (txHash != null) {
-        locator<TaskService>().queryNknWalletBalanceTask();
-      }
+      final ethWallet = await Ethereum.restoreWalletSaved(schema: wallet, password: password);
+      final ethClient = EthErc20Client();
+      final txHash = _ethTrueTokenFalse
+          ? await ethClient.sendEthereum(ethWallet.credt, address: _sendTo, amountEth: _amount, gasLimit: _maxGas, gasPriceInGwei: _gasPriceInGwei)
+          : await ethClient.sendNknToken(ethWallet.credt, address: _sendTo, amountNkn: _amount, gasLimit: _maxGas, gasPriceInGwei: _gasPriceInGwei);
       return txHash.length > 10;
     } catch (e) {
-      if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-        showToast(NMobileLocalizations.of(Global.appContext).password_wrong);
-      } else if (e.message == 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds') {
-        showToast(e.message);
-      } else {
-        showToast(NMobileLocalizations.of(Global.appContext).failure);
-      }
+      showToast(e.message);
       return false;
     }
   }
@@ -107,7 +144,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: Header(
-        title: NMobileLocalizations.of(context).send_nkn,
+        title: NMobileLocalizations.of(context).send_eth,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: IconButton(
           icon: loadAssetIconsImage(
@@ -128,7 +165,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
             if (jsonFormat) {
               _sendToController.text = jsonData['address'];
               _amountController.text = jsonData['amount'].toString();
-            } else if (verifyAddress(qrData)) {
+            } else if (isValidEthAddress(qrData)) {
               _sendToController.text = qrData;
             } else {
               await ModalDialog.of(context).show(
@@ -150,7 +187,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
           },
           child: Stack(
             alignment: Alignment.bottomCenter,
-            children: <Widget>[
+            children: [
               Positioned(
                 top: 0,
                 left: 0,
@@ -158,21 +195,14 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                 child: Container(
                   constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height),
                   color: DefaultTheme.backgroundColor4,
-                  child: Flex(direction: Axis.vertical, children: <Widget>[
-                    Expanded(
-                      flex: 0,
-                      child: Column(
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 32, left: 20, right: 20),
-                            child: Image(
-                              image: AssetImage("assets/wallet/transfer-header.png"),
-                            ),
-                          ),
-                        ],
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 32, left: 20, right: 20),
+                        child: Image(image: AssetImage("assets/wallet/transfer-header.png")),
                       ),
-                    ),
-                  ]),
+                    ],
+                  ),
                 ),
               ),
               ConstrainedBox(
@@ -189,6 +219,9 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                           builder: (context, state) {
                             if (state is FilteredWalletsLoaded) {
                               wallet = state.filteredWallets.first;
+                              if (wallet.type == WalletSchema.NKN_WALLET) {
+                                _ethTrueTokenFalse = false;
+                              }
                               return Container(
                                 decoration: BoxDecoration(
                                   color: DefaultTheme.backgroundLightColor,
@@ -231,7 +264,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                     padding: const EdgeInsets.only(bottom: 4),
                                                     controller: _amountController,
                                                     focusNode: _amountFocusNode,
-                                                    onSaved: (v) => _amount = v,
+                                                    onSaved: (v) => _amount = num.parse(v),
                                                     onFieldSubmitted: (_) {
                                                       FocusScope.of(context).requestFocus(_sendToFocusNode);
                                                     },
@@ -239,11 +272,19 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                     showErrorMessage: false,
                                                     hintText: NMobileLocalizations.of(context).enter_amount,
                                                     suffixIcon: GestureDetector(
-                                                      onTap: () {},
+                                                      onTap: () {
+                                                        _ethTrueTokenFalse = !_ethTrueTokenFalse;
+                                                        _amountController.text = '';
+                                                        _filteredWalletsBloc.add(LoadWalletFilter((x) => x.address == wallet.address));
+                                                      },
                                                       child: Container(
                                                         width: 20,
                                                         alignment: Alignment.centerRight,
-                                                        child: Label(NMobileLocalizations.of(context).nkn, type: LabelType.label),
+                                                        child: Label(
+                                                          _ethTrueTokenFalse ? NMobileLocalizations.of(context).eth : NMobileLocalizations.of(context).nkn,
+                                                          color: wallet.type == WalletSchema.ETH_WALLET ? Colours.blue_0f : null,
+                                                          type: wallet.type == WalletSchema.ETH_WALLET ? LabelType.bodyRegular : LabelType.label,
+                                                        ),
                                                       ),
                                                     ),
                                                     textInputAction: TextInputAction.next,
@@ -254,9 +295,9 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                     padding: const EdgeInsets.only(bottom: 20),
                                                     child: Row(
                                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                      children: <Widget>[
+                                                      children: [
                                                         Row(
-                                                          children: <Widget>[
+                                                          children: [
                                                             Label(NMobileLocalizations.of(context).available + ': '),
                                                             BlocBuilder<WalletsBloc, WalletsState>(
                                                               builder: (context, state) {
@@ -264,12 +305,13 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                                   var w = state.wallets.firstWhere((x) => x == wallet, orElse: () => null);
                                                                   if (w != null) {
                                                                     return Label(
-                                                                      Format.nknFormat(w.balance, decimalDigits: 8, symbol: 'NKN'),
+                                                                      Format.nknFormat(_ethTrueTokenFalse ? w.balanceEth : w.balance,
+                                                                          decimalDigits: 8, symbol: _ethTrueTokenFalse ? 'ETH' : 'NKN'),
                                                                       color: DefaultTheme.fontColor1,
                                                                     );
                                                                   }
                                                                 }
-                                                                return Label('-- NKN', color: DefaultTheme.fontColor1);
+                                                                return Label(_ethTrueTokenFalse ? '-- ETH' : '-- NKN', color: DefaultTheme.fontColor1);
                                                               },
                                                             )
                                                           ],
@@ -281,7 +323,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                             type: LabelType.bodyRegular,
                                                           ),
                                                           onTap: () {
-                                                            _amountController.text = wallet.balance.toString();
+                                                            _updateAmount();
                                                           },
                                                         )
                                                       ],
@@ -299,26 +341,9 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                     onFieldSubmitted: (_) {
                                                       FocusScope.of(context).requestFocus(_feeToFocusNode);
                                                     },
-                                                    validator: Validator.of(context).nknAddress(),
+                                                    validator: Validator.of(context).ethAddress(),
                                                     textInputAction: TextInputAction.next,
                                                     hintText: NMobileLocalizations.of(context).enter_receive_address,
-                                                    suffixIcon: GestureDetector(
-                                                      onTap: () async {
-                                                        if (account?.client != null) {
-                                                          var contact = await Navigator.of(context).pushNamed(ContactHome.routeName, arguments: true);
-                                                          if (contact is ContactSchema) {
-                                                            _sendToController.text = contact.nknWalletAddress;
-                                                          }
-                                                        } else {
-                                                          showToast('D-Chat not login');
-                                                        }
-                                                      },
-                                                      child: Container(
-                                                        width: 20,
-                                                        alignment: Alignment.centerRight,
-                                                        child: Icon(FontAwesomeIcons.solidAddressBook),
-                                                      ),
-                                                    ),
                                                   ),
                                                   Padding(
                                                     padding: const EdgeInsets.only(bottom: 20),
@@ -354,24 +379,32 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                             controller: _feeController,
                                                             focusNode: _feeToFocusNode,
                                                             padding: const EdgeInsets.only(bottom: 0),
-                                                            onSaved: (v) => _fee = double.parse(v ?? 0),
-                                                            onChanged: (v) {
-                                                              setState(() {
-                                                                double fee = v.isNotEmpty ? double.parse(v) : 0;
-                                                                if (fee > _sliderFeeMax) {
-                                                                  fee = _sliderFeeMax;
-                                                                } else if (fee < _sliderFeeMin) {
-                                                                  fee = _sliderFeeMin;
-                                                                }
-                                                                _sliderFee = fee;
-                                                              });
+                                                            onSaved: (v) {},
+                                                            onFieldSubmitted: (v) {
+                                                              int gasPrice = (num.parse(v).ETH.gwei / _maxGas).round();
+                                                              if (gasPrice < _sliderGasPriceMin) {
+                                                                gasPrice = _sliderGasPriceMin;
+                                                              }
+                                                              if (gasPrice > _sliderGasPriceMax) {
+                                                                gasPrice = _sliderGasPriceMax;
+                                                              }
+                                                              _LOG.w('fee field | gasPrice:$gasPrice');
+                                                              if (_gasPriceInGwei != gasPrice) {
+                                                                _gasPriceInGwei = gasPrice;
+                                                                _updateFee();
+                                                              }
                                                             },
                                                             suffixIcon: GestureDetector(
                                                               onTap: () {},
                                                               child: Container(
                                                                 width: 20,
                                                                 alignment: Alignment.centerRight,
-                                                                child: Label(NMobileLocalizations.of(context).nkn, type: LabelType.label),
+                                                                child: Label(
+                                                                  wallet.type == WalletSchema.ETH_WALLET
+                                                                      ? NMobileLocalizations.of(context).eth
+                                                                      : NMobileLocalizations.of(context).nkn,
+                                                                  type: LabelType.label,
+                                                                ),
                                                               ),
                                                             ),
                                                             keyboardType: TextInputType.numberWithOptions(
@@ -386,44 +419,90 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                   ),
                                                   ExpansionLayout(
                                                     isExpanded: _showFeeLayout,
-                                                    child: Container(
-                                                        width: double.infinity,
-                                                        padding: const EdgeInsets.only(top: 0),
-                                                        child: Column(
-                                                          children: <Widget>[
-                                                            Row(
-                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                              children: <Widget>[
-                                                                Label(
-                                                                  NMobileLocalizations.of(context).slow,
-                                                                  type: LabelType.bodySmall,
-                                                                  color: DefaultTheme.primaryColor,
-                                                                ),
-                                                                Label(
-                                                                  NMobileLocalizations.of(context).average,
-                                                                  type: LabelType.bodySmall,
-                                                                  color: DefaultTheme.primaryColor,
-                                                                ),
-                                                                Label(
-                                                                  NMobileLocalizations.of(context).fast,
-                                                                  type: LabelType.bodySmall,
-                                                                  color: DefaultTheme.primaryColor,
-                                                                ),
-                                                              ],
-                                                            ),
-                                                            Slider(
-                                                              value: _sliderFee,
-                                                              onChanged: (v) {
-                                                                setState(() {
-                                                                  _sliderFee = _fee = v;
-                                                                  _feeController.text = _fee.toStringAsFixed(2);
-                                                                });
-                                                              },
-                                                              max: _sliderFeeMax,
-                                                              min: _sliderFeeMin,
+                                                    child: Column(
+                                                      children: [
+                                                        Row(
+                                                          children: [
+                                                            Label(
+                                                              NMobileLocalizations.of(context).gas_price,
+                                                              type: LabelType.h4,
+                                                              fontWeight: FontWeight.w600,
+                                                            ).pad(r: 16),
+                                                            Expanded(
+                                                              flex: 1,
+                                                              child: Column(
+                                                                children: [
+                                                                  Row(
+                                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                    children: <Widget>[
+                                                                      Label(
+                                                                        _sliderGasPriceMin.toString() + ' ' + NMobileLocalizations.of(context).gwei,
+                                                                        type: LabelType.bodySmall,
+                                                                        color: DefaultTheme.primaryColor,
+                                                                      ),
+                                                                      Label(
+                                                                        _sliderGasPriceMax.toString() + ' ' + NMobileLocalizations.of(context).gwei,
+                                                                        type: LabelType.bodySmall,
+                                                                        color: DefaultTheme.primaryColor,
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                  Slider(
+                                                                    value: _gasPriceInGwei.toDouble(),
+                                                                    onChanged: (v) {
+                                                                      _gasPriceInGwei = v.toInt();
+                                                                      _updateFee();
+                                                                    },
+                                                                    min: _sliderGasPriceMin.toDouble(),
+                                                                    max: _sliderGasPriceMax.toDouble(),
+                                                                  ),
+                                                                ],
+                                                              ),
                                                             ),
                                                           ],
-                                                        )),
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            Label(
+                                                              NMobileLocalizations.of(context).gas_max,
+                                                              type: LabelType.h4,
+                                                              fontWeight: FontWeight.w600,
+                                                            ).pad(r: 22),
+                                                            Expanded(
+                                                              flex: 1,
+                                                              child: Column(
+                                                                children: [
+                                                                  Row(
+                                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                    children: <Widget>[
+                                                                      Label(
+                                                                        (_ethTrueTokenFalse ? _sliderMaxGasMinEth : _sliderMaxGasMinNkn).toString(),
+                                                                        type: LabelType.bodySmall,
+                                                                        color: DefaultTheme.primaryColor,
+                                                                      ),
+                                                                      Label(
+                                                                        _sliderMaxGasMax.toString(),
+                                                                        type: LabelType.bodySmall,
+                                                                        color: DefaultTheme.primaryColor,
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                  Slider(
+                                                                    value: _maxGasGet,
+                                                                    onChanged: (v) {
+                                                                      _maxGas = v.round();
+                                                                      _updateFee();
+                                                                    },
+                                                                    min: (_ethTrueTokenFalse ? _sliderMaxGasMinEth : _sliderMaxGasMinNkn).toDouble(),
+                                                                    max: _sliderMaxGasMax.toDouble(),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ],
                                               ),
