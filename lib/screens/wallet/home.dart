@@ -5,8 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get_it/get_it.dart';
-import 'package:nmobile/blocs/wallet/filtered_wallets_bloc.dart';
-import 'package:nmobile/blocs/wallet/filtered_wallets_event.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
 import 'package:nmobile/components/box/body.dart';
@@ -23,8 +21,6 @@ import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn_wallet.dart';
 import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
-import 'package:nmobile/screens/wallet/recieve_nkn.dart';
-import 'package:nmobile/screens/wallet/send_nkn.dart';
 import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
@@ -40,7 +36,6 @@ class WalletHome extends StatefulWidget {
 }
 
 class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateMixin {
-  FilteredWalletsBloc _filteredWalletsBloc;
   WalletsBloc _walletsBloc;
   StreamSubscription _walletSubscription;
   final GetIt locator = GetIt.instance;
@@ -67,24 +62,12 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
         });
       }
     });
-
-    _filteredWalletsBloc = BlocProvider.of<FilteredWalletsBloc>(context);
   }
 
   @override
   void dispose() {
     _walletSubscription.cancel();
     super.dispose();
-  }
-
-  _send() {
-    _filteredWalletsBloc.add(LoadWalletFilter(null));
-    Navigator.of(context).pushNamed(SendNknScreen.routeName);
-  }
-
-  _recieve() {
-    _filteredWalletsBloc.add(LoadWalletFilter(null));
-    Navigator.of(context).pushNamed(ReceiveNknScreen.routeName);
   }
 
   @override

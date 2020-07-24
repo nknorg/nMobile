@@ -115,7 +115,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
         backgroundColor: DefaultTheme.primaryColor,
         child: loadAssetIconsImage('pencil', width: 24),
         onPressed: showBottomMenu,
-      ).pad(b: 76 + MediaQuery.of(context).padding.bottom, r: 4),
+      ).pad(b: MediaQuery.of(context).padding.bottom, r: 4),
       body: Container(
         child: ConstrainedBox(
           constraints: BoxConstraints.expand(),
@@ -138,8 +138,8 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                           flex: 1,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: DefaultTheme.backgroundColor1,
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                              color: DefaultTheme.backgroundLightColor,
+//                              borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
                             ),
                             child: Flex(
                               direction: Axis.vertical,
@@ -178,7 +178,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
           child: Scaffold(
             backgroundColor: Colors.transparent,
             body: Padding(
-              padding: EdgeInsets.only(bottom: 86, right: 16),
+              padding: EdgeInsets.only(bottom: 76, right: 16),
               child: Align(
                 alignment: Alignment.bottomRight,
                 child: Container(

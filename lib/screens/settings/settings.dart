@@ -174,7 +174,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                   child: Column(children: <Widget>[
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
@@ -242,7 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                           child: Column(children: <Widget>[
                             SizedBox(
                                 width: double.infinity,
-                                height: 48,
+                                height: 50,
                                 child: FlatButton(
                                     padding: const EdgeInsets.only(left: 16, right: 16),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
@@ -284,7 +284,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                   children: <Widget>[
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
@@ -357,7 +357,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                   children: <Widget>[
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
@@ -383,7 +383,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                     ),
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(0))),
@@ -420,7 +420,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                     ),
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
@@ -481,7 +481,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                   children: <Widget>[
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),

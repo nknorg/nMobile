@@ -144,7 +144,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         return;
       case ContentType.eventContactOptions:
         try {
-          var pid = await NknClientPlugin.sendText([message.to], message.toActionContentOptionsData());
+          await NknClientPlugin.sendText([message.to], message.toActionContentOptionsData());
         } catch (e) {
           debugPrint(e);
           debugPrintStack();

@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
-import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/event/eventbus.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/screens/wallet/wallet.dart';
@@ -100,30 +99,42 @@ class _AppScreenState extends State<AppScreen> {
               ),
             ),
           ),
+          bottomNavigationBar: Container(
+            color: Colors.white,
+            child: SafeArea(
+              child: Nav(
+                currentIndex: _currentIndex,
+                screens: screens,
+                controller: _pageController,
+              ),
+            ),
+          ),
         ),
-        getBottomView()
+//        getBottomView()
       ],
     );
   }
 
-  getBottomView() {
-    return Positioned(
-        bottom: 0,
-        left: 0,
-        right: 0,
-        child: Column(children: <Widget>[
-          Container(
-            child: Nav(
-              currentIndex: _currentIndex,
-              screens: screens,
-              controller: _pageController,
-            ),
-          ),
-          Container(
-            height: MediaQuery.of(context).padding.bottom,
-            width: double.infinity,
-            color: DefaultTheme.backgroundLightColor,
-          )
-        ]));
-  }
+//  getBottomView() {
+//    return Positioned(
+//        bottom: 0,
+//        left: 0,
+//        right: 0,
+//        child: Column(children: <Widget>[
+//          Container(
+//            child: SafeArea(
+//              child: Nav(
+//                currentIndex: _currentIndex,
+//                screens: screens,
+//                controller: _pageController,
+//              ),
+//            ),
+//          ),
+////          Container(
+////            height: MediaQuery.of(context).padding.bottom,
+////            width: double.infinity,
+////            color: DefaultTheme.backgroundLightColor,
+////          )
+//        ]));
+//  }
 }

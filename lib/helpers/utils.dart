@@ -106,14 +106,10 @@ String createFileCachePath(File file) {
     dir.createSync(recursive: true);
   }
   String fullName = file?.path?.split('/')?.last;
-  String fileName;
   String fileExt;
   int index = fullName.lastIndexOf('.');
   if (index > -1) {
     fileExt = fullName?.split('.')?.last;
-    fileName = fullName?.substring(0, index);
-  } else {
-    fileName = fullName;
   }
   String path = join(rootDir.path, dir.path, name + '.' + fileExt);
   return path;
@@ -128,14 +124,10 @@ String createContactFilePath(File file) {
     dir.createSync(recursive: true);
   } else {}
   String fullName = file?.path?.split('/')?.last;
-  String fileName;
   String fileExt;
   int index = fullName.lastIndexOf('.');
   if (index > -1) {
     fileExt = fullName?.split('.')?.last;
-    fileName = fullName?.substring(0, index);
-  } else {
-    fileName = fullName;
   }
   String path = join(rootDir.path, dir.path, name + '.' + fileExt);
   return path;

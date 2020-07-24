@@ -328,10 +328,14 @@ class _ChatBubbleState extends State<ChatBubble> {
               padding: EdgeInsets.only(right: 10.w),
               child: GestureDetector(
                 onTap: () {
-                  Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: widget.contact);
+                  if (!widget.hideHeader) {
+                    Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: widget.contact);
+                  }
                 },
                 onLongPress: () {
-                  widget.onChanged(widget.contact.name);
+                  if (!widget.hideHeader) {
+                    widget.onChanged(widget.contact.name);
+                  }
                 },
                 child: Opacity(
                   opacity: !widget.hideHeader ? 1.0 : 0.0,

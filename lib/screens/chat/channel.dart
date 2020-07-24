@@ -345,13 +345,10 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
               child: Container(
                 padding: EdgeInsets.only(right: 10.w),
                 alignment: Alignment.center,
-                child: Hero(
-                  tag: 'avatar:${targetId}',
-                  child: widget.arguments.topic.avatarWidget(
-                    size: 48,
-                    backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
-                    fontColor: DefaultTheme.primaryColor,
-                  ),
+                child: widget.arguments.topic.avatarWidget(
+                  size: 48,
+                  backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
+                  fontColor: DefaultTheme.primaryColor,
                 ),
               ),
             ),
@@ -480,11 +477,11 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                     child: Container(
                       padding: const EdgeInsets.only(left: 0, right: 0, top: 15, bottom: 15),
                       constraints: BoxConstraints(minHeight: 70, maxHeight: 160),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          top: BorderSide(color: DefaultTheme.backgroundColor2),
-                        ),
-                      ),
+//                      decoration: BoxDecoration(
+//                        border: Border(
+//                          top: BorderSide(color: DefaultTheme.backgroundColor2),
+//                        ),
+//                      ),
                       child: getBottomView(),
                     ),
                   ),
