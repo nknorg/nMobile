@@ -21,6 +21,22 @@ class NMobileLocalizations {
     return Intl.message('NKN', name: 'nkn', desc: '');
   }
 
+  String get eth {
+    return Intl.message('ETH', name: 'eth', desc: '');
+  }
+
+  String get gwei {
+    return Intl.message('GWEI', name: 'gwei', desc: '');
+  }
+
+  String get gas_price {
+    return Intl.message('Gas Price', name: 'gas_price', desc: '');
+  }
+
+  String get gas_max {
+    return Intl.message('Max Gas', name: 'gas_max', desc: '');
+  }
+
   String get loading {
     return Intl.message('Loading', name: 'loading', desc: '');
   }
@@ -217,6 +233,10 @@ class NMobileLocalizations {
     return Intl.message('Send NKN', name: 'send_nkn', desc: '');
   }
 
+  String get send_eth {
+    return Intl.message('Send Eth', name: 'send_eth', desc: '');
+  }
+
   String get recieve {
     return Intl.message('Receive', name: 'recieve', desc: '');
   }
@@ -371,6 +391,10 @@ class NMobileLocalizations {
 
   String get main_wallet {
     return Intl.message('Main Wallet', name: 'main_wallet', desc: '');
+  }
+
+  String get eth_wallet {
+    return Intl.message('Eth Wallet', name: 'eth_wallet', desc: '');
   }
 
   String get view_qrcode {

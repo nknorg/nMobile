@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,18 +18,17 @@ import 'package:nmobile/components/dialog/notification.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
-import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
-import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
+import 'package:nmobile/screens/wallet/send_erc_20.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/copy_utils.dart';
@@ -51,6 +52,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
   ClientBloc _clientBloc;
   bool isDefault = false;
   TextEditingController _nameController = TextEditingController();
+  WalletSchema _currWallet;
 
   @override
   void initState() {
@@ -72,8 +74,13 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
   }
 
   _send() {
-    Navigator.of(context).pushNamed(SendNknScreen.routeName, arguments: widget.arguments).then((v) {
-      if (v != null) {
+    Navigator.of(context)
+        .pushNamed(
+      widget.arguments.type == WalletSchema.ETH_WALLET ? SendErc20Screen.routeName : SendNknScreen.routeName,
+      arguments: widget.arguments,
+    )
+        .then((FutureOr success) async {
+      if (success != null && await success) {
         NotificationDialog.of(context).show(
           title: NMobileLocalizations.of(context).transfer_initiated,
           content: NMobileLocalizations.of(context).transfer_initiated_desc,
@@ -87,148 +94,16 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).main_wallet,
+        title: widget.arguments.type == WalletSchema.ETH_WALLET ? NMobileLocalizations.of(context).eth_wallet : NMobileLocalizations.of(context).main_wallet,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: PopupMenuButton(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          icon: loadAssetIconsImage(
-            'more',
-            width: 24,
-          ),
-          onSelected: (int result) async {
-            switch (result) {
-              case 0:
-                if (widget.arguments.type == WalletSchema.ETH_WALLET) {
-                  TODO
-                  Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
-                    'wallet': null,
-                    'keystore': await widget.arguments.getKeystore(),
-                    'address': widget.arguments.address,
-                    'publicKey': null,
-                    'seed': null,
-                    'name': widget.arguments.name,
-                  });
-                } else {
-                  var password = await widget.arguments.getPassword();
-                  if (password != null) {
-                    try {
-                      var wallet = await widget.arguments.exportWallet(password);
-                      if (wallet['address'] == widget.arguments.address) {
-                        Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
-                          'wallet': wallet,
-                          'keystore': wallet['keystore'],
-                          'address': wallet['address'],
-                          'publicKey': wallet['publicKey'],
-                          'seed': wallet['seed'],
-                          'name': isDefault ? NMobileLocalizations
-                              .of(context)
-                              .main_wallet : widget.arguments.name,
-                        });
-                      } else {
-                        showToast(NMobileLocalizations
-                            .of(context)
-                            .password_wrong);
-                      }
-                    } catch (e) {
-                      if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-                        showToast(NMobileLocalizations
-                            .of(context)
-                            .password_wrong);
-                      }
-                    }
-                  }
-                }
-                break;
-              case 1:
-                SimpleConfirm(
-                        context: context,
-                        title: NMobileLocalizations.of(context).delete_wallet_confirm_title,
-                        content: NMobileLocalizations.of(context).delete_wallet_confirm_text,
-                        callback: (v) async {
-                          if (v) {
-                            _walletsBloc.add(DeleteWallet(widget.arguments));
-                            if (account?.client?.pubkey != null) {
-                              var walletAddr = await NknWalletPlugin.pubKeyToWalletAddr(accountPubkey);
-                              if (walletAddr == widget.arguments.address) {
-                                NLog.d('delete client');
-                                _clientBloc.add(DisConnected());
-                              } else {
-                                NLog.d('no delete client');
-                              }
-                            }
-                            Navigator.popAndPushNamed(context, AppScreen.routeName);
-                          }
-                        },
-                        buttonColor: Colors.red,
-                        buttonText: NMobileLocalizations.of(context).delete_wallet)
-                    .show();
-//                ModalDialog.of(context).show(
-//                  height: 450,
-//                  title: Label(
-//                    NMobileLocalizations.of(context).delete_wallet_confirm_title,
-//                    type: LabelType.h2,
-//                    softWrap: true,
-//                  ),
-//                  content: Column(
-//                    children: <Widget>[
-//                      WalletItem(
-//                        schema: widget.arguments,
-//                        onTap: () {},
-//                      ),
-//                      Label(
-//                        NMobileLocalizations.of(context).delete_wallet_confirm_text,
-//                        type: LabelType.bodyRegular,
-//                        softWrap: true,
-//                      ),
-//                    ],
-//                  ),
-//                  actions: <Widget>[
-//                    Button(
-//                      child: Row(
-//                        mainAxisAlignment: MainAxisAlignment.center,
-//                        children: <Widget>[
-//                          Padding(
-//                            padding: const EdgeInsets.only(right: 8),
-//                            child: loadAssetIconsImage(
-//                              'trash',
-//                              color: DefaultTheme.backgroundLightColor,
-//                              width: 24,
-//                            ),
-//                          ),
-//                          Label(
-//                            NMobileLocalizations.of(context).delete_wallet,
-//                            type: LabelType.h3,
-//                          )
-//                        ],
-//                      ),
-//                      backgroundColor: DefaultTheme.strongColor,
-//                      width: double.infinity,
-//                      onPressed: () async {
-//                        _walletsBloc.add(DeleteWallet(widget.arguments));
-//                        if (Global?.currentClient?.address != null) {
-//                          var s = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(Global.currentClient?.publicKey));
-//                          if (s.toString() == widget.arguments.address) {
-//                            NLog.d('delete client ');
-//                            _clientBloc.add(DisConnected());
-//                          } else {
-//                            NLog.d('no delete client ');
-//                          }
-//                        }
-//                        Navigator.popAndPushNamed(context, AppScreen.routeName);
-//                      },
-//                    ),
-//                  ],
-//                );
-                break;
-            }
-          },
+          icon: loadAssetIconsImage('more', width: 24),
+          onSelected: _onMenuSelected,
           itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
             PopupMenuItem<int>(
               value: 0,
-              child: Label(
-                NMobileLocalizations.of(context).export_wallet,
-                type: LabelType.display,
-              ),
+              child: Label(NMobileLocalizations.of(context).export_wallet, type: LabelType.display),
             ),
             PopupMenuItem<int>(
               value: 1,
@@ -269,53 +144,57 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
                                 ),
                                 child: SvgPicture.asset('assets/logo.svg', color: Colours.purple_2e),
                               ).symm(h: 16, v: 20),
-                              widget.arguments.type == WalletSchema.NKN_WALLET ? Space.empty : Positioned(
-                                top: 16,
-                                left: 60,
-                                child: Container(
-                                  width: 20,
-                                  height: 20,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
-                                  child: SvgPicture.asset('assets/ethereum-logo.svg'),
-                                ),
-                              )
+                              widget.arguments.type == WalletSchema.NKN_WALLET
+                                  ? Space.empty
+                                  : Positioned(
+                                      top: 16,
+                                      left: 60,
+                                      child: Container(
+                                        width: 20,
+                                        height: 20,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
+                                        child: SvgPicture.asset('assets/ethereum-logo.svg'),
+                                      ),
+                                    )
                             ],
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 16, bottom: 8, left: 34),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              BlocBuilder<WalletsBloc, WalletsState>(
-                                builder: (context, state) {
-                                  if (state is WalletsLoaded) {
-                                    var w = state.wallets.firstWhere((x) => x == widget.arguments, orElse: () => null);
-                                    if (w != null) {
-                                      return Label(
-                                        Format.nknFormat(w.balance, decimalDigits: 4),
-                                        type: LabelType.h1,
-                                      );
-                                    }
-                                  }
-                                  return Label(
-                                    '',
-                                    type: LabelType.h1,
-                                  );
-                                },
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4, left: 4),
-                                child: Label(
-                                  widget.arguments.type == WalletSchema.ETH_WALLET ? "ETH" : 'NKN',
-                                  type: LabelType.bodySmall,
-                                  color: DefaultTheme.fontColor1,
-                                ),
-                              ),
-                            ],
-                          ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              flex: 0,
+                              child: BlocBuilder<WalletsBloc, WalletsState>(builder: (context, state) {
+                                if (state is WalletsLoaded) {
+                                  _currWallet = state.wallets.firstWhere((x) => x.address == widget.arguments.address, orElse: () => null);
+                                }
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        _currWallet != null
+                                            ? Label(Format.nknFormat(_currWallet.balance, decimalDigits: 4), type: LabelType.h1)
+                                            : Label('--', type: LabelType.h1),
+                                        Label('NKN', type: LabelType.bodySmall, color: DefaultTheme.fontColor1).pad(t: 4),
+                                      ],
+                                    ),
+                                    _currWallet != null && _currWallet.type == WalletSchema.ETH_WALLET
+                                        ? Row(
+                                            children: [
+                                              Label(Format.nknFormat(_currWallet.balanceEth, decimalDigits: 4), type: LabelType.bodySmall),
+                                              Label('ETH', type: LabelType.bodySmall, color: DefaultTheme.fontColor1).pad(l: 6, r: 2),
+                                            ],
+                                          )
+                                        : Space.empty,
+                                  ],
+                                );
+                              }).pad(t: 16, b: 8, l: 34),
+                            ),
+                          ],
                         ),
                         Padding(
                           padding: const EdgeInsets.only(top: 24, bottom: 40),
@@ -468,5 +347,134 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
         ),
       ),
     );
+  }
+
+  _onMenuSelected(int result) async {
+    switch (result) {
+      case 0:
+        if (widget.arguments.type == WalletSchema.ETH_WALLET) {
+          var password = await widget.arguments.getPassword();
+          if (password != null) {
+            try {
+              final ethWallet = await Ethereum.restoreWalletSaved(schema: widget.arguments, password: password);
+              Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+                'wallet': null,
+                'keystore': ethWallet.keystore,
+                'address': (await ethWallet.address).hex,
+                'publicKey': ethWallet.pubkeyHex,
+                'seed': ethWallet.privateKeyHex,
+                'name': ethWallet.name,
+              });
+            } catch (e) {
+              showToast(NMobileLocalizations.of(context).password_wrong);
+            }
+          }
+        } else {
+          var password = await widget.arguments.getPassword();
+          if (password != null) {
+            try {
+              var wallet = await widget.arguments.exportWallet(password);
+              if (wallet['address'] == widget.arguments.address) {
+                Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+                  'wallet': wallet,
+                  'keystore': wallet['keystore'],
+                  'address': wallet['address'],
+                  'publicKey': wallet['publicKey'],
+                  'seed': wallet['seed'],
+                  'name': isDefault ? NMobileLocalizations.of(context).main_wallet : widget.arguments.name,
+                });
+              } else {
+                showToast(NMobileLocalizations.of(context).password_wrong);
+              }
+            } catch (e) {
+              if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+                showToast(NMobileLocalizations.of(context).password_wrong);
+              }
+            }
+          }
+        }
+        break;
+      case 1:
+        SimpleConfirm(
+                context: context,
+                title: NMobileLocalizations.of(context).delete_wallet_confirm_title,
+                content: NMobileLocalizations.of(context).delete_wallet_confirm_text,
+                callback: (v) async {
+                  if (v) {
+                    _walletsBloc.add(DeleteWallet(widget.arguments));
+                    if (account?.client?.pubkey != null) {
+                      var walletAddr = await NknWalletPlugin.pubKeyToWalletAddr(accountPubkey);
+                      if (walletAddr == widget.arguments.address) {
+                        NLog.d('delete client');
+                        _clientBloc.add(DisConnected());
+                      } else {
+                        NLog.d('no delete client');
+                      }
+                    }
+                    Navigator.popAndPushNamed(context, AppScreen.routeName);
+                  }
+                },
+                buttonColor: Colors.red,
+                buttonText: NMobileLocalizations.of(context).delete_wallet)
+            .show();
+//                ModalDialog.of(context).show(
+//                  height: 450,
+//                  title: Label(
+//                    NMobileLocalizations.of(context).delete_wallet_confirm_title,
+//                    type: LabelType.h2,
+//                    softWrap: true,
+//                  ),
+//                  content: Column(
+//                    children: <Widget>[
+//                      WalletItem(
+//                        schema: widget.arguments,
+//                        onTap: () {},
+//                      ),
+//                      Label(
+//                        NMobileLocalizations.of(context).delete_wallet_confirm_text,
+//                        type: LabelType.bodyRegular,
+//                        softWrap: true,
+//                      ),
+//                    ],
+//                  ),
+//                  actions: <Widget>[
+//                    Button(
+//                      child: Row(
+//                        mainAxisAlignment: MainAxisAlignment.center,
+//                        children: <Widget>[
+//                          Padding(
+//                            padding: const EdgeInsets.only(right: 8),
+//                            child: loadAssetIconsImage(
+//                              'trash',
+//                              color: DefaultTheme.backgroundLightColor,
+//                              width: 24,
+//                            ),
+//                          ),
+//                          Label(
+//                            NMobileLocalizations.of(context).delete_wallet,
+//                            type: LabelType.h3,
+//                          )
+//                        ],
+//                      ),
+//                      backgroundColor: DefaultTheme.strongColor,
+//                      width: double.infinity,
+//                      onPressed: () async {
+//                        _walletsBloc.add(DeleteWallet(widget.arguments));
+//                        if (Global?.currentClient?.address != null) {
+//                          var s = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(Global.currentClient?.publicKey));
+//                          if (s.toString() == widget.arguments.address) {
+//                            NLog.d('delete client ');
+//                            _clientBloc.add(DisConnected());
+//                          } else {
+//                            NLog.d('no delete client ');
+//                          }
+//                        }
+//                        Navigator.popAndPushNamed(context, AppScreen.routeName);
+//                      },
+//                    ),
+//                  ],
+//                );
+        break;
+    }
   }
 }

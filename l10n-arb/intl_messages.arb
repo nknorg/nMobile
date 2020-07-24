@@ -1,7 +1,31 @@
 {
-  "@@last_modified": "2020-07-23T23:06:07.605022",
+  "@@last_modified": "2020-07-26T20:59:36.391983",
   "nkn": "NKN",
   "@nkn": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "eth": "ETH",
+  "@eth": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "gwei": "GWEI",
+  "@gwei": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "gas_price": "Gas Price",
+  "@gas_price": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "gas_max": "Max Gas",
+  "@gas_max": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -300,6 +324,12 @@
     "type": "text",
     "placeholders": {}
   },
+  "send_eth": "Send Eth",
+  "@send_eth": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "recieve": "Receive",
   "@recieve": {
     "description": "",
@@ -530,6 +560,12 @@
   },
   "main_wallet": "Main Wallet",
   "@main_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "eth_wallet": "Eth Wallet",
+  "@eth_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}

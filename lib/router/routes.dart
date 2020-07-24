@@ -26,6 +26,7 @@ import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_detail.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
+import 'package:nmobile/screens/wallet/send_erc_20.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
 import 'package:nmobile/screens/wallet/wallet.dart';
 import 'package:nmobile/splash.dart';
@@ -45,6 +46,7 @@ Map<String, WidgetBuilder> routes = {
   NknWalletExportScreen.routeName: (BuildContext context, {arguments}) => NknWalletExportScreen(arguments: arguments),
   ReceiveNknScreen.routeName: (BuildContext context, {arguments}) => ReceiveNknScreen(arguments: arguments),
   SendNknScreen.routeName: (BuildContext context, {arguments}) => SendNknScreen(arguments: arguments),
+  SendErc20Screen.routeName: (BuildContext context, {arguments}) => SendErc20Screen(arguments: arguments),
 //  NoConnectScreen.routeName: (BuildContext context) => NoConnectScreen(),
   ChatSinglePage.routeName: (BuildContext context, {arguments}) => ChatSinglePage(arguments: arguments),
   ChatGroupPage.routeName: (BuildContext context, {arguments}) => ChatGroupPage(arguments: arguments),
