@@ -7,7 +7,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
@@ -151,43 +150,29 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                 itemCount: _messagesList.length,
                 itemBuilder: (BuildContext context, int index) {
                   var item = _messagesList[index];
-                  return Slidable(
-                    actionPane: SlidableStrechActionPane(),
-                    secondaryActions: <Widget>[
-                      IconSlideAction(
-                        caption: NMobileLocalizations.of(context).delete,
-                        color: Colors.red,
-                        icon: Icons.delete,
-                        onTap: () {
-                          MessageItem.deleteTargetChat(item.targetId).then((count) {
-                            if (count > 0) {
-                              setState(() {
-                                _messagesList.removeAt(index);
-                              });
-                            }
-                          });
-                        },
-                      )
-                    ],
-                    child: BlocBuilder<ContactBloc, ContactState>(
-                      builder: (context, state) {
-                        if (state is ContactLoaded) {
-                          Widget w = null;
-                          if (item.topic != null) {
-                            w = getTopicItemView(item, state);
-                          } else {
-                            w = getSingleChatItemView(item, state);
-                          }
+                  return BlocBuilder<ContactBloc, ContactState>(
+                    builder: (context, state) {
+                      if (state is ContactLoaded) {
+                        Widget w = null;
+                        if (item.topic != null) {
+                          w = getTopicItemView(item, state);
+                        } else {
+                          w = getSingleChatItemView(item, state);
+                        }
 
-                          return Container(
+                        return InkWell(
+                          onLongPress: () {
+                            showMenu(item, index);
+                          },
+                          child: Container(
                             child: w,
                             decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6.h, color: DefaultTheme.lineColor))),
-                          );
-                        } else {
-                          return Container();
-                        }
-                      },
-                    ),
+                          ),
+                        );
+                      } else {
+                        return Container();
+                      }
+                    },
                   );
                 },
               ),
@@ -260,14 +245,10 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                             padding: 0.pad(l: 36, r: 36),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
-                              children: [
-                                loadAssetIconsImage('pencil', width: 24, color: DefaultTheme.backgroundLightColor).pad(r: 12),
-                                Label(NMobileLocalizations.of(context).new_message, type: LabelType.h3)
-                              ],
+                              children: [loadAssetIconsImage('pencil', width: 24, color: DefaultTheme.backgroundLightColor).pad(r: 12), Label(NMobileLocalizations.of(context).new_message, type: LabelType.h3)],
                             ),
                             onPressed: () async {
-                              var address = await BottomDialog.of(context).showInputAddressDialog(
-                                  title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+                              var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
                               if (address != null) {
                                 ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
                                 await contact.createContact();
@@ -286,6 +267,65 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         ],
       );
     }
+  }
+
+  showMenu(MessageItem item, int index) {
+    showDialog<Null>(
+      context: context,
+      builder: (BuildContext context) {
+        return new SimpleDialog(
+          contentPadding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(6))),
+          children: <Widget>[
+            SimpleDialogOption(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(height: 10),
+                  Row(
+                    children: <Widget>[
+                      Icon(Icons.vertical_align_top),
+                      SizedBox(width: 10),
+                      Text('置顶'),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                ],
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            SimpleDialogOption(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(height: 10),
+                  Row(
+                    children: <Widget>[
+                      Icon(Icons.delete_outline),
+                      SizedBox(width: 10),
+                      Text('删除'),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                ],
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                MessageItem.deleteTargetChat(item.targetId).then((count) {
+                  if (count > 0) {
+                    setState(() {
+                      _messagesList.removeAt(index);
+                    });
+                  }
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override

@@ -379,7 +379,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
 //                  ContactScreen.routeName,
 //                  arguments: widget.arguments.contact,
 //                );
-                BurnViewUtil.showBurnViewDialog(context);
+                BurnViewUtil.showBurnViewDialog(context, widget.arguments.contact, _chatBloc);
                 break;
             }
           },
@@ -549,11 +549,11 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                       child: Container(
                         padding: const EdgeInsets.only(left: 0, right: 0, top: 15, bottom: 15),
                         constraints: BoxConstraints(minHeight: 70, maxHeight: 160),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            top: BorderSide(color: DefaultTheme.backgroundColor2),
-                          ),
-                        ),
+//                        decoration: BoxDecoration(
+//                          border: Border(
+//                            top: BorderSide(color: Colors.red),
+//                          ),
+//                        ),
                         child: Flex(
                           direction: Axis.horizontal,
                           crossAxisAlignment: CrossAxisAlignment.end,

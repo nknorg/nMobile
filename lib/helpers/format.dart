@@ -38,7 +38,6 @@ class Format {
 
   static String timeFromNowFormat(DateTime time) {
     var now = DateTime.now();
-    var localizations = Localizations.localeOf(Global.appContext).toString();
     var diffSpan = time.difference(now);
 
     if (diffSpan.inSeconds < 0) {

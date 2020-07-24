@@ -55,7 +55,6 @@ class _SendNknScreenState extends State<SendNknScreen> {
 
   WalletSchema wallet;
   bool _showFeeLayout = false;
-  FilteredWalletsBloc _filteredWalletsBloc;
   var _amount;
   var _sendTo;
   double _fee = 0.1;
@@ -67,7 +66,6 @@ class _SendNknScreenState extends State<SendNknScreen> {
   void initState() {
     super.initState();
     locator<TaskService>().queryNknWalletBalanceTask();
-    _filteredWalletsBloc = BlocProvider.of<FilteredWalletsBloc>(context);
     _feeController.text = _fee.toString();
   }
 
