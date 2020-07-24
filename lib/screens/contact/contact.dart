@@ -68,6 +68,8 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
     Duration(minutes: 10),
     Duration(minutes: 30),
     Duration(hours: 1),
+    Duration(days: 1),
+    Duration(days: 7),
   ];
   List<String> _burnTextArray;
   double _sliderBurnValue = 0;
@@ -159,6 +161,8 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
       NMobileLocalizations.of(context).burn_10_minutes,
       NMobileLocalizations.of(context).burn_30_minutes,
       NMobileLocalizations.of(context).burn_1_hour,
+      NMobileLocalizations.of(context).burn_1_day,
+      NMobileLocalizations.of(context).burn_1_week,
     ];
 
     if (widget.arguments.isMe) {
