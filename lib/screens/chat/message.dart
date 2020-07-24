@@ -6,7 +6,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
@@ -27,6 +26,7 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/screens/contact/contact.dart';
+import 'package:nmobile/screens/view/burn_view_utils.dart';
 import 'package:nmobile/utils/image_utils.dart';
 
 class ChatSinglePage extends StatefulWidget {
@@ -95,6 +95,32 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
         }
       });
       setState(() {});
+//      for (var item in _messages) {
+//        setState(() {
+//          if (item.deleteTime != null) {
+//            int afterSeconds = item.deleteTime.difference(DateTime.now()).inSeconds;
+//            item.burnAfterSeconds = afterSeconds;
+//            if (item.burnAfterSeconds < 0) {
+//              _messages.remove(item);
+//              item.deleteMessage();
+//            }
+//          }
+//        });
+//      }
+
+//      for (var i = 0, length = _messages.length; i < length; i++) {
+//        var item = _messages[i];
+//        if (item.deleteTime != null) {
+//          setState(() {
+//            int afterSeconds = item.deleteTime.difference(DateTime.now()).inSeconds;
+//            item.burnAfterSeconds = afterSeconds;
+//            if (item.burnAfterSeconds < 0) {
+//              _messages.removeAt(i);
+//              item.deleteMessage();
+//            }
+//          });
+//        }
+//      }
     });
   }
 
@@ -336,15 +362,37 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                 flex: 1,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Label(widget.arguments.contact.name, type: LabelType.h3, dark: true),
-                  ],
+                  children: <Widget>[Label(widget.arguments.contact.name, type: LabelType.h3, dark: true), getBurnTimeView()],
                 ),
               )
             ],
           ),
         ),
         backgroundColor: DefaultTheme.backgroundColor4,
+        action: PopupMenuButton(
+          icon: loadAssetIconsImage('more', width: 24),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          onSelected: (int result) {
+            switch (result) {
+              case 0:
+//                Navigator.of(context).pushNamed(
+//                  ContactScreen.routeName,
+//                  arguments: widget.arguments.contact,
+//                );
+                BurnViewUtil.showBurnViewDialog(context);
+                break;
+            }
+          },
+          itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
+            PopupMenuItem<int>(
+              value: 0,
+              child: Label(
+                NMobileLocalizations.of(context).burn_after_reading,
+                type: LabelType.display,
+              ),
+            )
+          ],
+        ),
       ),
       body: GestureDetector(
         onTap: () {
@@ -393,33 +441,44 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                                     alignment: WrapAlignment.center,
                                     crossAxisAlignment: WrapCrossAlignment.center,
                                     children: <Widget>[
-                                      Label('${message.isOutbound ? NMobileLocalizations.of(context).you : widget.arguments.contact.name} ${NMobileLocalizations.of(context).update_burn_after_reading}'),
-//                                      Label('${message.isOutbound ? Global.currentUser.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).update_burn_after_reading}'),
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 4, right: 4),
-                                        child: Icon(
-                                          FontAwesomeIcons.clock,
-                                          size: 12,
-                                          color: DefaultTheme.fontColor2,
-                                        ),
-                                      ),
-                                      Label('${Format.durationFormat(Duration(seconds: content['content']['deleteAfterSeconds']))}'),
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 8),
-                                        child: InkWell(
-                                          child: Label(
-                                            NMobileLocalizations.of(context).settings,
-                                            color: DefaultTheme.primaryColor,
-                                            type: LabelType.bodyRegular,
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: <Widget>[
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: <Widget>[
+                                              Padding(
+                                                padding: const EdgeInsets.only(left: 4, right: 4),
+                                                child: Icon(
+                                                  Icons.alarm_on,
+                                                  size: 14,
+                                                  color: DefaultTheme.fontColor2,
+                                                ),
+                                              ),
+                                              Label(' ${Format.durationFormatString(Duration(seconds: content['content']['deleteAfterSeconds']))}'),
+                                            ],
                                           ),
-                                          onTap: () {
-                                            Navigator.of(context).pushNamed(
-                                              ContactScreen.routeName,
-                                              arguments: widget.arguments.contact,
-                                            );
-                                          },
-                                        ),
+                                          SizedBox(height: 6),
+                                          Label('${message.isOutbound ? Global.currentUser.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).update_burn_after_reading}'),
+                                        ],
                                       ),
+//                                      Padding(
+//                                        padding: const EdgeInsets.only(left: 8),
+//                                        child: InkWell(
+//                                          child: Label(
+//                                            NMobileLocalizations.of(context).settings,
+//                                            color: DefaultTheme.primaryColor,
+//                                            type: LabelType.bodyRegular,
+//                                          ),
+//                                          onTap: () {
+//                                            Navigator.of(context).pushNamed(
+//                                              ContactScreen.routeName,
+//                                              arguments: widget.arguments.contact,
+//                                            );
+//                                          },
+//                                        ),
+//                                      ),
                                     ],
                                   ),
                                 );
@@ -429,23 +488,43 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                                     alignment: WrapAlignment.center,
                                     crossAxisAlignment: WrapCrossAlignment.center,
                                     children: <Widget>[
-                                      Label('${message.isOutbound ? Global.currentUser.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).close_burn_after_reading}'),
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 8),
-                                        child: InkWell(
-                                          child: Label(
-                                            NMobileLocalizations.of(context).settings,
-                                            color: DefaultTheme.primaryColor,
-                                            type: LabelType.bodyRegular,
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: <Widget>[
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: <Widget>[
+                                              Padding(
+                                                padding: const EdgeInsets.only(left: 4, right: 4),
+                                                child: Icon(
+                                                  Icons.alarm_off,
+                                                  size: 14,
+                                                  color: DefaultTheme.fontColor2,
+                                                ),
+                                              ),
+                                              SizedBox(width: 4),
+                                              Label('off'),
+                                            ],
                                           ),
-                                          onTap: () {
-                                            Navigator.of(context).pushNamed(
-                                              ContactScreen.routeName,
-                                              arguments: widget.arguments.contact,
-                                            );
-                                          },
-                                        ),
+                                          Label('${message.isOutbound ? NMobileLocalizations.of(context).you : widget.arguments.contact.name} ${NMobileLocalizations.of(context).close_burn_after_reading}'),
+                                        ],
                                       ),
+//                                      Padding(
+//                                        padding: const EdgeInsets.only(left: 8),
+//                                        child: InkWell(
+//                                          child: Label(
+//                                            NMobileLocalizations.of(context).settings,
+//                                            color: DefaultTheme.primaryColor,
+//                                            type: LabelType.bodyRegular,
+//                                          ),
+//                                          onTap: () {
+//                                            Navigator.of(context).pushNamed(
+//                                              ContactScreen.routeName,
+//                                              arguments: widget.arguments.contact,
+//                                            );
+//                                          },
+//                                        ),
+//                                      ),
                                     ],
                                   ),
                                 );
@@ -508,21 +587,6 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                                   direction: Axis.horizontal,
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: <Widget>[
-//                                    Expanded(
-//                                      flex: 0,
-//                                      child: Container(
-//                                        width: 48,
-//                                        height: 48,
-//                                        alignment: Alignment.center,
-//                                        child: GestureDetector(
-//                                          onTap: () async {},
-//                                          child: loadAssetIconsImage(
-//                                            'microphone',
-//                                            color: DefaultTheme.fontColor2,
-//                                          ),
-//                                        ),
-//                                      ),
-//                                    ),
                                     Expanded(
                                       flex: 1,
                                       child: TextField(
@@ -652,65 +716,6 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                                 ],
                               ),
                             ),
-//                            Expanded(
-//                              flex: 0,
-//                              child: Column(
-//                                children: <Widget>[
-//                                  SizedBox(
-//                                    width: 71,
-//                                    height: 71,
-//                                    child: FlatButton(
-//                                      padding: const EdgeInsets.all(0),
-//                                      color: DefaultTheme.backgroundColor1,
-//                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-//                                      child: loadAssetIconsImage(
-//                                        'paperclip2',
-//                                        width: 35,
-//                                        color: DefaultTheme.fontColor2,
-//                                      ),
-//                                      onPressed: () {},
-//                                    ),
-//                                  ),
-//                                  Padding(
-//                                    padding: const EdgeInsets.only(top: 8),
-//                                    child: Label(
-//                                      NMobileLocalizations.of(context).files,
-//                                      type: LabelType.bodySmall,
-//                                      color: DefaultTheme.fontColor2,
-//                                    ),
-//                                  )
-//                                ],
-//                              ),
-//                            ),
-//                            Expanded(
-//                              flex: 0,
-//                              child: Column(
-//                                children: <Widget>[
-//                                  SizedBox(
-//                                    width: 71,
-//                                    height: 71,
-//                                    child: FlatButton(
-//                                      color: DefaultTheme.backgroundColor1,
-//                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-//                                      child: loadAssetIconsImage(
-//                                        'pin',
-//                                        width: 24,
-//                                        color: DefaultTheme.fontColor2,
-//                                      ),
-//                                      onPressed: () {},
-//                                    ),
-//                                  ),
-//                                  Padding(
-//                                    padding: const EdgeInsets.only(top: 8),
-//                                    child: Label(
-//                                      NMobileLocalizations.of(context).location,
-//                                      type: LabelType.bodySmall,
-//                                      color: DefaultTheme.fontColor2,
-//                                    ),
-//                                  )
-//                                ],
-//                              ),
-//                            ),
                           ],
                         ),
                       ),
@@ -723,5 +728,26 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
         ),
       ),
     );
+  }
+
+  getBurnTimeView() {
+    if (widget.arguments.contact?.options != null && widget.arguments.contact?.options?.deleteAfterSeconds != null) {
+      return Container(
+        padding: EdgeInsets.only(top: 2),
+        child: Row(
+          children: <Widget>[
+            Icon(
+              Icons.alarm_on,
+              size: 14,
+              color: DefaultTheme.backgroundLightColor,
+            ),
+            SizedBox(width: 4),
+            Label(Format.durationFormat(Duration(seconds: widget.arguments.contact?.options?.deleteAfterSeconds)), type: LabelType.bodySmall, color: DefaultTheme.backgroundLightColor),
+          ],
+        ),
+      );
+    } else {
+      return Container();
+    }
   }
 }

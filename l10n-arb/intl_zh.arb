@@ -1232,13 +1232,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "update_burn_after_reading": "修改",
+  "update_burn_after_reading": "设置了阅后即焚时间。",
   "@update_burn_after_reading": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "close_burn_after_reading": "关闭",
+  "close_burn_after_reading": "禁用了阅后即焚。",
   "@close_burn_after_reading": {
     "description": "",
     "type": "text",
@@ -1546,6 +1546,37 @@
   },
   "you": "您",
   "@you": {
+    "type": "text",
+    "placeholders": {}
+  }, "seconds": "秒",
+  "@seconds": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hours": "小时",
+  "@hours": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "minute": "分钟",
+  "@minute": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "week": "周",
+  "@week": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "burn_1_day": "1 天",
+  "@burn_1_day": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "burn_1_week": "1 周",
+  "@burn_1_week": {
+    "description": "",
     "type": "text",
     "placeholders": {}
   }

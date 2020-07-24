@@ -854,11 +854,11 @@ class NMobileLocalizations {
   }
 
   String get update_burn_after_reading {
-    return Intl.message('update burn after reading', name: 'update_burn_after_reading', desc: '');
+    return Intl.message('set the disappearing message timer', name: 'update_burn_after_reading', desc: '');
   }
 
   String get close_burn_after_reading {
-    return Intl.message('close burn after reading', name: 'close_burn_after_reading', desc: '');
+    return Intl.message('disabled disappearing messages', name: 'close_burn_after_reading', desc: '');
   }
 
   String get joined_channel {
@@ -895,6 +895,14 @@ class NMobileLocalizations {
 
   String get burn_1_hour {
     return Intl.message('1 hour', name: 'burn_1_hour', desc: '');
+  }
+
+  String get burn_1_day {
+    return Intl.message('1 day', name: 'burn_1_day', desc: '');
+  }
+
+  String get burn_1_week {
+    return Intl.message('1 week', name: 'burn_1_week', desc: '');
   }
 
   String get hint_enter_wallet_name {
@@ -1015,6 +1023,10 @@ class NMobileLocalizations {
   String get export => Intl.message('Export', name: 'export');
   String get eth_keystore_export_desc => Intl.message('The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.', name: 'eth_keystore_export_desc');
   String get you => Intl.message('You', name: 'you');
+  String get seconds => Intl.message('seconds', name: 'seconds');
+  String get hours => Intl.message('hours', name: 'hours');
+  String get minute => Intl.message('minute', name: 'minute');
+  String get week => Intl.message('week', name: 'week');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {
