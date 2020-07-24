@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:web3dart/credentials.dart';
 
 class Validator {
   final BuildContext context;
@@ -70,8 +71,20 @@ class Validator {
       try {
         addressFormat = verifyAddress(value.trim());
       } catch (e) {
-        debugPrint(e);
-        debugPrintStack();
+        debugPrintStack(label: e?.toString());
+      }
+      return value.trim().length == 0 ? _localizations.error_required : !addressFormat ? _localizations.error_nkn_address_format : null;
+    };
+  }
+
+  ethAddress() {
+    return (value) {
+      bool addressFormat = false;
+      try {
+        EthereumAddress.fromHex(value.trim());
+        addressFormat = true;
+      } catch (e) {
+        //debugPrintStack(label: e?.toString());
       }
       return value.trim().length == 0 ? _localizations.error_required : !addressFormat ? _localizations.error_nkn_address_format : null;
     };
