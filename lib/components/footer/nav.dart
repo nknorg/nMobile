@@ -22,9 +22,6 @@ class Nav extends StatefulWidget {
 }
 
 class _NavState extends State<Nav> {
-  double _fontSize = 0;
-  double _selectedFontSize = 10;
-
   void _onItemTapped(int index) {
     setState(() {
       widget.currentIndex = index;
@@ -41,7 +38,8 @@ class _NavState extends State<Nav> {
       decoration: BoxDecoration(
         boxShadow: [BoxShadow(color: DefaultTheme.backgroundColor2)],
         color: DefaultTheme.backgroundLightColor,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        border: Border(top: BorderSide(color: DefaultTheme.backgroundColor2)),
+//        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -49,21 +47,21 @@ class _NavState extends State<Nav> {
           ButtonIcon(
             icon: loadAssetIconsImage('chat', color: widget.currentIndex == 0 ? _selectedColor : _color),
             text: NMobileLocalizations.of(context).menu_chat,
-            height: 68,
+            height: 60,
             fontColor: widget.currentIndex == 0 ? _selectedColor : _color,
             onPressed: () => _onItemTapped(0),
           ),
           ButtonIcon(
             icon: loadAssetIconsImage('wallet', color: widget.currentIndex == 1 ? _selectedColor : _color),
             text: NMobileLocalizations.of(context).menu_wallet,
-            height: 68,
+            height: 60,
             fontColor: widget.currentIndex == 1 ? _selectedColor : _color,
             onPressed: () => _onItemTapped(1),
           ),
           ButtonIcon(
             icon: loadAssetIconsImage('settings', color: widget.currentIndex == 2 ? _selectedColor : _color),
             text: NMobileLocalizations.of(context).menu_settings,
-            height: 68,
+            height: 60,
             fontColor: widget.currentIndex == 2 ? _selectedColor : _color,
             onPressed: () => _onItemTapped(2),
           ),

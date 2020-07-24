@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
@@ -35,12 +34,7 @@ class Textbox extends StatefulWidget {
   final Color borderColor;
   final Color color;
 
-  Textbox({this.value, this.color = Colours.dark_2d, this.padding = const EdgeInsets.only(bottom: 8), this.showErrorMessage = true,
-    this.enabled = true, this.readOnly = false, this.multi = false, this.minLines, this.maxLines = 3,
-    this.autofocus = false, this.focusNode, this.controller, this.password = false, this.validator,
-    this.hintText, this.helperText, this.keyboardType, this.textInputAction, this.suffixIcon,
-    this.onSaved, this.onChanged, this.onFieldSubmitted, this.inputFormatters, this.maxLength,
-    this.maxLengthEnforced = true, this.fontSize = 14, this.borderColor});
+  Textbox({this.value, this.color = Colours.dark_2d, this.padding = const EdgeInsets.only(bottom: 8), this.showErrorMessage = true, this.enabled = true, this.readOnly = false, this.multi = false, this.minLines, this.maxLines = 3, this.autofocus = false, this.focusNode, this.controller, this.password = false, this.validator, this.hintText, this.helperText, this.keyboardType, this.textInputAction, this.suffixIcon, this.onSaved, this.onChanged, this.onFieldSubmitted, this.inputFormatters, this.maxLength, this.maxLengthEnforced = true, this.fontSize = 14, this.borderColor});
 
   @override
   _TextboxState createState() => _TextboxState();
