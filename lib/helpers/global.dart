@@ -43,7 +43,7 @@ class Global {
       SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(statusBarColor: Colors.transparent);
       SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
 //      BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
-      AndroidMessagingService.registerOnMessage();
+      AndroidMessagingService.registerNativeCallback();
     }
   }
 
