@@ -19,14 +19,18 @@ import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
-import 'package:nmobile/utils/nlog_util.dart';
+import 'package:nmobile/utils/log_tag.dart';
 
-class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc {
+class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
   @override
   ChatState get initialState => NotConnect();
   final ContactBloc contactBloc;
 
-  ChatBloc({@required this.contactBloc});
+  LOG _LOG;
+
+  ChatBloc({@required this.contactBloc}) {
+    _LOG = LOG(tag);
+  }
 
   @override
   Stream<ChatState> mapEventToState(ChatEvent event) async* {
@@ -192,7 +196,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc {
   }
 
   Stream<ChatState> _mapReceiveMessageToState(ReceiveMessage event) async* {
-    NLog.d('=======receive  message ==============');
+    _LOG.d('=======receive  message ==============');
     var message = event.message;
     if (await message.isExist(db)) {
       return;
@@ -205,10 +209,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc {
       if (!dests.contains(message.from)) {
         TopicSchema(topic: message.topic).getPrivateOwnerMetaAction(account);
         TopicSchema(topic: message.topic).getSubscribers(account, cache: false);
-        NLog.d('$dests not contains ${message.from}');
+        _LOG.d('$dests not contains ${message.from}');
         return;
       } else {
-        NLog.d('$dests contains ${message.from}');
+        _LOG.d('$dests contains ${message.from}');
       }
     }
 
@@ -268,7 +272,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc {
         return;
       case ContentType.eventSubscribe:
         Global.removeTopicCache(message.topic);
-
         return;
       case ContentType.receipt:
         // todo debug
@@ -331,9 +334,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc {
               contactBloc.add(LoadContact(address: [message.from]));
             }
           } else {
-            NLog.d('no change profile');
+            _LOG.d('no change profile');
           }
-        } //
+        }
         return;
       case ContentType.eventContactOptions:
         Map<String, dynamic> data;

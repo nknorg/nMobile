@@ -66,6 +66,7 @@ class _MessagesTabState extends State<MessagesTab>
   LOG _LOG;
   bool _enabled = true;
   bool canDisable = false;
+  Timer looper;
 
   @override
   void initState() {
@@ -107,6 +108,7 @@ class _MessagesTabState extends State<MessagesTab>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _LOG.i('didChangeAppLifecycleState($state), $canDisable');
+    looper?.cancel();
     if (canDisable && state == AppLifecycleState.resumed) {
       canDisable = false;
       setState(() {
@@ -115,7 +117,9 @@ class _MessagesTabState extends State<MessagesTab>
       _ensureVerifyPassword();
     }
     if (state == AppLifecycleState.paused) {
-      canDisable = true;
+      looper = Timer(Duration(minutes: 1), () {
+        canDisable = true;
+      });
     }
   }
 

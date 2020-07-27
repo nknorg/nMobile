@@ -73,10 +73,11 @@ class Permission {
           return key.contains('__permission__');
         });
       }
-      BlocProvider.of<ChannelMembersBloc>(Global.appContext).add(MembersCount(topic, res.length, true));
+      //BlocProvider.of<ChannelMembersBloc>(Global.appContext).add(MembersCount(topic, res.length, true));
       return res;
     } catch (e) {
-      return getSubscribers(account, topic: topic);
+      LOG('Permission@static').e('getSubscribers', e);
+      rethrow;
     }
   }
 
@@ -159,7 +160,7 @@ class Permission {
     }
     Map<String, dynamic> subscribers = await SubscribersSchema.getSubscribersByTopic(await account.dbHolder.db, topic);
     if (subscribers != null && subscribers.length > 0) {
-      _LOG.i('getSubscribers use cache | $topic');
+      _LOG.i('getSubscribersFromDbOrNative use cache | $topic');
       _LOG.i(subscribers);
 
 //      if (Global.isLoadSubscribers(topic)) {

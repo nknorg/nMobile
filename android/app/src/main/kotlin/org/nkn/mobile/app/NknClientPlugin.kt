@@ -111,19 +111,19 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 accountPubkeyHex = ensureSameAccount(account)
                 val client = genClientIfNotExists(account, identifier, clientUrl)
                 if (client == null) {
-                    App.handler().post {
+                    App.runOnMainThread {
                         result.success(0)
                     }
                 } else {
-                    App.handler().post {
+                    App.runOnMainThread {
                         // @UiThread defined in doc.
                         result.success(1)
                     }
-                    acty?.sendAccount2Service(account)
+                    acty?.onClientCreated()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "createClient | e:", e)
-                App.handler().post {
+                App.runOnMainThread {
 //                    @UiThread
 //                    result.error(String errorCode,
 //                      @Nullable String errorMessage,
@@ -146,7 +146,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                         "node" to hashMapOf("address" to node.addr, "publicKey" to node.pubKey),
                         "client" to hashMapOf("address" to client.address())
                 )
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.success(data)
                 }
             } catch (e: Exception) {
@@ -167,9 +167,10 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
     private fun disConnect(call: MethodCall?, result: MethodChannel.Result?, callFromDart: Boolean) {
         result?.success(null)
         val clientAddr = multiClient?.address()
+        val isConn = isConnected
         closeClientIfExists()
-        if (!callFromDart) {
-            App.handler().post {
+        if (!callFromDart && isConn) {
+            App.runOnMainThread {
                 val data = hashMapOf(
                         "event" to "onDisConnect",
                         "client" to hashMapOf("address" to clientAddr)
@@ -202,7 +203,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                                         "pid" to msg.messageID
                                 )
                         )
-                        App.handler().post {
+                        App.runOnMainThread {
                             clientEventSink.success(data)
                         }
                     } else {
@@ -232,7 +233,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             }
         }
         if (nknDests == null) {
-            App.handler().post {
+            App.runOnMainThread {
                 clientEventSink.error(_id, "dests null", null)
             }
             return
@@ -250,12 +251,12 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                         "event" to "send",
                         "pid" to config.messageID
                 )
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "sendText | e:", e)
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
             }
@@ -280,12 +281,12 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                         "event" to "send",
                         "pid" to config.messageID
                 )
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "publishText | e:", e)
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
             }
@@ -311,12 +312,12 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                         "_id" to _id,
                         "result" to hash
                 )
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "subscribe | e:", e)
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
             }
@@ -340,12 +341,12 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                         "_id" to _id,
                         "result" to hash
                 )
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "unsubscribe | e:", e)
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
             }
@@ -373,12 +374,12 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                     map.put(chatId, meta)
                     true
                 }
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.success(map)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "getSubscribers | e:", e)
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
             }
@@ -399,12 +400,12 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                         "meta" to subscription.meta,
                         "expiresAt" to subscription.expiresAt
                 )
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "getSubscription | e:", e)
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
             }
@@ -423,12 +424,12 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                         "_id" to _id,
                         "result" to count
                 )
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "getSubscribersCount | e:", e)
-                App.handler().post {
+                App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
             }
@@ -486,7 +487,11 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         isConnected = false
     }
 
+    fun pauseClient() {
+        disConnect(null, null, callFromDart = false)
+    }
+
     fun close() {
-        closeClientIfExists()
+        disConnect(null, null, callFromDart = false)
     }
 }

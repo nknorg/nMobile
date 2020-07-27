@@ -24,6 +24,7 @@ import hobby.wei.c.tool.Retry
 import hobby.wei.c.tool.RetryByHandler
 import org.nkn.mobile.app.abs.StartMe
 import org.nkn.mobile.app.abs.Tag
+import org.nkn.mobile.app.BuildConfig
 import io.flutter.embedding.android.FlutterFragmentActivity
 
 /**
@@ -135,7 +136,9 @@ abstract class AbsMsgrActy : FlutterFragmentActivity(), RetryByHandler, Tag {
     val serviceConn: ServiceConnection by lazy {
         object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName, service: IBinder) {
-                assert(!connected) { "测试 onServiceConnected 会不会重复多次" }
+                if (BuildConfig.DEBUG && connected) {
+                    error("测试 onServiceConnected 会不会重复多次")
+                }
                 sender = serviceStarter.binder2Sender(service)
                 replyTo = serviceStarter.replyToClient(sender!!, msgHandler)
                 if (replyTo != null) {
