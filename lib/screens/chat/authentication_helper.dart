@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
 import 'package:nmobile/helpers/local_storage.dart';
+import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
@@ -46,6 +47,28 @@ class DChatAuthenticationHelper {
     final _password = await wallet.getPassword(showDialogIfCanceledBiometrics: true /*default*/, forceShowInputDialog: forceShowInputDialog);
     _authenticating = false;
     return _password;
+  }
+
+  static getPassword4BackgroundFetch({
+    @required WalletSchema wallet,
+    bool verifyProtectionEnabled = true,
+    @required void onGetPassword(WalletSchema wallet, String password),
+  }) async {
+    // 22508-22760 E/flutter: [ERROR:flutter/lib/ui/ui_dart_state.cc(157)] Unhandled Exception: MissingPluginException(
+    // No implementation found for method getAvailableBiometrics on channel plugins.flutter.io/local_auth)
+    // Since Android Native Service create a new `DartVM`, and not init other MethodChannel.
+    bool isProtectionEnabled = false;
+    if (verifyProtectionEnabled) {
+      isProtectionEnabled = (await LocalAuthenticationService.instance).isProtectionEnabled;
+    } else {
+      isProtectionEnabled = true;
+    }
+    if (isProtectionEnabled) {
+      final _password = await SecureStorage().get('${SecureStorage.PASSWORDS_KEY}:${wallet.address}');
+      if (_password != null) {
+        onGetPassword(wallet, _password);
+      }
+    }
   }
 
   static void cancelAuthentication() async {

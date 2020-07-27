@@ -14,6 +14,7 @@ import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
+import 'package:nmobile/utils/log_tag.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -230,7 +231,7 @@ class ContactSchema {
     return view;
   }
 
-  toRequestData(String requestType) async {
+  Future<String> toRequestData(String requestType) async {
     // Saved other's contact data.
     Map data = {
       'id': uuid.v4(),
@@ -242,7 +243,7 @@ class ContactSchema {
     return jsonEncode(data);
   }
 
-  toResponseData(Future<Database> db, String myClientAddr, String requestType) async {
+  Future<String> toResponseData(Future<Database> db, String myClientAddr, String requestType) async {
     final me = await getContactByAddress(db, myClientAddr);
     Map data = {
       'id': uuid.v4(),
@@ -406,7 +407,7 @@ class ContactSchema {
 
   Future requestProfile(NknClientProxy client, {String type = RequestType.header}) async {
     try {
-      await client.sendText([clientAddress], toRequestData(type));
+      await client.sendText([clientAddress], await toRequestData(type));
     } catch (e) {
       debugPrint(e?.toString());
 //      debugPrintStack();
@@ -415,7 +416,7 @@ class ContactSchema {
 
   Future responseProfile(DChatAccount account, String myClientAddr, {String type = RequestType.header}) async {
     try {
-      await account.client.sendText([clientAddress], toResponseData(account.dbHolder.db, myClientAddr, type));
+      await account.client.sendText([clientAddress], await toResponseData(account.dbHolder.db, myClientAddr, type));
     } catch (e) {
       debugPrint(e?.toString());
 //      debugPrintStack();
@@ -477,8 +478,7 @@ class ContactSchema {
       );
       return ContactSchema.parseEntity(res?.first);
     } catch (e) {
-      NLog.d(e.toString());
-      debugPrintStack();
+      LOG('ContactSchema@static').e('getContactByAddress', e);
     }
   }
 

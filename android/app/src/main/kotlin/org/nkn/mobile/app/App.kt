@@ -6,18 +6,23 @@
 
 package org.nkn.mobile.app
 
-import android.os.*
-import android.app.*
-import android.os.StrictMode.VmPolicy
 //import com.google.firebase.FirebaseApp
+
+import android.app.Activity
+import android.app.ActivityManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.*
+import android.os.StrictMode.VmPolicy
+import android.util.Log
+import io.flutter.app.FlutterApplication
 import nkn.Wallet
 import org.nkn.mobile.app.abs.Tag
 import org.nkn.mobile.app.dchat.DChatServiceForFlutter
 import org.nkn.mobile.app.util.Bytes2String.withAndroidPrefix
-
-import io.flutter.app.FlutterApplication
 import java.util.concurrent.TimeUnit
-import android.util.Log
 
 /**
  * @author Wei.Chou
@@ -34,7 +39,6 @@ class App : FlutterApplication(), Tag {
 //        FirebaseApp.initializeApp(this)
         super.onCreate()
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
-            var onStartStopInsCount = 0
             override fun onActivityCreated(activity: Activity, bundle: Bundle?) {}
 
             override fun onActivityStarted(activity: Activity) {
@@ -47,22 +51,15 @@ class App : FlutterApplication(), Tag {
             override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
             override fun onActivityStopped(activity: Activity) {
                 if (--onStartStopInsCount == 0) {
+                    mainActy = activity as MainActivity
                     DChatServiceForFlutter.startFg(applicationContext)
-//                    postDelayed(2000/*TimeUnit.MINUTES.toMillis(10)*/) {
-//                        if (onStartStopInsCount <= 0 /*&& isMainProcess()*/) {
-//                            Log.e(TAG, "finish activity: ${activity.javaClass.name}".withAndroidPrefix())
-//                            activity.finish()
-//                            // Can't trigger appTasks not running.
-//                            //Process.killProcess(Process.myPid())
-//                        }
-//                    }
                 }
             }
 
             override fun onActivityDestroyed(activity: Activity) {
+                if (activity == mainActy) mainActy = null
                 if (onStartStopInsCount <= 0) {
-                    // trigger service `onStartWork()`
-                    DChatServiceForFlutter.start(applicationContext)
+                    DChatServiceForFlutter.forceStartWork(applicationContext)
                 }
             }
         })
@@ -71,9 +68,33 @@ class App : FlutterApplication(), Tag {
             // exposed beyond app through Intent.getData()
             StrictMode.setVmPolicy(VmPolicy.Builder().build())
         }
+
+        val filter = IntentFilter()
+        filter.addAction(Intent.ACTION_SCREEN_OFF)
+        filter.addAction(Intent.ACTION_SCREEN_ON)
+        filter.addAction(Intent.ACTION_USER_PRESENT)
+        registerReceiver(object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                when (intent.action) {
+                    Intent.ACTION_SCREEN_ON -> {
+                        isScreenOn = true
+                    }
+                    Intent.ACTION_SCREEN_OFF -> {
+                        isScreenOn = false
+                        handler.removeCallbacks(serviceForceStartWorkRun)
+                        handler.postDelayed(serviceForceStartWorkRun, TimeUnit.MINUTES.toMillis(1))
+                    }
+                    Intent.ACTION_USER_PRESENT -> {
+                        isScreenOn = true
+                    }
+                    else -> {
+                    }
+                }
+            }
+        }, filter)
     }
 
-    fun isMainProcess(): Boolean {
+    private fun isMainProcess(): Boolean {
         fun getProcessName(pid: Int): String? {
             val actyManager = getSystemService(ActivityManager::class.java)
             for (info in actyManager.getRunningAppProcesses()) {
@@ -83,8 +104,32 @@ class App : FlutterApplication(), Tag {
             return null
         }
 
-        val packageName = getProcessName(Process.myPid())
-        return packageName!!.indexOf(':') < 0
+        val packageName = getProcessName(Process.myPid())!!
+        return packageName.indexOf(':') < 0
+    }
+
+    private val serviceForceStartWorkRun by lazy {
+        Runnable {
+            if (!isScreenOn && onStartStopInsCount <= 0 && isMainProcess()) {
+                DChatServiceForFlutter.forceStartWork(applicationContext)
+                postDelayed(TimeUnit.SECONDS.toMillis(10)) {
+                    if (!isScreenOn && onStartStopInsCount <= 0) {
+                        Log.w(TAG, "pauseClient on ui process: ${mainActy?.javaClass?.name}".withAndroidPrefix())
+                        mainActy?.clientPlugin?.pauseClient()
+                    }
+                }
+            }
+        }
+    }
+
+    fun onUiClientCreated() {
+        postDelayed(TimeUnit.SECONDS.toMillis(10)) {
+            // `onUiClientCreated()` is always at `main process`.
+            if (isScreenOn && onStartStopInsCount > 0/* && isMainProcess()*/) {
+                Log.w(TAG, "service force stop work".withAndroidPrefix())
+                DChatServiceForFlutter.forceStopWork(applicationContext)
+            }
+        }
     }
 
     val handler by lazy { Handler(mainLooper) }
@@ -93,14 +138,21 @@ class App : FlutterApplication(), Tag {
         handler.looper.queue.addIdleHandler(MyIdleHandler(times, action))
     }
 
+    private var onStartStopInsCount = 0
+    private var isScreenOn: Boolean = true
+    private var mainActy: MainActivity? = null
+
     companion object {
         @Volatile
         private lateinit var instance: App
 
-        @Volatile
-                /*private*/ var wallet: Wallet? = null
-
         fun get() = instance
+
+        fun runOnMainThread(action: () -> Unit) {
+            if (Looper.getMainLooper().isCurrentThread) {
+                action()
+            } else handler().post(action)
+        }
 
         fun handler() = get().handler
 
