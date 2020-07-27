@@ -28,10 +28,10 @@ mixin Tag {
 class LOG {
   static final _logger = Logger(printer: PrettyPrinter());
 
-  bool usePrint = true;
-  String tag;
+  final bool usePrint;
+  final String tag;
 
-  LOG(this.tag, {this.usePrint: true});
+  const LOG(this.tag, {this.usePrint: true});
 
   void i(dynamic message) {
     if (!Global.isRelease) {

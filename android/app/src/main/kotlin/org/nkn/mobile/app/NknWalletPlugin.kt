@@ -133,7 +133,7 @@ class NknWalletPlugin(flutterEngine: FlutterEngine) : MethodChannel.MethodCallHa
                 val transactionConfig = TransactionConfig()
                 transactionConfig.fee = fee
                 val hash = wallet.transfer(address, amount, transactionConfig)
-                App.handler().post{
+                App.runOnMainThread {
                     var hash = hashMapOf(
                             "_id" to _id,
                             "result" to hash
@@ -141,7 +141,7 @@ class NknWalletPlugin(flutterEngine: FlutterEngine) : MethodChannel.MethodCallHa
                     walletEventSink?.success(hash)
                 }
             }catch (e : Exception){
-                App.handler().post{
+                App.runOnMainThread {
                     walletEventSink?.error(_id,"","")
                 }
 
@@ -162,7 +162,7 @@ class NknWalletPlugin(flutterEngine: FlutterEngine) : MethodChannel.MethodCallHa
         AsyncTask.SERIAL_EXECUTOR.execute {
            try {
                val balance = wallet.balanceByAddress(address).toString()
-               App.handler().post{
+               App.runOnMainThread {
                    var hash = hashMapOf(
                            "_id" to _id,
                            "result" to balance.toDouble()
@@ -170,7 +170,7 @@ class NknWalletPlugin(flutterEngine: FlutterEngine) : MethodChannel.MethodCallHa
                    walletEventSink?.success(hash)
                }
            }catch (e : Exception){
-               App.handler().post{
+               App.runOnMainThread {
                    walletEventSink?.error(_id,"","")
                }
 
