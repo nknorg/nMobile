@@ -518,12 +518,13 @@ class _NodeMainPageState extends State<NodeMainPage> {
                                               type: LabelType.bodySmall,
                                               softWrap: true,
                                             ),
-                                            Label(
-                                              '流量: ${node.flow != null ? getFormatSize(node.flow.toDouble(), unitArr: ['Bytes', 'KBytes', 'MBytes', 'GBytes', 'TBytes']) : '-'}',
-                                              color: DefaultTheme.fontColor1,
-                                              type: LabelType.bodySmall,
-                                              softWrap: true,
-                                            )
+//                                            Misleading, remove it. by Chenai
+//                                            Label(
+//                                              '流量: ${node.flow != null ? getFormatSize(node.flow.toDouble(), unitArr: ['Bytes', 'KBytes', 'MBytes', 'GBytes', 'TBytes']) : '-'}',
+//                                              color: DefaultTheme.fontColor1,
+//                                              type: LabelType.bodySmall,
+//                                              softWrap: true,
+//                                            )
                                           ],
                                         ),
                                       ],
