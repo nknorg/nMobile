@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/download_progress.dart';
-import 'package:nmobile/components/button.dart';
+import 'package:nmobile/components/ButtonIcon.dart';
 import 'package:nmobile/components/markdown.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
@@ -91,9 +91,11 @@ class _ApkUpgradeNotesDialogState extends State<ApkUpgradeNotesDialog> {
                   flex: 0,
                   child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
-                      children: Button(
+                      children: ButtonIcon(
+                          width: 48,
+                          height: 48,
                           padding: 0.pad().pad(t: 6, r: 6),
-                          child: loadAssetIconsImage('close', width: 16),
+                          icon: loadAssetIconsImage('close', width: 16),
                           onPressed: () {
                             if (widget._force) {
                               // If it's a forced update, it cannot be turned off.
@@ -101,7 +103,7 @@ class _ApkUpgradeNotesDialogState extends State<ApkUpgradeNotesDialog> {
                               widget.close();
                               widget._onClose();
                             }
-                          }).sized(h: 48).toList)),
+                          }).toList)),
               Expanded(
                 flex: 1,
                 child: Column(
