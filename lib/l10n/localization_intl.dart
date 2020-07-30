@@ -218,7 +218,7 @@ class NMobileLocalizations {
   }
 
   String get recieve {
-    return Intl.message('Recieve', name: 'recieve', desc: '');
+    return Intl.message('Receive', name: 'recieve', desc: '');
   }
 
   String get keystore {
@@ -333,6 +333,10 @@ class NMobileLocalizations {
     return Intl.message('Are you sure you want to delete cache?', name: 'delete_cache_confirm_title', desc: '');
   }
 
+  String get delete_db_confirm_title {
+    return Intl.message('Are you sure you want to clear the database?', name: 'delete_db_confirm_title', desc: '');
+  }
+
   String get click_to_settings {
     return Intl.message('Click to settings', name: 'click_to_settings', desc: '');
   }
@@ -430,7 +434,7 @@ class NMobileLocalizations {
   }
 
   String get select_asset_to_recieve {
-    return Intl.message('Select Asset to Recieve', name: 'select_asset_to_recieve', desc: '');
+    return Intl.message('Select Asset to Receive', name: 'select_asset_to_recieve', desc: '');
   }
 
   String get select_another_wallet {
@@ -734,7 +738,7 @@ class NMobileLocalizations {
   }
 
   String get no_wallet_desc {
-    return Intl.message('Manage both your Mainnet and ERC-20 NKN tokens with our smart wallet manager.', name: 'no_wallet_desc', desc: '');
+    return Intl.message('Manage both your Mainnet and ERC-20 NKN\n tokens with our smart wallet manager.', name: 'no_wallet_desc', desc: '');
   }
 
   String get no_wallet_create {
@@ -938,11 +942,11 @@ class NMobileLocalizations {
   }
 
   String get enter_or_select_a_user_pubkey {
-    return Intl.message('Enter/Select a user public key', name: 'enter_or_select_a_user_pubkey', desc: '');
+    return Intl.message('Enter/Select a user D-Chat ID', name: 'enter_or_select_a_user_pubkey', desc: '');
   }
 
   String get scan_show_me_desc {
-    return Intl.message('Scan the QR code pattern below to add me to the contact.', name: 'scan_show_me_desc', desc: '');
+    return Intl.message('Scan the QR code pattern to add friends to your contacts.', name: 'scan_show_me_desc', desc: '');
   }
 
   String get nickname {
@@ -950,11 +954,11 @@ class NMobileLocalizations {
   }
 
   String get d_chat_address {
-    return Intl.message('D-Chat Address', name: 'd_chat_address', desc: '');
+    return Intl.message('D-Chat ID', name: 'd_chat_address', desc: '');
   }
 
   String get input_d_chat_address {
-    return Intl.message('Please input D-Chat Address', name: 'input_d_chat_address', desc: '');
+    return Intl.message('Please input D-Chat ID', name: 'input_d_chat_address', desc: '');
   }
 
   String get tip_password_error {
@@ -1000,13 +1004,68 @@ class NMobileLocalizations {
 
   String get transfer_initiated => Intl.message('Transfer Initiated', name: 'transfer_initiated');
   String get transfer_initiated_desc => Intl.message('Your transfer is in progress. It could take a few seconds to appear on the blockchain.', name: 'transfer_initiated_desc');
+  String get tip => Intl.message('Tips', name: 'tip');
+  String get my_details_desc => Intl.message('All subscriptions and tipping will come from your selected wallet.', name: 'my_details_desc');
 
+  String get change_default_chat_wallet => Intl.message('Change', name: 'change_default_chat_wallet');
+  String get coming_soon => Intl.message('Coming Soon...', name: 'coming_soon');
+  String get my_profile => Intl.message('My Profile', name: 'my_profile');
+  String get profile => Intl.message('Profile', name: 'profile');
+  String get send_message => Intl.message('Send Message', name: 'send_message');
+  String get show_wallet_address_desc => Intl.message('Scan the QR code, you can transfer it to me', name: 'show_wallet_address_desc');
+  String get disappear_desc => Intl.message('Messages received and sent will disappear after the set time.', name: 'disappear_desc');
+  String get storage_text => Intl.message('Storage', name: 'storage_text');
+
+  String get export => Intl.message('Export', name: 'export');
+  String get eth_keystore_export_desc => Intl.message('The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.', name: 'eth_keystore_export_desc');
   String get check_upgrade => Intl.message('Check Upgrade', name: 'check_upgrade');
   String get release_notes => Intl.message('Release Notes:', name: 'release_notes');
   String get download_now => Intl.message('Download Now', name: 'download_now');
   String get ignore => Intl.message('Ignore', name: 'ignore');
   String get already_the_latest_version => Intl.message('Already the latest version', name: 'already_the_latest_version');
-  String get tip => Intl.message('Tips', name: 'tip');
+  String get message_text => Intl.message('Messages', name: 'message_text');
+
+  String get niot_text => Intl.message('nIOT', name: 'niot_text');
+  String get mining_fee_text => Intl.message('Mining income', name: 'mining_fee_text');
+  String get withdraw_fee => Intl.message('Withdrawal', name: 'withdraw_fee');
+  String get yesterday_fee => Intl.message('Previous estimated income', name: 'yesterday_fee');
+  String get week_fee => Intl.message('Weekly estimated income', name: 'week_fee');
+  String get pre_week_fee => Intl.message('Last week’s earnings', name: 'pre_week_fee');
+  String get total_historical_fee => Intl.message('Historical gross income', name: 'total_historical_fee');
+  String get current_cashable_income => Intl.message('Current cashable income', name: 'current_cashable_income');
+  String get recommended_income => Intl.message('Recommended income', name: 'recommended_income');
+  String get see_node => Intl.message('View nodes', name: 'see_node');
+  String get get_invitation_code => Intl.message('Access invitation code', name: 'get_invitation_code');
+  String get node_detail => Intl.message('Nodes Detail', name: 'node_detail');
+  String get add_text => Intl.message('Add', name: 'add_text');
+  String get device_total => Intl.message('Total Devices', name: 'device_total');
+  String get running_text => Intl.message('Running', name: 'running_text');
+  String get abnormalities_text => Intl.message('Abnormal', name: 'abnormalities_text');
+  String get none_num_text => Intl.message('Unknown', name: 'none_num_text');
+  String get search_text => Intl.message('Search', name: 'search_text');
+  String get total_fee => Intl.message('Total Income', name: 'total_fee');
+  String get withdrawable_balance_fee => Intl.message('Cashable Balance', name: 'withdrawable_balance_fee');
+  String get withdrawable_amount => Intl.message('Amount of withdraw', name: 'withdrawable_amount');
+  String get withdrawable_address => Intl.message('Address of withdraw', name: 'withdrawable_address');
+  String get email_text => Intl.message('E-mail address', name: 'email_text');
+  String get note_text => Intl.message('Note', name: 'note_text');
+  String get sort_text => Intl.message('Sort', name: 'sort_text');
+  String get miner_name => Intl.message('Name', name: 'miner_name');
+  String get status_text => Intl.message('Status', name: 'status_text');
+  String get estimated_income => Intl.message('Estimated Income', name: 'estimated_income');
+  String get flow_text => Intl.message('Flow', name: 'flow_text');
+  String get select_sort_title => Intl.message('Please select a sorting method', name: 'select_sort_title');
+  String get fee_text => Intl.message('Income', name: 'fee_text');
+  String get node_list => Intl.message('Node List', name: 'node_list');
+  String get ip_address => Intl.message('IP Addrese', name: 'ip_address');
+  String get total_disk_capacity => Intl.message('Total disk capacity', name: 'total_disk_capacity');
+  String get number_of_used_space => Intl.message('Used space', name: 'number_of_used_space');
+  String get mac_address => Intl.message('MAC Address', name: 'mac_address');
+  String get device_parameters => Intl.message('Device Params', name: 'device_parameters');
+  String get recent_rate => Intl.message('Recent rate', name: 'recent_rate');
+  String get refresh_status => Intl.message('Refresh', name: 'refresh_status');
+  String get reboot_device => Intl.message('Reboot', name: 'reboot_device');
+  String get apply_for_withdrawal => Intl.message('Apply for withdrawal', name: 'apply_for_withdrawal');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {

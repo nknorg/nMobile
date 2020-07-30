@@ -59,9 +59,11 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
         _allBackedUp = true;
         state.wallets.forEach((w) => _totalNkn += w.balance ?? 0);
         state.wallets.forEach((w) {
+//          NLog.d('w.isBackedUp: ${w.isBackedUp}, w.name: ${w.name}');
           _allBackedUp = w.isBackedUp && _allBackedUp;
         });
         setState(() {
+//          NLog.d('_allBackedUp: $_allBackedUp');
         });
       }
     });
@@ -138,17 +140,28 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
           child: BlocBuilder<WalletsBloc, WalletsState>(
             builder: (context, state) {
               if (state is WalletsLoaded) {
-                return ListView(
-                  padding: EdgeInsets.only(top: 14.h),
-                  children: state.wallets
-                      .map(
-                        (w) => Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: WalletItem(type: w.type == WalletSchema.NKN_WALLET ? WalletType.nkn : WalletType.eth, schema: w),
-                        ),
-                      )
-                      .toList(),
-                );
+                return ListView.builder(
+                    padding: EdgeInsets.only(top: 14.h),
+                    itemCount: state.wallets.length,
+                    itemBuilder: (context, index) {
+                      WalletSchema w = state.wallets[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: WalletItem(type: w.type == WalletSchema.NKN_WALLET ? WalletType.nkn : WalletType.eth, schema: w),
+//                        child: WalletItem(type: w.type == WalletSchema.NKN_WALLET ? WalletType.nkn : WalletType.eth, schema: w),
+                      );
+                    });
+//                return ListView(
+//                  padding: EdgeInsets.only(top: 14.h),
+//                  children: state.wallets
+//                      .map(
+//                        (w) => Padding(
+//                          padding: const EdgeInsets.only(bottom: 16),
+//                          child: WalletItem(type: w.type == WalletSchema.NKN_WALLET ? WalletType.nkn : WalletType.eth, schema: w),
+//                        ),
+//                      )
+//                      .toList(),
+//                );
               }
               return ListView();
             },

@@ -1,28 +1,32 @@
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyrefresh/bezier_bounce_footer.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
 import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/create_input_group.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
+import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/screens/chat/chat_main_page.dart';
 import 'package:nmobile/screens/chat/message.dart';
-import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/screens/contact/home.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 
 class ChatHome extends StatefulWidget {
   static const String routeName = '/chat/home';
+
   @override
   _ChatHomeState createState() => _ChatHomeState();
 }
@@ -48,7 +52,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
             Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: Global.currentUser);
           },
           child: Padding(
-            padding: EdgeInsets.only(left: 16.h),
+            padding: EdgeInsets.only(left: 16),
             child: Flex(
               direction: Axis.horizontal,
               mainAxisAlignment: MainAxisAlignment.start,
@@ -56,9 +60,9 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                 Expanded(
                   flex: 0,
                   child: Container(
-                    padding: EdgeInsets.only(right: 16.h),
+                    padding: EdgeInsets.only(right: 16),
                     alignment: Alignment.center,
-                    child: Global.currentUser.avatarWidget(backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 24),
+                    child: Global.currentUser.avatarWidget(backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 28),
                   ),
                 ),
                 Expanded(
@@ -98,27 +102,20 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
         hasBack: false,
         backgroundColor: DefaultTheme.primaryColor,
         action: IconButton(
-          icon: loadAssetIconsImage('addbook', color: Colors.white, width: 20.w),
+          icon: loadAssetIconsImage('addbook', color: Colors.white, width: 24),
           onPressed: () {
             Navigator.of(context).pushNamed(ContactHome.routeName);
           },
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(bottom: 110.h),
-        child: FloatingActionButton(
-          key: _floatingActionKey,
-          backgroundColor: DefaultTheme.primaryColor,
-          child: loadAssetIconsImage(
-            'pencil',
-            width: 24,
-          ),
-          onPressed: () {
-            showBottomMenu();
-          },
-        ),
-      ),
+      floatingActionButton: FloatingActionButton(
+        key: _floatingActionKey,
+        elevation: 12,
+        backgroundColor: DefaultTheme.primaryColor,
+        child: loadAssetIconsImage('pencil', width: 24),
+        onPressed: showBottomMenu,
+      ).pad(b: 76 + MediaQuery.of(context).padding.bottom, r: 4),
       body: Container(
         child: ConstrainedBox(
           constraints: BoxConstraints.expand(),
@@ -134,31 +131,15 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                   child: Container(
                     constraints: BoxConstraints.expand(),
                     color: DefaultTheme.primaryColor,
-                    child: Flex(
-                      direction: Axis.vertical,
-                      children: <Widget>[
-                        Expanded(
-                          flex: 1,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: DefaultTheme.backgroundColor1,
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-                            ),
-                            child: Flex(
-                              direction: Axis.vertical,
-                              children: <Widget>[
-                                Expanded(
-                                  flex: 1,
-                                  child: Padding(
-                                    padding: EdgeInsets.only(top: 0.2),
-                                    child: MessagesTab(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      ],
+                    child: Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                        color: DefaultTheme.backgroundColor1,
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                      ),
+                      child: ChatMainPage(),
+//                      child: MessagesTab(),
                     ),
                   ),
                 ),
@@ -181,32 +162,30 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
           child: Scaffold(
             backgroundColor: Colors.transparent,
             body: Padding(
-              padding: EdgeInsets.only(bottom: 100.h, right: 12.w),
+              padding: EdgeInsets.only(bottom: 86, right: 16),
               child: Align(
                 alignment: Alignment.bottomRight,
                 child: Container(
-                  height: 150.h,
-                  width: 300.w,
-                  child: Flex(
-                    direction: Axis.horizontal,
-                    children: <Widget>[
+                  height: 136,
+                  child: Row(
+                    children: [
                       Expanded(
                         flex: 1,
                         child: Container(
-                          padding: EdgeInsets.only(bottom: 16.h, top: 16.h, right: 8.w),
+                          padding: EdgeInsets.only(bottom: 12, top: 12, right: 8),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.end,
-                            children: <Widget>[
+                            children: [
                               SizedBox(
-                                height: 48.h,
+                                height: 48,
                                 child: Align(
                                   alignment: Alignment.centerRight,
                                   child: Container(
-                                    padding: EdgeInsets.only(top: 4.h, bottom: 4.h, left: 8.w, right: 8.w),
+                                    padding: EdgeInsets.only(top: 4, bottom: 4, left: 8, right: 8),
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.all(Radius.circular(12)),
-                                      color: Color.fromARGB(200, 5, 28, 63),
+                                      color: Colours.dark_0f_a3p,
                                     ),
                                     child: Label(
                                       NMobileLocalizations.of(context).new_group,
@@ -218,14 +197,14 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                 ),
                               ),
                               SizedBox(
-                                height: 48.h,
+                                height: 48,
                                 child: Align(
                                   alignment: Alignment.centerRight,
                                   child: Container(
-                                    padding: EdgeInsets.only(top: 4.h, bottom: 4.h, left: 8.w, right: 8.w),
+                                    padding: EdgeInsets.only(top: 4, bottom: 4, left: 8, right: 8),
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.all(Radius.circular(12)),
-                                      color: Color.fromARGB(200, 5, 28, 63),
+                                      color: Colours.dark_0f_a3p,
                                     ),
                                     child: Label(
                                       NMobileLocalizations.of(context).new_whisper,
@@ -243,41 +222,38 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                       Expanded(
                         flex: 0,
                         child: Container(
-                          padding: EdgeInsets.only(bottom: 16.h, top: 16.h),
-                          width: 64.w,
+                          padding: EdgeInsets.only(bottom: 12, top: 12),
+                          width: 64,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(80)),
+                            borderRadius: BorderRadius.all(Radius.circular(32)),
                             color: DefaultTheme.primaryColor,
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Button(
-                                child: loadAssetIconsImage(
-                                  'group',
-                                  width: 24,
-                                  color: DefaultTheme.fontLightColor,
-                                ),
-                                padding: const EdgeInsets.only(),
+                                child: loadAssetChatPng('group', width: 22, color: DefaultTheme.fontLightColor),
                                 fontColor: DefaultTheme.fontLightColor,
                                 backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(77),
-                                width: 48.w,
-                                height: 48.w,
+                                width: 48,
+                                height: 48,
                                 onPressed: () async {
-                                  var address = await BottomDialog.of(context).showInputChannelDialog(title: NMobileLocalizations.of(context).create_channel);
+                                  showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12))),
+                                      builder: (context) {
+                                        return CreateGroupDialog();
+                                      });
+//                                  await BottomDialog.of(context).showInputChannelDialog(title: NMobileLocalizations.of(context).create_channel);
                                 },
                               ),
                               Button(
-                                child: loadAssetIconsImage(
-                                  'user',
-                                  width: 24.w,
-                                  color: DefaultTheme.fontLightColor,
-                                ),
-                                padding: const EdgeInsets.only(),
+                                child: loadAssetIconsImage('user', width: 24, color: DefaultTheme.fontLightColor),
                                 fontColor: DefaultTheme.fontLightColor,
                                 backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(77),
-                                width: 48.w,
-                                height: 48.h,
+                                width: 48,
+                                height: 48,
                                 onPressed: () async {
                                   var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
                                   if (address != null) {

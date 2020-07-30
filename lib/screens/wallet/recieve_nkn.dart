@@ -50,7 +50,7 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: (NMobileLocalizations.of(context).recieve + ' ' + NMobileLocalizations.of(context).nkn).toUpperCase(),
+        title: (NMobileLocalizations.of(context).recieve + ' ' + NMobileLocalizations.of(context).nkn),
         backgroundColor: DefaultTheme.backgroundColor4,
         action: IconButton(
           icon: loadAssetIconsImage(
@@ -205,12 +205,7 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
                     child: Column(
                       children: <Widget>[
                         Button(
-                          width: double.infinity,
-                          child: Label(
-                            NMobileLocalizations.of(context).done,
-                            type: LabelType.h3,
-                          ),
-                          padding: EdgeInsets.only(top: 16, bottom: 16),
+                          child: Label(NMobileLocalizations.of(context).done, type: LabelType.h3),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },

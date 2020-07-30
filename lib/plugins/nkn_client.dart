@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nmobile/blocs/cdn/cdn_bloc.dart';
+import 'package:nmobile/blocs/cdn/cdn_event.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/schemas/cdn_miner.dart';
 import 'package:nmobile/schemas/client.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/subscribers.dart';
@@ -14,10 +18,12 @@ import 'package:nmobile/utils/nlog_util.dart';
 
 class NknClientPlugin {
   static const String TAG = 'NknClientPlugin';
+  static const String EVENT_CHANNEL_NAME = 'org.nkn.sdk/client/event';
   static const MethodChannel _methodChannel = MethodChannel('org.nkn.sdk/client');
-  static const EventChannel _eventChannel = EventChannel('org.nkn.sdk/client/event');
-  static final ClientBloc _clientBloc = BlocProvider.of(Global.appContext);
+  static const EventChannel _eventChannel = EventChannel(EVENT_CHANNEL_NAME);
+  static final ClientBloc _clientBloc = BlocProvider.of<ClientBloc>(Global.appContext);
   static Map<String, Completer> _clientEventQueue = Map<String, Completer>();
+  static final CDNBloc _cdnBloc = BlocProvider.of<CDNBloc>(Global.appContext);
 
   static init() {
     _eventChannel.receiveBroadcastStream().listen((res) {
@@ -32,15 +38,22 @@ class NknClientPlugin {
           break;
         case 'onMessage':
           Map data = res['data'];
-          NLog.v(data);
-          _clientBloc.add(
-            OnMessage(
-              // FIXME: wei.chou on 16/06/2020
-              // `to` The value of the field is very problematic,
-              // there will be problems with hot switching of multiple wallets.
-              MessageSchema(from: data['src'], to: Global.currentClient.address, data: data['data'], pid: data['pid']),
-            ),
-          );
+          NLog.v(data, tag: 'NknClientPlugin onMessage --> ClientBloc@${_clientBloc.hashCode.toString().substring(0, 3)}');
+
+          try {
+            if (jsonDecode(data['data'])['contentType'].toString() == ContentType.text && jsonDecode(data['data'])['content'].toString().startsWith('```')) {
+              Map<String, dynamic> content = jsonDecode(jsonDecode(res['data']['data'])['content'].toString().replaceAll('```', ''));
+              onMessageNshell(data['src'], content);
+            } else {
+              _clientBloc.add(
+                OnMessage(
+                  MessageSchema(from: data['src'], to: Global.currentClient.address, data: data['data'], pid: data['pid']),
+                ),
+              );
+            }
+          } catch (e) {
+            NLog.v(e.toString(), tag: TAG);
+          }
           break;
         case 'onConnect':
           Map node = res['node'];
@@ -118,18 +131,20 @@ class NknClientPlugin {
     }
   }
 
-  static Future<Uint8List> sendText(List<String> dests, String data) async {
+  static Future<Uint8List> sendText(List<String> dests, String data, {int maxHoldingSeconds = 0}) async {
     NLog.d('sendText  $data ');
     NLog.d('sendText  $dests ');
     Completer<Uint8List> completer = Completer<Uint8List>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
     try {
-      await _methodChannel.invokeMethod('sendText', {
+      var params = {
         '_id': id,
         'dests': dests,
         'data': data,
-      });
+        'maxHoldingSeconds': maxHoldingSeconds,
+      };
+      await _methodChannel.invokeMethod('sendText', params);
     } catch (e) {
       NLog.e(e);
       throw e;
@@ -276,6 +291,26 @@ class NknClientPlugin {
     });
   }
 
+  static onMessageNshell(String src, content) async {
+    NLog.v(content['Result']);
+    NLog.v(content['Type']);
+    NLog.v(src);
+    var type = content['Type'];
+    try {
+      if (type != null && type.toString().contains('self_checker.sh')) {
+        var cdn = await CdnMiner.getModelFromNshid(src);
+        if (cdn != null) {
+          cdn.data = content;
+          await cdn.insertOrUpdate();
+          NLog.v('onMessage add');
+          _cdnBloc.add(LoadData(data: cdn));
+        }
+      }
+    } catch (e) {
+      NLog.v(e.toString(), tag: TAG + 'onMessage');
+    }
+  }
+
   static Future<Map<String, dynamic>> getSubscribers({
     String topic,
     String topicHash,
@@ -292,14 +327,6 @@ class NknClientPlugin {
     if (subscribers != null && subscribers.length > 0) {
       NLog.d('$topic  getSubscribers use cache');
       NLog.d(subscribers);
-
-//      if (Global.isLoadSubscribers(topic)) {
-//        LogUtil.v('$topic  getSubscribers use cache');
-//        LogUtil.v('$subscribers ');
-//        getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool).then((v) {
-//          TopicSchema(topic: topic).setSubscribers(v);
-//        });
-//      }
       return subscribers;
     } else {
       return getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);

@@ -1,96 +1,551 @@
 {
   "@@last_modified": "2020-05-12T15:55:43.214456",
   "nkn": "NKN",
+  "@nkn": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "loading": "加载中",
+  "@loading": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "connecting": "连接中",
+  "@connecting": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "connected": "已连接",
+  "@connected": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "click_connect": "点击连接",
+  "@click_connect": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "connect": "连接",
+  "@connect": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "ok": "好的",
+  "@ok": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "done": "完成",
+  "@done": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "close": "关闭",
+  "@close": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "cancel": "取消",
+  "@cancel": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "yes": "是的",
+  "@main_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "no": "不",
+  "@no": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "warning": "警告",
+  "@warning": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "continue_text": "下一步",
+  "@continue_text": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "accept_invitation": "接受邀请",
+  "@accept_invitation": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "channel_invitation": "群聊邀请",
+  "@channel_invitation": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "save": "保存",
+  "@save": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "max": "全部",
+  "@max": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "min": "最小",
+  "@min": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "slow": "慢",
+  "@slow": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "average": "平均",
+  "@average": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "fast": "快",
+  "@fast": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "copy": "复制",
+  "@copy": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "copy_success": "已复制",
+  "@copy_success": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "invitation_sent": "已发出邀请",
+  "@invitation_sent": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "success": "成功",
+  "@success": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "copied": "已复制",
+  "@copied": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "copy_to_clipboard": "复制到剪贴板",
+  "@copy_to_clipboard": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "rename": "修改",
+  "@rename": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "edit": "编辑",
+  "@edit": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "edit_name": "编辑",
+  "@edit_name": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "edit_nickname": "编辑昵称",
+  "@edit_nickname": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "input_nickname": "请输入昵称",
+  "@input_nickname": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "input_pubKey": "请输入公钥",
+  "@input_pubKey": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "input_name": "请输入名字",
+  "@input_name": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "input_wallet_address": "请输入钱包地址",
+  "@input_wallet_address": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "input_notes": "备注",
+  "@input_notes": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "edit_notes": "编辑备注",
+  "@edit_notes": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "view_all": "查看全部",
+  "@view_all": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "latest_transactions": "最新交易",
+  "@latest_transactions": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "day": "天",
+  "@day": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "today": "今天",
+  "@today": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete": "删除",
+  "@delete": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "notes": "备注",
+  "@notes": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "none": "无",
+  "@none": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "failure": "失败",
+  "@failure": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "title": "nMobile",
+  "@title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "send": "发送",
+  "@send": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "send_nkn": "发送 NKN",
+  "@send_nkn": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "recieve": "接收",
+  "@recieve": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "keystore": "Keystore",
+  "@keystore": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "seed": "Seed",
+  "@seed": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "private_key": "私钥",
+  "@private_key": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "public_key": "公钥",
+  "@public_key": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "my_wallets": "我的钱包",
+  "@my_wallets": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "my_details": "我的",
-  "mainnet": "MAINNET",
+  "@my_details": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "mainnet": "主网",
+  "@mainnet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "ERC_20": "ERC-20",
+  "@ERC_20": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "wallet_name": "钱包名称",
+  "@wallet_name": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "wallet_address": "钱包地址",
+  "@wallet_address": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "wallet_password": "密码",
+  "@wallet_password": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "wallet_password_mach": "密码必须包含至少8位字符。建议使用大、小写和特殊字符的组合。",
+  "@wallet_password_mach": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "wallet_password_helper_text": "密码必须包含至少8位字符。建议使用大、小写和特殊字符的组合。",
+  "@wallet_password_helper_text": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "wallet_password_error": "密码必须包含至少8位字符。建议使用大、小写和特殊字符的组合。",
+  "@wallet_password_error": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "password_wrong": "钱包密码或keystore错误",
+  "@password_wrong": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "confirm_password": "确认密码",
+  "@confirm_password": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "create": "创建",
+  "@create": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "create_wallet": "创建钱包",
+  "@create_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "save_contact": "保存联系人",
+  "@save_contact": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_wallet": "删除钱包",
+  "@delete_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_wallet_confirm_title": "您确定要删除此钱包吗?",
+  "@delete_wallet_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_wallet_confirm_text": "这将从您的设备中删除钱包。请确保您的钱包已备份，否则您的资金将丢失且无法找回。",
+  "@delete_wallet_confirm_text": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_message_confirm_title": "您确定要删除此消息吗?",
+  "@delete_message_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_contact_confirm_title": "您确定要删除联系人吗?",
+  "@delete_contact_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_chennel_confirm_title": "您确定要退出该群吗？",
+  "@delete_chennel_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_cache_confirm_title": "您确定要删除缓存吗?",
+  "@delete_cache_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "click_to_settings": "点击设置",
+  "@click_to_settings": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "import_wallet": "导入钱包",
+  "@import_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "export_wallet": "导出钱包",
+  "@export_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "view_channel_members": "查看群成员",
+  "@view_channel_members": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "invite_members": "邀请加入",
+  "@invite_members": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "total_balance": "余额",
+  "@total_balance": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "main_wallet": "主钱包",
+  "@main_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "view_qrcode": "查看二维码",
+  "@view_qrcode": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "qrcode": "二维码",
+  "@qrcode": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "verify_wallet_password": "验证钱包密码",
+  "@verify_wallet_password": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "seed_qrcode_dec": "请安全地保存和备份您的种子。如果丢失，您将失去对资产的访问权限。",
+  "@seed_qrcode_dec": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "to": "到",
+  "@to": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "send_to": "发送给",
+  "@send_to": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "from": "从",
+  "@from": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "fee": "矿工费",
+  "@fee": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "amount": "数量",
   "@amount": {
     "description": "",
@@ -289,7 +744,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "stranger": "Stranger",
+  "stranger": "陌生人",
   "@stranger": {
     "description": "",
     "type": "text",
@@ -475,7 +930,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "client_address": "Client Address",
+  "client_address": "地址",
   "@client_address": {
     "description": "",
     "type": "text",
@@ -499,7 +954,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "updated_at": "Updated at",
+  "updated_at": "更新",
   "@updated_at": {
     "description": "",
     "type": "text",
@@ -681,7 +1136,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "error_client_address_format": "Client address format does not match.",
+  "error_client_address_format": "地址不正确",
   "@error_client_address_format": {
     "description": "",
     "type": "text",
@@ -693,7 +1148,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "error_unknow_nkn_qrcode": "Unknow NKN qr code.",
+  "error_unknow_nkn_qrcode": "识别失败",
   "@error_unknow_nkn_qrcode": {
     "description": "",
     "type": "text",
@@ -723,7 +1178,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "chat_tab_group": "Group",
+  "chat_tab_group": "群",
   "@chat_tab_group": {
     "description": "",
     "type": "text",
@@ -897,7 +1352,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "learn_more": "更多",
+  "learn_more": "了解更多",
   "@learn_more": {
     "description": "",
     "type": "text",
@@ -909,7 +1364,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "scan_show_me_desc": "扫一扫下面的二维码图案，添加我到联系人。",
+  "scan_show_me_desc": "扫一扫二维码图案，添加到联系人。",
   "@scan_show_me_desc": {
     "description": "",
     "type": "text",
@@ -939,8 +1394,38 @@
     "type": "text",
     "placeholders": {}
   },
+  "type_a_message": "请输入",
+  "@type_a_message": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "placeholder_draft": "[草稿]",
+  "@placeholder_draft": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "d_not_backed_up_title": "重要提示：请备份您的钱包！",
   "@d_not_backed_up_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "friends": "好友",
+  "@friends": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "group_chat": "群",
+  "@group_chat": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "d_chat_not_login": "D-Chat 未登陆",
+  "@d_chat_not_login": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -956,6 +1441,12 @@
     "type": "text",
     "placeholders": {}
   },
+  "tip_password_error": "密码错误",
+  "@tip_password_error": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "select_asset_to_backup": "选择要备份的钱包",
   "@select_asset_to_backup": {
     "type": "text",
@@ -968,6 +1459,88 @@
   },
   "import_wallet_as_account": "导入钱包作为账户",
   "@import_wallet_as_account": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transfer_initiated": "转账初始化",
+  "@transfer_initiated": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transfer_initiated_desc": "您的转帐正在进行中，可能需要花一些时间才能出现在区块链上。",
+  "@transfer_initiated_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "tip": "提示",
+  "@tip": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "my_details_desc": "所有订阅和矿工费都将来自您选择的钱包。",
+  "@my_details_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "change_default_chat_wallet": "切换",
+  "@change_default_chat_wallet": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "coming_soon": "敬请期待...",
+  "@coming_soon": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "my_profile": "个人资料",
+  "@my_profile": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "profile": "个人资料",
+  "@profile": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "show_wallet_address_desc": "扫一扫二维码，可以转账给我",
+  "@show_wallet_address_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "disappear_desc": "接受和发送的消息将在设定的时间后消失。",
+  "@disappear_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "leave_group_confirm_title": "您确定要离开该群组吗？",
+  "@leave_group_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "send_message": "发送消息",
+  "@send_message": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "delete_db_confirm_title": "您确定要清除数据库吗?",
+  "@delete_db_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "storage_text": "存储",
+  "@storage_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "export": "导出",
+  "@export": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "eth_keystore_export_desc": "当前版本暂不支持ERC20 Token交易，请立刻导出此钱包Keystore进行备份。",
+  "@eth_keystore_export_desc": {
     "type": "text",
     "placeholders": {}
   },
@@ -1008,6 +1581,248 @@
   },
   "tip": "提示",
   "@tip": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "message_text": "消息",
+  "@message_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "my_profile": "个人资料",
+  "@my_profile": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "profile": "个人资料",
+  "@profile": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "show_wallet_address_desc": "扫一扫二维码，可以转账给我",
+  "@show_wallet_address_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "disappear_desc": "接受和发送的消息将在设定的时间后消失。",
+  "@disappear_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "coming_soon": "Coming Soon...",
+  "@coming_soon": {
+    "type": "text",
+    "placeholders": {}
+  },"error_amount_min_max": "必须大于{min}小于{max}.",
+  "@error_amount_min_max": {
+    "description": "",
+    "type": "text",
+    "placeholders": {
+      "min": {},
+      "max": {}
+    }
+  }, "niot_text": "nIOT",
+  "@niot_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "mining_fee_text": "挖矿收益",
+  "@mining_fee_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdraw_fee": "提现",
+  "@withdraw_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "yesterday_fee": "昨日预估收益",
+  "@yesterday_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "week_fee": "本周预估收益",
+  "@week_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "pre_week_fee": "上周收益",
+  "@pre_week_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "total_historical_fee": "历史总收益",
+  "@total_historical_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "current_cashable_income": "当前可提现收益",
+  "@current_cashable_income": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recommended_income": "推荐收益",
+  "@recommended_income": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "see_node": "查看节点",
+  "@see_node": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "get_invitation_code": "获取邀请码",
+  "@get_invitation_code": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "node_detail": "节点明细",
+  "@node_detail": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "add_text": "添加",
+  "@add_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "device_total": "设备总数",
+  "@device_total": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "running_text": "运行中",
+  "@running_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "abnormalities_text": "异常数量",
+  "@abnormalities_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "none_num_text": "未知数量",
+  "@none_num_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "search_text": "搜索",
+  "@search_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "total_fee": "总收益",
+  "@total_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdrawable_balance_fee": "可提现余额",
+  "@withdrawable_balance_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdrawable_amount": "提现金额",
+  "@withdrawable_amount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdrawable_address": "提现地址",
+  "@withdrawable_address": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "email_text": "邮箱",
+  "@email_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "note_text": "备注",
+  "@note_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "sort_text": "排序",
+  "@sort_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "miner_name": "名称",
+  "@miner_name": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "status_text": "状态",
+  "@status_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "estimated_income": "预估收益",
+  "@estimated_income": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "flow_text": "流量",
+  "@flow_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "select_sort_title": "请选择排序方式",
+  "@select_sort_title": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "fee_text": "收益",
+  "@fee_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "node_list": "节点列表",
+  "@node_list": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "ip_address": "IP地址",
+  "@ip_address": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "total_disk_capacity": "磁盘总容量",
+  "@total_disk_capacity": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "number_of_used_space": "已用空间数",
+  "@number_of_used_space": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "mac_address": "MAC地址",
+  "@mac_address": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "device_parameters": "设备参数",
+  "@device_parameters": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recent_rate": "近期速率",
+  "@recent_rate": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "refresh_status": "刷新状态",
+  "@refresh_status": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "reboot_device": "重启设备",
+  "@reboot_device": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "apply_for_withdrawal": "申请提现",
+  "@apply_for_withdrawal": {
     "type": "text",
     "placeholders": {}
   }

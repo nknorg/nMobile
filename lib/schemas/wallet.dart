@@ -65,7 +65,7 @@ class WalletSchema extends Equatable {
     var keystore = await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
     try {
       var wallet = await NknWalletPlugin.openWallet(keystore, password);
-      _secureStorage.set('${SecureStorage.PASSWORDS_KEY}:$address', password);
+      await _secureStorage.set('${SecureStorage.PASSWORDS_KEY}:$address', password);
       return wallet;
     } catch (e) {
       throw e;
@@ -83,5 +83,11 @@ class WalletSchema extends Equatable {
     } catch (e) {
       return null;
     }
+  }
+
+  Future<bool> isDefaultWallet() async {
+    WalletSchema wallet = await getWallet();
+    if (wallet == null || address == null) return false;
+    return wallet.address == address;
   }
 }

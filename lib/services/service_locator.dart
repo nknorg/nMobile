@@ -13,5 +13,5 @@ void setupLocator() {
     ..registerSingleton(BackgroundFetchService())
     ..registerSingleton(TaskService())
     ..registerLazySingleton<Logger>(() => Logger(printer: PrettyPrinter()))
-    ..registerLazySingleton(() => LocalAuthenticationService());
+    ..registerLazySingleton(() => LocalAuthenticationService.instance);
 }

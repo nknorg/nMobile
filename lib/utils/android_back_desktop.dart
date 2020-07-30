@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 
 class AndroidBackTop {
-  static const String CHANNEL = "android/nmbile/native/common";
+  static const String CHANNEL = "android/nmobile/native/common";
   static Future<bool> backToDesktop() async {
     final platform = MethodChannel(CHANNEL);
     try {

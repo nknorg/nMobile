@@ -6,6 +6,7 @@ import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
+import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/cdn_miner.dart';
 import 'package:nmobile/screens/ncdn/node_detail_page.dart';
 
@@ -33,7 +34,7 @@ class NodeListPageState extends State<NodeListPage> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: '节点列表',
+        title: NMobileLocalizations.of(context).node_list,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: Builder(

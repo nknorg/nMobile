@@ -1,9 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/sqlite_storage.dart';
-import 'package:nmobile/plugins/nshell_client.dart';
+import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -88,11 +89,21 @@ class CdnMiner {
       if (data['Result']) {
         return '运行中';
       } else {
-        return '故障';
+        return '异常';
       }
     } catch (e) {
       NLog.v(e, tag: 'getStatus');
       return '未知';
+    }
+  }
+
+  Color getStatusColor() {
+    if (getStatus() == '运行中') {
+      return DefaultTheme.notificationBackgroundColor;
+    } else if (getStatus() == '未知') {
+      return DefaultTheme.fontColor2;
+    } else {
+      return DefaultTheme.fallColor;
     }
   }
 
@@ -244,13 +255,13 @@ class CdnMiner {
   reboot() {
     MessageSchema msg = MessageSchema();
     msg.content = 'reboot';
-    NShellClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData(), maxHoldingSeconds: 1);
+    NknClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData(), maxHoldingSeconds: 1);
   }
 
   getMinerDetail() {
     MessageSchema msg = MessageSchema();
     msg.content = '/usr/bin/self_checker.sh';
-    NShellClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData());
+    NknClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData());
   }
 
   static removeCacheData() async {

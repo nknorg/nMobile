@@ -15,6 +15,8 @@ import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
 class BackgroundFetchService {
+  bool isFirstStart = true; // init start
+
   init() {
     final LocalAuthenticationService localAuth = locator<LocalAuthenticationService>();
     final LocalStorage _localStorage = LocalStorage();
@@ -26,6 +28,7 @@ class BackgroundFetchService {
       stopOnTerminate: false,
       enableHeadless: true,
       forceAlarmManager: false,
+      startOnBoot: true,
       requiredNetworkType: NetworkType.ANY,
     );
 
@@ -37,7 +40,7 @@ class BackgroundFetchService {
         BackgroundFetch.finish(taskId);
       } else {
         var isConnected = await NknClientPlugin.isConnected();
-        if (!isConnected && Global.currentChatId != null) {
+        if (!isConnected && !isFirstStart) {
           NLog.d("[BackgroundFetch] no Connect");
           var wallet = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
           if (wallet != null) {
@@ -51,6 +54,7 @@ class BackgroundFetchService {
             }
           }
         } else {
+          isFirstStart = false;
           NLog.d("[BackgroundFetch] Connectting");
         }
 

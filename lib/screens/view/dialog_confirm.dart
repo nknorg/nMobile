@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 
 class SimpleConfirm {
@@ -6,9 +7,10 @@ class SimpleConfirm {
   final String title;
   final String content;
   final String buttonText;
+  final Color buttonColor;
   final ValueChanged<bool> callback;
 
-  SimpleConfirm({@required this.context, this.title, @required this.content, this.callback, this.buttonText});
+  SimpleConfirm({@required this.context, this.title, @required this.content, this.callback, this.buttonText, this.buttonColor});
 
   Future<void> show() {
     String title = this.title;
@@ -25,14 +27,14 @@ class SimpleConfirm {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             actions: <Widget>[
               FlatButton(
-                child: Text(NMobileLocalizations.of(context).cancel.toUpperCase(), style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                child: Text(NMobileLocalizations.of(context).cancel.toUpperCase(), style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DefaultTheme.fontColor2)),
                 onPressed: () {
                   Navigator.of(context).pop();
                   if (callback != null) callback(false);
                 },
               ),
               FlatButton(
-                child: Text(buttonText.toUpperCase(), style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                child: Text(buttonText.toUpperCase(), style: TextStyle(color: buttonColor, fontSize: 14, fontWeight: FontWeight.bold)),
                 onPressed: () {
                   Navigator.of(context).pop();
                   if (callback != null) callback(true);

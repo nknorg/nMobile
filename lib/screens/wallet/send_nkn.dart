@@ -35,6 +35,7 @@ import 'package:oktoast/oktoast.dart';
 class SendNknScreen extends StatefulWidget {
   static const String routeName = '/wallet/send_nkn';
   WalletSchema arguments;
+
   SendNknScreen({this.arguments});
 
   @override
@@ -61,6 +62,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
   double _sliderFee = 0.1;
   double _sliderFeeMin = 0;
   double _sliderFeeMax = 10;
+
   @override
   void initState() {
     super.initState();
@@ -75,10 +77,8 @@ class _SendNknScreenState extends State<SendNknScreen> {
 
       var password = await wallet.getPassword();
       if (password != null) {
+        transferAction(password);
         Navigator.pop(context, true);
-        Future.delayed(Duration(milliseconds: 200), () {
-          transferAction(password);
-        });
       }
     }
   }
@@ -86,30 +86,16 @@ class _SendNknScreenState extends State<SendNknScreen> {
   transferAction(password) async {
     try {
       wallet.exportWallet(password).then((v) {
-        NknWalletPlugin.transfer(v['keystore'], password, _sendTo, _amount, _fee.toString()).then((hash) {
+        NknWalletPlugin.transferAsync(v['keystore'], password, _sendTo, _amount, _fee.toString()).then((hash) {
           if (hash != null) {
-            showToast(NMobileLocalizations.of(Global.appContext).success);
             locator<TaskService>().queryNknWalletBalanceTask();
-          } else {
-            showToast(NMobileLocalizations.of(Global.appContext).failure);
           }
         });
       });
-//          var w = await wallet.exportWallet(password);
-//          var keystore = w['keystore'];
-//          var hash = await NknWalletPlugin.transfer(keystore, password, _sendTo, _amount, _fee.toString());
-//          showToast(NMobileLocalizations.of(context).success);
     } catch (e) {
       if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
         showToast(NMobileLocalizations.of(Global.appContext).password_wrong);
       } else if (e.message == 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds') {
-//            await ModalDialog.of(context).show(
-//              height: 240,
-//              content: Label(
-//                e.message,
-//                type: LabelType.bodyRegular,
-//              ),
-//            );
         showToast(e.message);
       } else {
         showToast(NMobileLocalizations.of(Global.appContext).failure);
@@ -121,7 +107,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: Header(
-        title: NMobileLocalizations.of(context).send_nkn.toUpperCase(),
+        title: NMobileLocalizations.of(context).send_nkn,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: IconButton(
           icon: loadAssetIconsImage(
@@ -493,9 +479,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
                                                 Padding(
                                                   padding: EdgeInsets.only(left: 30, right: 30),
                                                   child: Button(
-                                                    width: double.infinity,
                                                     text: NMobileLocalizations.of(context).continue_text,
-                                                    padding: EdgeInsets.only(top: 16, bottom: 16),
                                                     disabled: !_formValid,
                                                     onPressed: next,
                                                   ),

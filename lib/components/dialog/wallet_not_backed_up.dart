@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/components/ButtonIcon.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
@@ -54,17 +55,15 @@ class _WalletNotBackedUpDialogState extends State<WalletNotBackedUpDialog> {
           children: <Widget>[
             Expanded(
                 flex: 0,
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: SizedBox(
-                      height: 54,
-                      child: Button(
-                          icon: true,
-                          padding: 0.pad().pad(t:6,r: 6),
-                          size: 48,
-                          child: loadAssetIconsImage('close', width: 16),
-                          onPressed: () => widget.close()),
-                    ).toList)),
+                child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                  ButtonIcon(
+                    padding: 0.pad(t: 6, r: 6),
+                    width: 48,
+                    height: 48,
+                    icon: loadAssetIconsImage('close', width: 16),
+                    onPressed: () => widget.close(),
+                  )
+                ])),
             Expanded(
               flex: 1,
               child: Column(
@@ -72,10 +71,7 @@ class _WalletNotBackedUpDialogState extends State<WalletNotBackedUpDialog> {
                 children: <Widget>[
                   Text(
                     NMobileLocalizations.of(context).d_not_backed_up_title,
-                    style: TextStyle(
-                        fontSize: DefaultTheme.h2FontSize,
-                        color: Colours.dark_2d,
-                        fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: DefaultTheme.h2FontSize, color: Colours.dark_2d, fontWeight: FontWeight.bold),
                     maxLines: 2,
                   ),
                   Text(
@@ -92,7 +88,7 @@ class _WalletNotBackedUpDialogState extends State<WalletNotBackedUpDialog> {
                   fontColor: Colours.white,
                   text: NMobileLocalizations.of(context).go_backup,
                   width: double.infinity,
-                  size: 48,
+                  height: 51,
                   onPressed: () {
                     // E/flutter (12613): Tried calling: focusScopeNode
                     // E/flutter (12613): #0      Object.noSuchMethod (dart:core-patch/object_patch.dart:53:5)

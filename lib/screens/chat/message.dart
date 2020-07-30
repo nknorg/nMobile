@@ -11,8 +11,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
+import 'package:nmobile/components/ButtonIcon.dart';
 import 'package:nmobile/components/box/body.dart';
-import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/chat/bubble.dart';
 import 'package:nmobile/components/chat/system.dart';
 import 'package:nmobile/components/header/header.dart';
@@ -33,6 +33,7 @@ class ChatSinglePage extends StatefulWidget {
   static const String routeName = '/chat/message';
 
   final ChatSchema arguments;
+
   ChatSinglePage({this.arguments});
 
   @override
@@ -254,6 +255,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
   _send() async {
     LocalStorage.saveChatUnSendContentFromId(targetId);
     String text = _sendController.text;
+    if (text == null || text.length == 0) return;
     _sendController.clear();
     _canSend = false;
 
@@ -360,7 +362,10 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                 flex: 1,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[Label(widget.arguments.contact.name, type: LabelType.h3, dark: true), Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor)],
+                  children: <Widget>[
+                    Label(widget.arguments.contact.name, type: LabelType.h3, dark: true),
+//                    Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor)
+                  ],
                 ),
               )
             ],
@@ -508,10 +513,10 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                               flex: 0,
                               child: Padding(
                                 padding: const EdgeInsets.only(left: 8, right: 8),
-                                child: Button(
-                                  size: 50,
-                                  icon: true,
-                                  child: loadAssetIconsImage(
+                                child: ButtonIcon(
+                                  width: 50,
+                                  height: 50,
+                                  icon: loadAssetIconsImage(
                                     'grid',
                                     width: 24,
                                     color: DefaultTheme.primaryColor,
@@ -580,15 +585,15 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                               flex: 0,
                               child: Padding(
                                 padding: const EdgeInsets.only(left: 8, right: 8),
-                                child: Button(
-                                  size: 50,
-                                  icon: true,
-                                  child: loadAssetIconsImage(
+                                child: ButtonIcon(
+                                  width: 50,
+                                  height: 50,
+                                  icon: loadAssetIconsImage(
                                     'send',
                                     width: 24,
                                     color: _canSend ? DefaultTheme.primaryColor : DefaultTheme.fontColor2,
                                   ),
-                                  disabled: !_canSend,
+                                  //disabled: !_canSend,
                                   onPressed: () {
                                     _send();
                                   },
@@ -613,7 +618,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                         ),
                         child: Flex(
                           direction: Axis.horizontal,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: <Widget>[
                             Expanded(
                               flex: 0,
@@ -677,65 +682,65 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                                 ],
                               ),
                             ),
-                            Expanded(
-                              flex: 0,
-                              child: Column(
-                                children: <Widget>[
-                                  SizedBox(
-                                    width: 71,
-                                    height: 71,
-                                    child: FlatButton(
-                                      padding: const EdgeInsets.all(0),
-                                      color: DefaultTheme.backgroundColor1,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-                                      child: loadAssetIconsImage(
-                                        'paperclip2',
-                                        width: 35,
-                                        color: DefaultTheme.fontColor2,
-                                      ),
-                                      onPressed: () {},
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: Label(
-                                      NMobileLocalizations.of(context).files,
-                                      type: LabelType.bodySmall,
-                                      color: DefaultTheme.fontColor2,
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              flex: 0,
-                              child: Column(
-                                children: <Widget>[
-                                  SizedBox(
-                                    width: 71,
-                                    height: 71,
-                                    child: FlatButton(
-                                      color: DefaultTheme.backgroundColor1,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-                                      child: loadAssetIconsImage(
-                                        'pin',
-                                        width: 24,
-                                        color: DefaultTheme.fontColor2,
-                                      ),
-                                      onPressed: () {},
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: Label(
-                                      NMobileLocalizations.of(context).location,
-                                      type: LabelType.bodySmall,
-                                      color: DefaultTheme.fontColor2,
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
+//                            Expanded(
+//                              flex: 0,
+//                              child: Column(
+//                                children: <Widget>[
+//                                  SizedBox(
+//                                    width: 71,
+//                                    height: 71,
+//                                    child: FlatButton(
+//                                      padding: const EdgeInsets.all(0),
+//                                      color: DefaultTheme.backgroundColor1,
+//                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+//                                      child: loadAssetIconsImage(
+//                                        'paperclip2',
+//                                        width: 35,
+//                                        color: DefaultTheme.fontColor2,
+//                                      ),
+//                                      onPressed: () {},
+//                                    ),
+//                                  ),
+//                                  Padding(
+//                                    padding: const EdgeInsets.only(top: 8),
+//                                    child: Label(
+//                                      NMobileLocalizations.of(context).files,
+//                                      type: LabelType.bodySmall,
+//                                      color: DefaultTheme.fontColor2,
+//                                    ),
+//                                  )
+//                                ],
+//                              ),
+//                            ),
+//                            Expanded(
+//                              flex: 0,
+//                              child: Column(
+//                                children: <Widget>[
+//                                  SizedBox(
+//                                    width: 71,
+//                                    height: 71,
+//                                    child: FlatButton(
+//                                      color: DefaultTheme.backgroundColor1,
+//                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+//                                      child: loadAssetIconsImage(
+//                                        'pin',
+//                                        width: 24,
+//                                        color: DefaultTheme.fontColor2,
+//                                      ),
+//                                      onPressed: () {},
+//                                    ),
+//                                  ),
+//                                  Padding(
+//                                    padding: const EdgeInsets.only(top: 8),
+//                                    child: Label(
+//                                      NMobileLocalizations.of(context).location,
+//                                      type: LabelType.bodySmall,
+//                                      color: DefaultTheme.fontColor2,
+//                                    ),
+//                                  )
+//                                ],
+//                              ),
+//                            ),
                           ],
                         ),
                       ),

@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-06-12T01:49:24.581877",
+  "@@last_modified": "2020-07-21T15:59:24.149830",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -300,7 +300,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "recieve": "Recieve",
+  "recieve": "Receive",
   "@recieve": {
     "description": "",
     "type": "text",
@@ -474,6 +474,12 @@
     "type": "text",
     "placeholders": {}
   },
+  "delete_db_confirm_title": "Are you sure you want to clear the database?",
+  "@delete_db_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "click_to_settings": "Click to settings",
   "@click_to_settings": {
     "description": "",
@@ -618,7 +624,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "select_asset_to_recieve": "Select Asset to Recieve",
+  "select_asset_to_recieve": "Select Asset to Receive",
   "@select_asset_to_recieve": {
     "description": "",
     "type": "text",
@@ -1074,7 +1080,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "no_wallet_desc": "Manage both your Mainnet and ERC-20 NKN tokens with our smart wallet manager.",
+  "no_wallet_desc": "Manage both your Mainnet and ERC-20 NKN\n tokens with our smart wallet manager.",
   "@no_wallet_desc": {
     "description": "",
     "type": "text",
@@ -1181,13 +1187,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "chat_no_wallet_title": "Private and Secure \nMessaging",
+  "chat_no_wallet_title": "Private and Secure\n Messaging",
   "@chat_no_wallet_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "chat_no_wallet_desc": "You need a Mainnet compatible wallet before you\ncan use D-Chat.",
+  "chat_no_wallet_desc": "You need a Mainnet compatible wallet before you can use D-Chat.",
   "@chat_no_wallet_desc": {
     "description": "",
     "type": "text",
@@ -1385,13 +1391,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "enter_or_select_a_user_pubkey": "Enter/Select a user public key",
+  "enter_or_select_a_user_pubkey": "Enter/Select a user D-Chat ID",
   "@enter_or_select_a_user_pubkey": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "scan_show_me_desc": "Scan the QR code pattern below to add me to the contact.",
+  "scan_show_me_desc": "Scan the QR code pattern to add friends to your contacts.",
   "@scan_show_me_desc": {
     "description": "",
     "type": "text",
@@ -1403,13 +1409,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "d_chat_address": "D-Chat Address",
+  "d_chat_address": "D-Chat ID",
   "@d_chat_address": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "input_d_chat_address": "Please input D-Chat Address",
+  "input_d_chat_address": "Please input D-Chat ID",
   "@input_d_chat_address": {
     "description": "",
     "type": "text",
@@ -1479,6 +1485,86 @@
     "type": "text",
     "placeholders": {}
   },
+  "create_account": "Create Account",
+  "@create_account": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "import_wallet_as_account": "Import Wallet as Account",
+  "@import_wallet_as_account": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transfer_initiated": "Transfer Initiated",
+  "@transfer_initiated": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "transfer_initiated_desc": "Your transfer is in progress. It could take a few seconds to appear on the blockchain.",
+  "@transfer_initiated_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "tip": "Tips",
+  "@tip": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "my_details_desc": "All subscriptions and tipping will come from your selected wallet.",
+  "@my_details_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "change_default_chat_wallet": "Change",
+  "@change_default_chat_wallet": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "coming_soon": "Coming Soon...",
+  "@coming_soon": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "my_profile": "My Profile",
+  "@my_profile": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "profile": "Profile",
+  "@profile": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "send_message": "Send Message",
+  "@send_message": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "show_wallet_address_desc": "Scan the QR code, you can transfer it to me",
+  "@show_wallet_address_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "disappear_desc": "Messages received and sent will disappear after the set time.",
+  "@disappear_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "storage_text": "Storage",
+  "@storage_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "export": "Export",
+  "@export": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "eth_keystore_export_desc": "The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.",
+  "@eth_keystore_export_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
   "check_upgrade": "Check Upgrade",
   "@check_upgrade": {
     "type": "text",
@@ -1504,18 +1590,213 @@
     "type": "text",
     "placeholders": {}
   },
-  "create_account": "Create Account",
-  "@create_account": {
+  "message_text": "Messages",
+  "@message_text": {
     "type": "text",
     "placeholders": {}
   },
-  "import_wallet_as_account": "Import Wallet as Account",
-  "@import_wallet_as_account": {
+  "niot_text": "nIOT",
+  "@niot_text": {
     "type": "text",
     "placeholders": {}
   },
-  "tip": "Tips",
-  "@tip": {
+  "mining_fee_text": "Mining income",
+  "@mining_fee_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdraw_fee": "Withdrawal",
+  "@withdraw_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "yesterday_fee": "Previous estimated income",
+  "@yesterday_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "week_fee": "Weekly estimated income",
+  "@week_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "pre_week_fee": "Last week’s earnings",
+  "@pre_week_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "total_historical_fee": "Historical gross income",
+  "@total_historical_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "current_cashable_income": "Current cashable income",
+  "@current_cashable_income": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recommended_income": "Recommended income",
+  "@recommended_income": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "see_node": "View nodes",
+  "@see_node": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "get_invitation_code": "Access invitation code",
+  "@get_invitation_code": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "node_detail": "Nodes Detail",
+  "@node_detail": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "add_text": "Add",
+  "@add_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "device_total": "Total Devices",
+  "@device_total": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "running_text": "Running",
+  "@running_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "abnormalities_text": "Abnormal",
+  "@abnormalities_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "none_num_text": "Unknown",
+  "@none_num_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "search_text": "Search",
+  "@search_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "total_fee": "Total Income",
+  "@total_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdrawable_balance_fee": "Cashable Balance",
+  "@withdrawable_balance_fee": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdrawable_amount": "Amount of withdraw",
+  "@withdrawable_amount": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "withdrawable_address": "Address of withdraw",
+  "@withdrawable_address": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "email_text": "E-mail address",
+  "@email_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "note_text": "Note",
+  "@note_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "sort_text": "Sort",
+  "@sort_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "miner_name": "Name",
+  "@miner_name": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "status_text": "Status",
+  "@status_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "estimated_income": "Estimated Income",
+  "@estimated_income": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "flow_text": "Flow",
+  "@flow_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "select_sort_title": "Please select a sorting method",
+  "@select_sort_title": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "fee_text": "Income",
+  "@fee_text": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "node_list": "Node List",
+  "@node_list": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "ip_address": "IP Addrese",
+  "@ip_address": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "total_disk_capacity": "Total disk capacity",
+  "@total_disk_capacity": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "number_of_used_space": "Used space",
+  "@number_of_used_space": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "mac_address": "MAC Address",
+  "@mac_address": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "device_parameters": "Device Params",
+  "@device_parameters": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "recent_rate": "Recent rate",
+  "@recent_rate": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "refresh_status": "Refresh",
+  "@refresh_status": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "reboot_device": "Reboot",
+  "@reboot_device": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "apply_for_withdrawal": "Apply for withdrawal",
+  "@apply_for_withdrawal": {
     "type": "text",
     "placeholders": {}
   }

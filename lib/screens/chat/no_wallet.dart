@@ -27,7 +27,8 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
       backgroundColor: DefaultTheme.primaryColor,
       appBar: Header(
         titleChild: Padding(
-          padding: EdgeInsets.only(left: 20.w),
+          // It is consistent with other pages, and I read its source code, but it is not so adapted.
+          padding: EdgeInsets.only(left: 20),
           child: Label(
             NMobileLocalizations.of(context).menu_chat.toUpperCase(),
             type: LabelType.h2,
@@ -56,9 +57,7 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                   child: Column(
                     children: <Widget>[
                       Padding(
-                        padding: EdgeInsets.only(
-                          top: 32.h,
-                        ),
+                        padding: EdgeInsets.only(top: 32),
                         child: Label(
                           NMobileLocalizations.of(context).chat_no_wallet_title,
                           type: LabelType.h2,
@@ -67,7 +66,7 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(top: 32.h, left: 0, right: 0),
+                        padding: EdgeInsets.only(top: 8, left: 48, right: 48),
                         child: Label(
                           NMobileLocalizations.of(context).chat_no_wallet_desc,
                           type: LabelType.bodySmall,
@@ -83,26 +82,18 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                   child: Column(
                     children: <Widget>[
                       Padding(
-                        padding: EdgeInsets.only(
-                          top: 48.h,
-                        ),
+                        padding: EdgeInsets.only(top: 48),
                         child: Button(
-                          width: double.infinity,
                           text: NMobileLocalizations.of(context).no_wallet_create,
-                          padding: EdgeInsets.only(top: 16, bottom: 16),
                           onPressed: () {
                             Navigator.pushNamed(context, CreateNknWalletScreen.routeName);
                           },
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(
-                          top: 16.h,
-                        ),
+                        padding: EdgeInsets.only(top: 16),
                         child: Button(
-                          width: double.infinity,
                           text: NMobileLocalizations.of(context).no_wallet_import,
-                          padding: EdgeInsets.only(top: 16, bottom: 16),
                           backgroundColor: DefaultTheme.primaryColor.withAlpha(20),
                           fontColor: DefaultTheme.primaryColor,
                           onPressed: () {

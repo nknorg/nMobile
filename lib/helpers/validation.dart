@@ -93,6 +93,12 @@ class Validator {
     };
   }
 
+  email() {
+    return (value) {
+      return value.trim().length == 0 ? _localizations.error_required : !RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(value) ? '邮箱输入有误' : null;
+    };
+  }
+
   ethIdentifier() {
     return (value) {
       return (value != null && (value.toString().startsWith('0x') || value.toString().startsWith('0X')) && value.toString().length == 42) ? null : '地址输入错误';

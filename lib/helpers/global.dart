@@ -8,13 +8,14 @@ import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/plugins/nshell_client.dart';
 import 'package:nmobile/schemas/client.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/screens/ncdn/miner_data.dart';
+import 'package:nmobile/services/android_messaging_service.dart';
 import 'package:nmobile/services/background_fetch_service.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:package_info/package_info.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_sqlcipher/sqlite_api.dart';
@@ -26,6 +27,7 @@ class Global {
   static String locale;
   static ClientSchema currentClient;
   static ContactSchema currentUser;
+  static String currentWalletName;
   static Database currentChatDb;
   static Database currentCDNDb;
   static Directory applicationRootDirectory;
@@ -37,14 +39,18 @@ class Global {
   static Map<String, DateTime> _loadProfileCache = {};
   static String currentChatId;
   static bool isAutoShowPassword = true;
-  static MinerData minerData;
+  static int currentPageIndex;
+
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
   static bool isLocaleZh() => locale != null && locale.startsWith('zh');
   static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
+
+  static MinerData minerData;
   static final String SERVER_PUBKEY = 'eb08c2a27cb61fe414654a1e9875113d715737247addf01db06ea66cafe0b5c8';
 
   static Future init(VoidCallback callback) async {
     WidgetsFlutterBinding.ensureInitialized();
+    NLog.d('APP start');
     await SpUtil.getInstance();
     setupLocator();
     await initData();
@@ -52,14 +58,14 @@ class Global {
     if (Platform.isAndroid) {
       SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(statusBarColor: Colors.transparent);
       SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
+      BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
+      AndroidMessagingService.registerOnMessage();
     }
-    BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
   }
 
   static Future initData() async {
     NknWalletPlugin.init();
     NknClientPlugin.init();
-    NShellClientPlugin.init();
     LocalNotification.init();
     Global.applicationRootDirectory = await getApplicationDocumentsDirectory();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();

@@ -212,7 +212,7 @@ class BottomDialog extends StatefulWidget {
                     padding: const EdgeInsets.only(top: 24, bottom: 24),
                     child: Label(
                       title,
-                      type: LabelType.h2,
+                      type: LabelType.h3,
                     ),
                   ),
                 ),
@@ -223,7 +223,8 @@ class BottomDialog extends StatefulWidget {
                     children: <Widget>[
                       Label(
                         NMobileLocalizations.of(context).send_to,
-                        type: LabelType.h4,
+                        type: LabelType.bodyRegular,
+                        color: DefaultTheme.fontColor1,
                         textAlign: TextAlign.start,
                       ),
                       Textbox(
@@ -256,9 +257,7 @@ class BottomDialog extends StatefulWidget {
   }
 
   showInputChannelDialog({@required String title}) {
-    double height = 340;
     return show<String>(
-      height: height,
       builder: (context) => GestureDetector(
         onTap: () {
           FocusScope.of(context).requestFocus(FocusNode());
@@ -366,7 +365,9 @@ class BottomDialog extends StatefulWidget {
                           var wallet = state.wallets[index];
                           return GestureDetector(
                             onTap: () {
-                              if(callback != null) {callback(wallet);}
+                              if (callback != null) {
+                                callback(wallet);
+                              }
                               _filteredWalletsBloc.add(LoadWalletFilter((x) => x.address == wallet.address));
                               close();
                             },

@@ -749,8 +749,9 @@ class TopicSchema {
   Future<void> unsubscribe({int c = 0}) async {
     int count = c;
     try {
-      String topicHash = genChannelId(topic);
+      Global.removeTopicCache(topic);
       LocalStorage.saveUnsubscribeTopic(topic);
+      String topicHash = genChannelId(topic);
       var hash = await NknClientPlugin.unsubscribe(topic: topicHash);
       if (hash != null) {
         Database db = SqliteStorage(db: Global.currentChatDb).db;
@@ -763,10 +764,9 @@ class TopicSchema {
           where: 'id = ?',
           whereArgs: [id],
         );
-        Global.removeTopicCache(topic);
-        LocalStorage.saveUnsubscribeTopic(topic);
       }
     } catch (e) {
+      NLog.e(e.toString());
       count++;
       if (count > 3) return;
       Future.delayed(Duration(seconds: 3 * count), () {

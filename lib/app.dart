@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/event/eventbus.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/screens/news.dart';
 import 'package:nmobile/services/background_fetch_service.dart';
@@ -31,8 +32,8 @@ class _AppScreenState extends State<AppScreen> {
   int _currentIndex = 0;
   List<Widget> screens = <Widget>[
     ChatScreen(),
-    NewsScreen(),
     HomeScreen(),
+    NewsScreen(),
     SettingsScreen(),
   ];
 
@@ -43,8 +44,8 @@ class _AppScreenState extends State<AppScreen> {
       DeviceOrientation.portraitUp,
     ]);
     OrientationPlugin.forceOrientation(DeviceOrientation.portraitUp);
-    _pageController = PageController();
-
+    _pageController = PageController(initialPage: 0);
+    Global.currentPageIndex = _currentIndex;
     _walletsBloc = BlocProvider.of<WalletsBloc>(context);
     _walletsBloc.add(LoadWallets());
   }
@@ -64,7 +65,7 @@ class _AppScreenState extends State<AppScreen> {
     locator<BackgroundFetchService>().init();
     return WillPopScope(
       onWillPop: () async {
-        AndroidBackTop.backToDesktop();
+        await AndroidBackTop.backToDesktop();
         return false;
       },
       child: getView(),
@@ -88,6 +89,8 @@ class _AppScreenState extends State<AppScreen> {
                       onPageChanged: (n) {
                         setState(() {
                           _currentIndex = n;
+                          Global.currentPageIndex = _currentIndex;
+                          eventBus.fire(MainTabIndex(Global.currentPageIndex));
                         });
                       },
                       controller: _pageController,
@@ -118,7 +121,7 @@ class _AppScreenState extends State<AppScreen> {
             ),
           ),
           Container(
-            height: ScreenUtil.bottomBarHeight,
+            height: MediaQuery.of(context).padding.bottom,
             width: double.infinity,
             color: DefaultTheme.backgroundLightColor,
           )

@@ -11,7 +11,6 @@ import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
-import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
@@ -28,7 +27,12 @@ import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/screens/chat/photo_page.dart';
+import 'package:nmobile/screens/contact/chat_profile.dart';
+import 'package:nmobile/screens/contact/show_chat_id.dart';
+import 'package:nmobile/screens/contact/show_my_chat_address.dart';
+import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/utils/copy_utils.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
@@ -48,7 +52,6 @@ class ContactScreen extends StatefulWidget {
 class _ContactScreenState extends State<ContactScreen> with RouteAware {
   ChatBloc _chatBloc;
   TextEditingController _firstNameController = TextEditingController();
-  TextEditingController _nameController = TextEditingController();
   TextEditingController _notesController = TextEditingController();
   FocusNode _firstNameFocusNode = FocusNode();
   GlobalKey _nameFormKey = new GlobalKey<FormState>();
@@ -71,6 +74,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
   int _burnValue;
   SourceProfile _sourceProfile;
   OptionsSchema _sourceOptions;
+  String nickName;
 
   initAsync() async {
     _sourceProfile = widget.arguments.sourceProfile;
@@ -115,7 +119,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
     }
     _burnValue = burnAfterSeconds;
 
-    _nameController.text = widget.arguments.name;
+    nickName = widget.arguments.name;
     _notesController.text = widget.arguments.notes;
   }
 
@@ -141,6 +145,11 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
+//    NLog.d(widget.arguments.name);
+//    NLog.d(widget.arguments.firstName);
+//    NLog.d(widget.arguments.sourceProfile.name);
+//    NLog.d(widget.arguments.sourceProfile.firstName);
+//    NLog.d(widget.arguments.toEntity());
     _burnTextArray = <String>[
       NMobileLocalizations.of(context).burn_5_seconds,
       NMobileLocalizations.of(context).burn_10_seconds,
@@ -154,691 +163,19 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
 
     if (widget.arguments.isMe) {
       return Scaffold(
+        backgroundColor: DefaultTheme.backgroundColor4,
         appBar: Header(
           title: '',
           backgroundColor: DefaultTheme.backgroundColor4,
-          action: IconButton(
-            icon: loadAssetIconsImage(
-              'scan',
-              width: 24,
-              color: DefaultTheme.backgroundLightColor,
-            ),
-            onPressed: () async {
-              showQRDialog();
-            },
-          ),
         ),
-        body: Container(
-          child: Column(
-            children: <Widget>[
-              Container(
-                color: DefaultTheme.backgroundColor4,
-                width: double.infinity,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    InkWell(
-                      onTap: () {
-                        if (widget?.arguments?.avatarFilePath != null) {
-                          Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
-                        }
-                      },
-                      child: Padding(
-                        padding: EdgeInsets.only(bottom: 16.h),
-                        child: widget.arguments.avatarWidget(
-                          backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
-                          size: 50,
-                          bottomRight: Button(
-                            padding: const EdgeInsets.all(0),
-                            width: 30.w,
-                            height: 30.w,
-                            backgroundColor: DefaultTheme.primaryColor,
-                            child: loadAssetIconsImage(
-                              'camera',
-                              width: 18.w,
-                            ),
-                            onPressed: () async {
-                              updatePic();
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 16.h),
-                      child: Label(
-                        widget.arguments.name,
-                        type: LabelType.h2,
-                        dark: true,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(color: DefaultTheme.backgroundColor4),
-                  child: BodyBox(
-                    padding: EdgeInsets.only(top: 32.h, left: 20.w, right: 20.w),
-                    color: DefaultTheme.backgroundLightColor,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 20.h),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: <Widget>[
-                                Label(
-                                  NMobileLocalizations.of(context).my_details,
-                                  type: LabelType.h2,
-                                  fontWeight: FontWeight.bold,
-                                  height: 1,
-                                )
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 0),
-                            child: Column(
-                              children: <Widget>[
-                                Column(
-                                  children: <Widget>[
-                                    Flex(
-                                      direction: Axis.horizontal,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                        Padding(
-                                          padding: const EdgeInsets.only(left: 0, right: 20),
-                                          child: loadAssetIconsImage(
-                                            'user',
-                                            color: DefaultTheme.primaryColor,
-                                            width: 24,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(top: 4),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: <Widget>[
-                                                Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                  children: <Widget>[
-                                                    Label(
-                                                      NMobileLocalizations.of(context).nickname,
-                                                      type: LabelType.h3,
-                                                      textAlign: TextAlign.start,
-                                                    ),
-                                                    InkWell(
-                                                      child: Label(
-                                                        NMobileLocalizations.of(context).edit,
-                                                        color: DefaultTheme.primaryColor,
-                                                        type: LabelType.bodyRegular,
-                                                      ),
-                                                      onTap: () {
-                                                        showChangeNameDialog();
-                                                      },
-                                                    ),
-                                                  ],
-                                                ),
-                                                Textbox(
-                                                  controller: _nameController,
-                                                  readOnly: true,
-                                                  enabled: false,
-                                                  textInputAction: TextInputAction.next,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Flex(
-                                      direction: Axis.horizontal,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                        Expanded(
-                                          flex: 0,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(left: 0, right: 20),
-                                            child: loadAssetIconsImage(
-                                              'key',
-                                              color: DefaultTheme.primaryColor,
-                                              width: 24,
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(top: 4),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: <Widget>[
-                                                Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                  children: <Widget>[
-                                                    Label(
-                                                      NMobileLocalizations.of(context).d_chat_address,
-                                                      type: LabelType.h3,
-                                                      textAlign: TextAlign.start,
-                                                    ),
-                                                    InkWell(
-                                                      child: Label(
-                                                        NMobileLocalizations.of(context).copy,
-                                                        color: DefaultTheme.primaryColor,
-                                                        type: LabelType.bodyRegular,
-                                                      ),
-                                                      onTap: () {
-                                                        copyAction(widget.arguments.clientAddress);
-                                                      },
-                                                    ),
-                                                  ],
-                                                ),
-                                                InkWell(
-                                                  onTap: () {
-                                                    copyAction(widget.arguments.clientAddress);
-                                                  },
-                                                  child: Textbox(
-                                                    value: widget.arguments.clientAddress,
-                                                    readOnly: true,
-                                                    enabled: false,
-                                                    textInputAction: TextInputAction.next,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Flex(
-                                      direction: Axis.horizontal,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                        Expanded(
-                                          flex: 0,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(left: 0, right: 20),
-                                            child: loadAssetIconsImage(
-                                              'wallet',
-                                              color: DefaultTheme.primaryColor,
-                                              width: 24,
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(top: 4),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: <Widget>[
-                                                Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                  children: <Widget>[
-                                                    Label(
-                                                      NMobileLocalizations.of(context).wallet_address,
-                                                      type: LabelType.h3,
-                                                      textAlign: TextAlign.start,
-                                                    ),
-                                                    InkWell(
-                                                      child: Label(
-                                                        NMobileLocalizations.of(context).copy,
-                                                        color: DefaultTheme.primaryColor,
-                                                        type: LabelType.bodyRegular,
-                                                      ),
-                                                      onTap: () {
-                                                        copyAction(widget.arguments.nknWalletAddress);
-                                                      },
-                                                    ),
-                                                  ],
-                                                ),
-                                                InkWell(
-                                                  onTap: () {
-                                                    copyAction(widget.arguments.nknWalletAddress);
-                                                  },
-                                                  child: Textbox(
-                                                    value: widget.arguments.nknWalletAddress,
-                                                    readOnly: true,
-                                                    textInputAction: TextInputAction.next,
-                                                    enabled: false,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                )
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        body: getSelfView(),
       );
     } else {
-      return Scaffold(
-        appBar: Header(
-          title: '',
-          leading: BackButton(
-            onPressed: () {
-              _setContactOptions();
-              Navigator.of(context).pop();
-            },
-          ),
-          backgroundColor: DefaultTheme.backgroundColor4,
-          action: widget.arguments.type == ContactType.stranger
-              ? IconButton(
-                  icon: loadAssetIconsImage(
-                    'user-plus',
-                    color: DefaultTheme.backgroundLightColor,
-                    width: 24,
-                  ),
-                  onPressed: () {
-                    showAction(true);
-                  },
-                )
-              : IconButton(
-                  icon: loadAssetIconsImage(
-                    'user-delete',
-                    color: DefaultTheme.backgroundLightColor,
-                    width: 24,
-                  ),
-                  onPressed: () {
-                    showAction(false);
-                  },
-                ),
-        ),
-        body: ConstrainedBox(
-          constraints: BoxConstraints.expand(),
-          child: Stack(
-            alignment: Alignment.bottomCenter,
-            children: <Widget>[
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height),
-                  color: DefaultTheme.backgroundColor4,
-                  child: Flex(direction: Axis.vertical, children: <Widget>[
-                    Expanded(
-                      flex: 0,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 24.h, left: 20.w, right: 20.w),
-                            child: Row(
-                              children: <Widget>[
-                                InkWell(
-                                  onTap: () {
-                                    if (widget.arguments.avatarFilePath != null) {
-                                      Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
-                                    }
-                                  },
-                                  child: Padding(
-                                    padding: EdgeInsets.only(right: 16.w),
-                                    child: widget.arguments.avatarWidget(
-                                      backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
-                                      size: 40,
-                                      bottomRight: Button(
-                                        padding: const EdgeInsets.all(0),
-                                        width: 28.w,
-                                        height: 28.w,
-                                        backgroundColor: DefaultTheme.primaryColor,
-                                        child: loadAssetIconsImage('camera', width: 18),
-                                        onPressed: () async {
-                                          File savedImg = await getHeaderImage();
-                                          setState(() {
-                                            widget.arguments.avatar = savedImg;
-                                          });
-                                          await widget.arguments.setAvatar(savedImg);
-                                          _chatBloc.add(RefreshMessages());
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[Label(widget.arguments.name + '${_sourceProfile?.name != null && _sourceProfile.name.isNotEmpty && (widget.arguments.firstName != null && widget.arguments.firstName.isNotEmpty || widget.arguments.lastName != null && widget.arguments.lastName.isNotEmpty) ? '(${_sourceProfile?.name})' : ''}', type: LabelType.h2, dark: true), Label(NMobileLocalizations.of(context).updated_at + ' ' + Format.timeFormat(widget.arguments.updatedTime ?? widget.arguments.createdTime), type: LabelType.bodyRegular, color: DefaultTheme.successColor)],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ]),
-                ),
-              ),
-              Container(
-                constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 220.h),
-                child: BodyBox(
-                  padding: const EdgeInsets.only(top: 32),
-                  color: DefaultTheme.backgroundLightColor,
-                  child: Flex(
-                    direction: Axis.vertical,
-                    children: <Widget>[
-                      Expanded(
-                        flex: 1,
-                        child: Padding(
-                          padding: EdgeInsets.only(top: 0),
-                          child: SingleChildScrollView(
-                            child: Flex(
-                              direction: Axis.vertical,
-                              children: <Widget>[
-                                Expanded(
-                                  flex: 0,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(top: 0),
-                                    child: Column(
-                                      children: <Widget>[
-                                        Expanded(
-                                          flex: 0,
-                                          child: Column(
-                                            children: <Widget>[
-                                              Flex(
-                                                direction: Axis.horizontal,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Expanded(
-                                                    flex: 1,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(top: 4, left: 20, right: 20),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: <Widget>[
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                            children: <Widget>[
-                                                              Label(
-                                                                NMobileLocalizations.of(context).nickname,
-                                                                type: LabelType.h4,
-                                                                textAlign: TextAlign.start,
-                                                              ),
-                                                              InkWell(
-                                                                child: Label(
-                                                                  NMobileLocalizations.of(context).edit,
-                                                                  color: DefaultTheme.primaryColor,
-                                                                  type: LabelType.bodyRegular,
-                                                                ),
-                                                                onTap: () {
-                                                                  _firstNameController.text = widget.arguments.firstName;
-
-                                                                  BottomDialog.of(context).showBottomDialog(
-                                                                    title: NMobileLocalizations.of(context).edit_name,
-                                                                    child: Form(
-                                                                      key: _nameFormKey,
-                                                                      autovalidate: true,
-                                                                      onChanged: () {
-                                                                        _nameFormValid = (_nameFormKey.currentState as FormState).validate();
-                                                                      },
-                                                                      child: Flex(
-                                                                        direction: Axis.horizontal,
-                                                                        children: <Widget>[
-                                                                          Expanded(
-                                                                            flex: 1,
-                                                                            child: Padding(
-                                                                              padding: const EdgeInsets.only(right: 4),
-                                                                              child: Column(
-                                                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                                                children: <Widget>[
-                                                                                  Textbox(
-                                                                                    controller: _firstNameController,
-                                                                                    focusNode: _firstNameFocusNode,
-                                                                                    maxLength: 20,
-                                                                                  ),
-                                                                                ],
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                    ),
-                                                                    action: Padding(
-                                                                      padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
-                                                                      child: Button(
-                                                                        text: NMobileLocalizations.of(context).save,
-                                                                        width: double.infinity,
-                                                                        onPressed: () async {
-                                                                          _nameFormValid = (_nameFormKey.currentState as FormState).validate();
-                                                                          if (_nameFormValid) {
-                                                                            var contact = widget.arguments;
-                                                                            contact.firstName = _firstNameController.text.trim();
-                                                                            await contact.setName(contact.firstName);
-                                                                            _nameController.text = widget.arguments.name;
-                                                                            _chatBloc.add(RefreshMessages());
-                                                                            Navigator.of(context).pop();
-                                                                          }
-                                                                        },
-                                                                      ),
-                                                                    ),
-                                                                  );
-                                                                },
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          Textbox(
-                                                            controller: _nameController,
-                                                            readOnly: true,
-                                                            enabled: false,
-                                                            textInputAction: TextInputAction.next,
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Flex(
-                                                direction: Axis.horizontal,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Expanded(
-                                                    flex: 1,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(top: 4, left: 20, right: 20),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: <Widget>[
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                            children: <Widget>[
-                                                              Label(
-                                                                NMobileLocalizations.of(context).d_chat_address,
-                                                                type: LabelType.h4,
-                                                                textAlign: TextAlign.start,
-                                                              ),
-                                                              InkWell(
-                                                                child: Label(
-                                                                  NMobileLocalizations.of(context).copy,
-                                                                  color: DefaultTheme.primaryColor,
-                                                                  type: LabelType.bodyRegular,
-                                                                ),
-                                                                onTap: () {
-                                                                  copyAction(widget.arguments.publickKey);
-                                                                },
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          InkWell(
-                                                            onTap: () {
-                                                              copyAction(widget.arguments.publickKey);
-                                                            },
-                                                            child: Textbox(
-                                                              value: widget.arguments.publickKey,
-                                                              readOnly: true,
-                                                              enabled: false,
-                                                              textInputAction: TextInputAction.next,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Flex(
-                                                direction: Axis.horizontal,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Expanded(
-                                                    flex: 1,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(top: 4, left: 20, right: 20),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: <Widget>[
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                            children: <Widget>[
-                                                              Label(
-                                                                NMobileLocalizations.of(context).notes,
-                                                                type: LabelType.h4,
-                                                                textAlign: TextAlign.start,
-                                                              ),
-                                                              InkWell(
-                                                                child: Label(
-                                                                  NMobileLocalizations.of(context).edit,
-                                                                  color: DefaultTheme.primaryColor,
-                                                                  type: LabelType.bodyRegular,
-                                                                ),
-                                                                onTap: () {
-                                                                  changeName();
-                                                                },
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          Textbox(
-                                                            multi: true,
-                                                            minLines: 1,
-                                                            maxLines: 3,
-                                                            controller: _notesController,
-                                                            readOnly: true,
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Flex(
-                                                direction: Axis.horizontal,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Expanded(
-                                                    flex: 1,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(top: 4),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: <Widget>[
-                                                          Padding(
-                                                            padding: const EdgeInsets.only(left: 20, right: 16),
-                                                            child: Row(
-                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                              children: <Widget>[
-                                                                Label(
-                                                                  NMobileLocalizations.of(context).burn_after_reading + '${_burnValue != null ? ' (${Format.durationFormat(Duration(seconds: _burnValue))})' : ''}',
-                                                                  type: LabelType.h4,
-                                                                  textAlign: TextAlign.start,
-                                                                ),
-                                                                CupertinoSwitch(
-                                                                  value: _burnSelected,
-                                                                  activeColor: DefaultTheme.primaryColor,
-                                                                  onChanged: (value) async {
-                                                                    if (value) {
-                                                                      _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
-                                                                    } else {
-                                                                      _burnValue = null;
-                                                                    }
-                                                                    setState(() {
-                                                                      _burnSelected = value;
-                                                                    });
-                                                                  },
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                          Padding(
-                                                            padding: const EdgeInsets.only(left: 5, right: 10),
-                                                            child: Slider(
-                                                              value: _sliderBurnValue,
-                                                              onChanged: (v) async {
-                                                                setState(() {
-                                                                  _burnSelected = true;
-                                                                  _sliderBurnValue = v;
-                                                                  _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
-                                                                });
-                                                              },
-                                                              divisions: _burnTextArray.length - 1,
-                                                              max: _burnTextArray.length - 1.0,
-                                                              min: 0,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 83.h,
-                right: 20,
-                child: Button(
-                  padding: const EdgeInsets.all(0),
-                  width: 56,
-                  height: 56,
-                  backgroundColor: DefaultTheme.primaryColor,
-                  child: SvgPicture.asset(
-                    'assets/icons/chat.svg',
-                    width: 24,
-                  ),
-                  onPressed: () async {
-                    _setContactOptions();
-                    Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return getPersonView();
     }
   }
 
-  changeName() {
+  changeNotes() {
     BottomDialog.of(context).showBottomDialog(
       height: 320,
       title: NMobileLocalizations.of(context).edit_notes,
@@ -899,6 +236,60 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
     );
   }
 
+  _detailChangeName(BuildContext context) {
+    BottomDialog.of(context).showBottomDialog(
+      title: NMobileLocalizations.of(context).edit_contact,
+      child: Form(
+        key: _nameFormKey,
+        autovalidate: true,
+        onChanged: () {
+          _nameFormValid = (_nameFormKey.currentState as FormState).validate();
+        },
+        child: Flex(
+          direction: Axis.horizontal,
+          children: <Widget>[
+            Expanded(
+              flex: 1,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Textbox(
+                      controller: _firstNameController,
+                      focusNode: _firstNameFocusNode,
+                      maxLength: 20,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      action: Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
+        child: Button(
+          text: NMobileLocalizations.of(context).save,
+          width: double.infinity,
+          onPressed: () async {
+            _nameFormValid = (_nameFormKey.currentState as FormState).validate();
+            if (_nameFormValid) {
+              var contact = widget.arguments;
+              contact.firstName = _firstNameController.text.trim();
+              await contact.setName(contact.firstName);
+              setState(() {
+                nickName = widget.arguments.name;
+              });
+              _chatBloc.add(RefreshMessages());
+              Navigator.of(context).pop();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   copyAction(String content) {
     CopyUtils.copyAction(context, content);
   }
@@ -912,7 +303,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
     });
   }
 
-  showChangeNameDialog() {
+  showChangeSelfNameDialog() {
     _firstNameController.text = widget.arguments.firstName;
 
     BottomDialog.of(context).showBottomDialog(
@@ -956,7 +347,9 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
             if (_nameFormValid) {
               var contact = widget.arguments;
               contact.firstName = _firstNameController.text.trim();
-              _nameController.text = widget.arguments.name;
+              setState(() {
+                nickName = widget.arguments.name;
+              });
               contact.setName(contact.firstName);
               Navigator.of(context).pop();
             }
@@ -1016,42 +409,621 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
 
   showAction(bool b) async {
     if (!b) {
-      await ModalDialog.of(context).confirm(
-        height: 350.h,
-        title: Label(
-          NMobileLocalizations.of(context).delete_friend_confirm_title,
-          type: LabelType.h2,
-          softWrap: true,
-        ),
-        content: Container(),
-        agree: Padding(
-          padding: EdgeInsets.only(bottom: 8),
-          child: Button(
-            child: Label(
-              NMobileLocalizations.of(context).delete,
-              type: LabelType.h3,
-            ),
-            backgroundColor: DefaultTheme.strongColor,
-            width: double.infinity,
-            onPressed: () {
-              Navigator.pop(context);
-              widget.arguments.setFriend(isFriend: b);
+      //delete
+      SimpleConfirm(
+          context: context,
+          content: NMobileLocalizations.of(context).delete_friend_confirm_title,
+          buttonText: NMobileLocalizations.of(context).delete,
+          buttonColor: Colors.red,
+          callback: (v) {
+            if (v) {
+              widget.arguments.setFriend(isFriend: false);
               setState(() {});
-            },
-          ),
-        ),
-        reject: Button(
-          backgroundColor: DefaultTheme.backgroundLightColor,
-          fontColor: DefaultTheme.fontColor2,
-          text: NMobileLocalizations.of(context).cancel,
-          width: double.infinity,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      );
+            }
+          }).show();
     } else {
       widget.arguments.setFriend(isFriend: b);
       setState(() {});
       showToast(NMobileLocalizations.of(context).success);
     }
+  }
+
+  getStatusView() {
+    if (widget.arguments.type == ContactType.stranger) {
+      return Container(
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        margin: EdgeInsets.only(left: 16, right: 16, top: 10),
+        child: FlatButton(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+          child: Container(
+            width: double.infinity,
+            child: Row(
+              children: <Widget>[
+                Icon(
+                  Icons.person_add,
+                  color: DefaultTheme.primaryColor,
+                ),
+                SizedBox(width: 10),
+                Label(NMobileLocalizations.of(context).add_contact, type: LabelType.bodyRegular, color: DefaultTheme.primaryColor),
+                Spacer(),
+              ],
+            ),
+          ),
+          onPressed: () {
+            showAction(true);
+          },
+        ).sized(h: 50, w: double.infinity),
+      );
+    } else {
+      return Container(
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        margin: EdgeInsets.only(left: 16, right: 16, top: 10),
+        child: FlatButton(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+          child: Container(
+            width: double.infinity,
+            child: Row(
+              children: <Widget>[
+                Icon(
+                  Icons.delete,
+                  color: Colors.red,
+                ),
+                SizedBox(width: 10),
+                Label(NMobileLocalizations.of(context).delete, type: LabelType.bodyRegular, color: Colors.red),
+                Spacer(),
+              ],
+            ),
+          ),
+          onPressed: () {
+            showAction(false);
+          },
+        ).sized(h: 50, w: double.infinity),
+      );
+    }
+  }
+
+  String getName() {
+    String name = '${_sourceProfile?.name != null && _sourceProfile.name.isNotEmpty && (widget.arguments.firstName != null && widget.arguments.firstName.isNotEmpty || widget.arguments.lastName != null && widget.arguments.lastName.isNotEmpty) ? '(${_sourceProfile?.name})' : ''}';
+    return widget.arguments.name;
+  }
+
+  getSelfView() {
+    return Container(
+      child: Column(
+        children: <Widget>[
+          Container(
+            width: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                Stack(
+                  children: <Widget>[
+                    InkWell(
+                      onTap: () {
+                        if (widget?.arguments?.avatarFilePath != null) {
+                          Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
+                        }
+                      },
+                      child: Container(
+                        child: widget.arguments.avatarWidget(
+                          backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
+                          size: 48,
+                          fontColor: DefaultTheme.fontLightColor,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Button(
+                        padding: const EdgeInsets.all(0),
+                        width: 24,
+                        height: 24,
+                        backgroundColor: DefaultTheme.primaryColor,
+                        child: SvgPicture.asset(
+                          'assets/icons/camera.svg',
+                          width: 16,
+                        ),
+                        onPressed: () async {
+                          updatePic();
+                        },
+                      ),
+                    )
+                  ],
+                ),
+                SizedBox(height: 20)
+              ],
+            ),
+          ),
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(color: DefaultTheme.backgroundColor4),
+              child: BodyBox(
+                padding: EdgeInsets.only(
+                  top: 0,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(20.w, 20.h, 0, 16.h),
+                        child: Label(
+                          NMobileLocalizations.of(context).my_profile,
+                          type: LabelType.h3,
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
+                        margin: EdgeInsets.symmetric(horizontal: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            FlatButton(
+                              padding: EdgeInsets.only(left: 16, right: 16, top: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                              onPressed: showChangeSelfNameDialog,
+                              child: Row(
+                                children: <Widget>[
+                                  loadAssetIconsImage(
+                                    'user',
+                                    color: DefaultTheme.primaryColor,
+                                    width: 24,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Label(
+                                    NMobileLocalizations.of(context).nickname,
+                                    type: LabelType.bodyRegular,
+                                    color: DefaultTheme.fontColor1,
+                                    height: 1,
+                                  ),
+                                  SizedBox(width: 20),
+                                  Expanded(
+                                    child: Label(
+                                      nickName ?? '',
+                                      type: LabelType.bodyRegular,
+                                      color: DefaultTheme.fontColor2,
+                                      overflow: TextOverflow.fade,
+                                      textAlign: TextAlign.right,
+                                      height: 1,
+                                    ),
+                                  ),
+                                  SvgPicture.asset(
+                                    'assets/icons/right.svg',
+                                    width: 24,
+                                    color: DefaultTheme.fontColor2,
+                                  )
+                                ],
+                              ),
+                            ).sized(h: 48),
+                            FlatButton(
+                              padding: const EdgeInsets.only(left: 16, right: 16),
+                              onPressed: () {
+                                Navigator.pushNamed(context, ShowMyChatID.routeName);
+                              },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: <Widget>[
+                                  loadAssetChatPng(
+                                    'chat_id',
+                                    color: DefaultTheme.primaryColor,
+                                    width: 22,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Label(
+                                    NMobileLocalizations.of(context).d_chat_address,
+                                    type: LabelType.bodyRegular,
+                                    color: DefaultTheme.fontColor1,
+                                    height: 1,
+                                  ),
+                                  SizedBox(width: 20),
+                                  Expanded(
+                                    child: Label(
+                                      Global.currentClient.address.substring(0, 8) + "...",
+                                      type: LabelType.bodyRegular,
+                                      textAlign: TextAlign.right,
+                                      color: DefaultTheme.fontColor2,
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                  SvgPicture.asset(
+                                    'assets/icons/right.svg',
+                                    width: 24,
+                                    color: DefaultTheme.fontColor2,
+                                  )
+                                ],
+                              ),
+                            ).sized(h: 48),
+                            FlatButton(
+                              padding: const EdgeInsets.only(
+                                left: 16,
+                                right: 16,
+                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
+                              onPressed: () {
+                                Navigator.pushNamed(context, ShowMyChatAddress.routeName, arguments: widget.arguments.nknWalletAddress);
+                              },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  loadAssetIconsImage(
+                                    'wallet',
+                                    color: DefaultTheme.primaryColor,
+                                    width: 24,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Label(
+                                    NMobileLocalizations.of(context).wallet_address,
+                                    type: LabelType.bodyRegular,
+                                    color: DefaultTheme.fontColor1,
+                                    height: 1,
+                                  ),
+                                  SizedBox(width: 20),
+                                  Expanded(
+                                    child: Label(
+                                      widget.arguments.nknWalletAddress.substring(0, 8) + "...",
+                                      type: LabelType.bodyRegular,
+                                      color: DefaultTheme.fontColor2,
+                                      textAlign: TextAlign.right,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  SvgPicture.asset(
+                                    'assets/icons/right.svg',
+                                    width: 24,
+                                    color: DefaultTheme.fontColor2,
+                                  )
+                                ],
+                              ),
+                            ).sized(h: 48),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  getPersonView() {
+    return Scaffold(
+      backgroundColor: DefaultTheme.backgroundColor4,
+      appBar: Header(
+        title: '',
+        leading: BackButton(
+          onPressed: () {
+            _setContactOptions();
+            Navigator.of(context).pop();
+          },
+        ),
+        backgroundColor: DefaultTheme.backgroundColor4,
+      ),
+      body: Container(
+        child: Flex(direction: Axis.vertical, children: <Widget>[
+          Expanded(
+            flex: 0,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Stack(
+                  children: <Widget>[
+                    InkWell(
+                      onTap: () {
+                        if (widget.arguments.avatarFilePath != null) {
+                          Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
+                        }
+                      },
+                      child: Container(
+                        child: widget.arguments.avatarWidget(
+                          backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
+                          size: 48,
+                          fontColor: DefaultTheme.fontLightColor,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Button(
+                        padding: const EdgeInsets.all(0),
+                        width: 24,
+                        height: 24,
+                        backgroundColor: DefaultTheme.primaryColor,
+                        child: SvgPicture.asset(
+                          'assets/icons/camera.svg',
+                          width: 16,
+                        ),
+                        onPressed: () async {
+                          File savedImg = await getHeaderImage();
+                          setState(() {
+                            widget.arguments.avatar = savedImg;
+                          });
+                          await widget.arguments.setAvatar(savedImg);
+                          _chatBloc.add(RefreshMessages());
+                        },
+                      ),
+                    )
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Label(
+                      widget.arguments.nickName ?? '',
+                      type: LabelType.bodyLarge,
+                      color: Colors.white,
+                      overflow: TextOverflow.fade,
+                      textAlign: TextAlign.center,
+                    ),
+//                      SizedBox(width: 10),
+//                      Icon(
+//                        Icons.edit,
+//                        color: DefaultTheme.fontColor2,
+//                        size: 18,
+//                      ),
+                  ],
+                )
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              children: <Widget>[
+                BodyBox(
+                  color: DefaultTheme.backgroundColor6,
+                  padding: EdgeInsets.only(top: 20),
+                  child: Column(
+                    children: <Widget>[
+                      Expanded(
+                        flex: 1,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Container(
+                              decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
+                              margin: EdgeInsets.symmetric(horizontal: 12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  FlatButton(
+                                    padding: EdgeInsets.only(left: 16, right: 16, top: 10),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                                    onPressed: () {
+                                      _firstNameController.text = widget.arguments.name;
+                                      _detailChangeName(context);
+                                    },
+                                    child: Row(
+                                      children: <Widget>[
+                                        loadAssetIconsImage(
+                                          'user',
+                                          color: DefaultTheme.primaryColor,
+                                          width: 24,
+                                        ),
+                                        SizedBox(width: 10),
+                                        Label(
+                                          NMobileLocalizations.of(context).edit_contact,
+                                          type: LabelType.bodyRegular,
+                                          color: DefaultTheme.fontColor1,
+                                          height: 1,
+                                        ),
+                                        SizedBox(width: 20),
+                                        Expanded(
+                                          child: Label(
+                                            getName(),
+                                            type: LabelType.bodyRegular,
+                                            color: DefaultTheme.fontColor2,
+                                            overflow: TextOverflow.fade,
+                                            textAlign: TextAlign.right,
+                                            height: 1,
+                                          ),
+                                        ),
+                                        SvgPicture.asset(
+                                          'assets/icons/right.svg',
+                                          width: 24,
+                                          color: DefaultTheme.fontColor2,
+                                        )
+                                      ],
+                                    ),
+                                  ).sized(h: 48),
+                                  FlatButton(
+                                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
+                                    onPressed: () {
+                                      Navigator.pushNamed(context, ChatProfile.routeName, arguments: widget.arguments);
+                                    },
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: <Widget>[
+                                        loadAssetChatPng(
+                                          'chat_id',
+                                          color: DefaultTheme.primaryColor,
+                                          width: 22,
+                                        ),
+                                        SizedBox(width: 10),
+                                        Label(
+                                          NMobileLocalizations.of(context).d_chat_address,
+                                          type: LabelType.bodyRegular,
+                                          color: DefaultTheme.fontColor1,
+                                          height: 1,
+                                        ),
+                                        SizedBox(width: 20),
+                                        Expanded(
+                                          child: Label(
+                                            widget.arguments.clientAddress.substring(0, 8) + '...',
+                                            type: LabelType.bodyRegular,
+                                            color: DefaultTheme.fontColor2,
+                                            textAlign: TextAlign.right,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        SvgPicture.asset(
+                                          'assets/icons/right.svg',
+                                          width: 24,
+                                          color: DefaultTheme.fontColor2,
+                                        )
+                                      ],
+                                    ),
+                                  ).sized(h: 48),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            Container(
+                              decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
+                              margin: EdgeInsets.symmetric(horizontal: 12),
+                              padding: EdgeInsets.only(top: 10),
+                              child: getBurnView(),
+                            ),
+                            Container(
+                              margin: EdgeInsets.symmetric(horizontal: 14),
+                              padding: EdgeInsets.only(top: 6),
+                              child: Row(
+                                children: <Widget>[
+                                  Expanded(
+                                    child: Label(
+                                      NMobileLocalizations.of(context).disappear_desc,
+                                      type: LabelType.bodySmall,
+                                      color: DefaultTheme.fontDescColor,
+                                      softWrap: true,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                              margin: EdgeInsets.only(left: 16, right: 16, top: 10),
+                              child: FlatButton(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                                child: Container(
+                                  width: double.infinity,
+                                  child: Row(
+                                    children: <Widget>[
+                                      SvgPicture.asset(
+                                        'assets/icons/chat.svg',
+                                        width: 24,
+                                        color: DefaultTheme.primaryColor,
+                                      ),
+//                                      loadAssetChatPng('send_message', width: 22),
+                                      SizedBox(width: 10),
+                                      Label(NMobileLocalizations.of(context).send_message, type: LabelType.bodyRegular, color: DefaultTheme.fontColor1),
+
+                                      Spacer(),
+                                      SvgPicture.asset(
+                                        'assets/icons/right.svg',
+                                        width: 24,
+                                        color: DefaultTheme.fontColor2,
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                onPressed: () {
+                                  _setContactOptions();
+                                  Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
+                                },
+                              ).sized(h: 50, w: double.infinity),
+                            ),
+                            SizedBox(height: 40),
+                            getStatusView(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ).pad(t: 28),
+//                Positioned(
+//                  top: 0,
+//                  right: 20,
+//                  child: Button(
+//                    padding: const EdgeInsets.all(0),
+//                    width: 56,
+//                    height: 56,
+//                    backgroundColor: DefaultTheme.primaryColor,
+//                    child: SvgPicture.asset('assets/icons/chat.svg', width: 24),
+//                    onPressed: () async {
+//                      _setContactOptions();
+//                      Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
+//                    },
+//                  ),
+//                ),
+              ],
+            ),
+          )
+        ]),
+      ),
+    );
+  }
+
+  getBurnView() {
+    return FlatButton(
+      onPressed: null,
+      padding: EdgeInsets.zero,
+      child: Container(
+        child: Column(children: <Widget>[
+          Row(
+            children: <Widget>[
+              loadAssetWalletImage(
+                'xiaohui',
+                color: DefaultTheme.primaryColor,
+                width: 24,
+              ),
+              SizedBox(width: 10),
+              Label(
+                NMobileLocalizations.of(context).burn_after_reading + '${_burnValue != null ? ' (${Format.durationFormat(Duration(seconds: _burnValue))})' : ''}',
+                type: LabelType.bodyRegular,
+                color: DefaultTheme.fontColor1,
+                textAlign: TextAlign.start,
+              ),
+              Spacer(),
+              CupertinoSwitch(
+                value: _burnSelected,
+                activeColor: DefaultTheme.primaryColor,
+                onChanged: (value) async {
+                  if (value) {
+                    _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
+                  } else {
+                    _burnValue = null;
+                  }
+                  setState(() {
+                    _burnSelected = value;
+                  });
+                },
+              ),
+            ],
+          ).pad(l: 20, r: 16),
+          _burnSelected
+              ? Slider(
+                  value: _sliderBurnValue,
+                  onChanged: (v) async {
+                    setState(() {
+                      _burnSelected = true;
+                      _sliderBurnValue = v;
+                      _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
+                    });
+                  },
+                  divisions: _burnTextArray.length - 1,
+                  max: _burnTextArray.length - 1.0,
+                  min: 0,
+                ).pad(l: 4, r: 4)
+              : Container(),
+          SizedBox(height: 10),
+        ]),
+      ),
+    );
   }
 }

@@ -14,12 +14,14 @@ import 'package:nmobile/helpers/api.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/cdn_miner.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/ncdn/with_draw_page.dart';
+import 'package:nmobile/screens/view/dialog_alert.dart';
 import 'package:oktoast/oktoast.dart';
 
 import 'node_main_page.dart';
@@ -27,9 +29,7 @@ import 'node_main_page.dart';
 class NcdnHomeScreen extends StatefulWidget {
   static const String routeName = '/ncdn/home';
 
-  final Map arguments;
-
-  NcdnHomeScreen({Key key, this.arguments}) : super(key: key);
+  NcdnHomeScreen({Key key}) : super(key: key);
 
   @override
   _NcdnHomeScreenState createState() => _NcdnHomeScreenState();
@@ -50,7 +50,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
 
   initAsync() async {
     _api = Api(mySecretKey: hexDecode(Global.minerData.se), myPublicKey: hexDecode(Global.minerData.pub), otherPubkey: hexDecode(Global.SERVER_PUBKEY));
-    String url = Api.CDN_MINER_DB + '/api/v1/sum/${Global.minerData.ads}';
+    String url = Api.CDN_MINER_DB + '/api/v1/sum/${Global.minerData.pub}';
     var params = {
       'where': {},
       'sum': 'amount',
@@ -66,7 +66,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
     });
     _api
         .post(
-            Api.CDN_MINER_DB + '/api/v1/sum/${Global.minerData.ads}',
+            Api.CDN_MINER_DB + '/api/v1/sum/${Global.minerData.pub}',
             {
               'where': {
                 'token_type': 'usdt',
@@ -84,19 +84,19 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
       }
     });
 
-    _api.get(Api.CDN_MINER_API + '/api/v2/referral_income/${Global.minerData.ads}').then((res) {
+    _api.get(Api.CDN_MINER_API + '/api/v3/referral_income/${Global.minerData.pub}').then((res) {
       var data = res;
       if (data != null && data['success']) {
         _referrerBalanceController.text = Format.currencyFormat(data['result'], decimalDigits: 3) + ' USDT';
       }
     });
-    _api.get(Api.CDN_MINER_API + '/api/v2/daily_estimate/${Global.minerData.ads}').then((res) {
+    _api.get(Api.CDN_MINER_API + '/api/v3/daily_estimate/${Global.minerData.pub}').then((res) {
       var data = res;
       if (data != null && data['success']) {
         _dailyEstimateController.text = Format.currencyFormat(data['result'], decimalDigits: 3) + ' USDT';
       }
     });
-    _api.get(Api.CDN_MINER_API + '/api/v2/weekly_estimate/${Global.minerData.ads}').then((res) {
+    _api.get(Api.CDN_MINER_API + '/api/v3/weekly_estimate/${Global.minerData.pub}').then((res) {
       var data = res;
       if (data != null && data['success']) {
         _weeklyEstimateController.text = Format.currencyFormat(data['result'], decimalDigits: 3) + ' USDT';
@@ -106,10 +106,10 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
     DateTime now = new DateTime.now();
     int weekday = now.weekday;
     var monday = getTimestampLatest(true, -weekday + 1 + -1 * 7);
-    var sunday = getTimestampLatest(false, 7 - weekday + -1 * 7);
+    var sunday = getTimestampLatest(true, 7 - weekday + 1 - 1 * 7);
     _api
         .post(
-            Api.CDN_MINER_DB + '/api/v1/sum/${Global.minerData.ads}',
+            Api.CDN_MINER_DB + '/api/v1/sum/${Global.minerData.pub}',
             {
               'where': {
                 'token_type': 'usdt',
@@ -142,13 +142,11 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: '挖矿收益',
+        title: NMobileLocalizations.of(context).mining_fee_text,
         backgroundColor: DefaultTheme.backgroundColor4,
-        action: Button(
-          padding: EdgeInsets.zero,
-          icon: true,
+        action: FlatButton(
           child: Label(
-            '提现',
+            NMobileLocalizations.of(context).withdraw_fee,
             color: Colors.white,
           ),
           onPressed: () {
@@ -177,7 +175,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Label(
-                                '昨日预估收益',
+                                NMobileLocalizations.of(context).yesterday_fee,
                                 type: LabelType.h4,
                                 textAlign: TextAlign.start,
                               ),
@@ -204,7 +202,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Label(
-                                '本周预估收益',
+                                NMobileLocalizations.of(context).week_fee,
                                 type: LabelType.h4,
                                 textAlign: TextAlign.start,
                               ),
@@ -231,7 +229,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Label(
-                                '上周收益',
+                                NMobileLocalizations.of(context).pre_week_fee,
                                 type: LabelType.h4,
                                 textAlign: TextAlign.start,
                               ),
@@ -258,7 +256,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Label(
-                                '历史总收益',
+                                NMobileLocalizations.of(context).total_historical_fee,
                                 type: LabelType.h4,
                                 textAlign: TextAlign.start,
                               ),
@@ -285,7 +283,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Label(
-                                '当前可提现收益',
+                                NMobileLocalizations.of(context).current_cashable_income,
                                 type: LabelType.h4,
                                 textAlign: TextAlign.start,
                               ),
@@ -312,7 +310,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Label(
-                                '推荐收益',
+                                NMobileLocalizations.of(context).recommended_income,
                                 type: LabelType.h4,
                                 textAlign: TextAlign.start,
                               ),
@@ -339,7 +337,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             padding: const EdgeInsets.only(top: 8),
                             child: Button(
                               width: double.infinity,
-                              text: '查看节点',
+                              text: NMobileLocalizations.of(context).see_node,
                               onPressed: () {
                                 Navigator.of(context).pushNamed(NodeMainPage.routeName);
                               },
@@ -349,7 +347,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                             padding: const EdgeInsets.only(top: 8),
                             child: Button(
                               width: double.infinity,
-                              text: '获取邀请码',
+                              text: NMobileLocalizations.of(context).get_invitation_code,
                               onPressed: () async {
                                 if (Global.currentClient == null) {
                                   showToast('请先连接D-Chat');
@@ -401,7 +399,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
 
   showTip() {
     if (_balance == null || _balance < 1) {
-      showToast('最小提现收益需大于1USDT');
+      SimpleAlert(context: context, content: '最小提现收益需大于1USDT').show();
     } else {
       Navigator.pushNamed(context, WithDrawPage.routeName, arguments: {
         "maxBalance": _balance,

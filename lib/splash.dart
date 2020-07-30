@@ -19,7 +19,6 @@ class SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-
     Global.initData().then((v) {
       Navigator.pushReplacementNamed(context, AppScreen.routeName);
     });
