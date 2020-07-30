@@ -213,7 +213,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
                                 Label(
-                                  '流量',
+                                  '昨日流量',
                                   type: LabelType.bodyRegular,
                                   color: DefaultTheme.fontColor2,
                                   textAlign: TextAlign.start,
