@@ -112,7 +112,7 @@ class AppState extends State<App> with WidgetsBindingObserver {
                 ),
               ),
               home: AppScreen(),
-              locale: Locale.fromSubtags(languageCode: Global.locale),
+              locale: Global.locale != null && Global.locale != 'auto' ? Locale.fromSubtags(languageCode: Global.locale) : null,
               localizationsDelegates: [
                 GlobalMaterialLocalizations.delegate,
                 GlobalWidgetsLocalizations.delegate,
