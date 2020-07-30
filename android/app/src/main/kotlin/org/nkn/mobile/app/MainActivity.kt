@@ -12,33 +12,19 @@ import nkn.Nkn
 import nkn.WalletConfig
 import org.nkn.mobile.app.util.Bytes2String.withAndroidPrefix
 import org.nkn.mobile.app.abs.Tag
-import org.nkn.mobile.app.dchat.Msgs
 import java.util.*
-import hobby.wei.c.core.AbsMsgrActy
-import hobby.wei.c.core.AbsMsgrService
-import org.nkn.mobile.app.abs.StartMe
 import org.nkn.mobile.app.dchat.*
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : AbsMsgrActy(), Msgs.Req, Msgs.Req.Callback, Tag {
-
-    override val serviceStarter: StartMe.MsgrSrvce
-        get() = DChatServiceForFlutter.Starter
-    override val msgrServiceClazz: Class<out AbsMsgrService>
-        get() = DChatServiceForFlutter::class.java
-
-    override fun handleServerMsg(msg: Message, handler: Handler) {
-        if (!handleServerMsg(msg, handler, this)) {
-            super<AbsMsgrActy>.handleServerMsg(msg, handler)
-        }
-    }
+class MainActivity : FlutterFragmentActivity(), Tag {
+    val TAG by lazy { tag() }
 
     companion object {
         private const val N_MOBILE_NATIVE = "android/nmobile/native/common"
     }
 
-    private var clientPlugin: NknClientPlugin? = null
+    /*private */var clientPlugin: NknClientPlugin? = null
     private var isActive : Boolean =  false;
-
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine);
@@ -48,6 +34,11 @@ class MainActivity : AbsMsgrActy(), Msgs.Req, Msgs.Req.Callback, Tag {
 
         NknWalletPlugin(flutterEngine)
         clientPlugin = NknClientPlugin(this, flutterEngine)
+
+        MethodChannel(flutterEngine.dartExecutor, "org.nkn.sdk/nshellclient").setMethodCallHandler(NShellClientPlugin())
+        EventChannel(flutterEngine.dartExecutor, "org.nkn.sdk/nshellclient/event").setStreamHandler(NShellClientEventPlugin())
+        MethodChannel(flutterEngine.dartExecutor, "org.nkn.native.call/apk_installer").setMethodCallHandler(InstallApkMethodPlugin())
+
         MethodChannel(flutterEngine.dartExecutor, N_MOBILE_NATIVE).setMethodCallHandler { methodCall, result ->
             if (methodCall.method == "backDesktop") {
                 result.success(true)
@@ -61,19 +52,13 @@ class MainActivity : AbsMsgrActy(), Msgs.Req, Msgs.Req.Callback, Tag {
         MessagingServiceFlutterPlugin.config(flutterEngine)
     }
 
-    fun sendAccount2Service(account: Account?) {
-        Log.w(TAG, "<<<---sendAccount2Service--->>>".withAndroidPrefix())
-        sendMsg2Server(buildMsg4SendAccount(account))
-    }
-
-    override fun onConnectionChanged(connected: Boolean) {
-        Log.d(TAG, "<<<---onConnectionChanged--->>>".withAndroidPrefix())
+    fun onClientCreated() {
+//        App.get().onUiClientCreated()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.e(TAG, "<<<---onCreate--->>>".withAndroidPrefix())
-        tryOrRebind()
     }
 
     override fun onStart() {
@@ -110,7 +95,6 @@ class MainActivity : AbsMsgrActy(), Msgs.Req, Msgs.Req.Callback, Tag {
     }
 
     override fun onDestroy() {
-        ensureUnbind()
         clientPlugin?.close()
         Log.e(TAG, ">>>---onDestroy---<<<".withAndroidPrefix())
         super.onDestroy()
