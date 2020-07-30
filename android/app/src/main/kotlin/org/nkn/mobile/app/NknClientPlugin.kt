@@ -371,7 +371,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                         clientEventSink?.error("0", "", "")
                     }
                 } else {
-                    acty?.sendAccount2Service(account)
+                    //acty?.onClientCreated()
                     onConnect()
                 }
             } catch (e: Exception) {
