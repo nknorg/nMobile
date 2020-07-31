@@ -8,6 +8,7 @@ import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/services/android_messaging_service.dart';
 import 'package:nmobile/services/service_locator.dart';
+import 'package:nmobile/utils/log_tag.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:package_info/package_info.dart';
 import 'package:path_provider/path_provider.dart';
@@ -15,6 +16,7 @@ import 'package:path_provider/path_provider.dart';
 import 'local_notification.dart';
 
 class Global {
+  static LOG _LOG = LOG('Global');
   static BuildContext appContext;
   static String locale;
   static String currentOtherChatId;
@@ -23,7 +25,7 @@ class Global {
   static String buildVersion;
   static Map<String, DateTime> loadTopicDataTime = {};
   static Map<String, num> loadLoadSubscribers = {};
-  static AppLifecycleState state = AppLifecycleState.resumed;
+  static AppLifecycleState state;
   static Map<String, DateTime> _loadProfileCache = {};
 
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
@@ -33,8 +35,9 @@ class Global {
   static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
 
   static Future init(VoidCallback callback) async {
+    _LOG.d('--->>> init --->>>');
     WidgetsFlutterBinding.ensureInitialized();
-    NLog.d('APP start');
+    state = AppLifecycleState.resumed;
     await SpUtil.getInstance();
     setupSingleton();
     await initData();
