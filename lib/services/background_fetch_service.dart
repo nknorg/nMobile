@@ -2,25 +2,25 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:background_fetch/background_fetch.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/client/client_state.dart';
+import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_notification.dart';
-import 'package:nmobile/helpers/local_storage.dart';
-import 'package:nmobile/helpers/secure_storage.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
-import 'package:nmobile/utils/nlog_util.dart';
+import 'package:nmobile/utils/log_tag.dart';
 
-class BackgroundFetchService {
-  bool isFirstStart = true; // init start
-
+class BackgroundFetchService with Tag {
   init() {
-    final LocalStorage _localStorage = LocalStorage();
-    final SecureStorage _secureStorage = SecureStorage();
+    // ignore: close_sinks
     ClientBloc _clientBloc = BlocProvider.of<ClientBloc>(Global.appContext);
+    // ignore: close_sinks
+    WalletsBloc _walletBloc = BlocProvider.of<WalletsBloc>(Global.appContext);
 
     var config = BackgroundFetchConfig(
       minimumFetchInterval: 15,
@@ -35,59 +35,71 @@ class BackgroundFetchService {
     );
 
     BackgroundFetch.configure(config, (String taskId) async {
-      print("[BackgroundFetch] Event received $taskId");
+      final _LOG = LOG(tag);
+      final timeBegin = DateTime.now().millisecondsSinceEpoch;
+
+      _LOG.d("[BackgroundFetch] Event received: $taskId");
       if (Platform.isAndroid) {
-        print("[BackgroundFetch] isAndroid: true, finish $taskId");
+        _LOG.d("[BackgroundFetch] isAndroid: true, finish $taskId");
         BackgroundFetch.finish(taskId);
         return;
       }
-      // todo debug
       LocalNotification.debugNotification('[debug] background fetch begin', taskId);
 
       final localAuth = await LocalAuthenticationService.instance;
       if (!localAuth.isProtectionEnabled) {
-        print("[BackgroundFetch] isProtectionEnabled: false, finish $taskId");
+        _LOG.d("[BackgroundFetch] isProtectionEnabled: false, finish $taskId");
+        BackgroundFetch.finish(taskId);
+      } else if (_clientBloc == null) {
+        _LOG.e("[BackgroundFetch] _clientBloc == null", null);
+        // In this case, the iOS native MethodChannel does not exist and cannot be recreated, it can only call finish.
         BackgroundFetch.finish(taskId);
       } else {
-        var isConnected = _clientBloc.state is Connected; // await NknClientPlugin.isConnected();
-        if (!isConnected && !isFirstStart) {
-          print("[BackgroundFetch] no Connect");
-          var wallet = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
-          if (wallet != null) {
-            var password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:${wallet['address']}');
-
-            // if(localAuth.isAuthenticated)
-            if (password != null) {
-              _clientBloc.add(CreateClient(
-                WalletSchema(address: wallet['address'], type: wallet['type'], name: wallet['name']),
-                password,
-              ));
-            }
-          }
-        } else {
-          isFirstStart = false;
-          print("[BackgroundFetch] Connecting");
+        var isConnected = _clientBloc.state is Connected;
+        var isBackground = Global.state == null || Global.state == AppLifecycleState.paused || Global.state == AppLifecycleState.detached;
+        _LOG.d("[BackgroundFetch] isConnected: $isConnected, isBackground: $isBackground.");
+        if (!isConnected && isBackground) {
+          _LOG.d("[BackgroundFetch] create connect...");
+          _walletBloc.add(LoadWallets());
+          DChatAuthenticationHelper.loadDChatUseWallet(_walletBloc, (wallet) {
+            DChatAuthenticationHelper.getPassword4BackgroundFetch(
+              wallet: wallet,
+              verifyProtectionEnabled: false,
+              onGetPassword: (wallet, password) {
+                _clientBloc.add(CreateClient(wallet, password));
+              },
+            );
+          });
         }
-
         Timer(Duration(seconds: 20), () {
-          // todo debug
+          _LOG.d("[BackgroundFetch] Timer finish: $taskId, timeDuration: ${((DateTime.now().millisecondsSinceEpoch
+              - timeBegin) / 1000.0).toStringAsFixed(3)}s");
           LocalNotification.debugNotification('[debug] background fetch end', taskId);
-
-          print("[BackgroundFetch] Timer finish $taskId");
           BackgroundFetch.finish(taskId);
-//          if (Platform.isIOS) {
-//            NknClientPlugin.disConnect();
-//          }
         });
       }
-    }).then((int status) {}).catchError((e) {
-      print('[BackgroundFetch] configure ERROR: $e');
+    }).then((int status) {
+      switch (status) {
+        case BackgroundFetch.STATUS_RESTRICTED:
+          LOG(tag).w('[BackgroundFetch] STATUS_RESTRICTED.');
+          break;
+        case BackgroundFetch.STATUS_AVAILABLE:
+          LOG(tag).i('[BackgroundFetch] STATUS_AVAILABLE.');
+          break;
+        case BackgroundFetch.STATUS_DENIED:
+          LOG(tag).e('[BackgroundFetch] STATUS_DENIED.', null);
+          break;
+        default:
+          break;
+      }
+    }).catchError((e) {
+      LOG(tag).e('[BackgroundFetch] configure ERROR.', e);
     });
   }
 }
 
-@deprecated
+@Deprecated('__Android only__: but android use `AndroidMessagingService` instead.')
 void backgroundFetchHeadlessTask(String taskId) async {
-  NLog.d('[BackgroundFetch] Headless event received.');
+  print('[BackgroundFetch] Headless event received.');
   BackgroundFetch.finish(taskId);
 }
