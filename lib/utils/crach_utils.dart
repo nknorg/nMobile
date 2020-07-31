@@ -1,4 +1,4 @@
-import 'package:catcher/catcher_plugin.dart';
+import 'package:catcher/catcher.dart';
 
 CatcherOptions debugOptions = CatcherOptions(PageReportMode(), [ConsoleHandler()]);
 
