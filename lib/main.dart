@@ -17,6 +17,7 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/router/route_observer.dart';
 import 'package:nmobile/router/routes.dart';
 import 'package:nmobile/theme/slider_theme.dart';
+import 'package:nmobile/utils/log_tag.dart';
 import 'package:oktoast/oktoast.dart';
 
 import 'blocs/wallet/wallets_bloc.dart';
@@ -35,7 +36,7 @@ class App extends StatefulWidget {
   AppState createState() => new AppState();
 }
 
-class AppState extends State<App> with WidgetsBindingObserver {
+class AppState extends State<App> with WidgetsBindingObserver, Tag {
   List<BlocProvider> providers = [
     BlocProvider<GlobalBloc>(
       create: (BuildContext context) => GlobalBloc(),
@@ -74,7 +75,7 @@ class AppState extends State<App> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-//    NLog.d(state.toString());
+    LOG(tag).d('didChangeAppLifecycleState($state)');
     Global.state = state;
   }
 
