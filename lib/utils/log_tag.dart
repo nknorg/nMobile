@@ -21,8 +21,12 @@ mixin Tag {
     if (name.length > length) {
       return name.substring(name.length - length);
     } else
-      return name.padLeft((length - name.length), '|');
+      return name.tag(length);
   }
+}
+
+extension StringTag on String {
+  String tag([int width = 23]) => this.padLeft(width, '.');
 }
 
 class LOG {
