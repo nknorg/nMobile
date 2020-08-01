@@ -7,11 +7,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
+import 'package:nmobile/blocs/client/client_bloc.dart';
+import 'package:nmobile/blocs/client/client_event.dart';
+import 'package:nmobile/blocs/client/client_state.dart' as clientState;
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
@@ -131,7 +133,14 @@ class _MessagesTabState extends State<MessagesTab>
   _ensureVerifyPassword() async {
     if (_enabled || !widget.activePage.isCurrPageActive) return;
     DChatAuthenticationHelper.loadDChatUseWallet(BlocProvider.of<WalletsBloc>(context), (wallet) {
-      DChatAuthenticationHelper.authToVerifyPassword(
+      // ignore: close_sinks
+      var clientBloc = BlocProvider.of<ClientBloc>(context);
+      if (clientBloc.state is clientState.NoConnect) {
+        DChatAuthenticationHelper.authToPrepareConnect(wallet, (wallet, password) {
+          clientBloc.add(CreateClient(wallet, password));
+        });
+      } else {
+        DChatAuthenticationHelper.authToVerifyPassword(
           wallet: wallet,
           onGot: (nw) {
             setState(() {
@@ -143,7 +152,9 @@ class _MessagesTabState extends State<MessagesTab>
             if (pwdIncorrect) {
               showToast(NMobileLocalizations.of(context).tip_password_error);
             }
-          });
+          },
+        );
+      }
     });
   }
 
@@ -386,7 +397,7 @@ class _MessagesTabState extends State<MessagesTab>
               ),
               onPressed: () {
                 Navigator.of(context).pop();
-                MessageItem.deleteTargetChat(item.targetId).then((count) {
+                MessageItem.deleteTargetChat(db, item.targetId).then((count) {
                   if (count > 0) {
                     setState(() {
                       _messagesList.removeAt(index);

@@ -29,12 +29,18 @@ class DChatAuthenticationHelper {
     }
   }
 
-  prepareConnect(void onGetPassword(WalletSchema wallet, String password)) async {
+  prepareConnect(void onGetPassword(WalletSchema wallet, String password)) {
+    authToPrepareConnect(wallet, (wallet, password) {
+      _initLaunch = false;
+      canShow = false;
+      onGetPassword(wallet, password);
+    });
+  }
+
+  static void authToPrepareConnect(WalletSchema wallet, void onGetPassword(WalletSchema wallet, String password)) async {
     final _wallet = wallet;
     final _password = await authToGetPassword(_wallet);
     if (_password != null) {
-      _initLaunch = false;
-      canShow = false;
       onGetPassword(_wallet, _password);
     }
   }

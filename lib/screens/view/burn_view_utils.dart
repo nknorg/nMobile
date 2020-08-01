@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
@@ -87,7 +87,7 @@ class BurnViewPage extends StatefulWidget {
   BurnViewPageState createState() => new BurnViewPageState();
 }
 
-class BurnViewPageState extends State<BurnViewPage> {
+class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
   int currentIndex = -1;
   List _burnTextArray;
 
@@ -202,12 +202,12 @@ class BurnViewPageState extends State<BurnViewPage> {
     var _burnValue;
     if (currentIndex != -1) {
       _burnValue = BurnViewUtil.burnValueArray[currentIndex].inSeconds;
-      await widget.contact.setBurnOptions(_burnValue);
+      await widget.contact.setBurnOptions(db, _burnValue);
     } else {
-      await widget.contact.setBurnOptions(null);
+      await widget.contact.setBurnOptions(db, null);
     }
     var sendMsg = MessageSchema.fromSendData(
-      from: Global.currentClient.address,
+      from: accountChatId,
       to: widget.contact.clientAddress,
       contentType: ContentType.eventContactOptions,
     );
