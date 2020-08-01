@@ -112,7 +112,7 @@ class _MessagesTabState extends State<MessagesTab>
     _LOG.i('didChangeAppLifecycleState($state), $canDisable');
     looper?.cancel();
     if (canDisable && state == AppLifecycleState.resumed) {
-      canDisable = false;
+//      canDisable = false;
       setState(() {
         _enabled = false;
       });
@@ -136,6 +136,8 @@ class _MessagesTabState extends State<MessagesTab>
       // ignore: close_sinks
       var clientBloc = BlocProvider.of<ClientBloc>(context);
       if (clientBloc.state is clientState.NoConnect) {
+        // In this case, the current page was popped.
+        canDisable = false;
         DChatAuthenticationHelper.authToPrepareConnect(wallet, (wallet, password) {
           clientBloc.add(CreateClient(wallet, password));
         });
@@ -143,6 +145,7 @@ class _MessagesTabState extends State<MessagesTab>
         DChatAuthenticationHelper.authToVerifyPassword(
           wallet: wallet,
           onGot: (nw) {
+            canDisable = false;
             setState(() {
               _enabled = true;
             });

@@ -46,15 +46,25 @@ class BackgroundFetchService with Tag {
       }
       LocalNotification.debugNotification('[debug] background fetch begin', taskId);
 
-      final localAuth = await LocalAuthenticationService.instance;
+      // May throw an exception! see: `DChatAuthenticationHelper.getPassword4BackgroundFetch()`.
+      /*final localAuth = await LocalAuthenticationService.instance;
       if (!localAuth.isProtectionEnabled) {
         _LOG.d("[BackgroundFetch] isProtectionEnabled: false, finish $taskId");
         BackgroundFetch.finish(taskId);
-      } else if (_clientBloc == null) {
+      } else*/ if (_clientBloc == null) {
         _LOG.e("[BackgroundFetch] _clientBloc == null", null);
-        // In this case, the iOS native MethodChannel does not exist and cannot be recreated, it can only call finish.
+        // In this case, the iOS native `MethodChannel` does not exist and cannot be recreated, it can only call finish.
         BackgroundFetch.finish(taskId);
       } else {
+        // Can't exceed 30s.
+        Timer(Duration(seconds: 25), () {
+          _LOG.d("[BackgroundFetch] Timer finish: $taskId, timeDuration: ${((DateTime.now().millisecondsSinceEpoch
+              - timeBegin) / 1000.0).toStringAsFixed(3)}s");
+          LocalNotification.debugNotification('[debug] background fetch end', taskId);
+          BackgroundFetch.finish(taskId);
+        });
+
+        // Do work.
         var isConnected = _clientBloc.state is Connected;
         var isBackground = Global.state == null || Global.state == AppLifecycleState.paused || Global.state == AppLifecycleState.detached;
         _LOG.d("[BackgroundFetch] isConnected: $isConnected, isBackground: $isBackground.");
@@ -71,12 +81,6 @@ class BackgroundFetchService with Tag {
             );
           });
         }
-        Timer(Duration(seconds: 20), () {
-          _LOG.d("[BackgroundFetch] Timer finish: $taskId, timeDuration: ${((DateTime.now().millisecondsSinceEpoch
-              - timeBegin) / 1000.0).toStringAsFixed(3)}s");
-          LocalNotification.debugNotification('[debug] background fetch end', taskId);
-          BackgroundFetch.finish(taskId);
-        });
       }
     }).then((int status) {
       switch (status) {
