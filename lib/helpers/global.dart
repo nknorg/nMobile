@@ -16,7 +16,8 @@ import 'package:path_provider/path_provider.dart';
 import 'local_notification.dart';
 
 class Global {
-  static LOG _LOG = LOG('Global');
+  // ignore: non_constant_identifier_names
+  static LOG _LOG = LOG('Global'.tag());
   static BuildContext appContext;
   static String locale;
   static String currentOtherChatId;

@@ -89,8 +89,6 @@ class BackgroundFetchService with Tag {
         case BackgroundFetch.STATUS_DENIED:
           LOG(tag).e('[BackgroundFetch] STATUS_DENIED.', null);
           break;
-        default:
-          break;
       }
     }).catchError((e) {
       LOG(tag).e('[BackgroundFetch] configure ERROR.', e);
