@@ -153,7 +153,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
           debugPrint(e);
           debugPrintStack();
         }
-        await message.insert();
+        await message.insert(db, accountPubkey);
         yield MessagesUpdated(target: message.to, message: message);
         return;
       case ContentType.dchatSubscribe:
