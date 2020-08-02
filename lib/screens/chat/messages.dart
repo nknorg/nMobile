@@ -133,11 +133,13 @@ class _MessagesTabState extends State<MessagesTab>
   _ensureVerifyPassword() async {
     if (_enabled || !widget.activePage.isCurrPageActive) return;
     DChatAuthenticationHelper.loadDChatUseWallet(BlocProvider.of<WalletsBloc>(context), (wallet) {
+      // When show faceIdAuthentication dialog, lifecycle is inactive,
+      // this can prevent secondary ejection popup.
+      canDisable = false;
       // ignore: close_sinks
       var clientBloc = BlocProvider.of<ClientBloc>(context);
       if (clientBloc.state is clientState.NoConnect) {
         // In this case, the current page was popped.
-        canDisable = false;
         DChatAuthenticationHelper.authToPrepareConnect(wallet, (wallet, password) {
           clientBloc.add(CreateClient(wallet, password));
         });
@@ -145,7 +147,6 @@ class _MessagesTabState extends State<MessagesTab>
         DChatAuthenticationHelper.authToVerifyPassword(
           wallet: wallet,
           onGot: (nw) {
-            canDisable = false;
             setState(() {
               _enabled = true;
             });
