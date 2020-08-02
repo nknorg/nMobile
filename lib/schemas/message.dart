@@ -225,12 +225,12 @@ class MessageSchema extends Equatable {
     try {
       await account.client.sendText([from], jsonEncode(data));
       // todo debug
-      LocalNotification.debugNotification('[debug] send receipt', msgId);
+//      LocalNotification.debugNotification('[debug] send receipt', msgId);
     } catch (e) {
       debugPrint(e);
       debugPrintStack();
       // todo debug
-      LocalNotification.debugNotification('[debug] send receipt error', e);
+//      LocalNotification.debugNotification('[debug] send receipt error', e);
       Timer(Duration(seconds: 1), () {
         receipt(account);
       });
