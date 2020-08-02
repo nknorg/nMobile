@@ -275,7 +275,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         return;
       case ContentType.receipt:
         // todo debug
-        LocalNotification.debugNotification('[debug] receipt ' + contact.name, message.msgId);
+//        LocalNotification.debugNotification('[debug] receipt ' + contact.name, message.msgId);
         await message.receiptMessage(db);
         yield MessagesUpdated(target: message.from, message: message);
         return;

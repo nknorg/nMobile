@@ -47,21 +47,25 @@ class BackgroundFetchService with Tag {
       LocalNotification.debugNotification('[debug] background fetch begin', taskId);
 
       // May throw an exception! see: `DChatAuthenticationHelper.getPassword4BackgroundFetch()`.
-      /*final localAuth = await LocalAuthenticationService.instance;
+      final localAuth = await LocalAuthenticationService.instance;
       if (!localAuth.isProtectionEnabled) {
         _LOG.d("[BackgroundFetch] isProtectionEnabled: false, finish $taskId");
         BackgroundFetch.finish(taskId);
-      } else*/ if (_clientBloc == null) {
+      } else if (_clientBloc == null) {
         _LOG.e("[BackgroundFetch] _clientBloc == null", null);
+        LocalNotification.debugNotification('[debug] _clientBloc == null', taskId);
         // In this case, the iOS native `MethodChannel` does not exist and cannot be recreated, it can only call finish.
         BackgroundFetch.finish(taskId);
       } else {
         // Can't exceed 30s.
         Timer(Duration(seconds: 25), () {
-          _LOG.d("[BackgroundFetch] Timer finish: $taskId, timeDuration: ${((DateTime.now().millisecondsSinceEpoch
-              - timeBegin) / 1000.0).toStringAsFixed(3)}s");
-          LocalNotification.debugNotification('[debug] background fetch end', taskId);
+          final duration = ((DateTime.now().millisecondsSinceEpoch - timeBegin) / 1000.0).toStringAsFixed(3);
+          _LOG.d("[BackgroundFetch] Timer finish: $taskId, timeDuration: ${duration}s");
+          LocalNotification.debugNotification('[debug] background fetch end', '${duration}s');
           BackgroundFetch.finish(taskId);
+//          if (Platform.isIOS) {
+//            _clientBloc.add(DisConnected());
+//          }
         });
 
         // Do work.
@@ -69,13 +73,18 @@ class BackgroundFetchService with Tag {
         var isBackground = Global.state == null || Global.state == AppLifecycleState.paused || Global.state == AppLifecycleState.detached;
         _LOG.d("[BackgroundFetch] isConnected: $isConnected, isBackground: $isBackground.");
         if (!isConnected && isBackground) {
-          _LOG.d("[BackgroundFetch] create connect...");
+          _LOG.d("[BackgroundFetch] create connection...");
+          LocalNotification.debugNotification('[debug] create connection...', '');
           _walletBloc.add(LoadWallets());
           DChatAuthenticationHelper.loadDChatUseWallet(_walletBloc, (wallet) {
+            _LOG.d("[BackgroundFetch] create connection | onGetWallet...");
+            LocalNotification.debugNotification('[debug] create connection', 'onGetWallet');
             DChatAuthenticationHelper.getPassword4BackgroundFetch(
               wallet: wallet,
               verifyProtectionEnabled: false,
               onGetPassword: (wallet, password) {
+                _LOG.d("[BackgroundFetch] create connection | onGetPassword...");
+                LocalNotification.debugNotification('[debug] create connection', 'onGetPassword');
                 _clientBloc.add(CreateClient(wallet, password));
               },
             );
