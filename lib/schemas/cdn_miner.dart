@@ -24,7 +24,11 @@ class CdnMiner {
       nshId = nshId.split('ctrl.')[1];
     }
     if (name == null || name.length == 0) {
-      _name = nshId.substring(0, 8);
+      if(nshId.length > 8) {
+        _name = nshId.substring(0, 8);
+      } else {
+        _name = nshId;
+      }
     } else {
       _name = name;
     }
