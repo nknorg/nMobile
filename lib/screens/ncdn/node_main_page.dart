@@ -155,7 +155,6 @@ class _NodeMainPageState extends State<NodeMainPage> {
       for (String key in responseData.keys) {
         if (key != null && key.length > 0) {
           List<dynamic> val = (responseData[key] as List<dynamic>);
-          NLog.v(val);
           amount += val[1];
           resultData.add(CdnMiner(key, flow: val[0], cost: val[1], contribution: val[2]));
         }
