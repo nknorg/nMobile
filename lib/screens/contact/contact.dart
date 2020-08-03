@@ -499,6 +499,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
   _selectWallets() {
     BottomDialog.of(context).showSelectWalletDialog(
       title: NMobileLocalizations.of(context).select_another_wallet,
+      onlyNkn: true,
       callback: (wallet) async {
         LOG('_selectWallets').w(wallet);
         Timer(Duration(milliseconds: 30), () {

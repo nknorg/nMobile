@@ -8,6 +8,7 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
+import 'package:nmobile/utils/extensions.dart';
 
 class BurnViewUtil {
   static List<Duration> burnValueArray = <Duration>[
@@ -103,22 +104,9 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
     items.add(SimpleDialogOption(
       child: Row(
         children: <Widget>[
-          Container(
-              height: 35,
-              width: double.infinity,
-              child: Row(
-                children: <Widget>[
-                  Text(NMobileLocalizations.of(context).close),
-                ],
-              )),
+          Container(height: 35, child: Row(children: [Text(NMobileLocalizations.of(context).close)])),
           Spacer(),
-          currentIndex == -1
-              ? Icon(
-                  Icons.check,
-                  color: Colors.red,
-                  size: 16,
-                )
-              : Container()
+          currentIndex == -1 ? Icon(Icons.check, color: Colors.red, size: 16) : Container()
         ],
       ),
       onPressed: () {
@@ -134,17 +122,7 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
           padding: EdgeInsets.symmetric(vertical: 4),
           width: double.infinity,
           child: Row(
-            children: <Widget>[
-              Text(content),
-              Spacer(),
-              i == currentIndex
-                  ? Icon(
-                      Icons.check,
-                      color: Colors.red,
-                      size: 16,
-                    )
-                  : Container()
-            ],
+            children: <Widget>[Text(content), Spacer(), i == currentIndex ? Icon(Icons.check, color: Colors.red, size: 16) : Container()],
           ),
         ),
         onPressed: () {
@@ -239,7 +217,7 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
         titlePadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 0.0),
         contentPadding: EdgeInsets.fromLTRB(0.0, 12.0, 0.0, 12.0),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-        title: Text('选择'),
+        title: Text(NMobileLocalizations.of(context).select),
         children: getItemView(_burnTextArray, context),
       ),
     );

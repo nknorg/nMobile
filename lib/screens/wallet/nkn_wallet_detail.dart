@@ -214,7 +214,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
                                 child: Padding(
                                   padding: const EdgeInsets.only(left: 8),
                                   child: Button(
-                                    text: NMobileLocalizations.of(context).recieve,
+                                    text: NMobileLocalizations.of(context).receive,
                                     onPressed: _receive,
                                   ),
                                 ),
