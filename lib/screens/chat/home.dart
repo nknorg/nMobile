@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:flutter_easyrefresh/bezier_bounce_footer.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
 import 'package:nmobile/blocs/client/client_state.dart';
@@ -13,25 +15,31 @@ import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/screens/chat/chat_main_page.dart';
 import 'package:nmobile/screens/chat/message.dart';
+import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/log_tag.dart';
 
 class ChatHome extends StatefulWidget {
   static const String routeName = '/chat/home';
+
+  final ActivePage activePage;
+
+  ChatHome(this.activePage);
 
   @override
   _ChatHomeState createState() => _ChatHomeState();
 }
 
-class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin {
+class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin, AccountDependsBloc, Tag {
   GlobalKey _floatingActionKey = GlobalKey();
   TabController _tabController;
 
@@ -49,7 +57,9 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
       appBar: Header(
         titleChild: GestureDetector(
           onTap: () async {
-            Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: Global.currentUser);
+            accountUser.then((currentUser) {
+              Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: currentUser);
+            });
           },
           child: Padding(
             padding: EdgeInsets.only(left: 16),
@@ -62,7 +72,9 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                   child: Container(
                     padding: EdgeInsets.only(right: 16),
                     alignment: Alignment.center,
-                    child: Global.currentUser.avatarWidget(backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 28),
+                    child: accountUserBuilder(onUser: (context, user) {
+                      return user.avatarWidget(db, backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 28);
+                    }),
                   ),
                 ),
                 Expanded(
@@ -70,7 +82,9 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Label(Global.currentUser.name, type: LabelType.h3, dark: true),
+                      accountUserBuilder(onUser: (context, user) {
+                        return Label(user.name, type: LabelType.h3, dark: true);
+                      }),
                       BlocBuilder<ClientBloc, ClientState>(
                         builder: (context, clientState) {
                           if (clientState is Connected) {
@@ -79,7 +93,8 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: <Widget>[
-                                Label(NMobileLocalizations.of(context).connecting, type: LabelType.bodySmall, color: DefaultTheme.fontLightColor.withAlpha(200)),
+                                Label(NMobileLocalizations.of(context).connecting,
+                                    type: LabelType.bodySmall, color: DefaultTheme.fontLightColor.withAlpha(200)),
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 2, left: 4),
                                   child: SpinKitThreeBounce(
@@ -131,15 +146,31 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                   child: Container(
                     constraints: BoxConstraints.expand(),
                     color: DefaultTheme.primaryColor,
-                    child: Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      decoration: BoxDecoration(
-                        color: DefaultTheme.backgroundColor1,
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-                      ),
-                      child: ChatMainPage(),
-//                      child: MessagesTab(),
+                    child: Flex(
+                      direction: Axis.vertical,
+                      children: <Widget>[
+                        Expanded(
+                          flex: 1,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: DefaultTheme.backgroundLightColor,
+//                              borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+                            ),
+                            child: Flex(
+                              direction: Axis.vertical,
+                              children: <Widget>[
+                                Expanded(
+                                  flex: 1,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(top: 0.2),
+                                    child: MessagesTab(widget.activePage),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      ],
                     ),
                   ),
                 ),
@@ -162,7 +193,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
           child: Scaffold(
             backgroundColor: Colors.transparent,
             body: Padding(
-              padding: EdgeInsets.only(bottom: 86, right: 16),
+              padding: EdgeInsets.only(bottom: 76, right: 16),
               child: Align(
                 alignment: Alignment.bottomRight,
                 child: Container(
@@ -255,15 +286,19 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                 width: 48,
                                 height: 48,
                                 onPressed: () async {
-                                  var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+                                  var address = await BottomDialog.of(context).showInputAddressDialog(
+                                      title: NMobileLocalizations.of(context).new_whisper,
+                                      hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
                                   if (address != null) {
                                     ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
-                                    await contact.createContact();
-                                    var c = await ContactSchema.getContactByAddress(address);
+                                    await contact.createContact(db);
+                                    var c = await ContactSchema.getContactByAddress(db, address);
                                     if (c != null) {
-                                      Navigator.of(context).pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: c));
+                                      Navigator.of(context)
+                                          .pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: c));
                                     } else {
-                                      Navigator.of(context).pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
+                                      Navigator.of(context)
+                                          .pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
                                     }
                                   }
                                 },

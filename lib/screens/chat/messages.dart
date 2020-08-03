@@ -7,41 +7,52 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
+import 'package:nmobile/blocs/client/client_bloc.dart';
+import 'package:nmobile/blocs/client/client_event.dart';
+import 'package:nmobile/blocs/client/client_state.dart' as clientState;
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
+import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/model/popular_model.dart';
+import 'package:nmobile/model/popular_channel.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/message_item.dart';
 import 'package:nmobile/schemas/topic.dart';
+import 'package:nmobile/screens/active_page.dart';
+import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/log_tag.dart';
 import 'package:oktoast/oktoast.dart';
 
 class MessagesTab extends StatefulWidget {
+  final ActivePage activePage;
+
+  MessagesTab(this.activePage);
+
   @override
   _MessagesTabState createState() => _MessagesTabState();
 }
 
-class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+class _MessagesTabState extends State<MessagesTab>
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin, WidgetsBindingObserver, AccountDependsBloc, Tag {
   List<MessageItem> _messagesList = <MessageItem>[];
   ChatBloc _chatBloc;
   ContactBloc _contactBloc;
@@ -50,55 +61,24 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
   int _limit = 20;
   int _skip = 20;
   bool loading = false;
-  List<PopularModel> populars;
+  List<PopularChannel> populars;
   bool isHideTip = false;
 
-  initAsync() async {
-    var res = await MessageItem.getLastChat(limit: _limit);
-    _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
-    if (mounted) {
-      setState(() {
-        try {
-          _skip = 20;
-          _messagesList = (res);
-        } catch (e) {
-          debugPrint(e);
-          debugPrintStack();
-        }
-      });
-    }
-  }
-
-  _updateTargetChatItem(targetId) async {
-    var res = await MessageItem.getTargetChat(targetId);
-    if (res != null) {
-      var index = _messagesList.indexWhere((x) => x.targetId == res.targetId);
-      setState(() {
-        if (index < 0) {
-          _messagesList.add(res);
-        } else {
-          _messagesList[index] = res;
-        }
-      });
-    }
-  }
-
-  Future _loadMore() async {
-    var res = await MessageItem.getLastChat(limit: _limit, skip: _skip);
-    if (res != null) {
-      _skip += res.length;
-      _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
-      setState(() {
-        _messagesList.addAll(res);
-      });
-    }
-  }
+  // ignore: non_constant_identifier_names
+  LOG _LOG;
+  bool _enabled = true;
+  bool canDisable = false;
+  Timer looper;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    widget.activePage.addOnCurrPageActive(onCurrPageActive);
+    _LOG = LOG(tag);
+
     isHideTip = SpUtil.getBool(LocalStorage.WALLET_TIP_STATUS, defValue: false);
-    populars = PopularModel.defaultData();
+    populars = PopularChannel.defaultData();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
     _contactBloc = BlocProvider.of<ContactBloc>(context);
     if (_chatSubscription == null) {
@@ -128,15 +108,113 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _LOG.i('didChangeAppLifecycleState($state), $canDisable');
+    looper?.cancel();
+    if (canDisable && state == AppLifecycleState.resumed) {
+//      canDisable = false;
+      setState(() {
+        _enabled = false;
+      });
+      _ensureVerifyPassword();
+    }
+    if (state == AppLifecycleState.paused) {
+      looper = Timer(Duration(minutes: 1), () {
+        canDisable = true;
+      });
+    }
+  }
+
+  void onCurrPageActive(active) {
+    _LOG.i('onCurrPageActive($active)');
+    _ensureVerifyPassword();
+  }
+
+  _ensureVerifyPassword() async {
+    if (_enabled || !widget.activePage.isCurrPageActive) return;
+    DChatAuthenticationHelper.loadDChatUseWallet(BlocProvider.of<WalletsBloc>(context), (wallet) {
+      // When show faceIdAuthentication dialog, lifecycle is inactive,
+      // this can prevent secondary ejection popup.
+      canDisable = false;
+      // ignore: close_sinks
+      var clientBloc = BlocProvider.of<ClientBloc>(context);
+      if (clientBloc.state is clientState.NoConnect) {
+        // In this case, the current page was popped.
+        DChatAuthenticationHelper.authToPrepareConnect(wallet, (wallet, password) {
+          clientBloc.add(CreateClient(wallet, password));
+        });
+      } else {
+        DChatAuthenticationHelper.authToVerifyPassword(
+          wallet: wallet,
+          onGot: (nw) {
+            setState(() {
+              _enabled = true;
+            });
+          },
+          onError: (pwdIncorrect, e) {
+            _LOG.e('onError($pwdIncorrect)', e);
+            if (pwdIncorrect) {
+              showToast(NMobileLocalizations.of(context).tip_password_error);
+            }
+          },
+        );
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _chatSubscription?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    widget.activePage.removeOnCurrPageActive(onCurrPageActive);
     super.dispose();
+  }
+
+  initAsync() async {
+    var res = await MessageItem.getLastChat(db, limit: _limit);
+    _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
+    if (mounted) {
+      setState(() {
+        try {
+          _skip = 20;
+          _messagesList = (res);
+        } catch (e) {
+          debugPrint(e);
+          debugPrintStack();
+        }
+      });
+    }
+  }
+
+  _updateTargetChatItem(targetId) async {
+    var res = await MessageItem.getTargetChat(db, targetId);
+    if (res != null) {
+      var index = _messagesList.indexWhere((x) => x.targetId == res.targetId);
+      setState(() {
+        if (index < 0) {
+          _messagesList.add(res);
+        } else {
+          _messagesList[index] = res;
+        }
+      });
+    }
+  }
+
+  Future _loadMore() async {
+    var res = await MessageItem.getLastChat(db, limit: _limit, skip: _skip);
+    if (res != null) {
+      _skip += res.length;
+      _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
+      setState(() {
+        _messagesList.addAll(res);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (_messagesList != null && _messagesList.length > 0) {
+    if (_enabled && _messagesList != null && _messagesList.length > 0) {
       return Flex(
         direction: Axis.vertical,
         children: <Widget>[
@@ -151,43 +229,29 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                 itemCount: _messagesList.length,
                 itemBuilder: (BuildContext context, int index) {
                   var item = _messagesList[index];
-                  return Slidable(
-                    actionPane: SlidableStrechActionPane(),
-                    secondaryActions: <Widget>[
-                      IconSlideAction(
-                        caption: NMobileLocalizations.of(context).delete,
-                        color: Colors.red,
-                        icon: Icons.delete,
-                        onTap: () {
-                          MessageItem.deleteTargetChat(item.targetId).then((count) {
-                            if (count > 0) {
-                              setState(() {
-                                _messagesList.removeAt(index);
-                              });
-                            }
-                          });
-                        },
-                      )
-                    ],
-                    child: BlocBuilder<ContactBloc, ContactState>(
-                      builder: (context, state) {
-                        if (state is ContactLoaded) {
-                          Widget w = null;
-                          if (item.topic != null) {
-                            w = getTopicItemView(item, state);
-                          } else {
-                            w = getSingleChatItemView(item, state);
-                          }
+                  return BlocBuilder<ContactBloc, ContactState>(
+                    builder: (context, state) {
+                      if (state is ContactLoaded) {
+                        Widget w = null;
+                        if (item.topic != null) {
+                          w = getTopicItemView(item, state);
+                        } else {
+                          w = getSingleChatItemView(item, state);
+                        }
 
-                          return Container(
+                        return InkWell(
+                          onLongPress: () {
+                            showMenu(item, index);
+                          },
+                          child: Container(
                             child: w,
                             decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6.h, color: DefaultTheme.lineColor))),
-                          );
-                        } else {
-                          return Container();
-                        }
-                      },
-                    ),
+                          ),
+                        );
+                      } else {
+                        return Container();
+                      }
+                    },
                   );
                 },
               ),
@@ -266,12 +330,17 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                               ],
                             ),
                             onPressed: () async {
-                              var address = await BottomDialog.of(context).showInputAddressDialog(
-                                  title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
-                              if (address != null) {
-                                ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
-                                await contact.createContact();
-                                Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
+                              if (_enabled) {
+                                var address = await BottomDialog.of(context).showInputAddressDialog(
+                                    title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+                                if (address != null) {
+                                  ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
+                                  await contact.createContact(db);
+                                  Navigator.of(context)
+                                      .pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
+                                }
+                              } else {
+                                _ensureVerifyPassword();
                               }
                             },
                           ).pad(t: 54),
@@ -288,10 +357,69 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     }
   }
 
+  showMenu(MessageItem item, int index) {
+    showDialog<Null>(
+      context: context,
+      builder: (BuildContext context) {
+        return new SimpleDialog(
+          contentPadding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(6))),
+          children: <Widget>[
+            SimpleDialogOption(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(height: 10),
+                  Row(
+                    children: <Widget>[
+                      Icon(Icons.vertical_align_top),
+                      SizedBox(width: 10),
+                      Text('置顶'),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                ],
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            SimpleDialogOption(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(height: 10),
+                  Row(
+                    children: <Widget>[
+                      Icon(Icons.delete_outline),
+                      SizedBox(width: 10),
+                      Text('删除'),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                ],
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                MessageItem.deleteTargetChat(db, item.targetId).then((count) {
+                  if (count > 0) {
+                    setState(() {
+                      _messagesList.removeAt(index);
+                    });
+                  }
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   bool get wantKeepAlive => true;
 
-  Widget getPopularItemView(int index, int length, PopularModel model) {
+  Widget getPopularItemView(int index, int length, PopularChannel model) {
     return Container(
       child: Container(
         width: 136,
@@ -347,23 +475,23 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     );
   }
 
-  _subscription(PopularModel model) async {
+  _subscription(PopularChannel popular) async {
     var duration = 400000;
     try {
-      TopicSchema.subscribe(topic: model.topic, duration: duration);
+      TopicSchema.subscribe(account, topic: popular.topic, duration: duration);
 //      if (hash != null) {
       var sendMsg = MessageSchema.fromSendData(
-        from: Global.currentClient.address,
-        topic: model.topic,
+        from: accountChatId,
+        topic: popular.topic,
         contentType: ContentType.dchatSubscribe,
       );
       sendMsg.isOutbound = true;
       sendMsg.content = sendMsg.toDchatSubscribeData();
       _chatBloc.add(SendMessage(sendMsg));
       DateTime now = DateTime.now();
-      var topicSchema = TopicSchema(topic: model.topic, type: TopicType.public, expiresAt: now.add(blockToExpiresTime(duration)));
-      await topicSchema.insertOrUpdate();
-      topicSchema = await TopicSchema.getTopic(model.topic);
+      var topicSchema = TopicSchema(topic: popular.topic, type: TopicType.public, expiresAt: now.add(blockToExpiresTime(duration)));
+      await topicSchema.insertOrUpdate(db, accountPubkey);
+      topicSchema = await TopicSchema.getTopic(db, popular.topic);
       Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topicSchema));
 //      }
     } catch (e) {
@@ -434,7 +562,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
       return Container();
     }
     Widget contentWidget;
-    String draft = LocalStorage.getChatUnSendContentFromId(item.targetId);
+    String draft = LocalStorage.getChatUnSendContentFromId(_chatBloc.accountPubkey, item.targetId);
     if (draft != null && draft.length > 0) {
       contentWidget = Row(
         children: <Widget>[
@@ -525,7 +653,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     }
     return InkWell(
       onTap: () async {
-        TopicSchema topic = await TopicSchema.getTopic(item.topic.topic);
+        TopicSchema topic = await TopicSchema.getTopic(db, item.topic.topic);
         Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
       },
       child: Container(
@@ -537,6 +665,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
               padding: EdgeInsets.only(right: 16.w),
               alignment: Alignment.center,
               child: item.topic.avatarWidget(
+                db,
                 size: 48,
                 backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
                 fontColor: DefaultTheme.primaryColor,
@@ -607,7 +736,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     if (contact == null) return Container();
 
     Widget contentWidget;
-    String draft = LocalStorage.getChatUnSendContentFromId(item.targetId);
+    String draft = LocalStorage.getChatUnSendContentFromId(_chatBloc.accountPubkey, item.targetId);
     if (draft != null && draft.length > 0) {
       contentWidget = Row(
         children: <Widget>[
@@ -672,6 +801,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
               padding: EdgeInsets.only(right: 16.w),
               alignment: Alignment.center,
               child: contact.avatarWidget(
+                db,
                 size: 24,
                 backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
               ),

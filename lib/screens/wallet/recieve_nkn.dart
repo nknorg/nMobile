@@ -34,7 +34,6 @@ class ReceiveNknScreen extends StatefulWidget {
 
 class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
   final GetIt locator = GetIt.instance;
-  FilteredWalletsBloc _filteredWalletsBloc;
   GlobalKey globalKey = new GlobalKey();
   WalletSchema wallet;
 
@@ -42,7 +41,6 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
   void initState() {
     super.initState();
     locator<TaskService>().queryNknWalletBalanceTask();
-    _filteredWalletsBloc = BlocProvider.of<FilteredWalletsBloc>(context);
   }
 
   @override

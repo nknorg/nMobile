@@ -11,6 +11,7 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/sqlite_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/model/data/dchat_account.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -115,7 +116,7 @@ class MessageSchema extends Equatable {
     if (options.keys.length == 0) options = null;
   }
 
-  loadMedia() async {
+  loadMedia(String currPubkey) async {
     var msg = jsonDecode(data);
     var match = RegExp(r'\(data:(.*);base64,(.*)\)').firstMatch(msg['content']);
     var mimeType = match?.group(1);
@@ -135,7 +136,7 @@ class MessageSchema extends Equatable {
     if (fileBase64.isNotEmpty) {
       var bytes = base64Decode(fileBase64);
       String name = hexEncode(md5.convert(bytes).bytes);
-      String path = getCachePath();
+      String path = getCachePath(currPubkey);
       File file = File(join(path, name + '.$extension'));
       file.writeAsBytesSync(bytes);
 
@@ -216,7 +217,7 @@ class MessageSchema extends Equatable {
     return jsonEncode(data);
   }
 
-  receipt() async {
+  receipt(DChatAccount account) async {
     Map data = {
       'id': uuid.v4(),
       'contentType': ContentType.receipt,
@@ -226,23 +227,23 @@ class MessageSchema extends Equatable {
     this.isSuccess = true;
 
     try {
-      await NknClientPlugin.sendText([from], jsonEncode(data));
+      await account.client.sendText([from], jsonEncode(data));
       // todo debug
-      LocalNotification.debugNotification('[debug] send receipt', msgId);
+//      LocalNotification.debugNotification('[debug] send receipt', msgId);
     } catch (e) {
       debugPrint(e);
       debugPrintStack();
       // todo debug
-      LocalNotification.debugNotification('[debug] send receipt error', e);
+//      LocalNotification.debugNotification('[debug] send receipt error', e);
       Timer(Duration(seconds: 1), () {
-        receipt();
+        receipt(account);
       });
     }
   }
 
-  receiptTopic() async {
+  receiptTopic(Database db) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       var countQuery = await db.query(
         MessageSchema.tableName,
         columns: ['COUNT(id) as count'],
@@ -318,7 +319,7 @@ class MessageSchema extends Equatable {
     await db.execute('CREATE INDEX index_delete_time ON Messages (delete_time)');
   }
 
-  toEntity() {
+  toEntity(String accountPubkey) {
     DateTime now = DateTime.now();
     Map<String, dynamic> map = {
       'pid': pid != null ? hexEncode(pid) : null,
@@ -338,7 +339,7 @@ class MessageSchema extends Equatable {
       'delete_time': deleteTime?.millisecondsSinceEpoch,
     };
     if (contentType == ContentType.media) {
-      map['content'] = getLocalPath((content as File).path);
+      map['content'] = getLocalPath(accountPubkey, (content as File).path);
     } else if (contentType == ContentType.eventContactOptions) {
       map['content'] = content;
       if (map['send_time'] == null) {
@@ -379,10 +380,10 @@ class MessageSchema extends Equatable {
     return message;
   }
 
-  Future<bool> insert() async {
+  Future<bool> insert(Future<Database> db, String accountPubkey) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      int n = await db.insert(MessageSchema.tableName, toEntity());
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      int n = await (await db).insert(MessageSchema.tableName, toEntity(accountPubkey));
       return n > 0;
     } catch (e) {
       debugPrint(e);
@@ -391,10 +392,10 @@ class MessageSchema extends Equatable {
     }
   }
 
-  Future<bool> isExist() async {
+  Future<bool> isExist(Future<Database> db) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var res = await (await db).query(
         MessageSchema.tableName,
         columns: ['COUNT(id) as count'],
         where: 'msg_id = ? AND is_outbound = 0',
@@ -408,10 +409,10 @@ class MessageSchema extends Equatable {
     }
   }
 
-  static Future<List<MessageSchema>> getAndReadTargetMessages(String targetId, {int limit = 20, int skip = 0}) async {
+  static Future<List<MessageSchema>> getAndReadTargetMessages(Future<Database> db, String targetId, {int limit = 20, int skip = 0}) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      await db.update(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      await (await db).update(
         MessageSchema.tableName,
         {
           'is_read': 1,
@@ -419,7 +420,7 @@ class MessageSchema extends Equatable {
         where: 'target_id = ? AND is_outbound = 0 AND is_read = 0',
         whereArgs: [targetId],
       );
-      var res = await db.query(
+      var res = await (await db).query(
         MessageSchema.tableName,
         columns: ['*'],
         orderBy: 'send_time desc',
@@ -435,7 +436,7 @@ class MessageSchema extends Equatable {
         if (!messageItem.isOutbound && messageItem.options != null) {
           if (messageItem.deleteTime == null && messageItem.options['deleteAfterSeconds'] != null) {
             messageItem.deleteTime = DateTime.now().add(Duration(seconds: messageItem.options['deleteAfterSeconds']));
-            db.update(
+            (await db).update(
               MessageSchema.tableName,
               {
                 'delete_time': messageItem.deleteTime.millisecondsSinceEpoch,
@@ -455,10 +456,10 @@ class MessageSchema extends Equatable {
     }
   }
 
-  static Future<int> readTargetMessages(String targetId) async {
+  static Future<int> readTargetMessages(Future<Database> db, String targetId) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var count = await db.update(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var count = await (await db).update(
         MessageSchema.tableName,
         {
           'is_read': 1,
@@ -473,14 +474,14 @@ class MessageSchema extends Equatable {
     }
   }
 
-  static Future<int> unReadMessages() async {
+  static Future<int> unReadMessages(Future<Database> db, String myChatId) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var res = await (await db).query(
         MessageSchema.tableName,
         columns: ['COUNT(id) as count'],
         where: 'sender != ? AND is_read = 0',
-        whereArgs: [Global.currentClient.address],
+        whereArgs: [myChatId],
       );
       return Sqflite.firstIntValue(res);
     } catch (e) {
@@ -489,10 +490,10 @@ class MessageSchema extends Equatable {
     }
   }
 
-  Future<int> receiptMessage() async {
+  Future<int> receiptMessage(Future<Database> db) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var res = await (await db).query(
         MessageSchema.tableName,
         columns: ['*'],
         where: 'msg_id = ?',
@@ -518,7 +519,7 @@ class MessageSchema extends Equatable {
         debugPrint(e);
       }
 
-      var count = await db.update(
+      var count = await (await db).update(
         MessageSchema.tableName,
         data,
         where: 'msg_id = ?',
@@ -532,10 +533,10 @@ class MessageSchema extends Equatable {
     }
   }
 
-  Future<int> readMessage() async {
+  Future<int> readMessage(Future<Database> db) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var count = await db.update(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var count = await (await db).update(
         MessageSchema.tableName,
         {
           'is_read': 1,
@@ -550,10 +551,10 @@ class MessageSchema extends Equatable {
     }
   }
 
-  Future<int> deleteMessage() async {
+  Future<int> deleteMessage(Future<Database> db) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await db.delete(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var res = await (await db).delete(
         MessageSchema.tableName,
         where: 'msg_id = ?',
         whereArgs: [contentType == ContentType.receipt ? content : msgId],

@@ -21,6 +21,22 @@ class NMobileLocalizations {
     return Intl.message('NKN', name: 'nkn', desc: '');
   }
 
+  String get eth {
+    return Intl.message('ETH', name: 'eth', desc: '');
+  }
+
+  String get gwei {
+    return Intl.message('GWEI', name: 'gwei', desc: '');
+  }
+
+  String get gas_price {
+    return Intl.message('Gas Price', name: 'gas_price', desc: '');
+  }
+
+  String get gas_max {
+    return Intl.message('Max Gas', name: 'gas_max', desc: '');
+  }
+
   String get loading {
     return Intl.message('Loading', name: 'loading', desc: '');
   }
@@ -217,6 +233,10 @@ class NMobileLocalizations {
     return Intl.message('Send NKN', name: 'send_nkn', desc: '');
   }
 
+  String get send_eth {
+    return Intl.message('Send Eth', name: 'send_eth', desc: '');
+  }
+
   String get recieve {
     return Intl.message('Receive', name: 'recieve', desc: '');
   }
@@ -247,6 +267,14 @@ class NMobileLocalizations {
 
   String get mainnet {
     return Intl.message('MAINNET', name: 'mainnet', desc: '');
+  }
+
+  String get nkn_mainnet {
+    return Intl.message('NKN Mainnet', name: 'nkn_mainnet', desc: '');
+  }
+
+  String get ethereum {
+    return Intl.message('Ethereum', name: 'ethereum', desc: '');
   }
 
   String get ERC_20 {
@@ -365,6 +393,10 @@ class NMobileLocalizations {
     return Intl.message('Main Wallet', name: 'main_wallet', desc: '');
   }
 
+  String get eth_wallet {
+    return Intl.message('Eth Wallet', name: 'eth_wallet', desc: '');
+  }
+
   String get view_qrcode {
     return Intl.message('View QR Code', name: 'view_qrcode', desc: '');
   }
@@ -439,6 +471,15 @@ class NMobileLocalizations {
 
   String get select_another_wallet {
     return Intl.message('Select Another Wallet', name: 'select_another_wallet', desc: '');
+  }
+
+  String get select_wallet_type {
+    return Intl.message('Select Wallet Type', name: 'select_wallet_type', desc: '');
+  }
+
+  String get select_wallet_type_desc {
+    return Intl.message('Select whether to create a NKN Mainnet wallet or an Ethereum based wallet to hold ERC-20 tokens. The two are not compatible.',
+        name: 'select_wallet_type_desc', desc: '',);
   }
 
   String get new_message {
@@ -577,6 +618,7 @@ class NMobileLocalizations {
     return Intl.message('Security', name: 'security', desc: '');
   }
 
+  // ignore: non_constant_identifier_names
   String get face_id {
     return Intl.message('Face ID', name: 'face_id', desc: '');
   }
@@ -753,6 +795,10 @@ class NMobileLocalizations {
     return Intl.message('CREATE MAINNET WALLET', name: 'create_nkn_wallet_title', desc: '');
   }
 
+  String get create_ethereum_wallet {
+    return Intl.message('CREATE ETHEREUM WALLET', name: 'create_ethereum_wallet', desc: '');
+  }
+
   String get import_keystore_nkn_wallet_title {
     return Intl.message('Import with Keystore', name: 'import_keystore_nkn_wallet_title', desc: '');
   }
@@ -858,11 +904,11 @@ class NMobileLocalizations {
   }
 
   String get update_burn_after_reading {
-    return Intl.message('update burn after reading', name: 'update_burn_after_reading', desc: '');
+    return Intl.message('set the disappearing message timer', name: 'update_burn_after_reading', desc: '');
   }
 
   String get close_burn_after_reading {
-    return Intl.message('close burn after reading', name: 'close_burn_after_reading', desc: '');
+    return Intl.message('disabled disappearing messages', name: 'close_burn_after_reading', desc: '');
   }
 
   String get joined_channel {
@@ -899,6 +945,14 @@ class NMobileLocalizations {
 
   String get burn_1_hour {
     return Intl.message('1 hour', name: 'burn_1_hour', desc: '');
+  }
+
+  String get burn_1_day {
+    return Intl.message('1 day', name: 'burn_1_day', desc: '');
+  }
+
+  String get burn_1_week {
+    return Intl.message('1 week', name: 'burn_1_week', desc: '');
   }
 
   String get hint_enter_wallet_name {
@@ -1014,10 +1068,17 @@ class NMobileLocalizations {
   String get send_message => Intl.message('Send Message', name: 'send_message');
   String get show_wallet_address_desc => Intl.message('Scan the QR code, you can transfer it to me', name: 'show_wallet_address_desc');
   String get disappear_desc => Intl.message('Messages received and sent will disappear after the set time.', name: 'disappear_desc');
+
+  String get account_switching_completed => Intl.message('Account switching Completed', name: 'account_switching_completed');
   String get storage_text => Intl.message('Storage', name: 'storage_text');
 
   String get export => Intl.message('Export', name: 'export');
   String get eth_keystore_export_desc => Intl.message('The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.', name: 'eth_keystore_export_desc');
+  String get you => Intl.message('You', name: 'you');
+  String get seconds => Intl.message('seconds', name: 'seconds');
+  String get hours => Intl.message('hours', name: 'hours');
+  String get minute => Intl.message('minute', name: 'minute');
+  String get week => Intl.message('week', name: 'week');
   String get check_upgrade => Intl.message('Check Upgrade', name: 'check_upgrade');
   String get release_notes => Intl.message('Release Notes:', name: 'release_notes');
   String get download_now => Intl.message('Download Now', name: 'download_now');

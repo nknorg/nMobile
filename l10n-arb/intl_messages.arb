@@ -1,7 +1,31 @@
 {
-  "@@last_modified": "2020-07-21T15:59:24.149830",
+  "@@last_modified": "2020-07-17T16:24:33.275192",
   "nkn": "NKN",
   "@nkn": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "eth": "ETH",
+  "@eth": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "gwei": "GWEI",
+  "@gwei": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "gas_price": "Gas Price",
+  "@gas_price": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "gas_max": "Max Gas",
+  "@gas_max": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -300,6 +324,12 @@
     "type": "text",
     "placeholders": {}
   },
+  "send_eth": "Send Eth",
+  "@send_eth": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "recieve": "Receive",
   "@recieve": {
     "description": "",
@@ -344,6 +374,18 @@
   },
   "mainnet": "MAINNET",
   "@mainnet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "nkn_mainnet": "NKN Mainnet",
+  "@nkn_mainnet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "ethereum": "Ethereum",
+  "@ethereum": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -522,6 +564,12 @@
     "type": "text",
     "placeholders": {}
   },
+  "eth_wallet": "Eth Wallet",
+  "@eth_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "view_qrcode": "View QR Code",
   "@view_qrcode": {
     "description": "",
@@ -632,6 +680,18 @@
   },
   "select_another_wallet": "Select Another Wallet",
   "@select_another_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "select_wallet_type": "Select Wallet Type",
+  "@select_wallet_type": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "select_wallet_type_desc": "Select whether to create a NKN Mainnet wallet or an Ethereum based wallet to hold ERC-20 tokens. The two are not compatible.",
+  "@select_wallet_type_desc": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1104,6 +1164,12 @@
     "type": "text",
     "placeholders": {}
   },
+  "create_ethereum_wallet": "CREATE ETHEREUM WALLET",
+  "@create_ethereum_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "import_keystore_nkn_wallet_title": "Import with Keystore",
   "@import_keystore_nkn_wallet_title": {
     "description": "",
@@ -1265,13 +1331,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "update_burn_after_reading": "update burn after reading",
+  "update_burn_after_reading": "set the disappearing message timer",
   "@update_burn_after_reading": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "close_burn_after_reading": "close burn after reading",
+  "close_burn_after_reading": "disabled disappearing messages",
   "@close_burn_after_reading": {
     "description": "",
     "type": "text",
@@ -1327,6 +1393,18 @@
   },
   "burn_1_hour": "1 hour",
   "@burn_1_hour": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "burn_1_day": "1 day",
+  "@burn_1_day": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "burn_1_week": "1 week",
+  "@burn_1_week": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1550,6 +1628,11 @@
     "type": "text",
     "placeholders": {}
   },
+  "account_switching_completed": "Account switching Completed",
+  "@account_switching_completed": {
+    "type": "text",
+    "placeholders": {}
+  },
   "storage_text": "Storage",
   "@storage_text": {
     "type": "text",
@@ -1562,6 +1645,31 @@
   },
   "eth_keystore_export_desc": "The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.",
   "@eth_keystore_export_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "you": "You",
+  "@you": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "seconds": "seconds",
+  "@seconds": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "hours": "hours",
+  "@hours": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "minute": "minute",
+  "@minute": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "week": "week",
+  "@week": {
     "type": "text",
     "placeholders": {}
   },

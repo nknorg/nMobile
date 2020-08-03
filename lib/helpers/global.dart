@@ -1,71 +1,66 @@
 import 'dart:io';
 
-import 'package:background_fetch/background_fetch.dart';
 import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/settings.dart';
-import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/client.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/screens/ncdn/miner_data.dart';
 import 'package:nmobile/services/android_messaging_service.dart';
-import 'package:nmobile/services/background_fetch_service.dart';
-import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/services/service_locator.dart';
+import 'package:nmobile/utils/log_tag.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:package_info/package_info.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite_sqlcipher/sqlite_api.dart';
 
 import 'local_notification.dart';
 
 class Global {
+  // ignore: non_constant_identifier_names
+  static LOG _LOG = LOG('Global'.tag());
   static BuildContext appContext;
   static String locale;
-  static ClientSchema currentClient;
-  static ContactSchema currentUser;
-  static String currentWalletName;
-  static Database currentChatDb;
   static Database currentCDNDb;
+  static String currentOtherChatId;
   static Directory applicationRootDirectory;
   static String version;
   static String buildVersion;
   static Map<String, DateTime> loadTopicDataTime = {};
   static Map<String, num> loadLoadSubscribers = {};
-  static AppLifecycleState state = AppLifecycleState.resumed;
+  static AppLifecycleState state;
   static Map<String, DateTime> _loadProfileCache = {};
-  static String currentChatId;
-  static bool isAutoShowPassword = true;
-  static int currentPageIndex;
 
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
+
   static bool isLocaleZh() => locale != null && locale.startsWith('zh');
+
   static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
 
   static MinerData minerData;
   static final String SERVER_PUBKEY = 'eb08c2a27cb61fe414654a1e9875113d715737247addf01db06ea66cafe0b5c8';
 
   static Future init(VoidCallback callback) async {
+    _LOG.d('--->>> init --->>>');
     WidgetsFlutterBinding.ensureInitialized();
-    NLog.d('APP start');
+    state = AppLifecycleState.resumed;
     await SpUtil.getInstance();
-    setupLocator();
+    setupSingleton();
     await initData();
     callback();
     if (Platform.isAndroid) {
       SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(statusBarColor: Colors.transparent);
       SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
-      BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
-      AndroidMessagingService.registerOnMessage();
+//      BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
+      AndroidMessagingService.registerNativeCallback();
     }
   }
 
   static Future initData() async {
     NknWalletPlugin.init();
-    NknClientPlugin.init();
+//    NknClientPlugin.init();
     LocalNotification.init();
     Global.applicationRootDirectory = await getApplicationDocumentsDirectory();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -78,10 +73,6 @@ class Global {
     // load settings
     Settings.localNotificationType = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.LOCAL_NOTIFICATION_TYPE_KEY}')) ?? 0;
     Settings.debug = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.DEBUG_KEY}')) ?? false;
-
-    final LocalAuthenticationService localAuth = locator<LocalAuthenticationService>();
-    localAuth.isProtectionEnabled = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}')) as bool ?? false;
-    localAuth.authType = await localAuth.getAuthType();
   }
 
   static bool isLoadTopic(String topic) {

@@ -5,13 +5,12 @@ import 'package:nmobile/services/task_service.dart';
 
 import 'local_authentication_service.dart';
 
-GetIt locator = GetIt.instance;
+GetIt instanceOf = GetIt.instance;
 
-void setupLocator() {
-  locator
+void setupSingleton() {
+  instanceOf
 //    ..registerSingleton<NavigateService>(NavigateService())
     ..registerSingleton(BackgroundFetchService())
     ..registerSingleton(TaskService())
-    ..registerLazySingleton<Logger>(() => Logger(printer: PrettyPrinter()))
-    ..registerLazySingleton(() => LocalAuthenticationService.instance);
+    ..registerLazySingleton<Logger>(() => Logger(printer: PrettyPrinter()));
 }

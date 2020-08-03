@@ -20,7 +20,9 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.PluginRegistry
 import io.flutter.view.FlutterCallbackInformation
 import io.flutter.view.FlutterMain
+import org.nkn.mobile.app.App
 import org.nkn.mobile.app.GlobalConf
+import org.nkn.mobile.app.NknClientPlugin
 import org.nkn.mobile.app.abs.Tag
 import org.nkn.mobile.app.NknWalletPlugin
 
@@ -29,16 +31,16 @@ import org.nkn.mobile.app.NknWalletPlugin
  * @version 1.0, 27/06/2020
  */
 class MessagingServiceFlutterPlugin(private val context: Context, private val onInitialized: () -> Unit) :
-        MethodChannel.MethodCallHandler, EventChannel.StreamHandler, Tag {
+        MethodChannel.MethodCallHandler/*, EventChannel.StreamHandler*/, Tag {
     val TAG by lazy { tag() }
 
     companion object {
         const val PLUGIN_PATH = "org.nkn.mobile.app/android_messaging_service"
         const val CONFIG_CHANNEL_NAME = "$PLUGIN_PATH/config"
-        const val MESSAGE_CHANNEL_NAME = "$PLUGIN_PATH/messaging"
+        const val INIT_CHANNEL_NAME = "$PLUGIN_PATH/initialize"
         const val CONFIG_METHOD_NAME = "registerMessagingCallback"
         const val REGISTERED_CALLBACK_ID = "callback_id"
-        const val ARGS_DATA = "data"
+        const val EVENT_AND_DATA = "event_and_data"
         const val INITIALIZED = "initialized"
 
         fun config(engine: FlutterEngine): Config {
@@ -62,7 +64,7 @@ class MessagingServiceFlutterPlugin(private val context: Context, private val on
                         GlobalConf.STATE.storeRegisteredMsgCallbackIds(listOf(dispatcherId, realCallbackId))
                     }
                     else -> {
-                        Log.e("CONFIG", call.method)
+                        Log.e(TAG, call.method)
                     }
                 }
             }
@@ -77,7 +79,8 @@ class MessagingServiceFlutterPlugin(private val context: Context, private val on
     private lateinit var dispatcherMethodId: String
     private lateinit var realCallbackId: String
     private lateinit var flutterEngine: FlutterEngine
-    private lateinit var messagingChannel: MethodChannel
+    private lateinit var initChannel: MethodChannel
+    private lateinit var clientPlugin: NknClientPlugin
 
     private fun obtainConfig() {
         val list = GlobalConf.STATE.getRegisteredMsgCallbackIds()
@@ -97,61 +100,65 @@ class MessagingServiceFlutterPlugin(private val context: Context, private val on
         }
         Log.i(TAG, "startBackgroundIsolate: $flutterEngine")
         val appBundlePath: String = FlutterMain.findAppBundlePath()
-        val assets: AssetManager = context.getAssets()
+        val assets: AssetManager = context.assets
         val dartCallback: DartExecutor.DartCallback = DartCallback(assets, appBundlePath, callbackInfo)
         executor.executeDartCallback(dartCallback)
     }
 
     private fun initMethodChannel() {
-        messagingChannel = MethodChannel(flutterEngine.dartExecutor, MESSAGE_CHANNEL_NAME)
-        messagingChannel.setMethodCallHandler(this)
+        initChannel = MethodChannel(flutterEngine.dartExecutor, INIT_CHANNEL_NAME)
+        initChannel.setMethodCallHandler(this)
 
+        clientPlugin = NknClientPlugin(null, flutterEngine)
         NknWalletPlugin(flutterEngine)
     }
 
-    private var walletEventSink: EventChannel.EventSink? = null
-
-    override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
-        walletEventSink = events
-    }
-
-    override fun onCancel(arguments: Any?) {
-    }
-
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        Log.e(TAG, "onMethodCall | ${call.method}")
+        Log.d(TAG, "onMethodCall | ${call.method}")
         when (call.method) {
             INITIALIZED -> {
-                onInitialized()
+                App.handler().post {
+                    onInitialized()
+                }
             }
             else -> {
+                result.notImplemented()
             }
         }
     }
 
-    fun onMessage(msgNkn: nkn.Message, myChatId: String, seed: ByteArray, json: String) {
-        val eventAndData = hashMapOf(
-                "event" to "onMessage",
-                "data" to hashMapOf(
-                        "src" to msgNkn.src,
-                        "to" to myChatId,
-                        "seed" to seed,
-                        "data" to json,
-                        "type" to msgNkn.type,
-                        "encrypted" to msgNkn.encrypted,
-                        "pid" to msgNkn.messageID
-                )
-        )
-        messagingChannel!!.invokeMethod(
-                "",
-                hashMapOf(
-                        REGISTERED_CALLBACK_ID to realCallbackId,
-                        ARGS_DATA to eventAndData
-                )
-        )
+    fun onNativeReady() {
+        App.runOnMainThread {
+            initChannel.invokeMethod(
+                    "",
+                    hashMapOf(
+                            REGISTERED_CALLBACK_ID to realCallbackId,
+                            EVENT_AND_DATA to hashMapOf(
+                                    "event" to "onNativeReady",
+                                    "data" to ""
+                            )
+                    )
+            )
+        }
     }
 
     fun destroy() {
-        flutterEngine?.destroy()
+        clientPlugin.close()
+        App.runOnMainThread {
+            try {
+                initChannel.invokeMethod(
+                        "",
+                        hashMapOf(
+                                REGISTERED_CALLBACK_ID to realCallbackId,
+                                EVENT_AND_DATA to hashMapOf(
+                                        "event" to "destroy",
+                                        "data" to ""
+                                )
+                        )
+                )
+            } finally {
+                flutterEngine.destroy()
+            }
+        }
     }
 }

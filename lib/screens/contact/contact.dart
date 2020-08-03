@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,34 +8,47 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
+import 'package:nmobile/blocs/client/client_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallets_state.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
+import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/nkn_image_utils.dart';
+import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/data/dchat_account.dart';
 import 'package:nmobile/router/custom_router.dart';
 import 'package:nmobile/router/route_observer.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
+import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/screens/chat/photo_page.dart';
 import 'package:nmobile/screens/contact/chat_profile.dart';
 import 'package:nmobile/screens/contact/show_chat_id.dart';
 import 'package:nmobile/screens/contact/show_my_chat_address.dart';
+import 'package:nmobile/screens/view/burn_view_utils.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
+import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/log_tag.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -49,7 +64,7 @@ class ContactScreen extends StatefulWidget {
   _ContactScreenState createState() => _ContactScreenState();
 }
 
-class _ContactScreenState extends State<ContactScreen> with RouteAware {
+class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountDependsBloc {
   ChatBloc _chatBloc;
   TextEditingController _firstNameController = TextEditingController();
   TextEditingController _notesController = TextEditingController();
@@ -68,6 +83,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
     Duration(minutes: 10),
     Duration(minutes: 30),
     Duration(hours: 1),
+    Duration(days: 1),
   ];
   List<String> _burnTextArray;
   double _sliderBurnValue = 0;
@@ -75,6 +91,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
   SourceProfile _sourceProfile;
   OptionsSchema _sourceOptions;
   String nickName;
+  WalletSchema _walletDefault;
 
   initAsync() async {
     _sourceProfile = widget.arguments.sourceProfile;
@@ -95,7 +112,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
 
   @override
   void didPop() {
-    _setContactOptions();
+//    _setContactOptions();
     NLog.d('didPop');
     super.didPop();
   }
@@ -104,8 +121,9 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
   void initState() {
     super.initState();
     _sourceOptions = OptionsSchema(deleteAfterSeconds: widget.arguments?.options?.deleteAfterSeconds);
-    initAsync();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
+    initAsync();
+
     int burnAfterSeconds = widget.arguments.options?.deleteAfterSeconds;
     if (burnAfterSeconds != null) {
       _burnSelected = true;
@@ -127,12 +145,12 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
     if (_sourceOptions?.deleteAfterSeconds != _burnValue) {
       var contact = widget.arguments;
       if (_burnSelected) {
-        await contact.setBurnOptions(_burnValue);
+        await contact.setBurnOptions(db, _burnValue);
       } else {
-        await contact.setBurnOptions(null);
+        await contact.setBurnOptions(db, null);
       }
       var sendMsg = MessageSchema.fromSendData(
-        from: Global.currentClient.address,
+        from: accountChatId,
         to: widget.arguments.clientAddress,
         contentType: ContentType.eventContactOptions,
       );
@@ -145,11 +163,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
-//    NLog.d(widget.arguments.name);
-//    NLog.d(widget.arguments.firstName);
-//    NLog.d(widget.arguments.sourceProfile.name);
-//    NLog.d(widget.arguments.sourceProfile.firstName);
-//    NLog.d(widget.arguments.toEntity());
     _burnTextArray = <String>[
       NMobileLocalizations.of(context).burn_5_seconds,
       NMobileLocalizations.of(context).burn_10_seconds,
@@ -159,17 +172,12 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
       NMobileLocalizations.of(context).burn_10_minutes,
       NMobileLocalizations.of(context).burn_30_minutes,
       NMobileLocalizations.of(context).burn_1_hour,
+      NMobileLocalizations.of(context).burn_1_day,
+      NMobileLocalizations.of(context).burn_1_week,
     ];
 
     if (widget.arguments.isMe) {
-      return Scaffold(
-        backgroundColor: DefaultTheme.backgroundColor4,
-        appBar: Header(
-          title: '',
-          backgroundColor: DefaultTheme.backgroundColor4,
-        ),
-        body: getSelfView(),
-      );
+      return getSelfView();
     } else {
       return getPersonView();
     }
@@ -226,7 +234,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
               var contact = widget.arguments;
               contact.notes = _notesController.text.trim();
 
-              await contact.setNotes(contact.notes);
+              await contact.setNotes(db, contact.notes);
               _chatBloc.add(RefreshMessages());
               Navigator.of(context).pop();
             }
@@ -277,7 +285,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
             if (_nameFormValid) {
               var contact = widget.arguments;
               contact.firstName = _firstNameController.text.trim();
-              await contact.setName(contact.firstName);
+              await contact.setName(db, contact.firstName);
               setState(() {
                 nickName = widget.arguments.name;
               });
@@ -295,9 +303,9 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
   }
 
   updatePic() async {
-    File savedImg = await getHeaderImage();
+    File savedImg = await getHeaderImage(accountPubkey);
     if (savedImg == null) return;
-    await widget.arguments.setAvatar(savedImg);
+    await widget.arguments.setAvatar(db, accountPubkey, savedImg);
     setState(() {
       widget.arguments.avatar = savedImg;
     });
@@ -350,7 +358,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
               setState(() {
                 nickName = widget.arguments.name;
               });
-              contact.setName(contact.firstName);
+              contact.setName(db, contact.firstName);
               Navigator.of(context).pop();
             }
           },
@@ -417,12 +425,12 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
           buttonColor: Colors.red,
           callback: (v) {
             if (v) {
-              widget.arguments.setFriend(isFriend: false);
+              widget.arguments.setFriend(db, isFriend: false);
               setState(() {});
             }
           }).show();
     } else {
-      widget.arguments.setFriend(isFriend: b);
+      widget.arguments.setFriend(db, isFriend: b);
       setState(() {});
       showToast(NMobileLocalizations.of(context).success);
     }
@@ -483,213 +491,312 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
   }
 
   String getName() {
-    String name = '${_sourceProfile?.name != null && _sourceProfile.name.isNotEmpty && (widget.arguments.firstName != null && widget.arguments.firstName.isNotEmpty || widget.arguments.lastName != null && widget.arguments.lastName.isNotEmpty) ? '(${_sourceProfile?.name})' : ''}';
+    String name =
+        '${_sourceProfile?.name != null && _sourceProfile.name.isNotEmpty && (widget.arguments.firstName != null && widget.arguments.firstName.isNotEmpty || widget.arguments.lastName != null && widget.arguments.lastName.isNotEmpty) ? '(${_sourceProfile?.name})' : ''}';
     return widget.arguments.name;
   }
 
+  _selectWallets() {
+    BottomDialog.of(context).showSelectWalletDialog(
+      title: NMobileLocalizations.of(context).select_another_wallet,
+      callback: (wallet) async {
+        LOG('_selectWallets').w(wallet);
+        Timer(Duration(milliseconds: 30), () {
+          _changeAccount(wallet);
+        });
+      },
+    );
+  }
+
+  _changeAccount(WalletSchema wallet) async {
+    if (wallet.address == widget.arguments.nknWalletAddress) return;
+    DChatAuthenticationHelper.authToVerifyPassword(
+        forceShowInputDialog: true,
+        wallet: wallet,
+        onGot: (nw) async {
+          final walletAddr = nw['address'];
+          final publicKey = nw['publicKey'];
+
+          final accountNew = DChatAccount(
+            walletAddr,
+            publicKey,
+            Uint8List.fromList(hexDecode(nw['seed'])),
+            ClientEventListener(BlocProvider.of<ClientBloc>(context)),
+          );
+          final localStorage = LocalStorage();
+          await localStorage.set(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS, accountNew.wallet.address);
+
+          final localAuth = await LocalAuthenticationService.instance;
+          if (localAuth.isProtectionEnabled) {
+            // nothing, since the above
+            // `await wallet.exportWallet(password)`
+            // steps have saved the password.
+          }
+
+          account.client.disConnect();
+          changeAccount(accountNew);
+          // Must be behind `changeAccount()`, since you need to use the new `db` object.
+          final currentUser = await ContactSchema.getContactByAddress(db, publicKey);
+          if (currentUser == null) {
+            DateTime now = DateTime.now();
+            await ContactSchema(
+              type: ContactType.me,
+              clientAddress: publicKey,
+              nknWalletAddress: walletAddr,
+              createdTime: now,
+              updatedTime: now,
+              profileVersion: uuid.v4(),
+            ).createContact(db);
+          }
+          showToast(NMobileLocalizations.of(context).account_switching_completed);
+          setState(() {
+            nickName = accountNew.client.myChatId.substring(0, 6);
+            _walletDefault = wallet;
+          });
+        },
+        onError: (pwdIncorrect, e) {
+          if (pwdIncorrect) {
+            showToast(NMobileLocalizations.of(context).tip_password_error);
+          }
+        });
+  }
+
   getSelfView() {
-    return Container(
-      child: Column(
-        children: <Widget>[
-          Container(
-            width: double.infinity,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Stack(
-                  children: <Widget>[
-                    InkWell(
-                      onTap: () {
-                        if (widget?.arguments?.avatarFilePath != null) {
-                          Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
-                        }
-                      },
-                      child: Container(
-                        child: widget.arguments.avatarWidget(
-                          backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
-                          size: 48,
-                          fontColor: DefaultTheme.fontLightColor,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Button(
-                        padding: const EdgeInsets.all(0),
-                        width: 24,
-                        height: 24,
-                        backgroundColor: DefaultTheme.primaryColor,
-                        child: SvgPicture.asset(
-                          'assets/icons/camera.svg',
-                          width: 16,
-                        ),
-                        onPressed: () async {
-                          updatePic();
-                        },
-                      ),
-                    )
-                  ],
-                ),
-                SizedBox(height: 20)
-              ],
-            ),
-          ),
-          Expanded(
-            child: Container(
+    return Scaffold(
+      backgroundColor: DefaultTheme.backgroundColor4,
+      appBar: Header(title: '', backgroundColor: DefaultTheme.backgroundColor4),
+      body: Container(
+        child: Column(
+          children: <Widget>[
+            Container(
               width: double.infinity,
-              decoration: BoxDecoration(color: DefaultTheme.backgroundColor4),
-              child: BodyBox(
-                padding: EdgeInsets.only(
-                  top: 0,
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(20.w, 20.h, 0, 16.h),
-                        child: Label(
-                          NMobileLocalizations.of(context).my_profile,
-                          type: LabelType.h3,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Stack(
+                    children: <Widget>[
+                      InkWell(
+                        onTap: () {
+                          if (widget?.arguments?.avatarFilePath != null) {
+                            Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
+                          }
+                        },
+                        child: Container(
+                          child: widget.arguments.avatarWidget(
+                            db,
+                            backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
+                            size: 48,
+                            fontColor: DefaultTheme.fontLightColor,
+                          ),
                         ),
                       ),
-                      Container(
-                        decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
-                        margin: EdgeInsets.symmetric(horizontal: 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            FlatButton(
-                              padding: EdgeInsets.only(left: 16, right: 16, top: 10),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
-                              onPressed: showChangeSelfNameDialog,
-                              child: Row(
-                                children: <Widget>[
-                                  loadAssetIconsImage(
-                                    'user',
-                                    color: DefaultTheme.primaryColor,
-                                    width: 24,
-                                  ),
-                                  SizedBox(width: 10),
-                                  Label(
-                                    NMobileLocalizations.of(context).nickname,
-                                    type: LabelType.bodyRegular,
-                                    color: DefaultTheme.fontColor1,
-                                    height: 1,
-                                  ),
-                                  SizedBox(width: 20),
-                                  Expanded(
-                                    child: Label(
-                                      nickName ?? '',
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Button(
+                          padding: const EdgeInsets.all(0),
+                          width: 24,
+                          height: 24,
+                          backgroundColor: DefaultTheme.primaryColor,
+                          child: SvgPicture.asset('assets/icons/camera.svg', width: 16),
+                          onPressed: () async {
+                            updatePic();
+                          },
+                        ),
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 20)
+                ],
+              ),
+            ),
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(color: DefaultTheme.backgroundColor4),
+                child: BodyBox(
+                  padding: EdgeInsets.only(
+                    top: 0,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(20.w, 20.h, 0, 16.h),
+                          child: Label(
+                            NMobileLocalizations.of(context).my_profile,
+                            type: LabelType.h3,
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
+                          margin: EdgeInsets.symmetric(horizontal: 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              FlatButton(
+                                padding: const EdgeInsets.only(left: 16, right: 16, top: 10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                                onPressed: showChangeSelfNameDialog,
+                                child: Row(
+                                  children: <Widget>[
+                                    loadAssetIconsImage('user', color: DefaultTheme.primaryColor, width: 24),
+                                    SizedBox(width: 10),
+                                    Label(
+                                      NMobileLocalizations.of(context).nickname,
                                       type: LabelType.bodyRegular,
-                                      color: DefaultTheme.fontColor2,
-                                      overflow: TextOverflow.fade,
-                                      textAlign: TextAlign.right,
+                                      color: DefaultTheme.fontColor1,
                                       height: 1,
                                     ),
-                                  ),
-                                  SvgPicture.asset(
-                                    'assets/icons/right.svg',
-                                    width: 24,
-                                    color: DefaultTheme.fontColor2,
-                                  )
-                                ],
-                              ),
-                            ).sized(h: 48),
-                            FlatButton(
-                              padding: const EdgeInsets.only(left: 16, right: 16),
-                              onPressed: () {
-                                Navigator.pushNamed(context, ShowMyChatID.routeName);
-                              },
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: <Widget>[
-                                  loadAssetChatPng(
-                                    'chat_id',
-                                    color: DefaultTheme.primaryColor,
-                                    width: 22,
-                                  ),
-                                  SizedBox(width: 10),
-                                  Label(
-                                    NMobileLocalizations.of(context).d_chat_address,
-                                    type: LabelType.bodyRegular,
-                                    color: DefaultTheme.fontColor1,
-                                    height: 1,
-                                  ),
-                                  SizedBox(width: 20),
-                                  Expanded(
-                                    child: Label(
-                                      Global.currentClient.address.substring(0, 8) + "...",
-                                      type: LabelType.bodyRegular,
-                                      textAlign: TextAlign.right,
-                                      color: DefaultTheme.fontColor2,
-                                      maxLines: 1,
+                                    SizedBox(width: 20),
+                                    Expanded(
+                                      child: Label(
+                                        nickName ?? '',
+                                        type: LabelType.bodyRegular,
+                                        color: DefaultTheme.fontColor2,
+                                        overflow: TextOverflow.fade,
+                                        textAlign: TextAlign.right,
+                                        height: 1,
+                                      ),
                                     ),
-                                  ),
-                                  SvgPicture.asset(
-                                    'assets/icons/right.svg',
-                                    width: 24,
-                                    color: DefaultTheme.fontColor2,
-                                  )
-                                ],
-                              ),
-                            ).sized(h: 48),
-                            FlatButton(
-                              padding: const EdgeInsets.only(
-                                left: 16,
-                                right: 16,
-                              ),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
-                              onPressed: () {
-                                Navigator.pushNamed(context, ShowMyChatAddress.routeName, arguments: widget.arguments.nknWalletAddress);
-                              },
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  loadAssetIconsImage(
-                                    'wallet',
-                                    color: DefaultTheme.primaryColor,
-                                    width: 24,
-                                  ),
-                                  SizedBox(width: 10),
-                                  Label(
-                                    NMobileLocalizations.of(context).wallet_address,
-                                    type: LabelType.bodyRegular,
-                                    color: DefaultTheme.fontColor1,
-                                    height: 1,
-                                  ),
-                                  SizedBox(width: 20),
-                                  Expanded(
-                                    child: Label(
-                                      widget.arguments.nknWalletAddress.substring(0, 8) + "...",
+                                    SvgPicture.asset('assets/icons/right.svg', width: 24, color: DefaultTheme.fontColor2)
+                                  ],
+                                ),
+                              ).sized(h: 48),
+                              FlatButton(
+                                padding: const EdgeInsets.only(left: 16, right: 16),
+                                onPressed: () {
+                                  Navigator.pushNamed(context, ShowMyChatID.routeName);
+                                },
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: <Widget>[
+                                    loadAssetChatPng('chat_id', color: DefaultTheme.primaryColor, width: 22),
+                                    SizedBox(width: 10),
+                                    Label(
+                                      NMobileLocalizations.of(context).d_chat_address,
                                       type: LabelType.bodyRegular,
-                                      color: DefaultTheme.fontColor2,
-                                      textAlign: TextAlign.right,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                      color: DefaultTheme.fontColor1,
+                                      height: 1,
                                     ),
-                                  ),
-                                  SvgPicture.asset(
-                                    'assets/icons/right.svg',
-                                    width: 24,
-                                    color: DefaultTheme.fontColor2,
-                                  )
-                                ],
-                              ),
-                            ).sized(h: 48),
-                          ],
+                                    SizedBox(width: 20),
+                                    Expanded(
+                                      child: Label(
+                                        accountChatId.substring(0, 8) + "...",
+                                        type: LabelType.bodyRegular,
+                                        textAlign: TextAlign.right,
+                                        color: DefaultTheme.fontColor2,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                    SvgPicture.asset(
+                                      'assets/icons/right.svg',
+                                      width: 24,
+                                      color: DefaultTheme.fontColor2,
+                                    )
+                                  ],
+                                ),
+                              ).sized(h: 48),
+                              FlatButton(
+                                padding: const EdgeInsets.only(left: 16, right: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
+                                onPressed: () {
+                                  Navigator.pushNamed(context, ShowMyChatAddress.routeName,
+                                      arguments: _walletDefault?.address ?? widget.arguments.nknWalletAddress);
+                                },
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    loadAssetIconsImage(
+                                      'wallet',
+                                      color: DefaultTheme.primaryColor,
+                                      width: 24,
+                                    ),
+                                    SizedBox(width: 10),
+                                    Label(
+                                      NMobileLocalizations.of(context).wallet_address,
+                                      type: LabelType.bodyRegular,
+                                      color: DefaultTheme.fontColor1,
+                                      height: 1,
+                                    ),
+                                    SizedBox(width: 20),
+                                    Expanded(
+                                      child: Label(
+                                        (_walletDefault?.address ?? widget.arguments.nknWalletAddress).substring(0, 8) + "...",
+                                        type: LabelType.bodyRegular,
+                                        color: DefaultTheme.fontColor2,
+                                        textAlign: TextAlign.right,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    SvgPicture.asset(
+                                      'assets/icons/right.svg',
+                                      width: 24,
+                                      color: DefaultTheme.fontColor2,
+                                    )
+                                  ],
+                                ),
+                              ).sized(h: 48),
+                              FlatButton(
+                                padding: const EdgeInsets.only(left: 16, right: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
+                                onPressed: _selectWallets,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    loadAssetIconsImage('wallet', color: DefaultTheme.primaryColor, width: 24),
+                                    _walletDefault == null
+                                        ? BlocBuilder<WalletsBloc, WalletsState>(
+                                            builder: (ctx, state) {
+                                              if (state is WalletsLoaded) {
+                                                final wallet = state.wallets.firstWhere((w) {
+                                                  return w.address == widget.arguments.nknWalletAddress;
+                                                }, orElse: null);
+                                                if (wallet != null) {
+                                                  _walletDefault = wallet;
+                                                }
+                                              }
+                                              return Label(
+                                                _walletDefault?.name ?? '--',
+                                                type: LabelType.bodyRegular,
+                                                color: DefaultTheme.fontColor1,
+                                                height: 1,
+                                              ).pad(l: 10);
+                                            },
+                                          )
+                                        : Label(
+                                            _walletDefault?.name ?? '--',
+                                            type: LabelType.bodyRegular,
+                                            color: DefaultTheme.fontColor1,
+                                            height: 1,
+                                          ).pad(l: 10),
+                                    Expanded(
+                                      child: Label(
+                                        NMobileLocalizations.of(context).change_default_chat_wallet,
+                                        type: LabelType.bodyRegular,
+                                        color: Colours.blue_0f,
+                                        textAlign: TextAlign.right,
+                                        maxLines: 1,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ).sized(h: 48),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -701,7 +808,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
         title: '',
         leading: BackButton(
           onPressed: () {
-            _setContactOptions();
             Navigator.of(context).pop();
           },
         ),
@@ -724,6 +830,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                       },
                       child: Container(
                         child: widget.arguments.avatarWidget(
+                          db,
                           backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
                           size: 48,
                           fontColor: DefaultTheme.fontLightColor,
@@ -743,11 +850,11 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                           width: 16,
                         ),
                         onPressed: () async {
-                          File savedImg = await getHeaderImage();
+                          File savedImg = await getHeaderImage(accountPubkey);
                           setState(() {
                             widget.arguments.avatar = savedImg;
                           });
-                          await widget.arguments.setAvatar(savedImg);
+                          await widget.arguments.setAvatar(db, accountPubkey, savedImg);
                           _chatBloc.add(RefreshMessages());
                         },
                       ),
@@ -885,9 +992,51 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                             SizedBox(height: 10),
                             Container(
                               decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
-                              margin: EdgeInsets.symmetric(horizontal: 12),
-                              padding: EdgeInsets.only(top: 10),
-                              child: getBurnView(),
+                              margin: EdgeInsets.only(left: 16, right: 16, top: 10),
+                              child: FlatButton(
+                                onPressed: () async {
+                                  _burnValue = await BurnViewUtil.showBurnViewDialog(context, widget.arguments, _chatBloc);
+                                  setState(() {});
+                                },
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                                child: Container(
+                                  width: double.infinity,
+                                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+                                    Row(
+                                      children: <Widget>[
+                                        loadAssetWalletImage(
+                                          'xiaohui',
+                                          color: DefaultTheme.primaryColor,
+                                          width: 24,
+                                        ),
+                                        SizedBox(width: 10),
+                                        Label(
+                                          NMobileLocalizations.of(context).burn_after_reading,
+                                          type: LabelType.bodyRegular,
+                                          color: DefaultTheme.fontColor1,
+                                          textAlign: TextAlign.start,
+                                        ),
+                                        SizedBox(width: 10),
+                                        Expanded(
+                                          child: Label(
+                                            _burnValue == null ? NMobileLocalizations.of(context).close : '${_burnValue != null ? '${BurnViewUtil.getStringFromSeconds(context, _burnValue)}' : ''}',
+                                            type: LabelType.bodyRegular,
+                                            color: DefaultTheme.fontColor2,
+                                            textAlign: TextAlign.right,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        SvgPicture.asset(
+                                          'assets/icons/right.svg',
+                                          width: 24,
+                                          color: DefaultTheme.fontColor2,
+                                        )
+                                      ],
+                                    ),
+                                  ]),
+                                ),
+                              ).sized(h: 50, w: double.infinity),
                             ),
                             Container(
                               margin: EdgeInsets.symmetric(horizontal: 14),
@@ -933,7 +1082,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                                   ),
                                 ),
                                 onPressed: () {
-                                  _setContactOptions();
+//                                  _setContactOptions();
                                   Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
                                 },
                               ).sized(h: 50, w: double.infinity),
@@ -946,21 +1095,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                     ],
                   ),
                 ).pad(t: 28),
-//                Positioned(
-//                  top: 0,
-//                  right: 20,
-//                  child: Button(
-//                    padding: const EdgeInsets.all(0),
-//                    width: 56,
-//                    height: 56,
-//                    backgroundColor: DefaultTheme.primaryColor,
-//                    child: SvgPicture.asset('assets/icons/chat.svg', width: 24),
-//                    onPressed: () async {
-//                      _setContactOptions();
-//                      Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
-//                    },
-//                  ),
-//                ),
               ],
             ),
           )
@@ -971,8 +1105,8 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
 
   getBurnView() {
     return FlatButton(
-      onPressed: null,
-      padding: EdgeInsets.zero,
+      onPressed: () {},
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
       child: Container(
         child: Column(children: <Widget>[
           Row(
@@ -989,39 +1123,24 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware {
                 color: DefaultTheme.fontColor1,
                 textAlign: TextAlign.start,
               ),
-              Spacer(),
-              CupertinoSwitch(
-                value: _burnSelected,
-                activeColor: DefaultTheme.primaryColor,
-                onChanged: (value) async {
-                  if (value) {
-                    _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
-                  } else {
-                    _burnValue = null;
-                  }
-                  setState(() {
-                    _burnSelected = value;
-                  });
-                },
+              SizedBox(width: 20),
+              Expanded(
+                child: Label(
+                  _burnValue == null ? NMobileLocalizations.of(context).close : BurnViewUtil.getStringFromSeconds(context, _burnValueArray[_sliderBurnValue.toInt()].inSeconds),
+                  type: LabelType.bodyRegular,
+                  color: DefaultTheme.fontColor2,
+                  textAlign: TextAlign.right,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              SvgPicture.asset(
+                'assets/icons/right.svg',
+                width: 24,
+                color: DefaultTheme.fontColor2,
+              )
             ],
-          ).pad(l: 20, r: 16),
-          _burnSelected
-              ? Slider(
-                  value: _sliderBurnValue,
-                  onChanged: (v) async {
-                    setState(() {
-                      _burnSelected = true;
-                      _sliderBurnValue = v;
-                      _burnValue = _burnValueArray[_sliderBurnValue.toInt()].inSeconds;
-                    });
-                  },
-                  divisions: _burnTextArray.length - 1,
-                  max: _burnTextArray.length - 1.0,
-                  min: 0,
-                ).pad(l: 4, r: 4)
-              : Container(),
-          SizedBox(height: 10),
+          ),
         ]),
       ),
     );

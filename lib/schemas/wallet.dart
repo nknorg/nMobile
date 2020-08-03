@@ -8,7 +8,6 @@ import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
-import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,14 +19,13 @@ class WalletSchema extends Equatable {
   String name;
   double balance = 0;
   String keystore;
-  String publicKey;
-  String seed;
+
+  //String publicKey; // fixme: null!!!
   double balanceEth = 0;
   bool isBackedUp = false;
 
 //  final LocalStorage _localStorage = LocalStorage();
   final SecureStorage _secureStorage = SecureStorage();
-  final LocalAuthenticationService _localAuth = locator<LocalAuthenticationService>();
 
   WalletSchema({this.address, this.type, this.name, this.balance = 0, this.balanceEth = 0, this.isBackedUp = false});
 
@@ -37,34 +35,42 @@ class WalletSchema extends Equatable {
   @override
   String toString() => 'WalletSchema { address: $address }';
 
-  Future<String> getPassword() async {
+  Future<String> getPassword({bool showDialogIfCanceledBiometrics = true, bool forceShowInputDialog = false}) async {
     NLog.d('getPassword');
+    Future<String> _showDialog() {
+      return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
+    }
+
+    if (forceShowInputDialog) {
+      return _showDialog();
+    }
+    final _localAuth = await LocalAuthenticationService.instance;
     if (_localAuth.isProtectionEnabled) {
       final password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');
       if (password == null) {
-        return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
+        return _showDialog();
       } else {
         bool auth = await _localAuth.authenticate();
         if (auth) {
           return password;
+        } else if (showDialogIfCanceledBiometrics) {
+          return _showDialog();
         } else {
-          return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
+          return null;
         }
       }
     } else {
-      return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
+      return _showDialog();
     }
   }
 
   Future<String> getKeystore() async {
-    var keystore = await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
-    return keystore;
+    return await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
   }
 
   Future exportWallet(password) async {
-    var keystore = await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
     try {
-      var wallet = await NknWalletPlugin.openWallet(keystore, password);
+      var wallet = await NknWalletPlugin.openWallet(await getKeystore(), password);
       await _secureStorage.set('${SecureStorage.PASSWORDS_KEY}:$address', password);
       return wallet;
     } catch (e) {

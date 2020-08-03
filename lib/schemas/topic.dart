@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -12,9 +13,11 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_storage.dart';
+import 'package:nmobile/helpers/permission.dart';
 import 'package:nmobile/helpers/sqlite_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/data/dchat_account.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/schemas/subscribers.dart';
@@ -84,7 +87,8 @@ class TopicSchema {
     }
   }
 
-  Widget avatarWidget({
+  Widget avatarWidget(
+    FutureOr<Database> db, {
     Color backgroundColor,
     double size,
     Color fontColor,
@@ -104,7 +108,7 @@ class TopicSchema {
       var wid = <Widget>[
         Material(
           borderRadius: BorderRadius.all(Radius.circular(8)),
-          color: Color(getOptions().backgroundColor),
+          color: Color(getOptions(db).backgroundColor),
           child: Container(
             alignment: Alignment.center,
             width: size,
@@ -112,7 +116,7 @@ class TopicSchema {
             child: Label(
               topic.substring(0, 2).toUpperCase(),
               type: fontType,
-              color: Color(getOptions().color),
+              color: Color(getOptions(db).color),
             ),
           ),
         ),
@@ -145,16 +149,16 @@ class TopicSchema {
     }
   }
 
-  Future<bool> setAvatar(File image) async {
+  Future<bool> setAvatar(Database db, String accountPubkey, File image) async {
     avatar = image;
     Map<String, dynamic> data = {
-      'avatar': getLocalContactPath(image.path),
+      'avatar': getLocalContactPath(accountPubkey, image.path),
 //      'avatar': getLocalPath(image.path),
       'updated_time': DateTime.now().millisecondsSinceEpoch,
     };
 
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       var res = await db.query(
         TopicSchema.tableName,
         columns: ['*'],
@@ -185,42 +189,42 @@ class TopicSchema {
     }
   }
 
-  bool isOwner() {
-    return Global.currentClient.publicKey == owner;
+  bool isOwner(String accountPubkey) {
+    return accountPubkey == owner;
   }
 
-  static Future<String> subscribe({
+  static Future<String> subscribe(DChatAccount account, {
     String identifier = '',
     String topic,
     int duration = 400000,
     String fee = '0',
     String meta = '',
   }) async {
-    LocalStorage.removeTopicFromUnsubscribeList(topic);
+    LocalStorage.removeTopicFromUnsubscribeList(account.client.pubkey, topic);
     Global.removeTopicCache(topic);
     String topicHash = genChannelId(topic);
     try {
-      var hash = await NknClientPlugin.subscribe(topic: topicHash, identifier: identifier, duration: duration, fee: fee, meta: meta);
+      var hash = await account.client.subscribe(topicHash: topicHash, identifier: identifier, duration: duration, fee: fee, meta: meta);
 
       return hash;
     } catch (e) {
       if (e != null && e is String) {
-        return subscribe(topic: topicHash, identifier: identifier, duration: duration, fee: fee, meta: meta);
+        return subscribe(account, topic: topicHash, identifier: identifier, duration: duration, fee: fee, meta: meta);
       }
       if (e != null && e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
         showToast(NMobileLocalizations.of(Global.appContext).password_wrong);
       } else {
-        return subscribe(topic: topicHash, identifier: identifier, duration: duration, fee: fee, meta: meta);
+        return subscribe(account, topic: topicHash, identifier: identifier, duration: duration, fee: fee, meta: meta);
       }
     }
   }
 
-  Future<Map<String, dynamic>> getPrivateOwnerMetaAction() async {
+  Future<Map<String, dynamic>> getPrivateOwnerMetaAction(DChatAccount account) async {
     String topicHash = genChannelId(topic);
     int i = 0;
     Map<String, dynamic> resultMeta = Map<String, dynamic>();
     while (true) {
-      var res = await NknClientPlugin.getSubscription(topic: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
+      var res = await account.client.getSubscription(topicHash: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
       NLog.d(res);
       if (res['meta'] == null || (res['meta'] as String).isEmpty) {
         break;
@@ -254,27 +258,27 @@ class TopicSchema {
       }
       i++;
     }
-    TopicSchema topicSchema = await TopicSchema.getTopic(topic);
+    TopicSchema topicSchema = await TopicSchema.getTopic(account.dbHolder.db, topic);
     if (topicSchema == null) {
       topicSchema = TopicSchema(topic: topic);
     }
     topicSchema.data = resultMeta;
     NLog.d('$topic  $resultMeta');
-    topicSchema.insertOrUpdate();
+    topicSchema.insertOrUpdate(account.dbHolder.db, account.client.pubkey);
     return resultMeta;
   }
 
-  Future<Map<String, dynamic>> getPrivateOwnerMeta({cache: true}) async {
-    TopicSchema topicSchema = await getTopic(topic);
+  Future<Map<String, dynamic>> getPrivateOwnerMeta(DChatAccount account, {cache: true}) async {
+    TopicSchema topicSchema = await getTopic(account.dbHolder.db, topic);
     if (topicSchema != null && topicSchema.data != null && topicSchema.data.length > 0 && cache) {
       NLog.d('use cache meta data');
       return topicSchema.data;
     } else {
-      return getPrivateOwnerMetaAction();
+      return getPrivateOwnerMetaAction(account);
     }
   }
 
-  Future<String> acceptPrivateMember({
+  Future<String> acceptPrivateMember(DChatAccount account, {
     int duration = 400000,
     String fee = '0',
     String addr,
@@ -283,7 +287,7 @@ class TopicSchema {
     String topicHash = genChannelId(topic);
     int i = 0;
     while (true) {
-      var res = await NknClientPlugin.getSubscription(topic: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
+      var res = await account.client.getSubscription(topicHash: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
 
       Map<String, dynamic> meta;
       try {
@@ -309,6 +313,7 @@ class TopicSchema {
       }
 
       String hash = await TopicSchema.subscribe(
+        account,
         identifier: '__${i.toString()}__.__permission__',
         topic: topic,
         meta: jsonEncode(meta),
@@ -321,7 +326,7 @@ class TopicSchema {
     }
   }
 
-  Future<String> removeAcceptPrivateMember({
+  Future<String> removeAcceptPrivateMember(DChatAccount account, {
     int duration = 400000,
     String fee = '0',
     String addr,
@@ -329,7 +334,7 @@ class TopicSchema {
     String topicHash = genChannelId(topic);
     int i = 0;
     while (true) {
-      var res = await NknClientPlugin.getSubscription(topic: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
+      var res = await account.client.getSubscription(topicHash: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
 
       Map<String, dynamic> meta;
       try {
@@ -352,6 +357,7 @@ class TopicSchema {
       }
 
       String hash = await TopicSchema.subscribe(
+        account,
         identifier: '__${i.toString()}__.__permission__',
         topic: topic,
         meta: jsonEncode(meta),
@@ -365,7 +371,7 @@ class TopicSchema {
   }
 
   /// remove from private group  1.remove from accept 2. join reject
-  Future<String> joinRejectPrivateMember({
+  Future<String> joinRejectPrivateMember(DChatAccount account, {
     int duration = 400000,
     String fee = '0',
     String addr,
@@ -374,7 +380,7 @@ class TopicSchema {
     String topicHash = genChannelId(topic);
     int i = 0;
     while (true) {
-      var res = await NknClientPlugin.getSubscription(topic: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
+      var res = await account.client.getSubscription(topicHash: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
       Map<String, dynamic> meta;
       try {
         meta = jsonDecode(res['meta']);
@@ -396,6 +402,7 @@ class TopicSchema {
       }
 
       String hash = await TopicSchema.subscribe(
+        account,
         identifier: '__${i.toString()}__.__permission__',
         topic: topic,
         meta: jsonEncode(meta),
@@ -408,7 +415,7 @@ class TopicSchema {
     }
   }
 
-  Future<String> rejectPrivateMember({
+  Future<String> rejectPrivateMember(DChatAccount account, {
     int duration = 400000,
     String fee = '0',
     String addr,
@@ -417,7 +424,7 @@ class TopicSchema {
     String topicHash = genChannelId(topic);
     int i = 0;
     while (true) {
-      var res = await NknClientPlugin.getSubscription(topic: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
+      var res = await account.client.getSubscription(topicHash: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
 
       Map<String, dynamic> meta;
       try {
@@ -445,6 +452,7 @@ class TopicSchema {
       }
 
       String hash = await TopicSchema.subscribe(
+        account,
         identifier: '__${i.toString()}__.__permission__',
         topic: topic,
         meta: jsonEncode(meta),
@@ -457,7 +465,7 @@ class TopicSchema {
     }
   }
 
-  Future<String> removeRejectPrivateMember({
+  Future<String> removeRejectPrivateMember(DChatAccount account, {
     int duration = 400000,
     String fee = '0',
     String addr,
@@ -466,7 +474,7 @@ class TopicSchema {
     String topicHash = genChannelId(topic);
     int i = 0;
     while (true) {
-      var res = await NknClientPlugin.getSubscription(topic: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
+      var res = await account.client.getSubscription(topicHash: topicHash, subscriber: '__${i.toString()}__.__permission__.${owner}');
 
       Map<String, dynamic> meta;
       try {
@@ -489,6 +497,7 @@ class TopicSchema {
       }
 
       String hash = await TopicSchema.subscribe(
+        account,
         identifier: '__${i.toString()}__.__permission__',
         topic: topic,
         meta: jsonEncode(meta),
@@ -526,13 +535,13 @@ class TopicSchema {
     await db.execute('CREATE INDEX topic_index_update_time ON Topic (updated_time)');
   }
 
-  toEntity() {
+  toEntity(String accountPubkey) {
     DateTime now = DateTime.now();
     Map<String, dynamic> map = {
       'id': id,
       'topic': topic,
       'count': count,
-      'avatar': avatar != null ? getLocalContactPath(avatar.path) : null,
+      'avatar': avatar != null ? getLocalContactPath(accountPubkey, avatar.path) : null,
 //      'avatar': avatar != null ? getLocalPath(avatar.path) : null,
       'type': type,
       'owner': owner,
@@ -578,11 +587,11 @@ class TopicSchema {
     return res;
   }
 
-  Future<bool> insert() async {
+  Future<bool> insert(Database db, String accountPubkey) async {
     if (updateTime == null) updateTime = DateTime.now();
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      int n = await db.insert(TopicSchema.tableName, toEntity());
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      int n = await db.insert(TopicSchema.tableName, toEntity(accountPubkey));
       return n > 0;
     } catch (e) {
       debugPrint(e);
@@ -591,11 +600,11 @@ class TopicSchema {
     }
   }
 
-  Future<bool> insertIfNoData() async {
+  Future<bool> insertIfNoData(Future<Database> db, String accountPubkey) async {
     if (updateTime == null) updateTime = DateTime.now();
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var countQuery = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var countQuery = await (await db).query(
         TopicSchema.tableName,
         columns: ['COUNT(id) as count'],
         where: 'topic = ?',
@@ -603,7 +612,7 @@ class TopicSchema {
       );
       var count = countQuery != null ? Sqflite.firstIntValue(countQuery) : 0;
       if (count == 0) {
-        int n = await db.insert(TopicSchema.tableName, toEntity());
+        int n = await (await db).insert(TopicSchema.tableName, toEntity(accountPubkey));
         return n > 0;
       }
       return false;
@@ -613,24 +622,24 @@ class TopicSchema {
     }
   }
 
-  OptionsSchema getOptions() {
+  OptionsSchema getOptions(FutureOr<Database> db) {
     int random = Random().nextInt(DefaultTheme.headerBackgroundColor.length);
     int backgroundColor = DefaultTheme.headerBackgroundColor[random];
     int color = DefaultTheme.headerColor[random];
     if (options == null || options.backgroundColor == null || options.color == null) {
-      setOptionColor(backgroundColor, color);
+      setOptionColor(db, backgroundColor, color);
     }
     return options;
   }
 
-  Future<bool> setOptionColor(int backgroundColor, int color) async {
+  Future<bool> setOptionColor(FutureOr<Database> db, int backgroundColor, int color) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       if (options == null) options = OptionsSchema();
       options.backgroundColor = backgroundColor;
       options.color = color;
       NLog.d(options.toJson());
-      var count = await db.update(
+      var count = await (await db).update(
         TopicSchema.tableName,
         {
           'options': options.toJson(),
@@ -645,11 +654,11 @@ class TopicSchema {
     }
   }
 
-  Future<bool> insertOrUpdate() async {
+  Future<bool> insertOrUpdate(Future<Database> db, String accountPubkey) async {
     if (updateTime == null) updateTime = DateTime.now();
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var countQuery = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var countQuery = await (await db).query(
         TopicSchema.tableName,
         columns: ['COUNT(id) as count'],
         where: 'topic = ?',
@@ -657,12 +666,12 @@ class TopicSchema {
       );
       var count = countQuery != null ? Sqflite.firstIntValue(countQuery) : 0;
       if (count == 0) {
-        int n = await db.insert(TopicSchema.tableName, toEntity());
+        int n = await (await db).insert(TopicSchema.tableName, toEntity(accountPubkey));
         return n > 0;
       } else {
         updateTime = DateTime.now();
 
-        int n = await db.update(
+        int n = await (await db).update(
           TopicSchema.tableName,
           {
             'type': type,
@@ -681,20 +690,18 @@ class TopicSchema {
     }
   }
 
-  static Future<TopicSchema> getTopic(String topic) async {
+  static Future<TopicSchema> getTopic(Future<Database> db, String topic) async {
     if (topic == null || topic.isEmpty) {
       return null;
     }
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var res = await (await db).query(
         TopicSchema.tableName,
         columns: ['*'],
         where: 'topic = ?',
         whereArgs: [topic],
       );
-
       return TopicSchema.parseEntity(res?.first);
     } catch (e) {
       NLog.e(e);
@@ -702,10 +709,10 @@ class TopicSchema {
     }
   }
 
-  static Future<List<TopicSchema>> getAllTopic() async {
+  static Future<List<TopicSchema>> getAllTopic(Future<Database> db) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var res = await (await db).query(
         TopicSchema.tableName,
         columns: ['*'],
       );
@@ -717,10 +724,10 @@ class TopicSchema {
     }
   }
 
-  Future<int> getTopicCount() async {
+  Future<int> getTopicCount(DChatAccount account) async {
     try {
-      await getSubscribers();
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      await getSubscribers(account);
+      Database db = await account.dbHolder.db;
       var countQuery = await db.query(
         SubscribersSchema.tableName,
         columns: ['COUNT(id) as count'],
@@ -742,20 +749,21 @@ class TopicSchema {
       return count;
     } catch (e) {
       NLog.d(e);
-      return getTopicCount();
+      // fixme by chenai on 07/07/2020: Are you joke me???
+      return getTopicCount(account);
     }
   }
 
-  Future<void> unsubscribe({int c = 0}) async {
+  Future<void> unsubscribe(DChatAccount account, {int c = 0}) async {
     int count = c;
     try {
       Global.removeTopicCache(topic);
-      LocalStorage.saveUnsubscribeTopic(topic);
+      LocalStorage.saveUnsubscribeTopic(account.client.pubkey, topic);
       String topicHash = genChannelId(topic);
-      var hash = await NknClientPlugin.unsubscribe(topic: topicHash);
+      var hash = await account.client.unsubscribe(topicHash: topicHash);
       if (hash != null) {
-        Database db = SqliteStorage(db: Global.currentChatDb).db;
-        await db.update(
+//        Database db = SqliteStorage(db: Global.currentChatDb).db;
+        await (await account.dbHolder.db).update(
           TopicSchema.tableName,
           {
             'expires_at': -1,
@@ -770,19 +778,20 @@ class TopicSchema {
       count++;
       if (count > 3) return;
       Future.delayed(Duration(seconds: 3 * count), () {
-        unsubscribe(c: count);
+        // fixme by chenai on 07/07/2020: Are you joke me???
+        unsubscribe(account, c: count);
       });
     }
   }
 
-  Future<Map<String, dynamic>> getSubscribers({meta: true, txPool: true, cache: true}) async {
+  Future<Map<String, dynamic>> getSubscribers(DChatAccount account, {meta: true, txPool: true, cache: true}) async {
     try {
       Map<String, dynamic> res;
       String topicHash = genChannelId(topic);
       if (!cache) {
-        res = await NknClientPlugin.getSubscribersAction(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
+        res = await account.client.getSubscribers(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
       } else {
-        res = await NknClientPlugin.getSubscribers(topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
+        res = await Permission.getSubscribersFromDbOrNative(account, topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
       }
       NLog.d('$res');
       if (type == TopicType.private) {
@@ -790,20 +799,20 @@ class TopicSchema {
           return key.contains('__permission__');
         });
       }
-      await setSubscribers(res);
+      await setSubscribers(await account.dbHolder.db, res);
       BlocProvider.of<ChannelMembersBloc>(Global.appContext).add(MembersCount(topic, res.length, true));
       return res;
     } catch (e) {
-      return getSubscribers();
+      return getSubscribers(account);
     }
   }
 
-  setSubscribers(Map<String, dynamic> subscribers) async {
+  setSubscribers(Database db, Map<String, dynamic> subscribers) async {
     try {
-      SubscribersSchema.deleteSubscribersByTopic(topic);
+      SubscribersSchema.deleteSubscribersByTopic(db, topic);
       for (var key in subscribers.keys) {
         var value = subscribers[key];
-        await SubscribersSchema(topic: topic, meta: value != null ? value : null, addr: key).insert();
+        await SubscribersSchema(topic: topic, meta: value != null ? value : null, addr: key).insert(db);
       }
     } catch (e) {
       print(e);
@@ -811,9 +820,9 @@ class TopicSchema {
     }
   }
 
-  Future<List<SubscribersSchema>> querySubscribers() async {
+  Future<List<SubscribersSchema>> querySubscribers(Database db) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       var res = await db.query(
         SubscribersSchema.tableName,
         columns: ['*'],

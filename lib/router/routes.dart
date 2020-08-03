@@ -26,11 +26,13 @@ import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/screens/select.dart';
 import 'package:nmobile/screens/settings/app_version.dart';
 import 'package:nmobile/screens/settings/channel.dart';
+import 'package:nmobile/screens/wallet/create_eth_wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn_wallet.dart';
 import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_detail.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
+import 'package:nmobile/screens/wallet/send_erc_20.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
 import 'package:nmobile/screens/wallet/wallet.dart';
 import 'package:nmobile/splash.dart';
@@ -44,12 +46,14 @@ Map<String, WidgetBuilder> routes = {
   SelectScreen.routeName: (BuildContext context, {arguments}) => SelectScreen(arguments: arguments),
   PhotoPage.routeName: (BuildContext context, {arguments}) => PhotoPage(arguments: arguments),
   CreateNknWalletScreen.routeName: (BuildContext context) => CreateNknWalletScreen(),
+  CreateEthWalletScreen.routeName: (BuildContext context) => CreateEthWalletScreen(),
   ImportNknWalletScreen.routeName: (BuildContext context) => ImportNknWalletScreen(),
   NknWalletDetailScreen.routeName: (BuildContext context, {arguments}) => NknWalletDetailScreen(arguments: arguments),
   NknWalletExportScreen.routeName: (BuildContext context, {arguments}) => NknWalletExportScreen(arguments: arguments),
   ReceiveNknScreen.routeName: (BuildContext context, {arguments}) => ReceiveNknScreen(arguments: arguments),
   SendNknScreen.routeName: (BuildContext context, {arguments}) => SendNknScreen(arguments: arguments),
-  NoConnectScreen.routeName: (BuildContext context) => NoConnectScreen(),
+  SendErc20Screen.routeName: (BuildContext context, {arguments}) => SendErc20Screen(arguments: arguments),
+//  NoConnectScreen.routeName: (BuildContext context) => NoConnectScreen(),
   ChatSinglePage.routeName: (BuildContext context, {arguments}) => ChatSinglePage(arguments: arguments),
   ChatGroupPage.routeName: (BuildContext context, {arguments}) => ChatGroupPage(arguments: arguments),
   ContactScreen.routeName: (BuildContext context, {arguments}) => ContactScreen(arguments: arguments),

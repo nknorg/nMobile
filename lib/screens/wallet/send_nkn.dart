@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get_it/get_it.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/wallet/filtered_wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/filtered_wallets_state.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
@@ -29,12 +30,13 @@ import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:oktoast/oktoast.dart';
 
 class SendNknScreen extends StatefulWidget {
   static const String routeName = '/wallet/send_nkn';
-  WalletSchema arguments;
+  final WalletSchema arguments;
 
   SendNknScreen({this.arguments});
 
@@ -42,7 +44,7 @@ class SendNknScreen extends StatefulWidget {
   _SendNknScreenState createState() => _SendNknScreenState();
 }
 
-class _SendNknScreenState extends State<SendNknScreen> {
+class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
   final GetIt locator = GetIt.instance;
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
@@ -55,7 +57,6 @@ class _SendNknScreenState extends State<SendNknScreen> {
 
   WalletSchema wallet;
   bool _showFeeLayout = false;
-  FilteredWalletsBloc _filteredWalletsBloc;
   var _amount;
   var _sendTo;
   double _fee = 0.1;
@@ -67,7 +68,6 @@ class _SendNknScreenState extends State<SendNknScreen> {
   void initState() {
     super.initState();
     locator<TaskService>().queryNknWalletBalanceTask();
-    _filteredWalletsBloc = BlocProvider.of<FilteredWalletsBloc>(context);
     _feeController.text = _fee.toString();
   }
 
@@ -77,21 +77,20 @@ class _SendNknScreenState extends State<SendNknScreen> {
 
       var password = await wallet.getPassword();
       if (password != null) {
-        transferAction(password);
-        Navigator.pop(context, true);
+        final result = transferAction(password);
+        Navigator.pop(context, result);
       }
     }
   }
 
-  transferAction(password) async {
+  Future<bool> transferAction(password) async {
     try {
-      wallet.exportWallet(password).then((v) {
-        NknWalletPlugin.transferAsync(v['keystore'], password, _sendTo, _amount, _fee.toString()).then((hash) {
-          if (hash != null) {
-            locator<TaskService>().queryNknWalletBalanceTask();
-          }
-        });
-      });
+      final nw = await wallet.exportWallet(password);
+      final txHash = await NknWalletPlugin.transferAsync(nw['keystore'], password, _sendTo, _amount, _fee.toString());
+      if (txHash != null) {
+        locator<TaskService>().queryNknWalletBalanceTask();
+      }
+      return txHash.length > 10;
     } catch (e) {
       if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
         showToast(NMobileLocalizations.of(Global.appContext).password_wrong);
@@ -100,6 +99,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
       } else {
         showToast(NMobileLocalizations.of(Global.appContext).failure);
       }
+      return false;
     }
   }
 
@@ -178,7 +178,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
               ConstrainedBox(
                 constraints: BoxConstraints(minHeight: 400),
                 child: Container(
-                  constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 200),
+                  constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 210),
                   color: DefaultTheme.backgroundColor4,
                   child: Flex(
                     direction: Axis.vertical,
@@ -202,268 +202,230 @@ class _SendNknScreenState extends State<SendNknScreen> {
                                       _formValid = (_formKey.currentState as FormState).validate();
                                     });
                                   },
-                                  child: Flex(
-                                    direction: Axis.vertical,
+                                  child: Column(
                                     children: <Widget>[
                                       Expanded(
                                         flex: 1,
-                                        child: Padding(
-                                          padding: EdgeInsets.only(top: 4),
-                                          child: Scrollbar(
-                                            child: SingleChildScrollView(
-                                              child: Padding(
-                                                padding: EdgeInsets.only(top: 32, left: 20, right: 20),
-                                                child: Flex(
-                                                  direction: Axis.vertical,
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: <Widget>[
-                                                    Expanded(
-                                                      flex: 0,
-                                                      child: Padding(
-                                                        padding: EdgeInsets.only(bottom: 32),
-                                                        child: Column(
-                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                          children: <Widget>[
-                                                            Padding(
-                                                              padding: const EdgeInsets.only(bottom: 20),
-                                                              child: Column(
-                                                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                                                children: <Widget>[
-                                                                  Row(
-                                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                    children: <Widget>[
-                                                                      Label(
-                                                                        NMobileLocalizations.of(context).from,
-                                                                        type: LabelType.h4,
-                                                                        textAlign: TextAlign.start,
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                  WalletDropdown(
-                                                                    title: NMobileLocalizations.of(context).select_asset_to_recieve,
-                                                                    schema: widget.arguments ?? wallet,
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                            Label(
-                                                              NMobileLocalizations.of(context).amount,
-                                                              type: LabelType.h4,
-                                                              textAlign: TextAlign.start,
-                                                            ),
-                                                            Textbox(
-                                                              padding: const EdgeInsets.only(bottom: 4),
-                                                              controller: _amountController,
-                                                              focusNode: _amountFocusNode,
-                                                              onSaved: (v) => _amount = v,
-                                                              onFieldSubmitted: (_) {
-                                                                FocusScope.of(context).requestFocus(_sendToFocusNode);
-                                                              },
-                                                              validator: Validator.of(context).amount(),
-                                                              showErrorMessage: false,
-                                                              hintText: NMobileLocalizations.of(context).enter_amount,
-                                                              suffixIcon: GestureDetector(
-                                                                onTap: () async {},
-                                                                child: Container(
-                                                                  width: 20,
-                                                                  alignment: Alignment.centerRight,
-                                                                  child: Label(
-                                                                    NMobileLocalizations.of(context).nkn,
-                                                                    type: LabelType.label,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                              textInputAction: TextInputAction.next,
-                                                              keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                                              inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
-                                                            ),
-                                                            Padding(
-                                                              padding: const EdgeInsets.only(bottom: 20),
-                                                              child: Row(
-                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                children: <Widget>[
-                                                                  Row(
-                                                                    children: <Widget>[
-                                                                      Label(NMobileLocalizations.of(context).available + ': '),
-                                                                      BlocBuilder<WalletsBloc, WalletsState>(
-                                                                        builder: (context, state) {
-                                                                          if (state is WalletsLoaded) {
-                                                                            var w = state.wallets.firstWhere((x) => x == wallet, orElse: () => null);
-                                                                            if (w != null) {
-                                                                              return Label(
-                                                                                Format.nknFormat(w.balance, decimalDigits: 8, symbol: 'NKN'),
-                                                                                color: DefaultTheme.fontColor1,
-                                                                              );
-                                                                            }
-                                                                          }
-                                                                          return Label(
-                                                                            '- NKN',
-                                                                            color: DefaultTheme.fontColor1,
-                                                                          );
-                                                                        },
-                                                                      )
-                                                                    ],
-                                                                  ),
-                                                                  InkWell(
-                                                                    child: Label(
-                                                                      NMobileLocalizations.of(context).max,
-                                                                      color: DefaultTheme.primaryColor,
-                                                                      type: LabelType.bodyRegular,
-                                                                    ),
-                                                                    onTap: () {
-                                                                      _amountController.text = wallet.balance.toString();
-                                                                    },
-                                                                  )
-                                                                ],
-                                                              ),
-                                                            ),
-                                                            Label(
-                                                              NMobileLocalizations.of(context).send_to,
-                                                              type: LabelType.h4,
-                                                              textAlign: TextAlign.start,
-                                                            ),
-                                                            Textbox(
-                                                              focusNode: _sendToFocusNode,
-                                                              controller: _sendToController,
-                                                              onSaved: (v) => _sendTo = v,
-                                                              onFieldSubmitted: (_) {
-                                                                FocusScope.of(context).requestFocus(_feeToFocusNode);
-                                                              },
-                                                              validator: Validator.of(context).nknAddress(),
-                                                              textInputAction: TextInputAction.next,
-                                                              hintText: NMobileLocalizations.of(context).enter_receive_address,
-                                                              suffixIcon: GestureDetector(
-                                                                onTap: () async {
-                                                                  if (Global.currentClient != null) {
-                                                                    var contact = await Navigator.of(context).pushNamed(ContactHome.routeName, arguments: true);
-                                                                    if (contact is ContactSchema) {
-                                                                      _sendToController.text = contact.nknWalletAddress;
-                                                                    }
-                                                                  } else {
-                                                                    showToast('D-Chat not login');
-                                                                  }
-                                                                },
-                                                                child: Container(
-                                                                  width: 20,
-                                                                  alignment: Alignment.centerRight,
-                                                                  child: Icon(FontAwesomeIcons.solidAddressBook),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            Padding(
-                                                              padding: const EdgeInsets.only(bottom: 20),
-                                                              child: Row(
-                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                crossAxisAlignment: CrossAxisAlignment.center,
-                                                                children: <Widget>[
-                                                                  InkWell(
-                                                                    onTap: () {
-                                                                      setState(() {
-                                                                        _showFeeLayout = !_showFeeLayout;
-                                                                      });
-                                                                    },
-                                                                    child: Row(
-                                                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                                                      children: <Widget>[
-                                                                        Label(
-                                                                          NMobileLocalizations.of(context).fee,
-                                                                          color: DefaultTheme.primaryColor,
-                                                                          type: LabelType.h4,
-                                                                          textAlign: TextAlign.start,
-                                                                        ),
-                                                                        RotatedBox(
-                                                                          quarterTurns: _showFeeLayout ? 2 : 0,
-                                                                          child: loadAssetIconsImage('down', color: DefaultTheme.primaryColor, width: 20),
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                  ),
-                                                                  SizedBox(
-                                                                    width: 160,
-                                                                    child: Textbox(
-                                                                      controller: _feeController,
-                                                                      focusNode: _feeToFocusNode,
-                                                                      padding: const EdgeInsets.only(bottom: 0),
-                                                                      onSaved: (v) => _fee = double.parse(v ?? 0),
-                                                                      onChanged: (v) {
-                                                                        setState(() {
-                                                                          double fee = v.isNotEmpty ? double.parse(v) : 0;
-                                                                          if (fee > _sliderFeeMax) {
-                                                                            fee = _sliderFeeMax;
-                                                                          } else if (fee < _sliderFeeMin) {
-                                                                            fee = _sliderFeeMin;
-                                                                          }
-                                                                          _sliderFee = fee;
-                                                                        });
-                                                                      },
-                                                                      suffixIcon: GestureDetector(
-                                                                        onTap: () {},
-                                                                        child: Container(
-                                                                          width: 20,
-                                                                          alignment: Alignment.centerRight,
-                                                                          child: Label(
-                                                                            NMobileLocalizations.of(context).nkn,
-                                                                            type: LabelType.label,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      keyboardType: TextInputType.numberWithOptions(
-                                                                        decimal: true,
-                                                                      ),
-                                                                      textInputAction: TextInputAction.done,
-                                                                      inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                            ExpansionLayout(
-                                                              isExpanded: _showFeeLayout,
-                                                              child: Container(
-                                                                  width: double.infinity,
-                                                                  padding: const EdgeInsets.only(top: 0),
-                                                                  child: Column(
-                                                                    children: <Widget>[
-                                                                      Row(
-                                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                        children: <Widget>[
-                                                                          Label(
-                                                                            NMobileLocalizations.of(context).slow,
-                                                                            type: LabelType.bodySmall,
-                                                                            color: DefaultTheme.primaryColor,
-                                                                          ),
-                                                                          Label(
-                                                                            NMobileLocalizations.of(context).average,
-                                                                            type: LabelType.bodySmall,
-                                                                            color: DefaultTheme.primaryColor,
-                                                                          ),
-                                                                          Label(
-                                                                            NMobileLocalizations.of(context).fast,
-                                                                            type: LabelType.bodySmall,
-                                                                            color: DefaultTheme.primaryColor,
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                      Slider(
-                                                                        value: _sliderFee,
-                                                                        onChanged: (v) {
-                                                                          setState(() {
-                                                                            _sliderFee = _fee = v;
-                                                                            _feeController.text = _fee.toStringAsFixed(2);
-                                                                          });
-                                                                        },
-                                                                        max: _sliderFeeMax,
-                                                                        min: _sliderFeeMin,
-                                                                      ),
-                                                                    ],
-                                                                  )),
-                                                            ),
-                                                          ],
-                                                        ),
+                                        child: Scrollbar(
+                                          child: SingleChildScrollView(
+                                            child: Padding(
+                                              padding: EdgeInsets.only(top: 32, left: 20, right: 20, bottom: 32),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Label(
+                                                    NMobileLocalizations.of(context).from,
+                                                    type: LabelType.h4,
+                                                    textAlign: TextAlign.start,
+                                                  ),
+                                                  WalletDropdown(
+                                                    title: NMobileLocalizations.of(context).select_asset_to_recieve,
+                                                    schema: widget.arguments ?? wallet,
+                                                  ),
+                                                  Label(
+                                                    NMobileLocalizations.of(context).amount,
+                                                    type: LabelType.h4,
+                                                    textAlign: TextAlign.start,
+                                                  ).pad(t: 20),
+                                                  Textbox(
+                                                    padding: const EdgeInsets.only(bottom: 4),
+                                                    controller: _amountController,
+                                                    focusNode: _amountFocusNode,
+                                                    onSaved: (v) => _amount = v,
+                                                    onFieldSubmitted: (_) {
+                                                      FocusScope.of(context).requestFocus(_sendToFocusNode);
+                                                    },
+                                                    validator: Validator.of(context).amount(),
+                                                    showErrorMessage: false,
+                                                    hintText: NMobileLocalizations.of(context).enter_amount,
+                                                    suffixIcon: GestureDetector(
+                                                      onTap: () {},
+                                                      child: Container(
+                                                        width: 20,
+                                                        alignment: Alignment.centerRight,
+                                                        child: Label(NMobileLocalizations.of(context).nkn, type: LabelType.label),
                                                       ),
                                                     ),
-                                                  ],
-                                                ),
+                                                    textInputAction: TextInputAction.next,
+                                                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                                                    inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(bottom: 20),
+                                                    child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                      children: <Widget>[
+                                                        Row(
+                                                          children: <Widget>[
+                                                            Label(NMobileLocalizations.of(context).available + ': '),
+                                                            BlocBuilder<WalletsBloc, WalletsState>(
+                                                              builder: (context, state) {
+                                                                if (state is WalletsLoaded) {
+                                                                  var w = state.wallets.firstWhere((x) => x == wallet, orElse: () => null);
+                                                                  if (w != null) {
+                                                                    return Label(
+                                                                      Format.nknFormat(w.balance, decimalDigits: 8, symbol: 'NKN'),
+                                                                      color: DefaultTheme.fontColor1,
+                                                                    );
+                                                                  }
+                                                                }
+                                                                return Label('-- NKN', color: DefaultTheme.fontColor1);
+                                                              },
+                                                            )
+                                                          ],
+                                                        ),
+                                                        InkWell(
+                                                          child: Label(
+                                                            NMobileLocalizations.of(context).max,
+                                                            color: DefaultTheme.primaryColor,
+                                                            type: LabelType.bodyRegular,
+                                                          ),
+                                                          onTap: () {
+                                                            _amountController.text = wallet.balance.toString();
+                                                          },
+                                                        )
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Label(
+                                                    NMobileLocalizations.of(context).send_to,
+                                                    type: LabelType.h4,
+                                                    textAlign: TextAlign.start,
+                                                  ),
+                                                  Textbox(
+                                                    focusNode: _sendToFocusNode,
+                                                    controller: _sendToController,
+                                                    onSaved: (v) => _sendTo = v,
+                                                    onFieldSubmitted: (_) {
+                                                      FocusScope.of(context).requestFocus(_feeToFocusNode);
+                                                    },
+                                                    validator: Validator.of(context).nknAddress(),
+                                                    textInputAction: TextInputAction.next,
+                                                    hintText: NMobileLocalizations.of(context).enter_receive_address,
+                                                    suffixIcon: GestureDetector(
+                                                      onTap: () async {
+                                                        if (account?.client != null) {
+                                                          var contact = await Navigator.of(context).pushNamed(ContactHome.routeName, arguments: true);
+                                                          if (contact is ContactSchema) {
+                                                            _sendToController.text = contact.nknWalletAddress;
+                                                          }
+                                                        } else {
+                                                          showToast('D-Chat not login');
+                                                        }
+                                                      },
+                                                      child: Container(
+                                                        width: 20,
+                                                        alignment: Alignment.centerRight,
+                                                        child: Icon(FontAwesomeIcons.solidAddressBook),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(bottom: 20),
+                                                    child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                                      children: <Widget>[
+                                                        InkWell(
+                                                          onTap: () {
+                                                            setState(() {
+                                                              _showFeeLayout = !_showFeeLayout;
+                                                            });
+                                                          },
+                                                          child: Row(
+                                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                                            children: <Widget>[
+                                                              Label(
+                                                                NMobileLocalizations.of(context).fee,
+                                                                color: DefaultTheme.primaryColor,
+                                                                type: LabelType.h4,
+                                                                textAlign: TextAlign.start,
+                                                              ),
+                                                              RotatedBox(
+                                                                quarterTurns: _showFeeLayout ? 2 : 0,
+                                                                child: loadAssetIconsImage('down', color: DefaultTheme.primaryColor, width: 20),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        SizedBox(
+                                                          width: 120,
+                                                          child: Textbox(
+                                                            controller: _feeController,
+                                                            focusNode: _feeToFocusNode,
+                                                            padding: const EdgeInsets.only(bottom: 0),
+                                                            onSaved: (v) => _fee = double.parse(v ?? 0),
+                                                            onChanged: (v) {
+                                                              setState(() {
+                                                                double fee = v.isNotEmpty ? double.parse(v) : 0;
+                                                                if (fee > _sliderFeeMax) {
+                                                                  fee = _sliderFeeMax;
+                                                                } else if (fee < _sliderFeeMin) {
+                                                                  fee = _sliderFeeMin;
+                                                                }
+                                                                _sliderFee = fee;
+                                                              });
+                                                            },
+                                                            suffixIcon: GestureDetector(
+                                                              onTap: () {},
+                                                              child: Container(
+                                                                width: 20,
+                                                                alignment: Alignment.centerRight,
+                                                                child: Label(NMobileLocalizations.of(context).nkn, type: LabelType.label),
+                                                              ),
+                                                            ),
+                                                            keyboardType: TextInputType.numberWithOptions(
+                                                              decimal: true,
+                                                            ),
+                                                            textInputAction: TextInputAction.done,
+                                                            inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  ExpansionLayout(
+                                                    isExpanded: _showFeeLayout,
+                                                    child: Container(
+                                                        width: double.infinity,
+                                                        padding: const EdgeInsets.only(top: 0),
+                                                        child: Column(
+                                                          children: <Widget>[
+                                                            Row(
+                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                              children: <Widget>[
+                                                                Label(
+                                                                  NMobileLocalizations.of(context).slow,
+                                                                  type: LabelType.bodySmall,
+                                                                  color: DefaultTheme.primaryColor,
+                                                                ),
+                                                                Label(
+                                                                  NMobileLocalizations.of(context).average,
+                                                                  type: LabelType.bodySmall,
+                                                                  color: DefaultTheme.primaryColor,
+                                                                ),
+                                                                Label(
+                                                                  NMobileLocalizations.of(context).fast,
+                                                                  type: LabelType.bodySmall,
+                                                                  color: DefaultTheme.primaryColor,
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            Slider(
+                                                              value: _sliderFee,
+                                                              onChanged: (v) {
+                                                                setState(() {
+                                                                  _sliderFee = _fee = v;
+                                                                  _feeController.text = _fee.toStringAsFixed(2);
+                                                                });
+                                                              },
+                                                              max: _sliderFeeMax,
+                                                              min: _sliderFeeMin,
+                                                            ),
+                                                          ],
+                                                        )),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ),

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -16,7 +16,7 @@ class ShowMyChatID extends StatefulWidget {
   ShowMyChatIDState createState() => new ShowMyChatIDState();
 }
 
-class ShowMyChatIDState extends State<ShowMyChatID> {
+class ShowMyChatIDState extends State<ShowMyChatID> with AccountDependsBloc {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,7 +36,7 @@ class ShowMyChatIDState extends State<ShowMyChatID> {
               child: FlatButton(
                 padding: EdgeInsets.all(16),
                 onPressed: () {
-                  CopyUtils.copyAction(context, Global.currentClient.address);
+                  CopyUtils.copyAction(context, accountChatId);
                 },
                 child: Column(
                   children: <Widget>[
@@ -62,7 +62,7 @@ class ShowMyChatIDState extends State<ShowMyChatID> {
                       children: <Widget>[
                         Expanded(
                           child: Label(
-                            Global.currentClient.address,
+                            accountChatId,
                             type: LabelType.bodyRegular,
                             color: DefaultTheme.fontColor2,
                             softWrap: true,
@@ -89,7 +89,7 @@ class ShowMyChatIDState extends State<ShowMyChatID> {
                   SizedBox(height: 20),
                   Center(
                     child: QrImage(
-                      data: Global.currentClient.address,
+                      data: accountChatId,
                       backgroundColor: DefaultTheme.backgroundLightColor,
                       foregroundColor: DefaultTheme.primaryColor,
                       version: QrVersions.auto,
