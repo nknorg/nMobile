@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-07-26T20:59:36.391983",
+  "@@last_modified": "2020-08-03T19:29:41.235200",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -330,8 +330,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "recieve": "Receive",
-  "@recieve": {
+  "receive": "Receive",
+  "@receive": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -672,8 +672,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "select_asset_to_recieve": "Select Asset to Receive",
-  "@select_asset_to_recieve": {
+  "select_asset_to_receive": "Select Asset to Receive",
+  "@select_asset_to_receive": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1661,6 +1661,11 @@
   },
   "week": "week",
   "@week": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "select": "Select",
+  "@select": {
     "type": "text",
     "placeholders": {}
   }
