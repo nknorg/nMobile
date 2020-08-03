@@ -156,7 +156,7 @@ class _WalletItemState extends State<WalletItem> {
                 flex: 1,
                 child: Container(
                   alignment: Alignment.centerLeft,
-                  height: 44,
+                  height: 48,
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

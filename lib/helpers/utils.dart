@@ -92,7 +92,7 @@ bool isValidEthAddress(String address) {
   try {
     EthereumAddress.fromHex(address);
     return true;
-  }catch (e) {
+  } catch (e) {
     return false;
   }
 }
@@ -104,7 +104,8 @@ Future<File> compressAndGetFile(String accountPubkey, File file) async {
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
-  var result = await FlutterImageCompress.compressAndGetFile(file.absolute.path, targetPath, quality: 30, minWidth: 640, minHeight: 1024, format: CompressFormat.jpeg);
+  var result =
+      await FlutterImageCompress.compressAndGetFile(file.absolute.path, targetPath, quality: 30, minWidth: 640, minHeight: 1024, format: CompressFormat.jpeg);
   return result;
 }
 
@@ -324,4 +325,13 @@ int getTimestampLatest(bool phase, int day) {
 //      isUtc: false, format: 'yyyy-MM-dd HH:mm:ss');
   int timeStamp = newDate.millisecondsSinceEpoch;
   return timeStamp;
+}
+
+Future<String> createApkCachePath(String apkUrl) async {
+  Directory rootDir = (await getTemporaryDirectory());
+  final Directory dir = Directory(join(rootDir.path, 'apks'));
+  if (!dir.existsSync()) {
+    dir.createSync(recursive: true);
+  }
+  return join(dir.path, getFileName(apkUrl));
 }

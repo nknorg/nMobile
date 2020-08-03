@@ -369,14 +369,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         yield MessagesUpdated(target: message.from, message: message);
         return;
       case ContentType.eventNodeOnline:
-        NLog.v('收到${message.from}');
-        CdnMiner.getAllCdnMiner().then((list) {
+        _LOG.i('收到${message.from}');
+        CdnMiner.getAllCdnMiner(db).then((list) {
           var model = list.firstWhere((m) => m.nshId == message.from, orElse: () => null);
           if (model == null) {
-            NLog.v('开始添加${message.from}');
-            CdnMiner(message.from).insertOrUpdate();
+            _LOG.i('开始添加${message.from}');
+            CdnMiner(message.from).insertOrUpdate(db);
           } else {
-            NLog.v('已存在${message.from}');
+            _LOG.i('已存在${message.from}');
           }
         });
 
@@ -385,8 +385,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         message.isSuccess = true;
         checkBurnOptions(message, contact);
         LocalNotification.messageNotification(title, message.content, message: message);
-        await message.insert();
-        var unReadCount = await MessageSchema.unReadMessages();
+        await message.insert(db, accountPubkey);
+        var unReadCount = await MessageSchema.unReadMessages(db, accountChatId);
         FlutterAppBadger.updateBadgeCount(unReadCount);
         yield MessagesUpdated(target: message.from, message: message);
         return;

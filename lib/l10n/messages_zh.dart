@@ -19,7 +19,7 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'zh';
 
-  static m0(min, max) => "必须大于${min}小于${max}.";
+  static m0(min, max) => "必须大于${min}小于${max}";
 
   static m1(field) => "${field} 必填";
 
@@ -49,7 +49,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "burn_1_day" : MessageLookupByLibrary.simpleMessage("1 天"),
     "burn_1_hour" : MessageLookupByLibrary.simpleMessage("1 小时"),
     "burn_1_minute" : MessageLookupByLibrary.simpleMessage("1 分钟"),
-    "burn_1_week" : MessageLookupByLibrary.simpleMessage("1 周"),
+    "burn_1_week" : MessageLookupByLibrary.simpleMessage("1 星期"),
     "burn_30_minutes" : MessageLookupByLibrary.simpleMessage("30 分钟"),
     "burn_30_seconds" : MessageLookupByLibrary.simpleMessage("30 秒"),
     "burn_5_minutes" : MessageLookupByLibrary.simpleMessage("5 分钟"),
@@ -79,8 +79,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "click_to_settings" : MessageLookupByLibrary.simpleMessage("点击设置"),
     "client_address" : MessageLookupByLibrary.simpleMessage("地址"),
     "close" : MessageLookupByLibrary.simpleMessage("关闭"),
-    "close_burn_after_reading" : MessageLookupByLibrary.simpleMessage("关闭"),
-    "coming_soon" : MessageLookupByLibrary.simpleMessage("Coming Soon..."),
     "close_burn_after_reading" : MessageLookupByLibrary.simpleMessage("禁用了阅后即焚。"),
     "coming_soon" : MessageLookupByLibrary.simpleMessage("敬请期待..."),
     "confirm_password" : MessageLookupByLibrary.simpleMessage("确认密码"),
@@ -113,7 +111,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "delete_chennel_confirm_title" : MessageLookupByLibrary.simpleMessage("您确定要退出该群吗？"),
     "delete_contact" : MessageLookupByLibrary.simpleMessage("删除"),
     "delete_contact_confirm_title" : MessageLookupByLibrary.simpleMessage("您确定要删除联系人吗?"),
-    "delete_db_confirm_title" : MessageLookupByLibrary.simpleMessage("您确定要清除数据库吗?"),
+    "delete_db_confirm_title" : MessageLookupByLibrary.simpleMessage("您确定要清空数据库吗？"),
+    "delete_friend_confirm_title" : MessageLookupByLibrary.simpleMessage("您确定要删除该好友吗？"),
     "delete_message_confirm_title" : MessageLookupByLibrary.simpleMessage("您确定要删除此消息吗?"),
     "delete_wallet" : MessageLookupByLibrary.simpleMessage("删除钱包"),
     "delete_wallet_confirm_text" : MessageLookupByLibrary.simpleMessage("这将从您的设备中删除钱包。请确保您的钱包已备份，否则您的资金将丢失且无法找回。"),
@@ -147,8 +146,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "error_unknow_nkn_qrcode" : MessageLookupByLibrary.simpleMessage("识别失败"),
     "estimated_income" : MessageLookupByLibrary.simpleMessage("预估收益"),
     "eth_keystore_export_desc" : MessageLookupByLibrary.simpleMessage("当前版本暂不支持ERC20 Token交易，请立刻导出此钱包Keystore进行备份。"),
-    "export" : MessageLookupByLibrary.simpleMessage("导出"),
+    "eth_wallet" : MessageLookupByLibrary.simpleMessage("Eth 钱包"),
     "ethereum" : MessageLookupByLibrary.simpleMessage("Ethereum"),
+    "export" : MessageLookupByLibrary.simpleMessage("导出"),
     "export_wallet" : MessageLookupByLibrary.simpleMessage("导出钱包"),
     "face_id" : MessageLookupByLibrary.simpleMessage("Face ID"),
     "failure" : MessageLookupByLibrary.simpleMessage("失败"),
@@ -168,8 +168,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "h" : MessageLookupByLibrary.simpleMessage("小时"),
     "help" : MessageLookupByLibrary.simpleMessage("帮助"),
     "hint_enter_wallet_name" : MessageLookupByLibrary.simpleMessage("钱包名称"),
-    "ignore" : MessageLookupByLibrary.simpleMessage("放弃该版更新"),
     "hours" : MessageLookupByLibrary.simpleMessage("小时"),
+    "ignore" : MessageLookupByLibrary.simpleMessage("放弃该版更新"),
     "import_keystore_nkn_wallet_desc" : MessageLookupByLibrary.simpleMessage("从已有的钱包中，找出如何导出keystore以及关联的密码，对二者进行备份，然后用其导入nMobile。"),
     "import_keystore_nkn_wallet_title" : MessageLookupByLibrary.simpleMessage("使用Keystore导入"),
     "import_seed_nkn_wallet_desc" : MessageLookupByLibrary.simpleMessage("从已有的钱包中，找出如何导出Seed（也称为“秘密种子”），对其进行备份，然后使用它导入nMobile。"),
@@ -197,7 +197,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "latest" : MessageLookupByLibrary.simpleMessage("最新"),
     "latest_transactions" : MessageLookupByLibrary.simpleMessage("最新交易"),
     "learn_more" : MessageLookupByLibrary.simpleMessage("了解更多"),
-    "leave_group_confirm_title" : MessageLookupByLibrary.simpleMessage("您确定要离开该群组吗？"),
+    "leave_group_confirm_title" : MessageLookupByLibrary.simpleMessage("您确定要退出该群吗？"),
     "loading" : MessageLookupByLibrary.simpleMessage("加载中"),
     "local_notification" : MessageLookupByLibrary.simpleMessage("本地通知"),
     "local_notification_both_name_message" : MessageLookupByLibrary.simpleMessage("显示名字和消息"),
@@ -217,9 +217,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "menu_wallet" : MessageLookupByLibrary.simpleMessage("钱包"),
     "message_text" : MessageLookupByLibrary.simpleMessage("消息"),
     "min" : MessageLookupByLibrary.simpleMessage("最小"),
-    "minute" : MessageLookupByLibrary.simpleMessage("分钟"),
     "miner_name" : MessageLookupByLibrary.simpleMessage("名称"),
     "mining_fee_text" : MessageLookupByLibrary.simpleMessage("挖矿收益"),
+    "minute" : MessageLookupByLibrary.simpleMessage("分钟"),
     "my_contact" : MessageLookupByLibrary.simpleMessage("我的联系人"),
     "my_details" : MessageLookupByLibrary.simpleMessage("我的"),
     "my_details_desc" : MessageLookupByLibrary.simpleMessage("所有订阅和矿工费都将来自您选择的钱包。"),
@@ -294,7 +294,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "select_wallet_type" : MessageLookupByLibrary.simpleMessage("选择钱包类型"),
     "select_wallet_type_desc" : MessageLookupByLibrary.simpleMessage("选择创建 NKN 主网钱包还是用来保存 NKN ERC-20 通证的以太坊钱包。两者是不兼容的。"),
     "send" : MessageLookupByLibrary.simpleMessage("发送"),
-    "send_message" : MessageLookupByLibrary.simpleMessage("发送消息"),
+    "send_eth" : MessageLookupByLibrary.simpleMessage("发送 Eth"),
+    "send_message" : MessageLookupByLibrary.simpleMessage("发送信息"),
     "send_nkn" : MessageLookupByLibrary.simpleMessage("发送 NKN"),
     "send_to" : MessageLookupByLibrary.simpleMessage("发送给"),
     "settings" : MessageLookupByLibrary.simpleMessage("设置"),
@@ -345,8 +346,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "withdrawable_amount" : MessageLookupByLibrary.simpleMessage("提现金额"),
     "withdrawable_balance_fee" : MessageLookupByLibrary.simpleMessage("可提现余额"),
     "yes" : MessageLookupByLibrary.simpleMessage("是的"),
-    "you" : MessageLookupByLibrary.simpleMessage("您"),
     "yesterday_fee" : MessageLookupByLibrary.simpleMessage("昨日预估收益"),
+    "you" : MessageLookupByLibrary.simpleMessage("您"),
     "you_have_new_message" : MessageLookupByLibrary.simpleMessage("新消息")
   };
 }

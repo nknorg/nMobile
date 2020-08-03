@@ -7,6 +7,7 @@ import 'package:flutter_easyrefresh/easy_refresh.dart';
 import 'package:flutter_easyrefresh/material_header.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/cdn/cdn_bloc.dart';
 import 'package:nmobile/blocs/cdn/cdn_state.dart';
 import 'package:nmobile/components/box/body.dart';
@@ -33,7 +34,7 @@ class NodeMainPage extends StatefulWidget {
   _NodeMainPageState createState() => _NodeMainPageState();
 }
 
-class _NodeMainPageState extends State<NodeMainPage> {
+class _NodeMainPageState extends State<NodeMainPage> with AccountDependsBloc {
 //  WalletSchema _wallet;
   Api _api;
   DateTime _start;
@@ -50,8 +51,8 @@ class _NodeMainPageState extends State<NodeMainPage> {
   EasyRefreshController _controller;
 
   initAsync() async {
-    await CdnMiner.removeCacheData();
-    var listTemp = await CdnMiner.getAllCdnMiner();
+    await CdnMiner.removeCacheData(db);
+    var listTemp = await CdnMiner.getAllCdnMiner(db);
     if (mounted) {
       setState(() {
         _list = listTemp;
@@ -110,7 +111,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
     _api.post(url, params, isEncrypted: true).then((res) async {
       responseData = (res as Map);
       if (res != null) {
-        var tempList = await CdnMiner.getAllCdnMiner();
+        var tempList = await CdnMiner.getAllCdnMiner(db);
         if (mounted) {
           setState(() {
             _list = tempList;
@@ -121,7 +122,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
         getFilterName();
         //循环获取设备详情
         for (CdnMiner cdn in _list) {
-          cdn.getMinerDetail();
+          cdn.getMinerDetail(account.client);
         }
       }
     });
@@ -575,7 +576,7 @@ class _NodeMainPageState extends State<NodeMainPage> {
       var result = _list.firstWhere((v) => v.nshId == qrData, orElse: () => null);
       if (result == null) {
         result = CdnMiner(qrData);
-        result.insertOrUpdate().then((v) {
+        result.insertOrUpdate(db).then((v) {
           if (v) {
             setState(() {
               _list.add(result);

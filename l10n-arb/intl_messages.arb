@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-07-17T16:24:33.275192",
+  "@@last_modified": "2020-08-03T14:27:44.153290",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1208,7 +1208,7 @@
       "field": {}
     }
   },
-  "error_amount_min_max": "This field must be greater than {min} and less than {max}.",
+  "error_amount_min_max": "This field must be greater than {min} and less than {max}",
   "@error_amount_min_max": {
     "description": "",
     "type": "text",

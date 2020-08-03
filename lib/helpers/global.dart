@@ -6,15 +6,13 @@ import 'package:flutter/services.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/schemas/client.dart';
-import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/screens/ncdn/miner_data.dart';
 import 'package:nmobile/services/android_messaging_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/log_tag.dart';
-import 'package:nmobile/utils/nlog_util.dart';
 import 'package:package_info/package_info.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'local_notification.dart';
 

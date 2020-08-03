@@ -32,7 +32,7 @@ class _AppScreenState extends State<AppScreen> {
   PageController _pageController;
   int _currentIndex = 0;
   List<Widget> screens = <Widget>[
-    ChatScreen(),
+    ChatScreen(ActivePage(0)),
     WalletScreen(),
     NewsScreen(),
     SettingsScreen(),
@@ -46,7 +46,7 @@ class _AppScreenState extends State<AppScreen> {
       DeviceOrientation.portraitUp,
     ]);
     OrientationPlugin.forceOrientation(DeviceOrientation.portraitUp);
-    _pageController = PageController(initialPage: 0);
+    _pageController = PageController();
 //    Global.currentPageIndex = _currentIndex;
     _walletsBloc = BlocProvider.of<WalletsBloc>(context);
     _walletsBloc.add(LoadWallets());

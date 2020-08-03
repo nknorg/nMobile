@@ -19,7 +19,7 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'messages';
 
-  static m0(min, max) => "This field must be greater than ${min} and less than ${max}.";
+  static m0(min, max) => "This field must be greater than ${min} and less than ${max}";
 
   static m1(field) => "${field} is required.";
 
@@ -146,9 +146,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "error_unknow_nkn_qrcode" : MessageLookupByLibrary.simpleMessage("Unknow NKN qr code."),
     "estimated_income" : MessageLookupByLibrary.simpleMessage("Estimated Income"),
     "eth" : MessageLookupByLibrary.simpleMessage("ETH"),
+    "eth_keystore_export_desc" : MessageLookupByLibrary.simpleMessage("The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately."),
     "eth_wallet" : MessageLookupByLibrary.simpleMessage("Eth Wallet"),
     "ethereum" : MessageLookupByLibrary.simpleMessage("Ethereum"),
-    "eth_keystore_export_desc" : MessageLookupByLibrary.simpleMessage("The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately."),
     "export" : MessageLookupByLibrary.simpleMessage("Export"),
     "export_wallet" : MessageLookupByLibrary.simpleMessage("Export Wallet"),
     "face_id" : MessageLookupByLibrary.simpleMessage("Face ID"),
@@ -172,8 +172,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "h" : MessageLookupByLibrary.simpleMessage("h"),
     "help" : MessageLookupByLibrary.simpleMessage("Help"),
     "hint_enter_wallet_name" : MessageLookupByLibrary.simpleMessage("Enter wallet name"),
-    "ignore" : MessageLookupByLibrary.simpleMessage("Ignore"),
     "hours" : MessageLookupByLibrary.simpleMessage("hours"),
+    "ignore" : MessageLookupByLibrary.simpleMessage("Ignore"),
     "import_keystore_nkn_wallet_desc" : MessageLookupByLibrary.simpleMessage("From your existing wallet, find out how to export keystore as well as associated password, make a backup of both, and then use both to import your existing wallet into nMobile."),
     "import_keystore_nkn_wallet_title" : MessageLookupByLibrary.simpleMessage("Import with Keystore"),
     "import_seed_nkn_wallet_desc" : MessageLookupByLibrary.simpleMessage("From your existing wallet, find out how to export Seed (also called \"Secret Seed\"), make a backup copy, and then use it to import your existing wallet into nMobile."),
@@ -221,9 +221,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "menu_wallet" : MessageLookupByLibrary.simpleMessage("Wallet"),
     "message_text" : MessageLookupByLibrary.simpleMessage("Messages"),
     "min" : MessageLookupByLibrary.simpleMessage("Min"),
-    "minute" : MessageLookupByLibrary.simpleMessage("minute"),
     "miner_name" : MessageLookupByLibrary.simpleMessage("Name"),
     "mining_fee_text" : MessageLookupByLibrary.simpleMessage("Mining income"),
+    "minute" : MessageLookupByLibrary.simpleMessage("minute"),
     "my_contact" : MessageLookupByLibrary.simpleMessage("My Contact"),
     "my_details" : MessageLookupByLibrary.simpleMessage("My Details"),
     "my_details_desc" : MessageLookupByLibrary.simpleMessage("All subscriptions and tipping will come from your selected wallet."),
@@ -285,8 +285,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "save_to_album" : MessageLookupByLibrary.simpleMessage("Save To Album"),
     "scan_show_me_desc" : MessageLookupByLibrary.simpleMessage("Scan the QR code pattern to add friends to your contacts."),
     "search" : MessageLookupByLibrary.simpleMessage("Search"),
-    "seconds" : MessageLookupByLibrary.simpleMessage("seconds"),
     "search_text" : MessageLookupByLibrary.simpleMessage("Search"),
+    "seconds" : MessageLookupByLibrary.simpleMessage("seconds"),
     "security" : MessageLookupByLibrary.simpleMessage("Security"),
     "see_node" : MessageLookupByLibrary.simpleMessage("View nodes"),
     "seed" : MessageLookupByLibrary.simpleMessage("Seed"),
@@ -295,9 +295,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "select_asset_to_backup" : MessageLookupByLibrary.simpleMessage("Select Asset to Backup"),
     "select_asset_to_recieve" : MessageLookupByLibrary.simpleMessage("Select Asset to Receive"),
     "select_asset_to_send" : MessageLookupByLibrary.simpleMessage("Select Asset to Send"),
+    "select_sort_title" : MessageLookupByLibrary.simpleMessage("Please select a sorting method"),
     "select_wallet_type" : MessageLookupByLibrary.simpleMessage("Select Wallet Type"),
     "select_wallet_type_desc" : MessageLookupByLibrary.simpleMessage("Select whether to create a NKN Mainnet wallet or an Ethereum based wallet to hold ERC-20 tokens. The two are not compatible."),
-    "select_sort_title" : MessageLookupByLibrary.simpleMessage("Please select a sorting method"),
     "send" : MessageLookupByLibrary.simpleMessage("Send"),
     "send_eth" : MessageLookupByLibrary.simpleMessage("Send Eth"),
     "send_message" : MessageLookupByLibrary.simpleMessage("Send Message"),
@@ -351,8 +351,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "withdrawable_amount" : MessageLookupByLibrary.simpleMessage("Amount of withdraw"),
     "withdrawable_balance_fee" : MessageLookupByLibrary.simpleMessage("Cashable Balance"),
     "yes" : MessageLookupByLibrary.simpleMessage("Yes"),
-    "you" : MessageLookupByLibrary.simpleMessage("You"),
     "yesterday_fee" : MessageLookupByLibrary.simpleMessage("Previous estimated income"),
+    "you" : MessageLookupByLibrary.simpleMessage("You"),
     "you_have_new_message" : MessageLookupByLibrary.simpleMessage("You have a new message")
   };
 }

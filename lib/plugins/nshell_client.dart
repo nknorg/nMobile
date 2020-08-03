@@ -4,18 +4,20 @@ import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/cdn/cdn_bloc.dart';
 import 'package:nmobile/blocs/cdn/cdn_event.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/schemas/cdn_miner.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
-class NShellClientPlugin {
+class NShellClientPlugin with AccountDependsBloc {
   static const String TAG = 'NShellClientPlugin';
   static const MethodChannel _methodChannel = MethodChannel('org.nkn.sdk/nshellclient');
   static const EventChannel _eventChannel = EventChannel('org.nkn.sdk/nshellclient/event');
   static final CDNBloc _cdnBloc = BlocProvider.of<CDNBloc>(Global.appContext);
   static Map<String, Completer> _clientEventQueue = Map<String, Completer>();
+  static final _instance = NShellClientPlugin();
 
   static init() {
     _eventChannel.receiveBroadcastStream().listen((res) {
@@ -59,10 +61,10 @@ class NShellClientPlugin {
     var type = content['Type'];
     try {
       if (type != null && type.toString().contains('self_checker.sh')) {
-        var cdn = await CdnMiner.getModelFromNshid(src);
+        var cdn = await CdnMiner.getModelFromNshid(_instance.db, src);
         if (cdn != null) {
           cdn.data = content;
-          await cdn.insertOrUpdate();
+          await cdn.insertOrUpdate(_instance.db);
           NLog.v('onMessage add');
           _cdnBloc.add(LoadData(data: cdn));
         }

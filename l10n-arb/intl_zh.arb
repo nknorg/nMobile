@@ -61,7 +61,7 @@
     "placeholders": {}
   },
   "yes": "是的",
-  "@main_wallet": {
+  "@yes": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -294,6 +294,12 @@
     "type": "text",
     "placeholders": {}
   },
+  "send_eth": "发送 Eth",
+  "@send_eth": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "recieve": "接收",
   "@recieve": {
     "description": "",
@@ -456,6 +462,18 @@
     "type": "text",
     "placeholders": {}
   },
+  "delete_friend_confirm_title": "您确定要删除该好友吗？",
+  "@delete_friend_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "leave_group_confirm_title": "您确定要退出该群吗？",
+  "@leave_group_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "delete_chennel_confirm_title": "您确定要退出该群吗？",
   "@delete_chennel_confirm_title": {
     "description": "",
@@ -464,6 +482,12 @@
   },
   "delete_cache_confirm_title": "您确定要删除缓存吗?",
   "@delete_cache_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "delete_db_confirm_title": "您确定要清空数据库吗？",
+  "@delete_db_confirm_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -506,6 +530,12 @@
   },
   "main_wallet": "主钱包",
   "@main_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "eth_wallet": "Eth 钱包",
+  "@eth_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1148,6 +1178,15 @@
       "field": {}
     }
   },
+  "error_amount_min_max": "必须大于{min}小于{max}",
+  "@error_amount_min_max": {
+    "description": "",
+    "type": "text",
+    "placeholders": {
+      "min": {},
+      "max": {}
+    }
+  },
   "error_confirm_password": "密码不匹配",
   "@error_confirm_password": {
     "description": "",
@@ -1328,6 +1367,18 @@
     "type": "text",
     "placeholders": {}
   },
+  "burn_1_day": "1 天",
+  "@burn_1_day": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "burn_1_week": "1 星期",
+  "@burn_1_week": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "hint_enter_wallet_name": "钱包名称",
   "@hint_enter_wallet_name": {
     "description": "",
@@ -1400,6 +1451,12 @@
     "type": "text",
     "placeholders": {}
   },
+  "nickname": "昵称",
+  "@nickname": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "d_chat_address": "滴聊地址",
   "@d_chat_address": {
     "description": "",
@@ -1412,14 +1469,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "nickname": "昵称",
-  "@nickname": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "not_backed_up": "尚未全部备份",
-  "@not_backed_up": {
+  "tip_password_error": "密码错误",
+  "@tip_password_error": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1432,12 +1483,6 @@
   },
   "placeholder_draft": "[草稿]",
   "@placeholder_draft": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "d_not_backed_up_title": "重要提示：请备份您的钱包！",
-  "@d_not_backed_up_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1460,6 +1505,18 @@
     "type": "text",
     "placeholders": {}
   },
+  "not_backed_up": "尚未全部备份",
+  "@not_backed_up": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "d_not_backed_up_title": "重要提示：请备份您的钱包！",
+  "@d_not_backed_up_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "d_not_backed_up_desc": "当您更新您的 nMobile App 或者偶然地卸载 nMobile 时，您的钱包可能会丢失，这时您将无法访问您的资产！因此，请现在花3分钟时间备份所有钱包。",
   "@d_not_backed_up_desc": {
     "description": "",
@@ -1468,12 +1525,6 @@
   },
   "go_backup": "去备份",
   "@go_backup": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "tip_password_error": "密码错误",
-  "@tip_password_error": {
-    "description": "",
     "type": "text",
     "placeholders": {}
   },
@@ -1532,6 +1583,11 @@
     "type": "text",
     "placeholders": {}
   },
+  "send_message": "发送信息",
+  "@send_message": {
+    "type": "text",
+    "placeholders": {}
+  },
   "show_wallet_address_desc": "扫一扫二维码，可以转账给我",
   "@show_wallet_address_desc": {
     "type": "text",
@@ -1544,23 +1600,6 @@
   },
   "account_switching_completed": "已完成账号切换",
   "@account_switching_completed": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "leave_group_confirm_title": "您确定要离开该群组吗？",
-  "@leave_group_confirm_title": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "send_message": "发送消息",
-  "@send_message": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "delete_db_confirm_title": "您确定要清除数据库吗?",
-  "@delete_db_confirm_title": {
-    "description": "",
     "type": "text",
     "placeholders": {}
   },
@@ -1583,7 +1622,8 @@
   "@you": {
     "type": "text",
     "placeholders": {}
-  }, "seconds": "秒",
+  },
+  "seconds": "秒",
   "@seconds": {
     "type": "text",
     "placeholders": {}
@@ -1600,28 +1640,6 @@
   },
   "week": "周",
   "@week": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "burn_1_day": "1 天",
-  "@burn_1_day": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "burn_1_week": "1 周",
-  "@burn_1_week": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "transfer_initiated": "转账初始化",
-  "@transfer_initiated": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "transfer_initiated_desc": "您的转帐正在进行中，可能需要花一些时间才能出现在区块链上。",
-  "@transfer_initiated_desc": {
     "type": "text",
     "placeholders": {}
   },
@@ -1650,49 +1668,12 @@
     "type": "text",
     "placeholders": {}
   },
-  "tip": "提示",
-  "@tip": {
-    "type": "text",
-    "placeholders": {}
-  },
   "message_text": "消息",
   "@message_text": {
     "type": "text",
     "placeholders": {}
   },
-  "my_profile": "个人资料",
-  "@my_profile": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "profile": "个人资料",
-  "@profile": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "show_wallet_address_desc": "扫一扫二维码，可以转账给我",
-  "@show_wallet_address_desc": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "disappear_desc": "接受和发送的消息将在设定的时间后消失。",
-  "@disappear_desc": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "coming_soon": "Coming Soon...",
-  "@coming_soon": {
-    "type": "text",
-    "placeholders": {}
-  },"error_amount_min_max": "必须大于{min}小于{max}.",
-  "@error_amount_min_max": {
-    "description": "",
-    "type": "text",
-    "placeholders": {
-      "min": {},
-      "max": {}
-    }
-  }, "niot_text": "nIOT",
+  "niot_text": "nIOT",
   "@niot_text": {
     "type": "text",
     "placeholders": {}

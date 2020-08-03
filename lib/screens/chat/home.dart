@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
-import 'package:flutter_easyrefresh/bezier_bounce_footer.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
 import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/components/button.dart';
@@ -21,7 +20,6 @@ import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/screens/chat/chat_main_page.dart';
 import 'package:nmobile/screens/chat/message.dart';
-import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/utils/extensions.dart';
@@ -163,7 +161,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                   flex: 1,
                                   child: Padding(
                                     padding: EdgeInsets.only(top: 0.2),
-                                    child: MessagesTab(widget.activePage),
+                                    child: ChatMainPage(widget.activePage),
                                   ),
                                 ),
                               ],
@@ -272,7 +270,8 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                   showModalBottomSheet(
                                       context: context,
                                       isScrollControlled: true,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12))),
+                                      shape:
+                                          RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12))),
                                       builder: (context) {
                                         return CreateGroupDialog();
                                       });

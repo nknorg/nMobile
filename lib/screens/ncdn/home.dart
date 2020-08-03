@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/box/body.dart';
@@ -35,7 +36,7 @@ class NcdnHomeScreen extends StatefulWidget {
   _NcdnHomeScreenState createState() => _NcdnHomeScreenState();
 }
 
-class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
+class _NcdnHomeScreenState extends State<NcdnHomeScreen> with AccountDependsBloc {
   Api _api;
 
   TextEditingController _balanceController = TextEditingController(text: '- USDT');
@@ -134,7 +135,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
     super.initState();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
     initAsync();
-    CdnMiner.removeCacheData();
+    CdnMiner.removeCacheData(db);
   }
 
   @override
@@ -349,7 +350,7 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                               width: double.infinity,
                               text: NMobileLocalizations.of(context).get_invitation_code,
                               onPressed: () async {
-                                if (Global.currentClient == null) {
+                                if (account?.client == null) {
                                   showToast('请先连接D-Chat');
                                   return;
                                 }
@@ -359,10 +360,10 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                                 String owner = getOwnerPubkeyByTopic(topic);
                                 LoadingDialog.of(context).show();
                                 var duration = 400000;
-                                var hash = await TopicSchema.subscribe(topic: topic, duration: duration);
+                                var hash = await TopicSchema.subscribe(account, topic: topic, duration: duration);
                                 if (hash != null) {
                                   var sendMsg = MessageSchema.fromSendData(
-                                    from: Global.currentClient.address,
+                                    from: accountChatId,
                                     topic: topic,
                                     contentType: ContentType.dchatSubscribe,
                                   );
@@ -373,13 +374,13 @@ class _NcdnHomeScreenState extends State<NcdnHomeScreen> {
                                   DateTime now = DateTime.now();
                                   var topicSchema = TopicSchema(topic: topic, type: type, owner: owner, expiresAt: now.add(blockToExpiresTime(duration)));
                                   if (type == TopicType.private) {
-                                    await topicSchema.acceptPrivateMember(addr: Global.currentClient.publicKey);
+                                    await topicSchema.acceptPrivateMember(account);
                                   }
-
-                                  await topicSchema.insertOrUpdate();
-                                  topicSchema = await TopicSchema.getTopic(topic);
+                                  await topicSchema.insertOrUpdate(db, accountPubkey);
+                                  topicSchema = await TopicSchema.getTopic(db, topic);
                                   LoadingDialog.of(context).close();
-                                  Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.PrivateChannel, topic: topicSchema));
+                                  Navigator.of(context)
+                                      .pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.PrivateChannel, topic: topicSchema));
                                 }
                               },
                             ),
