@@ -178,7 +178,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
               ConstrainedBox(
                 constraints: BoxConstraints(minHeight: 400),
                 child: Container(
-                  constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 210),
+                  constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 200),
                   color: DefaultTheme.backgroundColor4,
                   child: Flex(
                     direction: Axis.vertical,
@@ -192,7 +192,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                               return Container(
                                 decoration: BoxDecoration(
                                   color: DefaultTheme.backgroundLightColor,
-                                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+//                                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
                                 ),
                                 child: Form(
                                   key: _formKey,
@@ -209,17 +209,17 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                         child: Scrollbar(
                                           child: SingleChildScrollView(
                                             child: Padding(
-                                              padding: EdgeInsets.only(top: 32, left: 20, right: 20, bottom: 32),
+                                              padding: EdgeInsets.only(top: 24, left: 20, right: 20, bottom: 32),
                                               child: Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
-                                                  Label(
-                                                    NMobileLocalizations.of(context).from,
-                                                    type: LabelType.h4,
-                                                    textAlign: TextAlign.start,
-                                                  ),
+//                                                  Label(
+//                                                    NMobileLocalizations.of(context).from,
+//                                                    type: LabelType.h4,
+//                                                    textAlign: TextAlign.start,
+//                                                  ),
                                                   WalletDropdown(
-                                                    title: NMobileLocalizations.of(context).select_asset_to_recieve,
+                                                    title: NMobileLocalizations.of(context).select_asset_to_receive,
                                                     schema: widget.arguments ?? wallet,
                                                   ),
                                                   Label(

@@ -333,7 +333,7 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  showSelectWalletDialog({@required String title, void callback(WalletSchema wallet)}) {
+  showSelectWalletDialog({@required String title, bool onlyNkn = false, void callback(WalletSchema wallet)}) {
     FilteredWalletsBloc _filteredWalletsBloc = BlocProvider.of<FilteredWalletsBloc>(context);
     double height = 300;
     return show<String>(
@@ -359,12 +359,13 @@ class BottomDialog extends StatefulWidget {
                 child: BlocBuilder<WalletsBloc, WalletsState>(
                   builder: (context, state) {
                     if (state is WalletsLoaded) {
+                      final wallets = onlyNkn ? state.wallets.where((w) => w.type == WalletSchema.NKN_WALLET).toList() : state.wallets;
                       return ListView.builder(
-                        itemCount: state.wallets.length,
+                        itemCount: wallets.length,
                         itemExtent: 74,
                         padding: const EdgeInsets.all(0),
                         itemBuilder: (BuildContext context, int index) {
-                          var wallet = state.wallets[index];
+                          var wallet = wallets[index];
                           return GestureDetector(
                             behavior: HitTestBehavior.opaque,
                             onTap: () {

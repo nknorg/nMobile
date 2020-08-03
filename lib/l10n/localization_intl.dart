@@ -237,8 +237,8 @@ class NMobileLocalizations {
     return Intl.message('Send Eth', name: 'send_eth', desc: '');
   }
 
-  String get recieve {
-    return Intl.message('Receive', name: 'recieve', desc: '');
+  String get receive {
+    return Intl.message('Receive', name: 'receive', desc: '');
   }
 
   String get keystore {
@@ -465,8 +465,8 @@ class NMobileLocalizations {
     return Intl.message('Select Asset to Send', name: 'select_asset_to_send', desc: '');
   }
 
-  String get select_asset_to_recieve {
-    return Intl.message('Select Asset to Receive', name: 'select_asset_to_recieve', desc: '');
+  String get select_asset_to_receive {
+    return Intl.message('Select Asset to Receive', name: 'select_asset_to_receive', desc: '');
   }
 
   String get select_another_wallet {
@@ -1074,6 +1074,8 @@ class NMobileLocalizations {
   String get hours => Intl.message('hours', name: 'hours');
   String get minute => Intl.message('minute', name: 'minute');
   String get week => Intl.message('week', name: 'week');
+
+  String get select => Intl.message('Select', name: 'select');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {
