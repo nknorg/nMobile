@@ -18,6 +18,7 @@ import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/wallet/create_eth_wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn_wallet.dart';
@@ -204,27 +205,40 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
 
   _listen(WalletSchema ws) {
     NLog.d(ws);
-    Future(() {
+    Future(() async {
       final future = ws.getPassword();
       future.then((password) async {
         print('password: $password');
         if (password != null) {
-          try {
-            var wallet = await ws.exportWallet(password);
-            if (wallet['address'] == ws.address) {
-              Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
-                'wallet': wallet,
-                'keystore': wallet['keystore'],
-                'address': wallet['address'],
-                'publicKey': wallet['publicKey'],
-                'seed': wallet['seed'],
-              });
-            } else {
-              showToast(NMobileLocalizations.of(context).password_wrong);
-            }
-          } catch (e) {
-            if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-              showToast(NMobileLocalizations.of(context).password_wrong);
+          if (ws.type == WalletSchema.ETH_WALLET) {
+            EthWallet ethWallet = Ethereum.restoreWallet(name: ws.name, keystore: await ws.getKeystore(), password: password);
+            Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+              'wallet': null,
+              'keystore': ethWallet.keystore,
+              'address': (await ethWallet.address).hex,
+              'publicKey': ethWallet.pubkeyHex,
+              'seed': ethWallet.privateKeyHex,
+              'name': ethWallet.name,
+            });
+          } else {
+            try {
+              var wallet = await ws.exportWallet(password);
+              if (wallet['address'] == ws.address) {
+                Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+                  'wallet': wallet,
+                  'keystore': wallet['keystore'],
+                  'address': wallet['address'],
+                  'publicKey': wallet['publicKey'],
+                  'seed': wallet['seed'],
+                  'name': ws.name,
+                });
+              } else {
+                showToast(NMobileLocalizations.of(context).password_wrong);
+              }
+            } catch (e) {
+              if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+                showToast(NMobileLocalizations.of(context).password_wrong);
+              }
             }
           }
         }
