@@ -61,7 +61,7 @@
     "placeholders": {}
   },
   "yes": "是的",
-  "@main_wallet": {
+  "@yes": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -294,8 +294,14 @@
     "type": "text",
     "placeholders": {}
   },
-  "recieve": "接收",
-  "@recieve": {
+  "send_eth": "发送 Eth",
+  "@send_eth": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "receive": "接收",
+  "@receive": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -456,14 +462,26 @@
     "type": "text",
     "placeholders": {}
   },
-  "delete_chennel_confirm_title": "您确定要退出该群吗？",
-  "@delete_chennel_confirm_title": {
+  "delete_friend_confirm_title": "您确定要删除该好友吗？",
+  "@delete_friend_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "leave_group_confirm_title": "您确定要退出该群吗？",
+  "@leave_group_confirm_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
   "delete_cache_confirm_title": "您确定要删除缓存吗?",
   "@delete_cache_confirm_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "delete_db_confirm_title": "您确定要清空数据库吗？",
+  "@delete_db_confirm_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -506,6 +524,12 @@
   },
   "main_wallet": "主钱包",
   "@main_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "eth_wallet": "Eth 钱包",
+  "@eth_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -612,8 +636,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "select_asset_to_recieve": "选择要接收资金的钱包",
-  "@select_asset_to_recieve": {
+  "select_asset_to_receive": "选择要接收资金的钱包",
+  "@select_asset_to_receive": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1328,6 +1352,18 @@
     "type": "text",
     "placeholders": {}
   },
+  "burn_1_day": "1 天",
+  "@burn_1_day": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "burn_1_week": "1 星期",
+  "@burn_1_week": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "hint_enter_wallet_name": "钱包名称",
   "@hint_enter_wallet_name": {
     "description": "",
@@ -1400,6 +1436,12 @@
     "type": "text",
     "placeholders": {}
   },
+  "nickname": "昵称",
+  "@nickname": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "d_chat_address": "滴聊地址",
   "@d_chat_address": {
     "description": "",
@@ -1412,14 +1454,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "nickname": "昵称",
-  "@nickname": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "not_backed_up": "尚未全部备份",
-  "@not_backed_up": {
+  "tip_password_error": "密码错误",
+  "@tip_password_error": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1436,12 +1472,6 @@
     "type": "text",
     "placeholders": {}
   },
-  "d_not_backed_up_title": "重要提示：请备份您的钱包！",
-  "@d_not_backed_up_title": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
   "friends": "好友",
   "@friends": {
     "description": "",
@@ -1454,8 +1484,20 @@
     "type": "text",
     "placeholders": {}
   },
-  "d_chat_not_login": "D-Chat 未登陆",
+  "d_chat_not_login": "D-Chat 未登录",
   "@d_chat_not_login": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "not_backed_up": "尚未全部备份",
+  "@not_backed_up": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "d_not_backed_up_title": "重要提示：请备份您的钱包！",
+  "@d_not_backed_up_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1468,12 +1510,6 @@
   },
   "go_backup": "去备份",
   "@go_backup": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "tip_password_error": "密码错误",
-  "@tip_password_error": {
-    "description": "",
     "type": "text",
     "placeholders": {}
   },
@@ -1532,6 +1568,11 @@
     "type": "text",
     "placeholders": {}
   },
+  "send_message": "发送消息",
+  "@send_message": {
+    "type": "text",
+    "placeholders": {}
+  },
   "show_wallet_address_desc": "扫一扫二维码，可以转账给我",
   "@show_wallet_address_desc": {
     "type": "text",
@@ -1544,23 +1585,6 @@
   },
   "account_switching_completed": "已完成账号切换",
   "@account_switching_completed": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "leave_group_confirm_title": "您确定要离开该群组吗？",
-  "@leave_group_confirm_title": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "send_message": "发送消息",
-  "@send_message": {
-    "type": "text",
-    "placeholders": {}
-  },
-  "delete_db_confirm_title": "您确定要清除数据库吗?",
-  "@delete_db_confirm_title": {
-    "description": "",
     "type": "text",
     "placeholders": {}
   },
@@ -1583,7 +1607,8 @@
   "@you": {
     "type": "text",
     "placeholders": {}
-  }, "seconds": "秒",
+  },
+  "seconds": "秒",
   "@seconds": {
     "type": "text",
     "placeholders": {}
@@ -1603,15 +1628,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "burn_1_day": "1 天",
-  "@burn_1_day": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "burn_1_week": "1 周",
-  "@burn_1_week": {
-    "description": "",
+  "select": "选择",
+  "@select": {
     "type": "text",
     "placeholders": {}
   }
