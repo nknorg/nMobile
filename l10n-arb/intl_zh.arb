@@ -1640,12 +1640,12 @@
     "type": "text",
     "placeholders": {}
   },
-  "download_now": "下载",
+  "download_now": "立即下载",
   "@download_now": {
     "type": "text",
     "placeholders": {}
   },
-  "ignore": "忽略",
+  "ignore": "忽略此版本",
   "@ignore": {
     "type": "text",
     "placeholders": {}
