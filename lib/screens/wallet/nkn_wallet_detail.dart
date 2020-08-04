@@ -42,7 +42,7 @@ class NknWalletDetailScreen extends StatefulWidget {
   WalletSchema wallet;
   int index;
 
-  NknWalletDetailScreen(Map arguments) {
+  NknWalletDetailScreen({Map<String, dynamic> arguments}) {
     wallet = arguments['wallet'];
     index = arguments['index'];
   }
@@ -101,7 +101,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
         title: /*widget.wallet.type == WalletSchema.ETH_WALLET
             ? NMobileLocalizations.of(context).eth_wallet
             : */
-            widget.index == 0 ? NMobileLocalizations.of(context).main_wallet : widget.wallet.name,
+            widget.index == 0 ? NMobileLocalizations.of(context).main_wallet : widget.wallet.name.toUpperCase(),
         backgroundColor: DefaultTheme.backgroundColor4,
         action: PopupMenuButton(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
