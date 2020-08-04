@@ -171,7 +171,7 @@ class _SendErc20ScreenState extends State<SendErc20Screen> with AccountDependsBl
               await ModalDialog.of(context).show(
                 height: 240,
                 content: Label(
-                  NMobileLocalizations.of(context).error_unknow_nkn_qrcode,
+                  NMobileLocalizations.of(context).error_unknown_nkn_qrcode,
                   type: LabelType.bodyRegular,
                 ),
               );

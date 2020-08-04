@@ -134,7 +134,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
               await ModalDialog.of(context).show(
                 height: 240,
                 content: Label(
-                  NMobileLocalizations.of(context).error_unknow_nkn_qrcode,
+                  NMobileLocalizations.of(context).error_unknown_nkn_qrcode,
                   type: LabelType.bodyRegular,
                 ),
               );
