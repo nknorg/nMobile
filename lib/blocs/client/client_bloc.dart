@@ -68,8 +68,6 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
     try {
       var w = await wallet.exportWallet(password);
 //      var keystore = await wallet.getKeystore();
-      yield Connecting();
-
       var walletAddr = w['address'];
       var publicKey = w['publicKey'];
 
@@ -80,6 +78,8 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
         ClientEventListener(this),
       );
       changeAccount(currUser, force: true);
+      // Don't before when account is null.
+      yield Connecting();
 
       final currentUser = await ContactSchema.getContactByAddress(db, publicKey);
       if (currentUser == null) {
