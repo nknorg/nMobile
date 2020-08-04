@@ -68,6 +68,8 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
     try {
       var w = await wallet.exportWallet(password);
 //      var keystore = await wallet.getKeystore();
+      yield Connecting();
+
       var walletAddr = w['address'];
       var publicKey = w['publicKey'];
 
@@ -91,8 +93,6 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
           profileVersion: uuid.v4(),
         ).createContact(db);
       }
-      yield Connecting();
-
       currUser.client.connect();
     } catch (e) {
       if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
