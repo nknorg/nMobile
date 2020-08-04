@@ -1,3 +1,4 @@
+import Flutter
 import Nkn
 
 var nshellClient: NknMultiClient?
@@ -61,7 +62,7 @@ func isNShellConnected(_ call: FlutterMethodCall, result: FlutterResult) {
     }
 }
 
-func disNShellConnect(call: FlutterMethodCall, result: FlutterResult){
+func disNShellConnect(_ call: FlutterMethodCall, result: FlutterResult) {
     
     nshellReceiveMessageQueue.cancelAllOperations();
     

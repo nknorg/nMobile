@@ -9,7 +9,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>nMobile</string>
+	<string>nMobile Pro</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -22,7 +22,7 @@
 		<string>zh</string>
 	</array>
 	<key>CFBundleName</key>
-	<string>nmobile</string>
+	<string>nmobile pro</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -37,28 +37,28 @@
 	<string></string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSAppleMusicUsageDescription</key>
-	<string>AppleMusic permission is required for apple music usage.</string>
-	<key>NSCalendarsUsageDescription</key>
-	<string>Calendars usage permission is required for read calendar.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>App will uses your camera to take photos and for barcode scanning.</string>
-	<key>NSContactsUsageDescription</key>
-	<string>Contacts permission is required for read contacts.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>For protect your assets, please turn on Face ID to login.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Location permission is required for record your location.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Location permission is required for record your location.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone permission is required for record your voice when camera.</string>
-	<key>NSMotionUsageDescription</key>
-	<string>Motion permission is required for record motion data.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Granting access will allow you to take and share photos with your nMobile contacts</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>App will let you choose which photos from your library to send.</string>
+	<key>NSAppleMusicUsageDescription</key>
+    <string>AppleMusic permission is required for apple music usage.</string>
+    <key>NSCalendarsUsageDescription</key>
+    <string>Calendars usage permission is required for read calendar.</string>
+    <key>NSContactsUsageDescription</key>
+    <string>Contacts permission is required for read contacts.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Location permission is required for record your location.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Location permission is required for record your location.</string>
+    <key>NSMotionUsageDescription</key>
+    <string>Motion permission is required for record motion data.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
