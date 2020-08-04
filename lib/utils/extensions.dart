@@ -65,8 +65,14 @@ extension CenterWidget on Widget {
   Center get center => Center(child: this);
 }
 
+extension InkWellWidget on Widget {
+  InkWell inkWell(void onTap()) {
+    return InkWell(child: this, onTap: onTap);
+  }
+}
+
 class Space {
-  static Padding get empty => Padding(padding: EdgeInsets.all(0));
+  static Padding get empty => Padding(padding: const EdgeInsets.all(0));
 }
 
 main() {

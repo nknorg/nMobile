@@ -38,7 +38,6 @@ class Format {
 
   static String timeFromNowFormat(DateTime time) {
     var now = DateTime.now();
-    var localizations = Localizations.localeOf(Global.appContext).toString();
     var diffSpan = time.difference(now);
 
     if (diffSpan.inSeconds < 0) {
@@ -53,6 +52,7 @@ class Format {
       return diffSpan.inDays.toString() + NMobileLocalizations.of(Global.appContext).day;
     }
   }
+
   static String durationFormat(Duration d) {
     var localizations = NMobileLocalizations.of(Global.appContext);
 
@@ -66,6 +66,24 @@ class Format {
       return d.inHours.toString() + '${localizations.h}';
     } else {
       return d.inDays.toString() + localizations.d;
+    }
+  }
+
+  static String durationFormatString(Duration d) {
+    var localizations = NMobileLocalizations.of(Global.appContext);
+
+    if (d.inSeconds < 0) {
+      return '0${localizations.s}';
+    } else if (d.inSeconds < 60) {
+      return d.inSeconds.toString() + ' ${localizations.seconds}';
+    } else if (d.inSeconds < 3600) {
+      return d.inMinutes.toString() + ' ${localizations.minute}';
+    } else if (d.inHours < 24) {
+      return d.inHours.toString() + ' ${localizations.hours}';
+    } else if (d.inHours > 24) {
+      return d.inDays.toString() + localizations.day;
+    } else {
+      return d.inDays.toString() + localizations.day;
     }
   }
 

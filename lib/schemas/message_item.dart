@@ -23,7 +23,7 @@ class MessageItem {
     this.notReadCount,
   });
 
-  static Future<MessageItem> parseEntity(Map e) async {
+  static Future<MessageItem> parseEntity(Future<Database> db, Map e) async {
     var res = MessageItem(
       targetId: e['target_id'],
       sender: e['sender'],
@@ -33,15 +33,15 @@ class MessageItem {
       notReadCount: e['not_read'] as int,
     );
     if (e['topic'] != null) {
-      res.topic = await TopicSchema.getTopic(e['topic']);
+      res.topic = await TopicSchema.getTopic(db, e['topic']);
     }
     return res;
   }
 
-  static Future<List<MessageItem>> getLastChat({int limit = 20, int skip = 0}) async {
+  static Future<List<MessageItem>> getLastChat(Future<Database> db, {int limit = 20, int skip = 0}) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var res = await (await db).query(
         '${MessageSchema.tableName} as m',
         columns: ['m.*', '(SELECT COUNT(id) from ${MessageSchema.tableName} WHERE target_id = m.target_id AND is_outbound = 0 AND is_read = 0) as not_read', 'MAX(send_time)'],
         where: "type = ? or type = ? or type = ? or type = ? or type = ?",
@@ -54,7 +54,7 @@ class MessageItem {
       List<MessageItem> list = <MessageItem>[];
       for (var i = 0, length = res.length; i < length; i++) {
         var item = res[i];
-        list.add(await MessageItem.parseEntity(item));
+        list.add(await MessageItem.parseEntity(db, item));
       }
 
       return list;
@@ -64,10 +64,10 @@ class MessageItem {
     }
   }
 
-  static Future<MessageItem> getTargetChat(String targetId) async {
+  static Future<MessageItem> getTargetChat(Future<Database> db, String targetId) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var res = await (await db).query(
         '${MessageSchema.tableName} as m',
         columns: ['m.*', '(SELECT COUNT(id) from ${MessageSchema.tableName} WHERE sender = m.target_id AND is_read = 0) as not_read', 'MAX(send_time)'],
         groupBy: 'm.target_id',
@@ -76,7 +76,7 @@ class MessageItem {
       );
 
       if (res != null && res.length > 0) {
-        return await MessageItem.parseEntity(res.first);
+        return await MessageItem.parseEntity(db, res.first);
       } else {
         return null;
       }
@@ -85,9 +85,9 @@ class MessageItem {
     }
   }
 
-  static Future<int> deleteTargetChat(String targetId) async {
-    Database db = SqliteStorage(db: Global.currentChatDb).db;
-    var count = await db.delete(MessageSchema.tableName, where: 'target_id = ?', whereArgs: [targetId]);
+  static Future<int> deleteTargetChat(Future<Database> db, String targetId) async {
+//    Database db = SqliteStorage(db: Global.currentChatDb).db;
+    var count = await (await db).delete(MessageSchema.tableName, where: 'target_id = ?', whereArgs: [targetId]);
 
     return count;
   }

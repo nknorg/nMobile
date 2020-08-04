@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
-import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/event/eventbus.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/screens/news.dart';
+import 'package:nmobile/screens/wallet/wallet.dart';
 import 'package:nmobile/services/background_fetch_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/services/task_service.dart';
-import 'package:nmobile/utils/android_back_desktop.dart';
+import 'package:nmobile/plugins/android_back_desktop.dart';
 import 'package:orientation/orientation.dart';
 
 import 'components/footer/nav.dart';
@@ -31,8 +32,8 @@ class _AppScreenState extends State<AppScreen> {
   PageController _pageController;
   int _currentIndex = 0;
   List<Widget> screens = <Widget>[
-    ChatScreen(),
-    HomeScreen(),
+    ChatScreen(ActivePage(0)),
+    WalletScreen(),
     NewsScreen(),
     SettingsScreen(),
   ];
@@ -40,12 +41,13 @@ class _AppScreenState extends State<AppScreen> {
   @override
   void initState() {
     super.initState();
+    (screens[0] as ChatScreen).activePage.setCurrActivePageIndex(_currentIndex);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
     OrientationPlugin.forceOrientation(DeviceOrientation.portraitUp);
-    _pageController = PageController(initialPage: 0);
-    Global.currentPageIndex = _currentIndex;
+    _pageController = PageController();
+//    Global.currentPageIndex = _currentIndex;
     _walletsBloc = BlocProvider.of<WalletsBloc>(context);
     _walletsBloc.add(LoadWallets());
   }
@@ -61,8 +63,8 @@ class _AppScreenState extends State<AppScreen> {
     ScreenUtil.init(context, width: 375, height: 812);
     Global.appContext = context;
 
-    locator<TaskService>().init();
-    locator<BackgroundFetchService>().init();
+    instanceOf<TaskService>().init();
+    instanceOf<BackgroundFetchService>().init();
     return WillPopScope(
       onWillPop: () async {
         await AndroidBackTop.backToDesktop();
@@ -86,12 +88,13 @@ class _AppScreenState extends State<AppScreen> {
                   Expanded(
                     flex: 1,
                     child: PageView(
-                      onPageChanged: (n) {
+                      onPageChanged: (n) async {
                         setState(() {
                           _currentIndex = n;
-                          Global.currentPageIndex = _currentIndex;
-                          eventBus.fire(MainTabIndex(Global.currentPageIndex));
+//                          Global.currentPageIndex = _currentIndex;
+//                          eventBus.fire(MainTabIndex(Global.currentPageIndex));
                         });
+                        (screens[0] as ChatScreen).activePage.setCurrActivePageIndex(_currentIndex);
                       },
                       controller: _pageController,
                       children: screens,
@@ -101,30 +104,42 @@ class _AppScreenState extends State<AppScreen> {
               ),
             ),
           ),
+          bottomNavigationBar: Container(
+            color: Colors.white,
+            child: SafeArea(
+              child: Nav(
+                currentIndex: _currentIndex,
+                screens: screens,
+                controller: _pageController,
+              ),
+            ),
+          ),
         ),
-        getBottomView()
+//        getBottomView()
       ],
     );
   }
 
-  getBottomView() {
-    return Positioned(
-        bottom: 0,
-        left: 0,
-        right: 0,
-        child: Column(children: <Widget>[
-          Container(
-            child: Nav(
-              currentIndex: _currentIndex,
-              screens: screens,
-              controller: _pageController,
-            ),
-          ),
-          Container(
-            height: MediaQuery.of(context).padding.bottom,
-            width: double.infinity,
-            color: DefaultTheme.backgroundLightColor,
-          )
-        ]));
-  }
+//  getBottomView() {
+//    return Positioned(
+//        bottom: 0,
+//        left: 0,
+//        right: 0,
+//        child: Column(children: <Widget>[
+//          Container(
+//            child: SafeArea(
+//              child: Nav(
+//                currentIndex: _currentIndex,
+//                screens: screens,
+//                controller: _pageController,
+//              ),
+//            ),
+//          ),
+////          Container(
+////            height: MediaQuery.of(context).padding.bottom,
+////            width: double.infinity,
+////            color: DefaultTheme.backgroundLightColor,
+////          )
+//        ]));
+//  }
 }

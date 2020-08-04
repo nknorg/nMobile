@@ -2,8 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/sqlite_storage.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/utils/nlog_util.dart';
@@ -72,10 +70,10 @@ class CdnMiner {
     return map;
   }
 
-  static Future<List<CdnMiner>> getAllCdnMiner() async {
+  static Future<List<CdnMiner>> getAllCdnMiner(Future<Database> db) async {
     try {
-      Database db = SqliteStorage(db: Global.currentCDNDb).db;
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentCDNDb).db;
+      var res = await (await db).query(
         CdnMiner.tableName,
         columns: ['*'],
       );
@@ -138,17 +136,17 @@ class CdnMiner {
     }
   }
 
-  Future<bool> insertOrUpdate() async {
+  Future<bool> insertOrUpdate(Future<Database> db) async {
     try {
-      Database db = SqliteStorage(db: Global.currentCDNDb).db;
-      var countQuery = await db.query(
+//      Database db = SqliteStorage(db: Global.currentCDNDb).db;
+      var countQuery = await (await db).query(
         CdnMiner.tableName,
         columns: ['*'],
         where: 'nsh_id = ?',
         whereArgs: [nshId],
       );
       if (countQuery == null || countQuery.length == 0) {
-        int n = await db.insert(CdnMiner.tableName, toEntity());
+        int n = await (await db).insert(CdnMiner.tableName, toEntity());
         return n > 0;
       } else {
         if (_name == null) {
@@ -156,7 +154,7 @@ class CdnMiner {
         }
         var map = {'name': _name};
         map['data'] = (data != null ? jsonEncode(data) : null);
-        int n = await db.update(
+        int n = await (await db).update(
           CdnMiner.tableName,
           map,
           where: 'nsh_id = ?',
@@ -170,13 +168,13 @@ class CdnMiner {
     }
   }
 
-  static Future<CdnMiner> getModelFromNshid(String nshid) async {
+  static Future<CdnMiner> getModelFromNshid(Future<Database> db, String nshid) async {
     try {
       if (nshid.contains('ctrl.')) {
         nshid = nshid.split('ctrl.')[1];
       }
-      Database db = SqliteStorage(db: Global.currentCDNDb).db;
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentCDNDb).db;
+      var res = await (await db).query(
         CdnMiner.tableName,
         columns: ['*'],
         where: 'nsh_id = ?',
@@ -190,10 +188,10 @@ class CdnMiner {
     }
   }
 
-  Future<int> insert() async {
+  Future<int> insert(Future<Database> db) async {
     try {
-      Database db = SqliteStorage(db: Global.currentCDNDb).db;
-      int id = await db.insert(CdnMiner.tableName, toEntity());
+//      Database db = SqliteStorage(db: Global.currentCDNDb).db;
+      int id = await (await db).insert(CdnMiner.tableName, toEntity());
       return id;
     } catch (e) {
       NLog.v(e, tag: 'insert');
@@ -225,9 +223,9 @@ class CdnMiner {
     }
   }
 
-  delete() {
-    Database db = SqliteStorage(db: Global.currentCDNDb).db;
-    db.delete(
+  delete(Future<Database> db) async {
+//    Database db = SqliteStorage(db: Global.currentCDNDb).db;
+    await (await db).delete(
       CdnMiner.tableName,
       where: 'nsh_id = ?',
       whereArgs: [nshId],
@@ -256,23 +254,23 @@ class CdnMiner {
     }
   }
 
-  reboot() {
+  reboot(NknClientProxy client) {
     MessageSchema msg = MessageSchema();
     msg.content = 'reboot';
-    NknClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData(), maxHoldingSeconds: 1);
+    client.sendText(['ctrl.$nshId'], msg.toTextData(), maxHoldingSeconds: 0);
   }
 
-  getMinerDetail() {
+  getMinerDetail(NknClientProxy client) {
     MessageSchema msg = MessageSchema();
     msg.content = '/usr/bin/self_checker.sh';
-    NknClientPlugin.sendText(['ctrl.$nshId'], msg.toTextData());
+    client.sendText(['ctrl.$nshId'], msg.toTextData());
   }
 
-  static removeCacheData() async {
-    List<CdnMiner> _miner = await getAllCdnMiner();
+  static removeCacheData(Future<Database> db) async {
+    List<CdnMiner> _miner = await getAllCdnMiner(db);
     for (var value in _miner) {
       value.data = null;
-      await value.insertOrUpdate();
+      await value.insertOrUpdate(db);
     }
   }
 }

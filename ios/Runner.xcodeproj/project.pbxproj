@@ -15,8 +15,8 @@
 		1451669E240E1EA0004121F0 /* Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1451669D240E1EA0004121F0 /* Extension.swift */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		14CDBDF623F58A92006E91AA /* Nkn.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14CDBDF523F58A92006E91AA /* Nkn.framework */; };
-		14CDBDFF23F58D2B006E91AA /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CDBDFE23F58D2B006E91AA /* Client.swift */; };
-		14CDBE0123F58D60006E91AA /* NknSdkPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CDBE0023F58D60006E91AA /* NknSdkPlugin.swift */; };
+		14CDBDFF23F58D2B006E91AA /* NknClientPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CDBDFE23F58D2B006E91AA /* NknClientPlugin.swift */; };
+		14CDBE0123F58D60006E91AA /* NknWalletPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CDBE0023F58D60006E91AA /* NknWalletPlugin.swift */; };
 		14CDBE0323FACBA8006E91AA /* Wallet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CDBE0223FACBA8006E91AA /* Wallet.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		5E6C333F60C11EA8C2CA00BF /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CA27D5A7979FC190E81DB847 /* Pods_Runner.framework */; };
@@ -51,8 +51,8 @@
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		14A46B5C23FC470700BD1528 /* nMobile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = nMobile.entitlements; sourceTree = "<group>"; };
 		14CDBDF523F58A92006E91AA /* Nkn.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Nkn.framework; path = Frameworks/Nkn.framework; sourceTree = "<group>"; };
-		14CDBDFE23F58D2B006E91AA /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
-		14CDBE0023F58D60006E91AA /* NknSdkPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NknSdkPlugin.swift; sourceTree = "<group>"; };
+		14CDBDFE23F58D2B006E91AA /* NknClientPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NknClientPlugin.swift; sourceTree = "<group>"; };
+		14CDBE0023F58D60006E91AA /* NknWalletPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NknWalletPlugin.swift; sourceTree = "<group>"; };
 		14CDBE0223FACBA8006E91AA /* Wallet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wallet.swift; sourceTree = "<group>"; };
 		2DABD6A1BAEBF4D74C96B0EF /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
@@ -87,8 +87,8 @@
 		14CDBDFD23F58D1D006E91AA /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				14CDBDFE23F58D2B006E91AA /* Client.swift */,
-				14CDBE0023F58D60006E91AA /* NknSdkPlugin.swift */,
+				14CDBDFE23F58D2B006E91AA /* NknClientPlugin.swift */,
+				14CDBE0023F58D60006E91AA /* NknWalletPlugin.swift */,
 				14CDBE0223FACBA8006E91AA /* Wallet.swift */,
 				1451669D240E1EA0004121F0 /* Extension.swift */,
 				1414244C24160FBA0089B50F /* Debug.swift */,
@@ -262,7 +262,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" thin";
+			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin";
 		};
 		4344115DE2BF49B1B5878EDF /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -273,15 +273,14 @@
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/DKImagePickerController/DKImagePickerController.framework",
 				"${BUILT_PRODUCTS_DIR}/DKPhotoGallery/DKPhotoGallery.framework",
-				"${BUILT_PRODUCTS_DIR}/FLAnimatedImage/FLAnimatedImage.framework",
 				"${BUILT_PRODUCTS_DIR}/FMDB/FMDB.framework",
 				"${PODS_ROOT}/../Flutter/Flutter.framework",
 				"${BUILT_PRODUCTS_DIR}/MTBBarcodeScanner/MTBBarcodeScanner.framework",
 				"${BUILT_PRODUCTS_DIR}/Mantle/Mantle.framework",
 				"${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework",
-				"${BUILT_PRODUCTS_DIR}/SDWebImageFLPlugin/SDWebImageFLPlugin.framework",
 				"${BUILT_PRODUCTS_DIR}/SDWebImageWebPCoder/SDWebImageWebPCoder.framework",
 				"${BUILT_PRODUCTS_DIR}/SQLCipher/SQLCipher.framework",
+				"${BUILT_PRODUCTS_DIR}/SwiftyGif/SwiftyGif.framework",
 				"${BUILT_PRODUCTS_DIR}/TOCropViewController/TOCropViewController.framework",
 				"${BUILT_PRODUCTS_DIR}/background_fetch/background_fetch.framework",
 				"${BUILT_PRODUCTS_DIR}/catcher/catcher.framework",
@@ -296,6 +295,7 @@
 				"${BUILT_PRODUCTS_DIR}/flutter_plugin_android_lifecycle/flutter_plugin_android_lifecycle.framework",
 				"${BUILT_PRODUCTS_DIR}/flutter_secure_storage/flutter_secure_storage.framework",
 				"${BUILT_PRODUCTS_DIR}/flutter_sound/flutter_sound.framework",
+				"${BUILT_PRODUCTS_DIR}/flutter_vibrate/flutter_vibrate.framework",
 				"${BUILT_PRODUCTS_DIR}/fluttertoast/fluttertoast.framework",
 				"${BUILT_PRODUCTS_DIR}/image_cropper/image_cropper.framework",
 				"${BUILT_PRODUCTS_DIR}/image_picker/image_picker.framework",
@@ -317,15 +317,14 @@
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DKImagePickerController.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DKPhotoGallery.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FLAnimatedImage.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FMDB.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Flutter.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MTBBarcodeScanner.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Mantle.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImage.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImageFLPlugin.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImageWebPCoder.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SQLCipher.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyGif.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/TOCropViewController.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/background_fetch.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/catcher.framework",
@@ -340,6 +339,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_plugin_android_lifecycle.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_secure_storage.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_sound.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_vibrate.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/fluttertoast.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/image_cropper.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/image_picker.framework",
@@ -408,12 +408,12 @@
 				14CDBE0323FACBA8006E91AA /* Wallet.swift in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				14142455241A3EFB0089B50F /* Protocol.swift in Sources */,
-				14CDBE0123F58D60006E91AA /* NknSdkPlugin.swift in Sources */,
+				14CDBE0123F58D60006E91AA /* NknWalletPlugin.swift in Sources */,
 				1451669E240E1EA0004121F0 /* Extension.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				14142453241A1FCA0089B50F /* LaunchController.swift in Sources */,
 				1414244D24160FBA0089B50F /* Debug.swift in Sources */,
-				14CDBDFF23F58D2B006E91AA /* Client.swift in Sources */,
+				14CDBDFF23F58D2B006E91AA /* NknClientPlugin.swift in Sources */,
 				14142457241A611B0089B50F /* Operations.swift in Sources */,
 				04F632A12490842400E6C441 /* NShellClient.swift in Sources */,
 			);

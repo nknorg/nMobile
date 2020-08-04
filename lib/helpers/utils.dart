@@ -12,6 +12,7 @@ import 'package:nmobile/tweetnacl/tweetnaclfast.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:web3dart/credentials.dart';
 
 const ADDRESS_GEN_PREFIX = '02b825';
 const ADDRESS_GEN_PREFIX_LEN = ADDRESS_GEN_PREFIX.length ~/ 2;
@@ -87,21 +88,31 @@ bool verifyAddress(String address) {
   }
 }
 
-Future<File> compressAndGetFile(File file) async {
+bool isValidEthAddress(String address) {
+  try {
+    EthereumAddress.fromHex(address);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+Future<File> compressAndGetFile(String accountPubkey, File file) async {
   final dir = Global.applicationRootDirectory;
 
-  final targetPath = createRandomWebPFile();
+  final targetPath = createRandomWebPFile(accountPubkey);
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
-  var result = await FlutterImageCompress.compressAndGetFile(file.absolute.path, targetPath, quality: 30, minWidth: 640, minHeight: 1024, format: CompressFormat.jpeg);
+  var result =
+      await FlutterImageCompress.compressAndGetFile(file.absolute.path, targetPath, quality: 30, minWidth: 640, minHeight: 1024, format: CompressFormat.jpeg);
   return result;
 }
 
-String createRandomWebPFile() {
+String createRandomWebPFile(String accountPubkey) {
   var value = new DateTime.now().millisecondsSinceEpoch.toString();
   Directory rootDir = Global.applicationRootDirectory;
-  Directory dir = Directory(join(rootDir.path, '${Global.currentClient.publicKey}'));
+  Directory dir = Directory(join(rootDir.path, accountPubkey));
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
@@ -109,69 +120,52 @@ String createRandomWebPFile() {
   return path;
 }
 
-String createFileCachePath(File file) {
+String createFileCachePath(String accountPubkey, File file) {
   String name = hexEncode(md5.convert(file.readAsBytesSync()).bytes);
   Directory rootDir = Global.applicationRootDirectory;
-  Directory dir = Directory(join(rootDir.path, '${Global.currentClient.publicKey}'));
+  Directory dir = Directory(join(rootDir.path, accountPubkey));
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
   String fullName = file?.path?.split('/')?.last;
-  String fileName;
   String fileExt;
   int index = fullName.lastIndexOf('.');
   if (index > -1) {
     fileExt = fullName?.split('.')?.last;
-    fileName = fullName?.substring(0, index);
-  } else {
-    fileName = fullName;
   }
   String path = join(rootDir.path, dir.path, name + '.' + fileExt);
   return path;
 }
 
-String createContactFilePath(File file) {
+String createContactFilePath(String accountPubkey, File file) {
   String name = hexEncode(md5.convert(file.readAsBytesSync()).bytes);
   Directory rootDir = Global.applicationRootDirectory;
-  String p = join(rootDir.path, '${Global.currentClient.publicKey}', 'contact');
+  String p = join(rootDir.path, accountPubkey, 'contact');
   Directory dir = Directory(p);
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   } else {}
   String fullName = file?.path?.split('/')?.last;
-  String fileName;
   String fileExt;
   int index = fullName.lastIndexOf('.');
   if (index > -1) {
     fileExt = fullName?.split('.')?.last;
-    fileName = fullName?.substring(0, index);
-  } else {
-    fileName = fullName;
   }
   String path = join(rootDir.path, dir.path, name + '.' + fileExt);
   return path;
 }
 
-Future<String> createApkCachePath(String apkUrl) async {
-  Directory rootDir = (await getTemporaryDirectory());
-  final Directory dir = Directory(join(rootDir.path, 'apks'));
-  if (!dir.existsSync()) {
-    dir.createSync(recursive: true);
-  }
-  return join(dir.path, getFileName(apkUrl));
-}
-
-String getCachePath() {
+String getCachePath(String accountPubkey) {
   Directory rootDir = Global.applicationRootDirectory;
-  Directory dir = Directory(join(rootDir.path, '${Global.currentClient.publicKey}'));
+  Directory dir = Directory(join(rootDir.path, accountPubkey));
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
   return dir.path;
 }
 
-String getContactCachePath() {
-  String root = getCachePath();
+String getContactCachePath(String accountPubkey) {
+  String root = getCachePath(accountPubkey);
   Directory dir = Directory(join(root, 'contact'));
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
@@ -192,18 +186,18 @@ String getFileName(String path) {
   return path?.split('/')?.last;
 }
 
-String getLocalPath(String path) {
-  return join('${Global.currentClient.publicKey}', getFileName(path));
+String getLocalPath(String accountPubkey, String path) {
+  return join(accountPubkey, getFileName(path));
 }
 
-String getLocalContactPath(String path) {
+String getLocalContactPath(String accountPubkey, String path) {
   Directory rootDir = Global.applicationRootDirectory;
-  Directory dir = Directory(join(rootDir.path, '${Global.currentClient.publicKey}', 'contact'));
+  Directory dir = Directory(join(rootDir.path, accountPubkey, 'contact'));
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
 
-  return join('${Global.currentClient.publicKey}', 'contact', getFileName(path));
+  return join(accountPubkey, 'contact', getFileName(path));
 }
 
 launchURL(String url) async {
@@ -304,13 +298,13 @@ String getOwnerPubkeyByTopic(String topic) {
 }
 
 DateTime getStartOfDay(DateTime time) {
-  String formattedDate = DateUtil.formatDate(time, isUtc: false, format: 'yyyy-MM-dd');
+  String formattedDate = DateUtil.formatDate(time, /*isUtc: false,*/ format: 'yyyy-MM-dd');
   DateTime newDate = DateTime.parse(formattedDate);
   return newDate;
 }
 
 DateTime getEndOfDay(DateTime time) {
-  String formattedDate = DateUtil.formatDate(time, isUtc: false, format: 'yyyy-MM-dd');
+  String formattedDate = DateUtil.formatDate(time, /*isUtc: false,*/ format: 'yyyy-MM-dd');
   DateTime newDate = DateTime.parse(formattedDate + " 23:59:59");
   return newDate;
 }
@@ -319,7 +313,7 @@ int getTimestampLatest(bool phase, int day) {
   String newHours;
   DateTime now = new DateTime.now();
   DateTime sixtyDaysFromNow = now.add(new Duration(days: day));
-  String formattedDate = DateUtil.formatDate(sixtyDaysFromNow, isUtc: false, format: 'yyyy-MM-dd');
+  String formattedDate = DateUtil.formatDate(sixtyDaysFromNow, /*isUtc: false,*/ format: 'yyyy-MM-dd');
   if (phase) {
     newHours = formattedDate + ' 00:00:00';
   } else {
@@ -331,4 +325,13 @@ int getTimestampLatest(bool phase, int day) {
 //      isUtc: false, format: 'yyyy-MM-dd HH:mm:ss');
   int timeStamp = newDate.millisecondsSinceEpoch;
   return timeStamp;
+}
+
+Future<String> createApkCachePath(String apkUrl) async {
+  Directory rootDir = (await getTemporaryDirectory());
+  final Directory dir = Directory(join(rootDir.path, 'apks'));
+  if (!dir.existsSync()) {
+    dir.createSync(recursive: true);
+  }
+  return join(dir.path, getFileName(apkUrl));
 }

@@ -53,7 +53,7 @@ class MainActivity : FlutterFragmentActivity(), Tag {
     }
 
     fun onClientCreated() {
-//        App.get().onUiClientCreated()
+        App.get().onUiClientCreated()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

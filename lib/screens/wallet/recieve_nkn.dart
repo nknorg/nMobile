@@ -34,7 +34,6 @@ class ReceiveNknScreen extends StatefulWidget {
 
 class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
   final GetIt locator = GetIt.instance;
-  FilteredWalletsBloc _filteredWalletsBloc;
   GlobalKey globalKey = new GlobalKey();
   WalletSchema wallet;
 
@@ -42,7 +41,6 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
   void initState() {
     super.initState();
     locator<TaskService>().queryNknWalletBalanceTask();
-    _filteredWalletsBloc = BlocProvider.of<FilteredWalletsBloc>(context);
   }
 
   @override
@@ -50,7 +48,7 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: (NMobileLocalizations.of(context).recieve + ' ' + NMobileLocalizations.of(context).nkn),
+        title: (NMobileLocalizations.of(context).receive + ' ' + NMobileLocalizations.of(context).nkn),
         backgroundColor: DefaultTheme.backgroundColor4,
         action: IconButton(
           icon: loadAssetIconsImage(
@@ -87,7 +85,7 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
                             Expanded(
                               flex: 0,
                               child: Padding(
-                                padding: const EdgeInsets.only(top: 32, left: 20, right: 20),
+                                padding: const EdgeInsets.only(top: 24, left: 20, right: 20),
                                 child: Column(
                                   children: <Widget>[
                                     Expanded(
@@ -95,18 +93,18 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.stretch,
                                         children: <Widget>[
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: <Widget>[
-                                              Label(
-                                                NMobileLocalizations.of(context).to,
-                                                type: LabelType.h4,
-                                                textAlign: TextAlign.start,
-                                              ),
-                                            ],
-                                          ),
+//                                          Row(
+//                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                                            children: <Widget>[
+//                                              Label(
+//                                                NMobileLocalizations.of(context).to,
+//                                                type: LabelType.h4,
+//                                                textAlign: TextAlign.start,
+//                                              ),
+//                                            ],
+//                                          ),
                                           WalletDropdown(
-                                            title: NMobileLocalizations.of(context).select_asset_to_recieve,
+                                            title: NMobileLocalizations.of(context).select_asset_to_receive,
                                             schema: widget.arguments ?? wallet,
                                           ),
                                         ],

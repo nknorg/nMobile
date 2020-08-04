@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/cdn/cdn_bloc.dart';
 import 'package:nmobile/blocs/cdn/cdn_event.dart';
 import 'package:nmobile/blocs/cdn/cdn_state.dart';
@@ -36,7 +37,7 @@ class NodeDetailPage extends StatefulWidget {
   NodeDetailPageState createState() => new NodeDetailPageState();
 }
 
-class NodeDetailPageState extends State<NodeDetailPage> {
+class NodeDetailPageState extends State<NodeDetailPage> with AccountDependsBloc {
   GlobalKey _notesFormKey = new GlobalKey<FormState>();
   TextEditingController _nameController = TextEditingController();
   CDNBloc _cdnBloc;
@@ -366,7 +367,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                             InkWell(
                               onTap: () {
                                 isRefresh = true;
-                                widget.arguments.getMinerDetail();
+                                widget.arguments.getMinerDetail(account.client);
                               },
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -394,7 +395,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                             onTap: () {
                               showToast('已发送指令');
                               isRefresh = true;
-                              widget.arguments.getMinerDetail();
+                              widget.arguments.getMinerDetail(account.client);
                               initData();
                             },
                             child: Container(
@@ -565,7 +566,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
             if (_nameController.text.toString().length > 0) {
               setState(() {
                 widget.arguments.name = _nameController.text.toString();
-                widget.arguments.insertOrUpdate();
+                widget.arguments.insertOrUpdate(db);
               });
             }
             Navigator.of(context).pop();
@@ -603,7 +604,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
                     padding: EdgeInsets.zero,
                     onPressed: () {
                       Navigator.pop(context);
-                      widget.arguments.reboot();
+                      widget.arguments.reboot(account.client);
                       showToast('已发送重启指令！');
                     },
                     child: Label(
@@ -677,7 +678,7 @@ class NodeDetailPageState extends State<NodeDetailPage> {
   }
 
   deleteAction() {
-    widget.arguments.delete();
+    widget.arguments.delete(db);
     _cdnBloc.add(LoadData(data: widget.arguments));
     Navigator.of(context).pop(widget.arguments);
   }

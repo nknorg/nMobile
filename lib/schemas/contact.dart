@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -7,12 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/sqlite_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/model/data/dchat_account.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
+import 'package:nmobile/utils/log_tag.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -32,6 +34,7 @@ class SourceProfile {
   String firstName;
   String lastName;
   File avatar;
+
   SourceProfile({this.firstName, this.lastName, this.avatar});
 
   String get name {
@@ -55,6 +58,7 @@ class ContactSchema {
   String firstName;
   String lastName;
   String notes;
+
 //  bool isMe;
 
   File avatar;
@@ -118,8 +122,8 @@ class ContactSchema {
     }
   }
 
-  Future<SourceProfile> getSourceProfile() async {
-    var res = await getContactByAddress(clientAddress);
+  Future<SourceProfile> getSourceProfile(Future<Database> db) async {
+    var res = await getContactByAddress(db, clientAddress);
 
     if (res.sourceProfile != null) {
       return res.sourceProfile;
@@ -127,12 +131,12 @@ class ContactSchema {
     return null;
   }
 
-  OptionsSchema getOptions() {
+  OptionsSchema getOptions(FutureOr<Database> db) {
     int random = Random().nextInt(DefaultTheme.headerBackgroundColor.length);
     int backgroundColor = DefaultTheme.headerBackgroundColor[random];
     int color = DefaultTheme.headerColor[random];
     if (options == null || options.backgroundColor == null || options.color == null) {
-      setOptionColor(backgroundColor, color);
+      setOptionColor(db, backgroundColor, color);
     }
     return options;
   }
@@ -149,7 +153,8 @@ class ContactSchema {
     }
   }
 
-  Widget avatarWidget({
+  Widget avatarWidget(
+    FutureOr<Database> db, {
     Color backgroundColor,
     double size,
     Color fontColor,
@@ -186,11 +191,11 @@ class ContactSchema {
         var wid = <Widget>[
           CircleAvatar(
             radius: size,
-            backgroundColor: Color(getOptions().backgroundColor),
+            backgroundColor: Color(getOptions(db).backgroundColor),
             child: Label(
               name.length > 2 ? name.substring(0, 2).toUpperCase() : name,
               type: fontType,
-              color: Color(getOptions().color),
+              color: Color(getOptions(db).color),
             ),
           ),
         ];
@@ -226,33 +231,35 @@ class ContactSchema {
     return view;
   }
 
-  toRequestData(String requestType) {
+  Future<String> toRequestData(String requestType) async {
+    // Saved other's contact data.
     Map data = {
       'id': uuid.v4(),
       'contentType': ContentType.contact,
       'requestType': requestType,
-      'version': Global.currentUser.profileVersion,
+      'version': profileVersion,
       'expiresAt': 0,
     };
     return jsonEncode(data);
   }
 
-  toResponseData(String requestType) {
+  Future<String> toResponseData(Future<Database> db, String myClientAddr, String requestType) async {
+    final me = await getContactByAddress(db, myClientAddr);
     Map data = {
       'id': uuid.v4(),
       'contentType': ContentType.contact,
-      'version': Global.currentUser.profileVersion,
+      'version': me.profileVersion,
       'expiresAt': 0,
     };
     if (requestType == RequestType.full) {
       try {
         Map<String, dynamic> content = {
-          'name': Global.currentUser.firstName,
+          'name': me.firstName,
         };
-        if (Global.currentUser?.avatar != null) {
+        if (me?.avatar != null) {
           content['avatar'] = {
             'type': 'base64',
-            'data': base64Encode(Global.currentUser.avatar.readAsBytesSync()),
+            'data': base64Encode(me.avatar.readAsBytesSync()),
           };
         }
 
@@ -293,7 +300,7 @@ class ContactSchema {
     await db.execute('CREATE INDEX index_updated_time ON Contact (updated_time)');
   }
 
-  toEntity() {
+  toEntity(String accountPubkey) {
     Map<String, dynamic> data = {};
     if (nknWalletAddress != null) data['nknWalletAddress'] = nknWalletAddress;
     if (notes != null) data['notes'] = notes;
@@ -305,7 +312,7 @@ class ContactSchema {
       'last_name': lastName,
       'data': data != null ? jsonEncode(data) : '{}',
       'options': options?.toJson(),
-      'avatar': avatar != null ? getLocalContactPath(avatar.path) : null,
+      'avatar': avatar != null ? getLocalContactPath(accountPubkey, avatar.path) : null,
       'created_time': createdTime?.millisecondsSinceEpoch,
       'updated_time': updatedTime?.millisecondsSinceEpoch,
       'profile_version': profileVersion,
@@ -357,14 +364,13 @@ class ContactSchema {
         contact.options = OptionsSchema();
       }
     }
-
     return contact;
   }
 
-  Future<int> insert() async {
+  Future<int> insert(Future<Database> db, String accountPubkey) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      int id = await db.insert(ContactSchema.tableName, toEntity());
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      int id = await (await db).insert(ContactSchema.tableName, toEntity(accountPubkey));
       return id;
     } catch (e) {
       debugPrint(e);
@@ -372,13 +378,13 @@ class ContactSchema {
     }
   }
 
-  Future<int> createContact() async {
+  Future<int> createContact(Future<Database> db) async {
     DateTime now = DateTime.now();
     createdTime = now;
     updatedTime = now;
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var countQuery = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var countQuery = await (await db).query(
         ContactSchema.tableName,
 //        columns: ['COUNT(id) as count'],
         columns: ['*'],
@@ -392,36 +398,36 @@ class ContactSchema {
         if (nknWalletAddress == null || nknWalletAddress.isEmpty) {
           nknWalletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
         }
-        return await db.insert(ContactSchema.tableName, toEntity());
+        return await (await db).insert(ContactSchema.tableName, toEntity(clientAddress));
       }
     } catch (e) {
       NLog.d(e);
     }
   }
 
-  Future requestProfile({String type = RequestType.header}) async {
+  Future requestProfile(NknClientProxy client, {String type = RequestType.header}) async {
     try {
-      await NknClientPlugin.sendText([clientAddress], toRequestData(type));
+      await client.sendText([clientAddress], await toRequestData(type));
     } catch (e) {
-      debugPrint(e);
-      debugPrintStack();
+      debugPrint(e?.toString());
+//      debugPrintStack();
     }
   }
 
-  Future responseProfile({String type = RequestType.header}) async {
+  Future responseProfile(DChatAccount account, String myClientAddr, {String type = RequestType.header}) async {
     try {
-      await NknClientPlugin.sendText([clientAddress], toResponseData(type));
+      await account.client.sendText([clientAddress], await toResponseData(account.dbHolder.db, myClientAddr, type));
     } catch (e) {
-      debugPrint(e);
-      debugPrintStack();
+      debugPrint(e?.toString());
+//      debugPrintStack();
     }
   }
 
 //db.query('Test', where: 'name LIKE ?', whereArgs: ['%dummy%']);
-  static Future<List<ContactSchema>> getContacts({int limit = 20, int skip = 0}) async {
+  static Future<List<ContactSchema>> getContacts(Future<Database> db, {int limit = 20, int skip = 0}) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var res = await (await db).query(
         ContactSchema.tableName,
         columns: ['*'],
         orderBy: 'updated_time desc',
@@ -440,10 +446,10 @@ class ContactSchema {
     }
   }
 
-  static Future<List<ContactSchema>> getStrangerContacts({int limit = 20, int skip = 0}) async {
+  static Future<List<ContactSchema>> getStrangerContacts(Future<Database> db, {int limit = 20, int skip = 0}) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var res = await (await db).query(
         ContactSchema.tableName,
         columns: ['*'],
         orderBy: 'updated_time desc',
@@ -461,26 +467,25 @@ class ContactSchema {
     }
   }
 
-  static Future<ContactSchema> getContactByAddress(String address) async {
+  static Future<ContactSchema> getContactByAddress(Future<Database> db, String clientAddress) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var res = await (await db).query(
         ContactSchema.tableName,
         columns: ['*'],
         where: 'address = ?',
-        whereArgs: [address],
+        whereArgs: [clientAddress],
       );
       return ContactSchema.parseEntity(res?.first);
     } catch (e) {
-      NLog.d(e.toString());
-      debugPrintStack();
+      LOG('ContactSchema@static').e('getContactByAddress', e);
     }
   }
 
-  Future setProfile(Map<String, dynamic> sourceData) async {
+  Future setProfile(Future<Database> db, String accountPubkey, Map<String, dynamic> sourceData) async {
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var res = await (await db).query(
         ContactSchema.tableName,
         columns: ['*'],
         where: 'id = ?',
@@ -501,19 +506,19 @@ class ContactSchema {
               } else {
                 avatarData = content['avatar']['data'].toString().split(",")[1];
               }
-              String path = getContactCachePath();
+              String path = getContactCachePath(accountPubkey);
               var extension = 'jpg';
               var bytes = base64Decode(avatarData);
               String name = hexEncode(md5.convert(bytes).bytes);
               File avatar = File(join(path, name + '.$extension'));
               avatar.writeAsBytesSync(bytes);
-              data['avatar'] = getLocalContactPath(avatar.path);
+              data['avatar'] = getLocalContactPath(accountPubkey, avatar.path);
             }
           } else {
             data.remove('avatar');
           }
 
-          var count = await db.update(
+          var count = await (await db).update(
             ContactSchema.tableName,
             {
               'data': jsonEncode(data),
@@ -532,10 +537,10 @@ class ContactSchema {
     }
   }
 
-  Future<bool> setAvatar(File image) async {
+  Future<bool> setAvatar(Future<Database> db, String accountPubkey, File image) async {
     avatar = image;
     Map<String, dynamic> data = {
-      'avatar': getLocalContactPath(image.path),
+      'avatar': getLocalContactPath(accountPubkey, image.path),
       'type': type,
       'updated_time': DateTime.now().millisecondsSinceEpoch,
     };
@@ -548,8 +553,8 @@ class ContactSchema {
       data['profile_version'] = profileVersion;
     }
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var res = await (await db).query(
         ContactSchema.tableName,
         columns: ['*'],
         where: 'id = ?',
@@ -563,7 +568,7 @@ class ContactSchema {
           file.delete();
         }
       }
-      var count = await db.update(
+      var count = await (await db).update(
         ContactSchema.tableName,
         data,
         where: 'id = ?',
@@ -576,7 +581,7 @@ class ContactSchema {
     }
   }
 
-  Future<bool> setName(String firstName) async {
+  Future<bool> setName(Future<Database> db, String firstName) async {
     Map<String, dynamic> data = {
       'first_name': firstName,
       'last_name': "",
@@ -593,8 +598,8 @@ class ContactSchema {
     }
 
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var count = await db.update(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var count = await (await db).update(
         ContactSchema.tableName,
         data,
         where: 'id = ?',
@@ -607,14 +612,14 @@ class ContactSchema {
     }
   }
 
-  Future<bool> setNotes(String notes) async {
+  Future<bool> setNotes(Future<Database> db, String notes) async {
     if (type != ContactType.me) {
       type = ContactType.friend;
     }
 
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await db.query(
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var res = await (await db).query(
         ContactSchema.tableName,
         columns: ['*'],
         where: 'id = ?',
@@ -628,7 +633,7 @@ class ContactSchema {
         data = {};
       }
       data['notes'] = notes;
-      var count = await db.update(
+      var count = await (await db).update(
         ContactSchema.tableName,
         {
           'data': jsonEncode(data),
@@ -646,28 +651,28 @@ class ContactSchema {
     }
   }
 
-  Future sendActionContactOptions() async {
+  Future sendActionContactOptions(NknClientProxy client) async {
     Map data = {
       'id': uuid.v4(),
       'contentType': ContentType.eventContactOptions,
       'content': {'deleteAfterSeconds': options?.deleteAfterSeconds},
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
-    await NknClientPlugin.sendText([clientAddress], jsonEncode(data));
+    await client.sendText([clientAddress], jsonEncode(data));
   }
 
-  Future<bool> setOptionColor(int backgroundColor, int color) async {
+  Future<bool> setOptionColor(Future<Database> db, int backgroundColor, int color) async {
 //    if (type != ContactType.me) {
 //      type = ContactType.friend;
 //    }
 
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       if (options == null) options = OptionsSchema();
       options.backgroundColor = backgroundColor;
       options.color = color;
 
-      var count = await db.update(
+      var count = await (await db).update(
         ContactSchema.tableName,
         {
           'options': options.toJson(),
@@ -683,13 +688,13 @@ class ContactSchema {
     }
   }
 
-  Future<bool> setBurnOptions(int seconds) async {
+  Future<bool> setBurnOptions(Future<Database> db, int seconds) async {
     if (type != ContactType.me) {
       type = ContactType.friend;
     }
 
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       if (options == null) options = OptionsSchema();
       if (seconds != null && seconds > 0) {
         options.deleteAfterSeconds = seconds;
@@ -697,7 +702,7 @@ class ContactSchema {
         options.deleteAfterSeconds = null;
       }
 
-      var count = await db.update(
+      var count = await (await db).update(
         ContactSchema.tableName,
         {
           'options': options.toJson(),
@@ -714,7 +719,7 @@ class ContactSchema {
     }
   }
 
-  Future<bool> setFriend({bool isFriend = true}) async {
+  Future<bool> setFriend(Future<Database> db, {bool isFriend = true}) async {
     if (type != ContactType.me) {
       if (isFriend) {
         type = ContactType.friend;
@@ -724,9 +729,9 @@ class ContactSchema {
     }
 
     try {
-      Database db = SqliteStorage(db: Global.currentChatDb).db;
+//      Database db = SqliteStorage(db: Global.currentChatDb).db;
 
-      var count = await db.update(
+      var count = await (await db).update(
         ContactSchema.tableName,
         {
           'type': type,
@@ -743,9 +748,9 @@ class ContactSchema {
     }
   }
 
-  Future<int> deleteContact() async {
-    Database db = SqliteStorage(db: Global.currentChatDb).db;
-    var count = await db.delete(ContactSchema.tableName, where: 'id = ?', whereArgs: [id]);
+  Future<int> deleteContact(Future<Database> db) async {
+//    Database db = SqliteStorage(db: Global.currentChatDb).db;
+    var count = await (await db).delete(ContactSchema.tableName, where: 'id = ?', whereArgs: [id]);
 
     return count;
   }

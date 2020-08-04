@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:nmobile/components/ButtonIcon.dart';
+import 'package:nmobile/components/button_icon.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
@@ -10,6 +10,7 @@ class Nav extends StatefulWidget {
   PageController controller;
   List<Widget> screens;
   int currentIndex = 0;
+
   Nav({
     this.screens,
     this.controller,
@@ -21,14 +22,11 @@ class Nav extends StatefulWidget {
 }
 
 class _NavState extends State<Nav> {
-  double _fontSize = 0;
-  double _selectedFontSize = 10;
-
   void _onItemTapped(int index) {
     setState(() {
       widget.currentIndex = index;
       widget.controller.jumpToPage(index);
-      Global.currentPageIndex = index;
+//      Global.currentPageIndex = index;
     });
   }
 
@@ -40,48 +38,37 @@ class _NavState extends State<Nav> {
       decoration: BoxDecoration(
         boxShadow: [BoxShadow(color: DefaultTheme.backgroundColor2)],
         color: DefaultTheme.backgroundLightColor,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        border: Border(top: BorderSide(color: DefaultTheme.backgroundColor2)),
+//        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
           ButtonIcon(
-            height: 68,
-            icon: loadAssetIconsImage(
-              'chat',
-              color: widget.currentIndex == 0 ? _selectedColor : _color,
-            ),
+            icon: loadAssetIconsImage('chat', color: widget.currentIndex == 0 ? _selectedColor : _color),
             text: NMobileLocalizations.of(context).menu_chat,
+            height: 60,
             fontColor: widget.currentIndex == 0 ? _selectedColor : _color,
             onPressed: () => _onItemTapped(0),
           ),
           ButtonIcon(
-            height: 68,
-            icon: loadAssetIconsImage(
-              'wallet',
-              color: widget.currentIndex == 1 ? _selectedColor : _color,
-            ),
+            icon: loadAssetIconsImage('wallet', color: widget.currentIndex == 1 ? _selectedColor : _color),
             text: NMobileLocalizations.of(context).menu_wallet,
+            height: 60,
             fontColor: widget.currentIndex == 1 ? _selectedColor : _color,
             onPressed: () => _onItemTapped(1),
           ),
           ButtonIcon(
-            height: 68,
-            icon: loadAssetIconsImage(
-              'news',
-              color: widget.currentIndex == 2 ? _selectedColor : _color,
-            ),
+            icon: loadAssetIconsImage('news', color: widget.currentIndex == 2 ? _selectedColor : _color),
             text: NMobileLocalizations.of(context).menu_news,
+            height: 60,
             fontColor: widget.currentIndex == 2 ? _selectedColor : _color,
             onPressed: () => _onItemTapped(2),
           ),
           ButtonIcon(
-            height: 68,
-            icon: loadAssetIconsImage(
-              'settings',
-              color: widget.currentIndex == 3 ? _selectedColor : _color,
-            ),
+            icon: loadAssetIconsImage('settings', color: widget.currentIndex == 3 ? _selectedColor : _color),
             text: NMobileLocalizations.of(context).menu_settings,
+            height: 60,
             fontColor: widget.currentIndex == 3 ? _selectedColor : _color,
             onPressed: () => _onItemTapped(3),
           ),

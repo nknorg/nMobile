@@ -24,8 +24,8 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/advice_page.dart';
 import 'package:nmobile/screens/select.dart';
+import 'package:nmobile/screens/settings/app_version.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
-import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:oktoast/oktoast.dart';
@@ -38,7 +38,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAliveClientMixin {
-  final LocalAuthenticationService _localAuth = locator<LocalAuthenticationService>();
   final LocalStorage _localStorage = LocalStorage();
   final SecureStorage _secureStorage = SecureStorage();
   GlobalBloc _globalBloc;
@@ -53,12 +52,6 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
   @override
   void initState() {
     super.initState();
-    _authSelected = _localAuth.isProtectionEnabled;
-    if (_localAuth.authType == BiometricType.face) {
-      _authTypeString = NMobileLocalizations.of(Global.appContext).face_id;
-    } else if (_localAuth.authType == BiometricType.fingerprint) {
-      _authTypeString = NMobileLocalizations.of(Global.appContext).touch_id;
-    }
     initData();
     _globalBloc = BlocProvider.of<GlobalBloc>(context);
     _globalBlocSubs = _globalBloc.listen((state) {
@@ -73,6 +66,18 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
         }
       }
     });
+    initAsync();
+  }
+
+  initAsync() async {
+    final _localAuth = await LocalAuthenticationService.instance;
+    _authSelected = _localAuth.isProtectionEnabled;
+    if (_localAuth.authType == BiometricType.face) {
+      _authTypeString = NMobileLocalizations.of(Global.appContext).face_id;
+    } else if (_localAuth.authType == BiometricType.fingerprint) {
+      _authTypeString = NMobileLocalizations.of(Global.appContext).touch_id;
+    }
+    setState(() {});
   }
 
   initData() {
@@ -115,7 +120,8 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
     if (Settings.localNotificationType == null) {
       _currentLocalNotificationType = NMobileLocalizations.of(Global.appContext).local_notification_only_name;
     } else {
-      _currentLocalNotificationType = _localNotificationTypeList?.firstWhere((x) => x.value == Settings.localNotificationType, orElse: () => null)?.text ?? NMobileLocalizations.of(Global.appContext).local_notification_only_name;
+      _currentLocalNotificationType = _localNotificationTypeList?.firstWhere((x) => x.value == Settings.localNotificationType, orElse: () => null)?.text ??
+          NMobileLocalizations.of(Global.appContext).local_notification_only_name;
     }
 
     if (mounted) {
@@ -174,7 +180,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                   child: Column(children: <Widget>[
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
@@ -242,7 +248,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                           child: Column(children: <Widget>[
                             SizedBox(
                                 width: double.infinity,
-                                height: 48,
+                                height: 50,
                                 child: FlatButton(
                                     padding: const EdgeInsets.only(left: 16, right: 16),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
@@ -284,7 +290,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                   children: <Widget>[
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
@@ -357,7 +363,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                   children: <Widget>[
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
@@ -378,12 +384,14 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                             ),
                           ],
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.of(context).pushNamed(AppVersion.routeName);
+                        },
                       ),
                     ),
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(0))),
@@ -420,7 +428,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                     ),
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
@@ -481,7 +489,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                   children: <Widget>[
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
@@ -527,6 +535,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
       try {
         var w = await wallet.exportWallet(password);
         _localStorage.set('${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}', value);
+        final _localAuth = await LocalAuthenticationService.instance;
         _localAuth.isProtectionEnabled = value;
         setState(() {
           _authSelected = value;

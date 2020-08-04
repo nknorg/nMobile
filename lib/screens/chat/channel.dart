@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
@@ -12,7 +13,7 @@ import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
-import 'package:nmobile/components/ButtonIcon.dart';
+import 'package:nmobile/components/button_icon.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/chat/bubble.dart';
@@ -47,7 +48,7 @@ class ChatGroupPage extends StatefulWidget {
   _ChatGroupPageState createState() => _ChatGroupPageState();
 }
 
-class _ChatGroupPageState extends State<ChatGroupPage> {
+class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
   ChatBloc _chatBloc;
   ContactBloc _contactBloc;
   String targetId;
@@ -55,7 +56,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   ScrollController _scrollController = ScrollController();
   FocusNode _sendFocusNode = FocusNode();
   TextEditingController _sendController = TextEditingController();
-  String currentAddress = Global.currentClient.address;
   List<MessageSchema> _messages = <MessageSchema>[];
   bool _canSend = false;
   int _limit = 20;
@@ -68,7 +68,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   final String TAG = 'ChatGroupPage';
 
   initAsync() async {
-    var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit);
+    var res = await MessageSchema.getAndReadTargetMessages(db, targetId, limit: _limit);
     _contactBloc.add(LoadContact(address: res.where((x) => !x.isOutbound).map((x) => x.from).toList()));
     _chatBloc.add(RefreshMessages(target: targetId));
 
@@ -78,7 +78,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       });
     }
 
-    var topic = await TopicSchema.getTopic(widget.arguments.topic.topic);
+    var topic = await TopicSchema.getTopic(db, widget.arguments.topic.topic);
     if (topic != null && topic.count != 0) {
       if (mounted) {
         setState(() {
@@ -90,7 +90,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     }
 
     if (topic != null) {
-      topic.getTopicCount().then((tc) {
+      topic.getTopicCount(account).then((tc) {
         if (mounted) {
           setState(() {
             if (tc == 0 || tc == null) {
@@ -105,7 +105,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   }
 
   Future _loadMore() async {
-    var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit, skip: _skip);
+    var res = await MessageSchema.getAndReadTargetMessages(db, targetId, limit: _limit, skip: _skip);
     _contactBloc.add(LoadContact(address: res.where((x) => !x.isOutbound).map((x) => x.from).toList()));
     _chatBloc.add(RefreshMessages(target: targetId));
     if (res != null) {
@@ -126,7 +126,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             item.burnAfterSeconds = afterSeconds;
             if (item.burnAfterSeconds < 0) {
               _messages.removeAt(i);
-              item.deleteMessage();
+              item.deleteMessage(db);
             }
           });
         }
@@ -138,8 +138,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   void initState() {
     super.initState();
     targetId = widget.arguments.topic.topic;
-    Global.currentChatId = targetId;
-    isUnSubscribe = LocalStorage.getUnsubscribeTopicList().contains(targetId);
+    Global.currentOtherChatId = targetId;
+    isUnSubscribe = LocalStorage.getUnsubscribeTopicList(accountPubkey).contains(targetId);
     _contactBloc = BlocProvider.of<ContactBloc>(context);
     Future.delayed(Duration(milliseconds: 200), () {
       initAsync();
@@ -154,7 +154,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       _chatSubscription = _chatBloc.listen((state) {
         if (state is MessagesUpdated) {
           setState(() {
-            isUnSubscribe = LocalStorage.getUnsubscribeTopicList().contains(targetId);
+            isUnSubscribe = LocalStorage.getUnsubscribeTopicList(accountPubkey).contains(targetId);
           });
           if (state.message == null || state.message.topic == null) {
             return;
@@ -164,7 +164,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             if (state.message.topic == targetId && state.message.contentType == ContentType.text) {
               state.message.isSuccess = true;
               state.message.isRead = true;
-              state.message.readMessage().then((n) {
+              state.message.readMessage(db).then((n) {
                 _chatBloc.add(RefreshMessages());
               });
               setState(() {
@@ -184,7 +184,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
               if (state.message.options != null && state.message.options['deleteAfterSeconds'] != null) {
                 state.message.deleteTime = DateTime.now().add(Duration(seconds: state.message.options['deleteAfterSeconds'] + 1));
               }
-              state.message.readMessage().then((n) {
+              state.message.readMessage(db).then((n) {
                 _chatBloc.add(RefreshMessages());
               });
               setState(() {
@@ -214,7 +214,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
         }
       });
 
-      String content = LocalStorage.getChatUnSendContentFromId(targetId) ?? '';
+      String content = LocalStorage.getChatUnSendContentFromId(accountPubkey, targetId) ?? '';
       if (mounted)
         setState(() {
           _sendController.text = content;
@@ -227,8 +227,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   @override
   void dispose() {
-    Global.currentChatId = null;
-    LocalStorage.saveChatUnSendContentFromId(targetId, content: _sendController.text);
+    Global.currentOtherChatId = null;
+    LocalStorage.saveChatUnSendContentFromId(accountPubkey, targetId, content: _sendController.text);
     _chatBloc.add(RefreshMessages());
     _chatSubscription?.cancel();
     _scrollController?.dispose();
@@ -245,7 +245,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   }
 
   _send() async {
-    LocalStorage.saveChatUnSendContentFromId(targetId);
+    LocalStorage.saveChatUnSendContentFromId(accountPubkey, targetId);
     String text = _sendController.text;
     if (text == null || text.length == 0) return;
     _sendController.clear();
@@ -256,8 +256,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     String contentType = ContentType.text;
     Duration deleteAfterSeconds;
 
-    var sendMsg =
-        MessageSchema.fromSendData(from: currentAddress, topic: dest, content: text, contentType: contentType, deleteAfterSeconds: deleteAfterSeconds);
+    var sendMsg = MessageSchema.fromSendData(from: accountChatId, topic: dest, content: text, contentType: contentType, deleteAfterSeconds: deleteAfterSeconds);
     sendMsg.isOutbound = true;
     try {
       _chatBloc.add(SendMessage(sendMsg));
@@ -273,7 +272,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     String dest = targetId;
 
     var sendMsg = MessageSchema.fromSendData(
-      from: currentAddress,
+      from: accountChatId,
       topic: dest,
       content: savedImg,
       contentType: ContentType.media,
@@ -292,7 +291,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   getImageFile({@required ImageSource source}) async {
     FocusScope.of(context).requestFocus(FocusNode());
     try {
-      File image = await getCameraFile(source: source);
+      File image = await getCameraFile(accountPubkey, source: source);
       if (image != null) {
         _sendImage(image);
       }
@@ -321,7 +320,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     if (widget.arguments.topic.type == TopicType.private) {
       topicWidget.insert(0, loadAssetIconsImage('lock', width: 18, color: DefaultTheme.fontLightColor));
     }
-
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
@@ -329,7 +327,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
           onTap: () async {
             Navigator.of(context).pushNamed(ChannelSettingsScreen.routeName, arguments: widget.arguments.topic).then((v) {
               setState(() {
-                isUnSubscribe = LocalStorage.getUnsubscribeTopicList().contains(targetId);
+                isUnSubscribe = LocalStorage.getUnsubscribeTopicList(accountPubkey).contains(targetId);
                 NLog.d(isUnSubscribe);
               });
             });
@@ -348,6 +346,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 child: Hero(
                   tag: 'avatar:${targetId}',
                   child: widget.arguments.topic.avatarWidget(
+                    db,
                     size: 48,
                     backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200),
                     fontColor: DefaultTheme.primaryColor,
@@ -368,8 +367,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                       } else {
                         Future.delayed(Duration(seconds: 15), () {
                           if (_topicCount == 0) {
-                            widget.arguments.topic.getSubscribers(cache: false);
-                            widget.arguments.topic.getPrivateOwnerMeta(cache: false);
+                            widget.arguments.topic.getSubscribers(account, cache: false);
+                            widget.arguments.topic.getPrivateOwnerMeta(account, cache: false);
                             NLog.d('load topic count 0', tag: TAG);
                           }
                         });
@@ -444,7 +443,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                   alignment: WrapAlignment.center,
                                   crossAxisAlignment: WrapCrossAlignment.center,
                                   children: <Widget>[
-                                    Label('${message.isOutbound ? Global.currentUser.name : contact?.name} ${NMobileLocalizations.of(context).joined_channel}'),
+                                    accountUserBuilder(onUser: (ctx, user) {
+                                      return Label('${message.isOutbound ? user.name : contact?.name} ${NMobileLocalizations.of(context).joined_channel}');
+                                    }),
                                   ],
                                 ),
                               );
@@ -480,11 +481,11 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                     child: Container(
                       padding: const EdgeInsets.only(left: 0, right: 0, top: 15, bottom: 15),
                       constraints: BoxConstraints(minHeight: 70, maxHeight: 160),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          top: BorderSide(color: DefaultTheme.backgroundColor2),
-                        ),
-                      ),
+//                      decoration: BoxDecoration(
+//                        border: Border(
+//                          top: BorderSide(color: DefaultTheme.backgroundColor2),
+//                        ),
+//                      ),
                       child: getBottomView(),
                     ),
                   ),
@@ -501,14 +502,14 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   acceptPrivateAction(address) async {
     showToast(NMobileLocalizations.of(context).invitation_sent);
     if (widget.arguments.topic.type == TopicType.private) {
-      await widget.arguments.topic.acceptPrivateMember(addr: address);
+      await widget.arguments.topic.acceptPrivateMember(account, addr: address);
     }
 
-    var sendMsg = MessageSchema.fromSendData(from: currentAddress, content: targetId, to: address, contentType: ContentType.ChannelInvitation);
+    var sendMsg = MessageSchema.fromSendData(from: accountChatId, content: targetId, to: address, contentType: ContentType.ChannelInvitation);
     sendMsg.isOutbound = true;
 
     var sendMsg1 = MessageSchema.fromSendData(
-        from: currentAddress, topic: widget.arguments.topic.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
+        from: accountChatId, topic: widget.arguments.topic.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
     sendMsg1.isOutbound = true;
 
     try {
@@ -595,71 +596,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 ],
               ),
             ),
-//            Expanded(
-//              flex: 0,
-//              child: Visibility(
-//                visible: false,
-//                child: Column(
-//                  children: <Widget>[
-//                    SizedBox(
-//                      width: 71,
-//                      height: 71,
-//                      child: FlatButton(
-//                        padding: const EdgeInsets.all(0),
-//                        color: DefaultTheme.backgroundColor1,
-//                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-//                        child: loadAssetIconsImage(
-//                          'paperclip2',
-//                          width: 35,
-//                          color: DefaultTheme.fontColor2,
-//                        ),
-//                        onPressed: () {},
-//                      ),
-//                    ),
-//                    Padding(
-//                      padding: const EdgeInsets.only(top: 8),
-//                      child: Label(
-//                        NMobileLocalizations.of(context).files,
-//                        type: LabelType.bodySmall,
-//                        color: DefaultTheme.fontColor2,
-//                      ),
-//                    )
-//                  ],
-//                ),
-//              ),
-//            ),
-//            Expanded(
-//              flex: 0,
-//              child: Visibility(
-//                visible: false,
-//                child: Column(
-//                  children: <Widget>[
-//                    SizedBox(
-//                      width: 71,
-//                      height: 71,
-//                      child: FlatButton(
-//                        color: DefaultTheme.backgroundColor1,
-//                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-//                        child: loadAssetIconsImage(
-//                          'pin',
-//                          width: 24,
-//                          color: DefaultTheme.fontColor2,
-//                        ),
-//                        onPressed: () {},
-//                      ),
-//                    ),
-//                    Padding(
-//                      padding: const EdgeInsets.only(top: 8),
-//                      child: Label(
-//                        NMobileLocalizations.of(context).location,
-//                        type: LabelType.bodySmall,
-//                        color: DefaultTheme.fontColor2,
-//                      ),
-//                    )
-//                  ],
-//                ),
-//              ),
-//            ),
           ],
         ),
       ),
@@ -687,15 +623,15 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
           width: double.infinity,
           onPressed: () {
             var duration = 400000;
-            LocalStorage.removeTopicFromUnsubscribeList(targetId);
+            LocalStorage.removeTopicFromUnsubscribeList(accountPubkey, targetId);
             Global.removeTopicCache(targetId);
             setState(() {
-              isUnSubscribe = LocalStorage.getUnsubscribeTopicList().contains(targetId);
+              isUnSubscribe = LocalStorage.getUnsubscribeTopicList(accountPubkey).contains(targetId);
             });
-            TopicSchema.subscribe(topic: targetId, duration: duration).then((hash) {
+            TopicSchema.subscribe(account, topic: targetId, duration: duration).then((hash) {
               if (hash != null) {
                 var sendMsg = MessageSchema.fromSendData(
-                  from: Global.currentClient.address,
+                  from: accountChatId,
                   topic: targetId,
                   contentType: ContentType.dchatSubscribe,
                 );
@@ -704,7 +640,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 _chatBloc.add(SendMessage(sendMsg));
                 DateTime now = DateTime.now();
                 var topicSchema = TopicSchema(topic: targetId, expiresAt: now.add(blockToExpiresTime(duration)));
-                topicSchema.insertIfNoData();
+                topicSchema.insertIfNoData(db, accountPubkey);
               }
             });
           },

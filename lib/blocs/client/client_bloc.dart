@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart' as chatEvent;
 import 'package:nmobile/blocs/client/client_event.dart';
@@ -11,16 +13,17 @@ import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/sqlite_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/data/dchat_account.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
-import 'package:nmobile/schemas/client.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/ncdn/miner_data.dart';
 import 'package:nmobile/utils/const_utils.dart';
+import 'package:nmobile/utils/log_tag.dart';
 import 'package:oktoast/oktoast.dart';
 
-class ClientBloc extends Bloc<ClientEvent, ClientState> {
+class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc, Tag {
   @override
   ClientState get initialState => NoConnect();
   final ChatBloc chatBloc;
@@ -37,7 +40,7 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
 
   @override
   Stream<ClientState> mapEventToState(ClientEvent event) async* {
-    print('ClientBloc | mapEventToState | ChatBloc@${chatBloc.hashCode.toString().substring(0, 3)}');
+    print('ClientBloc | mapEventToState | $tag');
     if (event is CreateClient) {
       yield* _mapCreateClientToState(event);
     } else if (event is ConnectedClient) {
@@ -60,14 +63,16 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
   }
 
   Stream<ClientState> _disConnect() async* {
-    await NknClientPlugin.disConnect();
+    account?.client.disConnect();
     yield NoConnect();
   }
 
   Stream<ClientState> _connect(WalletSchema wallet, String password) async* {
     try {
       var w = await wallet.exportWallet(password);
-      var keystore = await wallet.getKeystore();
+
+      yield Connecting();
+
       var walletAddr = w['address'];
       var publicKey = w['publicKey'];
 
@@ -75,16 +80,20 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
       minerData.ads = walletAddr;
       minerData.pub = publicKey;
       minerData.se = w['seed'];
-      minerData.key = keystore;
+      minerData.key = await wallet.getKeystore();
       minerData.psd = password;
       Global.minerData = minerData;
 
-      Global.currentChatDb = await SqliteStorage.open('${SqliteStorage.CHAT_DATABASE_NAME}_$publicKey', hexEncode(sha256(w['seed'])));
-      Global.currentCDNDb = Global.currentChatDb;
-      Global.currentClient = ClientSchema(publicKey: publicKey, address: publicKey);
-      Global.currentWalletName = wallet.name;
-      Global.currentUser = await ContactSchema.getContactByAddress(publicKey);
-      if (Global.currentUser == null) {
+      final currUser = DChatAccount(
+        walletAddr,
+        publicKey,
+        Uint8List.fromList(hexDecode(w['seed'])),
+        ClientEventListener(this),
+      );
+      changeAccount(currUser, force: true);
+
+      final currentUser = await ContactSchema.getContactByAddress(db, publicKey);
+      if (currentUser == null) {
         DateTime now = DateTime.now();
         await ContactSchema(
           type: ContactType.me,
@@ -93,23 +102,10 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
           createdTime: now,
           updatedTime: now,
           profileVersion: uuid.v4(),
-        ).createContact();
-        Global.currentUser = await ContactSchema.getContactByAddress(publicKey);
+        ).createContact(db);
       }
-      yield Connecting();
 
-      for (var i = 0; i < 3; i++) {
-        try {
-          await NknClientPlugin.createClient('', keystore, password);
-          break;
-        } catch (e) {
-          if (i == 3) {
-            yield NoConnect();
-          }
-          debugPrint(e);
-          debugPrintStack();
-        }
-      }
+      currUser.client.connect();
     } catch (e) {
       if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
         showToast(NMobileLocalizations.of(Global.appContext).tip_password_error);
@@ -120,7 +116,7 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
 
   Stream<ClientState> _mapOnConnectToState(OnConnect event) async* {
     if (state is Connected) {
-      Global.currentClient = event.client;
+//      Global.currentClient = event.client;
       chatBloc.add(chatEvent.Connect());
       yield Connected(client: event.client);
     }
@@ -133,6 +129,40 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
       Connected currentState = (state as Connected);
       currentState.message = event.message;
       chatBloc.add(chatEvent.ReceiveMessage(currentState.message));
+    }
+  }
+}
+
+class ClientEventListener extends ClientEventDispatcher {
+  final ClientBloc _clientBloc;
+
+  ClientEventListener(this._clientBloc);
+
+  @override
+  void onConnect(String myChatId) {
+    // To avoid confusion, since multi-account uses same `_clientBloc`.
+    if (myChatId == _clientBloc.accountChatId) {
+      _clientBloc.add(ConnectedClient());
+    }
+  }
+
+  @override
+  void onDisConnect(String myChatId) {
+    // To avoid confusion, since multi-account uses same `_clientBloc`.
+    if (myChatId == _clientBloc.accountChatId) {
+      _clientBloc.add(DisConnected());
+    }
+  }
+
+  @override
+  void onMessage(String myChatId, Map data) {
+    // To avoid confusion, since multi-account uses same `_clientBloc`.
+    if (myChatId == _clientBloc.accountChatId) {
+      _clientBloc.add(
+        OnMessage(
+          MessageSchema(from: data['src'], to: myChatId, data: data['data'], pid: data['pid']),
+        ),
+      );
     }
   }
 }

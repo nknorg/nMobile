@@ -5,7 +5,7 @@ import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/model/popular_model.dart';
+import 'package:nmobile/model/popular_channel.dart';
 
 class PopularGroupPage extends StatefulWidget {
   static final String routeName = "PopularGroupPage";
@@ -15,12 +15,12 @@ class PopularGroupPage extends StatefulWidget {
 }
 
 class PopularGroupPageState extends State<PopularGroupPage> {
-  List<PopularModel> populars;
+  List<PopularChannel> populars;
 
   @override
   void initState() {
     super.initState();
-    populars = PopularModel.defaultData();
+    populars = PopularChannel.defaultData();
   }
 
   @override
@@ -61,7 +61,7 @@ class PopularGroupPageState extends State<PopularGroupPage> {
 
 class PopularItem extends StatelessWidget {
   static final String routeName = "PopularItem";
-  final PopularModel data;
+  final PopularChannel data;
   final VoidCallback click;
 
   PopularItem({Key key, this.data, this.click}) : super(key: key);
