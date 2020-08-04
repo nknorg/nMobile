@@ -128,7 +128,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
         backgroundColor: DefaultTheme.primaryColor,
         child: loadAssetIconsImage('pencil', width: 24),
         onPressed: showBottomMenu,
-      ).pad(b: 76 + MediaQuery.of(context).padding.bottom, r: 4),
+      ).pad(b: MediaQuery.of(context).padding.bottom, r: 4),
       body: Container(
         child: ConstrainedBox(
           constraints: BoxConstraints.expand(),
