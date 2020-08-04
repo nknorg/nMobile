@@ -1202,8 +1202,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "error_unknow_nkn_qrcode": "识别失败",
-  "@error_unknow_nkn_qrcode": {
+  "error_unknown_nkn_qrcode": "识别失败",
+  "@error_unknown_nkn_qrcode": {
     "description": "",
     "type": "text",
     "placeholders": {}

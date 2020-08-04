@@ -353,10 +353,6 @@ class NMobileLocalizations {
     return Intl.message('Are you sure you want to leave this group?', name: 'leave_group_confirm_title', desc: '');
   }
 
-  String get delete_chennel_confirm_title {
-    return Intl.message('Are you sure you want to leave from this group?', name: 'delete_chennel_confirm_title', desc: '');
-  }
-
   String get delete_cache_confirm_title {
     return Intl.message('Are you sure you want to delete cache?', name: 'delete_cache_confirm_title', desc: '');
   }
@@ -842,8 +838,8 @@ class NMobileLocalizations {
     return Intl.message('Invalid wallet address.', name: 'error_nkn_address_format', desc: '');
   }
 
-  String get error_unknow_nkn_qrcode {
-    return Intl.message('Unknow NKN qr code.', name: 'error_unknow_nkn_qrcode', desc: '');
+  String get error_unknown_nkn_qrcode {
+    return Intl.message('Unknown NKN qr code.', name: 'error_unknown_nkn_qrcode', desc: '');
   }
 
   String get chat_no_wallet_title {
