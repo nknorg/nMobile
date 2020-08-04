@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -376,16 +377,27 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                               color: DefaultTheme.fontColor1,
                               height: 1,
                             ),
-                            Label(
-                              Global.versionFull,
-                              type: LabelType.bodyRegular,
-                              color: DefaultTheme.fontColor2,
-                              height: 1,
+                            Row(
+                              children: <Widget>[
+                                Label(
+                                  Global.versionFull,
+                                  type: LabelType.bodyRegular,
+                                  color: DefaultTheme.fontColor2,
+                                  height: 1,
+                                ),
+                                Platform.isAndroid
+                                    ? SvgPicture.asset(
+                                        'assets/icons/right.svg',
+                                        width: 24,
+                                        color: DefaultTheme.fontColor2,
+                                      )
+                                    : Space.empty,
+                              ],
                             ),
                           ],
                         ),
                         onPressed: () {
-                          Navigator.of(context).pushNamed(AppVersion.routeName);
+                          if (Platform.isAndroid) Navigator.of(context).pushNamed(AppVersion.routeName);
                         },
                       ),
                     ),

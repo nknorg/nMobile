@@ -12,6 +12,7 @@ import 'package:nmobile/blocs/cdn/cdn_bloc.dart';
 import 'package:nmobile/blocs/cdn/cdn_state.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/label.dart';
+import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/api.dart';
 import 'package:nmobile/helpers/format.dart';
@@ -23,11 +24,13 @@ import 'package:nmobile/screens/ncdn/node_detail_page.dart';
 import 'package:nmobile/screens/ncdn/node_list_page.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/screens/view/ncdn_main_header.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class NodeMainPage extends StatefulWidget {
   static const String routeName = '/ncdn/node/detail';
+
   NodeMainPage({Key key}) : super(key: key);
 
   @override
@@ -270,15 +273,7 @@ class _NodeMainPageState extends State<NodeMainPage> with AccountDependsBloc {
                                 ),
                                 Spacer(),
                                 Label(
-                                  responseData == null
-                                      ? '获取中...'
-                                      : _list
-                                          .where((item) {
-                                            return item.getStatus() == '异常';
-                                          })
-                                          .toList()
-                                          .length
-                                          .toString(),
+                                  responseData == null ? '获取中...' : _list.where((item) => item.getStatus() == '异常').toList().length.toString(),
                                   color: DefaultTheme.fontColor1,
                                   type: LabelType.bodyRegular,
                                   softWrap: true,
@@ -310,15 +305,7 @@ class _NodeMainPageState extends State<NodeMainPage> with AccountDependsBloc {
                                 ),
                                 Spacer(),
                                 Label(
-                                  responseData == null
-                                      ? '获取中...'
-                                      : _list
-                                          .where((item) {
-                                            return item.getStatus() == '未知';
-                                          })
-                                          .toList()
-                                          .length
-                                          .toString(),
+                                  responseData == null ? '获取中...' : _list.where((item) => item.getStatus() == '未知').toList().length.toString(),
                                   color: DefaultTheme.fontColor1,
                                   type: LabelType.bodyRegular,
                                   softWrap: true,
@@ -338,7 +325,8 @@ class _NodeMainPageState extends State<NodeMainPage> with AccountDependsBloc {
                     SizedBox(height: 10.h),
                     Container(
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
                           InkWell(
                             onTap: () async {
@@ -358,29 +346,23 @@ class _NodeMainPageState extends State<NodeMainPage> with AccountDependsBloc {
                               }
                             },
                             child: Row(
-                              children: <Widget>[
-                                Icon(
-                                  Icons.calendar_today,
-                                  size: 16,
-                                ),
-                                SizedBox(width: 5.w),
-                                Label(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Icon(Icons.calendar_today, size: 16).pad(b: 1, r: 4),
+                                Text(
                                   _startText + " 00:00",
-                                  color: DefaultTheme.fontColor1,
-                                  type: LabelType.bodyRegular,
-                                  softWrap: true,
+                                  style: TextStyle(color: Colours.dark_2d, fontSize: DefaultTheme.bodySmallFontSize),
+                                  softWrap: false,
                                 ),
                               ],
                             ),
-                          ),
-                          SizedBox(width: 10.w),
+                          ).pad(r: 8),
                           Label(
                             '至',
                             color: DefaultTheme.fontColor1,
-                            type: LabelType.bodyRegular,
+                            type: LabelType.bodySmall,
                             softWrap: true,
-                          ),
-                          SizedBox(width: 10.w),
+                          ).pad(r: 8),
                           InkWell(
                             onTap: () async {
                               DateTime date = await showDatePicker(
@@ -397,22 +379,17 @@ class _NodeMainPageState extends State<NodeMainPage> with AccountDependsBloc {
                               });
                             },
                             child: Row(
-                              children: <Widget>[
-                                Icon(
-                                  Icons.calendar_today,
-                                  size: 16,
-                                ),
-                                SizedBox(width: 5.w),
-                                Label(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Icon(Icons.calendar_today, size: 16).pad(b: 1, r: 4),
+                                Text(
                                   _endText + " 23:59",
-                                  color: DefaultTheme.fontColor1,
-                                  type: LabelType.bodyRegular,
-                                  softWrap: true,
+                                  style: TextStyle(color: Colours.dark_2d, fontSize: DefaultTheme.bodySmallFontSize),
+                                  softWrap: false,
                                 ),
                               ],
                             ),
                           ),
-                          SizedBox(width: 10.w),
                         ],
                       ),
                     ),
