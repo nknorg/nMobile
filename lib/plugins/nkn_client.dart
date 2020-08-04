@@ -92,9 +92,9 @@ class NknClientProxy with Tag {
     }
   }
 
-  Future<Uint8List> sendText(List<String> dests, String data) {
+  Future<Uint8List> sendText(List<String> dests, String data, {int maxHoldingSeconds = -1}) {
     assert(_isConnected);
-    return _NknClientPlugin.sendText(dests, data);
+    return _NknClientPlugin.sendText(dests, data, maxHoldingSeconds: maxHoldingSeconds);
   }
 
   Future<Uint8List> publishText(String topicHash, String data) {
@@ -350,8 +350,8 @@ class _NknClientPlugin {
     await _methodChannel.invokeMethod('disConnect');
   }
 
-  static Future<Uint8List> sendText(List<String> dests, String data) async {
-    _LOG.i('sendText($dests, $data)');
+  static Future<Uint8List> sendText(List<String> dests, String data, {int maxHoldingSeconds = -1}) async {
+    _LOG.i('sendText($dests, $data, $maxHoldingSeconds)');
     Completer<Uint8List> completer = Completer<Uint8List>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
@@ -363,6 +363,7 @@ class _NknClientPlugin {
         '_id': id,
         'dests': dests,
         'data': data,
+        'maxHoldingSeconds': maxHoldingSeconds,
       });
     } catch (e) {
       _LOG.e('sendText', e);
