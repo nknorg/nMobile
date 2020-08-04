@@ -146,7 +146,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
                       WalletSchema w = state.wallets[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
-                        child: WalletItem(type: w.type == WalletSchema.NKN_WALLET ? WalletType.nkn : WalletType.eth, schema: w),
+                        child: WalletItem(schema: w, index: index, type: w.type == WalletSchema.NKN_WALLET ? WalletType.nkn : WalletType.eth),
 //                        child: WalletItem(type: w.type == WalletSchema.NKN_WALLET ? WalletType.nkn : WalletType.eth, schema: w),
                       );
                     });

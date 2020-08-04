@@ -13,10 +13,11 @@ enum WalletType { nkn, eth }
 
 class WalletItem extends StatefulWidget {
   final WalletSchema schema;
+  final int index;
   final WalletType type;
   final GestureTapCallback onTap;
 
-  WalletItem({this.schema, this.type = WalletType.nkn, this.onTap});
+  WalletItem({this.schema, this.index, this.type = WalletType.nkn, this.onTap});
 
   @override
   _WalletItemState createState() => _WalletItemState();
@@ -29,7 +30,10 @@ class _WalletItemState extends State<WalletItem> {
       return InkWell(
         onTap: widget.onTap ??
             () {
-              Navigator.of(context).pushNamed(NknWalletDetailScreen.routeName, arguments: widget.schema);
+              Navigator.of(context).pushNamed(NknWalletDetailScreen.routeName, arguments: {
+                'wallet': widget.schema,
+                'index': widget.index,
+              });
             },
         child: Container(
           decoration: BoxDecoration(
@@ -115,7 +119,10 @@ class _WalletItemState extends State<WalletItem> {
       return InkWell(
         onTap: widget.onTap ??
             () {
-              Navigator.of(context).pushNamed(NknWalletDetailScreen.routeName, arguments: widget.schema);
+              Navigator.of(context).pushNamed(NknWalletDetailScreen.routeName, arguments: {
+                'wallet': widget.schema,
+                'index': widget.index,
+              });
             },
         child: Container(
           decoration: BoxDecoration(
