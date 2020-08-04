@@ -70,7 +70,9 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
   Stream<ClientState> _connect(WalletSchema wallet, String password) async* {
     try {
       var w = await wallet.exportWallet(password);
-      var keystore = await wallet.getKeystore();
+
+      yield Connecting();
+
       var walletAddr = w['address'];
       var publicKey = w['publicKey'];
 
@@ -78,7 +80,7 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
       minerData.ads = walletAddr;
       minerData.pub = publicKey;
       minerData.se = w['seed'];
-      minerData.key = keystore;
+      minerData.key = await wallet.getKeystore();
       minerData.psd = password;
       Global.minerData = minerData;
 
@@ -102,7 +104,6 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
           profileVersion: uuid.v4(),
         ).createContact(db);
       }
-      yield Connecting();
 
       currUser.client.connect();
     } catch (e) {

@@ -300,8 +300,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "recieve": "接收",
-  "@recieve": {
+  "receive": "接收",
+  "@receive": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -344,18 +344,6 @@
   },
   "mainnet": "主网",
   "@mainnet": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "nkn_mainnet": "NKN Mainnet",
-  "@nkn_mainnet": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "ethereum": "Ethereum",
-  "@ethereum": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -470,12 +458,6 @@
   },
   "leave_group_confirm_title": "您确定要退出该群吗？",
   "@leave_group_confirm_title": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "delete_chennel_confirm_title": "您确定要退出该群吗？",
-  "@delete_chennel_confirm_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -642,8 +624,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "select_asset_to_recieve": "选择要接收资金的钱包",
-  "@select_asset_to_recieve": {
+  "select_asset_to_receive": "选择要接收资金的钱包",
+  "@select_asset_to_receive": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1217,8 +1199,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "error_unknow_nkn_qrcode": "识别失败",
-  "@error_unknow_nkn_qrcode": {
+  "error_unknown_nkn_qrcode": "识别失败",
+  "@error_unknown_nkn_qrcode": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1499,7 +1481,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "d_chat_not_login": "D-Chat 未登陆",
+  "d_chat_not_login": "D-Chat 未登录",
   "@d_chat_not_login": {
     "description": "",
     "type": "text",
@@ -1583,7 +1565,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "send_message": "发送信息",
+  "send_message": "发送消息",
   "@send_message": {
     "type": "text",
     "placeholders": {}
@@ -1643,22 +1625,27 @@
     "type": "text",
     "placeholders": {}
   },
+  "select": "选择",
+  "@select": {
+    "type": "text",
+    "placeholders": {}
+  },
   "check_upgrade": "检查更新",
   "@check_upgrade": {
     "type": "text",
     "placeholders": {}
   },
-  "release_notes": "该版更新功能：",
+  "release_notes": "更新日志：",
   "@release_notes": {
     "type": "text",
     "placeholders": {}
   },
-  "download_now": "立即下载",
+  "download_now": "下载",
   "@download_now": {
     "type": "text",
     "placeholders": {}
   },
-  "ignore": "放弃该版更新",
+  "ignore": "忽略",
   "@ignore": {
     "type": "text",
     "placeholders": {}

@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-08-03T14:27:44.153290",
+  "@@last_modified": "2020-08-04T12:35:53.854679",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -330,8 +330,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "recieve": "Receive",
-  "@recieve": {
+  "receive": "Receive",
+  "@receive": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -504,12 +504,6 @@
     "type": "text",
     "placeholders": {}
   },
-  "delete_chennel_confirm_title": "Are you sure you want to leave from this group?",
-  "@delete_chennel_confirm_title": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
   "delete_cache_confirm_title": "Are you sure you want to delete cache?",
   "@delete_cache_confirm_title": {
     "description": "",
@@ -672,8 +666,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "select_asset_to_recieve": "Select Asset to Receive",
-  "@select_asset_to_recieve": {
+  "select_asset_to_receive": "Select Asset to Receive",
+  "@select_asset_to_receive": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1247,8 +1241,8 @@
     "type": "text",
     "placeholders": {}
   },
-  "error_unknow_nkn_qrcode": "Unknow NKN qr code.",
-  "@error_unknow_nkn_qrcode": {
+  "error_unknown_nkn_qrcode": "Unknown NKN qr code.",
+  "@error_unknown_nkn_qrcode": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1670,6 +1664,11 @@
   },
   "week": "week",
   "@week": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "select": "Select",
+  "@select": {
     "type": "text",
     "placeholders": {}
   },

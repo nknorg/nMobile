@@ -237,8 +237,8 @@ class NMobileLocalizations {
     return Intl.message('Send Eth', name: 'send_eth', desc: '');
   }
 
-  String get recieve {
-    return Intl.message('Receive', name: 'recieve', desc: '');
+  String get receive {
+    return Intl.message('Receive', name: 'receive', desc: '');
   }
 
   String get keystore {
@@ -353,10 +353,6 @@ class NMobileLocalizations {
     return Intl.message('Are you sure you want to leave this group?', name: 'leave_group_confirm_title', desc: '');
   }
 
-  String get delete_chennel_confirm_title {
-    return Intl.message('Are you sure you want to leave from this group?', name: 'delete_chennel_confirm_title', desc: '');
-  }
-
   String get delete_cache_confirm_title {
     return Intl.message('Are you sure you want to delete cache?', name: 'delete_cache_confirm_title', desc: '');
   }
@@ -465,8 +461,8 @@ class NMobileLocalizations {
     return Intl.message('Select Asset to Send', name: 'select_asset_to_send', desc: '');
   }
 
-  String get select_asset_to_recieve {
-    return Intl.message('Select Asset to Receive', name: 'select_asset_to_recieve', desc: '');
+  String get select_asset_to_receive {
+    return Intl.message('Select Asset to Receive', name: 'select_asset_to_receive', desc: '');
   }
 
   String get select_another_wallet {
@@ -618,7 +614,6 @@ class NMobileLocalizations {
     return Intl.message('Security', name: 'security', desc: '');
   }
 
-  // ignore: non_constant_identifier_names
   String get face_id {
     return Intl.message('Face ID', name: 'face_id', desc: '');
   }
@@ -847,8 +842,8 @@ class NMobileLocalizations {
     return Intl.message('Invalid wallet address.', name: 'error_nkn_address_format', desc: '');
   }
 
-  String get error_unknow_nkn_qrcode {
-    return Intl.message('Unknow NKN qr code.', name: 'error_unknow_nkn_qrcode', desc: '');
+  String get error_unknown_nkn_qrcode {
+    return Intl.message('Unknown NKN qr code.', name: 'error_unknown_nkn_qrcode', desc: '');
   }
 
   String get chat_no_wallet_title {
@@ -1079,6 +1074,9 @@ class NMobileLocalizations {
   String get hours => Intl.message('hours', name: 'hours');
   String get minute => Intl.message('minute', name: 'minute');
   String get week => Intl.message('week', name: 'week');
+
+  String get select => Intl.message('Select', name: 'select');
+
   String get check_upgrade => Intl.message('Check Upgrade', name: 'check_upgrade');
   String get release_notes => Intl.message('Release Notes:', name: 'release_notes');
   String get download_now => Intl.message('Download Now', name: 'download_now');

@@ -298,13 +298,13 @@ String getOwnerPubkeyByTopic(String topic) {
 }
 
 DateTime getStartOfDay(DateTime time) {
-  String formattedDate = DateUtil.formatDate(time, isUtc: false, format: 'yyyy-MM-dd');
+  String formattedDate = DateUtil.formatDate(time, /*isUtc: false,*/ format: 'yyyy-MM-dd');
   DateTime newDate = DateTime.parse(formattedDate);
   return newDate;
 }
 
 DateTime getEndOfDay(DateTime time) {
-  String formattedDate = DateUtil.formatDate(time, isUtc: false, format: 'yyyy-MM-dd');
+  String formattedDate = DateUtil.formatDate(time, /*isUtc: false,*/ format: 'yyyy-MM-dd');
   DateTime newDate = DateTime.parse(formattedDate + " 23:59:59");
   return newDate;
 }
@@ -313,7 +313,7 @@ int getTimestampLatest(bool phase, int day) {
   String newHours;
   DateTime now = new DateTime.now();
   DateTime sixtyDaysFromNow = now.add(new Duration(days: day));
-  String formattedDate = DateUtil.formatDate(sixtyDaysFromNow, isUtc: false, format: 'yyyy-MM-dd');
+  String formattedDate = DateUtil.formatDate(sixtyDaysFromNow, /*isUtc: false,*/ format: 'yyyy-MM-dd');
   if (phase) {
     newHours = formattedDate + ' 00:00:00';
   } else {

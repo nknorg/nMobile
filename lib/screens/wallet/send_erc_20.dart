@@ -171,7 +171,7 @@ class _SendErc20ScreenState extends State<SendErc20Screen> with AccountDependsBl
               await ModalDialog.of(context).show(
                 height: 240,
                 content: Label(
-                  NMobileLocalizations.of(context).error_unknow_nkn_qrcode,
+                  NMobileLocalizations.of(context).error_unknown_nkn_qrcode,
                   type: LabelType.bodyRegular,
                 ),
               );
@@ -208,7 +208,7 @@ class _SendErc20ScreenState extends State<SendErc20Screen> with AccountDependsBl
               ConstrainedBox(
                 constraints: BoxConstraints(minHeight: 400),
                 child: Container(
-                  constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 210),
+                  constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 200),
                   color: DefaultTheme.backgroundColor4,
                   child: Flex(
                     direction: Axis.vertical,
@@ -225,7 +225,7 @@ class _SendErc20ScreenState extends State<SendErc20Screen> with AccountDependsBl
                               return Container(
                                 decoration: BoxDecoration(
                                   color: DefaultTheme.backgroundLightColor,
-                                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+//                                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
                                 ),
                                 child: Form(
                                   key: _formKey,
@@ -242,17 +242,17 @@ class _SendErc20ScreenState extends State<SendErc20Screen> with AccountDependsBl
                                         child: Scrollbar(
                                           child: SingleChildScrollView(
                                             child: Padding(
-                                              padding: EdgeInsets.only(top: 32, left: 20, right: 20, bottom: 32),
+                                              padding: EdgeInsets.only(top: 24, left: 20, right: 20, bottom: 32),
                                               child: Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
-                                                  Label(
-                                                    NMobileLocalizations.of(context).from,
-                                                    type: LabelType.h4,
-                                                    textAlign: TextAlign.start,
-                                                  ),
+//                                                  Label(
+//                                                    NMobileLocalizations.of(context).from,
+//                                                    type: LabelType.h4,
+//                                                    textAlign: TextAlign.start,
+//                                                  ),
                                                   WalletDropdown(
-                                                    title: NMobileLocalizations.of(context).select_asset_to_recieve,
+                                                    title: NMobileLocalizations.of(context).select_asset_to_receive,
                                                     schema: widget.arguments ?? wallet,
                                                   ),
                                                   Label(
