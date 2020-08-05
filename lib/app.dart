@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/plugins/common_native.dart';
+import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/screens/wallet/wallet.dart';
 import 'package:nmobile/services/background_fetch_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/services/task_service.dart';
-import 'package:nmobile/plugins/android_back_desktop.dart';
 import 'package:orientation/orientation.dart';
 
 import 'components/footer/nav.dart';
@@ -64,7 +64,7 @@ class _AppScreenState extends State<AppScreen> {
     instanceOf<BackgroundFetchService>().init();
     return WillPopScope(
       onWillPop: () async {
-        await AndroidBackTop.backToDesktop();
+        await CommonNative.androidBackToDesktop();
         return false;
       },
       child: getView(),

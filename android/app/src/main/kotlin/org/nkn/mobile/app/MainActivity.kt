@@ -20,7 +20,7 @@ class MainActivity : FlutterFragmentActivity(), Tag {
     val TAG by lazy { tag() }
 
     companion object {
-        private const val N_MOBILE_NATIVE = "android/nmobile/native/common"
+        private const val N_MOBILE_COMMON = "org.nkn.nmobile/native/common"
     }
 
     /*private */var clientPlugin: NknClientPlugin? = null
@@ -34,7 +34,7 @@ class MainActivity : FlutterFragmentActivity(), Tag {
 
         NknWalletPlugin(flutterEngine)
         clientPlugin = NknClientPlugin(this, flutterEngine)
-        MethodChannel(flutterEngine.dartExecutor, N_MOBILE_NATIVE).setMethodCallHandler { methodCall, result ->
+        MethodChannel(flutterEngine.dartExecutor, N_MOBILE_COMMON).setMethodCallHandler { methodCall, result ->
             if (methodCall.method == "backDesktop") {
                 result.success(true)
                 moveTaskToBack(false)

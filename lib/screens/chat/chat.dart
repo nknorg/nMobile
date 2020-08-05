@@ -1,10 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
+import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
+import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/local_notification.dart';
+import 'package:nmobile/helpers/local_storage.dart';
+import 'package:nmobile/plugins/common_native.dart';
+import 'package:nmobile/router/route_observer.dart';
+import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/active_page.dart';
+import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
 import 'package:nmobile/screens/chat/no_wallet_account.dart';
@@ -15,14 +25,122 @@ class ChatScreen extends StatefulWidget {
 
   final ActivePage activePage;
 
-  ChatScreen(this.activePage);
+  const ChatScreen(this.activePage);
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMixin, Tag {
-  bool firstShow = true;
+class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMixin, RouteAware, WidgetsBindingObserver, Tag {
+  final DChatAuthenticationHelper authHelper = DChatAuthenticationHelper();
+  bool noConnPageShowing = true;
+  bool fromBackground = false;
+  bool uiShowed = false;
+  ClientBloc clientBloc;
+  LocalStorage localStorage;
+
+  // ignore: non_constant_identifier_names
+  LOG _LOG;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _LOG.i('didChangeAppLifecycleState($state), ${DateTime.now().toLocal().toString()}');
+    if (state == AppLifecycleState.resumed) {
+      if (fromBackground) {
+        fromBackground = false;
+        authHelper.canShow = noConnPageShowing;
+        authHelper.ensureAutoShowAuthentication('lifecycle', onGetPassword);
+      }
+    } else if (state == AppLifecycleState.paused) {
+      // When app brought to foreground again,
+      // lifecycle state order is: inactive -> resumed.
+      // so...only judge if is `inactive` not enough.
+      fromBackground = true;
+    }
+  }
+
+  void onCurrPageActive(active) {
+    _LOG.i('onCurrPageActive($active)');
+    Timer(Duration(milliseconds: 600), () {
+      authHelper.setPageActive(PageAction.force, active);
+      authHelper.ensureAutoShowAuthentication('tab change', onGetPassword);
+    });
+  }
+
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    _LOG.i('canShow: $noConnPageShowing, call _authHelper.ensureAutoShowXxx()');
+    Timer(Duration(milliseconds: 600), () {
+      authHelper.canShow = noConnPageShowing;
+      authHelper.setPageActive(PageAction.popToCurr);
+      authHelper.ensureAutoShowAuthentication('popToCurr', onGetPassword);
+    });
+  }
+
+  @override
+  void didPushNext() {
+    _LOG.i('didPushNext()');
+    authHelper.setPageActive(PageAction.pushNext);
+    super.didPushNext();
+  }
+
+  void whenUiFirstShowing() async {
+    WidgetsBinding.instance.addPostFrameCallback((timestamp) async {
+      uiShowed = true;
+      if (await Global.isInBackground) {
+        fromBackground = true;
+      }
+      _LOG.d('whenUiFirstShowing | isInBackground: ${await Global.isInBackground}, isStateActive: ${await Global.isStateActive}, ' +
+          DateTime.now().toLocal().toString());
+      LocalNotification.debugNotification(
+          '<[DEBUG]> whenUiFirstShowing',
+          'isInBackground: ${await Global.isInBackground}, isStateActive: ${await Global.isStateActive}'
+              ', nativeActive: ${await CommonNative.isActive()}, ${DateTime.now().toLocal().toString()}');
+      authHelper.canShow = uiShowed && noConnPageShowing && !(await Global.isInBackground);
+      authHelper.ensureAutoShowAuthentication('first show', onGetPassword);
+    });
+  }
+
+  void onGetWallet(WalletSchema accountWallet) async {
+    if (authHelper.wallet != null && authHelper.wallet.address == accountWallet.address) return;
+    // When account changed, `authHelper.wallet` should be changed.
+    authHelper.wallet = accountWallet;
+    // fix bug of `showing-input-pwd-dialog` in background.
+    authHelper.canShow = uiShowed && noConnPageShowing && !(await Global.isInBackground);
+    authHelper.ensureAutoShowAuthentication('wallet', onGetPassword);
+  }
+
+  void onGetPassword(WalletSchema wallet, String password) {
+    clientBloc.add(CreateClient(wallet, password));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _LOG = LOG(tag);
+    LocalNotification.debugNotification('<[DEBUG]> chatPageInitState', '${DateTime.now().toLocal().toString()}');
+    whenUiFirstShowing();
+    WidgetsBinding.instance.addObserver(this);
+    clientBloc = BlocProvider.of<ClientBloc>(context);
+    authHelper.setPageActive(PageAction.init, widget.activePage.isCurrPageActive);
+    widget.activePage.addOnCurrPageActive(onCurrPageActive);
+  }
+
+  @override
+  void didChangeDependencies() {
+    RouteUtils.routeObserver.subscribe(this, ModalRoute.of(context));
+    super.didChangeDependencies();
+  }
+
+  @override
+  void dispose() {
+    RouteUtils.routeObserver.unsubscribe(this);
+    WidgetsBinding.instance.removeObserver(this);
+    DChatAuthenticationHelper.cancelAuthentication();
+    widget.activePage.removeOnCurrPageActive(onCurrPageActive);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,18 +152,26 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
             return BlocBuilder<ClientBloc, ClientState>(
               builder: (context, clientState) {
                 if (clientState is NoConnect) {
-                  LOG(tag).w('firstShow:$firstShow');
-                  firstShow = false;
-                  return NoConnectScreen(widget.activePage);
+                  noConnPageShowing = true;
+                  DChatAuthenticationHelper.loadDChatUseWalletByState(state, onGetWallet);
+                  return NoConnectScreen(() {
+                    authHelper.prepareConnect(onGetPassword);
+                  });
                 } else {
+                  noConnPageShowing = false;
+                  authHelper.wallet = null;
                   return ChatHome(widget.activePage);
                 }
               },
             );
           } else {
+            noConnPageShowing = false;
+            authHelper.wallet = null;
             return NoWalletAccount(widget.activePage);
           }
         }
+        noConnPageShowing = false;
+        authHelper.wallet = null;
         return Container();
       },
     );

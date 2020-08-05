@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:background_fetch/background_fetch.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
@@ -70,11 +69,10 @@ class BackgroundFetchService with Tag {
 
         // Do work.
         var isConnected = _clientBloc.state is Connected;
-        var isBackground = Global.state == null || Global.state == AppLifecycleState.paused || Global.state == AppLifecycleState.detached;
-        _LOG.d("[BackgroundFetch] isConnected: $isConnected, isBackground: $isBackground.");
-        if (!isConnected && isBackground) {
+        _LOG.d("[BackgroundFetch] isConnected: $isConnected, isInBackground: ${await Global.isInBackground}.");
+        if (!isConnected && await Global.isInBackground) {
           _LOG.d("[BackgroundFetch] create connection...");
-          LocalNotification.debugNotification('[debug] create connection...', '');
+          LocalNotification.debugNotification('<[DEBUG]> create connection...', '');
           _walletBloc.add(LoadWallets());
           DChatAuthenticationHelper.loadDChatUseWallet(_walletBloc, (wallet) {
             _LOG.d("[BackgroundFetch] create connection | onGetWallet...");

@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -39,6 +40,7 @@ Future _onDidReceiveLocalNotification(int id, String title, String body, String 
 class LocalNotification {
   static FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   static int _notificationId = 0;
+
   static init() async {
     var initializationSettingsAndroid = new AndroidInitializationSettings('@drawable/icon_logo');
 
@@ -55,7 +57,7 @@ class LocalNotification {
   }
 
   static debugNotification(String title, String content, {int badgeNumber}) async {
-    if (!Settings.debug) return;
+    if (!Settings.debug || !Platform.isIOS) return;
     var iOSPlatformChannelSpecifics = IOSNotificationDetails(badgeNumber: badgeNumber);
 
     var platformChannelSpecifics = NotificationDetails(null, iOSPlatformChannelSpecifics);
@@ -85,13 +87,15 @@ class LocalNotification {
     try {
       switch (Settings.localNotificationType) {
         case LocalNotificationType.only_name:
-          await _flutterLocalNotificationsPlugin.show(_notificationId++, title, NMobileLocalizations.of(Global.appContext).you_have_new_message, platformChannelSpecifics);
+          await _flutterLocalNotificationsPlugin.show(
+              _notificationId++, title, NMobileLocalizations.of(Global.appContext).you_have_new_message, platformChannelSpecifics);
           break;
         case LocalNotificationType.name_and_message:
           await _flutterLocalNotificationsPlugin.show(_notificationId++, title, content, platformChannelSpecifics);
           break;
         case LocalNotificationType.none:
-          await _flutterLocalNotificationsPlugin.show(_notificationId++, NMobileLocalizations.of(Global.appContext).new_message, NMobileLocalizations.of(Global.appContext).you_have_new_message, platformChannelSpecifics);
+          await _flutterLocalNotificationsPlugin.show(_notificationId++, NMobileLocalizations.of(Global.appContext).new_message,
+              NMobileLocalizations.of(Global.appContext).you_have_new_message, platformChannelSpecifics);
           break;
       }
     } catch (e) {

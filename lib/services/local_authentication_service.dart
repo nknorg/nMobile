@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:synchronized/synchronized.dart';
@@ -42,7 +43,14 @@ class LocalAuthenticationService with Tag {
         return BiometricType.fingerprint;
       }
     } on PlatformException catch (e) {
-      _LOG.e('getAuthType', e);
+      _LOG.e('getAuthType | PlatformException', e);
+      LocalNotification.debugNotification('<[DEBUG]> getAuthType', 'PlatformException | ' + e?.message);
+    } on MissingPluginException catch (e) {
+      _LOG.e('getAuthType | MissingPluginException', e);
+      LocalNotification.debugNotification('<[DEBUG]> getAuthType', 'MissingPluginException | ' + e?.message);
+    } catch (e) {
+      _LOG.e('getAuthType | ?', e);
+      LocalNotification.debugNotification('<[DEBUG]> getAuthType', '? | ' + e?.message);
     }
     return null;
   }
@@ -50,13 +58,22 @@ class LocalAuthenticationService with Tag {
   Future<bool> authenticate() async {
     if (isProtectionEnabled) {
       try {
-        return await _localAuth.authenticateWithBiometrics(
+        final success = await _localAuth.authenticateWithBiometrics(
           localizedReason: 'authenticate to access',
           useErrorDialogs: false,
           stickyAuth: true,
         );
+        if (!success) LocalNotification.debugNotification('<[DEBUG]> authenticate', 'isProtectionEnabled：$isProtectionEnabled, success: $success');
+        return success;
       } on PlatformException catch (e) {
-        _LOG.e('authenticate', e);
+        _LOG.e('authenticate | PlatformException', e);
+        LocalNotification.debugNotification('<[DEBUG]> authenticate', 'PlatformException | ' + e?.message);
+      } on MissingPluginException catch (e) {
+        _LOG.e('authenticate | MissingPluginException', e);
+        LocalNotification.debugNotification('<[DEBUG]> authenticate', 'MissingPluginException | ' + e?.message);
+      } catch (e) {
+        _LOG.e('authenticate | ?', e);
+        LocalNotification.debugNotification('<[DEBUG]> authenticate', '? | ' + e?.message);
       }
     }
     return false;
