@@ -24,6 +24,7 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
@@ -131,7 +132,7 @@ class _MessagesTabState extends State<MessagesTab>
   }
 
   _ensureVerifyPassword() async {
-    if (_enabled || !widget.activePage.isCurrPageActive) return;
+    if (_enabled || !widget.activePage.isCurrPageActive || await Global.isInBackground) return;
     DChatAuthenticationHelper.loadDChatUseWallet(BlocProvider.of<WalletsBloc>(context), (wallet) {
       // When show faceIdAuthentication dialog, lifecycle is inactive,
       // this can prevent secondary ejection popup.

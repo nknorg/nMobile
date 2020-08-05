@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/settings.dart';
+import 'package:nmobile/plugins/common_native.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/services/android_messaging_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/utils/log_tag.dart';
-import 'package:nmobile/utils/nlog_util.dart';
 import 'package:package_info/package_info.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -35,10 +35,24 @@ class Global {
 
   static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
 
+  static Future<bool> get isInBackground async {
+    // If app startup in background or after deep sleep, the system would
+    // NOT call `AppState.didChangeAppLifecycleState()`, so the `state` will be null.
+    // But this app would be either state of `background` or `foreground`, at this time,
+    // must call native to determine exact state.
+    // `CommonNative.isActive()` worked for iOS.
+    return Global.state == null ? !(await CommonNative.isActive()) : Global.state == AppLifecycleState.paused || Global.state == AppLifecycleState.detached;
+  }
+
+  static Future<bool> get isStateActive async {
+    return Global.state == null ? await CommonNative.isActive() : Global.state == AppLifecycleState.resumed;
+  }
+
   static Future init(VoidCallback callback) async {
     _LOG.d('--->>> init --->>>');
     WidgetsFlutterBinding.ensureInitialized();
-    state = AppLifecycleState.resumed;
+    // Do not set value here. Will be set in `AppState.didChangeAppLifecycleState()`.
+    // state = AppLifecycleState.resumed;
     await SpUtil.getInstance();
     setupSingleton();
     await initData();

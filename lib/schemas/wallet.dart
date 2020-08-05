@@ -3,15 +3,16 @@ import 'dart:convert';
 import 'package:equatable/equatable.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
-import 'package:nmobile/utils/nlog_util.dart';
+import 'package:nmobile/utils/log_tag.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class WalletSchema extends Equatable {
+class WalletSchema extends Equatable with Tag {
   static const String NKN_WALLET = 'nkn';
   static const String ETH_WALLET = 'eth';
   final String address;
@@ -36,31 +37,32 @@ class WalletSchema extends Equatable {
   String toString() => 'WalletSchema { address: $address }';
 
   Future<String> getPassword({bool showDialogIfCanceledBiometrics = true, bool forceShowInputDialog = false}) async {
-    NLog.d('getPassword');
-    Future<String> _showDialog() {
+    LOG(tag, usePrint: false).d('getPassword');
+    Future<String> _showDialog(String reason) {
+      LocalNotification.debugNotification('<[DEBUG]> showInputPasswordDialog', 'reason: $reason, ' + DateTime.now().toLocal().toString());
       return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
     }
 
     if (forceShowInputDialog) {
-      return _showDialog();
+      return _showDialog('force');
     }
     final _localAuth = await LocalAuthenticationService.instance;
     if (_localAuth.isProtectionEnabled) {
       final password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');
       if (password == null) {
-        return _showDialog();
+        return _showDialog('no password');
       } else {
         bool auth = await _localAuth.authenticate();
         if (auth) {
           return password;
         } else if (showDialogIfCanceledBiometrics) {
-          return _showDialog();
+          return _showDialog('auth failed');
         } else {
           return null;
         }
       }
     } else {
-      return _showDialog();
+      return _showDialog('disabled');
     }
   }
 

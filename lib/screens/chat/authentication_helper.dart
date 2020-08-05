@@ -7,31 +7,77 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
+import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
+import 'package:nmobile/utils/log_tag.dart';
 
 /// @author Chenai
 /// @version 1.0, 14/07/2020
-class DChatAuthenticationHelper {
-  // For account switch.
-  static bool _initLaunch = true;
+enum PageAction { init, pushNext, popToCurr, force }
+
+class DChatAuthenticationHelper with Tag {
+  // ignore: non_constant_identifier_names
+  LOG _LOG;
+
+  DChatAuthenticationHelper() {
+    _LOG = LOG(tag, usePrint: false);
+  }
 
   bool canShow = false;
-  bool isPageActive = true; // e.g. isTabOnCurrentPageIndex
   WalletSchema wallet;
 
-  ensureAutoShowAuthentication(void onGetPassword(WalletSchema wallet, String password)) {
-    if ((_initLaunch || canShow) && isPageActive && wallet != null) {
+  bool _pageActiveInited = false;
+  bool _isPageActive = true; // e.g. isTabOnCurrentPageIndex
+
+  void setPageActive(PageAction action, [bool value]) {
+    if (_pageActiveInited) {
+      switch (action) {
+        case PageAction.init:
+//        _isPageActive = force;
+          throw 'illegal state';
+          break;
+        case PageAction.pushNext:
+          _isPageActive = false;
+          break;
+        case PageAction.popToCurr:
+          _isPageActive = true;
+          break;
+        case PageAction.force:
+          assert(value != null);
+          _isPageActive = value;
+          break;
+        default:
+          throw 'unknown';
+      }
+    } else {
+      switch (action) {
+        case PageAction.init:
+          _pageActiveInited = true;
+          _isPageActive = value;
+          break;
+        default:
+          throw 'illegal state';
+      }
+    }
+  }
+
+  ensureAutoShowAuthentication(String debug, void onGetPassword(WalletSchema wallet, String password)) {
+    _LOG.d('ensureAutoShowAuth...[$debug] | canShow: $canShow, _isPageActive: $_isPageActive,'
+        ' route: ${ModalRoute.of(Global.appContext).settings.name}, wallet: $wallet.');
+    LocalNotification.debugNotification('<[DEBUG]> ensureAutoShowAuth...',
+        '[$debug] canShow: $canShow, pageActive: $_isPageActive, wallet: ${wallet != null}, ' + DateTime.now().toLocal().toString());
+    if (canShow && _isPageActive && wallet != null) {
       prepareConnect(onGetPassword);
     }
   }
 
   prepareConnect(void onGetPassword(WalletSchema wallet, String password)) {
     authToPrepareConnect(wallet, (wallet, password) {
-      _initLaunch = false;
       canShow = false;
       onGetPassword(wallet, password);
     });
@@ -40,7 +86,7 @@ class DChatAuthenticationHelper {
   static void authToPrepareConnect(WalletSchema wallet, void onGetPassword(WalletSchema wallet, String password)) async {
     final _wallet = wallet;
     final _password = await authToGetPassword(_wallet);
-    if (_password != null) {
+    if (_password != null && _password.length > 0) {
       onGetPassword(_wallet, _password);
     }
   }
@@ -71,16 +117,17 @@ class DChatAuthenticationHelper {
     }
     if (isProtectionEnabled) {
       final _password = await SecureStorage().get('${SecureStorage.PASSWORDS_KEY}:${wallet.address}');
-      if (_password != null) {
+      if (_password != null && _password.length > 0) {
         onGetPassword(wallet, _password);
       }
     }
   }
 
   static void cancelAuthentication() async {
-    LocalAuthenticationService.instance.then((instance) {
-      instance.cancelAuthentication();
-    });
+    // Must be canceled accompanied by `inputPasswordDialog`, or it only shows `inputPasswordDialog`.
+//    LocalAuthenticationService.instance.then((instance) {
+//      instance.cancelAuthentication();
+//    });
     // TODO: cancel input password dialog, `_authenticating` also played a role.
   }
 
@@ -105,11 +152,25 @@ class DChatAuthenticationHelper {
     bool forceShowInputDialog = false,
   }) async {
     final _password = await authToGetPassword(wallet, forceShowInputDialog: forceShowInputDialog);
-    if (_password != null) {
+    if (_password != null && _password.length > 0) {
       verifyPassword(wallet: wallet, password: _password, onGot: onGot, onError: onError);
     } else {
       if (onError != null) onError(true, null);
     }
+  }
+
+  static void loadDChatUseWalletByState(WalletsLoaded state, void callback(WalletSchema wallet)) {
+    LocalStorage().get(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS).then((walletAddress) {
+      // `walletAddress` can be null.
+      final addr = walletAddress;
+
+      void parse(WalletsLoaded state) {
+        final wallet = state.wallets.firstWhere((w) => w.address == addr, orElse: () => state.wallets.first);
+        callback(wallet);
+      }
+
+      parse(state);
+    });
   }
 
   static void loadDChatUseWallet(WalletsBloc walletBloc, void callback(WalletSchema wallet)) {
