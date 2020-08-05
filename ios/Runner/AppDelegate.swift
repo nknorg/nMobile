@@ -31,21 +31,14 @@ var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
 
         NknClientPlugin(controller: controller)
 
-//        let clientMethodChannel = FlutterMethodChannel(name: "org.nkn.sdk/client", binaryMessenger: controller.binaryMessenger)
-//        clientMethodChannel.setMethodCallHandler(NknClientPlugin.handle)
-//
-//        let clientEventChannel = FlutterEventChannel(name: "org.nkn.sdk/client/event", binaryMessenger: controller.binaryMessenger)
-//        clientEventChannel.setStreamHandler(NknClientEventPlugin())
-        
-        
-       let commontChannel = FlutterMethodChannel(name: "ios/nmobile/native/common", binaryMessenger: controller.binaryMessenger)
-        commontChannel.setMethodCallHandler { (call, result) in
-              if "isActive" == call.method{
-                 result(application.applicationState != UIApplication.State.background)
-              }else{
-                  result(FlutterMethodNotImplemented)
-              }
-          }
+       FlutterMethodChannel(name: "org.nkn.nmobile/native/common", binaryMessenger: controller.binaryMessenger)
+            .setMethodCallHandler { (call, result) in
+                  if "isActive" == call.method{
+                     result(application.applicationState != UIApplication.State.background)
+                  }else{
+                      result(FlutterMethodNotImplemented)
+                  }
+            }
         
         
         GeneratedPluginRegistrant.register(with: self)
