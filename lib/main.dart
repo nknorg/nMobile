@@ -13,6 +13,7 @@ import 'package:nmobile/blocs/global/global_bloc.dart';
 import 'package:nmobile/blocs/global/global_state.dart';
 import 'package:nmobile/blocs/wallet/filtered_wallets_bloc.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/router/route_observer.dart';
 import 'package:nmobile/router/routes.dart';
@@ -70,6 +71,7 @@ class AppState extends State<App> with WidgetsBindingObserver, Tag {
   @override
   void initState() {
     super.initState();
+    LocalNotification.debugNotification('<[DEBUG]> --- app init ---', DateTime.now().toLocal().toString());
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -77,6 +79,7 @@ class AppState extends State<App> with WidgetsBindingObserver, Tag {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     LOG(tag).d('didChangeAppLifecycleState($state)');
     Global.state = state;
+    LocalNotification.debugNotification('<[DEBUG]> $state', DateTime.now().toLocal().toString());
   }
 
   @override

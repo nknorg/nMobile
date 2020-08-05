@@ -33,7 +33,6 @@ import 'package:nmobile/splash.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
 Map<String, WidgetBuilder> routes = {
-  SplashPage.routeName: (BuildContext context) => SplashPage(),
   AppScreen.routeName: (BuildContext context) => AppScreen(),
   HomeScreen.routeName: (BuildContext context) => HomeScreen(),
   ScannerScreen.routeName: (BuildContext context) => ScannerScreen(),

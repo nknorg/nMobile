@@ -31,7 +31,7 @@ class ChatHome extends StatefulWidget {
 
   final ActivePage activePage;
 
-  ChatHome(this.activePage);
+  const ChatHome(this.activePage);
 
   @override
   _ChatHomeState createState() => _ChatHomeState();
@@ -49,7 +49,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    List<String> tabs = [NMobileLocalizations.of(context).chat_tab_messages, NMobileLocalizations.of(context).chat_tab_group];
+//    List<String> tabs = [NMobileLocalizations.of(context).chat_tab_messages, NMobileLocalizations.of(context).chat_tab_group];
     return Scaffold(
       backgroundColor: DefaultTheme.primaryColor,
       appBar: Header(

@@ -61,6 +61,12 @@ extension InkWellWidget on Widget {
   }
 }
 
+extension NumToDoubleOrInt on num {
+  int get i => this.round();
+
+  double get d => this.roundToDouble();
+}
+
 class Space {
   static Padding get empty => Padding(padding: const EdgeInsets.all(0));
 }
