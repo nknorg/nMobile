@@ -98,8 +98,6 @@ class AppState extends State<App> with WidgetsBindingObserver, Tag {
               onGenerateTitle: (context) {
                 return NMobileLocalizations.of(context).title;
               },
-//              navigatorKey: locator<NavigateService>().key,
-//              navigatorKey: Catcher.navigatorKey,
               onGenerateRoute: onGenerateRoute,
               title: 'nMobile',
               theme: ThemeData(
