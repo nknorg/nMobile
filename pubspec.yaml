@@ -70,7 +70,6 @@ dependencies:
   cached_network_image: ^2.0.0-rc
   oktoast: ^2.3.2
   flutter_easyrefresh: ^2.1.1
-  catcher: ^0.3.6
   flutter_easyloading: ^1.1.4
   flutter_slidable: ^0.5.4
   event_bus: ^1.1.0
