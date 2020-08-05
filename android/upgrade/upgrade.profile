@@ -5,5 +5,5 @@
   "title": "New Version to Update:",
   "notes": "* ### 1.1.4-Pro + (Build 122)\n1. optimize cdn link;\n2. fix bug with incorrect revenue display;\n3. update information ui display.",
   "sha-1": "bc782204400cce7f1737f81efb6ea8b718c7eb1c",
-  "force": true
+  "force": false
 }

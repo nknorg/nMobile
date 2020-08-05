@@ -5,5 +5,5 @@
   "title": "您有新版本可更新：",
   "notes": "* ### 1.1.4-Pro + (Build 122)\n1. 优化CDN链接；\n2. 修复收益显示错误的bug；\n3. 更新资料UI展示。",
   "sha-1": "bc782204400cce7f1737f81efb6ea8b718c7eb1c",
-  "force": true
+  "force": false
 }
