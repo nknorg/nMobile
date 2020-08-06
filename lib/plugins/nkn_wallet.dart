@@ -94,7 +94,6 @@ class NknWalletPlugin {
     Completer<double> completer = Completer<double>();
     String id = completer.hashCode.toString();
     _walletEventQueue[id] = completer;
-    NLog.d('getBalanceAsync   ');
     _methodChannel.invokeMethod('getBalanceAsync', {
       '_id': id,
       'address': address,
