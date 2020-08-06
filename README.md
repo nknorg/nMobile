@@ -1,4 +1,4 @@
-# nMobile - the world's most secure private and group messsenger
+# nMobile - the world's most secure private and group messenger
 
 “The decisions we make about communication security today will determine the kind of society we live in tomorrow.”
                                  — Dr. Whitfield Diffie, co-creator of public key cryptography and advisor to NKN
