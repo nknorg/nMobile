@@ -725,9 +725,9 @@ class TopicSchema {
     }
   }
 
-  Future<int> getTopicCount(DChatAccount account) async {
+  Future<int> getTopicCount(DChatAccount account, {cache: true}) async {
     try {
-      await getSubscribers(account);
+      await getSubscribers(account, cache: cache);
       Database db = await account.dbHolder.db;
       var countQuery = await db.query(
         SubscribersSchema.tableName,
@@ -795,6 +795,7 @@ class TopicSchema {
         res = await Permission.getSubscribersFromDbOrNative(account, topic: topic, topicHash: topicHash, offset: 0, limit: 10000, meta: meta, txPool: txPool);
       }
       NLog.d('$res');
+      NLog.d('${res.length}');
       if (type == TopicType.private) {
         res.removeWhere((key, val) {
           return key.contains('__permission__');

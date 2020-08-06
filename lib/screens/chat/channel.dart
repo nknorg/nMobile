@@ -90,7 +90,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
     }
 
     if (topic != null) {
-      topic.getTopicCount(account).then((tc) {
+      topic.getTopicCount(account, cache: false).then((tc) {
         if (mounted) {
           setState(() {
             if (tc == 0 || tc == null) {
