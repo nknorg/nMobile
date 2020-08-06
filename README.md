@@ -1,8 +1,21 @@
-# nmobile
+# nMobile
 
-nMobile
+“The decisions we make about communication security today will determine the kind of society we live in tomorrow.”
+                                 — Dr. Whitfield Diffie, co-creator of public key cryptography and advisor to NKN
+
+
+nMobile， the world's most secure private and group messsenger
+
+
+For more detail: 
+
+https://forum.nkn.org/t/nmobile-the-trusted-chat/2358
+
+
 
 ## Getting Started
+
+https://forum.nkn.org/t/nmobile-pre-beta-community-testing-and-simple-guide/2012
 
 
 ## install
