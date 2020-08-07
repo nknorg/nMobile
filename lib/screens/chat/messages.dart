@@ -37,7 +37,6 @@ import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/channel.dart';
-import 'package:nmobile/screens/chat/chat.dart';
 import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
@@ -146,8 +145,6 @@ class _MessagesTabState extends State<MessagesTab>
 
   _ensureVerifyPassword() async {
     if (_enabled || !widget.activePage.isCurrPageActive || await Global.isInBackground) return;
-    // Pop all except `ChatScreen`, this page is in `ChatScreen`.
-    Navigator.of(context).popUntil(ModalRoute.withName(ChatScreen.routeName));
     DChatAuthenticationHelper.loadDChatUseWallet(BlocProvider.of<WalletsBloc>(context), (wallet) {
       // When show faceIdAuthentication dialog, lifecycle is inactive,
       // this can prevent secondary ejection popup.
