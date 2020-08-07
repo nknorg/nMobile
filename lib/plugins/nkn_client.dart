@@ -62,6 +62,7 @@ class NknClientProxy with Tag {
   String get dbCipherPassphrase => isSeedMocked ? throw "db cipher invalid." : hexEncode(sha256(hexEncode(_seed.toList(growable: false))));
 
   bool get isSeedMocked => _seed.isEmpty;
+
 ///////////////////////////////////////////////////////////////////////////
   bool _isConnected = false;
   bool _disConnect = true;
@@ -259,6 +260,12 @@ class _NknClientPlugin {
       _LOG.i('event: $event');
 
       switch (event) {
+        case 'createClient':
+          String key = res['_id'];
+          bool success = res['success'] == 1;
+          _LOG.i('createClient, success: $success');
+          _clientEventQueue[key].complete(success);
+          break;
         case 'onConnect':
           final clientAddr = res['client']['address'];
           if (_clientProxy.myChatId == clientAddr) {
@@ -327,12 +334,24 @@ class _NknClientPlugin {
 
   static Future<bool> createClient(Uint8List seed, {String identifier, String clientUrl}) async {
     _LOG.i('createClient');
-    final status = await _methodChannel.invokeMethod('createClient', {
-      'identifier': identifier,
-      'seedBytes': seed,
-      'clientUrl': clientUrl,
+    Completer<bool> completer = Completer<bool>();
+    String id = completer.hashCode.toString();
+    _clientEventQueue[id] = completer;
+    completer.future.whenComplete(() {
+      _clientEventQueue.remove(id);
     });
-    return status == 1;
+    try {
+      await _methodChannel.invokeMethod('createClient', {
+        '_id': id,
+        'identifier': identifier,
+        'seedBytes': seed,
+        'clientUrl': clientUrl,
+      });
+    } catch (e) {
+      _LOG.e('createClient', e);
+      completer.completeError(e);
+    }
+    return completer.future;
   }
 
   static Future<void> connect() async {
