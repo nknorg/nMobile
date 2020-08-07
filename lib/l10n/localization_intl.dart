@@ -1072,6 +1072,7 @@ class NMobileLocalizations {
   String get week => Intl.message('week', name: 'week');
 
   String get select => Intl.message('Select', name: 'select');
+  String get top => Intl.message('top', name: 'top');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {
