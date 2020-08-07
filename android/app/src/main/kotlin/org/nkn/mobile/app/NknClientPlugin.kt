@@ -101,34 +101,42 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
     }
 
     private fun createClient(call: MethodCall, result: MethodChannel.Result) {
+        val _id = call.argument<String>("_id")!!
         val identifier = call.argument<String>("identifier")
         val seedBytes = call.argument<ByteArray>("seedBytes")!!
         val clientUrl = call.argument<String>("clientUrl")
+        result.success(null)
 
         msgSendHandler.post {
             try {
                 val account = Nkn.newAccount(seedBytes)
                 accountPubkeyHex = ensureSameAccount(account)
                 val client = genClientIfNotExists(account, identifier, clientUrl)
-                if (client == null) {
-                    App.runOnMainThread {
-                        result.success(0)
-                    }
-                } else {
-                    App.runOnMainThread {
-                        // @UiThread defined in doc.
-                        result.success(1)
-                    }
-                    acty?.onClientCreated()
+                val resp = hashMapOf(
+                        "_id" to _id,
+                        "event" to "createClient",
+                        "success" to if (client == null) 0 else 1
+                )
+                App.runOnMainThread {
+                    clientEventSink.success(resp)
                 }
+                if (client != null) acty?.onClientCreated()
             } catch (e: Exception) {
                 Log.e(TAG, "createClient | e:", e)
-                App.runOnMainThread {
+//                App.runOnMainThread {
 //                    @UiThread
 //                    result.error(String errorCode,
 //                      @Nullable String errorMessage,
 //                      @Nullable Object errorDetails)
-                    result.success(0)
+//                    result.success(0)
+//                }
+                val resp = hashMapOf(
+                        "_id" to _id,
+                        "event" to "createClient",
+                        "success" to 0
+                )
+                App.runOnMainThread {
+                    clientEventSink.success(resp)
                 }
             }
         }
