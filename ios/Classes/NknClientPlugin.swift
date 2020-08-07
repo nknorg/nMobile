@@ -67,22 +67,26 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
 
     func createClient(_ call: FlutterMethodCall, _ result: FlutterResult) {
         let args = call.arguments as! [String: Any]
+        let _id = args["_id"] as! String
         let identifier = args["identifier"] as? String
         let seedBytes = args["seedBytes"] as! FlutterStandardTypedData
         let clientUrl = args["clientUrl"] as? String
+        result(nil)
 
-        var error: NSError?
-        let account = NknNewAccount(seedBytes.data, &error)
-        if (error != nil) {
-            result(0)
-            return
-        }
-        self.accountPubkeyHex = self.ensureSameAccount(account!)
-        let client = self.genClientIfNotExists(account!, identifier, clientUrl)
-        if (client == nil) {
-            result(0)
-        } else {
-            result(1)
+        clientSendQueue.async {
+            var error: NSError?
+            let account = NknNewAccount(seedBytes.data, &error)
+            if (error != nil) {
+                self.clientEventSink!(FlutterError(code: _id, message: error!.localizedDescription, details: nil))
+                return
+            }
+            self.accountPubkeyHex = self.ensureSameAccount(account!)
+            let client = self.genClientIfNotExists(account!, identifier, clientUrl)
+            var resp: [String: Any] = [String: Any]()
+            resp["_id"] = _id
+            resp["event"] = "createClient"
+            resp["success"] = client == nil ? 0 : 1
+            self.clientEventSink!(resp)
         }
     }
 
