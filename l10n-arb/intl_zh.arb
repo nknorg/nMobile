@@ -1632,5 +1632,10 @@
   "@select": {
     "type": "text",
     "placeholders": {}
+  },
+  "top": "置顶",
+  "@top": {
+    "type": "text",
+    "placeholders": {}
   }
 }
