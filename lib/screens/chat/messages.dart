@@ -37,7 +37,6 @@ import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/channel.dart';
-import 'package:nmobile/screens/chat/chat.dart';
 import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
@@ -116,17 +115,25 @@ class _MessagesTabState extends State<MessagesTab>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _LOG.i('didChangeAppLifecycleState($state), $canDisable');
-    looper?.cancel();
-    if (canDisable && state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed) {
+      looper?.cancel();
+      looper = null;
+      if (canDisable) {
 //      canDisable = false;
-      setState(() {
-        _enabled = false;
-      });
-      _ensureVerifyPassword();
+        // Pop all except `ChatScreen`, this page is in `ChatScreen`.
+        Navigator.of(context).popUntil(ModalRoute.withName(ModalRoute.of(context).settings.name));
+        setState(() {
+          _enabled = false;
+        });
+        Timer(Duration(milliseconds: 600), () {
+          _ensureVerifyPassword();
+        });
+      }
     }
     if (state == AppLifecycleState.paused) {
-      looper = Timer(Duration(minutes: 1), () {
+      looper ??= Timer(Duration(minutes: 1), () {
         canDisable = true;
+        looper = null;
       });
     }
   }
@@ -138,8 +145,6 @@ class _MessagesTabState extends State<MessagesTab>
 
   _ensureVerifyPassword() async {
     if (_enabled || !widget.activePage.isCurrPageActive || await Global.isInBackground) return;
-    // Pop all except `ChatScreen`, this page is in `ChatScreen`.
-    Navigator.of(context).popUntil(ModalRoute.withName(ChatScreen.routeName));
     DChatAuthenticationHelper.loadDChatUseWallet(BlocProvider.of<WalletsBloc>(context), (wallet) {
       // When show faceIdAuthentication dialog, lifecycle is inactive,
       // this can prevent secondary ejection popup.
@@ -389,7 +394,7 @@ class _MessagesTabState extends State<MessagesTab>
                     children: <Widget>[
                       Icon(Icons.vertical_align_top),
                       SizedBox(width: 10),
-                      Text('置顶'),
+                      Text(NMobileLocalizations.of(context).top),
                     ],
                   ),
                   SizedBox(height: 10),
@@ -408,7 +413,7 @@ class _MessagesTabState extends State<MessagesTab>
                     children: <Widget>[
                       Icon(Icons.delete_outline),
                       SizedBox(width: 10),
-                      Text('删除'),
+                      Text(NMobileLocalizations.of(context).delete),
                     ],
                   ),
                   SizedBox(height: 10),
