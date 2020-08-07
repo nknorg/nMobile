@@ -86,6 +86,10 @@ abstract class AccountDependsBloc /* extends Bloc<AccountEvent, DChatAccount>*/ 
     }
   }
 
+  void cacheAccountUser(ContactSchema user) {
+    _accountUser = user;
+  }
+
   static _notifyOnAccountChanged() {
     for (var ins in _instances) {
       ins.onAccountChanged();

@@ -37,6 +37,7 @@ import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/channel.dart';
+import 'package:nmobile/screens/chat/chat.dart';
 import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
@@ -65,6 +66,8 @@ class _MessagesTabState extends State<MessagesTab>
   List<PopularChannel> populars;
   bool isHideTip = false;
 
+  int timeBegin = 0;
+
   // ignore: non_constant_identifier_names
   LOG _LOG;
   bool _enabled = true;
@@ -74,9 +77,11 @@ class _MessagesTabState extends State<MessagesTab>
   @override
   void initState() {
     super.initState();
+    _LOG = LOG(tag);
+
+    timeBegin = DateTime.now().millisecondsSinceEpoch;
     WidgetsBinding.instance.addObserver(this);
     widget.activePage.addOnCurrPageActive(onCurrPageActive);
-    _LOG = LOG(tag);
 
     isHideTip = SpUtil.getBool(LocalStorage.WALLET_TIP_STATUS, defValue: false);
     populars = PopularChannel.defaultData();
@@ -133,6 +138,8 @@ class _MessagesTabState extends State<MessagesTab>
 
   _ensureVerifyPassword() async {
     if (_enabled || !widget.activePage.isCurrPageActive || await Global.isInBackground) return;
+    // Pop all except `ChatScreen`, this page is in `ChatScreen`.
+    Navigator.of(context).popUntil(ModalRoute.withName(ChatScreen.routeName));
     DChatAuthenticationHelper.loadDChatUseWallet(BlocProvider.of<WalletsBloc>(context), (wallet) {
       // When show faceIdAuthentication dialog, lifecycle is inactive,
       // this can prevent secondary ejection popup.
@@ -172,8 +179,12 @@ class _MessagesTabState extends State<MessagesTab>
   }
 
   initAsync() async {
+    final duration = ((DateTime.now().millisecondsSinceEpoch - timeBegin) / 1000.0).toStringAsFixed(3);
+    _LOG.w("------- initAsync -------> timeDuration: ${duration}s");
     var res = await MessageItem.getLastChat(db, limit: _limit);
     _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
+    final duration2 = ((DateTime.now().millisecondsSinceEpoch - timeBegin) / 1000.0).toStringAsFixed(3);
+    _LOG.w("------- initAsync -------> timeDuration2: ${duration2}s");
     if (mounted) {
       setState(() {
         try {
@@ -215,7 +226,10 @@ class _MessagesTabState extends State<MessagesTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    _LOG.d("------------------------------------------> enabled: $_enabled");
     if (_enabled && _messagesList != null && _messagesList.length > 0) {
+      final duration = ((DateTime.now().millisecondsSinceEpoch - timeBegin) / 1000.0).toStringAsFixed(3);
+      _LOG.w("------------------------------------------> timeDuration: ${duration}s");
       return Flex(
         direction: Axis.vertical,
         children: <Widget>[

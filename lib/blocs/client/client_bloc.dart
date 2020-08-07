@@ -81,18 +81,20 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
       // Don't before when account is null.
       yield Connecting();
 
-      final currentUser = await ContactSchema.getContactByAddress(db, publicKey);
+      var currentUser = await ContactSchema.getContactByAddress(db, publicKey);
       if (currentUser == null) {
         DateTime now = DateTime.now();
-        await ContactSchema(
+        currentUser = ContactSchema(
           type: ContactType.me,
           clientAddress: publicKey,
           nknWalletAddress: walletAddr,
           createdTime: now,
           updatedTime: now,
           profileVersion: uuid.v4(),
-        ).createContact(db);
+        );
+        currentUser.createContact(db);
       }
+      cacheAccountUser(currentUser);
       currUser.client.connect();
     } catch (e) {
       if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
