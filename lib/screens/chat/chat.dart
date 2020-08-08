@@ -34,10 +34,12 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMixin, RouteAware, WidgetsBindingObserver, Tag {
   final DChatAuthenticationHelper authHelper = DChatAuthenticationHelper();
   bool noConnPageShowing = true;
+  bool homePageShowing = false;
   bool fromBackground = false;
   bool uiShowed = false;
   ClientBloc clientBloc;
   LocalStorage localStorage;
+  TimerAuth timerAuth;
 
   // ignore: non_constant_identifier_names
   LOG _LOG;
@@ -57,6 +59,13 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
       // so...only judge if is `inactive` not enough.
       fromBackground = true;
     }
+    timerAuth.homePageShowing = homePageShowing;
+    if (state == AppLifecycleState.resumed) {
+      timerAuth.onHomePageResumed(context);
+    }
+    if (state == AppLifecycleState.paused) {
+      timerAuth.onHomePagePaused(context);
+    }
   }
 
   void onCurrPageActive(active) {
@@ -65,6 +74,8 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
       authHelper.setPageActive(PageAction.force, active);
       authHelper.ensureAutoShowAuthentication('tab change', onGetPassword);
     });
+    timerAuth.homePageShowing = homePageShowing;
+    timerAuth.ensureVerifyPassword(context);
   }
 
   @override
@@ -90,6 +101,7 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
       uiShowed = true;
       if (await Global.isInBackground) {
         fromBackground = true;
+        timerAuth.onHomePagePaused(context);
       }
       _LOG.d('whenUiFirstShowing | isInBackground: ${await Global.isInBackground}, isStateActive: ${await Global.isStateActive}, ' +
           DateTime.now().toLocal().toString());
@@ -125,6 +137,7 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
     clientBloc = BlocProvider.of<ClientBloc>(context);
     authHelper.setPageActive(PageAction.init, widget.activePage.isCurrPageActive);
     widget.activePage.addOnCurrPageActive(onCurrPageActive);
+    timerAuth = TimerAuth(widget.activePage);
   }
 
   @override
@@ -153,6 +166,8 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
               builder: (context, clientState) {
                 if (clientState is NoConnect) {
                   noConnPageShowing = true;
+                  homePageShowing = false;
+                  timerAuth.onNoConnection();
                   DChatAuthenticationHelper.loadDChatUseWalletByState(state, onGetWallet);
                   return NoConnectScreen(() {
                     authHelper.prepareConnect(onGetPassword);
@@ -160,18 +175,26 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                 } else {
                   noConnPageShowing = false;
                   authHelper.wallet = null;
-                  return ChatHome(widget.activePage);
+                  if (!homePageShowing) {
+                    timerAuth.onHomePageFirstShow(context);
+                  }
+                  homePageShowing = true;
+                  return ChatHome(timerAuth);
                 }
               },
             );
           } else {
             noConnPageShowing = false;
+            homePageShowing = false;
             authHelper.wallet = null;
-            return NoWalletAccount(widget.activePage);
+            timerAuth.onNoConnection();
+            return NoWalletAccount(timerAuth);
           }
         }
         noConnPageShowing = false;
+        homePageShowing = false;
         authHelper.wallet = null;
+        timerAuth.onNoConnection();
         return Container();
       },
     );

@@ -59,18 +59,17 @@ class MainActivity : FlutterFragmentActivity(), Tag {
     override fun onStart() {
         super.onStart()
         Log.d(TAG, "<<<---onStart--->>>".withAndroidPrefix())
+        isActive = true
     }
 
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "<<<---onResume--->>>".withAndroidPrefix())
-        isActive = true;
     }
 
     override fun onPause() {
         Log.d(TAG, ">>>---onPause---<<<".withAndroidPrefix())
         super.onPause()
-        isActive = false;
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -85,8 +84,8 @@ class MainActivity : FlutterFragmentActivity(), Tag {
 
     override fun onStop() {
         Log.d(TAG, ">>>---onStop---<<<".withAndroidPrefix())
+        isActive = false
         super.onStop()
-        isActive = false;
     }
 
     override fun onDestroy() {

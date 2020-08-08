@@ -4,21 +4,144 @@
  * Proprietary and confidential
  */
 
+import 'dart:async';
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
+import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/log_tag.dart';
+import 'package:oktoast/oktoast.dart';
 
 /// @author Chenai
 /// @version 1.0, 14/07/2020
 enum PageAction { init, pushNext, popToCurr, force }
+
+class TimerAuth {
+  final ActivePage activePage;
+  bool _enabled = true;
+  bool _authError = false;
+  bool _canDisable = false;
+  bool homePageShowing = false;
+
+//  Timer _timer;
+  DateTime _startTime;
+  Set<VoidCallback> _observers = HashSet();
+
+  TimerAuth(this.activePage);
+
+  bool get enabled => _enabled;
+
+  addOnStateChanged(VoidCallback callback) {
+    _observers.add(callback);
+  }
+
+  removeOnStateChanged(VoidCallback callback) {
+    _observers.remove(callback);
+  }
+
+  _notifyObservers() async {
+    for (final callback in _observers) {
+      callback();
+    }
+  }
+
+  onHomePageResumed(BuildContext context) {
+    if (_startTime != null) {
+      _canDisable = DateTime.now().millisecondsSinceEpoch - _startTime.millisecondsSinceEpoch >= Duration.millisecondsPerMinute;
+    }
+    LocalNotification.debugNotification(
+      '<[DEBUG]> message list',
+      '${AppLifecycleState.resumed}, canDisable: $_canDisable, timer: ${/*_timer !=*/ null}, begin: ${_startTime?.toLocal().toString()}',
+    );
+//    _timer?.cancel();
+//    _timer = null;
+    if (_canDisable) {
+//      _canDisable = false;
+      // Pop all except `ChatScreen`, this page is in `ChatScreen`.
+      Navigator.of(context).popUntil(ModalRoute.withName(ModalRoute.of(context).settings.name));
+      _enabled = false;
+      _notifyObservers();
+      Timer(Duration(milliseconds: 350), () {
+        ensureVerifyPassword(context);
+      });
+    }
+  }
+
+  onHomePagePaused(BuildContext context) {
+//    _timer?.cancel();
+    if (_authError) {
+//      _timer = null;
+      _canDisable = true;
+    } else {
+      _startTime = DateTime.now();
+      // When system suspend, timer doesn't seems to keep going.
+//      _timer = Timer(Duration(minutes: 1), () {
+//        _timer = null;
+//        _canDisable = true;
+//      });
+    }
+  }
+
+  onNoConnection() {
+//    _timer?.cancel();
+//    _timer = null;
+    _enabled = true;
+    _authError = false;
+    _canDisable = false;
+    homePageShowing = false;
+  }
+
+  onHomePageFirstShow(BuildContext context) async {
+    LocalNotification.debugNotification(
+      '<[DEBUG]> homePageFirstShow',
+      'canDisable: $_canDisable, timer: ${/*_timer !=*/ null}, ${DateTime.now().toLocal().toString()}',
+    );
+//    _timer?.cancel();
+//    _timer = null;
+    _enabled = true;
+    _authError = false;
+    _canDisable = false;
+    homePageShowing = true;
+    if (await Global.isInBackground) {
+      onHomePagePaused(context);
+    }
+  }
+
+  ensureVerifyPassword(BuildContext context) async {
+    if (enabled || !homePageShowing || !activePage.isCurrPageActive || await Global.isInBackground) return;
+    DChatAuthenticationHelper.loadDChatUseWallet(BlocProvider.of<WalletsBloc>(context), (wallet) {
+      // When show faceIdAuthentication dialog, lifecycle is inactive,
+      // this can prevent secondary ejection popup.
+      _canDisable = false;
+      _startTime = null;
+      DChatAuthenticationHelper.authToVerifyPassword(
+        wallet: wallet,
+        onGot: (nw) {
+          _authError = false;
+          _enabled = true;
+          _notifyObservers();
+        },
+        onError: (pwdIncorrect, e) {
+          _authError = true;
+          if (pwdIncorrect) {
+            showToast(NMobileLocalizations.of(context).tip_password_error);
+          }
+        },
+      );
+    });
+  }
+}
 
 class DChatAuthenticationHelper with Tag {
   // ignore: non_constant_identifier_names
@@ -155,7 +278,7 @@ class DChatAuthenticationHelper with Tag {
     if (_password != null && _password.length > 0) {
       verifyPassword(wallet: wallet, password: _password, onGot: onGot, onError: onError);
     } else {
-      if (onError != null) onError(true, null);
+      if (onError != null) onError(false, null);
     }
   }
 
