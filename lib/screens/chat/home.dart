@@ -18,6 +18,7 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/screens/active_page.dart';
+import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/contact/contact.dart';
@@ -29,9 +30,9 @@ import 'package:nmobile/utils/log_tag.dart';
 class ChatHome extends StatefulWidget {
   static const String routeName = '/chat/home';
 
-  final ActivePage activePage;
+  final TimerAuth timerAuth;
 
-  const ChatHome(this.activePage);
+  const ChatHome(this.timerAuth);
 
   @override
   _ChatHomeState createState() => _ChatHomeState();
@@ -39,12 +40,24 @@ class ChatHome extends StatefulWidget {
 
 class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin, AccountDependsBloc, Tag {
   GlobalKey _floatingActionKey = GlobalKey();
-  TabController _tabController;
+
+//  TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    widget.timerAuth.addOnStateChanged(onStateChanged);
+//    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  void onStateChanged() {
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    widget.timerAuth.removeOnStateChanged(onStateChanged);
+    super.dispose();
   }
 
   @override
@@ -117,7 +130,11 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
         action: IconButton(
           icon: loadAssetIconsImage('addbook', color: Colors.white, width: 24),
           onPressed: () {
-            Navigator.of(context).pushNamed(ContactHome.routeName);
+            if (widget.timerAuth.enabled) {
+              Navigator.of(context).pushNamed(ContactHome.routeName);
+            } else {
+              widget.timerAuth.ensureVerifyPassword(context);
+            }
           },
         ),
       ),
@@ -127,7 +144,13 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
         elevation: 12,
         backgroundColor: DefaultTheme.primaryColor,
         child: loadAssetIconsImage('pencil', width: 24),
-        onPressed: showBottomMenu,
+        onPressed: () {
+          if (widget.timerAuth.enabled) {
+            showBottomMenu();
+          } else {
+            widget.timerAuth.ensureVerifyPassword(context);
+          }
+        },
       ).pad(b: MediaQuery.of(context).padding.bottom, r: 4),
       body: Container(
         child: ConstrainedBox(
@@ -161,7 +184,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                   flex: 1,
                                   child: Padding(
                                     padding: EdgeInsets.only(top: 0.2),
-                                    child: MessagesTab(widget.activePage),
+                                    child: MessagesTab(widget.timerAuth),
                                   ),
                                 ),
                               ],

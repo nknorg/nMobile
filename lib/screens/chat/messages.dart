@@ -11,20 +11,15 @@ import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
-import 'package:nmobile/blocs/client/client_bloc.dart';
-import 'package:nmobile/blocs/client/client_event.dart';
-import 'package:nmobile/blocs/client/client_state.dart' as clientState;
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
-import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
@@ -34,7 +29,6 @@ import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/message_item.dart';
 import 'package:nmobile/schemas/topic.dart';
-import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/chat/message.dart';
@@ -44,16 +38,15 @@ import 'package:nmobile/utils/log_tag.dart';
 import 'package:oktoast/oktoast.dart';
 
 class MessagesTab extends StatefulWidget {
-  final ActivePage activePage;
+  final TimerAuth timerAuth;
 
-  MessagesTab(this.activePage);
+  MessagesTab(this.timerAuth);
 
   @override
   _MessagesTabState createState() => _MessagesTabState();
 }
 
-class _MessagesTabState extends State<MessagesTab>
-    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin, WidgetsBindingObserver, AccountDependsBloc, Tag {
+class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin, AccountDependsBloc, Tag {
   List<MessageItem> _messagesList = <MessageItem>[];
   ChatBloc _chatBloc;
   ContactBloc _contactBloc;
@@ -69,9 +62,6 @@ class _MessagesTabState extends State<MessagesTab>
 
   // ignore: non_constant_identifier_names
   LOG _LOG;
-  bool _enabled = true;
-  bool canDisable = false;
-  Timer looper;
 
   @override
   void initState() {
@@ -79,9 +69,8 @@ class _MessagesTabState extends State<MessagesTab>
     _LOG = LOG(tag);
 
     timeBegin = DateTime.now().millisecondsSinceEpoch;
-    WidgetsBinding.instance.addObserver(this);
-    widget.activePage.addOnCurrPageActive(onCurrPageActive);
 
+    widget.timerAuth.addOnStateChanged(onStateChanged);
     isHideTip = SpUtil.getBool(LocalStorage.WALLET_TIP_STATUS, defValue: false);
     populars = PopularChannel.defaultData();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
@@ -112,92 +101,31 @@ class _MessagesTabState extends State<MessagesTab>
     });
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    _LOG.i('didChangeAppLifecycleState($state), $canDisable');
-    if (state == AppLifecycleState.resumed) {
-      looper?.cancel();
-      looper = null;
-      if (canDisable) {
-//      canDisable = false;
-        // Pop all except `ChatScreen`, this page is in `ChatScreen`.
-        Navigator.of(context).popUntil(ModalRoute.withName(ModalRoute.of(context).settings.name));
-        setState(() {
-          _enabled = false;
-        });
-        Timer(Duration(milliseconds: 600), () {
-          _ensureVerifyPassword();
-        });
-      }
-    }
-    if (state == AppLifecycleState.paused) {
-      looper ??= Timer(Duration(minutes: 1), () {
-        canDisable = true;
-        looper = null;
-      });
-    }
-  }
-
-  void onCurrPageActive(active) {
-    _LOG.i('onCurrPageActive($active)');
-    _ensureVerifyPassword();
-  }
-
-  _ensureVerifyPassword() async {
-    if (_enabled || !widget.activePage.isCurrPageActive || await Global.isInBackground) return;
-    DChatAuthenticationHelper.loadDChatUseWallet(BlocProvider.of<WalletsBloc>(context), (wallet) {
-      // When show faceIdAuthentication dialog, lifecycle is inactive,
-      // this can prevent secondary ejection popup.
-      canDisable = false;
-      // ignore: close_sinks
-      var clientBloc = BlocProvider.of<ClientBloc>(context);
-      if (clientBloc.state is clientState.NoConnect) {
-        // In this case, the current page was popped.
-        DChatAuthenticationHelper.authToPrepareConnect(wallet, (wallet, password) {
-          clientBloc.add(CreateClient(wallet, password));
-        });
-      } else {
-        DChatAuthenticationHelper.authToVerifyPassword(
-          wallet: wallet,
-          onGot: (nw) {
-            setState(() {
-              _enabled = true;
-            });
-          },
-          onError: (pwdIncorrect, e) {
-            _LOG.e('onError($pwdIncorrect)', e);
-            if (pwdIncorrect) {
-              showToast(NMobileLocalizations.of(context).tip_password_error);
-            }
-          },
-        );
-      }
-    });
+  void onStateChanged() {
+    setState(() {});
   }
 
   @override
   void dispose() {
     _chatSubscription?.cancel();
-    WidgetsBinding.instance.removeObserver(this);
-    widget.activePage.removeOnCurrPageActive(onCurrPageActive);
+    widget.timerAuth.removeOnStateChanged(onStateChanged);
     super.dispose();
   }
 
   initAsync() async {
     final duration = ((DateTime.now().millisecondsSinceEpoch - timeBegin) / 1000.0).toStringAsFixed(3);
-    _LOG.w("------- initAsync -------> timeDuration: ${duration}s");
+    _LOG.w("initAsync | timeDuration: ${duration}s");
     var res = await MessageItem.getLastChat(db, limit: _limit);
     _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
     final duration2 = ((DateTime.now().millisecondsSinceEpoch - timeBegin) / 1000.0).toStringAsFixed(3);
-    _LOG.w("------- initAsync -------> timeDuration2: ${duration2}s");
+    _LOG.w("initAsync | timeDuration2: ${duration2}s");
     if (mounted) {
       setState(() {
         try {
           _skip = 20;
           _messagesList = (res);
         } catch (e) {
-          debugPrint(e);
-          debugPrintStack();
+          _LOG.e('initAsync', e);
         }
       });
     }
@@ -231,10 +159,9 @@ class _MessagesTabState extends State<MessagesTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    _LOG.d("------------------------------------------> enabled: $_enabled");
-    if (_enabled && _messagesList != null && _messagesList.length > 0) {
+    if (widget.timerAuth.enabled && _messagesList != null && _messagesList.length > 0) {
       final duration = ((DateTime.now().millisecondsSinceEpoch - timeBegin) / 1000.0).toStringAsFixed(3);
-      _LOG.w("------------------------------------------> timeDuration: ${duration}s");
+      _LOG.w("timeDuration: ${duration}s");
       return Flex(
         direction: Axis.vertical,
         children: <Widget>[
@@ -350,7 +277,7 @@ class _MessagesTabState extends State<MessagesTab>
                               ],
                             ),
                             onPressed: () async {
-                              if (_enabled) {
+                              if (widget.timerAuth.enabled) {
                                 var address = await BottomDialog.of(context).showInputAddressDialog(
                                     title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
                                 if (address != null) {
@@ -360,7 +287,7 @@ class _MessagesTabState extends State<MessagesTab>
                                       .pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
                                 }
                               } else {
-                                _ensureVerifyPassword();
+                                widget.timerAuth.ensureVerifyPassword(context);
                               }
                             },
                           ).pad(t: 54),
