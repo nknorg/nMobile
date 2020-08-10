@@ -70,7 +70,7 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
 
   void onCurrPageActive(active) {
     _LOG.i('onCurrPageActive($active)');
-    Timer(Duration(milliseconds: 600), () {
+    Timer(Duration(milliseconds: 350), () {
       authHelper.setPageActive(PageAction.force, active);
       authHelper.ensureAutoShowAuthentication('tab change', onGetPassword);
     });
@@ -82,7 +82,7 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
   void didPopNext() {
     super.didPopNext();
     _LOG.i('canShow: $noConnPageShowing, call _authHelper.ensureAutoShowXxx()');
-    Timer(Duration(milliseconds: 600), () {
+    Timer(Duration(milliseconds: 350), () {
       authHelper.canShow = noConnPageShowing;
       authHelper.setPageActive(PageAction.popToCurr);
       authHelper.ensureAutoShowAuthentication('popToCurr', onGetPassword);
