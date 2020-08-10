@@ -73,9 +73,9 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
     Timer(Duration(milliseconds: 350), () {
       authHelper.setPageActive(PageAction.force, active);
       authHelper.ensureAutoShowAuthentication('tab change', onGetPassword);
+      timerAuth.homePageShowing = homePageShowing;
+      timerAuth.ensureVerifyPassword(context);
     });
-    timerAuth.homePageShowing = homePageShowing;
-    timerAuth.ensureVerifyPassword(context);
   }
 
   @override

@@ -17,7 +17,6 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
-import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/screens/chat/messages.dart';
@@ -68,9 +67,13 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
       appBar: Header(
         titleChild: GestureDetector(
           onTap: () async {
-            accountUser.then((currentUser) {
-              Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: currentUser);
-            });
+            if (widget.timerAuth.enabled) {
+              accountUser.then((currentUser) {
+                Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: currentUser);
+              });
+            } else {
+              widget.timerAuth.ensureVerifyPassword(context);
+            }
           },
           child: Padding(
             padding: EdgeInsets.only(left: 16),
