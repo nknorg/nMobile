@@ -726,7 +726,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "popular_channels": "推荐频道",
+  "popular_channels": "推荐群组",
   "@popular_channels": {
     "description": "",
     "type": "text",
@@ -1226,7 +1226,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "chat_tab_channels": "频道",
+  "chat_tab_channels": "群组",
   "@chat_tab_channels": {
     "description": "",
     "type": "text",
@@ -1298,7 +1298,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "joined_channel": "加入主题",
+  "joined_channel": "加入群聊",
   "@joined_channel": {
     "description": "",
     "type": "text",
