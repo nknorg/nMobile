@@ -403,7 +403,11 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                   decoration: BoxDecoration(color: Color(0xFF5458F7), borderRadius: BorderRadius.circular(100)),
                   child: InkWell(
                     onTap: () {
-                      _subscription(model);
+                      if (widget.timerAuth.enabled) {
+                        _subscription(model);
+                      } else {
+                        widget.timerAuth.ensureVerifyPassword(context);
+                      }
                     },
                     child: Center(
                       child: Text(
