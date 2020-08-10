@@ -13,11 +13,10 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/model/popular_model.dart';
+import 'package:nmobile/model/popular_channel.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
@@ -310,7 +309,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
 
   getPopularView() {
     List<Widget> list = [];
-    for (PopularModel item in PopularModel.defaultData()) {
+    for (PopularChannel item in PopularChannel.defaultData()) {
       list.add(InkWell(
         onTap: () async {
           createOrJoinGroup(item.topic);
