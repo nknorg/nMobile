@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/button.dart';
@@ -12,11 +12,10 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/model/popular_model.dart';
+import 'package:nmobile/model/popular_channel.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
@@ -330,7 +329,7 @@ class _InputChannelDialogState extends State<InputChannelDialog> with AccountDep
 
   getPopularView() {
     List<Widget> list = [];
-    for (PopularModel item in PopularModel.defaultData()) {
+    for (PopularChannel item in PopularChannel.defaultData()) {
       list.add(InkWell(
         onTap: () async {
           createOrJoinGroup(item.topic);
