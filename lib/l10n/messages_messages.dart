@@ -228,6 +228,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "notes" : MessageLookupByLibrary.simpleMessage("Notes"),
     "notification" : MessageLookupByLibrary.simpleMessage("Notification"),
     "notification_sound" : MessageLookupByLibrary.simpleMessage("Notification Sound"),
+    "off" : MessageLookupByLibrary.simpleMessage("Off"),
     "ok" : MessageLookupByLibrary.simpleMessage("OK"),
     "optional" : MessageLookupByLibrary.simpleMessage("optional"),
     "password_wrong" : MessageLookupByLibrary.simpleMessage("Wallet password or keystore file is wrong."),

@@ -224,6 +224,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "notes" : MessageLookupByLibrary.simpleMessage("备注"),
     "notification" : MessageLookupByLibrary.simpleMessage("通知"),
     "notification_sound" : MessageLookupByLibrary.simpleMessage("推送声音"),
+    "off" : MessageLookupByLibrary.simpleMessage("关"),
     "ok" : MessageLookupByLibrary.simpleMessage("好的"),
     "optional" : MessageLookupByLibrary.simpleMessage("可选"),
     "password_wrong" : MessageLookupByLibrary.simpleMessage("钱包密码或keystore错误"),
