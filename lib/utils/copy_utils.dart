@@ -5,6 +5,6 @@ import 'package:oktoast/oktoast.dart';
 class CopyUtils {
   static void copyAction(context, String content) {
     Clipboard.setData(ClipboardData(text: content));
-    showToast(NMobileLocalizations.of(context).copy_success);
+    showToast(NL10ns.of(context).copy_success);
   }
 }

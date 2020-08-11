@@ -59,7 +59,7 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: Header(
-        title: NMobileLocalizations.of(context).create_nkn_wallet_title,
+        title: NL10ns.of(context).create_nkn_wallet_title,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: ConstrainedBox(
@@ -139,12 +139,12 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                                                     crossAxisAlignment: CrossAxisAlignment.start,
                                                     children: <Widget>[
                                                       Label(
-                                                        NMobileLocalizations.of(context).wallet_name,
+                                                        NL10ns.of(context).wallet_name,
                                                         type: LabelType.h3,
                                                         textAlign: TextAlign.start,
                                                       ),
                                                       Textbox(
-                                                        hintText: NMobileLocalizations.of(context).hint_enter_wallet_name,
+                                                        hintText: NL10ns.of(context).hint_enter_wallet_name,
                                                         focusNode: _nameFocusNode,
                                                         onSaved: (v) => _name = v,
                                                         onFieldSubmitted: (_) {
@@ -155,14 +155,14 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                                                       ),
                                                       SizedBox(height: 14.h),
                                                       Label(
-                                                        NMobileLocalizations.of(context).wallet_password,
+                                                        NL10ns.of(context).wallet_password,
                                                         type: LabelType.h3,
                                                         textAlign: TextAlign.start,
                                                       ),
                                                       Textbox(
                                                         focusNode: _passwordFocusNode,
                                                         controller: _passwordController,
-                                                        hintText: NMobileLocalizations.of(context).input_password,
+                                                        hintText: NL10ns.of(context).input_password,
                                                         onSaved: (v) => _password = v,
                                                         onFieldSubmitted: (_) {
                                                           FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
@@ -172,18 +172,18 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                                                         password: true,
                                                       ),
                                                       Text(
-                                                        NMobileLocalizations.of(context).wallet_password_mach,
+                                                        NL10ns.of(context).wallet_password_mach,
                                                         style: TextStyle(color: Colours.gray_81, fontSize: DefaultTheme.bodySmallFontSize),
                                                       ),
                                                       SizedBox(height: 24.h),
                                                       Label(
-                                                        NMobileLocalizations.of(context).confirm_password,
+                                                        NL10ns.of(context).confirm_password,
                                                         type: LabelType.h3,
                                                         textAlign: TextAlign.start,
                                                       ),
                                                       Textbox(
                                                         focusNode: _confirmPasswordFocusNode,
-                                                        hintText: NMobileLocalizations.of(context).input_password_again,
+                                                        hintText: NL10ns.of(context).input_password_again,
                                                         validator: Validator.of(context).confrimPassword(_passwordController.text),
                                                         password: true,
                                                       ),
@@ -208,7 +208,7 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                                           Padding(
                                             padding: EdgeInsets.only(left: 30, right: 30),
                                             child: Button(
-                                              text: NMobileLocalizations.of(context).create_wallet,
+                                              text: NL10ns.of(context).create_wallet,
                                               disabled: !_formValid,
                                               onPressed: next,
                                             ),

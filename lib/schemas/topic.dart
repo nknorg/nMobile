@@ -213,7 +213,7 @@ class TopicSchema {
         return subscribe(account, topic: topicHash, identifier: identifier, duration: duration, fee: fee, meta: meta);
       }
       if (e != null && e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-        showToast(NMobileLocalizations.of(Global.appContext).password_wrong);
+        showToast(NL10ns.of(Global.appContext).password_wrong);
       } else {
         return subscribe(account, topic: topicHash, identifier: identifier, duration: duration, fee: fee, meta: meta);
       }

@@ -70,12 +70,12 @@ class _WalletNotBackedUpDialogState extends State<WalletNotBackedUpDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    NMobileLocalizations.of(context).d_not_backed_up_title,
+                    NL10ns.of(context).d_not_backed_up_title,
                     style: TextStyle(fontSize: DefaultTheme.h2FontSize, color: Colours.dark_2d, fontWeight: FontWeight.bold),
                     maxLines: 2,
                   ),
                   Text(
-                    NMobileLocalizations.of(context).d_not_backed_up_desc,
+                    NL10ns.of(context).d_not_backed_up_desc,
                     style: TextStyle(fontSize: DefaultTheme.h3FontSize, color: Colours.gray_81),
                   ).pad(t: 16)
                 ],
@@ -86,7 +86,7 @@ class _WalletNotBackedUpDialogState extends State<WalletNotBackedUpDialog> {
               child: Button(
                   backgroundColor: Colours.blue_0f,
                   fontColor: Colours.white,
-                  text: NMobileLocalizations.of(context).go_backup,
+                  text: NL10ns.of(context).go_backup,
                   width: double.infinity,
                   height: 51,
                   onPressed: () {

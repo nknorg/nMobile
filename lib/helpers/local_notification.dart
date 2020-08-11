@@ -88,14 +88,14 @@ class LocalNotification {
       switch (Settings.localNotificationType) {
         case LocalNotificationType.only_name:
           await _flutterLocalNotificationsPlugin.show(
-              _notificationId++, title, NMobileLocalizations.of(Global.appContext).you_have_new_message, platformChannelSpecifics);
+              _notificationId++, title, NL10ns.of(Global.appContext).you_have_new_message, platformChannelSpecifics);
           break;
         case LocalNotificationType.name_and_message:
           await _flutterLocalNotificationsPlugin.show(_notificationId++, title, content, platformChannelSpecifics);
           break;
         case LocalNotificationType.none:
-          await _flutterLocalNotificationsPlugin.show(_notificationId++, NMobileLocalizations.of(Global.appContext).new_message,
-              NMobileLocalizations.of(Global.appContext).you_have_new_message, platformChannelSpecifics);
+          await _flutterLocalNotificationsPlugin.show(_notificationId++, NL10ns.of(Global.appContext).new_message,
+              NL10ns.of(Global.appContext).you_have_new_message, platformChannelSpecifics);
           break;
       }
     } catch (e) {

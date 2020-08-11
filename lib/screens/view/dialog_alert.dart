@@ -13,8 +13,8 @@ class SimpleAlert {
   Future<void> show() {
     String title = this.title;
     String buttonText = this.buttonText;
-    if (title == null || title.isEmpty) title = NMobileLocalizations.of(context).tip;
-    if (buttonText == null || buttonText.isEmpty) buttonText = NMobileLocalizations.of(context).ok;
+    if (title == null || title.isEmpty) title = NL10ns.of(context).tip;
+    if (buttonText == null || buttonText.isEmpty) buttonText = NL10ns.of(context).ok;
     return showDialog<void>(
         context: context,
         barrierDismissible: false,

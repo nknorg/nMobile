@@ -3,18 +3,18 @@ import 'package:intl/intl.dart';
 
 import 'messages_all.dart';
 
-class NMobileLocalizations {
-  static Future<NMobileLocalizations> load(Locale locale) {
+class NL10ns {
+  static Future<NL10ns> load(Locale locale) {
     final String name = locale.countryCode?.isNotEmpty ?? false ? locale.toString() : locale.languageCode;
     final String localeName = Intl.canonicalizedLocale(name);
     return initializeMessages(localeName).then((_) {
       Intl.defaultLocale = localeName;
-      return NMobileLocalizations();
+      return NL10ns();
     });
   }
 
-  static NMobileLocalizations of(BuildContext context) {
-    return Localizations.of<NMobileLocalizations>(context, NMobileLocalizations);
+  static NL10ns of(BuildContext context) {
+    return Localizations.of<NL10ns>(context, NL10ns);
   }
 
   String get nkn {
@@ -1075,15 +1075,15 @@ class NMobileLocalizations {
   String get top => Intl.message('top', name: 'top');
 }
 
-class NMobileLocalizationsDelegate extends LocalizationsDelegate<NMobileLocalizations> {
+class NMobileLocalizationsDelegate extends LocalizationsDelegate<NL10ns> {
   const NMobileLocalizationsDelegate();
 
   @override
   bool isSupported(Locale locale) => ['en', 'zh'].contains(locale.languageCode);
 
   @override
-  Future<NMobileLocalizations> load(Locale locale) {
-    return NMobileLocalizations.load(locale);
+  Future<NL10ns> load(Locale locale) {
+    return NL10ns.load(locale);
   }
 
   @override
