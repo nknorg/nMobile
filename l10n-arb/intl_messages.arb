@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-08-07T22:46:13.863963",
+  "@@last_modified": "2020-08-11T15:49:59.273245",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1665,6 +1665,19 @@
   },
   "top": "top",
   "@top": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "burn_after_reading_desc_disappear": "Messages sent and received in this conversation will disappear {time} after they have been seen.",
+  "@burn_after_reading_desc_disappear": {
+    "description": "",
+    "type": "text",
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "burn_after_reading_desc": "Your messages will not expire.",
+  "@burn_after_reading_desc": {
     "type": "text",
     "placeholders": {}
   }

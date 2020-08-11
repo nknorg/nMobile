@@ -8,7 +8,6 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
-import 'package:nmobile/utils/extensions.dart';
 
 class BurnViewUtil {
   static List<Duration> burnValueArray = <Duration>[
@@ -141,9 +140,9 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
     ));
 
     if (currentIndex != -1) {
-      views.add(SimpleDialogOption(child: Container(child: Text('对话接受和发送的消息将于${burnTextArray[currentIndex]}后消失。'))));
+      views.add(SimpleDialogOption(child: Container(child: Text(NL10ns.of(context).burn_after_reading_desc_disappear(burnTextArray[currentIndex])))));
     } else {
-      views.add(SimpleDialogOption(child: Container(child: Text('对话接受和发送的消息不会消失。'))));
+      views.add(SimpleDialogOption(child: Container(child: Text(NL10ns.of(context).burn_after_reading_desc))));
     }
 
     views.add(Row(

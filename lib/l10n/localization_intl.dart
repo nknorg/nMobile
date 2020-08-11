@@ -1073,6 +1073,11 @@ class NL10ns {
 
   String get select => Intl.message('Select', name: 'select');
   String get top => Intl.message('top', name: 'top');
+
+  String burn_after_reading_desc_disappear(String time) {
+    return Intl.message('Messages sent and received in this conversation will disappear $time after they have been seen.', name: 'burn_after_reading_desc_disappear', desc: '', args: [time]);
+  }
+  String get burn_after_reading_desc => Intl.message('Your messages will not expire.', name: 'burn_after_reading_desc');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NL10ns> {
