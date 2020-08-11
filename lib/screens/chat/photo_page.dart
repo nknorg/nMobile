@@ -49,15 +49,15 @@ class PhotoPageState extends State<PhotoPage> with SingleTickerProviderStateMixi
                     final Uint8List bytes = await file.readAsBytes();
                     bool success = await ImageSave.saveImage(bytes, 'jpeg', albumName: name);
                     if (success) {
-                      showToast(NMobileLocalizations.of(context).success);
+                      showToast(NL10ns.of(context).success);
                     } else {
-                      showToast(NMobileLocalizations.of(context).failure);
+                      showToast(NL10ns.of(context).failure);
                     }
                   } catch (e) {
-                    showToast(NMobileLocalizations.of(context).failure);
+                    showToast(NL10ns.of(context).failure);
                   }
                 } else {
-                  showToast(NMobileLocalizations.of(context).failure);
+                  showToast(NL10ns.of(context).failure);
                 }
                 break;
             }
@@ -66,7 +66,7 @@ class PhotoPageState extends State<PhotoPage> with SingleTickerProviderStateMixi
             PopupMenuItem<int>(
               value: 0,
               child: Label(
-                NMobileLocalizations.of(context).save_to_album,
+                NL10ns.of(context).save_to_album,
                 type: LabelType.display,
               ),
             ),

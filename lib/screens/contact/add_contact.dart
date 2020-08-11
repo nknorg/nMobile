@@ -83,7 +83,7 @@ class AddContactState extends State<AddContact> with AccountDependsBloc {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).add_new_contact,
+        title: NL10ns.of(context).add_new_contact,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: IconButton(
           icon: loadAssetIconsImage(
@@ -174,12 +174,12 @@ class AddContactState extends State<AddContact> with AccountDependsBloc {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: <Widget>[
                                           Label(
-                                            NMobileLocalizations.of(context).nickname,
+                                            NL10ns.of(context).nickname,
                                             type: LabelType.h3,
                                             textAlign: TextAlign.start,
                                           ),
                                           Textbox(
-                                            hintText: NMobileLocalizations.of(context).input_name,
+                                            hintText: NL10ns.of(context).input_name,
                                             focusNode: _nameFocusNode,
                                             controller: _nameController,
                                             onFieldSubmitted: (_) {
@@ -190,7 +190,7 @@ class AddContactState extends State<AddContact> with AccountDependsBloc {
                                           ),
                                           SizedBox(height: 14.h),
                                           Label(
-                                            NMobileLocalizations.of(context).d_chat_address,
+                                            NL10ns.of(context).d_chat_address,
                                             type: LabelType.h3,
                                             textAlign: TextAlign.start,
                                           ),
@@ -199,7 +199,7 @@ class AddContactState extends State<AddContact> with AccountDependsBloc {
                                             controller: _pubKeyController,
                                             maxLines: 2,
                                             multi: true,
-                                            hintText: NMobileLocalizations.of(context).input_pubKey,
+                                            hintText: NL10ns.of(context).input_pubKey,
                                             onFieldSubmitted: (_) {
                                               FocusScope.of(context).requestFocus(_addressFocusNode);
                                             },
@@ -209,12 +209,12 @@ class AddContactState extends State<AddContact> with AccountDependsBloc {
                                           Row(
                                             children: <Widget>[
                                               Label(
-                                                NMobileLocalizations.of(context).wallet_address,
+                                                NL10ns.of(context).wallet_address,
                                                 type: LabelType.h3,
                                                 textAlign: TextAlign.start,
                                               ),
                                               Label(
-                                                ' (${NMobileLocalizations.of(context).optional})',
+                                                ' (${NL10ns.of(context).optional})',
                                                 type: LabelType.bodyLarge,
                                                 textAlign: TextAlign.start,
                                               ),
@@ -223,17 +223,17 @@ class AddContactState extends State<AddContact> with AccountDependsBloc {
                                           Textbox(
                                             focusNode: _addressFocusNode,
                                             controller: _addressController,
-                                            hintText: NMobileLocalizations.of(context).input_wallet_address,
+                                            hintText: NL10ns.of(context).input_wallet_address,
                                           ),
                                           Row(
                                             children: <Widget>[
                                               Label(
-                                                NMobileLocalizations.of(context).notes,
+                                                NL10ns.of(context).notes,
                                                 type: LabelType.h3,
                                                 textAlign: TextAlign.start,
                                               ),
                                               Label(
-                                                ' (${NMobileLocalizations.of(context).optional})',
+                                                ' (${NL10ns.of(context).optional})',
                                                 type: LabelType.bodyLarge,
                                                 textAlign: TextAlign.start,
                                               ),
@@ -242,7 +242,7 @@ class AddContactState extends State<AddContact> with AccountDependsBloc {
                                           Textbox(
                                             focusNode: _notesFocusNode,
                                             controller: _notesController,
-                                            hintText: NMobileLocalizations.of(context).input_notes,
+                                            hintText: NL10ns.of(context).input_notes,
                                           ),
                                         ],
                                       ),
@@ -263,7 +263,7 @@ class AddContactState extends State<AddContact> with AccountDependsBloc {
                                   Padding(
                                     padding: EdgeInsets.only(left: 30, right: 30),
                                     child: Button(
-                                      text: NMobileLocalizations.of(context).save_contact,
+                                      text: NL10ns.of(context).save_contact,
                                       disabled: !_formValid,
                                       onPressed: () {
                                         _saveAction(context);

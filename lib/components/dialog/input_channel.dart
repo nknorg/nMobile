@@ -102,14 +102,14 @@ class _InputChannelDialogState extends State<InputChannelDialog> with AccountDep
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: <Widget>[
                                 Label(
-                                  NMobileLocalizations.of(context).topic,
+                                  NL10ns.of(context).topic,
                                   type: LabelType.h4,
                                   textAlign: TextAlign.start,
                                 ),
                                 Row(
                                   children: <Widget>[
                                     Label(
-                                      NMobileLocalizations.of(context).private_channel,
+                                      NL10ns.of(context).private_channel,
                                       type: LabelType.h4,
                                       color: DefaultTheme.fontColor1,
                                     ),
@@ -136,7 +136,7 @@ class _InputChannelDialogState extends State<InputChannelDialog> with AccountDep
                                   child: Textbox(
                                     controller: _topicController,
                                     validator: Validator.of(context).required(),
-                                    hintText: NMobileLocalizations.of(context).enter_topic,
+                                    hintText: NL10ns.of(context).enter_topic,
                                   ),
                                 ),
                                 Container(
@@ -176,7 +176,7 @@ class _InputChannelDialogState extends State<InputChannelDialog> with AccountDep
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: <Widget>[
                                       Label(
-                                        NMobileLocalizations.of(context).advanced,
+                                        NL10ns.of(context).advanced,
                                         color: DefaultTheme.primaryColor,
                                         type: LabelType.h4,
                                         textAlign: TextAlign.start,
@@ -207,7 +207,7 @@ class _InputChannelDialogState extends State<InputChannelDialog> with AccountDep
                                           crossAxisAlignment: CrossAxisAlignment.center,
                                           children: <Widget>[
                                             Label(
-                                              NMobileLocalizations.of(context).fee,
+                                              NL10ns.of(context).fee,
                                               color: DefaultTheme.fontColor1,
                                               type: LabelType.h4,
                                               textAlign: TextAlign.start,
@@ -238,7 +238,7 @@ class _InputChannelDialogState extends State<InputChannelDialog> with AccountDep
                                                 width: 20,
                                                 alignment: Alignment.centerRight,
                                                 child: Label(
-                                                  NMobileLocalizations.of(context).nkn,
+                                                  NL10ns.of(context).nkn,
                                                   type: LabelType.label,
                                                 ),
                                               ),
@@ -259,17 +259,17 @@ class _InputChannelDialogState extends State<InputChannelDialog> with AccountDep
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: <Widget>[
                                         Label(
-                                          NMobileLocalizations.of(context).slow,
+                                          NL10ns.of(context).slow,
                                           type: LabelType.bodySmall,
                                           color: DefaultTheme.primaryColor,
                                         ),
                                         Label(
-                                          NMobileLocalizations.of(context).average,
+                                          NL10ns.of(context).average,
                                           type: LabelType.bodySmall,
                                           color: DefaultTheme.primaryColor,
                                         ),
                                         Label(
-                                          NMobileLocalizations.of(context).fast,
+                                          NL10ns.of(context).fast,
                                           type: LabelType.bodySmall,
                                           color: DefaultTheme.primaryColor,
                                         ),
@@ -310,7 +310,7 @@ class _InputChannelDialogState extends State<InputChannelDialog> with AccountDep
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
                 child: Button(
-                  text: NMobileLocalizations.of(context).continue_text,
+                  text: NL10ns.of(context).continue_text,
                   width: double.infinity,
                   disabled: _loading,
                   onPressed: () async {

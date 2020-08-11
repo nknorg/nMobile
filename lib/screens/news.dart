@@ -96,7 +96,7 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
                   Label(
-                    NMobileLocalizations.of(context).latest,
+                    NL10ns.of(context).latest,
                     type: LabelType.h3,
                   ),
                 ],
@@ -204,7 +204,7 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Label(
-                  NMobileLocalizations.of(context).featured,
+                  NL10ns.of(context).featured,
                   type: LabelType.h3,
                 ),
               ],
@@ -269,7 +269,7 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
                                       ),
                                       SizedBox(height: 4.h),
                                       Label(
-                                        NMobileLocalizations.of(context).news_from + ' NKN.org - ' + NknDateUtil.getNewDate(DateTime.parse(newsSchema.time)),
+                                        NL10ns.of(context).news_from + ' NKN.org - ' + NknDateUtil.getNewDate(DateTime.parse(newsSchema.time)),
                                         type: LabelType.bodyRegular,
                                         color: DefaultTheme.fontColor2,
                                         height: 1,

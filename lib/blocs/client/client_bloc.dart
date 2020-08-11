@@ -98,7 +98,7 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
       currUser.client.connect();
     } catch (e) {
       if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-        showToast(NMobileLocalizations.of(Global.appContext).tip_password_error);
+        showToast(NL10ns.of(Global.appContext).tip_password_error);
         yield NoConnect();
       }
     }

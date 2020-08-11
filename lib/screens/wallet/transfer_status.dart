@@ -53,11 +53,11 @@ class TransferStatusPopup extends PopupRoute {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            NMobileLocalizations.of(context).transfer_initiated,
+            NL10ns.of(context).transfer_initiated,
             style: TextStyle(fontSize: DefaultTheme.h4FontSize, fontWeight: FontWeight.bold, color: Colours.white),
           ).pad(l: 16, t: 14),
           Text(
-            NMobileLocalizations.of(context).transfer_initiated_desc,
+            NL10ns.of(context).transfer_initiated_desc,
             style: TextStyle(fontSize: DefaultTheme.bodySmallFontSize, color: Colours.white),
           ).pad(l: 16, t: 12),
         ],

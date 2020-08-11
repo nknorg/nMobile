@@ -102,12 +102,12 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                       BlocBuilder<ClientBloc, ClientState>(
                         builder: (context, clientState) {
                           if (clientState is Connected) {
-                            return Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor);
+                            return Label(NL10ns.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor);
                           } else {
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: <Widget>[
-                                Label(NMobileLocalizations.of(context).connecting,
+                                Label(NL10ns.of(context).connecting,
                                     type: LabelType.bodySmall, color: DefaultTheme.fontLightColor.withAlpha(200)),
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 2, left: 4),
@@ -243,7 +243,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                       color: Colours.dark_0f_a3p,
                                     ),
                                     child: Label(
-                                      NMobileLocalizations.of(context).new_group,
+                                      NL10ns.of(context).new_group,
                                       height: 1.2,
                                       type: LabelType.h4,
                                       dark: true,
@@ -262,7 +262,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                       color: Colours.dark_0f_a3p,
                                     ),
                                     child: Label(
-                                      NMobileLocalizations.of(context).new_whisper,
+                                      NL10ns.of(context).new_whisper,
                                       height: 1.2,
                                       type: LabelType.h4,
                                       dark: true,
@@ -312,8 +312,8 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                 height: 48,
                                 onPressed: () async {
                                   var address = await BottomDialog.of(context).showInputAddressDialog(
-                                      title: NMobileLocalizations.of(context).new_whisper,
-                                      hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+                                      title: NL10ns.of(context).new_whisper,
+                                      hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
                                   if (address != null) {
                                     ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
                                     await contact.createContact(db);

@@ -57,7 +57,7 @@ class ChangeUpdateContentPageState extends State<ChangeUpdateContentPage> {
             Padding(
               padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
               child: Button(
-                text: NMobileLocalizations.of(context).save,
+                text: NL10ns.of(context).save,
                 width: double.infinity,
                 onPressed: () {
                   Navigator.pop(context, _controller.text);

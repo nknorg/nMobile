@@ -55,11 +55,11 @@ class _SelectWalletTypeDialogState extends State<SelectWalletTypeDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                NMobileLocalizations.of(context).select_wallet_type,
+                NL10ns.of(context).select_wallet_type,
                 style: TextStyle(fontSize: DefaultTheme.h2FontSize, color: Colours.dark_2d, fontWeight: FontWeight.bold),
               ),
               Text(
-                NMobileLocalizations.of(context).select_wallet_type_desc,
+                NL10ns.of(context).select_wallet_type_desc,
                 style: TextStyle(fontSize: DefaultTheme.h4FontSize, color: Colours.gray_81),
               ).pad(t: 8),
               _getItemNkn(context),
@@ -88,7 +88,7 @@ class _SelectWalletTypeDialogState extends State<SelectWalletTypeDialog> {
           child: SvgPicture.asset('assets/logo.svg', color: Colours.purple_2e),
         ),
         Text(
-          NMobileLocalizations.of(context).nkn_mainnet,
+          NL10ns.of(context).nkn_mainnet,
           style: TextStyle(fontSize: DefaultTheme.h3FontSize, color: Colours.dark_2d, fontWeight: FontWeight.bold),
         ).pad(l: 16),
         Spacer(),
@@ -97,7 +97,7 @@ class _SelectWalletTypeDialogState extends State<SelectWalletTypeDialog> {
           padding: 2.pad(l: 8, r: 8),
           decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.green_06_a1p),
           child: Text(
-            NMobileLocalizations.of(context).mainnet,
+            NL10ns.of(context).mainnet,
             style: TextStyle(color: Colours.green_06, fontSize: 10, fontWeight: FontWeight.bold),
           ),
         )
@@ -122,7 +122,7 @@ class _SelectWalletTypeDialogState extends State<SelectWalletTypeDialog> {
           child: SvgPicture.asset('assets/icon_eth_15_24.svg', color: Colours.purple_53),
         ),
         Text(
-          NMobileLocalizations.of(context).ethereum,
+          NL10ns.of(context).ethereum,
           style: TextStyle(fontSize: DefaultTheme.h3FontSize, color: Colours.dark_2d, fontWeight: FontWeight.bold),
         ).pad(l: 16),
         Spacer(),
@@ -131,7 +131,7 @@ class _SelectWalletTypeDialogState extends State<SelectWalletTypeDialog> {
           padding: 2.pad(l: 8, r: 8),
           decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.purple_53_a1p),
           child: Text(
-            NMobileLocalizations.of(context).ERC_20,
+            NL10ns.of(context).ERC_20,
             style: TextStyle(color: Colours.purple_53, fontSize: 10, fontWeight: FontWeight.bold),
           ),
         )

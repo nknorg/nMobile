@@ -164,16 +164,16 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
   @override
   Widget build(BuildContext context) {
     _burnTextArray = <String>[
-      NMobileLocalizations.of(context).burn_5_seconds,
-      NMobileLocalizations.of(context).burn_10_seconds,
-      NMobileLocalizations.of(context).burn_30_seconds,
-      NMobileLocalizations.of(context).burn_1_minute,
-      NMobileLocalizations.of(context).burn_5_minutes,
-      NMobileLocalizations.of(context).burn_10_minutes,
-      NMobileLocalizations.of(context).burn_30_minutes,
-      NMobileLocalizations.of(context).burn_1_hour,
-      NMobileLocalizations.of(context).burn_1_day,
-      NMobileLocalizations.of(context).burn_1_week,
+      NL10ns.of(context).burn_5_seconds,
+      NL10ns.of(context).burn_10_seconds,
+      NL10ns.of(context).burn_30_seconds,
+      NL10ns.of(context).burn_1_minute,
+      NL10ns.of(context).burn_5_minutes,
+      NL10ns.of(context).burn_10_minutes,
+      NL10ns.of(context).burn_30_minutes,
+      NL10ns.of(context).burn_1_hour,
+      NL10ns.of(context).burn_1_day,
+      NL10ns.of(context).burn_1_week,
     ];
 
     if (widget.arguments.isMe) {
@@ -186,7 +186,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
   changeNotes() {
     BottomDialog.of(context).showBottomDialog(
       height: 320,
-      title: NMobileLocalizations.of(context).edit_notes,
+      title: NL10ns.of(context).edit_notes,
       child: Form(
         key: _notesFormKey,
         autovalidate: true,
@@ -204,7 +204,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Label(
-                      NMobileLocalizations.of(context).notes,
+                      NL10ns.of(context).notes,
                       type: LabelType.h4,
                       textAlign: TextAlign.start,
                     ),
@@ -226,7 +226,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: NMobileLocalizations.of(context).save,
+          text: NL10ns.of(context).save,
           width: double.infinity,
           onPressed: () async {
             _notesFormValid = (_notesFormKey.currentState as FormState).validate();
@@ -246,7 +246,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
 
   _detailChangeName(BuildContext context) {
     BottomDialog.of(context).showBottomDialog(
-      title: NMobileLocalizations.of(context).edit_contact,
+      title: NL10ns.of(context).edit_contact,
       child: Form(
         key: _nameFormKey,
         autovalidate: true,
@@ -278,7 +278,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: NMobileLocalizations.of(context).save,
+          text: NL10ns.of(context).save,
           width: double.infinity,
           onPressed: () async {
             _nameFormValid = (_nameFormKey.currentState as FormState).validate();
@@ -315,7 +315,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
     _firstNameController.text = widget.arguments.firstName;
 
     BottomDialog.of(context).showBottomDialog(
-      title: NMobileLocalizations.of(context).edit_nickname,
+      title: NL10ns.of(context).edit_nickname,
       child: Form(
         key: _nameFormKey,
         autovalidate: true,
@@ -335,7 +335,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                     Textbox(
                       controller: _firstNameController,
                       focusNode: _firstNameFocusNode,
-                      hintText: NMobileLocalizations.of(context).input_nickname,
+                      hintText: NL10ns.of(context).input_nickname,
                       maxLength: 20,
                     ),
                   ],
@@ -348,7 +348,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: NMobileLocalizations.of(context).save,
+          text: NL10ns.of(context).save,
           width: double.infinity,
           onPressed: () async {
             _nameFormValid = (_nameFormKey.currentState as FormState).validate();
@@ -383,7 +383,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Label(
-            NMobileLocalizations.of(context).scan_show_me_desc,
+            NL10ns.of(context).scan_show_me_desc,
             type: LabelType.bodyRegular,
             color: DefaultTheme.fontColor2,
             overflow: TextOverflow.fade,
@@ -405,7 +405,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: NMobileLocalizations.of(context).close,
+          text: NL10ns.of(context).close,
           width: double.infinity,
           onPressed: () async {
             Navigator.pop(context);
@@ -420,8 +420,8 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
       //delete
       SimpleConfirm(
           context: context,
-          content: NMobileLocalizations.of(context).delete_friend_confirm_title,
-          buttonText: NMobileLocalizations.of(context).delete,
+          content: NL10ns.of(context).delete_friend_confirm_title,
+          buttonText: NL10ns.of(context).delete,
           buttonColor: Colors.red,
           callback: (v) {
             if (v) {
@@ -432,7 +432,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
     } else {
       widget.arguments.setFriend(db, isFriend: b);
       setState(() {});
-      showToast(NMobileLocalizations.of(context).success);
+      showToast(NL10ns.of(context).success);
     }
   }
 
@@ -452,7 +452,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                   color: DefaultTheme.primaryColor,
                 ),
                 SizedBox(width: 10),
-                Label(NMobileLocalizations.of(context).add_contact, type: LabelType.bodyRegular, color: DefaultTheme.primaryColor),
+                Label(NL10ns.of(context).add_contact, type: LabelType.bodyRegular, color: DefaultTheme.primaryColor),
                 Spacer(),
               ],
             ),
@@ -477,7 +477,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                   color: Colors.red,
                 ),
                 SizedBox(width: 10),
-                Label(NMobileLocalizations.of(context).delete, type: LabelType.bodyRegular, color: Colors.red),
+                Label(NL10ns.of(context).delete, type: LabelType.bodyRegular, color: Colors.red),
                 Spacer(),
               ],
             ),
@@ -498,7 +498,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
 
   _selectWallets() {
     BottomDialog.of(context).showSelectWalletDialog(
-      title: NMobileLocalizations.of(context).select_another_wallet,
+      title: NL10ns.of(context).select_another_wallet,
       onlyNkn: true,
       callback: (wallet) async {
         LOG('_selectWallets').w(wallet);
@@ -549,7 +549,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
               profileVersion: uuid.v4(),
             ).createContact(db);
           }
-          showToast(NMobileLocalizations.of(context).account_switching_completed);
+          showToast(NL10ns.of(context).account_switching_completed);
           setState(() {
             nickName = accountNew.client.myChatId.substring(0, 6);
             _walletDefault = wallet;
@@ -557,7 +557,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
         },
         onError: (pwdIncorrect, e) {
           if (pwdIncorrect) {
-            showToast(NMobileLocalizations.of(context).tip_password_error);
+            showToast(NL10ns.of(context).tip_password_error);
           }
         });
   }
@@ -626,7 +626,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                         Padding(
                           padding: EdgeInsets.fromLTRB(20.w, 20.h, 0, 16.h),
                           child: Label(
-                            NMobileLocalizations.of(context).my_profile,
+                            NL10ns.of(context).my_profile,
                             type: LabelType.h3,
                           ),
                         ),
@@ -646,7 +646,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                     loadAssetIconsImage('user', color: DefaultTheme.primaryColor, width: 24),
                                     SizedBox(width: 10),
                                     Label(
-                                      NMobileLocalizations.of(context).nickname,
+                                      NL10ns.of(context).nickname,
                                       type: LabelType.bodyRegular,
                                       color: DefaultTheme.fontColor1,
                                       height: 1,
@@ -678,7 +678,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                     loadAssetChatPng('chat_id', color: DefaultTheme.primaryColor, width: 22),
                                     SizedBox(width: 10),
                                     Label(
-                                      NMobileLocalizations.of(context).d_chat_address,
+                                      NL10ns.of(context).d_chat_address,
                                       type: LabelType.bodyRegular,
                                       color: DefaultTheme.fontColor1,
                                       height: 1,
@@ -718,7 +718,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                     ),
                                     SizedBox(width: 10),
                                     Label(
-                                      NMobileLocalizations.of(context).wallet_address,
+                                      NL10ns.of(context).wallet_address,
                                       type: LabelType.bodyRegular,
                                       color: DefaultTheme.fontColor1,
                                       height: 1,
@@ -777,7 +777,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                           ).pad(l: 10),
                                     Expanded(
                                       child: Label(
-                                        NMobileLocalizations.of(context).change_default_chat_wallet,
+                                        NL10ns.of(context).change_default_chat_wallet,
                                         type: LabelType.bodyRegular,
                                         color: Colours.blue_0f,
                                         textAlign: TextAlign.right,
@@ -922,7 +922,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                         ),
                                         SizedBox(width: 10),
                                         Label(
-                                          NMobileLocalizations.of(context).edit_contact,
+                                          NL10ns.of(context).edit_contact,
                                           type: LabelType.bodyRegular,
                                           color: DefaultTheme.fontColor1,
                                           height: 1,
@@ -963,7 +963,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                         ),
                                         SizedBox(width: 10),
                                         Label(
-                                          NMobileLocalizations.of(context).d_chat_address,
+                                          NL10ns.of(context).d_chat_address,
                                           type: LabelType.bodyRegular,
                                           color: DefaultTheme.fontColor1,
                                           height: 1,
@@ -1012,7 +1012,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                         ),
                                         SizedBox(width: 10),
                                         Label(
-                                          NMobileLocalizations.of(context).burn_after_reading,
+                                          NL10ns.of(context).burn_after_reading,
                                           type: LabelType.bodyRegular,
                                           color: DefaultTheme.fontColor1,
                                           textAlign: TextAlign.start,
@@ -1020,7 +1020,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                         SizedBox(width: 10),
                                         Expanded(
                                           child: Label(
-                                            _burnValue == null ? NMobileLocalizations.of(context).close : '${_burnValue != null ? '${BurnViewUtil.getStringFromSeconds(context, _burnValue)}' : ''}',
+                                            _burnValue == null ? NL10ns.of(context).close : '${_burnValue != null ? '${BurnViewUtil.getStringFromSeconds(context, _burnValue)}' : ''}',
                                             type: LabelType.bodyRegular,
                                             color: DefaultTheme.fontColor2,
                                             textAlign: TextAlign.right,
@@ -1046,7 +1046,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                 children: <Widget>[
                                   Expanded(
                                     child: Label(
-                                      NMobileLocalizations.of(context).disappear_desc,
+                                      NL10ns.of(context).disappear_desc,
                                       type: LabelType.bodySmall,
                                       color: DefaultTheme.fontDescColor,
                                       softWrap: true,
@@ -1071,7 +1071,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                       ),
 //                                      loadAssetChatPng('send_message', width: 22),
                                       SizedBox(width: 10),
-                                      Label(NMobileLocalizations.of(context).send_message, type: LabelType.bodyRegular, color: DefaultTheme.fontColor1),
+                                      Label(NL10ns.of(context).send_message, type: LabelType.bodyRegular, color: DefaultTheme.fontColor1),
 
                                       Spacer(),
                                       SvgPicture.asset(
@@ -1119,7 +1119,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
               ),
               SizedBox(width: 10),
               Label(
-                NMobileLocalizations.of(context).burn_after_reading + '${_burnValue != null ? ' (${Format.durationFormat(Duration(seconds: _burnValue))})' : ''}',
+                NL10ns.of(context).burn_after_reading + '${_burnValue != null ? ' (${Format.durationFormat(Duration(seconds: _burnValue))})' : ''}',
                 type: LabelType.bodyRegular,
                 color: DefaultTheme.fontColor1,
                 textAlign: TextAlign.start,
@@ -1127,7 +1127,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
               SizedBox(width: 20),
               Expanded(
                 child: Label(
-                  _burnValue == null ? NMobileLocalizations.of(context).close : BurnViewUtil.getStringFromSeconds(context, _burnValueArray[_sliderBurnValue.toInt()].inSeconds),
+                  _burnValue == null ? NL10ns.of(context).close : BurnViewUtil.getStringFromSeconds(context, _burnValueArray[_sliderBurnValue.toInt()].inSeconds),
                   type: LabelType.bodyRegular,
                   color: DefaultTheme.fontColor2,
                   textAlign: TextAlign.right,

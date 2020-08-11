@@ -53,7 +53,7 @@ class _NoContactScreenState extends State<NoContactScreen> with AccountDependsBl
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Label(user.name, type: LabelType.h3, dark: true),
-                      Label(NMobileLocalizations.of(context).click_to_settings, type: LabelType.bodyRegular, color: DefaultTheme.fontLightColor.withAlpha(200))
+                      Label(NL10ns.of(context).click_to_settings, type: LabelType.bodyRegular, color: DefaultTheme.fontLightColor.withAlpha(200))
                     ],
                   ),
                 )
@@ -95,7 +95,7 @@ class _NoContactScreenState extends State<NoContactScreen> with AccountDependsBl
                         Padding(
                           padding: EdgeInsets.only(top: 32),
                           child: Label(
-                            NMobileLocalizations.of(context).cantact_no_contact_title,
+                            NL10ns.of(context).cantact_no_contact_title,
                             type: LabelType.h2,
                             textAlign: TextAlign.center,
                           ),
@@ -103,7 +103,7 @@ class _NoContactScreenState extends State<NoContactScreen> with AccountDependsBl
                         Padding(
                           padding: EdgeInsets.only(top: 8, left: 0, right: 0),
                           child: Label(
-                            NMobileLocalizations.of(context).cantact_no_contact_desc,
+                            NL10ns.of(context).cantact_no_contact_desc,
                             type: LabelType.bodySmall,
                             textAlign: TextAlign.center,
                             softWrap: true,
@@ -125,7 +125,7 @@ class _NoContactScreenState extends State<NoContactScreen> with AccountDependsBl
                             children: <Widget>[
                               SvgPicture.asset('assets/icons/user-plus.svg', color: DefaultTheme.backgroundLightColor, width: 24).pad(r: 12),
                               Label(
-                                NMobileLocalizations.of(context).add_contact,
+                                NL10ns.of(context).add_contact,
                                 type: LabelType.h3,
                               )
                             ],
