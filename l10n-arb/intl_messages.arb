@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-08-11T15:49:59.273245",
+  "@@last_modified": "2020-08-12T00:48:17.780353",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -74,6 +74,12 @@
   },
   "close": "Close",
   "@close": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "off": "Off",
+  "@off": {
     "description": "",
     "type": "text",
     "placeholders": {}
