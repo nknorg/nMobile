@@ -33,15 +33,15 @@ class BurnViewUtil {
       }
     }
     List _burnTextArray = <String>[
-      NMobileLocalizations.of(context).burn_5_seconds,
-      NMobileLocalizations.of(context).burn_10_seconds,
-      NMobileLocalizations.of(context).burn_30_seconds,
-      NMobileLocalizations.of(context).burn_1_minute,
-      NMobileLocalizations.of(context).burn_5_minutes,
-      NMobileLocalizations.of(context).burn_10_minutes,
-      NMobileLocalizations.of(context).burn_30_minutes,
-      NMobileLocalizations.of(context).burn_1_hour,
-      NMobileLocalizations.of(context).burn_1_day,
+      NL10ns.of(context).burn_5_seconds,
+      NL10ns.of(context).burn_10_seconds,
+      NL10ns.of(context).burn_30_seconds,
+      NL10ns.of(context).burn_1_minute,
+      NL10ns.of(context).burn_5_minutes,
+      NL10ns.of(context).burn_10_minutes,
+      NL10ns.of(context).burn_30_minutes,
+      NL10ns.of(context).burn_1_hour,
+      NL10ns.of(context).burn_1_day,
     ];
 
     if (currentIndex == -1) {
@@ -104,7 +104,7 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
     items.add(SimpleDialogOption(
       child: Row(
         children: <Widget>[
-          Container(height: 35, child: Row(children: [Text(NMobileLocalizations.of(context).close)])),
+          Container(height: 35, child: Row(children: [Text(NL10ns.of(context).close)])),
           Spacer(),
           currentIndex == -1 ? Icon(Icons.check, color: Colors.red, size: 16) : Container()
         ],
@@ -151,7 +151,7 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
         Spacer(),
         SimpleDialogOption(
           child: Label(
-            NMobileLocalizations.of(context).cancel,
+            NL10ns.of(context).cancel,
             type: LabelType.bodyRegular,
             color: DefaultTheme.fontColor1,
             textAlign: TextAlign.start,
@@ -162,7 +162,7 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
         ),
         SimpleDialogOption(
           child: Label(
-            NMobileLocalizations.of(context).ok,
+            NL10ns.of(context).ok,
             type: LabelType.bodyRegular,
             color: DefaultTheme.fontColor1,
             textAlign: TextAlign.start,
@@ -200,15 +200,15 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
   Widget build(BuildContext context) {
     if (_burnTextArray == null) {
       _burnTextArray = <String>[
-        NMobileLocalizations.of(context).burn_5_seconds,
-        NMobileLocalizations.of(context).burn_10_seconds,
-        NMobileLocalizations.of(context).burn_30_seconds,
-        NMobileLocalizations.of(context).burn_1_minute,
-        NMobileLocalizations.of(context).burn_5_minutes,
-        NMobileLocalizations.of(context).burn_10_minutes,
-        NMobileLocalizations.of(context).burn_30_minutes,
-        NMobileLocalizations.of(context).burn_1_hour,
-        NMobileLocalizations.of(context).burn_1_day,
+        NL10ns.of(context).burn_5_seconds,
+        NL10ns.of(context).burn_10_seconds,
+        NL10ns.of(context).burn_30_seconds,
+        NL10ns.of(context).burn_1_minute,
+        NL10ns.of(context).burn_5_minutes,
+        NL10ns.of(context).burn_10_minutes,
+        NL10ns.of(context).burn_30_minutes,
+        NL10ns.of(context).burn_1_hour,
+        NL10ns.of(context).burn_1_day,
       ];
     }
     return Material(
@@ -217,7 +217,7 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
         titlePadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 0.0),
         contentPadding: EdgeInsets.fromLTRB(0.0, 12.0, 0.0, 12.0),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-        title: Text(NMobileLocalizations.of(context).select),
+        title: Text(NL10ns.of(context).select),
         children: getItemView(_burnTextArray, context),
       ),
     );

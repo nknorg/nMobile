@@ -66,7 +66,7 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
       items: [
         MenuItem(
           userInfo: 0,
-          title: NMobileLocalizations.of(context).copy,
+          title: NL10ns.of(context).copy,
           textStyle: TextStyle(color: DefaultTheme.fontLightColor, fontSize: 12),
         ),
       ],
@@ -89,7 +89,7 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
       items: [
         MenuItem(
           userInfo: 0,
-          title: NMobileLocalizations.of(context).done,
+          title: NL10ns.of(context).done,
           textStyle: TextStyle(color: DefaultTheme.fontLightColor, fontSize: 12),
         ),
       ],
@@ -416,7 +416,7 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
 
     var content;
     if (widget.style != BubbleStyle.Me) {
-      content = NMobileLocalizations.of(context).invites_desc_to;
+      content = NL10ns.of(context).invites_desc_to;
     } else {
       content = 'You invites ${widget.message.to.substring(0, 5)} to join group';
     }
@@ -446,11 +446,11 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
               : InkWell(
                   onTap: () async {
                     BottomDialog.of(Global.appContext).showAcceptDialog(
-                        title: NMobileLocalizations.of(context).accept_invitation,
+                        title: NL10ns.of(context).accept_invitation,
                         subTitle: content,
                         content: widget.message.content,
                         onPressed: () async {
-                          showToast(NMobileLocalizations.of(context).accepted);
+                          showToast(NL10ns.of(context).accepted);
                           Navigator.pop(context);
                           var duration = 400000;
                           List<TopicSchema> topic = await TopicSchema.getAllTopic(db);
@@ -478,7 +478,7 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
                         });
                   },
                   child: Label(
-                    NMobileLocalizations.of(context).accept,
+                    NL10ns.of(context).accept,
                     type: LabelType.bodyRegular,
                     fontWeight: FontWeight.bold,
                     color: DefaultTheme.primaryColor,

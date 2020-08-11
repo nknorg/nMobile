@@ -135,7 +135,7 @@ class TimerAuth {
         onError: (pwdIncorrect, e) {
           _authError = true;
           if (pwdIncorrect) {
-            showToast(NMobileLocalizations.of(context).tip_password_error);
+            showToast(NL10ns.of(context).tip_password_error);
           }
         },
       );

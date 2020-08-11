@@ -86,7 +86,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
         titleChild: Padding(
           padding: 0.pad(l: 20),
           child: Label(
-            NMobileLocalizations.of(context).my_wallets,
+            NL10ns.of(context).my_wallets,
             type: LabelType.h2,
           ),
         ),
@@ -118,14 +118,14 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
             PopupMenuItem<int>(
               value: 0,
               child: Label(
-                NMobileLocalizations.of(context).no_wallet_create,
+                NL10ns.of(context).no_wallet_create,
                 type: LabelType.display,
               ),
             ),
             PopupMenuItem<int>(
               value: 1,
               child: Label(
-                NMobileLocalizations.of(context).import_wallet,
+                NL10ns.of(context).import_wallet,
                 type: LabelType.display,
               ),
             ),
@@ -182,7 +182,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
                   child: SvgPicture.asset('assets/icons/warning_20.svg', color: Colours.yellow_f0),
                 ),
                 Text(
-                  NMobileLocalizations.of(context).not_backed_up,
+                  NL10ns.of(context).not_backed_up,
                   textAlign: TextAlign.end,
                   style: TextStyle(fontSize: DefaultTheme.bodySmallFontSize, fontStyle: FontStyle.italic, color: Colours.pink_f8),
                   overflow: TextOverflow.ellipsis,
@@ -199,7 +199,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
   _onNotBackedUpTipClicked() {
     // Don't use `context` as `Widget build(BuildContext context)`.
     WalletNotBackedUpDialog.of(context).show(() {
-      BottomDialog.of(context).showSelectWalletDialog(title: NMobileLocalizations.of(context).select_asset_to_backup, callback: _listen);
+      BottomDialog.of(context).showSelectWalletDialog(title: NL10ns.of(context).select_asset_to_backup, callback: _listen);
     });
   }
 
@@ -233,11 +233,11 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
                   'name': ws.name,
                 });
               } else {
-                showToast(NMobileLocalizations.of(context).password_wrong);
+                showToast(NL10ns.of(context).password_wrong);
               }
             } catch (e) {
               if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-                showToast(NMobileLocalizations.of(context).password_wrong);
+                showToast(NL10ns.of(context).password_wrong);
               }
             }
           }

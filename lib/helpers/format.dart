@@ -49,12 +49,12 @@ class Format {
     } else if (diffSpan.inHours < 24) {
       return formatDurationToTime(diffSpan);
     } else {
-      return diffSpan.inDays.toString() + NMobileLocalizations.of(Global.appContext).day;
+      return diffSpan.inDays.toString() + NL10ns.of(Global.appContext).day;
     }
   }
 
   static String durationFormat(Duration d) {
-    var localizations = NMobileLocalizations.of(Global.appContext);
+    var localizations = NL10ns.of(Global.appContext);
 
     if (d.inSeconds < 0) {
       return '0${localizations.s}';
@@ -70,7 +70,7 @@ class Format {
   }
 
   static String durationFormatString(Duration d) {
-    var localizations = NMobileLocalizations.of(Global.appContext);
+    var localizations = NL10ns.of(Global.appContext);
 
     if (d.inSeconds < 0) {
       return '0${localizations.s}';

@@ -72,9 +72,9 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
     final _localAuth = await LocalAuthenticationService.instance;
     _authSelected = _localAuth.isProtectionEnabled;
     if (_localAuth.authType == BiometricType.face) {
-      _authTypeString = NMobileLocalizations.of(Global.appContext).face_id;
+      _authTypeString = NL10ns.of(Global.appContext).face_id;
     } else if (_localAuth.authType == BiometricType.fingerprint) {
-      _authTypeString = NMobileLocalizations.of(Global.appContext).touch_id;
+      _authTypeString = NL10ns.of(Global.appContext).touch_id;
     }
     setState(() {});
   }
@@ -82,7 +82,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
   initData() {
     _languageList = <SelectListItem>[
       SelectListItem(
-        text: NMobileLocalizations.of(Global.appContext).auto,
+        text: NL10ns.of(Global.appContext).auto,
         value: 'auto',
       ),
       SelectListItem(
@@ -97,30 +97,30 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
 
     _localNotificationTypeList = <SelectListItem>[
       SelectListItem(
-        text: NMobileLocalizations.of(Global.appContext).local_notification_only_name,
+        text: NL10ns.of(Global.appContext).local_notification_only_name,
         value: 0,
       ),
       SelectListItem(
-        text: NMobileLocalizations.of(Global.appContext).local_notification_both_name_message,
+        text: NL10ns.of(Global.appContext).local_notification_both_name_message,
         value: 1,
       ),
       SelectListItem(
-        text: NMobileLocalizations.of(Global.appContext).local_notification_none_display,
+        text: NL10ns.of(Global.appContext).local_notification_none_display,
         value: 2,
       ),
     ];
 
     if (Global.locale == null) {
-      _currentLanguage = NMobileLocalizations.of(Global.appContext).auto;
+      _currentLanguage = NL10ns.of(Global.appContext).auto;
     } else {
-      _currentLanguage = _languageList.firstWhere((x) => x.value == Global.locale, orElse: () => null)?.text ?? NMobileLocalizations.of(Global.appContext).auto;
+      _currentLanguage = _languageList.firstWhere((x) => x.value == Global.locale, orElse: () => null)?.text ?? NL10ns.of(Global.appContext).auto;
     }
 
     if (Settings.localNotificationType == null) {
-      _currentLocalNotificationType = NMobileLocalizations.of(Global.appContext).local_notification_only_name;
+      _currentLocalNotificationType = NL10ns.of(Global.appContext).local_notification_only_name;
     } else {
       _currentLocalNotificationType = _localNotificationTypeList?.firstWhere((x) => x.value == Settings.localNotificationType, orElse: () => null)?.text ??
-          NMobileLocalizations.of(Global.appContext).local_notification_only_name;
+          NL10ns.of(Global.appContext).local_notification_only_name;
     }
 
     if (mounted) {
@@ -144,7 +144,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
         titleChild: Padding(
           padding: const EdgeInsets.only(left: 20),
           child: Label(
-            NMobileLocalizations.of(context).menu_settings,
+            NL10ns.of(context).menu_settings,
             type: LabelType.h2,
           ),
         ),
@@ -165,7 +165,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     Label(
-                      NMobileLocalizations.of(context).general,
+                      NL10ns.of(context).general,
                       type: LabelType.h3,
                     ),
                   ],
@@ -185,7 +185,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
                         onPressed: () async {
                           Navigator.pushNamed(context, SelectScreen.routeName, arguments: {
-                            SelectScreen.title: NMobileLocalizations.of(context).change_language,
+                            SelectScreen.title: NL10ns.of(context).change_language,
                             SelectScreen.selectedValue: Global.locale ?? 'auto',
                             SelectScreen.list: _languageList,
                           }).then((lang) {
@@ -198,7 +198,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Label(
-                              NMobileLocalizations.of(context).language,
+                              NL10ns.of(context).language,
                               type: LabelType.bodyRegular,
                               color: DefaultTheme.fontColor1,
                               height: 1,
@@ -233,7 +233,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: <Widget>[
                             Label(
-                              NMobileLocalizations.of(context).security,
+                              NL10ns.of(context).security,
                               type: LabelType.h3,
                             ),
                           ],
@@ -273,7 +273,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
               Row(
                 children: <Widget>[
                   Label(
-                    NMobileLocalizations.of(context).notification,
+                    NL10ns.of(context).notification,
                     type: LabelType.h3,
                   ),
                 ],
@@ -295,7 +295,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
                         onPressed: () async {
                           Navigator.pushNamed(context, SelectScreen.routeName, arguments: {
-                            SelectScreen.title: NMobileLocalizations.of(context).local_notification,
+                            SelectScreen.title: NL10ns.of(context).local_notification,
                             SelectScreen.selectedValue: Settings.localNotificationType,
                             SelectScreen.list: _localNotificationTypeList,
                           }).then((type) {
@@ -312,7 +312,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Label(
-                              NMobileLocalizations.of(context).local_notification,
+                              NL10ns.of(context).local_notification,
                               type: LabelType.bodyRegular,
                               color: DefaultTheme.fontColor1,
                               height: 1,
@@ -347,7 +347,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     Label(
-                      NMobileLocalizations.of(context).about,
+                      NL10ns.of(context).about,
                       type: LabelType.h3,
                     ),
                   ],
@@ -370,7 +370,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Label(
-                              NMobileLocalizations.of(context).version,
+                              NL10ns.of(context).version,
                               type: LabelType.bodyRegular,
                               color: DefaultTheme.fontColor1,
                               height: 1,
@@ -396,7 +396,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Label(
-                              NMobileLocalizations.of(context).contact,
+                              NL10ns.of(context).contact,
                               type: LabelType.bodyRegular,
                               color: DefaultTheme.fontColor1,
                               height: 1,
@@ -433,7 +433,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Label(
-                              NMobileLocalizations.of(context).help,
+                              NL10ns.of(context).help,
                               type: LabelType.bodyRegular,
                               color: DefaultTheme.fontColor1,
                               height: 1,
@@ -471,7 +471,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     Label(
-                      NMobileLocalizations.of(context).advanced,
+                      NL10ns.of(context).advanced,
                       type: LabelType.h3,
                     ),
                   ],
@@ -497,7 +497,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Label(
-                              NMobileLocalizations.of(context).debug,
+                              NL10ns.of(context).debug,
                               type: LabelType.bodyRegular,
                               color: DefaultTheme.fontColor1,
                               height: 1,
@@ -527,7 +527,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
   changeAuthAction(bool value) async {
     var wallet = await WalletSchema.getWallet();
     if (wallet == null) return;
-    var password = await BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
+    var password = await BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NL10ns.of(Global.appContext).verify_wallet_password);
     if (password != null) {
       try {
         var w = await wallet.exportWallet(password);
@@ -539,7 +539,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
         });
       } catch (e) {
         if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-          showToast(NMobileLocalizations.of(context).tip_password_error);
+          showToast(NL10ns.of(context).tip_password_error);
         }
       }
     }

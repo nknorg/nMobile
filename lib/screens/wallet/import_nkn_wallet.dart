@@ -28,10 +28,10 @@ class _ImportNknWalletScreenState extends State<ImportNknWalletScreen> with Sing
 
   @override
   Widget build(BuildContext context) {
-    List<String> tabs = [NMobileLocalizations.of(context).tab_keystore, NMobileLocalizations.of(context).tab_seed];
+    List<String> tabs = [NL10ns.of(context).tab_keystore, NL10ns.of(context).tab_seed];
     return Scaffold(
       appBar: Header(
-        title: NMobileLocalizations.of(context).create_nkn_wallet_title,
+        title: NL10ns.of(context).create_nkn_wallet_title,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: IconButton(
           icon: loadAssetIconsImage(

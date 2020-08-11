@@ -86,8 +86,8 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
         .then((FutureOr success) async {
       if (success != null && await success) {
         NotificationDialog.of(context).show(
-          title: NMobileLocalizations.of(context).transfer_initiated,
-          content: NMobileLocalizations.of(context).transfer_initiated_desc,
+          title: NL10ns.of(context).transfer_initiated,
+          content: NL10ns.of(context).transfer_initiated_desc,
         );
       }
     });
@@ -101,7 +101,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
         title: /*widget.wallet.type == WalletSchema.ETH_WALLET
             ? NMobileLocalizations.of(context).eth_wallet
             : */
-            widget.index == 0 ? NMobileLocalizations.of(context).main_wallet : widget.wallet.name.toUpperCase(),
+            widget.index == 0 ? NL10ns.of(context).main_wallet : widget.wallet.name.toUpperCase(),
         backgroundColor: DefaultTheme.backgroundColor4,
         action: PopupMenuButton(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -110,12 +110,12 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
           itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
             PopupMenuItem<int>(
               value: 0,
-              child: Label(NMobileLocalizations.of(context).export_wallet, type: LabelType.display),
+              child: Label(NL10ns.of(context).export_wallet, type: LabelType.display),
             ),
             PopupMenuItem<int>(
               value: 1,
               child: Label(
-                NMobileLocalizations.of(context).delete_wallet,
+                NL10ns.of(context).delete_wallet,
                 type: LabelType.display,
                 color: DefaultTheme.strongColor,
               ),
@@ -212,7 +212,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
                                 child: Padding(
                                   padding: const EdgeInsets.only(right: 8),
                                   child: Button(
-                                    text: NMobileLocalizations.of(context).send,
+                                    text: NL10ns.of(context).send,
                                     onPressed: _send,
                                   ),
                                 ),
@@ -221,7 +221,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
                                 child: Padding(
                                   padding: const EdgeInsets.only(left: 8),
                                   child: Button(
-                                    text: NMobileLocalizations.of(context).receive,
+                                    text: NL10ns.of(context).receive,
                                     onPressed: _receive,
                                   ),
                                 ),
@@ -238,7 +238,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
                                   Label(
-                                    NMobileLocalizations.of(context).wallet_name,
+                                    NL10ns.of(context).wallet_name,
                                     type: LabelType.h3,
                                     textAlign: TextAlign.start,
                                   ),
@@ -262,13 +262,13 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
                                   Label(
-                                    NMobileLocalizations.of(context).wallet_address,
+                                    NL10ns.of(context).wallet_address,
                                     type: LabelType.h3,
                                     textAlign: TextAlign.start,
                                   ),
                                   InkWell(
                                     child: Label(
-                                      NMobileLocalizations.of(context).copy,
+                                      NL10ns.of(context).copy,
                                       color: DefaultTheme.primaryColor,
                                       type: LabelType.bodyLarge,
                                     ),
@@ -309,7 +309,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
 
   showChangeNameDialog() {
     BottomDialog.of(context).showBottomDialog(
-      title: NMobileLocalizations.of(context).wallet_name,
+      title: NL10ns.of(context).wallet_name,
       child: Form(
         autovalidate: false,
         key: _nameFormKey,
@@ -326,7 +326,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
                   children: <Widget>[
                     Textbox(
                       controller: _walletNameController,
-                      hintText: NMobileLocalizations.of(context).hint_enter_wallet_name,
+                      hintText: NL10ns.of(context).hint_enter_wallet_name,
                       maxLength: 20,
                     ),
                   ],
@@ -339,7 +339,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: NMobileLocalizations.of(context).save,
+          text: NL10ns.of(context).save,
           width: double.infinity,
           onPressed: () async {
             if (_walletNameController.text != null && _walletNameController.text.length > 0) {
@@ -373,7 +373,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
                 'name': ethWallet.name,
               });
             } catch (e) {
-              showToast(NMobileLocalizations.of(context).password_wrong);
+              showToast(NL10ns.of(context).password_wrong);
             }
           }
         } else {
@@ -388,14 +388,14 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
                   'address': wallet['address'],
                   'publicKey': wallet['publicKey'],
                   'seed': wallet['seed'],
-                  'name': isDefault ? NMobileLocalizations.of(context).main_wallet : widget.wallet.name,
+                  'name': isDefault ? NL10ns.of(context).main_wallet : widget.wallet.name,
                 });
               } else {
-                showToast(NMobileLocalizations.of(context).password_wrong);
+                showToast(NL10ns.of(context).password_wrong);
               }
             } catch (e) {
               if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-                showToast(NMobileLocalizations.of(context).password_wrong);
+                showToast(NL10ns.of(context).password_wrong);
               }
             }
           }
@@ -404,8 +404,8 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
       case 1:
         SimpleConfirm(
                 context: context,
-                title: NMobileLocalizations.of(context).delete_wallet_confirm_title,
-                content: NMobileLocalizations.of(context).delete_wallet_confirm_text,
+                title: NL10ns.of(context).delete_wallet_confirm_title,
+                content: NL10ns.of(context).delete_wallet_confirm_text,
                 callback: (v) async {
                   if (v) {
                     _walletsBloc.add(DeleteWallet(widget.wallet));
@@ -422,7 +422,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
                   }
                 },
                 buttonColor: Colors.red,
-                buttonText: NMobileLocalizations.of(context).delete_wallet)
+                buttonText: NL10ns.of(context).delete_wallet)
             .show();
 //                ModalDialog.of(context).show(
 //                  height: 450,

@@ -55,12 +55,12 @@ class _ImportKeystoreNknWalletState extends State<ImportKeystoreNknWallet> with 
         String address = keystore['Address'];
         _walletsBloc.add(AddWallet(WalletSchema(address: address, type: 'nkn', name: _name), keystoreJson));
         EasyLoading.dismiss();
-        showToast(NMobileLocalizations.of(context).success);
+        showToast(NL10ns.of(context).success);
         Navigator.of(context).pushReplacementNamed(AppScreen.routeName);
       } catch (e) {
         EasyLoading.dismiss();
         if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-          showToast(NMobileLocalizations.of(context).password_wrong);
+          showToast(NL10ns.of(context).password_wrong);
         }
       }
     }
@@ -101,7 +101,7 @@ class _ImportKeystoreNknWalletState extends State<ImportKeystoreNknWallet> with 
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8, bottom: 8),
                                   child: Label(
-                                    NMobileLocalizations.of(context).import_keystore_nkn_wallet_title,
+                                    NL10ns.of(context).import_keystore_nkn_wallet_title,
                                     type: LabelType.h2,
                                     textAlign: TextAlign.start,
                                   ),
@@ -109,21 +109,21 @@ class _ImportKeystoreNknWalletState extends State<ImportKeystoreNknWallet> with 
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 32),
                                   child: Label(
-                                    NMobileLocalizations.of(context).import_keystore_nkn_wallet_desc,
+                                    NL10ns.of(context).import_keystore_nkn_wallet_desc,
                                     type: LabelType.bodyRegular,
                                     textAlign: TextAlign.start,
                                     softWrap: true,
                                   ),
                                 ),
                                 Label(
-                                  NMobileLocalizations.of(context).keystore,
+                                  NL10ns.of(context).keystore,
                                   type: LabelType.h4,
                                   textAlign: TextAlign.start,
                                 ),
                                 Textbox(
                                   multi: true,
                                   controller: _keystoreController,
-                                  hintText: NMobileLocalizations.of(context).input_keystore,
+                                  hintText: NL10ns.of(context).input_keystore,
                                   focusNode: _keystoreFocusNode,
                                   onSaved: (v) => _keystore = v,
                                   onFieldSubmitted: (_) {
@@ -148,13 +148,13 @@ class _ImportKeystoreNknWalletState extends State<ImportKeystoreNknWallet> with 
                                   validator: Validator.of(context).keystore(),
                                 ),
                                 Label(
-                                  NMobileLocalizations.of(context).wallet_name,
+                                  NL10ns.of(context).wallet_name,
                                   type: LabelType.h4,
                                   textAlign: TextAlign.start,
                                 ),
                                 Textbox(
                                   focusNode: _nameFocusNode,
-                                  hintText: NMobileLocalizations.of(context).hint_enter_wallet_name,
+                                  hintText: NL10ns.of(context).hint_enter_wallet_name,
                                   onSaved: (v) => _name = v,
                                   onFieldSubmitted: (_) {
                                     FocusScope.of(context).requestFocus(_passwordFocusNode);
@@ -163,14 +163,14 @@ class _ImportKeystoreNknWalletState extends State<ImportKeystoreNknWallet> with 
                                   validator: Validator.of(context).walletName(),
                                 ),
                                 Label(
-                                  NMobileLocalizations.of(context).wallet_password,
+                                  NL10ns.of(context).wallet_password,
                                   type: LabelType.h4,
                                   textAlign: TextAlign.start,
                                 ),
                                 Textbox(
                                   focusNode: _passwordFocusNode,
                                   controller: _passwordController,
-                                  hintText: NMobileLocalizations.of(context).input_password,
+                                  hintText: NL10ns.of(context).input_password,
                                   onSaved: (v) => _password = v,
                                   onFieldSubmitted: (_) {
                                     FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
@@ -199,7 +199,7 @@ class _ImportKeystoreNknWalletState extends State<ImportKeystoreNknWallet> with 
                     Padding(
                       padding: EdgeInsets.only(left: 30, right: 30),
                       child: Button(
-                        text: NMobileLocalizations.of(context).import_wallet,
+                        text: NL10ns.of(context).import_wallet,
                         disabled: !_formValid,
                         onPressed: next,
                       ),

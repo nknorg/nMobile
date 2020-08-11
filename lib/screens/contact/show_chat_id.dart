@@ -22,7 +22,7 @@ class ShowMyChatIDState extends State<ShowMyChatID> with AccountDependsBloc {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).d_chat_address,
+        title: NL10ns.of(context).d_chat_address,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: BodyBox(
@@ -45,7 +45,7 @@ class ShowMyChatIDState extends State<ShowMyChatID> with AccountDependsBloc {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         Label(
-                          NMobileLocalizations.of(context).d_chat_address,
+                          NL10ns.of(context).d_chat_address,
                           type: LabelType.bodyRegular,
                           color: DefaultTheme.fontColor1,
                           height: 1,
@@ -98,7 +98,7 @@ class ShowMyChatIDState extends State<ShowMyChatID> with AccountDependsBloc {
                   ),
                   SizedBox(height: 20.h),
                   Label(
-                    NMobileLocalizations.of(context).scan_show_me_desc,
+                    NL10ns.of(context).scan_show_me_desc,
                     type: LabelType.bodyRegular,
                     color: DefaultTheme.fontColor2,
                     overflow: TextOverflow.fade,

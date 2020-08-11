@@ -24,7 +24,7 @@ class ChatProfileState extends State<ChatProfile> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).profile,
+        title: NL10ns.of(context).profile,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: BodyBox(
@@ -47,7 +47,7 @@ class ChatProfileState extends State<ChatProfile> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         Label(
-                          NMobileLocalizations.of(context).d_chat_address,
+                          NL10ns.of(context).d_chat_address,
                           type: LabelType.bodyRegular,
                           color: DefaultTheme.fontColor1,
                           height: 1,
@@ -100,7 +100,7 @@ class ChatProfileState extends State<ChatProfile> {
                   ),
                   SizedBox(height: 20.h),
                   Label(
-                    NMobileLocalizations.of(context).scan_show_me_desc,
+                    NL10ns.of(context).scan_show_me_desc,
                     type: LabelType.bodyRegular,
                     color: DefaultTheme.fontColor2,
                     overflow: TextOverflow.fade,

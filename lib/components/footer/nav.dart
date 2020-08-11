@@ -46,21 +46,21 @@ class _NavState extends State<Nav> {
         children: <Widget>[
           ButtonIcon(
             icon: loadAssetIconsImage('chat', color: widget.currentIndex == 0 ? _selectedColor : _color),
-            text: NMobileLocalizations.of(context).menu_chat,
+            text: NL10ns.of(context).menu_chat,
             height: 60,
             fontColor: widget.currentIndex == 0 ? _selectedColor : _color,
             onPressed: () => _onItemTapped(0),
           ),
           ButtonIcon(
             icon: loadAssetIconsImage('wallet', color: widget.currentIndex == 1 ? _selectedColor : _color),
-            text: NMobileLocalizations.of(context).menu_wallet,
+            text: NL10ns.of(context).menu_wallet,
             height: 60,
             fontColor: widget.currentIndex == 1 ? _selectedColor : _color,
             onPressed: () => _onItemTapped(1),
           ),
           ButtonIcon(
             icon: loadAssetIconsImage('settings', color: widget.currentIndex == 2 ? _selectedColor : _color),
-            text: NMobileLocalizations.of(context).menu_settings,
+            text: NL10ns.of(context).menu_settings,
             height: 60,
             fontColor: widget.currentIndex == 2 ? _selectedColor : _color,
             onPressed: () => _onItemTapped(2),

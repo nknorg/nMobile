@@ -10,9 +10,9 @@ class Validator {
 
   Validator.of(context) : this(context);
 
-  NMobileLocalizations _localizations;
+  NL10ns _localizations;
   Validator(this.context) {
-    _localizations = NMobileLocalizations.of(context);
+    _localizations = NL10ns.of(context);
   }
 
   keystore() {

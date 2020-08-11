@@ -25,7 +25,7 @@ class ShowMyChatAddressState extends State<ShowMyChatAddress> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).wallet_address,
+        title: NL10ns.of(context).wallet_address,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: BodyBox(
@@ -48,7 +48,7 @@ class ShowMyChatAddressState extends State<ShowMyChatAddress> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         Label(
-                          NMobileLocalizations.of(context).wallet_address,
+                          NL10ns.of(context).wallet_address,
                           type: LabelType.bodyRegular,
                           color: DefaultTheme.fontColor1,
                           height: 1,
@@ -101,7 +101,7 @@ class ShowMyChatAddressState extends State<ShowMyChatAddress> {
                   ),
                   SizedBox(height: 20.h),
                   Label(
-                    NMobileLocalizations.of(context).show_wallet_address_desc,
+                    NL10ns.of(context).show_wallet_address_desc,
                     type: LabelType.bodyRegular,
                     color: DefaultTheme.fontColor2,
                     overflow: TextOverflow.fade,

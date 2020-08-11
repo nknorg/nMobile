@@ -70,7 +70,7 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
     return Scaffold(
         backgroundColor: DefaultTheme.primaryColor,
         appBar: Header(
-          titleChild: Label(NMobileLocalizations.of(context).menu_chat.toUpperCase(), type: LabelType.h2).pad(l: 20),
+          titleChild: Label(NL10ns.of(context).menu_chat.toUpperCase(), type: LabelType.h2).pad(l: 20),
           hasBack: false,
           backgroundColor: DefaultTheme.primaryColor,
           leading: null,
@@ -88,7 +88,7 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
                       child: Column(
                         children: <Widget>[
                           Label(
-                            NMobileLocalizations.of(context).chat_no_wallet_title,
+                            NL10ns.of(context).chat_no_wallet_title,
                             type: LabelType.h2,
                             textAlign: TextAlign.center,
                             softWrap: true,
@@ -123,12 +123,12 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Label(
-                                      NMobileLocalizations.of(context).nickname,
+                                      NL10ns.of(context).nickname,
                                       type: LabelType.h3,
                                       textAlign: TextAlign.start,
                                     ),
                                     TextSelector(
-                                      NMobileLocalizations.of(context).import_wallet_as_account,
+                                      NL10ns.of(context).import_wallet_as_account,
                                       DefaultTheme.bodySmallFontSize,
                                       Colours.blue_0f,
                                       Colours.gray_81,
@@ -141,7 +141,7 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
                                   ],
                                 ),
                                 Textbox(
-                                  hintText: NMobileLocalizations.of(context).input_nickname,
+                                  hintText: NL10ns.of(context).input_nickname,
                                   focusNode: _nameFocusNode,
                                   onSaved: (v) => _name = v,
                                   onFieldSubmitted: (_) {
@@ -152,14 +152,14 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
                                   borderColor: Colours.blue_0f,
                                 ),
                                 Label(
-                                  NMobileLocalizations.of(context).wallet_password,
+                                  NL10ns.of(context).wallet_password,
                                   type: LabelType.h3,
                                   textAlign: TextAlign.start,
                                 ),
                                 Textbox(
                                   focusNode: _passwordFocusNode,
                                   controller: _passwordController,
-                                  hintText: NMobileLocalizations.of(context).input_password,
+                                  hintText: NL10ns.of(context).input_password,
                                   onSaved: (v) => _password = v,
                                   onFieldSubmitted: (_) {
                                     FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
@@ -171,17 +171,17 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
                                   borderColor: Colours.blue_0f,
                                 ),
                                 Text(
-                                  NMobileLocalizations.of(context).wallet_password_mach,
+                                  NL10ns.of(context).wallet_password_mach,
                                   style: TextStyle(color: Color(0xFF8F92A1), fontSize: DefaultTheme.bodySmallFontSize),
                                 ),
                                 Label(
-                                  NMobileLocalizations.of(context).confirm_password,
+                                  NL10ns.of(context).confirm_password,
                                   type: LabelType.h3,
                                   textAlign: TextAlign.start,
                                 ).pad(t: 12),
                                 Textbox(
                                   focusNode: _confirmPasswordFocusNode,
-                                  hintText: NMobileLocalizations.of(context).input_password_again,
+                                  hintText: NL10ns.of(context).input_password_again,
                                   validator: Validator.of(context).confrimPassword(_passwordController.text),
                                   password: true,
                                   padding: 0.pad(b: 24),
@@ -200,7 +200,7 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
                                         color: Colours.blue_0f,
                                         colorBrightness: Brightness.dark,
                                         child: Text(
-                                          NMobileLocalizations.of(context).create_account,
+                                          NL10ns.of(context).create_account,
                                           style: TextStyle(fontSize: DefaultTheme.h3FontSize, fontWeight: FontWeight.bold, color: null),
                                         ),
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),

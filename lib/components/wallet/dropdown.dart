@@ -113,7 +113,7 @@ class _WalletDropdownState extends State<WalletDropdown> {
                                 padding: 2.pad(l: 8, r: 8),
                                 decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.green_06_a1p),
                                 child: Text(
-                                  NMobileLocalizations.of(context).mainnet,
+                                  NL10ns.of(context).mainnet,
                                   style: TextStyle(color: Colours.green_06, fontSize: 10, fontWeight: FontWeight.bold),
                                 ),
                               )
@@ -122,7 +122,7 @@ class _WalletDropdownState extends State<WalletDropdown> {
                                 padding: 2.pad(l: 8, r: 8),
                                 decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.purple_53_a1p),
                                 child: Text(
-                                  NMobileLocalizations.of(context).ERC_20,
+                                  NL10ns.of(context).ERC_20,
                                   style: TextStyle(color: Colours.purple_53, fontSize: 10, fontWeight: FontWeight.bold),
                                 ),
                               ),

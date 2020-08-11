@@ -99,7 +99,7 @@ class AppState extends State<App> with WidgetsBindingObserver, Tag {
               },
               navigatorObservers: [BotToastNavigatorObserver(), RouteUtils.routeObserver],
               onGenerateTitle: (context) {
-                return NMobileLocalizations.of(context).title;
+                return NL10ns.of(context).title;
               },
               onGenerateRoute: onGenerateRoute,
               title: 'nMobile',

@@ -58,7 +58,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).export_wallet,
+        title: NL10ns.of(context).export_wallet,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: Builder(
@@ -155,13 +155,13 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     children: <Widget>[
                                                       Label(
-                                                        NMobileLocalizations.of(context).wallet_address,
+                                                        NL10ns.of(context).wallet_address,
                                                         type: LabelType.h4,
                                                         textAlign: TextAlign.start,
                                                       ),
                                                       InkWell(
                                                         child: Label(
-                                                          NMobileLocalizations.of(context).copy,
+                                                          NL10ns.of(context).copy,
                                                           color: DefaultTheme.primaryColor,
                                                           type: LabelType.bodyRegular,
                                                         ),
@@ -216,13 +216,13 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                           children: <Widget>[
                                                             Label(
-                                                              NMobileLocalizations.of(context).public_key,
+                                                              NL10ns.of(context).public_key,
                                                               type: LabelType.h4,
                                                               textAlign: TextAlign.start,
                                                             ),
                                                             InkWell(
                                                               child: Label(
-                                                                NMobileLocalizations.of(context).copy,
+                                                                NL10ns.of(context).copy,
                                                                 color: DefaultTheme.primaryColor,
                                                                 type: LabelType.bodyRegular,
                                                               ),
@@ -278,13 +278,13 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                           children: <Widget>[
                                                             Label(
-                                                              NMobileLocalizations.of(context).seed,
+                                                              NL10ns.of(context).seed,
                                                               type: LabelType.h4,
                                                               textAlign: TextAlign.start,
                                                             ),
                                                             InkWell(
                                                               child: Label(
-                                                                NMobileLocalizations.of(context).copy,
+                                                                NL10ns.of(context).copy,
                                                                 color: DefaultTheme.primaryColor,
                                                                 type: LabelType.bodyRegular,
                                                               ),
@@ -340,13 +340,13 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     children: <Widget>[
                                                       Label(
-                                                        NMobileLocalizations.of(context).keystore,
+                                                        NL10ns.of(context).keystore,
                                                         type: LabelType.h4,
                                                         textAlign: TextAlign.start,
                                                       ),
                                                       InkWell(
                                                         child: Label(
-                                                          NMobileLocalizations.of(context).copy,
+                                                          NL10ns.of(context).copy,
                                                           color: DefaultTheme.primaryColor,
                                                           type: LabelType.bodyRegular,
                                                         ),
@@ -398,7 +398,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                       children: <Widget>[
                         Button(
                           child: Label(
-                            NMobileLocalizations.of(context).view_qrcode,
+                            NL10ns.of(context).view_qrcode,
                             type: LabelType.h3,
                             color: DefaultTheme.primaryColor,
                           ),
@@ -406,7 +406,7 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                           fontColor: DefaultTheme.primaryColor,
                           onPressed: () {
                             BottomDialog.of(context).showQrcodeDialog(
-                              title: NMobileLocalizations.of(context).seed + NMobileLocalizations.of(context).qrcode,
+                              title: NL10ns.of(context).seed + NL10ns.of(context).qrcode,
                               data: seed,
                             );
                             _setBackupFlag();

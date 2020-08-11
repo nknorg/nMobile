@@ -226,7 +226,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Label(
-                                NMobileLocalizations.of(context).popular_channels,
+                                NL10ns.of(context).popular_channels,
                                 type: LabelType.h3,
                                 textAlign: TextAlign.left,
                               ).pad(l: 20)
@@ -249,7 +249,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                                 Padding(
                                   padding: EdgeInsets.only(top: 32),
                                   child: Label(
-                                    NMobileLocalizations.of(context).chat_no_messages_title,
+                                    NL10ns.of(context).chat_no_messages_title,
                                     type: LabelType.h2,
                                     textAlign: TextAlign.center,
                                   ),
@@ -257,7 +257,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                                 Padding(
                                   padding: EdgeInsets.only(top: 8, left: 0, right: 0),
                                   child: Label(
-                                    NMobileLocalizations.of(context).chat_no_messages_desc,
+                                    NL10ns.of(context).chat_no_messages_desc,
                                     type: LabelType.bodyRegular,
                                     textAlign: TextAlign.center,
                                   ),
@@ -273,13 +273,13 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 loadAssetIconsImage('pencil', width: 24, color: DefaultTheme.backgroundLightColor).pad(r: 12),
-                                Label(NMobileLocalizations.of(context).new_message, type: LabelType.h3)
+                                Label(NL10ns.of(context).new_message, type: LabelType.h3)
                               ],
                             ),
                             onPressed: () async {
                               if (widget.timerAuth.enabled) {
                                 var address = await BottomDialog.of(context).showInputAddressDialog(
-                                    title: NMobileLocalizations.of(context).new_whisper, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+                                    title: NL10ns.of(context).new_whisper, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
                                 if (address != null) {
                                   ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
                                   await contact.createContact(db);
@@ -321,7 +321,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                     children: <Widget>[
                       Icon(Icons.vertical_align_top),
                       SizedBox(width: 10),
-                      Text(NMobileLocalizations.of(context).top),
+                      Text(NL10ns.of(context).top),
                     ],
                   ),
                   SizedBox(height: 10),
@@ -340,7 +340,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                     children: <Widget>[
                       Icon(Icons.delete_outline),
                       SizedBox(width: 10),
-                      Text(NMobileLocalizations.of(context).delete),
+                      Text(NL10ns.of(context).delete),
                     ],
                   ),
                   SizedBox(height: 10),
@@ -411,7 +411,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                     },
                     child: Center(
                       child: Text(
-                        NMobileLocalizations.of(context).subscribe,
+                        NL10ns.of(context).subscribe,
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
@@ -446,7 +446,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
       Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topicSchema));
 //      }
     } catch (e) {
-      showToast(NMobileLocalizations.of(context).failure);
+      showToast(NL10ns.of(context).failure);
     }
   }
 
@@ -475,16 +475,16 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Label(
-                    NMobileLocalizations.of(context).private_messages,
+                    NL10ns.of(context).private_messages,
                     type: LabelType.h3,
                   ).pad(t: 16),
                   Label(
-                    NMobileLocalizations.of(context).private_messages_desc,
+                    NL10ns.of(context).private_messages_desc,
                     type: LabelType.bodyRegular,
                     softWrap: true,
                   ).pad(t: 4),
                   Label(
-                    NMobileLocalizations.of(context).learn_more,
+                    NL10ns.of(context).learn_more,
                     type: LabelType.bodySmall,
                     color: DefaultTheme.primaryColor,
                     fontWeight: FontWeight.bold,
@@ -518,7 +518,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
       contentWidget = Row(
         children: <Widget>[
           Label(
-            NMobileLocalizations.of(context).placeholder_draft,
+            NL10ns.of(context).placeholder_draft,
             type: LabelType.bodySmall,
             color: Colors.red,
             overflow: TextOverflow.ellipsis,
@@ -552,7 +552,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
       );
     } else if (item.contentType == ContentType.ChannelInvitation) {
       contentWidget = Label(
-        contact.name + ': ' + NMobileLocalizations.of(context).channel_invitation,
+        contact.name + ': ' + NL10ns.of(context).channel_invitation,
         type: LabelType.bodySmall,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -567,7 +567,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
 //      );
     } else if (item.contentType == ContentType.dchatSubscribe) {
       contentWidget = Label(
-        NMobileLocalizations.of(context).joined_channel,
+        NL10ns.of(context).joined_channel,
         maxLines: 1,
         type: LabelType.bodySmall,
         overflow: TextOverflow.ellipsis,
@@ -692,7 +692,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
       contentWidget = Row(
         children: <Widget>[
           Label(
-            NMobileLocalizations.of(context).placeholder_draft,
+            NL10ns.of(context).placeholder_draft,
             type: LabelType.bodySmall,
             color: Colors.red,
             overflow: TextOverflow.ellipsis,
@@ -720,14 +720,14 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
       );
     } else if (item.contentType == ContentType.ChannelInvitation) {
       contentWidget = Label(
-        NMobileLocalizations.of(context).channel_invitation,
+        NL10ns.of(context).channel_invitation,
         maxLines: 1,
         type: LabelType.bodySmall,
         overflow: TextOverflow.ellipsis,
       );
     } else if (item.contentType == ContentType.dchatSubscribe) {
       contentWidget = Label(
-        NMobileLocalizations.of(context).joined_channel,
+        NL10ns.of(context).joined_channel,
         maxLines: 1,
         type: LabelType.bodySmall,
         overflow: TextOverflow.ellipsis,

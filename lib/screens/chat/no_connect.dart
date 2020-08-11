@@ -28,7 +28,7 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.primaryColor,
       appBar: Header(
-        titleChild: Label(NMobileLocalizations.of(context).menu_chat.toUpperCase(), type: LabelType.h2).pad(l: 20.w.d),
+        titleChild: Label(NL10ns.of(context).menu_chat.toUpperCase(), type: LabelType.h2).pad(l: 20.w.d),
         hasBack: false,
         backgroundColor: DefaultTheme.primaryColor,
         leading: null,
@@ -50,12 +50,12 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
                   child: Column(
                     children: [
                       Label(
-                        NMobileLocalizations.of(context).chat_no_wallet_title,
+                        NL10ns.of(context).chat_no_wallet_title,
                         type: LabelType.h2,
                         textAlign: TextAlign.center,
                       ).pad(t: 32.h.d),
                       Label(
-                        NMobileLocalizations.of(context).click_connect,
+                        NL10ns.of(context).click_connect,
                         type: LabelType.bodyRegular,
                         textAlign: TextAlign.center,
                       ).pad(t: 8.h.d)
@@ -72,7 +72,7 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
                           if (state is WalletsLoaded) {
                             return Button(
                               width: double.infinity,
-                              text: NMobileLocalizations.of(context).connect,
+                              text: NL10ns.of(context).connect,
                               onPressed: widget.onConnectClick,
                             );
                           }

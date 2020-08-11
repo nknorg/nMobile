@@ -5,8 +5,8 @@ class LocalizationService {
   BuildContext context;
 
 
-  NMobileLocalizations get message {
-    return NMobileLocalizations.of(context);
+  NL10ns get message {
+    return NL10ns.of(context);
   }
 
 

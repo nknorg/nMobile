@@ -57,7 +57,7 @@ class _AdvancedPageState extends State<AdvancePage> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).debug,
+        title: NL10ns.of(context).debug,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: Builder(
@@ -82,8 +82,8 @@ class _AdvancedPageState extends State<AdvancePage> {
                         onPressed: () async {
                           SimpleConfirm(
                               context: context,
-                              content: NMobileLocalizations.of(context).delete_cache_confirm_title,
-                              buttonText: NMobileLocalizations.of(context).delete,
+                              content: NL10ns.of(context).delete_cache_confirm_title,
+                              buttonText: NL10ns.of(context).delete,
                               buttonColor: Colors.red,
                               callback: (v) {
                                 if (v) {
@@ -104,7 +104,7 @@ class _AdvancedPageState extends State<AdvancePage> {
                                           ModalDialog.of(context).show(
                                             height: 240,
                                             content: Label(
-                                              NMobileLocalizations.of(context).password_wrong,
+                                              NL10ns.of(context).password_wrong,
                                               type: LabelType.bodyRegular,
                                             ),
                                           );
@@ -119,7 +119,7 @@ class _AdvancedPageState extends State<AdvancePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Label(
-                              NMobileLocalizations.of(context).clear_cache,
+                              NL10ns.of(context).clear_cache,
                               type: LabelType.bodyRegular,
                               color: DefaultTheme.fontColor1,
                               height: 1,
@@ -151,8 +151,8 @@ class _AdvancedPageState extends State<AdvancePage> {
                         onPressed: () async {
                           SimpleConfirm(
                               context: context,
-                              content: NMobileLocalizations.of(context).delete_db_confirm_title,
-                              buttonText: NMobileLocalizations.of(context).delete,
+                              content: NL10ns.of(context).delete_db_confirm_title,
+                              buttonText: NL10ns.of(context).delete,
                               buttonColor: Colors.red,
                               callback: (v) {
                                 if (v) {
@@ -173,7 +173,7 @@ class _AdvancedPageState extends State<AdvancePage> {
                                           ModalDialog.of(context).show(
                                             height: 240,
                                             content: Label(
-                                              NMobileLocalizations.of(context).password_wrong,
+                                              NL10ns.of(context).password_wrong,
                                               type: LabelType.bodyRegular,
                                             ),
                                           );
@@ -188,7 +188,7 @@ class _AdvancedPageState extends State<AdvancePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Label(
-                              NMobileLocalizations.of(context).clear_database + ' [debug]',
+                              NL10ns.of(context).clear_database + ' [debug]',
                               type: LabelType.bodyRegular,
                               color: DefaultTheme.fontColor1,
                               height: 1,
@@ -222,7 +222,7 @@ class _AdvancedPageState extends State<AdvancePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Label(
-                              NMobileLocalizations.of(context).notification + '[debug]',
+                              NL10ns.of(context).notification + '[debug]',
                               type: LabelType.bodyRegular,
                               color: DefaultTheme.fontColor1,
                               height: 1,
