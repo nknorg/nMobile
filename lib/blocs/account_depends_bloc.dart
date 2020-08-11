@@ -87,6 +87,7 @@ abstract class AccountDependsBloc /* extends Bloc<AccountEvent, DChatAccount>*/ 
   }
 
   void cacheAccountUser(ContactSchema user) {
+    assert(user.clientAddress == accountChatId);
     _accountUser = user;
   }
 

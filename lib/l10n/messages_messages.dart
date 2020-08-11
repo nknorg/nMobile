@@ -19,7 +19,9 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'messages';
 
-  static m0(field) => "${field} is required.";
+  static m0(time) => "Messages sent and received in this conversation will disappear ${time} after they have been seen.";
+
+  static m1(field) => "${field} is required.";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
@@ -49,6 +51,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "burn_5_minutes" : MessageLookupByLibrary.simpleMessage("5 minutes"),
     "burn_5_seconds" : MessageLookupByLibrary.simpleMessage("5 seconds"),
     "burn_after_reading" : MessageLookupByLibrary.simpleMessage("Burn After Reading"),
+    "burn_after_reading_desc" : MessageLookupByLibrary.simpleMessage("Your messages will not expire."),
+    "burn_after_reading_desc_disappear" : m0,
     "camera" : MessageLookupByLibrary.simpleMessage("Camera"),
     "cancel" : MessageLookupByLibrary.simpleMessage("Cancel"),
     "cantact_no_contact_desc" : MessageLookupByLibrary.simpleMessage("Use your contact list to quickly message and\n send funds to your friends."),
@@ -124,7 +128,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "enter_users_address" : MessageLookupByLibrary.simpleMessage("Enter users address"),
     "error_client_address_format" : MessageLookupByLibrary.simpleMessage("Client address format does not match."),
     "error_confirm_password" : MessageLookupByLibrary.simpleMessage("Password does not match."),
-    "error_field_required" : m0,
+    "error_field_required" : m1,
     "error_keystore_format" : MessageLookupByLibrary.simpleMessage("Keystore format does not match."),
     "error_nkn_address_format" : MessageLookupByLibrary.simpleMessage("Invalid wallet address."),
     "error_required" : MessageLookupByLibrary.simpleMessage("This field is required."),

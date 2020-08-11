@@ -19,7 +19,9 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'zh';
 
-  static m0(field) => "${field} 必填";
+  static m0(time) => "该对话接收和发送的消息将于 ${time} 后消失。";
+
+  static m1(field) => "${field} 必填";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
@@ -49,6 +51,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "burn_5_minutes" : MessageLookupByLibrary.simpleMessage("5 分钟"),
     "burn_5_seconds" : MessageLookupByLibrary.simpleMessage("5 秒"),
     "burn_after_reading" : MessageLookupByLibrary.simpleMessage("阅后即焚"),
+    "burn_after_reading_desc" : MessageLookupByLibrary.simpleMessage("该对话接收和发送的消息不会消失。"),
+    "burn_after_reading_desc_disappear" : m0,
     "camera" : MessageLookupByLibrary.simpleMessage("相机"),
     "cancel" : MessageLookupByLibrary.simpleMessage("取消"),
     "cantact_no_contact_desc" : MessageLookupByLibrary.simpleMessage("使用您的联系人列表快速发送消息和资金。"),
@@ -124,7 +128,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "enter_users_address" : MessageLookupByLibrary.simpleMessage("请输入地址"),
     "error_client_address_format" : MessageLookupByLibrary.simpleMessage("地址不正确"),
     "error_confirm_password" : MessageLookupByLibrary.simpleMessage("密码不匹配"),
-    "error_field_required" : m0,
+    "error_field_required" : m1,
     "error_keystore_format" : MessageLookupByLibrary.simpleMessage("Keystore 错误"),
     "error_nkn_address_format" : MessageLookupByLibrary.simpleMessage("钱包地址无效"),
     "error_required" : MessageLookupByLibrary.simpleMessage("必填"),

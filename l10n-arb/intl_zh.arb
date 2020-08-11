@@ -1637,5 +1637,18 @@
   "@top": {
     "type": "text",
     "placeholders": {}
+  },
+  "burn_after_reading_desc_disappear": "该对话接收和发送的消息将于 {time} 后消失。",
+  "@burn_after_reading_desc_disappear": {
+    "description": "",
+    "type": "text",
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "burn_after_reading_desc": "该对话接收和发送的消息不会消失。",
+  "@burn_after_reading_desc": {
+    "type": "text",
+    "placeholders": {}
   }
 }
