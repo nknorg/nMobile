@@ -68,7 +68,7 @@ extension NumToDoubleOrInt on num {
 }
 
 class Space {
-  static Padding get empty => Padding(padding: const EdgeInsets.all(0));
+  static Container get empty => Container();
 }
 
 main() {

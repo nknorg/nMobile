@@ -54,6 +54,12 @@
     "type": "text",
     "placeholders": {}
   },
+  "off": "关",
+  "@off": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "cancel": "取消",
   "@cancel": {
     "description": "",

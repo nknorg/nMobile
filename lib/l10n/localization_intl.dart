@@ -69,6 +69,10 @@ class NL10ns {
     return Intl.message('Close', name: 'close', desc: '');
   }
 
+  String get off {
+    return Intl.message('Off', name: 'off', desc: '');
+  }
+
   String get cancel {
     return Intl.message('Cancel', name: 'cancel', desc: '');
   }

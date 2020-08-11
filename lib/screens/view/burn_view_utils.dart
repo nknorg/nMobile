@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
@@ -8,9 +9,10 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
+import 'package:nmobile/utils/extensions.dart';
 
 class BurnViewUtil {
-  static List<Duration> burnValueArray = <Duration>[
+  static List<Duration> burnValueArray = [
     Duration(seconds: 5),
     Duration(seconds: 10),
     Duration(seconds: 30),
@@ -20,7 +22,23 @@ class BurnViewUtil {
     Duration(minutes: 30),
     Duration(hours: 1),
     Duration(days: 1),
+    Duration(days: 7),
   ];
+
+  static List<String> burnTextArray(BuildContext context) {
+    return [
+      NL10ns.of(context).burn_5_seconds,
+      NL10ns.of(context).burn_10_seconds,
+      NL10ns.of(context).burn_30_seconds,
+      NL10ns.of(context).burn_1_minute,
+      NL10ns.of(context).burn_5_minutes,
+      NL10ns.of(context).burn_10_minutes,
+      NL10ns.of(context).burn_30_minutes,
+      NL10ns.of(context).burn_1_hour,
+      NL10ns.of(context).burn_1_day,
+      NL10ns.of(context).burn_1_week,
+    ];
+  }
 
   static String getStringFromSeconds(context, seconds) {
     int currentIndex = -1;
@@ -31,22 +49,10 @@ class BurnViewUtil {
         break;
       }
     }
-    List _burnTextArray = <String>[
-      NL10ns.of(context).burn_5_seconds,
-      NL10ns.of(context).burn_10_seconds,
-      NL10ns.of(context).burn_30_seconds,
-      NL10ns.of(context).burn_1_minute,
-      NL10ns.of(context).burn_5_minutes,
-      NL10ns.of(context).burn_10_minutes,
-      NL10ns.of(context).burn_30_minutes,
-      NL10ns.of(context).burn_1_hour,
-      NL10ns.of(context).burn_1_day,
-    ];
-
     if (currentIndex == -1) {
       return '';
     } else {
-      return _burnTextArray[currentIndex];
+      return burnTextArray(context)[currentIndex];
     }
   }
 
@@ -89,7 +95,6 @@ class BurnViewPage extends StatefulWidget {
 
 class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
   int currentIndex = -1;
-  List _burnTextArray;
 
   @override
   void initState() {
@@ -97,16 +102,35 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
     currentIndex = widget.currentIndex;
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: SimpleDialog(
+        titlePadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 0.0),
+        contentPadding: EdgeInsets.fromLTRB(0.0, 12.0, 0.0, 12.0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        title: Text(NL10ns.of(context).select),
+        children: getItemView(BurnViewUtil.burnTextArray(context), context),
+      ),
+    );
+  }
+
   getItemView(List burnTextArray, context) {
     List<Widget> views = [];
     List<Widget> items = [];
     items.add(SimpleDialogOption(
-      child: Row(
-        children: <Widget>[
-          Container(height: 35, child: Row(children: [Text(NL10ns.of(context).close)])),
-          Spacer(),
-          currentIndex == -1 ? Icon(Icons.check, color: Colors.red, size: 16) : Container()
-        ],
+      child: Container(
+        width: double.maxFinite,
+        height: 20,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(NL10ns.of(context).off, style: TextStyle(fontWeight: FontWeight.w500)),
+            Spacer(),
+            currentIndex == -1 ? Icon(Icons.check, color: Colors.red, size: 16) : Space.empty
+          ],
+        ),
       ),
       onPressed: () {
         setState(() {
@@ -118,10 +142,9 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
       var content = burnTextArray[i];
       items.add(SimpleDialogOption(
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 4),
-          width: double.infinity,
+          height: 20,
           child: Row(
-            children: <Widget>[Text(content), Spacer(), i == currentIndex ? Icon(Icons.check, color: Colors.red, size: 16) : Container()],
+            children: [Text(content), Spacer(), i == currentIndex ? Icon(Icons.check, color: Colors.red, size: 16) : Space.empty],
           ),
         ),
         onPressed: () {
@@ -131,19 +154,24 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
         },
       ));
     }
-    views.add(Container(
-      width: double.infinity,
-      child: SingleChildScrollView(
-          child: Column(
+    views.add(SingleChildScrollView(
+      child: Column(
         children: items,
-      )),
+      ),
     ));
 
-    if (currentIndex != -1) {
-      views.add(SimpleDialogOption(child: Container(child: Text(NL10ns.of(context).burn_after_reading_desc_disappear(burnTextArray[currentIndex])))));
-    } else {
-      views.add(SimpleDialogOption(child: Container(child: Text(NL10ns.of(context).burn_after_reading_desc))));
-    }
+    views.add(
+      SimpleDialogOption(
+        child: Container(
+          height: 56,
+          child: Text(currentIndex < 0
+              ? NL10ns.of(context).burn_after_reading_desc
+              : NL10ns.of(context).burn_after_reading_desc_disappear(
+                  burnTextArray[currentIndex],
+                )),
+        ),
+      ),
+    );
 
     views.add(Row(
       children: <Widget>[
@@ -193,32 +221,5 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
     sendMsg.content = sendMsg.toActionContentOptionsData();
     widget.chatBloc.add(SendMessage(sendMsg));
     Navigator.pop(context, _burnValue);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_burnTextArray == null) {
-      _burnTextArray = <String>[
-        NL10ns.of(context).burn_5_seconds,
-        NL10ns.of(context).burn_10_seconds,
-        NL10ns.of(context).burn_30_seconds,
-        NL10ns.of(context).burn_1_minute,
-        NL10ns.of(context).burn_5_minutes,
-        NL10ns.of(context).burn_10_minutes,
-        NL10ns.of(context).burn_30_minutes,
-        NL10ns.of(context).burn_1_hour,
-        NL10ns.of(context).burn_1_day,
-      ];
-    }
-    return Material(
-      type: MaterialType.transparency,
-      child: SimpleDialog(
-        titlePadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 0.0),
-        contentPadding: EdgeInsets.fromLTRB(0.0, 12.0, 0.0, 12.0),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-        title: Text(NL10ns.of(context).select),
-        children: getItemView(_burnTextArray, context),
-      ),
-    );
   }
 }
