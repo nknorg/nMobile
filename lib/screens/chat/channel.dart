@@ -375,7 +375,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
                       }
                     }
                     return Label(
-                      '${_topicCount ?? '--'} ' + NMobileLocalizations.of(context).members,
+                      '${_topicCount ?? '--'} ' + NL10ns.of(context).members,
                       type: LabelType.bodySmall,
                       color: DefaultTheme.riseColor,
                     );
@@ -444,7 +444,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
                                   crossAxisAlignment: WrapCrossAlignment.center,
                                   children: <Widget>[
                                     accountUserBuilder(onUser: (ctx, user) {
-                                      return Label('${message.isOutbound ? user.name : contact?.name} ${NMobileLocalizations.of(context).joined_channel}');
+                                      return Label('${message.isOutbound ? user.name : contact?.name} ${NL10ns.of(context).joined_channel}');
                                     }),
                                   ],
                                 ),
@@ -500,7 +500,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
   }
 
   acceptPrivateAction(address) async {
-    showToast(NMobileLocalizations.of(context).invitation_sent);
+    showToast(NL10ns.of(context).invitation_sent);
     if (widget.arguments.topic.type == TopicType.private) {
       await widget.arguments.topic.acceptPrivateMember(account, addr: address);
     }
@@ -557,7 +557,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Label(
-                      NMobileLocalizations.of(context).pictures,
+                      NL10ns.of(context).pictures,
                       type: LabelType.bodySmall,
                       color: DefaultTheme.fontColor2,
                     ),
@@ -588,7 +588,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Label(
-                      NMobileLocalizations.of(context).camera,
+                      NL10ns.of(context).camera,
                       type: LabelType.bodySmall,
                       color: DefaultTheme.fontColor2,
                     ),
@@ -614,7 +614,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Label(
-                NMobileLocalizations.of(context).subscribe,
+                NL10ns.of(context).subscribe,
                 type: LabelType.h3,
               )
             ],
@@ -692,7 +692,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
                     style: TextStyle(fontSize: 14, height: 1.4),
                     decoration: InputDecoration(
                       contentPadding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
-                      hintText: NMobileLocalizations.of(context).type_a_message,
+                      hintText: NL10ns.of(context).type_a_message,
                       border: UnderlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(20.w)),
                         borderSide: const BorderSide(width: 0, style: BorderStyle.none),

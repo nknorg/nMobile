@@ -63,7 +63,7 @@ class BottomDialog extends StatefulWidget {
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: NMobileLocalizations.of(context).continue_text,
+          text: NL10ns.of(context).continue_text,
           width: double.infinity,
           onPressed: () {
             Navigator.of(context).pop(_passwordController.text);
@@ -92,13 +92,13 @@ class BottomDialog extends StatefulWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Label(
-                    NMobileLocalizations.of(context).wallet_password,
+                    NL10ns.of(context).wallet_password,
                     type: LabelType.h4,
                     textAlign: TextAlign.start,
                   ),
                   Textbox(
                     controller: _passwordController,
-                    hintText: NMobileLocalizations.of(context).input_password,
+                    hintText: NL10ns.of(context).input_password,
                     validator: Validator.of(context).password(),
                     password: true,
                   ),
@@ -118,7 +118,7 @@ class BottomDialog extends StatefulWidget {
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: NMobileLocalizations.of(context).accept_invitation,
+          text: NL10ns.of(context).accept_invitation,
           width: double.infinity,
           onPressed: onPressed,
         ),
@@ -159,7 +159,7 @@ class BottomDialog extends StatefulWidget {
               Textbox(
                 value: content,
                 enabled: false,
-                hintText: NMobileLocalizations.of(context).enter_users_address,
+                hintText: NL10ns.of(context).enter_users_address,
               ),
             ],
           ),
@@ -175,7 +175,7 @@ class BottomDialog extends StatefulWidget {
     bool formValid = false;
 
     if (hint == null) {
-      hint = NMobileLocalizations.of(context).enter_users_address;
+      hint = NL10ns.of(context).enter_users_address;
     }
 
     return show<String>(
@@ -183,7 +183,7 @@ class BottomDialog extends StatefulWidget {
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: NMobileLocalizations.of(context).continue_text,
+          text: NL10ns.of(context).continue_text,
           width: double.infinity,
           onPressed: () {
             if (formValid) {
@@ -224,7 +224,7 @@ class BottomDialog extends StatefulWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Label(
-                        NMobileLocalizations.of(context).send_to,
+                        NL10ns.of(context).send_to,
                         type: LabelType.bodyRegular,
                         color: DefaultTheme.fontColor1,
                         textAlign: TextAlign.start,
@@ -279,7 +279,7 @@ class BottomDialog extends StatefulWidget {
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: NMobileLocalizations.of(context).close,
+          text: NL10ns.of(context).close,
           width: double.infinity,
           backgroundColor: DefaultTheme.primaryColor.withAlpha(20),
           fontColor: DefaultTheme.primaryColor,
@@ -310,7 +310,7 @@ class BottomDialog extends StatefulWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Label(
-                    NMobileLocalizations.of(context).seed_qrcode_dec,
+                    NL10ns.of(context).seed_qrcode_dec,
                     type: LabelType.bodyRegular,
                     softWrap: true,
                   ),
@@ -445,7 +445,7 @@ class BottomDialog extends StatefulWidget {
                                                   padding: 2.pad(l: 8, r: 8),
                                                   decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.green_06_a1p),
                                                   child: Text(
-                                                    NMobileLocalizations.of(context).mainnet,
+                                                    NL10ns.of(context).mainnet,
                                                     style: TextStyle(color: Colours.green_06, fontSize: 10, fontWeight: FontWeight.bold),
                                                   ),
                                                 )
@@ -454,7 +454,7 @@ class BottomDialog extends StatefulWidget {
                                                   padding: 2.pad(l: 8, r: 8),
                                                   decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.purple_53_a1p),
                                                   child: Text(
-                                                    NMobileLocalizations.of(context).ERC_20,
+                                                    NL10ns.of(context).ERC_20,
                                                     style: TextStyle(color: Colours.purple_53, fontSize: 10, fontWeight: FontWeight.bold),
                                                   ),
                                                 ),

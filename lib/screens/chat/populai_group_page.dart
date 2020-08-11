@@ -28,7 +28,7 @@ class PopularGroupPageState extends State<PopularGroupPage> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).popular_channels,
+        title: NL10ns.of(context).popular_channels,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: Builder(

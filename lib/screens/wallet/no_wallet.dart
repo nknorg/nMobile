@@ -48,14 +48,14 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                         child: Column(
                           children: <Widget>[
                             Label(
-                              NMobileLocalizations.of(context).no_wallet_title,
+                              NL10ns.of(context).no_wallet_title,
                               type: LabelType.h2,
                               dark: true,
                             ),
                             Padding(
                               padding: EdgeInsets.only(top: 16, left: 24, right: 24),
                               child: Label(
-                                NMobileLocalizations.of(context).no_wallet_desc,
+                                NL10ns.of(context).no_wallet_desc,
                                 type: LabelType.h4,
                                 dark: true,
                                 softWrap: true,
@@ -70,14 +70,14 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                         child: Column(
                           children: <Widget>[
                             Button(
-                              text: NMobileLocalizations.of(context).no_wallet_create,
+                              text: NL10ns.of(context).no_wallet_create,
                               onPressed: () {
 //                                  locator<NavigateService>().pushNamed(CreateNknWalletScreen.routeName);
                                 Navigator.pushNamed(context, CreateNknWalletScreen.routeName);
                               },
                             ),
                             Button(
-                              text: NMobileLocalizations.of(context).no_wallet_import,
+                              text: NL10ns.of(context).no_wallet_import,
                               backgroundColor: Color(0xFF232D50),
                               onPressed: () {
 //                                  locator<NavigateService>().pushNamed(ImportNknWalletScreen.routeName);

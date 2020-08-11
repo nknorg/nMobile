@@ -125,7 +125,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).channel_members,
+        title: NL10ns.of(context).channel_members,
         leading: BackButton(
           onPressed: () {
             Navigator.of(context).pop();
@@ -135,7 +135,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
         action: FlatButton(
           child: loadAssetChatPng('group_add', width: 20.w),
           onPressed: () async {
-            var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+            var address = await BottomDialog.of(context).showInputAddressDialog(title: NL10ns.of(context).invite_members, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
             if (address != null) {
               acceptPrivateAction(address);
             }
@@ -162,7 +162,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
                     Row(
                       children: topicWidget,
                     ),
-                    Label('${widget.arguments.count ?? 0} ' + NMobileLocalizations.of(context).members, type: LabelType.bodyRegular, color: DefaultTheme.successColor)
+                    Label('${widget.arguments.count ?? 0} ' + NL10ns.of(context).members, type: LabelType.bodyRegular, color: DefaultTheme.successColor)
                   ],
                 ),
               ],
@@ -203,7 +203,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
     String name = contact.name;
     if (widget.arguments.type == TopicType.private && contact.clientAddress != accountChatId && widget.arguments.isOwner(accountPubkey)) {
       var permissionStatus = _permissionHelper?.getSubscriberStatus(contact.clientAddress);
-      name = name + '(${permissionStatus ?? NMobileLocalizations.of(context).loading})';
+      name = name + '(${permissionStatus ?? NL10ns.of(context).loading})';
     }
     return Expanded(
       child: Label(
@@ -312,7 +312,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
             await widget.arguments.removeRejectPrivateMember(account, addr: contact.clientAddress);
           }
           EasyLoading.dismiss();
-          showToast(NMobileLocalizations.of(context).success);
+          showToast(NL10ns.of(context).success);
           setState(() {
             _permissionHelper.reject.removeWhere((x) => x['addr'] == contact.clientAddress);
             if (_permissionHelper.accept == null) {
@@ -338,7 +338,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
               await widget.arguments.removeAcceptPrivateMember(account, addr: contact.clientAddress);
             }
             EasyLoading.dismiss();
-            showToast(NMobileLocalizations.of(context).success);
+            showToast(NL10ns.of(context).success);
             setState(() {
               _permissionHelper.accept.removeWhere((x) => x['addr'] == contact.clientAddress);
               if (_permissionHelper.reject == null) {
@@ -368,7 +368,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
   }
 
   acceptPrivateAction(address) async {
-    showToast(NMobileLocalizations.of(context).invitation_sent);
+    showToast(NL10ns.of(context).invitation_sent);
     if (widget.arguments.type == TopicType.private) {
       await widget.arguments.acceptPrivateMember(account, addr: address);
     }

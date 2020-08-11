@@ -87,7 +87,7 @@ class _ModalDialogState extends State<ModalDialog> {
       actions.add(Button(
         backgroundColor: DefaultTheme.backgroundLightColor,
         fontColor: DefaultTheme.fontColor2,
-        text: NMobileLocalizations.of(context).close,
+        text: NL10ns.of(context).close,
         width: double.infinity,
         onPressed: () => widget.close(),
       ));
@@ -137,7 +137,7 @@ class _ModalDialogState extends State<ModalDialog> {
                       padding: EdgeInsets.only(bottom: 24),
                       child: widget.title ??
                           Label(
-                            NMobileLocalizations.of(context).warning,
+                            NL10ns.of(context).warning,
                             type: LabelType.h2,
                           ),
                     ),

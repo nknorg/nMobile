@@ -64,7 +64,7 @@ class _ImportSeedNknWalletState extends State<ImportSeedNknWallet> with SingleTi
       String address = json['Address'];
       _walletsBloc.add(AddWallet(WalletSchema(address: address, type: 'nkn', name: _name), keystore));
       EasyLoading.dismiss();
-      showToast(NMobileLocalizations.of(context).success);
+      showToast(NL10ns.of(context).success);
       Navigator.pushReplacementNamed(context, AppScreen.routeName);
     }
   }
@@ -104,7 +104,7 @@ class _ImportSeedNknWalletState extends State<ImportSeedNknWallet> with SingleTi
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8, bottom: 8),
                                   child: Label(
-                                    NMobileLocalizations.of(context).import_seed_nkn_wallet_title,
+                                    NL10ns.of(context).import_seed_nkn_wallet_title,
                                     type: LabelType.h2,
                                     textAlign: TextAlign.start,
                                   ),
@@ -112,21 +112,21 @@ class _ImportSeedNknWalletState extends State<ImportSeedNknWallet> with SingleTi
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 32),
                                   child: Label(
-                                    NMobileLocalizations.of(context).import_seed_nkn_wallet_desc,
+                                    NL10ns.of(context).import_seed_nkn_wallet_desc,
                                     type: LabelType.bodyRegular,
                                     textAlign: TextAlign.start,
                                     softWrap: true,
                                   ),
                                 ),
                                 Label(
-                                  NMobileLocalizations.of(context).seed,
+                                  NL10ns.of(context).seed,
                                   type: LabelType.h4,
                                   textAlign: TextAlign.start,
                                 ),
                                 Textbox(
                                   controller: _seedController,
                                   focusNode: _seedFocusNode,
-                                  hintText: NMobileLocalizations.of(context).input_seed,
+                                  hintText: NL10ns.of(context).input_seed,
                                   onSaved: (v) => _seed = v,
                                   onFieldSubmitted: (_) {
                                     FocusScope.of(context).requestFocus(_nameFocusNode);
@@ -134,13 +134,13 @@ class _ImportSeedNknWalletState extends State<ImportSeedNknWallet> with SingleTi
                                   validator: Validator.of(context).seed(),
                                 ),
                                 Label(
-                                  NMobileLocalizations.of(context).wallet_name,
+                                  NL10ns.of(context).wallet_name,
                                   type: LabelType.h4,
                                   textAlign: TextAlign.start,
                                 ),
                                 Textbox(
                                   focusNode: _nameFocusNode,
-                                  hintText: NMobileLocalizations.of(context).hint_enter_wallet_name,
+                                  hintText: NL10ns.of(context).hint_enter_wallet_name,
                                   onSaved: (v) => _name = v,
                                   onFieldSubmitted: (_) {
                                     FocusScope.of(context).requestFocus(_passwordFocusNode);
@@ -149,14 +149,14 @@ class _ImportSeedNknWalletState extends State<ImportSeedNknWallet> with SingleTi
                                   validator: Validator.of(context).walletName(),
                                 ),
                                 Label(
-                                  NMobileLocalizations.of(context).wallet_password,
+                                  NL10ns.of(context).wallet_password,
                                   type: LabelType.h4,
                                   textAlign: TextAlign.start,
                                 ),
                                 Textbox(
                                   focusNode: _passwordFocusNode,
                                   controller: _passwordController,
-                                  hintText: NMobileLocalizations.of(context).input_password,
+                                  hintText: NL10ns.of(context).input_password,
                                   onSaved: (v) => _password = v,
                                   onFieldSubmitted: (_) {
                                     FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
@@ -185,7 +185,7 @@ class _ImportSeedNknWalletState extends State<ImportSeedNknWallet> with SingleTi
                     Padding(
                       padding: EdgeInsets.only(left: 30, right: 30),
                       child: Button(
-                        text: NMobileLocalizations.of(context).import_wallet,
+                        text: NL10ns.of(context).import_wallet,
                         disabled: !_formValid,
                         onPressed: next,
                       ),

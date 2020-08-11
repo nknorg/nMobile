@@ -142,7 +142,7 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Label(user.name, type: LabelType.h3, dark: true),
-                        Label(NMobileLocalizations.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor),
+                        Label(NL10ns.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor),
                       ],
                     ),
                   )
@@ -210,7 +210,7 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
                               },
                               style: TextStyle(fontSize: 14, height: 1.5),
                               decoration: InputDecoration(
-                                hintText: NMobileLocalizations.of(context).search,
+                                hintText: NL10ns.of(context).search,
                                 contentPadding: const EdgeInsets.only(left: 0, right: 16, top: 9, bottom: 9),
                                 border: UnderlineInputBorder(
                                   borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -261,7 +261,7 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
       contactList.add(Padding(
         padding: const EdgeInsets.only(top: 16, bottom: 16),
         child: Label(
-          '(${_friends.length}) ${NMobileLocalizations.of(context).friends}',
+          '(${_friends.length}) ${NL10ns.of(context).friends}',
           type: LabelType.h3,
           height: 1,
         ),
@@ -277,7 +277,7 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
             var isDismiss = await ModalDialog.of(context).confirm(
               height: 380,
               title: Label(
-                NMobileLocalizations.of(context).delete_contact_confirm_title,
+                NL10ns.of(context).delete_contact_confirm_title,
                 type: LabelType.h2,
                 softWrap: true,
               ),
@@ -365,7 +365,7 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
                         ),
                       ),
                       Label(
-                        NMobileLocalizations.of(context).delete,
+                        NL10ns.of(context).delete,
                         type: LabelType.h3,
                       )
                     ],
@@ -380,7 +380,7 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
               reject: Button(
                 backgroundColor: DefaultTheme.backgroundLightColor,
                 fontColor: DefaultTheme.fontColor2,
-                text: NMobileLocalizations.of(context).cancel,
+                text: NL10ns.of(context).cancel,
                 width: double.infinity,
                 onPressed: () => Navigator.of(context).pop(),
               ),
@@ -523,7 +523,7 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
       strangerContactList.add(Padding(
         padding: const EdgeInsets.only(top: 32, bottom: 16),
         child: Label(
-          '(${_strangerContacts.length}) ${NMobileLocalizations.of(context).recent}',
+          '(${_strangerContacts.length}) ${NL10ns.of(context).recent}',
           type: LabelType.h3,
           height: 1,
         ),
@@ -633,7 +633,7 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
       topicList.add(Padding(
         padding: const EdgeInsets.only(top: 32, bottom: 16),
         child: Label(
-          '(${_topic.length}) ${NMobileLocalizations.of(context).group_chat}',
+          '(${_topic.length}) ${NL10ns.of(context).group_chat}',
           type: LabelType.h3,
           height: 1,
         ),

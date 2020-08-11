@@ -77,7 +77,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NMobileLocalizations.of(context).channel_settings,
+        title: NL10ns.of(context).channel_settings,
         leading: BackButton(
           onPressed: () {
             Navigator.of(context).pop();
@@ -165,7 +165,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
                                         ),
                                         SizedBox(width: 10),
                                         Label(
-                                          NMobileLocalizations.of(context).name,
+                                          NL10ns.of(context).name,
                                           type: LabelType.bodyRegular,
                                           color: DefaultTheme.fontColor1,
                                           height: 1,
@@ -201,7 +201,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
                                         loadAssetChatPng('group_blue', width: 22.w),
                                         SizedBox(width: 10),
                                         Label(
-                                          NMobileLocalizations.of(context).view_channel_members,
+                                          NL10ns.of(context).view_channel_members,
                                           type: LabelType.bodyRegular,
                                           color: DefaultTheme.fontColor1,
                                           height: 1,
@@ -209,7 +209,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
                                         SizedBox(width: 20),
                                         Expanded(
                                           child: Label(
-                                            '${widget.arguments.count} ' + NMobileLocalizations.of(context).members,
+                                            '${widget.arguments.count} ' + NL10ns.of(context).members,
                                             type: LabelType.bodyRegular,
                                             textAlign: TextAlign.right,
                                             color: DefaultTheme.fontColor2,
@@ -231,7 +231,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
                                     ),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
                                     onPressed: () async {
-                                      var address = await BottomDialog.of(context).showInputAddressDialog(title: NMobileLocalizations.of(context).invite_members, hint: NMobileLocalizations.of(context).enter_or_select_a_user_pubkey);
+                                      var address = await BottomDialog.of(context).showInputAddressDialog(title: NL10ns.of(context).invite_members, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
                                       if (address != null) {
                                         acceptPrivateAction(address);
                                       }
@@ -242,7 +242,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
                                         loadAssetChatPng('invisit_blue', width: 20.w),
                                         SizedBox(width: 10),
                                         Label(
-                                          NMobileLocalizations.of(context).invite_members,
+                                          NL10ns.of(context).invite_members,
                                           type: LabelType.bodyRegular,
                                           color: DefaultTheme.fontColor1,
                                           height: 1,
@@ -293,7 +293,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
                 ),
                 SizedBox(width: 10),
                 Text(
-                  NMobileLocalizations.of(context).unsubscribe,
+                  NL10ns.of(context).unsubscribe,
                   textAlign: TextAlign.left,
                   style: TextStyle(color: Colors.red, fontSize: DefaultTheme.bodyRegularFontSize),
                 ),
@@ -322,7 +322,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
                 ),
                 SizedBox(width: 10),
                 Text(
-                  NMobileLocalizations.of(context).subscribe,
+                  NL10ns.of(context).subscribe,
                   textAlign: TextAlign.left,
                   style: TextStyle(color: DefaultTheme.primaryColor, fontSize: DefaultTheme.bodyRegularFontSize),
                 ),
@@ -342,14 +342,14 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
     SimpleConfirm(
             context: context,
             buttonColor: Colors.red,
-            content: NMobileLocalizations.of(context).leave_group_confirm_title,
+            content: NL10ns.of(context).leave_group_confirm_title,
             callback: (b) {
               if (b) {
                 widget.arguments.unsubscribe(account);
                 Navigator.of(context).pop(true);
               }
             },
-            buttonText: NMobileLocalizations.of(context).unsubscribe)
+            buttonText: NL10ns.of(context).unsubscribe)
         .show();
   }
 
@@ -374,7 +374,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
   }
 
   acceptPrivateAction(address) async {
-    showToast(NMobileLocalizations.of(context).invitation_sent);
+    showToast(NL10ns.of(context).invitation_sent);
     if (widget.arguments.type == TopicType.private) {
       await widget.arguments.acceptPrivateMember(account, addr: address);
     }

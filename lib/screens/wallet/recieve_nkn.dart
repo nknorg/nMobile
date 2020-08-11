@@ -48,7 +48,7 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: (NMobileLocalizations.of(context).receive + ' ' + NMobileLocalizations.of(context).nkn),
+        title: (NL10ns.of(context).receive + ' ' + NL10ns.of(context).nkn),
         backgroundColor: DefaultTheme.backgroundColor4,
         action: IconButton(
           icon: loadAssetIconsImage(
@@ -104,7 +104,7 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
 //                                            ],
 //                                          ),
                                           WalletDropdown(
-                                            title: NMobileLocalizations.of(context).select_asset_to_receive,
+                                            title: NL10ns.of(context).select_asset_to_receive,
                                             schema: widget.arguments ?? wallet,
                                           ),
                                         ],
@@ -132,7 +132,7 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
                                           child: Column(
                                             children: <Widget>[
                                               Label(
-                                                NMobileLocalizations.of(context).wallet_address,
+                                                NL10ns.of(context).wallet_address,
                                                 type: LabelType.h4,
                                                 textAlign: TextAlign.start,
                                               ),
@@ -157,7 +157,7 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
                                                       ),
                                                     ),
                                                     Label(
-                                                      NMobileLocalizations.of(context).copy_to_clipboard,
+                                                      NL10ns.of(context).copy_to_clipboard,
                                                       color: DefaultTheme.primaryColor,
                                                       type: LabelType.h4,
                                                     ),
@@ -203,7 +203,7 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
                     child: Column(
                       children: <Widget>[
                         Button(
-                          child: Label(NMobileLocalizations.of(context).done, type: LabelType.h3),
+                          child: Label(NL10ns.of(context).done, type: LabelType.h3),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },

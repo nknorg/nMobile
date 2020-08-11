@@ -67,7 +67,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
               Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 14),
                 child: Label(
-                  NMobileLocalizations.of(context).create_channel,
+                  NL10ns.of(context).create_channel,
                   type: LabelType.h3,
                 ),
               ),
@@ -82,7 +82,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         Label(
-                          NMobileLocalizations.of(context).name,
+                          NL10ns.of(context).name,
                           type: LabelType.bodyRegular,
                           color: DefaultTheme.fontColor1,
                           textAlign: TextAlign.start,
@@ -90,7 +90,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
                         Row(
                           children: <Widget>[
                             Label(
-                              NMobileLocalizations.of(context).private_channel,
+                              NL10ns.of(context).private_channel,
                               type: LabelType.bodyRegular,
                               color: DefaultTheme.fontColor1,
                             ),
@@ -117,7 +117,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
                           child: Textbox(
                             controller: _topicController,
                             validator: Validator.of(context).required(),
-                            hintText: NMobileLocalizations.of(context).input_name,
+                            hintText: NL10ns.of(context).input_name,
                           ),
                         ),
 //                        SizedBox(width: 10),
@@ -155,7 +155,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: <Widget>[
                                   Label(
-                                    NMobileLocalizations.of(context).advanced,
+                                    NL10ns.of(context).advanced,
                                     type: LabelType.bodyRegular,
                                     color: DefaultTheme.fontColor1,
                                     textAlign: TextAlign.start,
@@ -188,7 +188,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: <Widget>[
                                     Label(
-                                      NMobileLocalizations.of(context).fee,
+                                      NL10ns.of(context).fee,
                                       type: LabelType.bodyRegular,
                                       color: DefaultTheme.fontColor1,
                                       textAlign: TextAlign.start,
@@ -219,7 +219,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
                                         width: 20,
                                         alignment: Alignment.centerRight,
                                         child: Label(
-                                          NMobileLocalizations.of(context).nkn,
+                                          NL10ns.of(context).nkn,
                                           type: LabelType.label,
                                         ),
                                       ),
@@ -240,17 +240,17 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
                                 Label(
-                                  NMobileLocalizations.of(context).slow,
+                                  NL10ns.of(context).slow,
                                   type: LabelType.bodySmall,
                                   color: DefaultTheme.primaryColor,
                                 ),
                                 Label(
-                                  NMobileLocalizations.of(context).average,
+                                  NL10ns.of(context).average,
                                   type: LabelType.bodySmall,
                                   color: DefaultTheme.primaryColor,
                                 ),
                                 Label(
-                                  NMobileLocalizations.of(context).fast,
+                                  NL10ns.of(context).fast,
                                   type: LabelType.bodySmall,
                                   color: DefaultTheme.primaryColor,
                                 ),
@@ -278,7 +278,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
                   Padding(
                     padding: EdgeInsets.only(left: 16, top: 16),
                     child: Label(
-                      NMobileLocalizations.of(context).popular_channels,
+                      NL10ns.of(context).popular_channels,
                       type: LabelType.h4,
                       textAlign: TextAlign.start,
                     ),
@@ -290,7 +290,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
               Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 10),
                 child: Button(
-                  text: NMobileLocalizations.of(context).continue_text,
+                  text: NL10ns.of(context).continue_text,
                   width: double.infinity,
                   disabled: _loading,
                   onPressed: () async {

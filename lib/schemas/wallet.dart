@@ -40,7 +40,7 @@ class WalletSchema extends Equatable with Tag {
     LOG(tag, usePrint: false).d('getPassword');
     Future<String> _showDialog(String reason) {
       LocalNotification.debugNotification('<[DEBUG]> showInputPasswordDialog', 'reason: $reason, ' + DateTime.now().toLocal().toString());
-      return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NMobileLocalizations.of(Global.appContext).verify_wallet_password);
+      return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NL10ns.of(Global.appContext).verify_wallet_password);
     }
 
     if (forceShowInputDialog) {

@@ -101,7 +101,7 @@ class _WalletItemState extends State<WalletItem> {
                             alignment: Alignment.center,
                             padding: const EdgeInsets.only(left: 8, right: 8),
                             decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(8)), color: Color(0x1500CC96)),
-                            child: Text(NMobileLocalizations.of(context).mainnet,
+                            child: Text(NL10ns.of(context).mainnet,
                                 style: TextStyle(color: Color(0xFF00CC96), fontSize: 10, fontWeight: FontWeight.bold)),
                           ),
                         ],
@@ -192,7 +192,7 @@ class _WalletItemState extends State<WalletItem> {
                         padding: 2.pad(l: 8, r: 8),
                         decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.purple_53_a1p),
                         child: Text(
-                          NMobileLocalizations.of(context).ERC_20,
+                          NL10ns.of(context).ERC_20,
                           style: TextStyle(color: Colours.purple_53, fontSize: 10, fontWeight: FontWeight.bold),
                         ),
                       ),

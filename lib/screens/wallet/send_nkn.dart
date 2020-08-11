@@ -93,11 +93,11 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
       return txHash.length > 10;
     } catch (e) {
       if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-        showToast(NMobileLocalizations.of(Global.appContext).password_wrong);
+        showToast(NL10ns.of(Global.appContext).password_wrong);
       } else if (e.message == 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds') {
         showToast(e.message);
       } else {
-        showToast(NMobileLocalizations.of(Global.appContext).failure);
+        showToast(NL10ns.of(Global.appContext).failure);
       }
       return false;
     }
@@ -107,7 +107,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: Header(
-        title: NMobileLocalizations.of(context).send_nkn,
+        title: NL10ns.of(context).send_nkn,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: IconButton(
           icon: loadAssetIconsImage(
@@ -134,7 +134,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
               await ModalDialog.of(context).show(
                 height: 240,
                 content: Label(
-                  NMobileLocalizations.of(context).error_unknown_nkn_qrcode,
+                  NL10ns.of(context).error_unknown_nkn_qrcode,
                   type: LabelType.bodyRegular,
                 ),
               );
@@ -219,11 +219,11 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
 //                                                    textAlign: TextAlign.start,
 //                                                  ),
                                                   WalletDropdown(
-                                                    title: NMobileLocalizations.of(context).select_asset_to_receive,
+                                                    title: NL10ns.of(context).select_asset_to_receive,
                                                     schema: widget.arguments ?? wallet,
                                                   ),
                                                   Label(
-                                                    NMobileLocalizations.of(context).amount,
+                                                    NL10ns.of(context).amount,
                                                     type: LabelType.h4,
                                                     textAlign: TextAlign.start,
                                                   ).pad(t: 20),
@@ -237,13 +237,13 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                     },
                                                     validator: Validator.of(context).amount(),
                                                     showErrorMessage: false,
-                                                    hintText: NMobileLocalizations.of(context).enter_amount,
+                                                    hintText: NL10ns.of(context).enter_amount,
                                                     suffixIcon: GestureDetector(
                                                       onTap: () {},
                                                       child: Container(
                                                         width: 20,
                                                         alignment: Alignment.centerRight,
-                                                        child: Label(NMobileLocalizations.of(context).nkn, type: LabelType.label),
+                                                        child: Label(NL10ns.of(context).nkn, type: LabelType.label),
                                                       ),
                                                     ),
                                                     textInputAction: TextInputAction.next,
@@ -257,7 +257,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                       children: <Widget>[
                                                         Row(
                                                           children: <Widget>[
-                                                            Label(NMobileLocalizations.of(context).available + ': '),
+                                                            Label(NL10ns.of(context).available + ': '),
                                                             BlocBuilder<WalletsBloc, WalletsState>(
                                                               builder: (context, state) {
                                                                 if (state is WalletsLoaded) {
@@ -276,7 +276,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                         ),
                                                         InkWell(
                                                           child: Label(
-                                                            NMobileLocalizations.of(context).max,
+                                                            NL10ns.of(context).max,
                                                             color: DefaultTheme.primaryColor,
                                                             type: LabelType.bodyRegular,
                                                           ),
@@ -288,7 +288,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                     ),
                                                   ),
                                                   Label(
-                                                    NMobileLocalizations.of(context).send_to,
+                                                    NL10ns.of(context).send_to,
                                                     type: LabelType.h4,
                                                     textAlign: TextAlign.start,
                                                   ),
@@ -301,7 +301,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                     },
                                                     validator: Validator.of(context).nknAddress(),
                                                     textInputAction: TextInputAction.next,
-                                                    hintText: NMobileLocalizations.of(context).enter_receive_address,
+                                                    hintText: NL10ns.of(context).enter_receive_address,
                                                     suffixIcon: GestureDetector(
                                                       onTap: () async {
                                                         if (account?.client != null) {
@@ -336,7 +336,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                             crossAxisAlignment: CrossAxisAlignment.center,
                                                             children: <Widget>[
                                                               Label(
-                                                                NMobileLocalizations.of(context).fee,
+                                                                NL10ns.of(context).fee,
                                                                 color: DefaultTheme.primaryColor,
                                                                 type: LabelType.h4,
                                                                 textAlign: TextAlign.start,
@@ -371,7 +371,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                               child: Container(
                                                                 width: 20,
                                                                 alignment: Alignment.centerRight,
-                                                                child: Label(NMobileLocalizations.of(context).nkn, type: LabelType.label),
+                                                                child: Label(NL10ns.of(context).nkn, type: LabelType.label),
                                                               ),
                                                             ),
                                                             keyboardType: TextInputType.numberWithOptions(
@@ -395,17 +395,17 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                               children: <Widget>[
                                                                 Label(
-                                                                  NMobileLocalizations.of(context).slow,
+                                                                  NL10ns.of(context).slow,
                                                                   type: LabelType.bodySmall,
                                                                   color: DefaultTheme.primaryColor,
                                                                 ),
                                                                 Label(
-                                                                  NMobileLocalizations.of(context).average,
+                                                                  NL10ns.of(context).average,
                                                                   type: LabelType.bodySmall,
                                                                   color: DefaultTheme.primaryColor,
                                                                 ),
                                                                 Label(
-                                                                  NMobileLocalizations.of(context).fast,
+                                                                  NL10ns.of(context).fast,
                                                                   type: LabelType.bodySmall,
                                                                   color: DefaultTheme.primaryColor,
                                                                 ),
@@ -441,7 +441,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                 Padding(
                                                   padding: EdgeInsets.only(left: 30, right: 30),
                                                   child: Button(
-                                                    text: NMobileLocalizations.of(context).continue_text,
+                                                    text: NL10ns.of(context).continue_text,
                                                     disabled: !_formValid,
                                                     onPressed: next,
                                                   ),

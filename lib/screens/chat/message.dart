@@ -388,7 +388,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
             PopupMenuItem<int>(
               value: 0,
               child: Label(
-                NMobileLocalizations.of(context).burn_after_reading,
+                NL10ns.of(context).burn_after_reading,
                 type: LabelType.display,
               ),
             )
@@ -463,7 +463,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
                                           SizedBox(height: 6),
                                           accountUserBuilder(onUser: (context, user) {
                                             return Label(
-                                                '${message.isOutbound ? user.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).update_burn_after_reading}');
+                                                '${message.isOutbound ? user.name : widget.arguments.contact.name} ${NL10ns.of(context).update_burn_after_reading}');
                                           }),
                                         ],
                                       ),
@@ -512,7 +512,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
                                           ),
                                           accountUserBuilder(onUser: (context, user) {
                                             return Label(
-                                                '${message.isOutbound ? user.name : widget.arguments.contact.name} ${NMobileLocalizations.of(context).close_burn_after_reading}');
+                                                '${message.isOutbound ? user.name : widget.arguments.contact.name} ${NL10ns.of(context).close_burn_after_reading}');
                                           }),
                                         ],
                                       ),
@@ -609,7 +609,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
                                         },
                                         style: TextStyle(fontSize: 14, height: 1.4),
                                         decoration: InputDecoration(
-                                          hintText: NMobileLocalizations.of(context).type_a_message,
+                                          hintText: NL10ns.of(context).type_a_message,
                                           contentPadding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
                                           border: UnderlineInputBorder(
                                             borderRadius: BorderRadius.all(Radius.circular(20.w)),
@@ -684,7 +684,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
                                   Padding(
                                     padding: const EdgeInsets.only(top: 8),
                                     child: Label(
-                                      NMobileLocalizations.of(context).pictures,
+                                      NL10ns.of(context).pictures,
                                       type: LabelType.bodySmall,
                                       color: DefaultTheme.fontColor2,
                                     ),
@@ -715,7 +715,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
                                   Padding(
                                     padding: const EdgeInsets.only(top: 8),
                                     child: Label(
-                                      NMobileLocalizations.of(context).camera,
+                                      NL10ns.of(context).camera,
                                       type: LabelType.bodySmall,
                                       color: DefaultTheme.fontColor2,
                                     ),
