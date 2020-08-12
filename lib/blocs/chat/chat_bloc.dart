@@ -282,6 +282,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
       case ContentType.textExtension:
         message.receipt(account);
         message.isSuccess = true;
+        checkBurnOptions(message, contact);
         LocalNotification.messageNotification(title, message.content, message: message);
         await message.insert(db, accountPubkey);
         var unReadCount = await MessageSchema.unReadMessages(db, accountChatId);
@@ -374,14 +375,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
     if (event.target != null) {
       MessageSchema.getAndReadTargetMessages(db, event.target);
     }
-
     yield MessagesUpdated(target: event.target);
   }
 
   ///change burn status
   checkBurnOptions(MessageSchema message, ContactSchema contact) async {
-    if (message.topic != null || contact?.options?.deleteAfterSeconds == null) return;
-    contact.setBurnOptions(db, null);
+    if (message.topic != null) return;
+    await contact.setBurnOptions(db, contact.options?.deleteAfterSeconds);
     contactBloc.add(LoadContact(address: [contact.clientAddress]));
   }
 }
