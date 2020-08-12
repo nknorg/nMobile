@@ -49,9 +49,9 @@ class Format {
     } else if (diff.inHours < Duration.hoursPerDay) {
       return formatDurationToTime(diff);
     } else if (diff.inDays < 7) {
-      return diff.inDays.toString() + NL10ns.of(Global.appContext).days;
+      return diff.inDays.toString() + ' ' + NL10ns.of(Global.appContext).days;
     } else {
-      return (diff.inDays / 7).toStringAsFixed(0) + NL10ns.of(Global.appContext).weeks;
+      return (diff.inDays / 7).toStringAsFixed(0) + ' ' + NL10ns.of(Global.appContext).weeks;
     }
   }
 
