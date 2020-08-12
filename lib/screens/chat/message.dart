@@ -11,8 +11,8 @@ import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
-import 'package:nmobile/components/button_icon.dart';
 import 'package:nmobile/components/box/body.dart';
+import 'package:nmobile/components/button_icon.dart';
 import 'package:nmobile/components/chat/bubble.dart';
 import 'package:nmobile/components/chat/system.dart';
 import 'package:nmobile/components/header/header.dart';
@@ -28,8 +28,8 @@ import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/screens/view/burn_view_utils.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class ChatSinglePage extends StatefulWidget {
   static const String routeName = '/chat/message';
@@ -42,7 +42,7 @@ class ChatSinglePage extends StatefulWidget {
   _ChatSinglePageState createState() => _ChatSinglePageState();
 }
 
-class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc{
+class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc {
   ChatBloc _chatBloc;
   String targetId;
   StreamSubscription _chatSubscription;
@@ -271,8 +271,13 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
           deleteAfterSeconds = Duration(seconds: widget.arguments.contact.options.deleteAfterSeconds);
         }
       }
-
-      var sendMsg = MessageSchema.fromSendData(from: accountChatId, to: dest, content: text, contentType: contentType, deleteAfterSeconds: deleteAfterSeconds);
+      var sendMsg = MessageSchema.fromSendData(
+        from: accountChatId,
+        to: dest,
+        content: text,
+        contentType: contentType,
+        deleteAfterSeconds: deleteAfterSeconds,
+      );
       sendMsg.isOutbound = true;
       try {
         _chatBloc.add(SendMessage(sendMsg));
@@ -289,7 +294,8 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
     String dest = targetId;
     Duration deleteAfterSeconds;
     if (widget.arguments.contact?.options != null) {
-      if (widget.arguments.contact?.options?.deleteAfterSeconds != null) deleteAfterSeconds = Duration(seconds: widget.arguments.contact.options.deleteAfterSeconds);
+      if (widget.arguments.contact?.options?.deleteAfterSeconds != null)
+        deleteAfterSeconds = Duration(seconds: widget.arguments.contact.options.deleteAfterSeconds);
     }
     var sendMsg = MessageSchema.fromSendData(
       from: accountChatId,
@@ -441,30 +447,29 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
                                   child: Wrap(
                                     alignment: WrapAlignment.center,
                                     crossAxisAlignment: WrapCrossAlignment.center,
-                                    children: <Widget>[
+                                    children: [
                                       Column(
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         mainAxisAlignment: MainAxisAlignment.center,
-                                        children: <Widget>[
+                                        children: [
                                           Row(
                                             mainAxisAlignment: MainAxisAlignment.center,
-                                            children: <Widget>[
-                                              Padding(
-                                                padding: const EdgeInsets.only(left: 4, right: 4),
-                                                child: Icon(
-                                                  Icons.alarm_on,
-                                                  size: 14,
-                                                  color: DefaultTheme.fontColor2,
-                                                ),
+                                            children: [
+                                              Icon(Icons.alarm_on, size: 16, color: DefaultTheme.fontColor2).pad(b: 1, r: 4),
+                                              Label(Format.durationFormat(Duration(seconds: content['content']['deleteAfterSeconds'])),
+                                                  type: LabelType.bodySmall),
+                                            ],
+                                          ).pad(b: 6),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Label(
+                                                message.isOutbound ? NL10ns.of(context).you : widget.arguments.contact.name,
+                                                fontWeight: FontWeight.bold,
                                               ),
-                                              Label(' ${Format.durationFormatString(Duration(seconds: content['content']['deleteAfterSeconds']))}'),
+                                              Label(' ${NL10ns.of(context).update_burn_after_reading}'),
                                             ],
                                           ),
-                                          SizedBox(height: 6),
-                                          accountUserBuilder(onUser: (context, user) {
-                                            return Label(
-                                                '${message.isOutbound ? user.name : widget.arguments.contact.name} ${NL10ns.of(context).update_burn_after_reading}');
-                                          }),
                                         ],
                                       ),
 //                                      Padding(
@@ -491,29 +496,28 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
                                   child: Wrap(
                                     alignment: WrapAlignment.center,
                                     crossAxisAlignment: WrapCrossAlignment.center,
-                                    children: <Widget>[
+                                    children: [
                                       Column(
                                         crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: <Widget>[
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
                                           Row(
                                             mainAxisAlignment: MainAxisAlignment.center,
-                                            children: <Widget>[
-                                              Padding(
-                                                padding: const EdgeInsets.only(left: 4, right: 4),
-                                                child: Icon(
-                                                  Icons.alarm_off,
-                                                  size: 14,
-                                                  color: DefaultTheme.fontColor2,
-                                                ),
+                                            children: [
+                                              Icon(Icons.alarm_off, size: 16, color: DefaultTheme.fontColor2).pad(b: 1, r: 4),
+                                              Label(NL10ns.of(context).off, type: LabelType.bodySmall, fontWeight: FontWeight.bold),
+                                            ],
+                                          ).pad(b: 6),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Label(
+                                                message.isOutbound ? NL10ns.of(context).you : widget.arguments.contact.name,
+                                                fontWeight: FontWeight.bold,
                                               ),
-                                              SizedBox(width: 4),
-                                              Label('off'),
+                                              Label(' ${NL10ns.of(context).close_burn_after_reading}'),
                                             ],
                                           ),
-                                          accountUserBuilder(onUser: (context, user) {
-                                            return Label(
-                                                '${message.isOutbound ? user.name : widget.arguments.contact.name} ${NL10ns.of(context).close_burn_after_reading}');
-                                          }),
                                         ],
                                       ),
 //                                      Padding(
@@ -739,20 +743,16 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
 
   getBurnTimeView() {
     if (widget.arguments.contact?.options != null && widget.arguments.contact?.options?.deleteAfterSeconds != null) {
-      return Container(
-        padding: EdgeInsets.only(top: 2),
-        child: Row(
-          children: <Widget>[
-            Icon(
-              Icons.alarm_on,
-              size: 14,
-              color: DefaultTheme.backgroundLightColor,
-            ),
-            SizedBox(width: 4),
-            Label(Format.durationFormat(Duration(seconds: widget.arguments.contact?.options?.deleteAfterSeconds)), type: LabelType.bodySmall, color: DefaultTheme.backgroundLightColor),
-          ],
-        ),
-      );
+      return Row(
+        children: [
+          Icon(Icons.alarm_on, size: 16, color: DefaultTheme.backgroundLightColor).pad(r: 4),
+          Label(
+            Format.durationFormat(Duration(seconds: widget.arguments.contact?.options?.deleteAfterSeconds)),
+            type: LabelType.bodySmall,
+            color: DefaultTheme.backgroundLightColor,
+          ),
+        ],
+      ).pad(t: 2);
     } else {
       return Container();
     }

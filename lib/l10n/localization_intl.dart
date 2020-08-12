@@ -201,10 +201,6 @@ class NL10ns {
     return Intl.message('Latest Transactions', name: 'latest_transactions', desc: '');
   }
 
-  String get day {
-    return Intl.message('day', name: 'day', desc: '');
-  }
-
   String get today {
     return Intl.message('Today', name: 'today', desc: '');
   }
@@ -874,28 +870,12 @@ class NL10ns {
     return Intl.message('Start a new direct message or group chat, or join\nexisting ones..', name: 'chat_no_messages_desc', desc: '');
   }
 
-  String get cantact_no_contact_title {
-    return Intl.message('You haven’t got any\n contacts yet', name: 'cantact_no_contact_title', desc: '');
+  String get contact_no_contact_title {
+    return Intl.message('You haven’t got any\n contacts yet', name: 'contact_no_contact_title', desc: '');
   }
 
-  String get cantact_no_contact_desc {
-    return Intl.message('Use your contact list to quickly message and\n send funds to your friends.', name: 'cantact_no_contact_desc', desc: '');
-  }
-
-  String get s {
-    return Intl.message('s', name: 's', desc: '');
-  }
-
-  String get m {
-    return Intl.message('m', name: 'm', desc: '');
-  }
-
-  String get h {
-    return Intl.message('h', name: 'h', desc: '');
-  }
-
-  String get d {
-    return Intl.message('d', name: 'd', desc: '');
+  String get contact_no_contact_desc {
+    return Intl.message('Use your contact list to quickly message and\n send funds to your friends.', name: 'contact_no_contact_desc', desc: '');
   }
 
   String get update_burn_after_reading {
@@ -1071,9 +1051,10 @@ class NL10ns {
   String get eth_keystore_export_desc => Intl.message('The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.', name: 'eth_keystore_export_desc');
   String get you => Intl.message('You', name: 'you');
   String get seconds => Intl.message('seconds', name: 'seconds');
+  String get minutes => Intl.message('minutes', name: 'minutes');
   String get hours => Intl.message('hours', name: 'hours');
-  String get minute => Intl.message('minute', name: 'minute');
-  String get week => Intl.message('week', name: 'week');
+  String get days => Intl.message('days', name: 'days', desc: '');
+  String get weeks => Intl.message('weeks', name: 'weeks');
 
   String get select => Intl.message('Select', name: 'select');
   String get top => Intl.message('top', name: 'top');
