@@ -95,7 +95,7 @@ class _NoContactScreenState extends State<NoContactScreen> with AccountDependsBl
                         Padding(
                           padding: EdgeInsets.only(top: 32),
                           child: Label(
-                            NL10ns.of(context).cantact_no_contact_title,
+                            NL10ns.of(context).contact_no_contact_title,
                             type: LabelType.h2,
                             textAlign: TextAlign.center,
                           ),
@@ -103,7 +103,7 @@ class _NoContactScreenState extends State<NoContactScreen> with AccountDependsBl
                         Padding(
                           padding: EdgeInsets.only(top: 8, left: 0, right: 0),
                           child: Label(
-                            NL10ns.of(context).cantact_no_contact_desc,
+                            NL10ns.of(context).contact_no_contact_desc,
                             type: LabelType.bodySmall,
                             textAlign: TextAlign.center,
                             softWrap: true,
