@@ -59,7 +59,7 @@ class BurnViewUtil {
   static showBurnViewDialog(context, contact, chatBloc) async {
     int currentIndex = -1;
     var _sourceOptions = OptionsSchema(deleteAfterSeconds: contact?.options?.deleteAfterSeconds);
-    if (_sourceOptions != null && _sourceOptions.deleteAfterSeconds != null && _sourceOptions.deleteAfterSeconds != -1) {
+    if (_sourceOptions.deleteAfterSeconds != null && _sourceOptions.deleteAfterSeconds != -1) {
       for (int index = 0; index < burnValueArray.length; index++) {
         Duration duration = burnValueArray[index];
         if (_sourceOptions.deleteAfterSeconds == duration.inSeconds) {

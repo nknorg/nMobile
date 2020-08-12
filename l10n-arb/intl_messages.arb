@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-08-12T00:48:17.780353",
+  "@@last_modified": "2020-08-12T13:37:04.844098",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -272,12 +272,6 @@
   },
   "latest_transactions": "Latest Transactions",
   "@latest_transactions": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "day": "day",
-  "@day": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1286,38 +1280,14 @@
     "type": "text",
     "placeholders": {}
   },
-  "cantact_no_contact_title": "You haven’t got any\n contacts yet",
-  "@cantact_no_contact_title": {
+  "contact_no_contact_title": "You haven’t got any\n contacts yet",
+  "@contact_no_contact_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "cantact_no_contact_desc": "Use your contact list to quickly message and\n send funds to your friends.",
-  "@cantact_no_contact_desc": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "s": "s",
-  "@s": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "m": "m",
-  "@m": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "h": "h",
-  "@h": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "d": "d",
-  "@d": {
+  "contact_no_contact_desc": "Use your contact list to quickly message and\n send funds to your friends.",
+  "@contact_no_contact_desc": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1649,18 +1619,24 @@
     "type": "text",
     "placeholders": {}
   },
+  "minutes": "minutes",
+  "@minutes": {
+    "type": "text",
+    "placeholders": {}
+  },
   "hours": "hours",
   "@hours": {
     "type": "text",
     "placeholders": {}
   },
-  "minute": "minute",
-  "@minute": {
+  "days": "days",
+  "@days": {
+    "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "week": "week",
-  "@week": {
+  "weeks": "weeks",
+  "@weeks": {
     "type": "text",
     "placeholders": {}
   },
