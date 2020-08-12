@@ -459,7 +459,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
                                               Label(Format.durationFormat(Duration(seconds: content['content']['deleteAfterSeconds'])),
                                                   type: LabelType.bodySmall),
                                             ],
-                                          ).pad(b: 6),
+                                          ).pad(b: 4),
                                           Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
@@ -467,7 +467,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
                                                 message.isOutbound ? NL10ns.of(context).you : widget.arguments.contact.name,
                                                 fontWeight: FontWeight.bold,
                                               ),
-                                              Label(' ${NL10ns.of(context).update_burn_after_reading}'),
+                                              Label(' ${NL10ns.of(context).update_burn_after_reading}', softWrap: true),
                                             ],
                                           ),
                                         ],
@@ -507,7 +507,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
                                               Icon(Icons.alarm_off, size: 16, color: DefaultTheme.fontColor2).pad(b: 1, r: 4),
                                               Label(NL10ns.of(context).off, type: LabelType.bodySmall, fontWeight: FontWeight.bold),
                                             ],
-                                          ).pad(b: 6),
+                                          ).pad(b: 4),
                                           Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
