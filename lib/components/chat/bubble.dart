@@ -25,6 +25,7 @@ import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/theme/popup_menu.dart';
 import 'package:nmobile/utils/chat_utils.dart';
 import 'package:nmobile/utils/copy_utils.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/nkn_time_utils.dart';
 import 'package:oktoast/oktoast.dart';
 
@@ -139,20 +140,17 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
       if (widget.message.options != null && widget.message.options['deleteAfterSeconds'] != null) {
         burnWidget = Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Icon(
-              FontAwesomeIcons.clock,
-              size: 12,
-              color: DefaultTheme.fontLightColor.withAlpha(178),
-            ),
-            SizedBox(width: 4.w),
+            Icon(FontAwesomeIcons.clock, size: 12, color: DefaultTheme.fontLightColor.withAlpha(178)).pad(b: 1, r: 4),
             Label(
               Format.timeFromNowFormat(widget.message.deleteTime ?? DateTime.now().add(Duration(seconds: widget.message.options['deleteAfterSeconds'] + 1))),
-              type: LabelType.bodyRegular,
+              type: LabelType.bodySmall,
+              fontSize: DefaultTheme.iconTextFontSize,
               color: DefaultTheme.fontLightColor.withAlpha(178),
             ),
           ],
-        );
+        ).pad(t: 1);
       }
     } else if (widget.style == BubbleStyle.SendError) {
       decoration = BoxDecoration(
@@ -179,22 +177,17 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
       if (widget.message.options != null && widget.message.options['deleteAfterSeconds'] != null) {
         burnWidget = Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: Icon(
-                FontAwesomeIcons.clock,
-                size: 12,
-                color: DefaultTheme.fontColor2,
-              ),
-            ),
+            Icon(FontAwesomeIcons.clock, size: 12, color: DefaultTheme.fontColor2).pad(b: 1, r: 4),
             Label(
               Format.timeFromNowFormat(widget.message.deleteTime ?? DateTime.now().add(Duration(seconds: widget.message.options['deleteAfterSeconds'] + 1))),
-              type: LabelType.bodyRegular,
+              type: LabelType.bodySmall,
+              fontSize: DefaultTheme.iconTextFontSize,
               color: DefaultTheme.fontColor2,
             ),
           ],
-        );
+        ).pad(t: 1);
       }
     }
     EdgeInsetsGeometry contentPadding = EdgeInsets.zero;
@@ -213,7 +206,8 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
           List<InlineSpan> children = [];
           for (String s in chatContent) {
             if (s.contains(ChatUtil.reg)) {
-              children.add(TextSpan(text: s, style: TextStyle(height: 1.15, color: Color(DefaultTheme.headerColor2), fontStyle: FontStyle.italic, fontWeight: FontWeight.bold)));
+              children.add(TextSpan(
+                  text: s, style: TextStyle(height: 1.15, color: Color(DefaultTheme.headerColor2), fontStyle: FontStyle.italic, fontWeight: FontWeight.bold)));
             } else {
               if (widget.style == BubbleStyle.Me) {
                 children.add(TextSpan(text: s, style: TextStyle(color: DefaultTheme.fontLightColor, height: 1.25)));
@@ -470,7 +464,10 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
                               sendMsg.content = sendMsg.toDchatSubscribeData();
                               _chatBloc.add(SendMessage(sendMsg));
                               DateTime now = DateTime.now();
-                              var topicSchema = TopicSchema(topic: widget.message.content, owner: getOwnerPubkeyByTopic(widget.message.content.toString()), expiresAt: now.add(blockToExpiresTime(duration)));
+                              var topicSchema = TopicSchema(
+                                  topic: widget.message.content,
+                                  owner: getOwnerPubkeyByTopic(widget.message.content.toString()),
+                                  expiresAt: now.add(blockToExpiresTime(duration)));
                               await topicSchema.insertOrUpdate(db, accountPubkey);
                               topicSchema = await TopicSchema.getTopic(db, widget.message.content);
                             }

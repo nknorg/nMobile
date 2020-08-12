@@ -38,52 +38,37 @@ class Format {
 
   static String timeFromNowFormat(DateTime time) {
     var now = DateTime.now();
-    var diffSpan = time.difference(now);
+    var diff = time.difference(now);
 
-    if (diffSpan.inSeconds < 0) {
+    if (diff.inSeconds < 0) {
       return '0';
-    } else if (diffSpan.inSeconds < 60) {
-      return diffSpan.inSeconds.toString();
-    } else if (diffSpan.inSeconds < 3600) {
-      return formatDurationToTime(diffSpan).toString().substring(3);
-    } else if (diffSpan.inHours < 24) {
-      return formatDurationToTime(diffSpan);
+    } else if (diff.inSeconds < Duration.secondsPerMinute) {
+      return diff.inSeconds.toString();
+    } else if (diff.inMinutes < Duration.minutesPerHour) {
+      return formatDurationToTime(diff).toString().substring(3);
+    } else if (diff.inHours < Duration.hoursPerDay) {
+      return formatDurationToTime(diff);
+    } else if (diff.inDays < 7) {
+      return diff.inDays.toString() + NL10ns.of(Global.appContext).days;
     } else {
-      return diffSpan.inDays.toString() + NL10ns.of(Global.appContext).day;
+      return (diff.inDays / 7).toStringAsFixed(0) + NL10ns.of(Global.appContext).weeks;
     }
   }
 
   static String durationFormat(Duration d) {
     var localizations = NL10ns.of(Global.appContext);
-
     if (d.inSeconds < 0) {
-      return '0${localizations.s}';
-    } else if (d.inSeconds < 60) {
-      return d.inSeconds.toString() + '${localizations.s}';
-    } else if (d.inSeconds < 3600) {
-      return d.inMinutes.toString() + '${localizations.m}';
-    } else if (d.inHours < 24) {
-      return d.inHours.toString() + '${localizations.h}';
-    } else {
-      return d.inDays.toString() + localizations.d;
-    }
-  }
-
-  static String durationFormatString(Duration d) {
-    var localizations = NL10ns.of(Global.appContext);
-
-    if (d.inSeconds < 0) {
-      return '0${localizations.s}';
-    } else if (d.inSeconds < 60) {
+      return '0 ${localizations.seconds}';
+    } else if (d.inSeconds < Duration.secondsPerMinute) {
       return d.inSeconds.toString() + ' ${localizations.seconds}';
-    } else if (d.inSeconds < 3600) {
-      return d.inMinutes.toString() + ' ${localizations.minute}';
-    } else if (d.inHours < 24) {
+    } else if (d.inMinutes < Duration.minutesPerHour) {
+      return d.inMinutes.toString() + ' ${localizations.minutes}';
+    } else if (d.inHours < Duration.hoursPerDay) {
       return d.inHours.toString() + ' ${localizations.hours}';
-    } else if (d.inHours > 24) {
-      return d.inDays.toString() + localizations.day;
+    } else if (d.inDays < 7) {
+      return d.inDays.toString() + ' ' + localizations.days;
     } else {
-      return d.inDays.toString() + localizations.day;
+      return (d.inDays / 7).toStringAsFixed(0) + ' ' + localizations.weeks;
     }
   }
 

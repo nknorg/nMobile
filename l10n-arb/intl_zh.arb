@@ -108,6 +108,12 @@
     "type": "text",
     "placeholders": {}
   },
+  "save_to_album": "保存到相册",
+  "@save_to_album": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "max": "全部",
   "@max": {
     "description": "",
@@ -246,12 +252,6 @@
     "type": "text",
     "placeholders": {}
   },
-  "day": "天",
-  "@day": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
   "today": "今天",
   "@today": {
     "description": "",
@@ -354,13 +354,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "nkn_mainnet": "NKN Mainnet",
+  "nkn_mainnet": "NKN 主网",
   "@nkn_mainnet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "ethereum": "Ethereum",
+  "ethereum": "以太坊",
   "@ethereum": {
     "description": "",
     "type": "text",
@@ -996,13 +996,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "first_name": "名字",
+  "first_name": "名",
   "@first_name": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "last_name": "名字",
+  "last_name": "姓",
   "@last_name": {
     "description": "",
     "type": "text",
@@ -1256,49 +1256,25 @@
     "type": "text",
     "placeholders": {}
   },
-  "cantact_no_contact_title": "您还没有联系人",
-  "@cantact_no_contact_title": {
+  "contact_no_contact_title": "您还没有联系人",
+  "@contact_no_contact_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "cantact_no_contact_desc": "使用您的联系人列表快速发送消息和资金。",
-  "@cantact_no_contact_desc": {
+  "contact_no_contact_desc": "使用您的联系人列表快速发送消息和资金。",
+  "@contact_no_contact_desc": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "s": "秒",
-  "@s": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "m": "分钟",
-  "@m": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "h": "小时",
-  "@h": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "d": "d",
-  "@d": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
-  "update_burn_after_reading": "设置了阅后即焚时间。",
+  "update_burn_after_reading": "设置了阅后即焚时间",
   "@update_burn_after_reading": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "close_burn_after_reading": "禁用了阅后即焚。",
+  "close_burn_after_reading": "禁用了阅后即焚",
   "@close_burn_after_reading": {
     "description": "",
     "type": "text",
@@ -1619,18 +1595,24 @@
     "type": "text",
     "placeholders": {}
   },
+  "minutes": "分钟",
+  "@minutes": {
+    "type": "text",
+    "placeholders": {}
+  },
   "hours": "小时",
   "@hours": {
     "type": "text",
     "placeholders": {}
   },
-  "minute": "分钟",
-  "@minute": {
+  "days": "天",
+  "@days": {
+    "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "week": "周",
-  "@week": {
+  "weeks": "星期",
+  "@weeks": {
     "type": "text",
     "placeholders": {}
   },
