@@ -1334,6 +1334,18 @@
     "type": "text",
     "placeholders": {}
   },
+  "burn_6_hour": "6 小时",
+  "@burn_6_hour": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "burn_12_hour": "12 小时",
+  "@burn_12_hour": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "burn_1_day": "1 天",
   "@burn_1_day": {
     "description": "",
@@ -1560,11 +1572,6 @@
     "type": "text",
     "placeholders": {}
   },
-  "disappear_desc": "接受和发送的消息将在设定的时间后消失。",
-  "@disappear_desc": {
-    "type": "text",
-    "placeholders": {}
-  },
   "account_switching_completed": "已完成账号切换",
   "@account_switching_completed": {
     "type": "text",
@@ -1618,6 +1625,11 @@
   },
   "select": "选择",
   "@select": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "click_to_change": "点击更改",
+  "@click_to_change": {
     "type": "text",
     "placeholders": {}
   },

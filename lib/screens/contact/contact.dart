@@ -22,8 +22,6 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/format.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/nkn_image_utils.dart';
 import 'package:nmobile/helpers/utils.dart';
@@ -34,7 +32,6 @@ import 'package:nmobile/router/route_observer.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
-import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/message.dart';
@@ -74,22 +71,10 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
   bool _nameFormValid = false;
   bool _notesFormValid = false;
   bool _burnSelected = false;
-  List<Duration> _burnValueArray = <Duration>[
-    Duration(seconds: 5),
-    Duration(seconds: 10),
-    Duration(seconds: 30),
-    Duration(minutes: 1),
-    Duration(minutes: 5),
-    Duration(minutes: 10),
-    Duration(minutes: 30),
-    Duration(hours: 1),
-    Duration(days: 1),
-  ];
-  List<String> _burnTextArray;
-  double _sliderBurnValue = 0;
-  int _burnValue;
+  bool _initBurnSelected = false;
+  int _burnIndex = -1;
+  int _initBurnIndex = -1;
   SourceProfile _sourceProfile;
-  OptionsSchema _sourceOptions;
   String nickName;
   WalletSchema _walletDefault;
 
@@ -120,62 +105,47 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
   @override
   void initState() {
     super.initState();
-    _sourceOptions = OptionsSchema(deleteAfterSeconds: widget.arguments?.options?.deleteAfterSeconds);
     _chatBloc = BlocProvider.of<ChatBloc>(context);
     initAsync();
 
     int burnAfterSeconds = widget.arguments.options?.deleteAfterSeconds;
-    if (burnAfterSeconds != null) {
-      _burnSelected = true;
-      _sliderBurnValue = _burnValueArray.indexWhere((x) => x.inSeconds == burnAfterSeconds).toDouble();
-      if (_sliderBurnValue < 0) {
-        _sliderBurnValue = 0;
-        if (burnAfterSeconds > _burnValueArray.last.inSeconds) {
-          _sliderBurnValue = (_burnValueArray.length - 1).toDouble();
-        }
+    _burnSelected = burnAfterSeconds != null;
+    if (_burnSelected) {
+      _burnIndex = BurnViewUtil.burnValueArray.indexWhere((x) => x.inSeconds == burnAfterSeconds);
+      if (burnAfterSeconds > BurnViewUtil.burnValueArray.last.inSeconds) {
+        _burnIndex = BurnViewUtil.burnValueArray.length - 1;
       }
     }
-    _burnValue = burnAfterSeconds;
+    if (_burnIndex < 0) _burnIndex = 0;
+    _initBurnSelected = _burnSelected;
+    _initBurnIndex = _burnIndex;
 
     nickName = widget.arguments.name;
     _notesController.text = widget.arguments.notes;
   }
 
-  _setContactOptions() async {
-    if (_sourceOptions?.deleteAfterSeconds != _burnValue) {
-      var contact = widget.arguments;
-      if (_burnSelected) {
-        await contact.setBurnOptions(db, _burnValue);
-      } else {
-        await contact.setBurnOptions(db, null);
-      }
-      var sendMsg = MessageSchema.fromSendData(
-        from: accountChatId,
-        to: widget.arguments.clientAddress,
-        contentType: ContentType.eventContactOptions,
-      );
-      sendMsg.isOutbound = true;
-      if (_burnSelected) sendMsg.burnAfterSeconds = _burnValue;
-      sendMsg.content = sendMsg.toActionContentOptionsData();
-      _chatBloc.add(SendMessage(sendMsg));
+  _saveAndSendBurnMessage() async {
+    if (_burnSelected == _initBurnSelected && _burnIndex == _initBurnIndex) return;
+    var _burnValue;
+    if (!_burnSelected || _burnIndex < 0) {
+      await widget.arguments.setBurnOptions(db, null);
+    } else {
+      _burnValue = BurnViewUtil.burnValueArray[_burnIndex].inSeconds;
+      await widget.arguments.setBurnOptions(db, _burnValue);
     }
+    var sendMsg = MessageSchema.fromSendData(
+      from: accountChatId,
+      to: widget.arguments.clientAddress,
+      contentType: ContentType.eventContactOptions,
+    );
+    sendMsg.isOutbound = true;
+    sendMsg.burnAfterSeconds = _burnValue;
+    sendMsg.content = sendMsg.toActionContentOptionsData();
+    _chatBloc.add(SendMessage(sendMsg));
   }
 
   @override
   Widget build(BuildContext context) {
-    _burnTextArray = <String>[
-      NL10ns.of(context).burn_5_seconds,
-      NL10ns.of(context).burn_10_seconds,
-      NL10ns.of(context).burn_30_seconds,
-      NL10ns.of(context).burn_1_minute,
-      NL10ns.of(context).burn_5_minutes,
-      NL10ns.of(context).burn_10_minutes,
-      NL10ns.of(context).burn_30_minutes,
-      NL10ns.of(context).burn_1_hour,
-      NL10ns.of(context).burn_1_day,
-      NL10ns.of(context).burn_1_week,
-    ];
-
     if (widget.arguments.isMe) {
       return getSelfView();
     } else {
@@ -996,65 +966,105 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                               margin: EdgeInsets.only(left: 16, right: 16, top: 10),
                               child: FlatButton(
                                 onPressed: () async {
-                                  _burnValue = await BurnViewUtil.showBurnViewDialog(context, widget.arguments, _chatBloc);
-                                  setState(() {});
+//                                // _burnValue = await BurnViewUtil.showBurnViewDialog(context, widget.arguments, _chatBloc);
+                                  setState(() {
+                                    _burnSelected = !_burnSelected;
+                                    _saveAndSendBurnMessage();
+                                  });
                                 },
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
                                 child: Container(
                                   width: double.infinity,
-                                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-                                    Row(
-                                      children: <Widget>[
-                                        loadAssetWalletImage(
-                                          'xiaohui',
-                                          color: DefaultTheme.primaryColor,
-                                          width: 24,
-                                        ),
-                                        SizedBox(width: 10),
-                                        Label(
-                                          NL10ns.of(context).burn_after_reading,
-                                          type: LabelType.bodyRegular,
-                                          color: DefaultTheme.fontColor1,
-                                          textAlign: TextAlign.start,
-                                        ),
-                                        SizedBox(width: 10),
-                                        Expanded(
-                                          child: Label(
-                                            _burnValue == null ? NL10ns.of(context).close : '${_burnValue != null ? '${BurnViewUtil.getStringFromSeconds(context, _burnValue)}' : ''}',
+                                  padding: _burnSelected ? 0.symm(v: 5.5) : 0.pad(),
+                                  child: Column(
+                                    mainAxisAlignment: _burnSelected ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
+                                    children: <Widget>[
+                                      Row(
+                                        children: [
+                                          loadAssetWalletImage('xiaohui', color: DefaultTheme.primaryColor, width: 24),
+                                          SizedBox(width: 10),
+                                          Label(
+                                            NL10ns.of(context).burn_after_reading,
                                             type: LabelType.bodyRegular,
-                                            color: DefaultTheme.fontColor2,
-                                            textAlign: TextAlign.right,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                            color: DefaultTheme.fontColor1,
+                                            textAlign: TextAlign.start,
                                           ),
-                                        ),
-                                        SvgPicture.asset(
-                                          'assets/icons/right.svg',
-                                          width: 24,
-                                          color: DefaultTheme.fontColor2,
-                                        )
-                                      ],
-                                    ),
-                                  ]),
-                                ),
-                              ).sized(h: 50, w: double.infinity),
-                            ),
-                            Container(
-                              margin: EdgeInsets.symmetric(horizontal: 14),
-                              padding: EdgeInsets.only(top: 6),
-                              child: Row(
-                                children: <Widget>[
-                                  Expanded(
-                                    child: Label(
-                                      NL10ns.of(context).disappear_desc,
-                                      type: LabelType.bodySmall,
-                                      color: DefaultTheme.fontDescColor,
-                                      softWrap: true,
-                                    ),
+                                          Spacer(),
+                                          CupertinoSwitch(
+                                            value: _burnSelected,
+                                            activeColor: DefaultTheme.primaryColor,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                _burnSelected = value;
+                                                _saveAndSendBurnMessage();
+                                              });
+                                            },
+                                          ),
+//                                        SvgPicture.asset('assets/icons/right.svg', width: 24, color: DefaultTheme.fontColor2)
+                                        ],
+                                      ),
+                                      _burnSelected
+                                          ? Row(
+                                              mainAxisSize: MainAxisSize.max,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Icon(Icons.alarm_on, size: 24, color: Colours.blue_0f).pad(r: 10),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Label(
+                                                        (!_burnSelected || _burnIndex < 0)
+                                                            ? NL10ns.of(context).off
+                                                            : BurnViewUtil.getStringFromSeconds(context, BurnViewUtil.burnValueArray[_burnIndex].inSeconds),
+                                                        type: LabelType.bodyRegular,
+                                                        color: Colours.gray_81,
+                                                        fontWeight: FontWeight.w700,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                      Slider(
+                                                        value: _burnIndex.d,
+                                                        min: 0,
+                                                        max: (BurnViewUtil.burnValueArray.length - 1).d,
+                                                        activeColor: Colours.blue_0f,
+                                                        inactiveColor: Colours.gray_81,
+                                                        divisions: BurnViewUtil.burnValueArray.length - 1,
+                                                        label: BurnViewUtil.burnTextArray(context)[_burnIndex],
+                                                        onChanged: (value) {
+                                                          setState(() {
+                                                            _burnIndex = value.round();
+                                                            if (_burnIndex > BurnViewUtil.burnValueArray.length - 1) {
+                                                              _burnIndex = BurnViewUtil.burnValueArray.length - 1;
+                                                            }
+                                                          });
+                                                        },
+                                                        onChangeEnd: (value) {
+                                                          _saveAndSendBurnMessage();
+                                                        },
+                                                      )
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          : Space.empty,
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ).sized(h: _burnSelected ? 112 : 50, w: double.infinity),
                             ),
+                            Label(
+                              (!_burnSelected || _burnIndex < 0)
+                                  ? NL10ns.of(context).burn_after_reading_desc
+                                  : NL10ns.of(context).burn_after_reading_desc_disappear(
+                                      BurnViewUtil.burnTextArray(context)[_burnIndex],
+                                    ),
+                              type: LabelType.bodySmall,
+                              color: Colours.gray_81,
+                              fontWeight: FontWeight.w600,
+                              softWrap: true,
+                            ).pad(t: 6, b: 8, l: 20, r: 20),
                             Container(
                               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
                               margin: EdgeInsets.only(left: 16, right: 16, top: 10),
@@ -1064,27 +1074,19 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                   width: double.infinity,
                                   child: Row(
                                     children: <Widget>[
-                                      SvgPicture.asset(
-                                        'assets/icons/chat.svg',
-                                        width: 24,
-                                        color: DefaultTheme.primaryColor,
-                                      ),
+                                      SvgPicture.asset('assets/icons/chat.svg', width: 24, color: DefaultTheme.primaryColor),
 //                                      loadAssetChatPng('send_message', width: 22),
                                       SizedBox(width: 10),
                                       Label(NL10ns.of(context).send_message, type: LabelType.bodyRegular, color: DefaultTheme.fontColor1),
-
                                       Spacer(),
-                                      SvgPicture.asset(
-                                        'assets/icons/right.svg',
-                                        width: 24,
-                                        color: DefaultTheme.fontColor2,
-                                      )
+                                      SvgPicture.asset('assets/icons/right.svg', width: 24, color: DefaultTheme.fontColor2)
                                     ],
                                   ),
                                 ),
                                 onPressed: () {
 //                                  _setContactOptions();
-                                  Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
+                                  Navigator.of(context)
+                                      .pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
                                 },
                               ).sized(h: 50, w: double.infinity),
                             ),
@@ -1099,49 +1101,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
               ],
             ),
           )
-        ]),
-      ),
-    );
-  }
-
-  getBurnView() {
-    return FlatButton(
-      onPressed: () {},
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
-      child: Container(
-        child: Column(children: <Widget>[
-          Row(
-            children: <Widget>[
-              loadAssetWalletImage(
-                'xiaohui',
-                color: DefaultTheme.primaryColor,
-                width: 24,
-              ),
-              SizedBox(width: 10),
-              Label(
-                NL10ns.of(context).burn_after_reading + '${_burnValue != null ? ' (${Format.durationFormat(Duration(seconds: _burnValue))})' : ''}',
-                type: LabelType.bodyRegular,
-                color: DefaultTheme.fontColor1,
-                textAlign: TextAlign.start,
-              ),
-              SizedBox(width: 20),
-              Expanded(
-                child: Label(
-                  _burnValue == null ? NL10ns.of(context).close : BurnViewUtil.getStringFromSeconds(context, _burnValueArray[_sliderBurnValue.toInt()].inSeconds),
-                  type: LabelType.bodyRegular,
-                  color: DefaultTheme.fontColor2,
-                  textAlign: TextAlign.right,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              SvgPicture.asset(
-                'assets/icons/right.svg',
-                width: 24,
-                color: DefaultTheme.fontColor2,
-              )
-            ],
-          ),
         ]),
       ),
     );

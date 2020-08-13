@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-08-12T13:37:04.844098",
+  "@@last_modified": "2020-08-13T19:21:54.922077",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1358,6 +1358,18 @@
     "type": "text",
     "placeholders": {}
   },
+  "burn_6_hour": "6 hours",
+  "@burn_6_hour": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "burn_12_hour": "12 hours",
+  "@burn_12_hour": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "burn_1_day": "1 day",
   "@burn_1_day": {
     "description": "",
@@ -1584,11 +1596,6 @@
     "type": "text",
     "placeholders": {}
   },
-  "disappear_desc": "Messages received and sent will disappear after the set time.",
-  "@disappear_desc": {
-    "type": "text",
-    "placeholders": {}
-  },
   "account_switching_completed": "Account switching Completed",
   "@account_switching_completed": {
     "type": "text",
@@ -1642,6 +1649,11 @@
   },
   "select": "Select",
   "@select": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "click_to_change": "Click to change",
+  "@click_to_change": {
     "type": "text",
     "placeholders": {}
   },

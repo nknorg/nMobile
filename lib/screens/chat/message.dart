@@ -27,7 +27,6 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/screens/contact/contact.dart';
-import 'package:nmobile/screens/view/burn_view_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 
@@ -348,10 +347,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
       appBar: Header(
         titleChild: GestureDetector(
           onTap: () async {
-            Navigator.of(context).pushNamed(
-              ContactScreen.routeName,
-              arguments: widget.arguments.contact,
-            );
+            Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: widget.arguments.contact);
           },
           child: Flex(
             direction: Axis.horizontal,
@@ -382,11 +378,8 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
           onSelected: (int result) {
             switch (result) {
               case 0:
-//                Navigator.of(context).pushNamed(
-//                  ContactScreen.routeName,
-//                  arguments: widget.arguments.contact,
-//                );
-                BurnViewUtil.showBurnViewDialog(context, widget.arguments.contact, _chatBloc);
+                Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: widget.arguments.contact);
+//                BurnViewUtil.showBurnViewDialog(context, widget.arguments.contact, _chatBloc);
                 break;
             }
           },
@@ -469,25 +462,15 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
                                               ),
                                               Label(' ${NL10ns.of(context).update_burn_after_reading}', softWrap: true),
                                             ],
+                                          ).pad(b: 4),
+                                          InkWell(
+                                            child: Label(NL10ns.of(context).click_to_change, color: DefaultTheme.primaryColor, type: LabelType.bodyRegular),
+                                            onTap: () {
+                                              Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: widget.arguments.contact);
+                                            },
                                           ),
                                         ],
                                       ),
-//                                      Padding(
-//                                        padding: const EdgeInsets.only(left: 8),
-//                                        child: InkWell(
-//                                          child: Label(
-//                                            NMobileLocalizations.of(context).settings,
-//                                            color: DefaultTheme.primaryColor,
-//                                            type: LabelType.bodyRegular,
-//                                          ),
-//                                          onTap: () {
-//                                            Navigator.of(context).pushNamed(
-//                                              ContactScreen.routeName,
-//                                              arguments: widget.arguments.contact,
-//                                            );
-//                                          },
-//                                        ),
-//                                      ),
                                     ],
                                   ),
                                 );
@@ -517,25 +500,15 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
                                               ),
                                               Label(' ${NL10ns.of(context).close_burn_after_reading}'),
                                             ],
+                                          ).pad(b: 4),
+                                          InkWell(
+                                            child: Label(NL10ns.of(context).click_to_change, color: DefaultTheme.primaryColor, type: LabelType.bodyRegular),
+                                            onTap: () {
+                                              Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: widget.arguments.contact);
+                                            },
                                           ),
                                         ],
                                       ),
-//                                      Padding(
-//                                        padding: const EdgeInsets.only(left: 8),
-//                                        child: InkWell(
-//                                          child: Label(
-//                                            NMobileLocalizations.of(context).settings,
-//                                            color: DefaultTheme.primaryColor,
-//                                            type: LabelType.bodyRegular,
-//                                          ),
-//                                          onTap: () {
-//                                            Navigator.of(context).pushNamed(
-//                                              ContactScreen.routeName,
-//                                              arguments: widget.arguments.contact,
-//                                            );
-//                                          },
-//                                        ),
-//                                      ),
                                     ],
                                   ),
                                 );
