@@ -21,6 +21,8 @@ class BurnViewUtil {
     Duration(minutes: 10),
     Duration(minutes: 30),
     Duration(hours: 1),
+    Duration(hours: 6),
+    Duration(hours: 12),
     Duration(days: 1),
     Duration(days: 7),
   ];
@@ -35,12 +37,14 @@ class BurnViewUtil {
       NL10ns.of(context).burn_10_minutes,
       NL10ns.of(context).burn_30_minutes,
       NL10ns.of(context).burn_1_hour,
+      NL10ns.of(context).burn_6_hour,
+      NL10ns.of(context).burn_12_hour,
       NL10ns.of(context).burn_1_day,
       NL10ns.of(context).burn_1_week,
     ];
   }
 
-  static String getStringFromSeconds(context, seconds) {
+  static String getStringFromSeconds(context, int seconds) {
     int currentIndex = -1;
     for (int index = 0; index < burnValueArray.length; index++) {
       Duration duration = burnValueArray[index];
