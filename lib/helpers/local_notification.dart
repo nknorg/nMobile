@@ -1,5 +1,5 @@
-import 'dart:typed_data';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +8,7 @@ import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/screens/news.dart';
+import 'package:nmobile/utils/log_tag.dart';
 
 import 'global.dart';
 
@@ -40,6 +41,7 @@ Future _onDidReceiveLocalNotification(int id, String title, String body, String 
 class LocalNotification {
   static FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   static int _notificationId = 0;
+  static final _log = LOG('LocalNotification'.tag());
 
   static init() async {
     var initializationSettingsAndroid = new AndroidInitializationSettings('@drawable/icon_logo');
@@ -85,22 +87,22 @@ class LocalNotification {
         vibrationPattern: Int64List.fromList([0, 30, 100, 30]));
     var platformChannelSpecifics = NotificationDetails(androidNotificationDetails, iOSPlatformChannelSpecifics);
     try {
+      _log.d('messageNotification | Global.appContext: ${Global.appContext == null ? null : 'instance'}');
+      final nl10ns = Global.appContext != null ? NL10ns.of(Global.appContext) : null;
       switch (Settings.localNotificationType) {
         case LocalNotificationType.only_name:
-          await _flutterLocalNotificationsPlugin.show(
-              _notificationId++, title, NL10ns.of(Global.appContext).you_have_new_message, platformChannelSpecifics);
+          await _flutterLocalNotificationsPlugin.show(_notificationId++, title, nl10ns?.you_have_new_message ?? ' ', platformChannelSpecifics);
           break;
         case LocalNotificationType.name_and_message:
           await _flutterLocalNotificationsPlugin.show(_notificationId++, title, content, platformChannelSpecifics);
           break;
         case LocalNotificationType.none:
-          await _flutterLocalNotificationsPlugin.show(_notificationId++, NL10ns.of(Global.appContext).new_message,
-              NL10ns.of(Global.appContext).you_have_new_message, platformChannelSpecifics);
+          await _flutterLocalNotificationsPlugin.show(
+              _notificationId++, nl10ns?.new_message ?? ' ', nl10ns?.you_have_new_message ?? ' ', platformChannelSpecifics);
           break;
       }
     } catch (e) {
-      debugPrint(e);
-      debugPrintStack();
+      _log.e('messageNotification', e);
     }
   }
 
