@@ -922,6 +922,14 @@ class NL10ns {
     return Intl.message('1 hour', name: 'burn_1_hour', desc: '');
   }
 
+  String get burn_6_hour {
+    return Intl.message('6 hours', name: 'burn_6_hour', desc: '');
+  }
+
+  String get burn_12_hour {
+    return Intl.message('12 hours', name: 'burn_12_hour', desc: '');
+  }
+
   String get burn_1_day {
     return Intl.message('1 day', name: 'burn_1_day', desc: '');
   }
@@ -1042,7 +1050,6 @@ class NL10ns {
   String get profile => Intl.message('Profile', name: 'profile');
   String get send_message => Intl.message('Send Message', name: 'send_message');
   String get show_wallet_address_desc => Intl.message('Scan the QR code, you can transfer it to me', name: 'show_wallet_address_desc');
-  String get disappear_desc => Intl.message('Messages received and sent will disappear after the set time.', name: 'disappear_desc');
 
   String get account_switching_completed => Intl.message('Account switching Completed', name: 'account_switching_completed');
   String get storage_text => Intl.message('Storage', name: 'storage_text');
@@ -1057,6 +1064,7 @@ class NL10ns {
   String get weeks => Intl.message('weeks', name: 'weeks');
 
   String get select => Intl.message('Select', name: 'select');
+  String get click_to_change => Intl.message('Click to change', name: 'click_to_change');
   String get top => Intl.message('top', name: 'top');
 
   String burn_after_reading_desc_disappear(String time) {
