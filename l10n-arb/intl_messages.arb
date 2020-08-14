@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-08-13T19:21:54.922077",
+  "@@last_modified": "2020-08-14T15:31:39.836984",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -522,12 +522,6 @@
     "type": "text",
     "placeholders": {}
   },
-  "import_wallet": "Import Wallet",
-  "@import_wallet": {
-    "description": "",
-    "type": "text",
-    "placeholders": {}
-  },
   "export_wallet": "Export Wallet",
   "@export_wallet": {
     "description": "",
@@ -684,7 +678,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "select_wallet_type_desc": "Select whether to create a NKN Mainnet wallet or an Ethereum based wallet to hold ERC-20 tokens. The two are not compatible.",
+  "select_wallet_type_desc": "Select whether to create/import a NKN Mainnet wallet or an Ethereum based wallet to hold ERC-20 tokens. The two are not compatible.",
   "@select_wallet_type_desc": {
     "description": "",
     "type": "text",
@@ -1146,44 +1140,62 @@
     "type": "text",
     "placeholders": {}
   },
-  "no_wallet_import": "Import Exisiting Wallet",
+  "no_wallet_import": "Import Existing Wallet",
   "@no_wallet_import": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "create_nkn_wallet_title": "CREATE MAINNET WALLET",
-  "@create_nkn_wallet_title": {
+  "import_wallet": "Import Wallet",
+  "@import_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "create_ethereum_wallet": "CREATE ETHEREUM WALLET",
+  "create_nkn_wallet": "Create Mainnet Wallet",
+  "@create_nkn_wallet": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "create_ethereum_wallet": "Create Ethereum Wallet",
   "@create_ethereum_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "import_keystore_nkn_wallet_title": "Import with Keystore",
-  "@import_keystore_nkn_wallet_title": {
+  "import_nkn_wallet": "Import Mainnet Wallet",
+  "@import_nkn_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "import_keystore_nkn_wallet_desc": "From your existing wallet, find out how to export keystore as well as associated password, make a backup of both, and then use both to import your existing wallet into nMobile.",
-  "@import_keystore_nkn_wallet_desc": {
+  "import_ethereum_wallet": "Import Ethereum Wallet",
+  "@import_ethereum_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "import_seed_nkn_wallet_title": "Import with Seed",
-  "@import_seed_nkn_wallet_title": {
+  "import_with_keystore_title": "Import with Keystore",
+  "@import_with_keystore_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "import_seed_nkn_wallet_desc": "From your existing wallet, find out how to export Seed (also called \"Secret Seed\"), make a backup copy, and then use it to import your existing wallet into nMobile.",
-  "@import_seed_nkn_wallet_desc": {
+  "import_with_keystore_desc": "From your existing wallet, find out how to export keystore as well as associated password, make a backup of both, and then use both to import your existing wallet into nMobile.",
+  "@import_with_keystore_desc": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "import_with_seed_title": "Import with Seed",
+  "@import_with_seed_title": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "import_with_seed_desc": "From your existing wallet, find out how to export Seed (also called \"Secret Seed\"), make a backup copy, and then use it to import your existing wallet into nMobile.",
+  "@import_with_seed_desc": {
     "description": "",
     "type": "text",
     "placeholders": {}

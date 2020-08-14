@@ -9,8 +9,6 @@ import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_detail.dart';
 import 'package:nmobile/utils/extensions.dart';
 
-enum WalletType { nkn, eth }
-
 class WalletItem extends StatefulWidget {
   final WalletSchema schema;
   final int index;
@@ -101,8 +99,7 @@ class _WalletItemState extends State<WalletItem> {
                             alignment: Alignment.center,
                             padding: const EdgeInsets.only(left: 8, right: 8),
                             decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(8)), color: Color(0x1500CC96)),
-                            child: Text(NL10ns.of(context).mainnet,
-                                style: TextStyle(color: Color(0xFF00CC96), fontSize: 10, fontWeight: FontWeight.bold)),
+                            child: Text(NL10ns.of(context).mainnet, style: TextStyle(color: Color(0xFF00CC96), fontSize: 10, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),

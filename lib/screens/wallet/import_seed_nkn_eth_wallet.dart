@@ -13,16 +13,21 @@ import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/event/eventbus.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:oktoast/oktoast.dart';
 
-class ImportSeedNknWallet extends StatefulWidget {
+class ImportSeedWallet extends StatefulWidget {
+  final WalletType type;
+
+  const ImportSeedWallet({this.type});
+
   @override
-  _ImportSeedNknWalletState createState() => _ImportSeedNknWalletState();
+  _ImportSeedWalletState createState() => _ImportSeedWalletState();
 }
 
-class _ImportSeedNknWalletState extends State<ImportSeedNknWallet> with SingleTickerProviderStateMixin {
+class _ImportSeedWalletState extends State<ImportSeedWallet> with SingleTickerProviderStateMixin {
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
   TextEditingController _seedController = TextEditingController();
@@ -58,14 +63,23 @@ class _ImportSeedNknWalletState extends State<ImportSeedNknWallet> with SingleTi
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
       EasyLoading.show();
-
-      String keystore = await NknWalletPlugin.createWallet(_seed, _password);
-      var json = jsonDecode(keystore);
-      String address = json['Address'];
-      _walletsBloc.add(AddWallet(WalletSchema(address: address, type: 'nkn', name: _name), keystore));
-      EasyLoading.dismiss();
-      showToast(NL10ns.of(context).success);
-      Navigator.pushReplacementNamed(context, AppScreen.routeName);
+      try {
+        if (widget.type == WalletType.nkn) {
+          String keystore = await NknWalletPlugin.createWallet(_seed, _password);
+          var json = jsonDecode(keystore);
+          String address = json['Address'];
+          _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
+        } else {
+          final ethWallet = Ethereum.restoreWalletFromPrivateKey(name: _name, privateKey: _seed, password: _password);
+          Ethereum.saveWallet(ethWallet: ethWallet, walletsBloc: _walletsBloc);
+        }
+        EasyLoading.dismiss();
+        showToast(NL10ns.of(context).success);
+        Navigator.pushReplacementNamed(context, AppScreen.routeName);
+      } catch (e) {
+        EasyLoading.dismiss();
+        showToast(e.message);
+      }
     }
   }
 
@@ -104,7 +118,7 @@ class _ImportSeedNknWalletState extends State<ImportSeedNknWallet> with SingleTi
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8, bottom: 8),
                                   child: Label(
-                                    NL10ns.of(context).import_seed_nkn_wallet_title,
+                                    NL10ns.of(context).import_with_seed_title,
                                     type: LabelType.h2,
                                     textAlign: TextAlign.start,
                                   ),
@@ -112,7 +126,7 @@ class _ImportSeedNknWalletState extends State<ImportSeedNknWallet> with SingleTi
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 32),
                                   child: Label(
-                                    NL10ns.of(context).import_seed_nkn_wallet_desc,
+                                    NL10ns.of(context).import_with_seed_desc,
                                     type: LabelType.bodyRegular,
                                     textAlign: TextAlign.start,
                                     softWrap: true,
@@ -185,7 +199,7 @@ class _ImportSeedNknWalletState extends State<ImportSeedNknWallet> with SingleTi
                     Padding(
                       padding: EdgeInsets.only(left: 30, right: 30),
                       child: Button(
-                        text: NL10ns.of(context).import_wallet,
+                        text: widget.type == WalletType.nkn ? NL10ns.of(context).import_nkn_wallet : NL10ns.of(context).import_ethereum_wallet,
                         disabled: !_formValid,
                         onPressed: next,
                       ),

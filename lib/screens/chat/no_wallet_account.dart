@@ -20,7 +20,7 @@ import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/home.dart';
-import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';
+import 'package:nmobile/screens/wallet/import_nkn_eth_wallet.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 
@@ -135,7 +135,7 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
                                       fontStyle: FontStyle.italic,
                                       decoration: TextDecoration.underline,
                                       onTap: () {
-                                        Navigator.pushNamed(context, ImportNknWalletScreen.routeName);
+                                        Navigator.pushNamed(context, ImportWalletScreen.routeName, arguments: WalletType.nkn);
                                       },
                                     ),
                                   ],
