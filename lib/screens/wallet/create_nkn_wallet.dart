@@ -59,7 +59,7 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: Header(
-        title: NL10ns.of(context).create_nkn_wallet_title,
+        title: NL10ns.of(context).create_nkn_wallet,
         backgroundColor: DefaultTheme.backgroundColor4,
       ),
       body: ConstrainedBox(

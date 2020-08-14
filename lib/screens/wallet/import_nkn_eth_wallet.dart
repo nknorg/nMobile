@@ -4,20 +4,25 @@ import 'package:nmobile/components/tabs.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/event/eventbus.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/scanner.dart';
-import 'package:nmobile/screens/wallet/import_keystore_nkn_wallet.dart';
-import 'package:nmobile/screens/wallet/import_seed_nkn_wallet.dart';
+import 'package:nmobile/screens/wallet/import_keystore_nkn_eth_wallet.dart';
+import 'package:nmobile/screens/wallet/import_seed_nkn_eth_wallet.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
-class ImportNknWalletScreen extends StatefulWidget {
+class ImportWalletScreen extends StatefulWidget {
   static const String routeName = '/wallet/import_nkn_wallet';
 
+  final WalletType type;
+
+  const ImportWalletScreen({this.type});
+
   @override
-  _ImportNknWalletScreenState createState() => _ImportNknWalletScreenState();
+  _ImportWalletScreenState createState() => _ImportWalletScreenState();
 }
 
-class _ImportNknWalletScreenState extends State<ImportNknWalletScreen> with SingleTickerProviderStateMixin {
+class _ImportWalletScreenState extends State<ImportWalletScreen> with SingleTickerProviderStateMixin {
   TabController _tabController;
 
   @override
@@ -31,7 +36,7 @@ class _ImportNknWalletScreenState extends State<ImportNknWalletScreen> with Sing
     List<String> tabs = [NL10ns.of(context).tab_keystore, NL10ns.of(context).tab_seed];
     return Scaffold(
       appBar: Header(
-        title: NL10ns.of(context).create_nkn_wallet_title,
+        title: widget.type == WalletType.eth ? NL10ns.of(context).import_ethereum_wallet : NL10ns.of(context).import_nkn_wallet,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: IconButton(
           icon: loadAssetIconsImage(
@@ -87,8 +92,8 @@ class _ImportNknWalletScreenState extends State<ImportNknWalletScreen> with Sing
                                   child: TabBarView(
                                     controller: _tabController,
                                     children: <Widget>[
-                                      ImportKeystoreNknWallet(),
-                                      ImportSeedNknWallet(),
+                                      ImportKeystoreWallet(type: widget.type),
+                                      ImportSeedWallet(type: widget.type),
                                     ],
                                   ),
                                 ),
