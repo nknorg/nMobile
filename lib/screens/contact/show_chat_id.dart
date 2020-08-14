@@ -35,6 +35,7 @@ class ShowMyChatIDState extends State<ShowMyChatID> with AccountDependsBloc {
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
               child: FlatButton(
                 padding: EdgeInsets.all(16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16), bottom: Radius.circular(16))),
                 onPressed: () {
                   CopyUtils.copyAction(context, accountChatId);
                 },
