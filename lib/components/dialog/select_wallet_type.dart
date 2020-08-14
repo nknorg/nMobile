@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/utils/extensions.dart';
 
 class SelectWalletTypeDialog extends StatefulWidget {

@@ -22,7 +22,7 @@ import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/wallet/create_eth_wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn_wallet.dart';
-import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';
+import 'package:nmobile/screens/wallet/import_nkn_eth_wallet.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
@@ -110,7 +110,9 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
                 }
                 break;
               case 1:
-                Navigator.of(context).pushNamed(ImportNknWalletScreen.routeName);
+                final type = await SelectWalletTypeDialog.of(context).show();
+                assert(type == WalletType.nkn || type == WalletType.eth);
+                Navigator.of(context).pushNamed(ImportWalletScreen.routeName, arguments: type);
                 break;
             }
           },

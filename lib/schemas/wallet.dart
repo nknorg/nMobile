@@ -12,6 +12,8 @@ import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+enum WalletType { nkn, eth }
+
 class WalletSchema extends Equatable with Tag {
   static const String NKN_WALLET = 'nkn';
   static const String ETH_WALLET = 'eth';

@@ -33,7 +33,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
             flex: 1,
             child: (titleChild ??
                     Text(
-                      title ?? '',
+                      title?.toUpperCase() ?? '',
                       textAlign: TextAlign.start,
                       style: TextStyle(fontSize: DefaultTheme.labelFontSize),
                       overflow: TextOverflow.fade,

@@ -365,10 +365,6 @@ class NL10ns {
     return Intl.message('Click to settings', name: 'click_to_settings', desc: '');
   }
 
-  String get import_wallet {
-    return Intl.message('Import Wallet', name: 'import_wallet', desc: '');
-  }
-
   String get export_wallet {
     return Intl.message('Export Wallet', name: 'export_wallet', desc: '');
   }
@@ -474,7 +470,7 @@ class NL10ns {
   }
 
   String get select_wallet_type_desc {
-    return Intl.message('Select whether to create a NKN Mainnet wallet or an Ethereum based wallet to hold ERC-20 tokens. The two are not compatible.',
+    return Intl.message('Select whether to create/import a NKN Mainnet wallet or an Ethereum based wallet to hold ERC-20 tokens. The two are not compatible.',
         name: 'select_wallet_type_desc', desc: '',);
   }
 
@@ -783,31 +779,43 @@ class NL10ns {
   }
 
   String get no_wallet_import {
-    return Intl.message('Import Exisiting Wallet', name: 'no_wallet_import', desc: '');
+    return Intl.message('Import Existing Wallet', name: 'no_wallet_import', desc: '');
   }
 
-  String get create_nkn_wallet_title {
-    return Intl.message('CREATE MAINNET WALLET', name: 'create_nkn_wallet_title', desc: '');
+  String get import_wallet {
+    return Intl.message('Import Wallet', name: 'import_wallet', desc: '');
+  }
+
+  String get create_nkn_wallet {
+    return Intl.message('Create Mainnet Wallet', name: 'create_nkn_wallet', desc: '');
   }
 
   String get create_ethereum_wallet {
-    return Intl.message('CREATE ETHEREUM WALLET', name: 'create_ethereum_wallet', desc: '');
+    return Intl.message('Create Ethereum Wallet', name: 'create_ethereum_wallet', desc: '');
   }
 
-  String get import_keystore_nkn_wallet_title {
-    return Intl.message('Import with Keystore', name: 'import_keystore_nkn_wallet_title', desc: '');
+  String get import_nkn_wallet {
+    return Intl.message('Import Mainnet Wallet', name: 'import_nkn_wallet', desc: '');
   }
 
-  String get import_keystore_nkn_wallet_desc {
-    return Intl.message('From your existing wallet, find out how to export keystore as well as associated password, make a backup of both, and then use both to import your existing wallet into nMobile.', name: 'import_keystore_nkn_wallet_desc', desc: '');
+  String get import_ethereum_wallet {
+    return Intl.message('Import Ethereum Wallet', name: 'import_ethereum_wallet', desc: '');
   }
 
-  String get import_seed_nkn_wallet_title {
-    return Intl.message('Import with Seed', name: 'import_seed_nkn_wallet_title', desc: '');
+  String get import_with_keystore_title {
+    return Intl.message('Import with Keystore', name: 'import_with_keystore_title', desc: '');
   }
 
-  String get import_seed_nkn_wallet_desc {
-    return Intl.message('From your existing wallet, find out how to export Seed (also called "Secret Seed"), make a backup copy, and then use it to import your existing wallet into nMobile.', name: 'import_seed_nkn_wallet_desc', desc: '');
+  String get import_with_keystore_desc {
+    return Intl.message('From your existing wallet, find out how to export keystore as well as associated password, make a backup of both, and then use both to import your existing wallet into nMobile.', name: 'import_with_keystore_desc', desc: '');
+  }
+
+  String get import_with_seed_title {
+    return Intl.message('Import with Seed', name: 'import_with_seed_title', desc: '');
+  }
+
+  String get import_with_seed_desc {
+    return Intl.message('From your existing wallet, find out how to export Seed (also called "Secret Seed"), make a backup copy, and then use it to import your existing wallet into nMobile.', name: 'import_with_seed_desc', desc: '');
   }
 
   String get error_required {

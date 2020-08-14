@@ -7,8 +7,9 @@ import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn_wallet.dart';
-import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';
+import 'package:nmobile/screens/wallet/import_nkn_eth_wallet.dart';
 import 'package:nmobile/utils/image_utils.dart';
 
 class NoWalletScreen extends StatefulWidget {
@@ -97,7 +98,7 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                           backgroundColor: DefaultTheme.primaryColor.withAlpha(20),
                           fontColor: DefaultTheme.primaryColor,
                           onPressed: () {
-                            Navigator.pushNamed(context, ImportNknWalletScreen.routeName);
+                            Navigator.pushNamed(context, ImportWalletScreen.routeName, arguments: WalletType.nkn);
                           },
                         ),
                       ),
