@@ -885,14 +885,10 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                     },
                                     child: Row(
                                       children: <Widget>[
-                                        loadAssetIconsImage(
-                                          'user',
-                                          color: DefaultTheme.primaryColor,
-                                          width: 24,
-                                        ),
+                                        loadAssetIconsImage('user', color: DefaultTheme.primaryColor, width: 24),
                                         SizedBox(width: 10),
                                         Label(
-                                          NL10ns.of(context).edit_contact,
+                                          NL10ns.of(context).nickname,
                                           type: LabelType.bodyRegular,
                                           color: DefaultTheme.fontColor1,
                                           height: 1,
