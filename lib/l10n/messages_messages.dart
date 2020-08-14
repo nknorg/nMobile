@@ -37,6 +37,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "advanced" : MessageLookupByLibrary.simpleMessage("Advanced"),
     "amount" : MessageLookupByLibrary.simpleMessage("Amount"),
     "app_version" : MessageLookupByLibrary.simpleMessage("App Version"),
+    "authenticate_to_access" : MessageLookupByLibrary.simpleMessage("authenticate to access"),
     "auto" : MessageLookupByLibrary.simpleMessage("Auto"),
     "available" : MessageLookupByLibrary.simpleMessage("Available"),
     "average" : MessageLookupByLibrary.simpleMessage("Average"),

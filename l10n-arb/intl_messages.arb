@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-08-14T15:31:39.836984",
+  "@@last_modified": "2020-08-14T19:27:17.650376",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1684,6 +1684,11 @@
   },
   "burn_after_reading_desc": "Your messages will not expire.",
   "@burn_after_reading_desc": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "authenticate_to_access": "authenticate to access",
+  "@authenticate_to_access": {
     "type": "text",
     "placeholders": {}
   }
