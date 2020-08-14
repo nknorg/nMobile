@@ -164,44 +164,37 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
       _LOG.w("timeDuration: ${duration}s");
       return Flex(
         direction: Axis.vertical,
-        children: <Widget>[
+        children: [
           getTipView(),
           Expanded(
             flex: 1,
-            child: Padding(
-              padding: EdgeInsets.only(top: 2, left: 20.w, right: 20.w),
-              child: ListView.builder(
-                padding: EdgeInsets.only(bottom: 100),
-                controller: _scrollController,
-                itemCount: _messagesList.length,
-                itemBuilder: (BuildContext context, int index) {
-                  var item = _messagesList[index];
-                  return BlocBuilder<ContactBloc, ContactState>(
-                    builder: (context, state) {
-                      if (state is ContactLoaded) {
-                        Widget w = null;
-                        if (item.topic != null) {
-                          w = getTopicItemView(item, state);
-                        } else {
-                          w = getSingleChatItemView(item, state);
-                        }
-
-                        return InkWell(
-                          onLongPress: () {
-                            showMenu(item, index);
-                          },
-                          child: Container(
-                            child: w,
-                            decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6.h, color: DefaultTheme.lineColor))),
-                          ),
-                        );
+            child: ListView.builder(
+              padding: EdgeInsets.only(bottom: 72),
+              controller: _scrollController,
+              itemCount: _messagesList.length,
+              itemBuilder: (BuildContext context, int index) {
+                var item = _messagesList[index];
+                return BlocBuilder<ContactBloc, ContactState>(
+                  builder: (context, state) {
+                    if (state is ContactLoaded) {
+                      Widget widget;
+                      if (item.topic != null) {
+                        widget = getTopicItemView(item, state);
                       } else {
-                        return Container();
+                        widget = getSingleChatItemView(item, state);
                       }
-                    },
-                  );
-                },
-              ),
+                      return InkWell(
+                        onLongPress: () {
+                          showMenu(item, index);
+                        },
+                        child: widget,
+                      );
+                    } else {
+                      return Container();
+                    }
+                  },
+                );
+              },
             ),
           ),
         ],
@@ -278,8 +271,8 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                             ),
                             onPressed: () async {
                               if (widget.timerAuth.enabled) {
-                                var address = await BottomDialog.of(context).showInputAddressDialog(
-                                    title: NL10ns.of(context).new_whisper, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
+                                var address = await BottomDialog.of(context)
+                                    .showInputAddressDialog(title: NL10ns.of(context).new_whisper, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
                                 if (address != null) {
                                   ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
                                   await contact.createContact(db);
@@ -608,70 +601,55 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
       },
       child: Container(
-        height: 72.h,
-        padding: const EdgeInsets.all(0),
+        height: 72,
         child: Row(
-          children: <Widget>[
-            Container(
-              padding: EdgeInsets.only(right: 16.w),
-              alignment: Alignment.center,
-              child: item.topic.avatarWidget(
-                db,
-                size: 48,
-                backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
-                fontColor: DefaultTheme.primaryColor,
-              ),
-            ),
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            item.topic
+                .avatarWidget(
+                  db,
+                  size: 48,
+                  backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
+                  fontColor: DefaultTheme.primaryColor,
+                )
+                .pad(l: 20, r: 16),
             Expanded(
-              flex: 1,
               child: Container(
-                alignment: Alignment.centerLeft,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: topicWidget,
-                    ),
-                    Row(
-                      children: <Widget>[
-                        Container(child: Expanded(child: contentWidget)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                padding: EdgeInsets.only(left: 16.w),
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 3.h),
-                      child: Label(
-                        Format.timeFormat(item.lastReceiveTime),
-                        type: LabelType.bodySmall,
-                        fontSize: DefaultTheme.chatTimeSize,
+                decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6, color: DefaultTheme.lineColor))),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(children: topicWidget),
+                          contentWidget.pad(t: 6),
+                        ],
                       ),
                     ),
-                    item.notReadCount > 0
-                        ? Badge(
-                            padding: EdgeInsets.only(left: 8.w, right: 8.w, top: 4.h, bottom: 4.h),
-                            badgeColor: Color(0xFF5458F7),
-                            shape: BadgeShape.square,
-                            borderRadius: 10,
-                            toAnimate: true,
-                            elevation: 0,
-                            badgeContent: Text(item.notReadCount.toString(), style: TextStyle(fontSize: 10, color: DefaultTheme.fontLightColor)),
-                          )
-                        : SizedBox(
-                            height: 16.h,
-                          ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Label(
+                          Format.timeFormat(item.lastReceiveTime),
+                          type: LabelType.bodySmall,
+                          fontSize: DefaultTheme.chatTimeSize,
+                        ).pad(r: 20, b: 6),
+                        item.notReadCount > 0
+                            ? Badge(
+                                padding: EdgeInsets.only(left: 6, right: 6, top: 3, bottom: 3),
+                                badgeColor: Colours.purple_57,
+                                shape: BadgeShape.square,
+                                borderRadius: 24,
+                                toAnimate: true,
+                                elevation: 0,
+                                badgeContent: Text(item.notReadCount.toString(), style: TextStyle(fontSize: 10, color: Colours.white)),
+                              ).pad(r: 20)
+                            : SizedBox(height: 16),
+                      ],
+                    ).pad(l: 12),
                   ],
                 ),
               ),
@@ -744,68 +722,54 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
       },
       child: Container(
-        height: 72.h,
-        padding: const EdgeInsets.only(),
+        height: 72,
         child: Row(
-          children: <Widget>[
-            Container(
-              padding: EdgeInsets.only(right: 16.w),
-              alignment: Alignment.center,
-              child: contact.avatarWidget(
-                db,
-                size: 24,
-                backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
-              ),
-            ),
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            contact
+                .avatarWidget(
+                  db,
+                  size: 24,
+                  backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
+                )
+                .pad(l: 20, r: 16),
             Expanded(
               child: Container(
-                alignment: Alignment.centerLeft,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Label(
-                      contact.name,
-                      type: LabelType.h4,
-                    ),
-                    Row(
-                      children: <Widget>[
-                        Expanded(child: contentWidget),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                padding: EdgeInsets.only(left: 16.w),
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 3.h),
-                      child: Label(
-                        Format.timeFormat(item.lastReceiveTime),
-                        type: LabelType.bodySmall,
-                        fontSize: DefaultTheme.chatTimeSize,
+                decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6, color: DefaultTheme.lineColor))),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Label(contact.name, type: LabelType.h4),
+                          contentWidget.pad(t: 6),
+                        ],
                       ),
                     ),
-                    item.notReadCount > 0
-                        ? Badge(
-                            padding: EdgeInsets.only(left: 8.w, right: 8.w, top: 4.h, bottom: 4.h),
-                            badgeColor: Color(0xFF5458F7),
-                            shape: BadgeShape.square,
-                            borderRadius: 10,
-                            toAnimate: true,
-                            elevation: 0,
-                            badgeContent: Text(item.notReadCount.toString(), style: TextStyle(fontSize: 10, color: DefaultTheme.fontLightColor)),
-                          )
-                        : SizedBox(
-                            height: 16.h,
-                          ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Label(
+                          Format.timeFormat(item.lastReceiveTime),
+                          type: LabelType.bodySmall,
+                          fontSize: DefaultTheme.chatTimeSize,
+                        ).pad(r: 20, b: 6),
+                        item.notReadCount > 0
+                            ? Badge(
+                                padding: EdgeInsets.only(left: 6, right: 6, top: 3, bottom: 3),
+                                badgeColor: Colours.purple_57,
+                                shape: BadgeShape.square,
+                                borderRadius: 24,
+                                toAnimate: true,
+                                elevation: 0,
+                                badgeContent: Text(item.notReadCount.toString(), style: TextStyle(fontSize: 10, color: Colours.white)),
+                              ).pad(r: 20)
+                            : SizedBox(height: 16),
+                      ],
+                    ).pad(l: 12),
                   ],
                 ),
               ),
