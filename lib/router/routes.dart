@@ -5,7 +5,6 @@ import 'package:nmobile/screens/advice_page.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/screens/chat/message.dart';
-import 'package:nmobile/screens/chat/no_connect.dart';
 import 'package:nmobile/screens/chat/photo_page.dart';
 import 'package:nmobile/screens/chat/populai_group_page.dart';
 import 'package:nmobile/screens/common/page/change_update_content.dart';
@@ -22,14 +21,13 @@ import 'package:nmobile/screens/select.dart';
 import 'package:nmobile/screens/settings/channel.dart';
 import 'package:nmobile/screens/wallet/create_eth_wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn_wallet.dart';
-import 'package:nmobile/screens/wallet/import_nkn_wallet.dart';
+import 'package:nmobile/screens/wallet/import_nkn_eth_wallet.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_detail.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
 import 'package:nmobile/screens/wallet/recieve_nkn.dart';
 import 'package:nmobile/screens/wallet/send_erc_20.dart';
 import 'package:nmobile/screens/wallet/send_nkn.dart';
 import 'package:nmobile/screens/wallet/wallet.dart';
-import 'package:nmobile/splash.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
 Map<String, WidgetBuilder> routes = {
@@ -40,7 +38,7 @@ Map<String, WidgetBuilder> routes = {
   PhotoPage.routeName: (BuildContext context, {arguments}) => PhotoPage(arguments: arguments),
   CreateNknWalletScreen.routeName: (BuildContext context) => CreateNknWalletScreen(),
   CreateEthWalletScreen.routeName: (BuildContext context) => CreateEthWalletScreen(),
-  ImportNknWalletScreen.routeName: (BuildContext context) => ImportNknWalletScreen(),
+  ImportWalletScreen.routeName: (BuildContext context, {arguments}) => ImportWalletScreen(type: arguments),
   NknWalletDetailScreen.routeName: (BuildContext context, {arguments}) => NknWalletDetailScreen(arguments: arguments),
   NknWalletExportScreen.routeName: (BuildContext context, {arguments}) => NknWalletExportScreen(arguments: arguments),
   ReceiveNknScreen.routeName: (BuildContext context, {arguments}) => ReceiveNknScreen(arguments: arguments),

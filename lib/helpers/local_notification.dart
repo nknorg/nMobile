@@ -41,6 +41,7 @@ Future _onDidReceiveLocalNotification(int id, String title, String body, String 
 class LocalNotification {
   static FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   static int _notificationId = 0;
+  static int _notificationIdDebug = 1000;
   static final _log = LOG('LocalNotification'.tag());
 
   static init() async {
@@ -64,7 +65,7 @@ class LocalNotification {
 
     var platformChannelSpecifics = NotificationDetails(null, iOSPlatformChannelSpecifics);
     try {
-      await _flutterLocalNotificationsPlugin.show(_notificationId++, title, content, platformChannelSpecifics);
+      await _flutterLocalNotificationsPlugin.show(_notificationIdDebug++, title, content, platformChannelSpecifics);
     } catch (e) {
       debugPrint(e);
       debugPrintStack();
@@ -91,14 +92,14 @@ class LocalNotification {
       final nl10ns = Global.appContext != null ? NL10ns.of(Global.appContext) : null;
       switch (Settings.localNotificationType) {
         case LocalNotificationType.only_name:
-          await _flutterLocalNotificationsPlugin.show(_notificationId++, title, nl10ns?.you_have_new_message ?? ' ', platformChannelSpecifics);
+          await _flutterLocalNotificationsPlugin.show(_genNotificationId, title, nl10ns?.you_have_new_message ?? ' ', platformChannelSpecifics);
           break;
         case LocalNotificationType.name_and_message:
-          await _flutterLocalNotificationsPlugin.show(_notificationId++, title, content, platformChannelSpecifics);
+          await _flutterLocalNotificationsPlugin.show(_genNotificationId, title, content, platformChannelSpecifics);
           break;
         case LocalNotificationType.none:
           await _flutterLocalNotificationsPlugin.show(
-              _notificationId++, nl10ns?.new_message ?? ' ', nl10ns?.you_have_new_message ?? ' ', platformChannelSpecifics);
+              _genNotificationId, nl10ns?.new_message ?? ' ', nl10ns?.you_have_new_message ?? ' ', platformChannelSpecifics);
           break;
       }
     } catch (e) {
@@ -108,5 +109,11 @@ class LocalNotification {
 
   static Future cancelAllNotifications() async {
     await _flutterLocalNotificationsPlugin.cancelAll();
+  }
+
+  static get _genNotificationId {
+    _notificationId++;
+    if (_notificationId > 9) _notificationId = 1;
+    return _notificationId;
   }
 }

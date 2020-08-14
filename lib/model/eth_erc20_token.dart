@@ -5,6 +5,7 @@
  */
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math'; //used for the random number generator
 import 'dart:typed_data';
 
@@ -208,6 +209,12 @@ class Ethereum {
     }
   }
 
+  static EthWallet restoreWalletFromPrivateKey({@required String name, @required String privateKey, @required String password}) {
+    final credentials = walletFromPrivateKey(privateKey: privateKey);
+    final raw = Wallet.createNew(credentials, password, Random.secure());
+    return EthWallet(name, raw);
+  }
+
   static Future<EthWallet> restoreWalletSaved({@required WalletSchema schema, @required String password}) async {
     return restoreWallet(name: schema.name, keystore: await schema.getKeystore(), password: password);
   }
@@ -224,6 +231,18 @@ class Ethereum {
       _LOG.e('verifyPassword', e);
       throw e;
     }
+  }
+
+  static bool isKeystoreValid(String jsonStr) {
+    final data = jsonDecode(jsonStr);
+    // Ensure version is 3, only version that we support at the moment
+    final version = data['version'];
+    if (version != 3) {
+      return false;
+    }
+    final crypto = data['crypto'] ?? data['Crypto'];
+    final kdf = crypto['kdf'] as String;
+    return (kdf == 'pbkdf2' && crypto['kdfparams'] is Map) || (kdf == 'scrypt' && crypto['kdfparams'] is Map);
   }
 
   static Credentials walletFromPrivateKey({@required String privateKey}) {
