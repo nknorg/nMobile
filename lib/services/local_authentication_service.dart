@@ -1,9 +1,11 @@
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:nmobile/l10n/localization_intl.dart';
 
 class LocalAuthenticationService with Tag {
   // ignore: non_constant_identifier_names
@@ -59,7 +61,7 @@ class LocalAuthenticationService with Tag {
     if (isProtectionEnabled) {
       try {
         final success = await _localAuth.authenticateWithBiometrics(
-          localizedReason: 'authenticate to access',
+          localizedReason: NL10ns.of(Global.appContext).authenticate_to_access,
           useErrorDialogs: false,
           stickyAuth: true,
         );

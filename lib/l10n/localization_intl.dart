@@ -1079,6 +1079,8 @@ class NL10ns {
     return Intl.message('Messages sent and received in this conversation will disappear $time after they have been seen.', name: 'burn_after_reading_desc_disappear', desc: '', args: [time]);
   }
   String get burn_after_reading_desc => Intl.message('Your messages will not expire.', name: 'burn_after_reading_desc');
+
+  String get authenticate_to_access => Intl.message('authenticate to access', name: 'authenticate_to_access');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NL10ns> {

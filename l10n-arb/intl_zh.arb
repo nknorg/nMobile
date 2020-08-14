@@ -1662,5 +1662,10 @@
   "@burn_after_reading_desc": {
     "type": "text",
     "placeholders": {}
+  },
+  "authenticate_to_access": "认证以授权访问",
+  "@authenticate_to_access": {
+    "type": "text",
+    "placeholders": {}
   }
 }
