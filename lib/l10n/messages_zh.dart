@@ -37,6 +37,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "advanced" : MessageLookupByLibrary.simpleMessage("高级"),
     "amount" : MessageLookupByLibrary.simpleMessage("数量"),
     "app_version" : MessageLookupByLibrary.simpleMessage("版本号"),
+    "authenticate_to_access" : MessageLookupByLibrary.simpleMessage("认证以授权访问"),
     "auto" : MessageLookupByLibrary.simpleMessage("跟随系统"),
     "available" : MessageLookupByLibrary.simpleMessage("可用"),
     "average" : MessageLookupByLibrary.simpleMessage("平均"),
