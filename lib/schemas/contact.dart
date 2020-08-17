@@ -275,9 +275,8 @@ class ContactSchema {
   static String get tableName => 'Contact';
 
   static create(Database db, int version) async {
-    // create table
-    await db.execute('''
-      CREATE TABLE Contact (
+    final createSqlV2 = '''
+      CREATE TABLE $tableName (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         type TEXT,
         address TEXT,
@@ -290,14 +289,56 @@ class ContactSchema {
         updated_time INTEGER,
         profile_version TEXT,
         profile_expires_at INTEGER
-      )''');
+      )''';
+    final createSqlV3 = '''
+      CREATE TABLE $tableName (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT,
+        address TEXT,
+        first_name TEXT,
+        last_name TEXT,
+        data TEXT,
+        options TEXT,
+        avatar TEXT,
+        created_time INTEGER,
+        updated_time INTEGER,
+        profile_version TEXT,
+        profile_expires_at INTEGER,
+        is_top BOOLEAN DEFAULT 0
+      )''';
+    // create table
+    if (version == 2) {
+      await db.execute(createSqlV2);
+    } else if (version == 3) {
+      await db.execute(createSqlV3);
+    } else {
+      throw UnsupportedError('unsupported create operation version $version.');
+    }
     // index
-    await db.execute('CREATE INDEX index_type ON Contact (type)');
-    await db.execute('CREATE INDEX index_address ON Contact (address)');
-    await db.execute('CREATE INDEX index_first_name ON Contact (first_name)');
-    await db.execute('CREATE INDEX index_last_name ON Contact (last_name)');
-    await db.execute('CREATE INDEX index_created_time ON Contact (created_time)');
-    await db.execute('CREATE INDEX index_updated_time ON Contact (updated_time)');
+    await db.execute('CREATE INDEX index_type ON $tableName (type)');
+    await db.execute('CREATE INDEX index_address ON $tableName (address)');
+    await db.execute('CREATE INDEX index_first_name ON $tableName (first_name)');
+    await db.execute('CREATE INDEX index_last_name ON $tableName (last_name)');
+    await db.execute('CREATE INDEX index_created_time ON $tableName (created_time)');
+    await db.execute('CREATE INDEX index_updated_time ON $tableName (updated_time)');
+  }
+
+  static upgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion == 2 && newVersion == 3) {
+      await db.execute('ALTER TABLE $tableName ADD COLUMN is_top BOOLEAN DEFAULT 0');
+    } else {
+      throw UnsupportedError('unsupported upgrade from $oldVersion to $newVersion.');
+    }
+  }
+
+  static Future<int> setTop(Future<Database> db, String chatIdOther, bool top) async {
+    // Returns the number of changes made
+    return await (await db).update(tableName, {'is_top': top ? 1 : 0}, where: 'address = ?', whereArgs: [chatIdOther]);
+  }
+
+  static Future<bool> getIsTop(Future<Database> db, String chatIdOther) async {
+    var res = await (await db).query(tableName, columns: ['is_top'], where: 'address = ?', whereArgs: [chatIdOther]);
+    return res.length > 0 && res[0]['is_top'] as int == 1;
   }
 
   toEntity(String accountPubkey) {

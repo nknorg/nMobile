@@ -281,6 +281,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "to" : MessageLookupByLibrary.simpleMessage("到"),
     "today" : MessageLookupByLibrary.simpleMessage("今天"),
     "top" : MessageLookupByLibrary.simpleMessage("置顶"),
+    "top_cancel" : MessageLookupByLibrary.simpleMessage("取消置顶"),
     "topic" : MessageLookupByLibrary.simpleMessage("群组"),
     "total_balance" : MessageLookupByLibrary.simpleMessage("余额"),
     "touch_id" : MessageLookupByLibrary.simpleMessage("Touch ID"),

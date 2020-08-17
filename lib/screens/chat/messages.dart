@@ -146,7 +146,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
   }
 
   Future _loadMore() async {
-    var res = await MessageItem.getLastChat(db, limit: _limit, skip: _skip);
+    var res = await MessageItem.getLastChat(db, limit: _limit, offset: _skip);
     if (res != null) {
       _skip += res.length;
       _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
@@ -162,6 +162,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     if (widget.timerAuth.enabled && _messagesList != null && _messagesList.length > 0) {
       final duration = ((DateTime.now().millisecondsSinceEpoch - timeBegin) / 1000.0).toStringAsFixed(3);
       _LOG.w("timeDuration: ${duration}s");
+      _messagesList.sort((a, b) => a.isTop ? (b.isTop ? -1 /*hold position original*/ : -1) : (b.isTop ? 1 : b.lastReceiveTime.compareTo(a.lastReceiveTime)));
       return Flex(
         direction: Axis.vertical,
         children: [
@@ -304,47 +305,40 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         return new SimpleDialog(
           contentPadding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(6))),
-          children: <Widget>[
+          children: [
             SimpleDialogOption(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  SizedBox(height: 10),
-                  Row(
-                    children: <Widget>[
-                      Icon(Icons.vertical_align_top),
-                      SizedBox(width: 10),
-                      Text(NL10ns.of(context).top),
-                    ],
-                  ),
-                  SizedBox(height: 10),
+              child: Row(
+                children: [
+                  Icon(item.isTop ? Icons.vertical_align_bottom : Icons.vertical_align_top).pad(r: 12),
+                  Text(item.isTop ? NL10ns.of(context).top_cancel : NL10ns.of(context).top),
                 ],
-              ),
-              onPressed: () {
+              ).pad(t: 8, b: 4),
+              onPressed: () async {
                 Navigator.of(context).pop();
+                final top = !item.isTop;
+                final numChanges = await (item.topic == null ? ContactSchema.setTop(db, item.targetId, top) : TopicSchema.setTop(db, item.topic.topic, top));
+                if (numChanges > 0) {
+                  setState(() {
+                    item.isTop = top;
+                    _messagesList.remove(item);
+                    _messagesList.insert(0, item);
+                  });
+                }
               },
             ),
             SimpleDialogOption(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  SizedBox(height: 10),
-                  Row(
-                    children: <Widget>[
-                      Icon(Icons.delete_outline),
-                      SizedBox(width: 10),
-                      Text(NL10ns.of(context).delete),
-                    ],
-                  ),
-                  SizedBox(height: 10),
+              child: Row(
+                children: [
+                  Icon(Icons.delete_outline).pad(r: 12),
+                  Text(NL10ns.of(context).delete),
                 ],
-              ),
+              ).pad(t: 4, b: 8),
               onPressed: () {
                 Navigator.of(context).pop();
-                MessageItem.deleteTargetChat(db, item.targetId).then((count) {
-                  if (count > 0) {
+                MessageItem.deleteTargetChat(db, item.targetId).then((numChanges) {
+                  if (numChanges > 0) {
                     setState(() {
-                      _messagesList.removeAt(index);
+                      _messagesList.remove(item);
                     });
                   }
                 });
@@ -535,11 +529,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
               type: LabelType.bodySmall,
               overflow: TextOverflow.ellipsis,
             ),
-            loadAssetIconsImage(
-              'image',
-              width: 14,
-              color: DefaultTheme.fontColor2,
-            ),
+            loadAssetIconsImage('image', width: 14, color: DefaultTheme.fontColor2),
           ],
         ),
       );
@@ -580,20 +570,10 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     }
 
     List<Widget> topicWidget = <Widget>[
-      Label(
-        name,
-        type: LabelType.h4,
-      ),
+      Label(name, type: LabelType.h4),
     ];
     if (item.topic.type == TopicType.private) {
-      topicWidget.insert(
-        0,
-        loadAssetIconsImage(
-          'lock',
-          width: 18.w,
-          color: DefaultTheme.primaryColor,
-        ),
-      );
+      topicWidget.insert(0, loadAssetIconsImage('lock', width: 18.w, color: DefaultTheme.primaryColor));
     }
     return InkWell(
       onTap: () async {
@@ -601,6 +581,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
       },
       child: Container(
+        color: item.isTop ? Colours.light_fb : Colours.transparent,
         height: 72,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -615,7 +596,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                 .pad(l: 20, r: 16),
             Expanded(
               child: Container(
-                decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6, color: DefaultTheme.lineColor))),
+                decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6, color: item.isTop ? Colours.light_e5 : Colours.light_e9))),
                 child: Row(
                   children: [
                     Expanded(
@@ -688,11 +669,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         padding: const EdgeInsets.only(top: 0),
         child: Row(
           children: <Widget>[
-            loadAssetIconsImage(
-              'image',
-              width: 16.w,
-              color: DefaultTheme.fontColor2,
-            ),
+            loadAssetIconsImage('image', width: 16.w, color: DefaultTheme.fontColor2),
           ],
         ),
       );
@@ -722,6 +699,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
       },
       child: Container(
+        color: item.isTop ? Colours.light_fb : Colours.transparent,
         height: 72,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -735,7 +713,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                 .pad(l: 20, r: 16),
             Expanded(
               child: Container(
-                decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6, color: DefaultTheme.lineColor))),
+                decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6, color: item.isTop ? Colours.light_e5 : Colours.light_e9))),
                 child: Row(
                   children: [
                     Expanded(

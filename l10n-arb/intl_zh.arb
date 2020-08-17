@@ -1650,6 +1650,11 @@
     "type": "text",
     "placeholders": {}
   },
+  "top_cancel": "取消置顶",
+  "@top_cancel": {
+    "type": "text",
+    "placeholders": {}
+  },
   "burn_after_reading_desc_disappear": "该对话接收和发送的消息将于 {time} 后消失。",
   "@burn_after_reading_desc_disappear": {
     "description": "",
