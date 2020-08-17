@@ -427,7 +427,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
       sendMsg.content = sendMsg.toDchatSubscribeData();
       _chatBloc.add(SendMessage(sendMsg));
       DateTime now = DateTime.now();
-      var topicSchema = TopicSchema(topic: popular.topic, type: TopicType.public, expiresAt: now.add(blockToExpiresTime(duration)));
+      var topicSchema = TopicSchema(topic: popular.topic, expiresAt: now.add(blockToExpiresTime(duration)));
       await topicSchema.insertOrUpdate(db, accountPubkey);
       topicSchema = await TopicSchema.getTopic(db, popular.topic);
       Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topicSchema));
@@ -563,17 +563,11 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         overflow: TextOverflow.ellipsis,
       );
     }
-
-    String name = item.topic.topicName;
-    if (item.topic.type == TopicType.private) {
-      name = item.topic.topicName + '.' + item.topic.owner.substring(0, 8);
-    }
-
-    List<Widget> topicWidget = <Widget>[
-      Label(name, type: LabelType.h4),
+    List<Widget> topicWidget = [
+      Label(item.topic.shortName, type: LabelType.h4),
     ];
     if (item.topic.type == TopicType.private) {
-      topicWidget.insert(0, loadAssetIconsImage('lock', width: 18.w, color: DefaultTheme.primaryColor));
+      topicWidget.insert(0, loadAssetIconsImage('lock', width: 18, color: DefaultTheme.primaryColor));
     }
     return InkWell(
       onTap: () async {

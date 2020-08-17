@@ -15,16 +15,11 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/permission.dart';
-import 'package:nmobile/helpers/sqlite_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
-import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/data/dchat_account.dart';
-import 'package:nmobile/plugins/nkn_client.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/schemas/subscribers.dart';
-import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/nlog_util.dart';
-import 'package:oktoast/oktoast.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -39,6 +34,7 @@ class TopicSchema {
   int count;
   File avatar;
   String type;
+  String name;
   String owner;
   Map<String, dynamic> data;
   DateTime expiresAt;
@@ -50,8 +46,6 @@ class TopicSchema {
     this.topic,
     this.count,
     this.avatar,
-    this.type,
-    this.owner,
     this.data,
     this.expiresAt,
     this.updateTime,
@@ -64,29 +58,15 @@ class TopicSchema {
 
     if (type == TopicType.private) {
       int index = topic.lastIndexOf('.');
+      name = topic.substring(0, index);
       owner = topic.substring(index + 1);
+    } else {
+      name = topic;
+      owner = null;
     }
   }
 
-  String get topicName {
-    if (isPrivateTopic(topic)) {
-      int index = topic.lastIndexOf('.');
-      return topic.substring(0, index);
-    }
-    return topic;
-  }
-
-  String get subTitle {
-    try {
-      if (isPrivateTopic(topic)) {
-        return topicName + '.' + owner.substring(0, 8);
-      } else {
-        return topic;
-      }
-    } catch (e) {
-      return topic;
-    }
-  }
+  String get shortName => type == TopicType.private ? name + '.' + owner.substring(0, 8) : name;
 
   Widget avatarWidget(
     FutureOr<Database> db, {
@@ -206,18 +186,10 @@ class TopicSchema {
     Global.removeTopicCache(topic);
     String topicHash = genChannelId(topic);
     try {
-      var hash = await account.client.subscribe(topicHash: topicHash, identifier: identifier, duration: duration, fee: fee, meta: meta);
-
-      return hash;
+      // hash
+      return await account.client.subscribe(topicHash: topicHash, identifier: identifier, duration: duration, fee: fee, meta: meta);
     } catch (e) {
-      if (e != null && e is String) {
-        return subscribe(account, topic: topicHash, identifier: identifier, duration: duration, fee: fee, meta: meta);
-      }
-      if (e != null && e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-        showToast(NL10ns.of(Global.appContext).password_wrong);
-      } else {
-        return subscribe(account, topic: topicHash, identifier: identifier, duration: duration, fee: fee, meta: meta);
-      }
+      return null;
     }
   }
 
@@ -582,7 +554,7 @@ class TopicSchema {
   }
 
   toEntity(String accountPubkey) {
-    DateTime now = DateTime.now();
+//    DateTime now = DateTime.now();
     Map<String, dynamic> map = {
       'id': id,
       'topic': topic,
@@ -606,8 +578,6 @@ class TopicSchema {
       topic: e['topic'],
       count: e['count'],
       avatar: e['avatar'] != null ? File(join(Global.applicationRootDirectory.path, e['avatar'])) : null,
-      type: e['type'],
-      owner: e['owner'],
       expiresAt: e['expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['expires_at']) : null,
       updateTime: e['updated_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['updated_time']) : null,
     );
@@ -715,8 +685,7 @@ class TopicSchema {
         int n = await (await db).insert(TopicSchema.tableName, toEntity(accountPubkey));
         return n > 0;
       } else {
-        updateTime = DateTime.now();
-
+//        updateTime = DateTime.now();
         int n = await (await db).update(
           TopicSchema.tableName,
           {
@@ -742,13 +711,13 @@ class TopicSchema {
     }
     try {
 //      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await (await db).query(
+      var list = await (await db).query(
         TopicSchema.tableName,
         columns: ['*'],
         where: 'topic = ?',
         whereArgs: [topic],
       );
-      return TopicSchema.parseEntity(res?.first);
+      return list.length > 0 ? TopicSchema.parseEntity(list.first) : null;
     } catch (e) {
       NLog.e(e);
       return null;

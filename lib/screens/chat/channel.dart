@@ -13,9 +13,9 @@ import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
-import 'package:nmobile/components/button_icon.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
+import 'package:nmobile/components/button_icon.dart';
 import 'package:nmobile/components/chat/bubble.dart';
 import 'package:nmobile/components/chat/system.dart';
 import 'package:nmobile/components/header/header.dart';
@@ -33,6 +33,7 @@ import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/screens/settings/channel.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
@@ -316,9 +317,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> topicWidget = [Label(widget.arguments.topic.topicName, type: LabelType.h3, dark: true)];
+    List<Widget> topicWidget = [Label(widget.arguments.topic.shortName, type: LabelType.h3, dark: true)];
     if (widget.arguments.topic.type == TopicType.private) {
-      topicWidget.insert(0, loadAssetIconsImage('lock', width: 18, color: DefaultTheme.fontLightColor));
+      topicWidget.insert(0, loadAssetIconsImage('lock', width: 18, color: DefaultTheme.fontLightColor).pad(r: 2));
     }
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
@@ -358,7 +359,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
               flex: 1,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
+                children: [
                   Row(children: topicWidget),
                   BlocBuilder<ChannelMembersBloc, ChannelMembersState>(builder: (context, state) {
                     if (state.membersCount != null && state.membersCount.topicName == targetId) {
@@ -378,7 +379,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
                       '${_topicCount ?? '--'} ' + NL10ns.of(context).members,
                       type: LabelType.bodySmall,
                       color: DefaultTheme.riseColor,
-                    );
+                    ).pad(l: widget.arguments.topic.type == TopicType.private ? 20 : 0);
                   })
                 ],
               ),
@@ -387,10 +388,11 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
         ),
         backgroundColor: DefaultTheme.backgroundColor4,
         action: FlatButton(
-            onPressed: () {
-              Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: widget.arguments.topic);
-            },
-            child: loadAssetChatPng('group', width: 22.w)),
+          onPressed: () {
+            Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: widget.arguments.topic);
+          },
+          child: loadAssetChatPng('group', width: 22),
+        ).sized(w: 72),
       ),
       body: GestureDetector(
         onTap: () {

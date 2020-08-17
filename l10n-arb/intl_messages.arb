@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-08-17T13:30:05.566578",
+  "@@last_modified": "2020-08-19T13:02:11.692036",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1062,6 +1062,12 @@
     "type": "text",
     "placeholders": {}
   },
+  "rejected": "rejected",
+  "@rejected": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "debug": "Debug",
   "@debug": {
     "description": "",
@@ -1633,6 +1639,11 @@
     "type": "text",
     "placeholders": {}
   },
+  "owner": "Owner",
+  "@owner": {
+    "type": "text",
+    "placeholders": {}
+  },
   "seconds": "seconds",
   "@seconds": {
     "type": "text",
@@ -1694,6 +1705,11 @@
   },
   "authenticate_to_access": "authenticate to access",
   "@authenticate_to_access": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "something_went_wrong": "Oops, something went wrong! Please try again later.",
+  "@something_went_wrong": {
     "type": "text",
     "placeholders": {}
   }

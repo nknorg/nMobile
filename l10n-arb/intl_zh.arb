@@ -1038,6 +1038,12 @@
     "type": "text",
     "placeholders": {}
   },
+  "rejected": "已踢出",
+  "@rejected": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "debug": "Debug",
   "@debug": {
     "description": "",
@@ -1609,6 +1615,11 @@
     "type": "text",
     "placeholders": {}
   },
+  "owner": "群主",
+  "@owner": {
+    "type": "text",
+    "placeholders": {}
+  },
   "seconds": "秒",
   "@seconds": {
     "type": "text",
@@ -1670,6 +1681,11 @@
   },
   "authenticate_to_access": "认证以授权访问",
   "@authenticate_to_access": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "something_went_wrong": "啊哦~哪里出错了！请稍后重试。",
+  "@something_went_wrong": {
     "type": "text",
     "placeholders": {}
   }
