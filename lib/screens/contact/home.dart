@@ -641,11 +641,6 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
     }
 
     for (var item in _topic) {
-      String name = item.topicName;
-      if (item.type == TopicType.private) {
-        name = item.topicName + '.' + item.owner.substring(0, 8);
-      }
-
       topicList.add(InkWell(
         onTap: () async {
           TopicSchema topic = await TopicSchema.getTopic(db, item.topic);
@@ -701,7 +696,7 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
                                         )
                                       : Container(),
                                   Label(
-                                    name,
+                                    item.shortName,
                                     type: LabelType.h3,
                                     overflow: TextOverflow.ellipsis,
                                   ),

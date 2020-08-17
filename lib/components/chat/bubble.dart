@@ -466,7 +466,7 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
                               DateTime now = DateTime.now();
                               var topicSchema = TopicSchema(
                                   topic: widget.message.content,
-                                  owner: getOwnerPubkeyByTopic(widget.message.content.toString()),
+//                                  owner: getOwnerPubkeyByTopic(widget.message.content.toString()),
                                   expiresAt: now.add(blockToExpiresTime(duration)));
                               await topicSchema.insertOrUpdate(db, accountPubkey);
                               topicSchema = await TopicSchema.getTopic(db, widget.message.content);

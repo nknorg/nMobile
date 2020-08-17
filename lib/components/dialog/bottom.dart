@@ -258,19 +258,19 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  showInputChannelDialog({@required String title}) {
-    return show<String>(
-      builder: (context) => GestureDetector(
-        onTap: () {
-          FocusScope.of(context).requestFocus(FocusNode());
-        },
-        child: InputChannelDialog(
-          title: title,
-          updateHeight: updateHeight,
-        ),
-      ),
-    );
-  }
+//  showInputChannelDialog({@required String title}) {
+//    return show<String>(
+//      builder: (context) => GestureDetector(
+//        onTap: () {
+//          FocusScope.of(context).requestFocus(FocusNode());
+//        },
+//        child: InputChannelDialog(
+//          title: title,
+//          updateHeight: updateHeight,
+//        ),
+//      ),
+//    );
+//  }
 
   showQrcodeDialog({@required String title, String data}) {
     double height = 500;

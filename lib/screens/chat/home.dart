@@ -107,8 +107,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: <Widget>[
-                                Label(NL10ns.of(context).connecting,
-                                    type: LabelType.bodySmall, color: DefaultTheme.fontLightColor.withAlpha(200)),
+                                Label(NL10ns.of(context).connecting, type: LabelType.bodySmall, color: DefaultTheme.fontLightColor.withAlpha(200)),
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 2, left: 4),
                                   child: SpinKitThreeBounce(
@@ -293,6 +292,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                 width: 48,
                                 height: 48,
                                 onPressed: () async {
+                                  Navigator.of(context).pop();
                                   showModalBottomSheet(
                                       context: context,
                                       isScrollControlled: true,
@@ -311,9 +311,8 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                 width: 48,
                                 height: 48,
                                 onPressed: () async {
-                                  var address = await BottomDialog.of(context).showInputAddressDialog(
-                                      title: NL10ns.of(context).new_whisper,
-                                      hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
+                                  var address = await BottomDialog.of(context)
+                                      .showInputAddressDialog(title: NL10ns.of(context).new_whisper, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
                                   if (address != null) {
                                     ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
                                     await contact.createContact(db);
@@ -325,6 +324,8 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                       Navigator.of(context)
                                           .pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
                                     }
+                                  } else {
+                                    Navigator.of(context).pop();
                                   }
                                 },
                               ),

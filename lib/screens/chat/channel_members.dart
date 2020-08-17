@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -30,9 +31,9 @@ import 'package:oktoast/oktoast.dart';
 class ChannelMembersScreen extends StatefulWidget {
   static const String routeName = '/channel/members';
 
-  final TopicSchema arguments;
+  final TopicSchema topic;
 
-  ChannelMembersScreen({this.arguments});
+  ChannelMembersScreen({this.topic});
 
   @override
   _ChannelMembersScreenState createState() => _ChannelMembersScreenState();
@@ -65,35 +66,35 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
 
   initAsync() async {
     NLog.d('initAsync');
-    widget.arguments.querySubscribers(await db).then((data) async {
-      List<ContactSchema> list = List<ContactSchema>();
+//    widget.topic.querySubscribers(await db).then((data) async {
+//      List<ContactSchema> list = List<ContactSchema>();
+//
+//      for (var sub in data) {
+//        var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(sub.addr));
+//        String contactType = ContactType.stranger;
+//        if (sub.addr == accountChatId) {
+//          contactType = ContactType.me;
+//        }
+//        ContactSchema contact = ContactSchema(clientAddress: sub.addr, nknWalletAddress: walletAddress, type: contactType);
+//        await contact.createContact(db);
+//        var getContact = await ContactSchema.getContactByAddress(db, contact.clientAddress);
+//        list.add(getContact);
+//      }
+//
+//      if (mounted) {
+//        setState(() {
+//          _subs = list;
+//        });
+//      }
+//    });
+//    await widget.topic.getTopicCount(account);
 
-      for (var sub in data) {
-        var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(sub.addr));
-        String contactType = ContactType.stranger;
-        if (sub.addr == accountChatId) {
-          contactType = ContactType.me;
-        }
-        ContactSchema contact = ContactSchema(clientAddress: sub.addr, nknWalletAddress: walletAddress, type: contactType);
-        await contact.createContact(db);
-        var getContact = await ContactSchema.getContactByAddress(db, contact.clientAddress);
-        list.add(getContact);
-      }
-
-      if (mounted) {
-        setState(() {
-          _subs = list;
-        });
-      }
-    });
-
-    await widget.arguments.getTopicCount(account);
-
-    var data = await widget.arguments.querySubscribers(await db);
+    var data = await widget.topic.querySubscribers(await db);
     _subs = await _genContactList(data);
-    if (widget.arguments.type == TopicType.private) {
+    _subs = _subs.toSet().toList();
+    if (widget.topic.type == TopicType.private) {
       // get private meta
-      var meta = await widget.arguments.getPrivateOwnerMeta(account);
+      var meta = await widget.topic.getPrivateOwnerMeta(account);
       print(meta);
       NLog.d('==============$meta');
       _permissionHelper = Permission(accept: meta['accept'] ?? [], reject: meta['reject'] ?? []);
@@ -102,7 +103,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
     if (mounted) {
       setState(() {});
     }
-    Global.removeTopicCache(widget.arguments.topic);
+    Global.removeTopicCache(widget.topic.topic);
   }
 
   @override
@@ -114,55 +115,62 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> topicWidget = <Widget>[
-      SizedBox(width: 6.w),
-      Label(widget.arguments.topicName, type: LabelType.h3, dark: true),
-    ];
-    if (widget.arguments.type == TopicType.private) {
-      topicWidget.insert(0, loadAssetIconsImage('lock', width: 22, color: DefaultTheme.fontLightColor));
+    if (_subs.length > 0) {
+      ContactSchema owner = widget.topic.type == TopicType.public ? null : _subs.firstWhere((c) => widget.topic.isOwner(c.clientAddress), orElse: () => null);
+      if (owner != null) _subs.remove(owner);
+      ContactSchema me = _subs.firstWhere((c) => c.clientAddress == accountChatId, orElse: () => null);
+      if (me != null) _subs.remove(me);
+      _subs.sort((a, b) => a.name.compareTo(b.name));
+      if (me != null) _subs.insert(0, me);
+      if (owner != null && owner != me) _subs.insert(0, owner);
     }
-
+    List<Widget> topicWidget = [Label(widget.topic.shortName, type: LabelType.h3, dark: true)];
+    if (widget.topic.type == TopicType.private) {
+      topicWidget.insert(0, loadAssetIconsImage('lock', width: 18, color: DefaultTheme.fontLightColor).pad(r: 2));
+    }
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: NL10ns.of(context).channel_members,
-        leading: BackButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        backgroundColor: DefaultTheme.backgroundColor4,
-        action: FlatButton(
-          child: loadAssetChatPng('group_add', width: 20.w),
-          onPressed: () async {
-            var address = await BottomDialog.of(context).showInputAddressDialog(title: NL10ns.of(context).invite_members, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
-            if (address != null) {
-              acceptPrivateAction(address);
-            }
-          },
-        ),
-      ),
+          title: NL10ns.of(context).channel_members,
+          leading: BackButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          backgroundColor: DefaultTheme.backgroundColor4,
+          action: FlatButton(
+            child: loadAssetChatPng('group_add', width: 20),
+            onPressed: () async {
+              var address = await BottomDialog.of(context)
+                  .showInputAddressDialog(title: NL10ns.of(context).invite_members, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
+              if (address != null) {
+                acceptPrivateAction(address);
+              }
+            },
+          ).sized(w: 72)),
       body: Column(
-        children: <Widget>[
+        children: [
           Container(
             padding: EdgeInsets.only(bottom: 20.h, left: 16.w, right: 16.w),
             child: Row(
-              children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(right: 16.w),
-                  child: widget.arguments.avatarWidget(db,
-                    backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
-                    size: 48,
-                    fontColor: DefaultTheme.fontLightColor,
-                  ),
-                ),
+              children: [
+                widget.topic
+                    .avatarWidget(
+                      db,
+                      backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
+                      size: 48,
+                      fontColor: DefaultTheme.fontLightColor,
+                    )
+                    .pad(r: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      children: topicWidget,
-                    ),
-                    Label('${widget.arguments.count ?? 0} ' + NL10ns.of(context).members, type: LabelType.bodyRegular, color: DefaultTheme.successColor)
+                  children: [
+                    Row(children: topicWidget),
+                    Label(
+                      '${_subs?.length ?? '--'} ' + NL10ns.of(context).members,
+                      type: LabelType.bodyRegular,
+                      color: DefaultTheme.successColor,
+                    ).pad(l: widget.topic.type == TopicType.private ? 20 : 0)
                   ],
                 ),
               ],
@@ -171,7 +179,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
           Expanded(
             child: Container(
               child: BodyBox(
-                padding: EdgeInsets.only(left: 16.w, right: 16.w),
+                padding: 0.pad(),
                 color: DefaultTheme.backgroundLightColor,
                 child: Flex(
                   direction: Axis.vertical,
@@ -184,8 +192,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
                         itemCount: _subs.length,
                         itemExtent: 72,
                         itemBuilder: (BuildContext context, int index) {
-                          var contact = _subs[index];
-                          return getItemView(contact);
+                          return getItemView(_subs[index]);
                         },
                       ),
                     ),
@@ -199,97 +206,46 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
     );
   }
 
-  getNameLabel(ContactSchema contact) {
-    String name = contact.name;
-    if (widget.arguments.type == TopicType.private && contact.clientAddress != accountChatId && widget.arguments.isOwner(accountPubkey)) {
-      var permissionStatus = _permissionHelper?.getSubscriberStatus(contact.clientAddress);
-      name = name + '(${permissionStatus ?? NL10ns.of(context).loading})';
-    }
-    return Expanded(
-      child: Label(
-        name,
-        type: LabelType.h4,
-        overflow: TextOverflow.fade,
-      ),
-    );
-  }
-
   getItemView(ContactSchema contact) {
-    List<Widget> toolBtns = [];
-    if (contact.clientAddress != accountChatId) {
-      toolBtns = getToolBtn(contact);
-    }
-    List<Widget> nameLabel = <Widget>[
-      getNameLabel(contact),
-    ];
+    List<Widget> nameLabel = getNameLabels(contact);
+    List<Widget> toolBtns = getToolBtns(contact);
 
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).pushNamed(
-          ContactScreen.routeName,
-          arguments: contact,
-        );
+        Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: contact);
       },
       child: Container(
-        child: Flex(
-          direction: Axis.horizontal,
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Expanded(
-              flex: 0,
-              child: Container(
-                padding: EdgeInsets.only(right: 16.w),
-                alignment: Alignment.center,
-                child: contact.avatarWidget(db,
-                  size: 22,
+            contact
+                .avatarWidget(
+                  db,
+                  size: 24,
                   backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
-                ),
-              ),
-            ),
+                )
+                .pad(l: 16, r: 16)
+                .center,
             Expanded(
-              flex: 1,
               child: Container(
-                padding: const EdgeInsets.only(),
-                decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: DefaultTheme.lineColor)),
-                ),
-                child: Flex(
-                  direction: Axis.horizontal,
-                  children: <Widget>[
+                decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6, color: Colours.light_e9))),
+                child: Row(
+                  children: [
                     Expanded(
-                      flex: 1,
-                      child: Container(
-                        alignment: Alignment.centerLeft,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Row(children: nameLabel),
-                            SizedBox(height: 6),
-                            Label(
-                              contact.clientAddress,
-                              type: LabelType.label,
-                              overflow: TextOverflow.fade,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 0,
-                      child: Container(
-                        alignment: Alignment.centerRight,
-                        height: double.infinity,
-                        child: Padding(
-                          padding: EdgeInsets.only(left: 4),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: toolBtns,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(children: nameLabel).pad(b: 6),
+                          Label(
+                            contact.clientAddress,
+                            type: LabelType.label,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ),
+                        ],
+                      ).pad(r: toolBtns.isEmpty ? 16 : 0),
                     ),
+                    Row(children: toolBtns),
                   ],
                 ),
               ),
@@ -300,68 +256,99 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
     );
   }
 
-  getToolBtn(ContactSchema contact) {
+  List<Widget> getNameLabels(ContactSchema contact) {
+    String name = contact.name;
+    String option;
+    if (widget.topic.type == TopicType.private) {
+      if (widget.topic.isOwner(contact.clientAddress /*.toPubkey*/)) {
+        if (contact.clientAddress == accountChatId) {
+          option = '(${NL10ns.of(context).you}, ${NL10ns.of(context).owner})';
+        } else {
+          option = '(${NL10ns.of(context).owner})';
+        }
+      } else if (contact.clientAddress == accountChatId) {
+        option = '(${NL10ns.of(context).you})';
+      } else if (widget.topic.isOwner(accountPubkey)) {
+        // Me is owner, but current user is not me.
+        String permissionStatus = _permissionHelper?.getSubscriberStatus(contact.clientAddress);
+        option = permissionStatus == PermissionStatus.accepted ? null : '(${permissionStatus ?? NL10ns.of(context).loading})';
+      }
+    } else if (contact.clientAddress == accountChatId) {
+      option = '(${NL10ns.of(context).you})';
+    }
+    return [
+      Label(name, type: LabelType.h4, overflow: TextOverflow.ellipsis),
+      option == null
+          ? Space.empty
+          : option.contains(PermissionStatus.rejected)
+              ? Text(
+                  option,
+                  style: TextStyle(
+                    fontSize: DefaultTheme.h4FontSize,
+                    color: Colours.pink_f8,
+                    fontWeight: FontWeight.w600,
+//                    decoration: TextDecoration.lineThrough,
+//                    decorationStyle: TextDecorationStyle.solid,
+//                    decorationThickness: 1.5,
+                  ),
+                ).pad(l: 4)
+              : Label(option, type: LabelType.h4, color: Colours.gray_81, fontWeight: FontWeight.w600).pad(l: 4),
+    ];
+  }
+
+  List<Widget> getToolBtns(ContactSchema contact) {
     List<Widget> toolBtns = <Widget>[];
-    if (widget.arguments.type == TopicType.private && widget.arguments.isOwner(accountPubkey)) {
+    if (widget.topic.type == TopicType.private && widget.topic.isOwner(accountPubkey) && contact.clientAddress != accountChatId) {
       var permissionStatus = _permissionHelper?.getSubscriberStatus(contact.clientAddress);
-      Widget checkBtn = GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () async {
-          EasyLoading.show();
-          if (permissionStatus == PermissionStatus.rejected) {
-            await widget.arguments.removeRejectPrivateMember(account, addr: contact.clientAddress);
+
+      acceptAction() async {
+        EasyLoading.show();
+        if (permissionStatus == PermissionStatus.rejected) {
+          await widget.topic.removeRejectPrivateMember(account, addr: contact.clientAddress);
+        }
+        setState(() {
+          _permissionHelper.reject.removeWhere((x) => x['addr'] == contact.clientAddress);
+          if (_permissionHelper.accept == null) {
+            _permissionHelper.accept = [];
           }
-          EasyLoading.dismiss();
-          showToast(NL10ns.of(context).success);
-          setState(() {
-            _permissionHelper.reject.removeWhere((x) => x['addr'] == contact.clientAddress);
-            if (_permissionHelper.accept == null) {
-              _permissionHelper.accept = [];
-            }
-            _permissionHelper.accept.add({'addr': contact.clientAddress});
-          });
-          Future.delayed(Duration(milliseconds: 500), () {
-            widget.arguments.acceptPrivateMember(account, addr: contact.clientAddress);
-          });
-        },
-        child: loadAssetIconsImage(
-          'check',
-          width: 20,
-          color: DefaultTheme.successColor,
-        ).pad(l: 12).sized(w: 32, h: double.infinity),
-      );
-      Widget trashBtn = GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: () async {
-            EasyLoading.show();
-            if (permissionStatus == PermissionStatus.accepted) {
-              await widget.arguments.removeAcceptPrivateMember(account, addr: contact.clientAddress);
-            }
-            EasyLoading.dismiss();
-            showToast(NL10ns.of(context).success);
-            setState(() {
-              _permissionHelper.accept.removeWhere((x) => x['addr'] == contact.clientAddress);
-              if (_permissionHelper.reject == null) {
-                _permissionHelper.reject = [];
-              }
-              _permissionHelper.reject.add({'addr': contact.clientAddress});
-            });
-            Future.delayed(Duration(milliseconds: 500), () {
-              widget.arguments.rejectPrivateMember(account, addr: contact.clientAddress);
-            });
-          },
-          child: Icon(
-            Icons.block,
-            size: 20,
-            color: Colours.red,
-          ).pad(l: 12).sized(w: 32, h: double.infinity));
+          _permissionHelper.accept.add({'addr': contact.clientAddress});
+        });
+        Future.delayed(Duration(milliseconds: 500), () {
+          widget.topic.acceptPrivateMember(account, addr: contact.clientAddress);
+        });
+        EasyLoading.dismiss();
+        showToast(NL10ns.of(context).accepted);
+      }
+
+      rejectAction() async {
+        EasyLoading.show();
+        if (permissionStatus == PermissionStatus.accepted) {
+          await widget.topic.removeAcceptPrivateMember(account, addr: contact.clientAddress);
+        }
+        setState(() {
+          _permissionHelper.accept.removeWhere((x) => x['addr'] == contact.clientAddress);
+          if (_permissionHelper.reject == null) {
+            _permissionHelper.reject = [];
+          }
+          _permissionHelper.reject.add({'addr': contact.clientAddress});
+        });
+        Future.delayed(Duration(milliseconds: 500), () {
+          widget.topic.rejectPrivateMember(account, addr: contact.clientAddress);
+        });
+        EasyLoading.dismiss();
+        showToast(NL10ns.of(context).rejected);
+      }
+
+      ;
+      Widget acceptIcon = loadAssetIconsImage('check', width: 20, color: DefaultTheme.successColor);
+      Widget rejectIcon = Icon(Icons.block, size: 20, color: Colours.red);
       if (permissionStatus == PermissionStatus.accepted) {
-        toolBtns.add(trashBtn);
+        toolBtns.add(InkWell(child: rejectIcon.pad(l: 6, r: 16).center.sized(h: double.infinity), onTap: rejectAction));
       } else if (permissionStatus == PermissionStatus.rejected) {
-        toolBtns.add(checkBtn);
+        toolBtns.add(InkWell(child: acceptIcon.pad(l: 6, r: 16).center.sized(h: double.infinity), onTap: acceptAction));
       } else if (permissionStatus == PermissionStatus.pending) {
-        toolBtns.add(checkBtn);
-        toolBtns.add(trashBtn);
+        toolBtns.add(InkWell(child: acceptIcon.pad(l: 6, r: 8).center.sized(h: double.infinity), onTap: acceptAction));
+        toolBtns.add(InkWell(child: rejectIcon.pad(l: 8, r: 16).center.sized(h: double.infinity), onTap: rejectAction));
       }
     }
     return toolBtns;
@@ -369,14 +356,15 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
 
   acceptPrivateAction(address) async {
     showToast(NL10ns.of(context).invitation_sent);
-    if (widget.arguments.type == TopicType.private) {
-      await widget.arguments.acceptPrivateMember(account, addr: address);
+    if (widget.topic.type == TopicType.private) {
+      await widget.topic.acceptPrivateMember(account, addr: address);
     }
 
-    var sendMsg = MessageSchema.fromSendData(from: accountChatId, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
+    var sendMsg = MessageSchema.fromSendData(from: accountChatId, content: widget.topic.topic, to: address, contentType: ContentType.ChannelInvitation);
     sendMsg.isOutbound = true;
 
-    var sendMsg1 = MessageSchema.fromSendData(from: accountChatId, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
+    var sendMsg1 =
+        MessageSchema.fromSendData(from: accountChatId, topic: widget.topic.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
     sendMsg1.isOutbound = true;
 
     try {

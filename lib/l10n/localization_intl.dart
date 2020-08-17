@@ -722,9 +722,8 @@ class NL10ns {
     return Intl.message('Accept', name: 'accept', desc: '');
   }
 
-  String get accepted {
-    return Intl.message('accepted', name: 'accepted', desc: '');
-  }
+  String get accepted => Intl.message('accepted', name: 'accepted', desc: '');
+  String get rejected => Intl.message('rejected', name: 'rejected', desc: '');
 
   String get debug {
     return Intl.message('Debug', name: 'debug', desc: '');
@@ -1065,6 +1064,8 @@ class NL10ns {
   String get export => Intl.message('Export', name: 'export');
   String get eth_keystore_export_desc => Intl.message('The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.', name: 'eth_keystore_export_desc');
   String get you => Intl.message('You', name: 'you');
+  String get owner => Intl.message('Owner', name: 'owner');
+
   String get seconds => Intl.message('seconds', name: 'seconds');
   String get minutes => Intl.message('minutes', name: 'minutes');
   String get hours => Intl.message('hours', name: 'hours');
@@ -1080,8 +1081,8 @@ class NL10ns {
     return Intl.message('Messages sent and received in this conversation will disappear $time after they have been seen.', name: 'burn_after_reading_desc_disappear', desc: '', args: [time]);
   }
   String get burn_after_reading_desc => Intl.message('Your messages will not expire.', name: 'burn_after_reading_desc');
-
   String get authenticate_to_access => Intl.message('authenticate to access', name: 'authenticate_to_access');
+  String get something_went_wrong => Intl.message('Oops, something went wrong! Please try again later.', name: 'something_went_wrong');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NL10ns> {
