@@ -1,11 +1,12 @@
-import 'package:flutter/cupertino.dart';
-import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/sqlite_storage.dart';
+import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
+import 'package:nmobile/utils/log_tag.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class MessageItem {
+  static LOG _log = LOG('MessageItem'.tag());
+
   String targetId;
   String sender;
   TopicSchema topic;
@@ -13,6 +14,8 @@ class MessageItem {
   String contentType;
   DateTime lastReceiveTime;
   int notReadCount;
+  bool isTop;
+
   MessageItem({
     this.targetId,
     this.sender,
@@ -21,6 +24,7 @@ class MessageItem {
     this.contentType,
     this.lastReceiveTime,
     this.notReadCount,
+    this.isTop = false,
   });
 
   static Future<MessageItem> parseEntity(Future<Database> db, Map e) async {
@@ -34,33 +38,39 @@ class MessageItem {
     );
     if (e['topic'] != null) {
       res.topic = await TopicSchema.getTopic(db, e['topic']);
+      res.isTop = await TopicSchema.getIsTop(db, res.topic.topic);
+    } else {
+      res.isTop = await ContactSchema.getIsTop(db, res.targetId);
     }
     return res;
   }
 
-  static Future<List<MessageItem>> getLastChat(Future<Database> db, {int limit = 20, int skip = 0}) async {
+  static Future<List<MessageItem>> getLastChat(Future<Database> db, {int limit = 20, int offset = 0}) async {
     try {
 //      Database db = SqliteStorage(db: Global.currentChatDb).db;
       var res = await (await db).query(
         '${MessageSchema.tableName} as m',
-        columns: ['m.*', '(SELECT COUNT(id) from ${MessageSchema.tableName} WHERE target_id = m.target_id AND is_outbound = 0 AND is_read = 0) as not_read', 'MAX(send_time)'],
+        columns: [
+          'm.*',
+          '(SELECT COUNT(id) from ${MessageSchema.tableName} WHERE target_id = m.target_id AND is_outbound = 0 AND is_read = 0) as not_read',
+          'MAX(send_time)'
+        ],
         where: "type = ? or type = ? or type = ? or type = ? or type = ?",
-        whereArgs: [ContentType.text, ContentType.textExtension, ContentType.media, ContentType.ChannelInvitation, ContentType.dchatSubscribe], //ContentType.ChannelInvitation
+        whereArgs: [ContentType.text, ContentType.textExtension, ContentType.media, ContentType.ChannelInvitation, ContentType.dchatSubscribe],
+        //ContentType.ChannelInvitation
         groupBy: 'm.target_id',
         orderBy: 'm.send_time desc',
         limit: limit,
-        offset: skip,
+        offset: offset,
       );
       List<MessageItem> list = <MessageItem>[];
       for (var i = 0, length = res.length; i < length; i++) {
         var item = res[i];
         list.add(await MessageItem.parseEntity(db, item));
       }
-
       return list;
     } catch (e) {
-      debugPrint(e);
-      debugPrintStack();
+      _log.e('getLastChat', e);
     }
   }
 
@@ -81,14 +91,12 @@ class MessageItem {
         return null;
       }
     } catch (e) {
-      print('getTargetChat error, e: $e');
+      _log.e('getTargetChat', e);
     }
   }
 
   static Future<int> deleteTargetChat(Future<Database> db, String targetId) async {
-//    Database db = SqliteStorage(db: Global.currentChatDb).db;
-    var count = await (await db).delete(MessageSchema.tableName, where: 'target_id = ?', whereArgs: [targetId]);
-
-    return count;
+    // Returns the number of changes made
+    return await (await db).delete(MessageSchema.tableName, where: 'target_id = ?', whereArgs: [targetId]);
   }
 }
