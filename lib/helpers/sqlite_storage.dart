@@ -45,7 +45,7 @@ class SqliteStorage {
     var db = await openDatabase(
       path,
       password: password,
-      version: 2,
+      version: 3,
       onCreate: (Database db, int version) async {
         await MessageSchema.create(db, version);
         await ContactSchema.create(db, version);
@@ -62,9 +62,12 @@ class SqliteStorage {
               updatedTime: now,
               profileVersion: uuid.v4(),
             ).toEntity(publicKey));
-
         await TopicSchema.create(db, version);
         await SubscribersSchema.create(db, version);
+      },
+      onUpgrade: (Database db, int oldVersion, int newVersion) async {
+        await TopicSchema.upgrade(db, oldVersion, newVersion);
+        await ContactSchema.upgrade(db, oldVersion, newVersion);
       },
     );
     return db;
