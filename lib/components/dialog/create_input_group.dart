@@ -22,6 +22,7 @@ import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:oktoast/oktoast.dart';
 
 class CreateGroupDialog extends StatefulWidget {
   @override
@@ -389,26 +390,18 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
 
     List<TopicSchema> list = await TopicSchema.getAllTopic(db);
     var group = list.firstWhere((x) => x.topic == topic, orElse: () => null);
-    if (group != null) {
-      TopicSchema topic = await TopicSchema.getTopic(db, group.topic);
-      Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
-    } else {
-      String type = TopicType.public;
-      String owner;
-      if (_privateSelected) {
-        if (!isPrivateTopic(topic)) {
-          topic = '$topic.$accountPubkey';
-          owner = accountPubkey;
-        } else {
-          owner = getOwnerPubkeyByTopic(topic);
-        }
-        type = TopicType.private;
-      }
-
+    if (group == null) {
       setState(() {
         _loading = true;
       });
       EasyLoading.show();
+
+      if (_privateSelected) {
+        if (!isPrivateTopic(topic)) {
+          topic = '$topic.$accountPubkey';
+        }
+      }
+
       var duration = 400000;
       var hash = await TopicSchema.subscribe(account, topic: topic, duration: duration);
       if (hash != null) {
@@ -421,24 +414,30 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
         sendMsg.content = sendMsg.toDchatSubscribeData();
         _chatBloc.add(SendMessage(sendMsg));
 
-        DateTime now = DateTime.now();
-        var topicSchema = TopicSchema(topic: topic, type: type, owner: owner, expiresAt: now.add(blockToExpiresTime(duration)));
-        if (type == TopicType.private) {
+        var topicSchema = TopicSchema(topic: topic, expiresAt: DateTime.now().add(blockToExpiresTime(duration)));
+        if (topicSchema.type == TopicType.private) {
           topicSchema.acceptPrivateMember(account, addr: accountPubkey);
         }
 
         await topicSchema.insertOrUpdate(db, accountPubkey);
-        topicSchema = await TopicSchema.getTopic(db, topic);
-        EasyLoading.dismiss();
-        if (type == TopicType.private) {
-          Navigator.of(context).pushReplacementNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.PrivateChannel, topic: topicSchema));
-        } else {
-          Navigator.of(context).pushReplacementNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topicSchema));
-        }
+//        topicSchema = await TopicSchema.getTopic(db, topic);
+        group = topicSchema;
       }
+      EasyLoading.dismiss();
       setState(() {
         _loading = false;
       });
+    }
+    if (group == null) {
+      showToast(NL10ns.of(context).something_went_wrong);
+    } else {
+      Navigator.of(context).pushReplacementNamed(
+        ChatGroupPage.routeName,
+        arguments: ChatSchema(
+          type: group.type == TopicType.private ? ChatType.PrivateChannel : ChatType.Channel,
+          topic: group,
+        ),
+      );
     }
   }
 }

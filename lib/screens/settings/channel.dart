@@ -60,20 +60,12 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> topicWidget = <Widget>[
-      SizedBox(width: 6.w),
-      Label(widget.arguments.topicName, type: LabelType.h3, dark: true),
-    ];
-    if (widget.arguments.type == TopicType.private) {
-      topicWidget.insert(
-        0,
-        SvgPicture.asset(
-          'assets/icons/lock.svg',
-          width: 22,
-          color: DefaultTheme.fontLightColor,
-        ),
-      );
-    }
+//    List<Widget> topicWidget = [
+//      Label(widget.arguments.shortName, type: LabelType.h3, dark: true).pad(l: 6),
+//    ];
+//    if (widget.arguments.type == TopicType.private) {
+//      topicWidget.insert(0, SvgPicture.asset('assets/icons/lock.svg', width: 18, color: DefaultTheme.fontLightColor));
+//    }
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
@@ -100,7 +92,8 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
                     Stack(
                       children: <Widget>[
                         Container(
-                          child: widget.arguments.avatarWidget(db,
+                          child: widget.arguments.avatarWidget(
+                            db,
                             backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
                             size: 64,
                             fontColor: DefaultTheme.fontLightColor,
@@ -231,7 +224,8 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
                                     ),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
                                     onPressed: () async {
-                                      var address = await BottomDialog.of(context).showInputAddressDialog(title: NL10ns.of(context).invite_members, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
+                                      var address = await BottomDialog.of(context).showInputAddressDialog(
+                                          title: NL10ns.of(context).invite_members, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
                                       if (address != null) {
                                         acceptPrivateAction(address);
                                       }
@@ -379,8 +373,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
       await widget.arguments.acceptPrivateMember(account, addr: address);
     }
 
-    var sendMsg = MessageSchema.fromSendData(
-        from: accountChatId, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
+    var sendMsg = MessageSchema.fromSendData(from: accountChatId, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
     sendMsg.isOutbound = true;
 
     var sendMsg1 = MessageSchema.fromSendData(

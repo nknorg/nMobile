@@ -230,15 +230,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
 
     if (message.topic != null) {
       title = '[${message.topic}] $title';
-
-      String topicType = TopicType.public;
-      String owner;
-      if (isPrivateTopic(message.topic)) {
-        topicType = TopicType.private;
-        owner = getOwnerPubkeyByTopic(message.topic);
-        title = TopicSchema(topic: message.topic, type: TopicType.private).subTitle;
+      TopicSchema topicSchema = TopicSchema(topic: message.topic, updateTime: DateTime.now());
+      if (topicSchema.type == TopicType.private) {
+        title = topicSchema.shortName;
       }
-      TopicSchema topicSchema = TopicSchema(topic: message.topic, type: topicType, owner: owner, updateTime: DateTime.now());
       topicSchema.insertIfNoData(db, accountPubkey);
     }
     switch (message.contentType) {

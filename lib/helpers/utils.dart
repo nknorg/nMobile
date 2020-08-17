@@ -271,16 +271,15 @@ Duration blockToExpiresTime(int blockCount) {
 }
 
 bool isPrivateTopic(String topic) {
-  if (RegExp(r'\.[0-9a-f]{64}$').hasMatch(topic)) {
-    return true;
-  }
-  return false;
+  return RegExp(r'\.[0-9a-f]{64}$').hasMatch(topic);
 }
 
 String getOwnerPubkeyByTopic(String topic) {
   int index = topic.lastIndexOf('.');
   if (index > -1) {
-    return topic.substring(index + 1);
+    var pubkey = topic.substring(index + 1);
+    assert(RegExp(r'[0-9a-f]{64}').hasMatch(pubkey));
+    return pubkey;
   }
   return null;
 }
