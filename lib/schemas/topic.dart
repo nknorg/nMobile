@@ -194,7 +194,8 @@ class TopicSchema {
     return accountPubkey == owner;
   }
 
-  static Future<String> subscribe(DChatAccount account, {
+  static Future<String> subscribe(
+    DChatAccount account, {
     String identifier = '',
     String topic,
     int duration = 400000,
@@ -279,7 +280,8 @@ class TopicSchema {
     }
   }
 
-  Future<String> acceptPrivateMember(DChatAccount account, {
+  Future<String> acceptPrivateMember(
+    DChatAccount account, {
     int duration = 400000,
     String fee = '0',
     String addr,
@@ -327,7 +329,8 @@ class TopicSchema {
     }
   }
 
-  Future<String> removeAcceptPrivateMember(DChatAccount account, {
+  Future<String> removeAcceptPrivateMember(
+    DChatAccount account, {
     int duration = 400000,
     String fee = '0',
     String addr,
@@ -372,7 +375,8 @@ class TopicSchema {
   }
 
   /// remove from private group  1.remove from accept 2. join reject
-  Future<String> joinRejectPrivateMember(DChatAccount account, {
+  Future<String> joinRejectPrivateMember(
+    DChatAccount account, {
     int duration = 400000,
     String fee = '0',
     String addr,
@@ -416,7 +420,8 @@ class TopicSchema {
     }
   }
 
-  Future<String> rejectPrivateMember(DChatAccount account, {
+  Future<String> rejectPrivateMember(
+    DChatAccount account, {
     int duration = 400000,
     String fee = '0',
     String addr,
@@ -466,7 +471,8 @@ class TopicSchema {
     }
   }
 
-  Future<String> removeRejectPrivateMember(DChatAccount account, {
+  Future<String> removeRejectPrivateMember(
+    DChatAccount account, {
     int duration = 400000,
     String fee = '0',
     String addr,
@@ -514,8 +520,7 @@ class TopicSchema {
   static String get tableName => 'Topic';
 
   static create(Database db, int version) async {
-    // create table
-    await db.execute('''
+    final createSqlV2 = '''
       CREATE TABLE Topic (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         topic TEXT,
@@ -527,13 +532,53 @@ class TopicSchema {
         expires_at INTEGER,
         updated_time INTEGER,
         options TEXT
-      )''');
+      )''';
+    final createSqlV3 = '''
+      CREATE TABLE Topic (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        topic TEXT,
+        count INTEGER,
+        avatar TEXT,
+        type TEXT,
+        owner TEXT,
+        data TEXT,
+        expires_at INTEGER,
+        updated_time INTEGER,
+        options TEXT,
+        is_top BOOLEAN DEFAULT 0
+      )''';
+    // create table
+    if (version == 2) {
+      await db.execute(createSqlV2);
+    } else if (version == 3) {
+      await db.execute(createSqlV3);
+    } else {
+      throw UnsupportedError('unsupported create operation version $version.');
+    }
     // index
     await db.execute('CREATE INDEX topic_index_topic ON Topic (topic)');
     await db.execute('CREATE INDEX topic_index_count ON Topic (count)');
     await db.execute('CREATE INDEX topic_index_owner ON Topic (owner)');
     await db.execute('CREATE INDEX topic_index_expires_at ON Topic (expires_at)');
     await db.execute('CREATE INDEX topic_index_update_time ON Topic (updated_time)');
+  }
+
+  static upgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion == 2 && newVersion == 3) {
+      await db.execute('ALTER TABLE $tableName ADD COLUMN is_top BOOLEAN DEFAULT 0');
+    } else {
+      throw UnsupportedError('unsupported upgrade from $oldVersion to $newVersion.');
+    }
+  }
+
+  static Future<int> setTop(Future<Database> db, String topic, bool top) async {
+    // Returns the number of changes made
+    return await (await db).update(tableName, {'is_top': top ? 1 : 0}, where: 'topic = ?', whereArgs: [topic]);
+  }
+
+  static Future<bool> getIsTop(Future<Database> db, String topic) async {
+    var res = await (await db).query(tableName, columns: ['is_top'], where: 'topic = ?', whereArgs: [topic]);
+    return res.length > 0 && res[0]['is_top'] as int == 1;
   }
 
   toEntity(String accountPubkey) {
