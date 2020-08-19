@@ -206,6 +206,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         let _id = args["_id"] as! String
         let topicHash = args["topic"] as! String
         let data = args["data"] as! String
+        let maxHoldingSeconds = args["maxHoldingSeconds"] as! Int32
         result(nil)
 
         guard let client = self.multiClient else {
@@ -215,7 +216,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         clientSendQueue.async {
             do {
                 let config: NknMessageConfig = NknMessageConfig.init()
-                config.maxHoldingSeconds = Int32.max
+                config.maxHoldingSeconds = maxHoldingSeconds < 0 ? Int32.max : maxHoldingSeconds
                 config.messageID = NknRandomBytes(Int(NknMessageIDSize), nil)
                 config.noReply = true
 
