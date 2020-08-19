@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/model/db/black_list_repo.dart';
+import 'package:nmobile/model/db/subscriber_repo.dart';
+import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
@@ -45,7 +48,7 @@ class SqliteStorage {
     var db = await openDatabase(
       path,
       password: password,
-      version: 3,
+      version: 5,
       onCreate: (Database db, int version) async {
         await MessageSchema.create(db, version);
         await ContactSchema.create(db, version);
@@ -62,12 +65,24 @@ class SqliteStorage {
               updatedTime: now,
               profileVersion: uuid.v4(),
             ).toEntity(publicKey));
-        await TopicSchema.create(db, version);
-        await SubscribersSchema.create(db, version);
+        if (version <= 3) {
+//          await TopicSchema.create(db, version);
+//          await SubscribersSchema.create(db, version);
+        } else {
+          await TopicRepo.create(db, version);
+          await SubscriberRepo.create(db, version);
+          await BlackListRepo.create(db, version);
+        }
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
-        await TopicSchema.upgrade(db, oldVersion, newVersion);
         await ContactSchema.upgrade(db, oldVersion, newVersion);
+        if (newVersion <= 3) {
+//          await TopicSchema.upgrade(db, oldVersion, newVersion);
+        } else {
+          await TopicRepo.upgradeFromV5(db, oldVersion, newVersion);
+          await SubscriberRepo.upgradeFromV5(db, oldVersion, newVersion);
+          await BlackListRepo.upgradeFromV5(db, oldVersion, newVersion);
+        }
       },
     );
     return db;

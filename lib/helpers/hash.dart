@@ -47,7 +47,7 @@ unleadingHashIt(String str) {
   return str.replaceFirst(RegExp(r'^#*'), '');
 }
 
-genChannelId(String topic) {
+String genTopicHash(String topic) {
   if(topic == null || topic.isEmpty){
     return null;
   }

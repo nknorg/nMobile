@@ -71,6 +71,20 @@ class Space {
   static Container get empty => Container();
 }
 
+extension CheckAnything on dynamic {
+  bool get isNull => this == null;
+
+  bool get nonNull => this != null;
+}
+
+bool nonEmpty(String s) {
+  return s != null && s.isNotEmpty;
+}
+
+bool isEmpty(String s) {
+  return s == null || s.isEmpty;
+}
+
 main() {
   // e.g.
   print('42'.parseInt());
