@@ -276,10 +276,11 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         val _id = call.argument<String>("_id")!!
         val topicHash = call.argument<String>("topic")!!
         val data = call.argument<String>("data")!!
+        val maxHoldingSeconds = call.argument<Int>("maxHoldingSeconds")!!
         result.success(null)
 
         val config = MessageConfig()
-        config.maxHoldingSeconds = Int.MAX_VALUE
+        config.maxHoldingSeconds = if (maxHoldingSeconds < 0) Int.MAX_VALUE else maxHoldingSeconds
         config.messageID = Nkn.randomBytes(Nkn.MessageIDSize)
         config.noReply = true
         msgSendHandler.post {

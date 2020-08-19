@@ -93,14 +93,14 @@ class NknClientProxy with Tag {
     }
   }
 
-  Future<Uint8List> sendText(List<String> dests, String data, {int maxHoldingSeconds = -1}) {
+  Future<Uint8List> sendText(List<String> dests, String data, {int maxHoldingSeconds = Duration.secondsPerDay * 30}) {
     assert(_isConnected);
     return _NknClientPlugin.sendText(dests, data, maxHoldingSeconds: maxHoldingSeconds);
   }
 
-  Future<Uint8List> publishText(String topicHash, String data) {
+  Future<Uint8List> publishText(String topicHash, String data, {int maxHoldingSeconds = Duration.secondsPerDay * 30}) {
     assert(_isConnected);
-    return _NknClientPlugin.publishText(topicHash, data);
+    return _NknClientPlugin.publishText(topicHash, data, maxHoldingSeconds: maxHoldingSeconds);
   }
 
   Future<String> subscribe({
@@ -392,8 +392,8 @@ class _NknClientPlugin {
     return completer.future;
   }
 
-  static Future<Uint8List> publishText(String topic, String data) async {
-    _LOG.i('topic: $topic, data: $data');
+  static Future<Uint8List> publishText(String topic, String data, {int maxHoldingSeconds = -1}) async {
+    _LOG.i('publishText($topic, $data, $maxHoldingSeconds)');
     Completer<Uint8List> completer = Completer<Uint8List>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
@@ -405,6 +405,7 @@ class _NknClientPlugin {
         '_id': id,
         'topic': topic,
         'data': data,
+        'maxHoldingSeconds': maxHoldingSeconds,
       });
     } catch (e) {
       _LOG.e('publish', e);
