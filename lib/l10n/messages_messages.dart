@@ -23,6 +23,10 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static m1(field) => "${field} is required.";
 
+  static m2(other) => "${other} invites You to join group";
+
+  static m3(other) => "You invites ${other} to join group";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
     "ERC_20" : MessageLookupByLibrary.simpleMessage("ERC-20"),
@@ -30,6 +34,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "accept" : MessageLookupByLibrary.simpleMessage("Accept"),
     "accept_invitation" : MessageLookupByLibrary.simpleMessage("Accept Invitation"),
     "accepted" : MessageLookupByLibrary.simpleMessage("accepted"),
+    "accepted_already" : MessageLookupByLibrary.simpleMessage("You have already accepted"),
     "account_switching_completed" : MessageLookupByLibrary.simpleMessage("Account switching Completed"),
     "add_contact" : MessageLookupByLibrary.simpleMessage("Add Contact"),
     "add_new_contact" : MessageLookupByLibrary.simpleMessage("Add New Contact"),
@@ -180,7 +185,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "input_wallet_address" : MessageLookupByLibrary.simpleMessage("Please input Wallet Address"),
     "invitation_sent" : MessageLookupByLibrary.simpleMessage("Invitation sent"),
     "invite_members" : MessageLookupByLibrary.simpleMessage("Invite Members"),
-    "invites_desc_to" : MessageLookupByLibrary.simpleMessage("Invites You to join group"),
+    "invites_desc_me" : m2,
+    "invites_desc_other" : m3,
     "joined_channel" : MessageLookupByLibrary.simpleMessage("Joined group"),
     "keystore" : MessageLookupByLibrary.simpleMessage("Keystore"),
     "language" : MessageLookupByLibrary.simpleMessage("Language"),
@@ -235,6 +241,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "optional" : MessageLookupByLibrary.simpleMessage("optional"),
     "owner" : MessageLookupByLibrary.simpleMessage("Owner"),
     "password_wrong" : MessageLookupByLibrary.simpleMessage("Wallet password or keystore file is wrong."),
+    "pending" : MessageLookupByLibrary.simpleMessage("pending"),
     "pictures" : MessageLookupByLibrary.simpleMessage("Pictures"),
     "placeholder_draft" : MessageLookupByLibrary.simpleMessage("[Draft]"),
     "popular_channels" : MessageLookupByLibrary.simpleMessage("Popular Groups"),
@@ -279,6 +286,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "storage_text" : MessageLookupByLibrary.simpleMessage("Storage"),
     "stranger" : MessageLookupByLibrary.simpleMessage("Stranger"),
     "subscribe" : MessageLookupByLibrary.simpleMessage("Subscribe"),
+    "subscribe_or_waiting" : MessageLookupByLibrary.simpleMessage("Subscribe or Waiting..."),
+    "subscribed" : MessageLookupByLibrary.simpleMessage("Subscribed"),
     "success" : MessageLookupByLibrary.simpleMessage("Success"),
     "tab_keystore" : MessageLookupByLibrary.simpleMessage("Keystore"),
     "tab_seed" : MessageLookupByLibrary.simpleMessage("Seed"),
@@ -296,6 +305,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "transfer_initiated_desc" : MessageLookupByLibrary.simpleMessage("Your transfer is in progress. It could take a few seconds to appear on the blockchain."),
     "type_a_message" : MessageLookupByLibrary.simpleMessage("Type a message"),
     "unsubscribe" : MessageLookupByLibrary.simpleMessage("Leave"),
+    "unsubscribed" : MessageLookupByLibrary.simpleMessage("Leaved"),
     "update_burn_after_reading" : MessageLookupByLibrary.simpleMessage("set the disappearing message timer"),
     "updated_at" : MessageLookupByLibrary.simpleMessage("Updated at"),
     "verify_wallet_password" : MessageLookupByLibrary.simpleMessage("Verify Wallet Password"),

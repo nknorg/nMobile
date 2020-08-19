@@ -5,21 +5,23 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
+import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
-import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/markdown.dart';
+import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/local_storage.dart';
-import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/db/black_list_repo.dart';
+import 'package:nmobile/model/db/subscriber_repo.dart';
+import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/router/custom_router.dart';
 import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/schemas/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
-import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/photo_page.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/theme/popup_menu.dart';
@@ -107,7 +109,6 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
   }
@@ -239,7 +240,6 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
             ),
           );
         }
-
         break;
       case ContentType.textExtension:
         content.add(
@@ -268,9 +268,15 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
         );
         break;
     }
-
     if (widget.message.options != null && widget.message.options['deleteAfterSeconds'] != null) {
       content.add(burnWidget);
+    }
+    // fix by Wei.Chou
+    // Avoid error:
+    // 'package:flutter/src/rendering/sliver_multi_box_adaptor.dart':
+    // Failed assertion: line 549 pos 12: 'child.hasSize': is not true.
+    if (content.isEmpty) {
+      content.add(Space.empty);
     }
     if (widget.contact != null) {
       List<Widget> contents = <Widget>[
@@ -397,23 +403,11 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
   }
 
   getChannelInviteView(String myChatId) {
-    var name;
-    var groupName;
-    TopicSchema topicSchema = TopicSchema(topic: widget.message.content);
-    if (topicSchema.type == TopicType.public) {
-      name = widget.message.content;
-      groupName = widget.message.content;
-    } else {
-      name = widget.message.content.toString().split(".")[1].substring(0, 5);
-      groupName = widget.message.content.toString().split(".")[0] + "." + widget.message.content.toString().split(".")[1].substring(0, 8);
-    }
-
-    var content;
-    if (widget.style != BubbleStyle.Me) {
-      content = NL10ns.of(context).invites_desc_to;
-    } else {
-      content = 'You invites ${widget.message.to.substring(0, 5)} to join group';
-    }
+    Topic topicSpotName = Topic.spotName(name: widget.message.content);
+    // TODO: get other name from contact.
+    final inviteDesc = widget.style != BubbleStyle.Me
+        ? NL10ns.of(context).invites_desc_me(widget.message.to.substring(0, 6))
+        : NL10ns.of(context).invites_desc_other(widget.message.to.substring(0, 6));
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20),
@@ -421,57 +415,63 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Column(
-            children: <Widget>[
-              Label(
-                content,
-                type: LabelType.bodyRegular,
-                color: Color(0xFF2D2D2D),
-              ),
-              Label(
-                groupName,
-                type: LabelType.bodyRegular,
-                color: DefaultTheme.primaryColor,
-              )
+            children: [
+              Label(inviteDesc, type: LabelType.bodyRegular, color: Colours.dark_2d),
+              Label(topicSpotName.shortName, type: LabelType.bodyRegular, color: Colours.blue_0f)
             ],
           ),
           SizedBox(width: 5),
           widget.style == BubbleStyle.Me
-              ? Container()
+              ? Space.empty
               : InkWell(
                   onTap: () async {
+                    final topicName = widget.message.content;
                     BottomDialog.of(Global.appContext).showAcceptDialog(
                         title: NL10ns.of(context).accept_invitation,
-                        subTitle: content,
-                        content: widget.message.content,
-                        onPressed: () async {
-                          showToast(NL10ns.of(context).accepted);
-                          Navigator.pop(context);
-                          var duration = 400000;
-                          List<TopicSchema> topic = await TopicSchema.getAllTopic(db);
-                          var t = topic.firstWhere((item) => item.topic == widget.message.content, orElse: () => null);
-                          if (t != null && !LocalStorage.getUnsubscribeTopicList(myChatId).contains(widget.message.content)) {
-//                            LogUtil.v('joined');
-                          } else {
-                            LocalStorage.removeTopicFromUnsubscribeList(myChatId, widget.message.content);
-                            var hash = await TopicSchema.subscribe(account, topic: widget.message.content, duration: duration);
-                            if (hash != null) {
-                              var sendMsg = MessageSchema.fromSendData(
-                                from: myChatId,
-                                topic: widget.message.content,
-                                contentType: ContentType.dchatSubscribe,
-                              );
-                              sendMsg.isOutbound = true;
-                              sendMsg.content = sendMsg.toDchatSubscribeData();
-                              _chatBloc.add(SendMessage(sendMsg));
-                              DateTime now = DateTime.now();
-                              var topicSchema = TopicSchema(
-                                  topic: widget.message.content,
-//                                  owner: getOwnerPubkeyByTopic(widget.message.content.toString()),
-                                  expiresAt: now.add(blockToExpiresTime(duration)));
-                              await topicSchema.insertOrUpdate(db, accountPubkey);
-                              topicSchema = await TopicSchema.getTopic(db, widget.message.content);
-                            }
-                          }
+                        subTitle: inviteDesc,
+                        content: topicName,
+                        onPressed: () {
+                          GroupChatHelper.subscribeTopic(
+                              account: account,
+                              topicName: topicName,
+                              chatBloc: _chatBloc,
+                              callback: (success, e) async {
+                                if (success) {
+                                  if (topicSpotName.isPrivate) {
+                                    // TODO: delay pull action at least 3 minutes.
+                                    GroupChatPrivateChannel.pullSubscribersPrivateChannel(
+                                        client: account.client,
+                                        topicName: topicName,
+                                        accountPubkey: accountPubkey,
+                                        myChatId: accountChatId,
+                                        repoSub: SubscriberRepo(db),
+                                        repoBlackL: BlackListRepo(db),
+                                        repoTopic: TopicRepo(db),
+                                        membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+                                        needUploadMetaCallback: (topicName) {
+                                          // The owner will not invite himself. In other words, current `account` is not the group owner.
+                                        });
+                                  } else {
+                                    GroupChatPublicChannel.pullSubscribersPublicChannel(
+                                      client: account.client,
+                                      topicName: topicName,
+                                      myChatId: accountChatId,
+                                      repoSub: SubscriberRepo(db),
+                                      repoTopic: TopicRepo(db),
+                                      membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+                                    );
+                                  }
+                                  showToast(NL10ns.of(context).accepted);
+                                  Navigator.pop(context);
+                                } else {
+                                  final topicExists = await TopicRepo(db).getTopicByName(topicName);
+                                  if (topicExists.nonNull) {
+                                    showToast(NL10ns.of(context).accepted_already);
+                                    Navigator.pop(context);
+                                  } else
+                                    showToast(NL10ns.of(context).something_went_wrong);
+                                }
+                              });
                         });
                   },
                   child: Label(

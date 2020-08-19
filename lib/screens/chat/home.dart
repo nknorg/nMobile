@@ -6,7 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
-import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/create_input_group.dart';

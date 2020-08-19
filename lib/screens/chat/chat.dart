@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
-import 'package:nmobile/blocs/client/client_event.dart';
-import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
 import 'package:nmobile/helpers/global.dart';

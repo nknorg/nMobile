@@ -7,7 +7,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
-import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';

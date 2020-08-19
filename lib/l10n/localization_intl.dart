@@ -294,15 +294,18 @@ class NL10ns {
   }
 
   String get wallet_password_mach {
-    return Intl.message('Your password must be at least 8 characters. It is recommended to use a mix of different characters.', name: 'wallet_password_mach', desc: '');
+    return Intl.message('Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
+        name: 'wallet_password_mach', desc: '');
   }
 
   String get wallet_password_helper_text {
-    return Intl.message('Your password must be at least 8 characters. It is recommended to use a mix of different characters.', name: 'wallet_password_helper_text', desc: '');
+    return Intl.message('Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
+        name: 'wallet_password_helper_text', desc: '');
   }
 
   String get wallet_password_error {
-    return Intl.message('Your password must be at least 8 characters. It is recommended to use a mix of different characters.', name: 'wallet_password_error', desc: '');
+    return Intl.message('Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
+        name: 'wallet_password_error', desc: '');
   }
 
   String get password_wrong {
@@ -334,7 +337,8 @@ class NL10ns {
   }
 
   String get delete_wallet_confirm_text {
-    return Intl.message('This will remove the wallet off your local device. Please make sure your wallet is fully backed up or you will lose your funds.', name: 'delete_wallet_confirm_text', desc: '');
+    return Intl.message('This will remove the wallet off your local device. Please make sure your wallet is fully backed up or you will lose your funds.',
+        name: 'delete_wallet_confirm_text', desc: '');
   }
 
   String get delete_message_confirm_title {
@@ -402,7 +406,8 @@ class NL10ns {
   }
 
   String get seed_qrcode_dec {
-    return Intl.message('Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.', name: 'seed_qrcode_dec', desc: '');
+    return Intl.message('Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.',
+        name: 'seed_qrcode_dec', desc: '');
   }
 
   String get to {
@@ -470,8 +475,11 @@ class NL10ns {
   }
 
   String get select_wallet_type_desc {
-    return Intl.message('Select whether to create/import a NKN Mainnet wallet or an Ethereum based wallet to hold ERC-20 tokens. The two are not compatible.',
-        name: 'select_wallet_type_desc', desc: '',);
+    return Intl.message(
+      'Select whether to create/import a NKN Mainnet wallet or an Ethereum based wallet to hold ERC-20 tokens. The two are not compatible.',
+      name: 'select_wallet_type_desc',
+      desc: '',
+    );
   }
 
   String get new_message {
@@ -714,8 +722,12 @@ class NL10ns {
     return Intl.message('members', name: 'members', desc: '');
   }
 
-  String get invites_desc_to {
-    return Intl.message('Invites You to join group', name: 'invites_desc_to', desc: '');
+  String invites_desc_me(String other) {
+    return Intl.message('$other invites You to join group', name: 'invites_desc_me', desc: '', args: [other]);
+  }
+
+  String invites_desc_other(String other) {
+    return Intl.message('You invites $other to join group', name: 'invites_desc_other', desc: '', args: [other]);
   }
 
   String get accept {
@@ -723,19 +735,24 @@ class NL10ns {
   }
 
   String get accepted => Intl.message('accepted', name: 'accepted', desc: '');
+
+  String get accepted_already => Intl.message('You have already accepted', name: 'accepted_already', desc: '');
+
   String get rejected => Intl.message('rejected', name: 'rejected', desc: '');
 
-  String get debug {
-    return Intl.message('Debug', name: 'debug', desc: '');
-  }
+  String get pending => Intl.message('pending', name: 'pending', desc: '');
 
-  String get subscribe {
-    return Intl.message('Subscribe', name: 'subscribe', desc: '');
-  }
+  String get debug => Intl.message('Debug', name: 'debug', desc: '');
 
-  String get unsubscribe {
-    return Intl.message('Leave', name: 'unsubscribe', desc: '');
-  }
+  String get subscribe => Intl.message('Subscribe', name: 'subscribe', desc: '');
+
+  String get subscribe_or_waiting => Intl.message('Subscribe or Waiting...', name: 'subscribe_or_waiting', desc: '');
+
+  String get subscribed => Intl.message('Subscribed', name: 'subscribed', desc: '');
+
+  String get unsubscribe => Intl.message('Leave', name: 'unsubscribe', desc: '');
+
+  String get unsubscribed => Intl.message('Leaved', name: 'unsubscribed', desc: '');
 
   String get menu_wallet {
     return Intl.message('Wallet', name: 'menu_wallet', desc: '');
@@ -806,7 +823,10 @@ class NL10ns {
   }
 
   String get import_with_keystore_desc {
-    return Intl.message('From your existing wallet, find out how to export keystore as well as associated password, make a backup of both, and then use both to import your existing wallet into nMobile.', name: 'import_with_keystore_desc', desc: '');
+    return Intl.message(
+        'From your existing wallet, find out how to export keystore as well as associated password, make a backup of both, and then use both to import your existing wallet into nMobile.',
+        name: 'import_with_keystore_desc',
+        desc: '');
   }
 
   String get import_with_seed_title {
@@ -814,7 +834,10 @@ class NL10ns {
   }
 
   String get import_with_seed_desc {
-    return Intl.message('From your existing wallet, find out how to export Seed (also called "Secret Seed"), make a backup copy, and then use it to import your existing wallet into nMobile.', name: 'import_with_seed_desc', desc: '');
+    return Intl.message(
+        'From your existing wallet, find out how to export Seed (also called "Secret Seed"), make a backup copy, and then use it to import your existing wallet into nMobile.',
+        name: 'import_with_seed_desc',
+        desc: '');
   }
 
   String get error_required {
@@ -1038,50 +1061,82 @@ class NL10ns {
   }
 
   String get d_not_backed_up_desc {
-    return Intl.message('When you update your nMobile software or accidentally uninstall nMobile, your wallet might be lost and you might NOT be able to access your assets! So please take 3 minutes time now to back up all your wallets.', name: 'd_not_backed_up_desc', desc: '');
+    return Intl.message(
+        'When you update your nMobile software or accidentally uninstall nMobile, your wallet might be lost and you might NOT be able to access your assets! So please take 3 minutes time now to back up all your wallets.',
+        name: 'd_not_backed_up_desc',
+        desc: '');
   }
 
   String get go_backup => Intl.message('Go Backup', name: 'go_backup');
+
   String get select_asset_to_backup => Intl.message('Select Asset to Backup', name: 'select_asset_to_backup');
+
   String get create_account => Intl.message('Create Account', name: 'create_account');
+
   String get import_wallet_as_account => Intl.message('Import Wallet as Account', name: 'import_wallet_as_account');
 
   String get transfer_initiated => Intl.message('Transfer Initiated', name: 'transfer_initiated');
-  String get transfer_initiated_desc => Intl.message('Your transfer is in progress. It could take a few seconds to appear on the blockchain.', name: 'transfer_initiated_desc');
+
+  String get transfer_initiated_desc =>
+      Intl.message('Your transfer is in progress. It could take a few seconds to appear on the blockchain.', name: 'transfer_initiated_desc');
+
   String get tip => Intl.message('Tips', name: 'tip');
+
   String get my_details_desc => Intl.message('All subscriptions and tipping will come from your selected wallet.', name: 'my_details_desc');
 
   String get change_default_chat_wallet => Intl.message('Change', name: 'change_default_chat_wallet');
+
   String get coming_soon => Intl.message('Coming Soon...', name: 'coming_soon');
+
   String get my_profile => Intl.message('My Profile', name: 'my_profile');
+
   String get profile => Intl.message('Profile', name: 'profile');
+
   String get send_message => Intl.message('Send Message', name: 'send_message');
+
   String get show_wallet_address_desc => Intl.message('Scan the QR code, you can transfer it to me', name: 'show_wallet_address_desc');
 
   String get account_switching_completed => Intl.message('Account switching Completed', name: 'account_switching_completed');
+
   String get storage_text => Intl.message('Storage', name: 'storage_text');
 
   String get export => Intl.message('Export', name: 'export');
-  String get eth_keystore_export_desc => Intl.message('The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.', name: 'eth_keystore_export_desc');
+
+  String get eth_keystore_export_desc =>
+      Intl.message('The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.',
+          name: 'eth_keystore_export_desc');
+
   String get you => Intl.message('You', name: 'you');
+
   String get owner => Intl.message('Owner', name: 'owner');
 
   String get seconds => Intl.message('seconds', name: 'seconds');
+
   String get minutes => Intl.message('minutes', name: 'minutes');
+
   String get hours => Intl.message('hours', name: 'hours');
+
   String get days => Intl.message('days', name: 'days', desc: '');
+
   String get weeks => Intl.message('weeks', name: 'weeks');
 
   String get select => Intl.message('Select', name: 'select');
+
   String get click_to_change => Intl.message('Click to change', name: 'click_to_change');
+
   String get top => Intl.message('Top', name: 'top');
+
   String get top_cancel => Intl.message('Cancel Top', name: 'top_cancel');
 
   String burn_after_reading_desc_disappear(String time) {
-    return Intl.message('Messages sent and received in this conversation will disappear $time after they have been seen.', name: 'burn_after_reading_desc_disappear', desc: '', args: [time]);
+    return Intl.message('Messages sent and received in this conversation will disappear $time after they have been seen.',
+        name: 'burn_after_reading_desc_disappear', desc: '', args: [time]);
   }
+
   String get burn_after_reading_desc => Intl.message('Your messages will not expire.', name: 'burn_after_reading_desc');
+
   String get authenticate_to_access => Intl.message('authenticate to access', name: 'authenticate_to_access');
+
   String get something_went_wrong => Intl.message('Oops, something went wrong! Please try again later.', name: 'something_went_wrong');
 }
 

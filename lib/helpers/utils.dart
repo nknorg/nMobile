@@ -270,8 +270,9 @@ Duration blockToExpiresTime(int blockCount) {
   return Duration(seconds: totalSeconds);
 }
 
+final privateTopicRegExp = RegExp(r'\.[0-9a-f]{64}$');
 bool isPrivateTopic(String topic) {
-  return RegExp(r'\.[0-9a-f]{64}$').hasMatch(topic);
+  return privateTopicRegExp.hasMatch(topic);
 }
 
 String getOwnerPubkeyByTopic(String topic) {

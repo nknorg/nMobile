@@ -2,17 +2,16 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
-import 'package:nmobile/blocs/chat/chat_bloc.dart';
-import 'package:nmobile/blocs/chat/chat_event.dart' as chatEvent;
-import 'package:nmobile/blocs/client/client_event.dart';
-import 'package:nmobile/blocs/client/client_state.dart';
+import 'package:nmobile/blocs/chat/chat_bloc.dart' as chat;
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/data/dchat_account.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
+import 'package:nmobile/schemas/client.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/wallet.dart';
@@ -23,7 +22,7 @@ import 'package:oktoast/oktoast.dart';
 class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc, Tag {
   @override
   ClientState get initialState => NoConnect();
-  final ChatBloc chatBloc;
+  final chat.ChatBloc chatBloc;
 
   ClientBloc({@required this.chatBloc}) {
     this.listen((state) {
@@ -107,7 +106,7 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
   Stream<ClientState> _mapOnConnectToState(OnConnect event) async* {
     if (state is Connected) {
 //      Global.currentClient = event.client;
-      chatBloc.add(chatEvent.Connect());
+      chatBloc.add(chat.Connect());
       yield Connected(client: event.client);
     }
   }
@@ -118,7 +117,7 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
       print('ClientBloc | OnMessage | Connected -->');
       Connected currentState = (state as Connected);
       currentState.message = event.message;
-      chatBloc.add(chatEvent.ReceiveMessage(currentState.message));
+      chatBloc.add(chat.ReceiveMessage(currentState.message));
     }
   }
 }
@@ -155,4 +154,62 @@ class ClientEventListener extends ClientEventDispatcher {
       );
     }
   }
+}
+
+typedef OnConnectFunc = void Function();
+typedef OnMessageFunc = void Function(String src, String data, Uint8List pid);
+
+abstract class ClientEvent extends Equatable {
+  const ClientEvent();
+
+  @override
+  List<Object> get props => [];
+}
+
+class CreateClient extends ClientEvent {
+  final WalletSchema wallet;
+  final String password;
+
+  const CreateClient(this.wallet, this.password);
+}
+
+class DisConnected extends ClientEvent {}
+
+class ConnectedClient extends ClientEvent {}
+
+class Listen extends ClientEvent {
+  final OnConnectFunc onConnect;
+  final OnMessageFunc onMessage;
+
+  const Listen({this.onConnect, this.onMessage});
+}
+
+class OnConnect extends ClientEvent {
+  final ClientSchema client;
+
+  const OnConnect(this.client);
+}
+
+class OnMessage extends ClientEvent {
+  final MessageSchema message;
+
+  const OnMessage(this.message);
+}
+
+abstract class ClientState extends Equatable {
+  const ClientState();
+
+  @override
+  List<Object> get props => [];
+}
+
+class NoConnect extends ClientState {}
+
+class Connecting extends ClientState {}
+
+class Connected extends ClientState {
+  final ClientSchema client;
+  MessageSchema message;
+
+  Connected({this.client, this.message});
 }

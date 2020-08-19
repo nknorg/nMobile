@@ -45,7 +45,7 @@ class DefaultTheme {
 
   static const Color chatNumberColor = Color(0xFF24F0B6);
 
-  static const List headerBackgroundColor = [
+  static const List<int> headerBackgroundColor = [
     headerBackgroundColor1,
     headerBackgroundColor2,
     headerBackgroundColor3,
@@ -55,7 +55,7 @@ class DefaultTheme {
     headerBackgroundColor7,
   ];
 
-  static const List headerColor = [
+  static const List<int> headerColor = [
     headerColor1,
     headerColor2,
     headerColor3,

@@ -6,21 +6,28 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
+import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
-import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/db/black_list_repo.dart';
+import 'package:nmobile/model/db/subscriber_repo.dart';
+import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/model/popular_channel.dart';
 import 'package:nmobile/schemas/chat.dart';
+import 'package:nmobile/schemas/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:oktoast/oktoast.dart';
 
@@ -383,58 +390,77 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
     );
   }
 
-  createOrJoinGroup(topic) async {
-    if (topic == null || topic.isEmpty) {
+  createOrJoinGroup(topicName) async {
+    if (isEmpty(topicName)) {
       return;
     }
-
-    List<TopicSchema> list = await TopicSchema.getAllTopic(db);
-    var group = list.firstWhere((x) => x.topic == topic, orElse: () => null);
+    if (_privateSelected) {
+      if (!isPrivateTopic(topicName)) {
+        topicName = '$topicName.$accountPubkey';
+      }
+    }
+    final topicRepo = TopicRepo(db);
+    var group = await topicRepo.getTopicByName(topicName);
     if (group == null) {
       setState(() {
         _loading = true;
       });
       EasyLoading.show();
-
-      if (_privateSelected) {
-        if (!isPrivateTopic(topic)) {
-          topic = '$topic.$accountPubkey';
-        }
-      }
-
-      var duration = 400000;
-      var hash = await TopicSchema.subscribe(account, topic: topic, duration: duration);
-      if (hash != null) {
-        var sendMsg = MessageSchema.fromSendData(
-          from: accountChatId,
-          topic: topic,
-          contentType: ContentType.dchatSubscribe,
-        );
-        sendMsg.isOutbound = true;
-        sendMsg.content = sendMsg.toDchatSubscribeData();
-        _chatBloc.add(SendMessage(sendMsg));
-
-        var topicSchema = TopicSchema(topic: topic, expiresAt: DateTime.now().add(blockToExpiresTime(duration)));
-        if (topicSchema.type == TopicType.private) {
-          topicSchema.acceptPrivateMember(account, addr: accountPubkey);
-        }
-
-        await topicSchema.insertOrUpdate(db, accountPubkey);
-//        topicSchema = await TopicSchema.getTopic(db, topic);
-        group = topicSchema;
-      }
+      await GroupChatHelper.subscribeTopic(
+          account: account,
+          topicName: topicName,
+          chatBloc: _chatBloc,
+          callback: (success, e) async {
+            if (success) {
+              final topicSpotName = Topic.spotName(name: topicName);
+              if (topicSpotName.isPrivate) {
+                // TODO: delay pull action at least 3 minutes.
+                GroupChatPrivateChannel.pullSubscribersPrivateChannel(
+                    client: account.client,
+                    topicName: topicName,
+                    accountPubkey: accountPubkey,
+                    myChatId: accountChatId,
+                    repoSub: SubscriberRepo(db),
+                    repoBlackL: BlackListRepo(db),
+                    repoTopic: TopicRepo(db),
+                    membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+                    needUploadMetaCallback: (topicName) {
+                      GroupChatPrivateChannel.uploadPermissionMeta(
+                        client: account.client,
+                        topicName: topicName,
+                        accountPubkey: accountPubkey,
+                        repoSub: SubscriberRepo(db),
+                        repoBlackL: BlackListRepo(db),
+                      );
+                    });
+              } else {
+                GroupChatPublicChannel.pullSubscribersPublicChannel(
+                  client: account.client,
+                  topicName: topicName,
+                  myChatId: accountChatId,
+                  repoSub: SubscriberRepo(db),
+                  repoTopic: TopicRepo(db),
+                  membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+                );
+              }
+              // see below.
+            } else {
+              // see below.
+            }
+          });
       EasyLoading.dismiss();
       setState(() {
         _loading = false;
       });
     }
+    group = await topicRepo.getTopicByName(topicName);
     if (group == null) {
       showToast(NL10ns.of(context).something_went_wrong);
     } else {
       Navigator.of(context).pushReplacementNamed(
         ChatGroupPage.routeName,
         arguments: ChatSchema(
-          type: group.type == TopicType.private ? ChatType.PrivateChannel : ChatType.Channel,
+          type: group.isPrivate ? ChatType.PrivateChannel : ChatType.Channel,
           topic: group,
         ),
       );

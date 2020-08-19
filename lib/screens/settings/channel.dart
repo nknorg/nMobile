@@ -7,7 +7,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
-import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -15,11 +14,13 @@ import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/nkn_image_utils.dart';
-import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/db/subscriber_repo.dart';
+import 'package:nmobile/model/db/topic_repo.dart';
+import 'package:nmobile/schemas/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
@@ -31,7 +32,7 @@ import 'package:oktoast/oktoast.dart';
 class ChannelSettingsScreen extends StatefulWidget {
   static const String routeName = '/settings/channel';
 
-  final TopicSchema arguments;
+  Topic arguments;
 
   ChannelSettingsScreen({this.arguments});
 
@@ -41,18 +42,24 @@ class ChannelSettingsScreen extends StatefulWidget {
 
 class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with AccountDependsBloc {
   ChatBloc _chatBloc;
-  bool isUnSubscribe = false;
+  bool isUnSubscribed = false;
 
   initAsync() async {
-    widget.arguments.getTopicCount(account).then((count) {
-      setState(() {});
+    SubscriberRepo(db).getByTopicAndChatId(widget.arguments.topic, accountChatId).then((subs) {
+      bool unSubs = subs == null;
+      if (isUnSubscribed != unSubs) {
+        if (mounted)
+          setState(() {
+            isUnSubscribed = unSubs;
+          });
+      }
     });
   }
 
   @override
   void initState() {
     super.initState();
-    isUnSubscribe = LocalStorage.getUnsubscribeTopicList(accountPubkey).contains(widget.arguments.topic);
+//    isUnSubscribe = LocalStorage.getUnsubscribeTopicList(accountPubkey).contains(widget.arguments.topic);
     Global.removeTopicCache(widget.arguments.topic);
     initAsync();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
@@ -92,11 +99,11 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
                     Stack(
                       children: <Widget>[
                         Container(
-                          child: widget.arguments.avatarWidget(
-                            db,
-                            backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
+                          child: TopicSchema.avatarWidget(
+                            topicName: widget.arguments.topic,
                             size: 64,
-                            fontColor: DefaultTheme.fontLightColor,
+                            avatar: widget.arguments.avatarUri == null ? null : File(widget.arguments.avatarUri),
+                            options: widget.arguments.options ?? OptionsSchema.random(themeId: widget.arguments.themeId),
                           ),
                         ),
                         Positioned(
@@ -114,11 +121,12 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
                             onPressed: () async {
                               File savedImg = await getHeaderImage(accountPubkey);
                               if (savedImg == null) return;
-
+                              final topicRepo = TopicRepo(db);
+                              await topicRepo.updateAvatar(widget.arguments.topic, savedImg.path);
+//                              final topicSaved = topicRepo.getTopicByName(widget.arguments.topic);
                               setState(() {
-                                widget.arguments.avatar = savedImg;
+                                widget.arguments = widget.arguments.copyWith(avatarUri: savedImg.path);
                               });
-                              await widget.arguments.setAvatar(await db, accountPubkey, savedImg);
                               _chatBloc.add(RefreshMessages());
                             },
                           ),
@@ -202,7 +210,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
                                         SizedBox(width: 20),
                                         Expanded(
                                           child: Label(
-                                            '${widget.arguments.count} ' + NL10ns.of(context).members,
+                                            '${widget.arguments.numSubscribers} ' + NL10ns.of(context).members,
                                             type: LabelType.bodyRegular,
                                             textAlign: TextAlign.right,
                                             color: DefaultTheme.fontColor2,
@@ -271,7 +279,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
   }
 
   getTopicStatusView() {
-    if (!isUnSubscribe) {
+    if (!isUnSubscribed) {
       return Container(
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
         margin: EdgeInsets.only(left: 12, right: 12, top: 10),
@@ -334,57 +342,70 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
 
   unSubscriberAction() async {
     SimpleConfirm(
-            context: context,
-            buttonColor: Colors.red,
-            content: NL10ns.of(context).leave_group_confirm_title,
-            callback: (b) {
-              if (b) {
-                widget.arguments.unsubscribe(account);
-                Navigator.of(context).pop(true);
-              }
-            },
-            buttonText: NL10ns.of(context).unsubscribe)
-        .show();
+      context: context,
+      buttonColor: Colors.red,
+      content: NL10ns.of(context).leave_group_confirm_title,
+      callback: (b) {
+        if (b) {
+          GroupChatHelper.unsubscribeTopic(
+              account: account,
+              topicName: widget.arguments.topic,
+              chatBloc: _chatBloc,
+              callback: (success, e) {
+                if (success) {
+                  showToast(NL10ns.of(context).unsubscribed);
+                  Navigator.of(context).pop(true);
+                } else {
+                  showToast(NL10ns.of(context).something_went_wrong);
+                }
+              });
+        }
+      },
+      buttonText: NL10ns.of(context).unsubscribe,
+    ).show();
   }
 
   subscriberAction() {
-    var duration = 400000;
-    String topic = widget.arguments.topic;
-    LocalStorage.removeTopicFromUnsubscribeList(accountPubkey, topic);
-    Navigator.pop(context);
-    TopicSchema.subscribe(account, topic: topic, duration: duration);
-    var sendMsg = MessageSchema.fromSendData(
-      from: accountChatId,
-      topic: topic,
-      contentType: ContentType.dchatSubscribe,
-    );
-    sendMsg.isOutbound = true;
-    sendMsg.content = sendMsg.toDchatSubscribeData();
-    _chatBloc.add(SendMessage(sendMsg));
-    DateTime now = DateTime.now();
-    // todo topic type
-    var topicSchema = TopicSchema(topic: topic, expiresAt: now.add(blockToExpiresTime(duration)));
-    topicSchema.insertIfNoData(db, accountPubkey);
+    GroupChatHelper.subscribeTopic(
+        account: account,
+        topicName: widget.arguments.topic,
+        chatBloc: _chatBloc,
+        callback: (success, e) {
+          if (success) {
+            showToast(NL10ns.of(context).subscribed);
+            Navigator.pop(context);
+          } else {
+            showToast(NL10ns.of(context).something_went_wrong);
+          }
+        });
   }
 
   acceptPrivateAction(address) async {
-    showToast(NL10ns.of(context).invitation_sent);
-    if (widget.arguments.type == TopicType.private) {
-      await widget.arguments.acceptPrivateMember(account, addr: address);
-    }
+    // TODO: check address is a valid chatId.
+    //if (!isValidChatId(address)) return;
 
-    var sendMsg = MessageSchema.fromSendData(from: accountChatId, content: widget.arguments.topic, to: address, contentType: ContentType.ChannelInvitation);
+    final topic = widget.arguments;
+    // Anyone can invite anyone.
+    var sendMsg = MessageSchema.fromSendData(from: accountChatId, content: topic.topic, to: address, contentType: ContentType.ChannelInvitation);
     sendMsg.isOutbound = true;
+    _chatBloc.add(SendMessage(sendMsg));
+    showToast(NL10ns.of(context).invitation_sent);
 
-    var sendMsg1 = MessageSchema.fromSendData(
-        from: accountChatId, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
-    sendMsg1.isOutbound = true;
-
-    try {
-      _chatBloc.add(SendMessage(sendMsg));
-      _chatBloc.add(SendMessage(sendMsg1));
-    } catch (e) {
-      print('send message error: $e');
+    if (topic.isPrivate && topic.isOwner(accountPubkey) && address != accountChatId) {
+      await GroupChatHelper.moveSubscriberToWhiteList(
+          account: account,
+          topic: topic,
+          chatId: address,
+          callback: () {
+            // refreshMembers();
+          });
     }
+
+    // This message will only be sent when yourself subscribe.
+//    var sendMsg1 = MessageSchema.fromSendData(
+//        from: accountChatId, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
+//    sendMsg1.isOutbound = true;
+
+//      _chatBloc.add(SendMessage(sendMsg1));
   }
 }

@@ -1,11 +1,12 @@
+import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/schemas/contact.dart';
-import 'package:nmobile/schemas/topic.dart';
 
 enum ChatType { PrivateChat, Channel, PrivateChannel }
 
 class ChatSchema {
   ChatType type;
   ContactSchema contact;
-  TopicSchema topic;
+  Topic topic;
+
   ChatSchema({this.type, this.contact, this.topic});
 }

@@ -104,7 +104,7 @@ class NknClientProxy with Tag {
   }
 
   Future<String> subscribe({
-    String identifier,
+    String identifier = '',
     @required String topicHash,
     int duration = 400000,
     String fee = '0',
@@ -120,7 +120,7 @@ class NknClientProxy with Tag {
     );
   }
 
-  Future<String> unsubscribe({String identifier, @required String topicHash, String fee = '0'}) {
+  Future<String> unsubscribe({String identifier = '', @required String topicHash, String fee = '0'}) {
     assert(_clientCreated);
     return _NknClientPlugin.unsubscribe(identifier: identifier, topicHash: topicHash, fee: fee);
   }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
-import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';

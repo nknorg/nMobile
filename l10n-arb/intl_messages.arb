@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-08-19T13:02:11.692036",
+  "@@last_modified": "2020-08-25T19:32:41.620651",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1044,11 +1044,21 @@
     "type": "text",
     "placeholders": {}
   },
-  "invites_desc_to": "Invites You to join group",
-  "@invites_desc_to": {
+  "invites_desc_me": "{other} invites You to join group",
+  "@invites_desc_me": {
     "description": "",
     "type": "text",
-    "placeholders": {}
+    "placeholders": {
+      "other": {}
+    }
+  },
+  "invites_desc_other": "You invites {other} to join group",
+  "@invites_desc_other": {
+    "description": "",
+    "type": "text",
+    "placeholders": {
+      "other": {}
+    }
   },
   "accept": "Accept",
   "@accept": {
@@ -1062,8 +1072,20 @@
     "type": "text",
     "placeholders": {}
   },
+  "accepted_already": "You have already accepted",
+  "@accepted_already": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "rejected": "rejected",
   "@rejected": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "pending": "pending",
+  "@pending": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1080,8 +1102,26 @@
     "type": "text",
     "placeholders": {}
   },
+  "subscribe_or_waiting": "Subscribe or Waiting...",
+  "@subscribe_or_waiting": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "subscribed": "Subscribed",
+  "@subscribed": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "unsubscribe": "Leave",
   "@unsubscribe": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "unsubscribed": "Leaved",
+  "@unsubscribed": {
     "description": "",
     "type": "text",
     "placeholders": {}

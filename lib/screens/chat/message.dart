@@ -9,8 +9,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
-import 'package:nmobile/blocs/chat/chat_event.dart';
-import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button_icon.dart';
 import 'package:nmobile/components/chat/bubble.dart';
@@ -236,7 +234,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
   @override
   void dispose() {
     Global.currentOtherChatId = null;
-    LocalStorage.saveChatUnSendContentFromId(accountPubkey, targetId, content: _sendController.text);
+    LocalStorage.saveChatUnSendContentWithId(accountPubkey, targetId, content: _sendController.text);
     _chatBloc.add(RefreshMessages());
     _chatSubscription?.cancel();
     _scrollController?.dispose();
@@ -253,7 +251,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
   }
 
   _send() async {
-    LocalStorage.saveChatUnSendContentFromId(accountPubkey, targetId);
+    LocalStorage.saveChatUnSendContentWithId(accountPubkey, targetId);
     String text = _sendController.text;
     if (text == null || text.length == 0) return;
     _sendController.clear();
