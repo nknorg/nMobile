@@ -204,7 +204,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
     func publishText(_ call: FlutterMethodCall, _ result: FlutterResult) {
         let args = call.arguments as! [String: Any]
         let _id = args["_id"] as! String
-        let topicHash = args["topic"] as! String
+        let topicHash = args["topicHash"] as! String
         let data = args["data"] as! String
         let maxHoldingSeconds = args["maxHoldingSeconds"] as! Int32
         result(nil)
@@ -236,7 +236,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         let args = call.arguments as! [String: Any]
         let _id = args["_id"] as! String
         let identifier = args["identifier"] as? String ?? ""
-        let topicHash = args["topic"] as! String
+        let topicHash = args["topicHash"] as! String
         let duration = args["duration"] as! Int
         let meta = args["meta"] as? String
         let fee = args["fee"] as? String ?? "0"
@@ -267,7 +267,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         let args = call.arguments as! [String: Any]
         let _id = args["_id"] as! String
         let identifier = args["identifier"] as? String ?? ""
-        let topicHash = args["topic"] as! String
+        let topicHash = args["topicHash"] as! String
         let fee = args["fee"] as? String ?? "0"
         result(nil)
 
@@ -295,7 +295,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
     func getSubscribers(_ call: FlutterMethodCall, _ result: FlutterResult) {
         let args = call.arguments as! [String: Any]
         let _id = args["_id"] as! String
-        let topicHash = args["topic"] as! String
+        let topicHash = args["topicHash"] as! String
         let offset = args["offset"] as? Int ?? 0
         let limit = args["limit"] as? Int ?? 0
         let meta = args["meta"] as? Bool ?? true
@@ -311,6 +311,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
                 let res: NknSubscribers? = try client.getSubscribers(topicHash, offset: offset, limit: limit, meta: meta, txPool: txPool)
                 let mapPro = MapProtocol.init()
                 mapPro.result["_id"] = _id
+                res?.subscribersInTxPool?.range(mapPro)
                 res?.subscribers?.range(mapPro)
                 self.clientEventSink!(mapPro.result)
             } catch let error {
@@ -322,7 +323,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
     func getSubscription(_ call: FlutterMethodCall, _ result: FlutterResult) {
         let args = call.arguments as! [String: Any]
         let _id = args["_id"] as! String
-        let topicHash = args["topic"] as! String
+        let topicHash = args["topicHash"] as! String
         let subscriber = args["subscriber"] as! String
         result(nil)
 
@@ -347,7 +348,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
     func getSubscribersCount(_ call: FlutterMethodCall, _ result: FlutterResult) {
         let args = call.arguments as! [String: Any]
         let _id = args["_id"] as! String
-        let topicHash = args["topic"] as! String
+        let topicHash = args["topicHash"] as! String
         result(nil)
 
         guard let client = self.multiClient else {
