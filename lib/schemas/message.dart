@@ -27,8 +27,9 @@ class ContentType {
   static const String media = 'media';
   static const String contact = 'contact';
   static const String eventContactOptions = 'event:contactOptions';
-  static const String dchatSubscribe = 'dchat/subscribe';
+//  static const String dchatSubscribe = 'dchat/subscribe';
   static const String eventSubscribe = 'event:subscribe';
+  static const String eventUnsubscribe = 'event:unsubscribe';
   static const String ChannelInvitation = 'event:channelInvitation';
 }
 
@@ -190,17 +191,17 @@ class MessageSchema extends Equatable {
     return jsonEncode(data);
   }
 
-  toDchatSubscribeData() {
-    Map data = {
-      'id': msgId,
-      'contentType': ContentType.dchatSubscribe,
-      'content': 'Joined channel.',
-      'topic': topic,
-      'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-    };
-
-    return jsonEncode(data);
-  }
+//  toDchatSubscribeData() {
+//    Map data = {
+//      'id': msgId,
+//      'contentType': ContentType.dchatSubscribe,
+//      'content': 'Joined channel.',
+//      'topic': topic,
+//      'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+//    };
+//
+//    return jsonEncode(data);
+//  }
 
   toEventSubscribeData() {
     Map data = {

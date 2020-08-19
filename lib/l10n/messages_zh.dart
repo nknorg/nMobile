@@ -23,6 +23,10 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static m1(field) => "${field} 必填";
 
+  static m2(other) => "${other} 邀请您加入群聊";
+
+  static m3(other) => "您邀请 ${other} 加入群聊";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
     "ERC_20" : MessageLookupByLibrary.simpleMessage("ERC-20"),
@@ -30,6 +34,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "accept" : MessageLookupByLibrary.simpleMessage("接受"),
     "accept_invitation" : MessageLookupByLibrary.simpleMessage("接受邀请"),
     "accepted" : MessageLookupByLibrary.simpleMessage("已接受"),
+    "accepted_already" : MessageLookupByLibrary.simpleMessage("您已接受邀请"),
     "account_switching_completed" : MessageLookupByLibrary.simpleMessage("已完成账号切换"),
     "add_contact" : MessageLookupByLibrary.simpleMessage("添加联系人"),
     "add_new_contact" : MessageLookupByLibrary.simpleMessage("添加联系人"),
@@ -176,7 +181,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "input_wallet_address" : MessageLookupByLibrary.simpleMessage("请输入钱包地址"),
     "invitation_sent" : MessageLookupByLibrary.simpleMessage("已发出邀请"),
     "invite_members" : MessageLookupByLibrary.simpleMessage("邀请加入"),
-    "invites_desc_to" : MessageLookupByLibrary.simpleMessage("邀请您加入"),
+    "invites_desc_me" : m2,
+    "invites_desc_other" : m3,
     "joined_channel" : MessageLookupByLibrary.simpleMessage("加入群聊"),
     "keystore" : MessageLookupByLibrary.simpleMessage("Keystore"),
     "language" : MessageLookupByLibrary.simpleMessage("语言"),
@@ -231,6 +237,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "optional" : MessageLookupByLibrary.simpleMessage("可选"),
     "owner" : MessageLookupByLibrary.simpleMessage("群主"),
     "password_wrong" : MessageLookupByLibrary.simpleMessage("钱包密码或keystore错误"),
+    "pending" : MessageLookupByLibrary.simpleMessage("待定"),
     "pictures" : MessageLookupByLibrary.simpleMessage("图片"),
     "placeholder_draft" : MessageLookupByLibrary.simpleMessage("[草稿]"),
     "popular_channels" : MessageLookupByLibrary.simpleMessage("推荐群组"),
@@ -275,6 +282,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "storage_text" : MessageLookupByLibrary.simpleMessage("存储"),
     "stranger" : MessageLookupByLibrary.simpleMessage("陌生人"),
     "subscribe" : MessageLookupByLibrary.simpleMessage("加入"),
+    "subscribe_or_waiting" : MessageLookupByLibrary.simpleMessage("加入或等待片刻..."),
+    "subscribed" : MessageLookupByLibrary.simpleMessage("已加入"),
     "success" : MessageLookupByLibrary.simpleMessage("成功"),
     "tab_keystore" : MessageLookupByLibrary.simpleMessage("Keystore"),
     "tab_seed" : MessageLookupByLibrary.simpleMessage("Seed"),
@@ -292,6 +301,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "transfer_initiated_desc" : MessageLookupByLibrary.simpleMessage("您的转帐正在进行中，可能需要花一些时间才能出现在区块链上。"),
     "type_a_message" : MessageLookupByLibrary.simpleMessage("请输入"),
     "unsubscribe" : MessageLookupByLibrary.simpleMessage("退出"),
+    "unsubscribed" : MessageLookupByLibrary.simpleMessage("已退出"),
     "update_burn_after_reading" : MessageLookupByLibrary.simpleMessage("设置了阅后即焚时间"),
     "updated_at" : MessageLookupByLibrary.simpleMessage("更新"),
     "verify_wallet_password" : MessageLookupByLibrary.simpleMessage("验证钱包密码"),

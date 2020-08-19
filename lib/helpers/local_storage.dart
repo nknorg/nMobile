@@ -129,7 +129,7 @@ class LocalStorage {
     return SpUtil.getString(to + accountPubkey);
   }
 
-  static saveChatUnSendContentFromId(String accountPubkey, String to, {String content}) async {
+  static saveChatUnSendContentWithId(String accountPubkey, String to, {String content}) async {
     if (to.length == 0) return;
     if (content == null || content.length == 0) {
       SpUtil.remove(to + accountPubkey);
@@ -137,35 +137,35 @@ class LocalStorage {
     SpUtil.putString(to + accountPubkey, content);
   }
 
-  static saveUnsubscribeTopic(String accountPubkey, String topic) {
-    List<String> list = SpUtil.getStringList(UN_SUBSCRIBE_LIST + accountPubkey, defValue: <String>[]);
-    if (!list.contains(topic)) {
-      list.add(topic);
-      SpUtil.putStringList(UN_SUBSCRIBE_LIST + accountPubkey, list);
-    }
-  }
-
-  static removeTopicFromUnsubscribeList(String accountPubkey, String topic) {
-    List<String> list = getUnsubscribeTopicList(accountPubkey);
-    if (list.contains(topic)) {
-      list.remove(topic);
-      SpUtil.putStringList(UN_SUBSCRIBE_LIST + accountPubkey, list);
-    }
-  }
-
-  static List<String> getUnsubscribeTopicList(String accountPubkey) {
-    return SpUtil.getStringList(UN_SUBSCRIBE_LIST + accountPubkey, defValue: <String>[]);
-  }
-
-  //leave group list cache
-  static bool isBlank(String accountPubkey, String topic) {
-    List<String> list = getUnsubscribeTopicList(accountPubkey);
-    if (list == null || list.length == 0) return false;
-
-    if (list.contains(topic)) {
-      return true;
-    } else {
-      return false;
-    }
-  }
+//  static saveUnsubscribeTopic(String accountPubkey, String topic) {
+//    List<String> list = SpUtil.getStringList(UN_SUBSCRIBE_LIST + accountPubkey, defValue: <String>[]);
+//    if (!list.contains(topic)) {
+//      list.add(topic);
+//      SpUtil.putStringList(UN_SUBSCRIBE_LIST + accountPubkey, list);
+//    }
+//  }
+//
+//  static removeTopicFromUnsubscribeList(String accountPubkey, String topic) {
+//    List<String> list = getUnsubscribeTopicList(accountPubkey);
+//    if (list.contains(topic)) {
+//      list.remove(topic);
+//      SpUtil.putStringList(UN_SUBSCRIBE_LIST + accountPubkey, list);
+//    }
+//  }
+//
+//  static List<String> getUnsubscribeTopicList(String accountPubkey) {
+//    return SpUtil.getStringList(UN_SUBSCRIBE_LIST + accountPubkey, defValue: <String>[]);
+//  }
+//
+//  //leave group list cache
+//  static bool isBlank(String accountPubkey, String topic) {
+//    List<String> list = getUnsubscribeTopicList(accountPubkey);
+//    if (list == null || list.length == 0) return false;
+//
+//    if (list.contains(topic)) {
+//      return true;
+//    } else {
+//      return false;
+//    }
+//  }
 }

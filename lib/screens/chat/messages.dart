@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:badges/badges.dart';
@@ -6,11 +7,10 @@ import 'package:flustars/flustars.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
-import 'package:nmobile/blocs/chat/chat_event.dart';
-import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
@@ -21,13 +21,15 @@ import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/local_storage.dart';
-import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/model/popular_channel.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/schemas/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/message_item.dart';
+import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/channel.dart';
@@ -116,6 +118,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     final duration = ((DateTime.now().millisecondsSinceEpoch - timeBegin) / 1000.0).toStringAsFixed(3);
     _LOG.w("initAsync | timeDuration: ${duration}s");
     var res = await MessageItem.getLastChat(db, limit: _limit);
+    if (res == null) return;
     _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
     final duration2 = ((DateTime.now().millisecondsSinceEpoch - timeBegin) / 1000.0).toStringAsFixed(3);
     _LOG.w("initAsync | timeDuration2: ${duration2}s");
@@ -316,7 +319,9 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
               onPressed: () async {
                 Navigator.of(context).pop();
                 final top = !item.isTop;
-                final numChanges = await (item.topic == null ? ContactSchema.setTop(db, item.targetId, top) : TopicSchema.setTop(db, item.topic.topic, top));
+                final numChanges = await (item.topic == null
+                    ? ContactSchema.setTop(db, item.targetId, top)
+                    : TopicRepo(db).updateIsTop(item.topic.topic, top)); // TopicSchema.setTop(db, item.topic.topic, top));
                 if (numChanges > 0) {
                   setState(() {
                     item.isTop = top;
@@ -414,27 +419,21 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
   }
 
   _subscription(PopularChannel popular) async {
-    var duration = 400000;
-    try {
-      TopicSchema.subscribe(account, topic: popular.topic, duration: duration);
-//      if (hash != null) {
-      var sendMsg = MessageSchema.fromSendData(
-        from: accountChatId,
-        topic: popular.topic,
-        contentType: ContentType.dchatSubscribe,
-      );
-      sendMsg.isOutbound = true;
-      sendMsg.content = sendMsg.toDchatSubscribeData();
-      _chatBloc.add(SendMessage(sendMsg));
-      DateTime now = DateTime.now();
-      var topicSchema = TopicSchema(topic: popular.topic, expiresAt: now.add(blockToExpiresTime(duration)));
-      await topicSchema.insertOrUpdate(db, accountPubkey);
-      topicSchema = await TopicSchema.getTopic(db, popular.topic);
-      Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topicSchema));
-//      }
-    } catch (e) {
-      showToast(NL10ns.of(context).failure);
-    }
+    EasyLoading.show();
+    GroupChatHelper.subscribeTopic(
+        account: account,
+        topicName: popular.topic,
+        chatBloc: _chatBloc,
+        callback: (success, e) async {
+          EasyLoading.dismiss();
+          if (success) {
+            final topic = await TopicRepo(db).getTopicByName(popular.topic);
+            assert(topic.nonNull);
+            Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
+          } else {
+            showToast(NL10ns.of(context).something_went_wrong);
+          }
+        });
   }
 
   getTipView() {
@@ -541,14 +540,6 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         overflow: TextOverflow.ellipsis,
       );
     } else if (item.contentType == ContentType.eventSubscribe) {
-      return Container();
-//      contentWidget = Label(
-//        item.content,
-//        type: LabelType.bodySmall,
-//        maxLines: 1,
-//        overflow: TextOverflow.ellipsis,
-//      );
-    } else if (item.contentType == ContentType.dchatSubscribe) {
       contentWidget = Label(
         NL10ns.of(context).joined_channel,
         maxLines: 1,
@@ -571,7 +562,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     }
     return InkWell(
       onTap: () async {
-        TopicSchema topic = await TopicSchema.getTopic(db, item.topic.topic);
+        final topic = await TopicRepo(db).getTopicByName(item.topic.topic);
         Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
       },
       child: Container(
@@ -580,14 +571,13 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            item.topic
-                .avatarWidget(
-                  db,
-                  size: 48,
-                  backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
-                  fontColor: DefaultTheme.primaryColor,
-                )
-                .pad(l: 20, r: 16),
+//            item.topic
+            TopicSchema.avatarWidget(
+              topicName: item.topic.topic,
+              size: 48,
+              avatar: item.topic.avatarUri == null ? null : File(item.topic.avatarUri),
+              options: item.topic.options ?? OptionsSchema.random(themeId: item.topic.themeId),
+            ).pad(l: 20, r: 16),
             Expanded(
               child: Container(
                 decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6, color: item.isTop ? Colours.light_e5 : Colours.light_e9))),
@@ -674,7 +664,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         type: LabelType.bodySmall,
         overflow: TextOverflow.ellipsis,
       );
-    } else if (item.contentType == ContentType.dchatSubscribe) {
+    } else if (item.contentType == ContentType.eventSubscribe) {
       contentWidget = Label(
         NL10ns.of(context).joined_channel,
         maxLines: 1,

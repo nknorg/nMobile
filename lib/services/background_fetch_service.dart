@@ -4,8 +4,6 @@ import 'dart:io';
 import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/client/client_bloc.dart';
-import 'package:nmobile/blocs/client/client_event.dart';
-import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/helpers/global.dart';

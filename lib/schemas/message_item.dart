@@ -1,6 +1,6 @@
+import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
-import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -9,7 +9,7 @@ class MessageItem {
 
   String targetId;
   String sender;
-  TopicSchema topic;
+  Topic topic;
   String content;
   String contentType;
   DateTime lastReceiveTime;
@@ -37,8 +37,9 @@ class MessageItem {
       notReadCount: e['not_read'] as int,
     );
     if (e['topic'] != null) {
-      res.topic = await TopicSchema.getTopic(db, e['topic']);
-      res.isTop = await TopicSchema.getIsTop(db, res.topic.topic);
+      final repoTopic = TopicRepo(db);
+      res.topic = await repoTopic.getTopicByName(e['topic']);
+      res.isTop = res.topic?.isTop ?? false;
     } else {
       res.isTop = await ContactSchema.getIsTop(db, res.targetId);
     }
@@ -56,7 +57,7 @@ class MessageItem {
           'MAX(send_time)'
         ],
         where: "type = ? or type = ? or type = ? or type = ? or type = ?",
-        whereArgs: [ContentType.text, ContentType.textExtension, ContentType.media, ContentType.ChannelInvitation, ContentType.dchatSubscribe],
+        whereArgs: [ContentType.text, ContentType.textExtension, ContentType.media, ContentType.ChannelInvitation, ContentType.eventSubscribe],
         //ContentType.ChannelInvitation
         groupBy: 'm.target_id',
         orderBy: 'm.send_time desc',
