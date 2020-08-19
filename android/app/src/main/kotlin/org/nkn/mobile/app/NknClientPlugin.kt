@@ -274,7 +274,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
 
     private fun publishText(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id")!!
-        val topicHash = call.argument<String>("topic")!!
+        val topicHash = call.argument<String>("topicHash")!!
         val data = call.argument<String>("data")!!
         val maxHoldingSeconds = call.argument<Int>("maxHoldingSeconds")!!
         result.success(null)
@@ -306,7 +306,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
     private fun subscribe(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id")!!
         val identifier = call.argument<String>("identifier") ?: ""
-        val topicHash = call.argument<String>("topic")!!
+        val topicHash = call.argument<String>("topicHash")!!
         val duration = call.argument<Int>("duration")!!
         val meta = call.argument<String>("meta")
         val fee = call.argument<String>("fee") ?: "0"
@@ -337,7 +337,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
     private fun unsubscribe(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id")!!
         val identifier = call.argument<String>("identifier") ?: ""
-        val topicHash = call.argument<String>("topic")!!
+        val topicHash = call.argument<String>("topicHash")!!
         val fee = call.argument<String>("fee") ?: "0"
         result.success(null)
 
@@ -365,7 +365,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
 
     private fun getSubscribers(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id")!!
-        val topicHash = call.argument<String>("topic")!!
+        val topicHash = call.argument<String>("topicHash")!!
         val offset = call.argument<Int>("offset") ?: 0
         val limit = call.argument<Int>("limit") ?: 0
         val meta = call.argument<Boolean>("meta") ?: true
@@ -379,6 +379,11 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 val map = HashMap<String, String>()
                 map.put("_id", _id!!)
 
+                subscribers.subscribersInTxPool.range { chatId, value ->
+                    val meta = value?.trim() ?: ""
+                    map[chatId] = meta
+                    true
+                }
                 subscribers.subscribers.range { chatId, value ->
                     val meta = value?.trim() ?: ""
                     map.put(chatId, meta)
@@ -398,7 +403,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
 
     private fun getSubscription(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id")!!
-        val topicHash = call.argument<String>("topic")!!
+        val topicHash = call.argument<String>("topicHash")!!
         val subscriber = call.argument<String>("subscriber")!!
         result.success(null)
 
@@ -424,7 +429,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
 
     private fun getSubscribersCount(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id")!!
-        val topicHash = call.argument<String>("topic")!!
+        val topicHash = call.argument<String>("topicHash")!!
         result.success(null)
 
         subscribersHandler.post {

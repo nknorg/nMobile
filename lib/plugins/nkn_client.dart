@@ -113,7 +113,7 @@ class NknClientProxy with Tag {
     assert(_clientCreated);
     return _NknClientPlugin.subscribe(
       identifier: identifier,
-      topic: topicHash,
+      topicHash: topicHash,
       duration: duration,
       fee: fee,
       meta: meta,
@@ -122,16 +122,15 @@ class NknClientProxy with Tag {
 
   Future<String> unsubscribe({String identifier, @required String topicHash, String fee = '0'}) {
     assert(_clientCreated);
-    return _NknClientPlugin.unsubscribe(identifier: identifier, topic: topicHash, fee: fee);
+    return _NknClientPlugin.unsubscribe(identifier: identifier, topicHash: topicHash, fee: fee);
   }
 
-  Future<int> getSubscribersCount(String topicHashed) {
+  Future<int> getSubscribersCount(String topicHash) {
     assert(_clientCreated);
-    return _NknClientPlugin.getSubscribersCount(topicHashed);
+    return _NknClientPlugin.getSubscribersCount(topicHash);
   }
 
   Future<Map<String, dynamic>> getSubscribers({
-    @required String topic,
     @required String topicHash,
     int offset = 0,
     int limit = 10000,
@@ -139,8 +138,7 @@ class NknClientProxy with Tag {
     bool txPool = true,
   }) {
     assert(_clientCreated);
-    return _NknClientPlugin.getSubscribersAction(
-      topic: topic,
+    return _NknClientPlugin.getSubscribers(
       topicHash: topicHash,
       offset: offset,
       limit: limit,
@@ -151,7 +149,7 @@ class NknClientProxy with Tag {
 
   Future<Map<String, dynamic>> getSubscription({@required String topicHash, @required String subscriber}) {
     assert(_clientCreated);
-    return _NknClientPlugin.getSubscription(topic: topicHash, subscriber: subscriber);
+    return _NknClientPlugin.getSubscription(topicHash: topicHash, subscriber: subscriber);
   }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -392,8 +390,8 @@ class _NknClientPlugin {
     return completer.future;
   }
 
-  static Future<Uint8List> publishText(String topic, String data, {int maxHoldingSeconds = -1}) async {
-    _LOG.i('publishText($topic, $data, $maxHoldingSeconds)');
+  static Future<Uint8List> publishText(String topicHash, String data, {int maxHoldingSeconds = -1}) async {
+    _LOG.i('publishText($topicHash, $data, $maxHoldingSeconds)');
     Completer<Uint8List> completer = Completer<Uint8List>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
@@ -403,7 +401,7 @@ class _NknClientPlugin {
     try {
       await _methodChannel.invokeMethod('publishText', {
         '_id': id,
-        'topic': topic,
+        'topicHash': topicHash,
         'data': data,
         'maxHoldingSeconds': maxHoldingSeconds,
       });
@@ -416,19 +414,19 @@ class _NknClientPlugin {
 
   static Future<String> subscribe({
     String identifier = '',
-    String topic,
+    String topicHash,
     int duration = 400000,
     String fee = '0',
     String meta = '',
   }) async {
-    _LOG.i('subscribe($identifier, $topic, $duration, $fee, $meta)');
+    _LOG.i('subscribe($identifier, $topicHash, $duration, $fee, $meta)');
     Completer<String> completer = Completer<String>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
     _methodChannel.invokeMethod('subscribe', {
       '_id': id,
       'identifier': identifier,
-      'topic': topic,
+      'topicHash': topicHash,
       'duration': duration,
       'fee': fee,
       'meta': meta,
@@ -438,15 +436,15 @@ class _NknClientPlugin {
     });
   }
 
-  static Future<String> unsubscribe({String identifier, String topic, String fee = '0'}) async {
-    _LOG.i('unsubscribe($identifier, $topic, $fee)');
+  static Future<String> unsubscribe({String identifier = '', String topicHash, String fee = '0'}) async {
+    _LOG.i('unsubscribe($identifier, $topicHash, $fee)');
     Completer<String> completer = Completer<String>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
     _methodChannel.invokeMethod('unsubscribe', {
       '_id': id,
       'identifier': identifier,
-      'topic': topic,
+      'topicHash': topicHash,
       'fee': fee,
     });
     return completer.future.whenComplete(() {
@@ -454,28 +452,28 @@ class _NknClientPlugin {
     });
   }
 
-  static Future<int> getSubscribersCount(String topic) async {
-    _LOG.i('getSubscribersCount($topic)');
+  static Future<int> getSubscribersCount(String topicHash) async {
+    _LOG.i('getSubscribersCount($topicHash)');
     Completer<int> completer = Completer<int>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
     _methodChannel.invokeMethod('getSubscribersCount', {
       '_id': id,
-      'topic': topic,
+      'topicHash': topicHash,
     });
     return completer.future.whenComplete(() {
       _clientEventQueue.remove(id);
     });
   }
 
-  static Future<Map<String, dynamic>> getSubscription({String topic, String subscriber}) async {
-    _LOG.i('getSubscription($topic, $subscriber)');
+  static Future<Map<String, dynamic>> getSubscription({String topicHash, String subscriber}) async {
+    _LOG.i('getSubscription($topicHash, $subscriber)');
     Completer<Map<String, dynamic>> completer = Completer<Map<String, dynamic>>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
     _methodChannel.invokeMethod('getSubscription', {
       '_id': id,
-      'topic': topic,
+      'topicHash': topicHash,
       'subscriber': subscriber,
     });
 
@@ -484,21 +482,20 @@ class _NknClientPlugin {
     });
   }
 
-  static Future<Map<String, dynamic>> getSubscribersAction({
-    String topic,
+  static Future<Map<String, dynamic>> getSubscribers({
     String topicHash,
     int offset = 0,
     int limit = 10000,
     bool meta = true,
     bool txPool = true,
   }) async {
-    _LOG.i('getSubscribersAction($topic, $topicHash, $offset, $limit, $meta, $txPool)');
+    _LOG.i('getSubscribersAction($topicHash, $offset, $limit, $meta, $txPool)');
     Completer<Map<String, dynamic>> completer = Completer<Map<String, dynamic>>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
     _methodChannel.invokeMethod('getSubscribers', {
       '_id': id,
-      'topic': topicHash,
+      'topicHash': topicHash,
       'offset': offset,
       'limit': limit,
       'meta': meta,
