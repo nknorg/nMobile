@@ -1,24 +1,29 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
-import 'package:nmobile/blocs/chat/chat_event.dart';
-import 'package:nmobile/blocs/chat/chat_state.dart';
+import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
+import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_notification.dart';
-import 'package:nmobile/helpers/local_storage.dart';
-import 'package:nmobile/helpers/permission.dart';
 import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/model/db/black_list_repo.dart';
+import 'package:nmobile/model/db/subscriber_repo.dart';
+import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/schemas/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
-import 'package:nmobile/schemas/topic.dart';
+import 'package:nmobile/schemas/options.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/log_tag.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
@@ -27,9 +32,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
   final ContactBloc contactBloc;
 
   LOG _LOG;
+  SubscriberRepo repoSub;
+  BlackListRepo repoBl;
+  TopicRepo repoTopic;
 
   ChatBloc({@required this.contactBloc}) {
     _LOG = LOG(tag);
+    registerObserver();
+  }
+
+  @override
+  void onAccountChanged() {
+    repoSub = SubscriberRepo(db);
+    repoBl = BlackListRepo(db);
+    repoTopic = TopicRepo(db);
   }
 
   @override
@@ -66,8 +82,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
           message.isSendError = false;
         } catch (e) {
           message.isSendError = true;
-          debugPrint(e);
-          debugPrintStack();
+          _LOG.e('_mapSendMessageToState', e);
         }
         await message.insert(db, accountPubkey);
         yield MessagesUpdated(target: message.to, message: message);
@@ -79,15 +94,38 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
           var pid;
           if (message.topic != null) {
             if (isPrivateTopic(message.topic)) {
-              List<String> dests = await Permission.getPrivateChannelDests(account, message.topic);
+              List<String> dests = await repoSub.getTopicChatIds(message.topic);
               if (!dests.contains(accountChatId)) {
-                dests.add(accountChatId);
-                TopicSchema(topic: message.topic).getPrivateOwnerMetaAction(account);
-                TopicSchema(topic: message.topic).getSubscribers(account, cache: false);
+                await GroupChatPrivateChannel.pullSubscribersPrivateChannel(
+                    client: account.client,
+                    topicName: message.topic,
+                    accountPubkey: accountPubkey,
+                    myChatId: accountChatId,
+                    repoSub: repoSub,
+                    repoBlackL: repoBl,
+                    repoTopic: repoTopic,
+                    membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+                    needUploadMetaCallback: (topicName) {
+//                    GroupChatPrivateChannel.uploadPermissionMeta(
+//                        client: account.client,
+//                        topicName: topicName,
+//                        accountPubkey: accountPubkey,
+//                        repoSub: repoSub,
+//                        repoBlackL: repoBl,
+//                        membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext));
+                    });
+                if (await repoBl.getByTopicAndChatId(message.topic, accountChatId) != null ||
+                    (accountPubkey != accountChatId && await repoBl.getByTopicAndChatId(message.topic, accountPubkey) != null)) {
+                  yield GroupEvicted(message.topic);
+                  return;
+                } else {
+                  dests = await repoSub.getTopicChatIds(message.topic);
+                  dests.add(accountChatId);
+                }
               }
               pid = await account.client.sendText(dests, message.toTextData());
             } else {
-              pid = await account.client.publishText(genChannelId(message.topic), message.toTextData());
+              pid = await account.client.publishText(genTopicHash(message.topic), message.toTextData());
             }
           } else {
             pid = await account.client.sendText([message.to], message.toTextData());
@@ -96,6 +134,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
           message.isSendError = false;
         } catch (e) {
           message.isSendError = true;
+          _LOG.e('_mapSendMessageToState', e);
         }
         await message.insert(db, accountPubkey);
         yield MessagesUpdated(target: message.to, message: message);
@@ -112,8 +151,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
           message.isSendError = false;
         } catch (e) {
           message.isSendError = true;
-          debugPrint(e);
-          debugPrintStack();
+          _LOG.e('_mapSendMessageToState', e);
         }
         await message.insert(db, accountPubkey);
         yield MessagesUpdated(target: message.to, message: message);
@@ -128,10 +166,30 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
           var pid;
           if (message.topic != null) {
             if (isPrivateTopic(message.topic)) {
-              List<String> dests = await Permission.getPrivateChannelDests(account, message.topic);
+              List<String> dests = await repoSub.getTopicChatIds(message.topic);
+              if (!dests.contains(accountChatId)) {
+                await GroupChatPrivateChannel.pullSubscribersPrivateChannel(
+                    client: account.client,
+                    topicName: message.topic,
+                    accountPubkey: accountPubkey,
+                    myChatId: accountChatId,
+                    repoSub: repoSub,
+                    repoBlackL: repoBl,
+                    repoTopic: repoTopic,
+                    membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+                    needUploadMetaCallback: (topicName) {});
+                if (await repoBl.getByTopicAndChatId(message.topic, accountChatId) != null ||
+                    (accountPubkey != accountChatId && await repoBl.getByTopicAndChatId(message.topic, accountPubkey) != null)) {
+                  yield GroupEvicted(message.topic);
+                  return;
+                } else {
+                  dests = await repoSub.getTopicChatIds(message.topic);
+                  dests.add(accountChatId);
+                }
+              }
               pid = await account.client.sendText(dests, message.toMediaData());
             } else {
-              pid = await account.client.publishText(genChannelId(message.topic), message.toMediaData());
+              pid = await account.client.publishText(genTopicHash(message.topic), message.toMediaData());
             }
           } else {
             pid = await account.client.sendText([message.to], message.toMediaData());
@@ -140,8 +198,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
           message.isSendError = false;
         } catch (e) {
           message.isSendError = true;
-          debugPrint(e);
-          debugPrintStack();
+          _LOG.e('_mapSendMessageToState', e);
         }
         await message.insert(db, accountPubkey);
         yield MessagesUpdated(target: message.to, message: message);
@@ -150,46 +207,55 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         try {
           await account.client.sendText([message.to], message.toActionContentOptionsData());
         } catch (e) {
-          debugPrint(e);
-          debugPrintStack();
-        }
-        await message.insert(db, accountPubkey);
-        yield MessagesUpdated(target: message.to, message: message);
-        return;
-      case ContentType.dchatSubscribe:
-        message.isOutbound = true;
-        message.isRead = true;
-        try {
-          var pid;
-          if (message.topic != null) {
-            if (isPrivateTopic(message.topic)) {
-              List<String> dests = await Permission.getPrivateChannelDests(account, message.topic);
-              if (dests.length != 0) pid = await account.client.sendText(dests, message.toDchatSubscribeData());
-            } else {
-              pid = await account.client.publishText(genChannelId(message.topic), message.toDchatSubscribeData());
-            }
-          }
-          message.pid = pid;
-          message.isSendError = false;
-        } catch (e) {
-          message.isSendError = true;
+          _LOG.e('_mapSendMessageToState', e);
         }
         await message.insert(db, accountPubkey);
         yield MessagesUpdated(target: message.to, message: message);
         return;
       case ContentType.eventSubscribe:
-        message.isOutbound = true;
-        message.isRead = true;
-        try {
-          var pid;
-          if (isPrivateTopic(message.topic) && message.topic != null) {
-            List<String> dests = await Permission.getPrivateChannelDests(account, message.topic);
-            pid = await account.client.sendText(dests, message.toEventSubscribeData());
+        if (message.topic != null) {
+          message.isOutbound = true;
+          message.isRead = true;
+          try {
+            var pid;
+            if (isPrivateTopic(message.topic)) {
+              List<String> dests = await repoSub.getTopicChatIds(message.topic);
+              if (dests.length != 0) pid = await account.client.sendText(dests, message.toEventSubscribeData());
+            } else {
+              pid = await account.client.publishText(genTopicHash(message.topic), message.toEventSubscribeData());
+            }
+            message.pid = pid;
+            message.isSendError = false;
+          } catch (e) {
+            message.isSendError = true;
+            _LOG.e('_mapSendMessageToState', e);
           }
-          message.pid = pid;
-          message.isSendError = false;
-        } catch (e) {
-          message.isSendError = true;
+          await message.insert(db, accountPubkey);
+          yield MessagesUpdated(target: message.to, message: message);
+        }
+        return;
+      case ContentType.eventUnsubscribe:
+        if (message.topic != null) {
+          message.isOutbound = true;
+          message.isRead = true;
+          try {
+            var pid;
+            if (isPrivateTopic(message.topic)) {
+              List<String> dests = await repoSub.getTopicChatIds(message.topic);
+              if (dests.length != 0) pid = await account.client.sendText(dests, message.toEventSubscribeData());
+            } else {
+              pid = await account.client.publishText(genTopicHash(message.topic), message.toEventSubscribeData());
+            }
+            message.pid = pid;
+            message.isSendError = false;
+            // delete after message sent.
+            await repoSub.deleteAll(message.topic);
+          } catch (e) {
+            message.isSendError = true;
+            _LOG.e('_mapSendMessageToState', e);
+          }
+//          await message.insert(db, accountPubkey);
+//          yield MessagesUpdated(target: message.to, message: message);
         }
         return;
     }
@@ -198,28 +264,78 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
   Stream<ChatState> _mapReceiveMessageToState(ReceiveMessage event) async* {
     _LOG.d('=======receive  message ==============');
     var message = event.message;
+    // TODO: upgrade DB for UNIQUE INDEX.
     if (await message.isExist(db)) {
       return;
     }
-
-    if (message.topic != null && LocalStorage.isBlank(accountPubkey, message.topic)) return;
-
-    if (message.topic != null && isPrivateTopic(message.topic)) {
-      List<String> dests = await Permission.getPrivateChannelDests(account, message.topic);
+//    if (message.topic != null && LocalStorage.isBlank(accountPubkey, message.topic)) return;
+    if (message.topic != null) {
+      List<String> dests = await repoSub.getTopicChatIds(message.topic);
       if (!dests.contains(message.from)) {
-        TopicSchema(topic: message.topic).getPrivateOwnerMetaAction(account);
-        TopicSchema(topic: message.topic).getSubscribers(account, cache: false);
-        _LOG.d('$dests not contains ${message.from}');
-        return;
+        if (isPrivateTopic(message.topic)) {
+          await GroupChatPrivateChannel.pullSubscribersPrivateChannel(
+              client: account.client,
+              topicName: message.topic,
+              accountPubkey: accountPubkey,
+              myChatId: accountChatId,
+              repoSub: repoSub,
+              repoBlackL: repoBl,
+              repoTopic: repoTopic,
+              membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+              needUploadMetaCallback: (topicName) {});
+          if (await repoBl.getByTopicAndChatId(message.topic, accountChatId) != null ||
+              (accountPubkey != accountChatId && await repoBl.getByTopicAndChatId(message.topic, accountPubkey) != null)) {
+            yield GroupEvicted(message.topic);
+            return;
+          } else {
+            dests = await repoSub.getTopicChatIds(message.topic);
+            if (!dests.contains(message.from)) {
+              _LOG.w('$dests not contains ${message.from}');
+            } else {
+              _LOG.d('$dests contains ${message.from}');
+            }
+          }
+        } else {
+          await GroupChatPublicChannel.pullSubscribersPublicChannel(
+            client: account.client,
+            topicName: message.topic,
+            myChatId: accountChatId,
+            repoSub: SubscriberRepo(db),
+            repoTopic: TopicRepo(db),
+            membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+          );
+          dests = await repoSub.getTopicChatIds(message.topic);
+          if (!dests.contains(message.from)) {
+            _LOG.w('PUBLIC GROUP MEMBERS not contains ${message.from}');
+            return;
+          } else {
+            _LOG.d('PUBLIC GROUP MEMBERS contains ${message.from}');
+          }
+        }
       } else {
-        _LOG.d('$dests contains ${message.from}');
+        _LOG.d('GROUP MEMBERS contains ${message.from}');
       }
+    }
+    Topic topic;
+    if (message.topic != null) {
+      final themeId = Random().nextInt(DefaultTheme.headerBackgroundColor.length);
+      topic = Topic(
+        id: 0,
+        topic: message.topic,
+        numSubscribers: -1,
+        themeId: themeId,
+        timeUpdate: DateTime.now().millisecondsSinceEpoch,
+        blockHeightExpireAt: -1,
+        isTop: false,
+        options: OptionsSchema.random(themeId: themeId).toJson(),
+      );
+      repoTopic.insertOrIgnore(topic);
     }
 
     var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(message.from));
     await ContactSchema(type: ContactType.stranger, clientAddress: message.from, nknWalletAddress: walletAddress).createContact(db);
     var contact = await ContactSchema.getContactByAddress(db, message.from);
-    var title = contact.name;
+    final String title = (topic?.isPrivate ?? false) ? topic.shortName : contact.name;
 
     if (!contact.isMe && message.contentType != ContentType.contact && Global.isLoadProfile(contact.publicKey)) {
       if (contact.profileExpiresAt == null || DateTime.now().isAfter(contact.profileExpiresAt)) {
@@ -228,14 +344,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
       }
     }
 
-    if (message.topic != null) {
-      title = '[${message.topic}] $title';
-      TopicSchema topicSchema = TopicSchema(topic: message.topic, updateTime: DateTime.now());
-      if (topicSchema.type == TopicType.private) {
-        title = topicSchema.shortName;
-      }
-      topicSchema.insertIfNoData(db, accountPubkey);
-    }
     switch (message.contentType) {
       case ContentType.text:
         if (message.topic != null && message.from == accountChatId) {
@@ -264,9 +372,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         var unReadCount = await MessageSchema.unReadMessages(db, accountChatId);
         FlutterAppBadger.updateBadgeCount(unReadCount);
         yield MessagesUpdated(target: message.from, message: message);
-        return;
-      case ContentType.eventSubscribe:
-        Global.removeTopicCache(message.topic);
         return;
       case ContentType.receipt:
         // todo debug
@@ -313,8 +418,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         try {
           data = jsonDecode(message.content);
         } on FormatException catch (e) {
-          debugPrint(e.message);
-          debugPrintStack();
+          _LOG.e('_mapReceiveMessageToState', e);
         }
         if (data['requestType'] == RequestType.header) {
           contact.responseProfile(account, accountChatId, type: RequestType.header);
@@ -339,7 +443,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         try {
           data = jsonDecode(message.content);
         } on FormatException catch (e) {
-          print(e);
+          _LOG.e('_mapReceiveMessageToState', e);
         }
         await contact.setBurnOptions(db, data['content']['deleteAfterSeconds']);
         contactBloc.add(LoadContact(address: [contact.clientAddress]));
@@ -348,20 +452,42 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         await message.insert(db, accountPubkey);
         yield MessagesUpdated(target: message.from, message: message);
         return;
-      case ContentType.dchatSubscribe:
-        if (message.topic != null && message.from == accountChatId) {
-          await message.receiptTopic(await db);
-          message.isSuccess = true;
-          message.isRead = true;
-          message.content = message.msgId;
-          message.contentType = ContentType.receipt;
-          yield MessagesUpdated(target: message.from, message: message);
-          return;
+      case ContentType.eventSubscribe:
+      case ContentType.eventUnsubscribe:
+        Global.removeTopicCache(message.topic);
+        if (message.from == accountChatId) {
+        } else {
+          assert(message.topic.nonNull);
+          if (isPrivateTopic(message.topic)) {
+            await GroupChatPrivateChannel.pullSubscribersPrivateChannel(
+                client: account.client,
+                topicName: message.topic,
+                accountPubkey: accountPubkey,
+                myChatId: accountChatId,
+                repoSub: repoSub,
+                repoBlackL: repoBl,
+                repoTopic: repoTopic,
+                membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+                needUploadMetaCallback: (topicName) {
+                  GroupChatPrivateChannel.uploadPermissionMeta(
+                    client: account.client,
+                    topicName: topicName,
+                    accountPubkey: accountPubkey,
+                    repoSub: SubscriberRepo(db),
+                    repoBlackL: BlackListRepo(db),
+                  );
+                });
+          } else {
+            await GroupChatPublicChannel.pullSubscribersPublicChannel(
+              client: account.client,
+              topicName: message.topic,
+              myChatId: accountChatId,
+              repoSub: SubscriberRepo(db),
+              repoTopic: TopicRepo(db),
+              membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+            );
+          }
         }
-        message.isSuccess = true;
-        message.isRead = true;
-        await message.insert(db, accountPubkey);
-        yield MessagesUpdated(target: message.from, message: message);
         return;
     }
   }
@@ -379,4 +505,58 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
     await contact.setBurnOptions(db, contact.options?.deleteAfterSeconds);
     contactBloc.add(LoadContact(address: [contact.clientAddress]));
   }
+}
+
+abstract class ChatState {
+  const ChatState();
+}
+
+class NotConnect extends ChatState {}
+
+class Connected extends ChatState {}
+
+class MessagesUpdated extends ChatState {
+  final String target;
+  final MessageSchema message;
+
+  const MessagesUpdated({this.target, this.message});
+}
+
+class GroupEvicted extends ChatState {
+  final String topicName;
+
+  const GroupEvicted(this.topicName);
+}
+
+abstract class ChatEvent extends Equatable {
+  const ChatEvent();
+
+  @override
+  List<Object> get props => [];
+}
+
+class Connect extends ChatEvent {}
+
+class RefreshMessages extends ChatEvent {
+  final String target;
+
+  const RefreshMessages({this.target});
+}
+
+class ReceiveMessage extends ChatEvent {
+  final MessageSchema message;
+
+  const ReceiveMessage(this.message);
+}
+
+class SendMessage extends ChatEvent {
+  final MessageSchema message;
+
+  const SendMessage(this.message);
+}
+
+class GetAndReadMessages extends ChatEvent {
+  final String target;
+
+  const GetAndReadMessages({this.target});
 }

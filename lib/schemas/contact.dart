@@ -311,6 +311,8 @@ class ContactSchema {
       await db.execute(createSqlV2);
     } else if (version == 3) {
       await db.execute(createSqlV3);
+    } else if (version == 5) {
+      await db.execute(createSqlV3);
     } else {
       throw UnsupportedError('unsupported create operation version $version.');
     }
@@ -325,10 +327,23 @@ class ContactSchema {
 
   static upgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion == 2 && newVersion == 3) {
-      await db.execute('ALTER TABLE $tableName ADD COLUMN is_top BOOLEAN DEFAULT 0');
+      await _upgrade_2_3(db);
+    } else if (oldVersion == 3 && newVersion == 5) {
+      await _upgrade_3_5(db);
+    } else if (oldVersion == 2 && newVersion == 5) {
+      await _upgrade_2_3(db);
+      await _upgrade_3_5(db);
     } else {
       throw UnsupportedError('unsupported upgrade from $oldVersion to $newVersion.');
     }
+  }
+
+  static _upgrade_2_3(Database db) async {
+    await db.execute('ALTER TABLE $tableName ADD COLUMN is_top BOOLEAN DEFAULT 0');
+  }
+
+  static _upgrade_3_5(Database db) async {
+    // nothing...
   }
 
   static Future<int> setTop(Future<Database> db, String chatIdOther, bool top) async {

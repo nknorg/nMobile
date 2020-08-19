@@ -1020,11 +1020,21 @@
     "type": "text",
     "placeholders": {}
   },
-  "invites_desc_to": "邀请您加入",
-  "@invites_desc_to": {
+  "invites_desc_me": "{other} 邀请您加入群聊",
+  "@invites_desc_me": {
     "description": "",
     "type": "text",
-    "placeholders": {}
+    "placeholders": {
+      "other": {}
+    }
+  },
+  "invites_desc_other": "您邀请 {other} 加入群聊",
+  "@invites_desc_other": {
+    "description": "",
+    "type": "text",
+    "placeholders": {
+      "other": {}
+    }
   },
   "accept": "接受",
   "@accept": {
@@ -1038,8 +1048,20 @@
     "type": "text",
     "placeholders": {}
   },
+  "accepted_already": "您已接受邀请",
+  "@accepted_already": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "rejected": "已踢出",
   "@rejected": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "pending": "待定",
+  "@pending": {
     "description": "",
     "type": "text",
     "placeholders": {}
@@ -1056,8 +1078,26 @@
     "type": "text",
     "placeholders": {}
   },
+  "subscribe_or_waiting": "加入或等待片刻...",
+  "@subscribe_or_waiting": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "subscribed": "已加入",
+  "@subscribed": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
   "unsubscribe": "退出",
   "@unsubscribe": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "unsubscribed": "已退出",
+  "@unsubscribed": {
     "description": "",
     "type": "text",
     "placeholders": {}
