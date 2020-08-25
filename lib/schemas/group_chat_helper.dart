@@ -378,16 +378,26 @@ class GroupChatPrivateChannel {
         }
       }
 
-      final list = await repoSub.getByTopicExceptNone(topicName);
+      final whiteList = await repoSub.getByTopicExceptNone(topicName);
       final blackList = await repoBlackL.getByTopic(topicName);
-      final maxPageIndex = max(list.reduce((a, b) => a.indexPermiPage > b.indexPermiPage ? a : b)?.indexPermiPage ?? -1,
-          blackList.reduce((a, b) => a.indexPermiPage > b.indexPermiPage ? a : b)?.indexPermiPage ?? -1);
+      var _pageIndex = -1;
+      for (var el in whiteList) {
+        if (el.indexPermiPage > _pageIndex) {
+          _pageIndex = el.indexPermiPage;
+        }
+      }
+      for (var el in blackList) {
+        if (el.indexPermiPage > _pageIndex) {
+          _pageIndex = el.indexPermiPage;
+        }
+      }
+      final maxPageIndex = _pageIndex;
       if (maxPageIndex < 0) {
-        _log.w("uploadPermissionMeta | [--, $maxPageIndex] list:\n$list");
+        _log.w("uploadPermissionMeta | [--, $maxPageIndex] whiteList:\n${whiteList.length}");
       }
       var pageIndex = 0;
       while (pageIndex < maxPageIndex) {
-        final paged = List.of(list);
+        final paged = List.of(whiteList);
         paged.retainWhere((el) => el.indexPermiPage == pageIndex);
         final pagedBlack = List.of(blackList);
         pagedBlack.retainWhere((el) => el.indexPermiPage == pageIndex);
@@ -401,14 +411,14 @@ class GroupChatPrivateChannel {
         ++pageIndex;
       }
       final maxSize = 1024 * 1024 * 3 / 4;
-      List<Subscriber> newAdded = List.of(list, growable: true);
+      List<Subscriber> newAdded = List.of(whiteList, growable: true);
       newAdded.retainWhere((el) => el.indexPermiPage < 0);
       // ```kotlin
-      // newAdded.addAll(list.filter { it.indexPermissionPage == maxPageIndex }.filterNot { s ->
+      // newAdded.addAll(whiteList.filter { it.indexPermissionPage == maxPageIndex }.filterNot { s ->
       //     newAdded.any { s.chatId == it.chatId }
       // });
       // ```
-      var temp = List.of(list);
+      var temp = List.of(whiteList);
       temp.retainWhere((el) => el.indexPermiPage == maxPageIndex);
       temp.removeWhere((s) => newAdded.any((it) => s.chatId == it.chatId));
       newAdded.addAll(temp);
