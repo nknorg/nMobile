@@ -76,6 +76,19 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
     repoBla = BlackListRepo(db);
     _topicCount = widget.topic.numSubscribers;
     refreshMembers();
+    uploadPermissionMeta();
+  }
+
+  uploadPermissionMeta() {
+    if (widget.topic.isPrivate && widget.topic.isOwner(accountPubkey)) {
+      GroupChatPrivateChannel.uploadPermissionMeta(
+        client: account.client,
+        topicName: widget.topic.topic,
+        accountPubkey: account.client.pubkey,
+        repoSub: repoSub,
+        repoBlackL: repoBla,
+      );
+    }
   }
 
   refreshMembers() async {
@@ -114,6 +127,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
     if (mounted) {
       setState(() {});
     }
+    // TODO: ???
     Global.removeTopicCache(widget.topic.topic);
   }
 
