@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_notification.dart';
-import 'package:nmobile/helpers/sqlite_storage.dart';
+import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/model/data/dchat_account.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
