@@ -197,7 +197,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
                         }
                       }
                       return Label(
-                        '${_topicCount ?? '--'} ' + NL10ns.of(context).members,
+                        '${(_topicCount == null || _topicCount < 0) ? '--' : _topicCount} ' + NL10ns.of(context).members,
                         type: LabelType.bodyRegular,
                         color: DefaultTheme.successColor,
                       ).pad(l: widget.topic.isPrivate ? 20 : 0);
