@@ -6,7 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:nmobile/helpers/sqlite_storage.dart';
+import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:nmobile/plugins/nkn_client.dart';
 
 /// @author Chenai

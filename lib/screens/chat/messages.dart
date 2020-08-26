@@ -26,7 +26,7 @@ import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/model/popular_channel.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
-import 'package:nmobile/schemas/group_chat_helper.dart';
+import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/message_item.dart';
 import 'package:nmobile/schemas/options.dart';

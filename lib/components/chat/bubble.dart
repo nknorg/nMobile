@@ -20,7 +20,7 @@ import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/router/custom_router.dart';
 import 'package:nmobile/schemas/contact.dart';
-import 'package:nmobile/schemas/group_chat_helper.dart';
+import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/screens/chat/photo_page.dart';
 import 'package:nmobile/screens/contact/contact.dart';

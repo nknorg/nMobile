@@ -18,7 +18,7 @@ import 'package:nmobile/helpers/nkn_image_utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
-import 'package:nmobile/schemas/group_chat_helper.dart';
+import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/schemas/topic.dart';
