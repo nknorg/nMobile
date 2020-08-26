@@ -438,7 +438,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
                       }
                     }
                     return Label(
-                      '${_topicCount ?? '--'} ' + NL10ns.of(context).members,
+                      '${(_topicCount == null || _topicCount < 0) ? '--' : _topicCount} ' + NL10ns.of(context).members,
                       type: LabelType.bodySmall,
                       color: DefaultTheme.riseColor,
                     ).pad(l: widget.arguments.topic.type == TopicType.private ? 20 : 0);
