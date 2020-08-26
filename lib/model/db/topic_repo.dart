@@ -8,7 +8,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/helpers/utils.dart';
-import 'package:nmobile/schemas/group_chat_helper.dart';
+import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
