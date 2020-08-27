@@ -134,6 +134,7 @@ class GroupChatPublicChannel {
     } catch (e) {
       _topicIsLoading[topicName] = false;
       _log.e("pullSubscribers, e:", e);
+      return -1;
     }
   }
 }
@@ -506,6 +507,8 @@ class GroupChatPrivateChannel {
       final whiteListPubkey = Map<String, int>();
       final blackListChatId = Map<String, int>();
       final blackListPubkey = Map<String, int>();
+
+      /// 1. Retrieve the permission control list of `a private group` page by page.
       label:
       while (true) {
         _log.i("pullSubscribersPrivateChannel | retrieve permission: __${pageIndex}__.__permission__.$owner");
@@ -590,6 +593,7 @@ class GroupChatPrivateChannel {
         }
       }
 
+      /// 2. If I am the group owner, update the expired block height of the group.
       final ownerIsMe = ownerIsMeFunc(topicName, accountPubkey);
       if (ownerIsMe) {
         try {
@@ -602,17 +606,21 @@ class GroupChatPrivateChannel {
       }
       var needUploadMeta = false;
       final List<String> chatIdsCurrentlySubscribed = [];
+
+      /// 3. Save the subscribers of this group into the `Black/White List` data table.
       final Map<String, dynamic> subscribersMap = await client.getSubscribers(topicHash: topicHashed, offset: 0, limit: 10000, meta: false, txPool: true);
       chatIdsCurrentlySubscribed.addAll(subscribersMap.keys);
       for (var chatId in subscribersMap.keys) {
+        _log.i("pullSubscribersPrivateChannel | forEach: $chatId");
         final inWhiteList = inWhiteListFunc(chatId);
         final isPrmCtl = chatId.contains("__permission__");
         if (!isPrmCtl && (acceptAll || (notInBlackList(chatId) && (inWhiteList || ownerIsMe)))) {
-          _log.i("pullSubscribersPrivateChannel | insertOrUpdate(subscriber)");
           if (!acceptAll && !inWhiteList) {
+            _log.d("pullSubscribersPrivateChannel | ownerIsMe: $chatId");
             // this case indicates `ownerIsMe`
             final subscriber = await repoSub.getByTopicAndChatId(topicName, chatId);
             if (subscriber == null) {
+              _log.d("pullSubscribersPrivateChannel | insertOrUpdateOwnerIsMe($chatId)");
               needUploadMeta = true;
               await repoSub.insertOrUpdateOwnerIsMe(Subscriber(
                   id: 0,
@@ -628,6 +636,7 @@ class GroupChatPrivateChannel {
                   uploadDone: false));
             }
           } else {
+            _log.i("pullSubscribersPrivateChannel | insertOrUpdate($chatId)");
             await repoSub.insertOrUpdate(Subscriber(
                 id: 0,
                 topic: topicName,
@@ -643,6 +652,9 @@ class GroupChatPrivateChannel {
           }
         }
       }
+
+      /// 3.1. Save the pubkey (broader scope: including chatId) in the permission-controlled
+      /// blacklist into the blacklist data table.
       for (var pubkey in blackListPubkey.keys) {
         final pageIndex = blackListPubkey[pubkey];
         _log.d("pullSubscribersPrivateChannel | blacklist | pubkey: $pubkey, pageIndex: $pageIndex");
@@ -654,6 +666,9 @@ class GroupChatPrivateChannel {
             uploaded: true,
             subscribed: chatIdsCurrentlySubscribed.any((e) => e.endsWith(pubkey))));
       }
+
+      /// 3.2. Save the chatId (not included in the pubkey) in the permission-controlled
+      /// blacklist into the blacklist data table.
       Map<String, int> temp = Map.of(blackListChatId);
       temp.removeWhere((chatId, _) => blackListPubkey.keys.any((pubkey) => chatId.endsWith(pubkey)));
       for (var chatId in temp.keys) {
@@ -668,15 +683,22 @@ class GroupChatPrivateChannel {
             subscribed: chatIdsCurrentlySubscribed.contains(chatId)));
       }
 
+      /// 3.3. Delete the cross-existing chatId and pubkey in the permission-controlled blacklist
+      /// from the blacklist data table (only keep the wider pubkey).
       Map<String, int> temp1 = {};
       blackListChatId.forEach((chatId, index) {
-        if (blackListPubkey.keys.any((pubkey) => chatId.endsWith(pubkey))) temp1[chatId] = index;
+        if (blackListPubkey.keys.any((pubkey) {
+          // assert(chatId != pubkey);
+          return chatId != pubkey && chatId.endsWith(pubkey);
+        })) temp1[chatId] = index;
       });
       for (var chatId in temp1.keys) {
         final pageIndex = temp1[chatId];
         _log.d("pullSubscribersPrivateChannel | filtered blacklist | chatId: $chatId, pageIndex: $pageIndex");
         await repoBlackL.delete(topicName, chatId);
       }
+
+      /// 3.4. If I am not the owner of the group, delete all those not in the permission control blacklist.
       if (!ownerIsMe) {
         final blackList = await repoBlackL.getByTopic(topicName);
         blackList.removeWhere((el) => inBlackListFunc(el.chatIdOrPubkey));
@@ -684,6 +706,11 @@ class GroupChatPrivateChannel {
           await repoBlackL.delete(topicName, it.chatIdOrPubkey);
         }
       }
+
+      /// 3.5. If I am not the owner of the group, and [not] in the subscription list or in the blacklist, delete all
+      /// the whitelist (indicating that there is no one in the group),
+      /// but do not delete myself from the blacklist (in order to query myself In the blacklist).
+      /// And end to return.
       if (!ownerIsMe && (!chatIdsCurrentlySubscribed.contains(myChatId) || inBlackListFunc(myChatId))) {
         _log.w("pullSubscribersPrivateChannel | not contains my chatid, delete all. myChatId: $myChatId");
         await repoSub.deleteAll(topicName);
@@ -696,9 +723,15 @@ class GroupChatPrivateChannel {
         _topicIsLoading[topicName] = false;
         return -1;
       }
+
+      /// 4. Take out all the people in the whitelist (all have been correctly written so far, but there
+      /// may be redundancy and have not been deleted).
       final whiteList = await repoSub.getByTopicExceptNone(topicName);
+
+      /// 4.1.1. If I am the owner of the group, there may be people in the whitelist who have just been invited
+      /// but have not yet accepted (subscribed), so you cannot delete those who have not subscribed first.
       if (ownerIsMe) {
-        // Below, in extreme cases: chatIds both in whitelist and blacklist. Then you need to upload afresh.
+        /// 4.2.1. Filter out people who exist in both blacklist and whitelist.
         final blackList = await repoBlackL.getByTopic(topicName);
         final beMixed = <Subscriber>[];
         whiteList.forEach((w) {
@@ -706,9 +739,15 @@ class GroupChatPrivateChannel {
             beMixed.add(w);
           }
         });
+
+        /// 4.3.1. In extreme cases: chatIds both in whitelist and blacklist. Then you need to upload afresh.
         if (beMixed.isNotEmpty) needUploadMeta = true;
+
+        /// 4.4.1. Delete from the blacklist the ones that exist in the whitelist but have not been uploaded
+        /// successfully (maybe you just moved from the blacklist to the whitelist in the UI, but now the pull-down
+        /// is triggered, the previous steps are written to the blacklist again, so simultaneously exist).
         final temp = List.of(beMixed);
-        temp.removeWhere((el) => el.uploaded);
+        temp.removeWhere((el) => el.uploadDone);
         for (var it in temp) {
           _log.d("pullSubscribersPrivateChannel | deleteBlackList(${it.chatId})");
           await repoBlackL.delete(topicName, it.chatId);
@@ -717,23 +756,32 @@ class GroupChatPrivateChannel {
             await repoBlackL.delete(topicName, pubkey);
           }
         }
+
+        /// 4.5.1. Delete the uploaded successfully from the whitelist (keep it in the blacklist).
         final temp1 = List.of(beMixed);
-        temp1.retainWhere((el) => el.uploaded);
+        temp1.retainWhere((el) => el.uploadDone);
         for (var it in temp1) {
           _log.w("pullSubscribersPrivateChannel | deleteWhiteList(${it.chatId})");
           await repoSub.delete(topicName, it.chatId);
         }
+
+        /// 4.6.1. Finally, you cannot delete people who do not have a subscription (see 4.1.1).
       } else {
+        /// 4.1.2. Only if I am not the owner of the group, can I delete people who have not subscribed first.
         final temp = List.of(whiteList);
         temp.removeWhere((it) => chatIdsCurrentlySubscribed.contains(it.chatId));
         for (var it in temp) {
           await repoSub.delete(topicName, it.chatId);
         }
+
+        /// 4.1.2. Remove people who are not in the whitelist from the whitelist.
         final temp1 = List.of(whiteList);
         temp1.removeWhere((it) => inWhiteListFunc(it.chatId));
         for (var it in temp1) {
           await repoSub.delete(topicName, it.chatId);
         }
+
+        /// 4.1.2. Remove the people in the blacklist from the whitelist.
         final temp2 = List.of(whiteList);
         temp2.retainWhere((it) => inBlackListFunc(it.chatId));
         for (var it in temp2) {
