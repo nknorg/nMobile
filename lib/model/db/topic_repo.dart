@@ -72,7 +72,7 @@ class Topic with Tag {
         timeUpdate: timeUpdate,
         blockHeightExpireAt: blockHeightExpireAt,
         isTop: isTop,
-        options: options);
+        options: _options);
   }
 
   String get name => _name;
