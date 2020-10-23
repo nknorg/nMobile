@@ -1,23 +1,23 @@
 package org.nkn.mobile.app
 
-import android.os.*
+import android.os.Bundle
 import android.util.Log
 import androidx.annotation.NonNull
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
-import nkn.Account
-import nkn.Nkn
-import nkn.WalletConfig
-import org.nkn.mobile.app.util.Bytes2String.withAndroidPrefix
+import io.sentry.Sentry
+import io.sentry.android.AndroidSentryClientFactory
 import org.nkn.mobile.app.abs.Tag
+import org.nkn.mobile.app.dchat.MessagingServiceFlutterPlugin
+import org.nkn.mobile.app.util.Bytes2String.withAndroidPrefix
 import java.util.*
-import org.nkn.mobile.app.dchat.*
-import io.flutter.embedding.android.FlutterFragmentActivity
 
 class MainActivity : FlutterFragmentActivity(), Tag {
     val TAG by lazy { tag() }
+
+    val instance by lazy { this } //这里使用了委托，表示只有使用到instance才会执行该段代码
 
     companion object {
         private const val N_MOBILE_COMMON = "org.nkn.nmobile/native/common"
@@ -30,7 +30,41 @@ class MainActivity : FlutterFragmentActivity(), Tag {
         super.configureFlutterEngine(flutterEngine);
         Log.e(TAG, "<<<---configureFlutterEngine--->>>".withAndroidPrefix())
 
+        Sentry.init("https://06a570b6f7d5489eade00b7f60d797c0@o460339.ingest.sentry.io/5478173",
+                AndroidSentryClientFactory(this.applicationContext))
+        try {
+            Log.d("sentrytest1","try")
+            throw Exception("This is a test.")
+
+        } catch (e: Exception) {
+            Log.d("sentrytest1","catch")
+            Sentry.capture(e)
+        }
+
         GeneratedPluginRegistrant.registerWith(flutterEngine)
+
+//        var filePath = "/data/service-account.json";
+//        filePath = Environment.getDataDirectory().path+"/service-account.json";
+//        var stream = assets.open("service-account.json");
+//        filePath = resources.openRawResource(R.raw.)
+
+
+//        FirebaseInstanceId.getInstance().instanceId
+//                .addOnCompleteListener(OnCompleteListener { task ->
+//                    if (!task.isSuccessful) {
+//                        Log.d(TAG, "getInstanceId failed", task.exception)
+//                        return@OnCompleteListener
+//                    }
+//
+//                    // Get new Instance ID token
+//                    val token = task.result?.token
+//
+//                    // Log and toast
+////                    Log.d(TAG, token)
+//                    Log.e(TAG, token.toString().withAndroidPrefix())
+//                    System.out.println(token);
+//                    Toast.makeText(instance, token, Toast.LENGTH_SHORT).show()
+//                })
 
         NknWalletPlugin(flutterEngine)
         clientPlugin = NknClientPlugin(this, flutterEngine)
@@ -38,9 +72,11 @@ class MainActivity : FlutterFragmentActivity(), Tag {
             if (methodCall.method == "backDesktop") {
                 result.success(true)
                 moveTaskToBack(false)
-            }else if (methodCall.method == "isActive") {
+            }
+            else if (methodCall.method == "isActive") {
                 result.success(isActive)
-            } else {
+            }
+            else {
                 result.success(true)
             }
         }
@@ -53,6 +89,14 @@ class MainActivity : FlutterFragmentActivity(), Tag {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+//        val content = File("serviceaccount.json").readText()
+//        println(content)
+//        val fileStream : InputStream = assets.open("src/assets/serviceaccount.json")
+//        val input = Context.asse
+//
+//        val service = GooglePushService()
+//        val token = service.getAuth(fileStream);
+//        Log.e(TAG,"Token is "+token.toString());
         Log.e(TAG, "<<<---onCreate--->>>".withAndroidPrefix())
     }
 
