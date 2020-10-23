@@ -105,6 +105,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         val identifier = call.argument<String>("identifier")
         val seedBytes = call.argument<ByteArray>("seedBytes")!!
         val clientUrl = call.argument<String>("clientUrl")
+        print("XXXXXXXXXX"+clientUrl.toString());
         result.success(null)
 
         msgSendHandler.post {

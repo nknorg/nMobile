@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:badges/badges.dart';
 import 'package:flustars/flustars.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -602,17 +601,18 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                           type: LabelType.bodySmall,
                           fontSize: DefaultTheme.chatTimeSize,
                         ).pad(r: 20, b: 6),
-                        item.notReadCount > 0
-                            ? Badge(
-                                padding: EdgeInsets.only(left: 6, right: 6, top: 3, bottom: 3),
-                                badgeColor: Colours.purple_57,
-                                shape: BadgeShape.square,
-                                borderRadius: 24,
-                                toAnimate: true,
-                                elevation: 0,
-                                badgeContent: Text(item.notReadCount.toString(), style: TextStyle(fontSize: 10, color: Colours.white)),
-                              ).pad(r: 20)
-                            : SizedBox(height: 16),
+                        _unReadWidget(item),
+                        // item.notReadCount > 0
+                        //     ? Badge(
+                        //         padding: EdgeInsets.only(left: 6, right: 6, top: 3, bottom: 3),
+                        //         badgeColor: Colours.purple_57,
+                        //         shape: BadgeShape.square,
+                        //         borderRadius: 24,
+                        //         toAnimate: true,
+                        //         elevation: 0,
+                        //         badgeContent: Text(item.notReadCount.toString(), style: TextStyle(fontSize: 10, color: Colours.white)),
+                        //       ).pad(r: 20)
+                        //     : SizedBox(height: 16),
                       ],
                     ).pad(l: 12),
                   ],
@@ -623,6 +623,58 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         ),
       ),
     );
+  }
+
+  Widget _unReadWidget(MessageItem item){
+    print('Unread count is '+item.notReadCount.toString());
+    String countStr = item.notReadCount.toString();
+    if (item.notReadCount > 99){
+      countStr = '99+';
+      return Container(
+        margin: EdgeInsets.only(right: 15),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12.5),
+          child: Container(
+              color: Colours.purple_57,
+              height: 25,
+              width: 25,
+              child: Center(
+                child: Text(countStr,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.white,
+                  ),
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                ),
+              )
+          ),
+        ),
+      );
+    }
+    if (item.notReadCount > 0){
+      return Container(
+        margin: EdgeInsets.only(right: 15),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12.5),
+          child: Container(
+              color: Colours.purple_57,
+              height: 25,
+              width: 25,
+              child: Center(
+                child: Text(countStr,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              )
+          ),
+        ),
+      );
+    }
+    return Container();
   }
 
   Widget getSingleChatItemView(MessageItem item, ContactLoaded state) {
@@ -719,17 +771,18 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                           type: LabelType.bodySmall,
                           fontSize: DefaultTheme.chatTimeSize,
                         ).pad(r: 20, b: 6),
-                        item.notReadCount > 0
-                            ? Badge(
-                                padding: EdgeInsets.only(left: 6, right: 6, top: 3, bottom: 3),
-                                badgeColor: Colours.purple_57,
-                                shape: BadgeShape.square,
-                                borderRadius: 24,
-                                toAnimate: true,
-                                elevation: 0,
-                                badgeContent: Text(item.notReadCount.toString(), style: TextStyle(fontSize: 10, color: Colours.white)),
-                              ).pad(r: 20)
-                            : SizedBox(height: 16),
+                        _unReadWidget(item),
+                        // item.notReadCount > 0
+                        //     ? Badge(
+                        //         padding: EdgeInsets.only(left: 6, right: 6, top: 3, bottom: 3),
+                        //         badgeColor: Colours.purple_57,
+                        //         shape: BadgeShape.square,
+                        //         borderRadius: 24,
+                        //         toAnimate: true,
+                        //         elevation: 0,
+                        //         badgeContent: Text(item.notReadCount.toString(), style: TextStyle(fontSize: 10, color: Colours.white)),
+                        //       ).pad(r: 20)
+                        //     : SizedBox(height: 16),
                       ],
                     ).pad(l: 12),
                   ],

@@ -38,10 +38,14 @@ def parse_KV_file(file, separator='=')
 end
 
 target 'Runner' do
-  use_frameworks!
-  use_modular_headers!
-  pod 'Bugly'
+  platform :ios, '10.0'
 
+  use_frameworks!
+  
+  pod 'Sentry', '~> 6.0.4'
+  
+  use_modular_headers!
+ 
   # Flutter Pod
 
   copied_flutter_dir = File.join(__dir__, 'Flutter')

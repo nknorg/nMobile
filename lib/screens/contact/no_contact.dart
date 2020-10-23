@@ -79,7 +79,7 @@ class _NoContactScreenState extends State<NoContactScreen> with AccountDependsBl
           color: DefaultTheme.backgroundLightColor,
           child: SingleChildScrollView(
             child: Container(
-              height: MediaQuery.of(context).size.height - 220,
+              height: MediaQuery.of(context).size.height-MediaQuery.of(context).padding.top,
               child: Flex(
                 direction: Axis.vertical,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -93,7 +93,7 @@ class _NoContactScreenState extends State<NoContactScreen> with AccountDependsBl
                     child: Column(
                       children: <Widget>[
                         Padding(
-                          padding: EdgeInsets.only(top: 32),
+                          padding: EdgeInsets.only(top: 32,bottom: 50),
                           child: Label(
                             NL10ns.of(context).contact_no_contact_title,
                             type: LabelType.h2,

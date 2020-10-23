@@ -77,6 +77,8 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
   String nickName;
   WalletSchema _walletDefault;
 
+  bool _acceptNotification = false;
+
   initAsync() async {
     _sourceProfile = widget.arguments.sourceProfile;
     setState(() {});
@@ -102,12 +104,16 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
   }
 
   @override
-  void initState() {
+  Future<void> initState() {
     super.initState();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
     initAsync();
-
     int burnAfterSeconds = widget.arguments.options?.deleteAfterSeconds;
+
+    if (widget.arguments.notificationOpen != null && widget.arguments.notificationOpen == true){
+      _acceptNotification = true;
+    }
+
     _burnSelected = burnAfterSeconds != null;
     if (_burnSelected) {
       _burnIndex = BurnViewUtil.burnValueArray.indexWhere((x) => x.inSeconds == burnAfterSeconds);
@@ -128,6 +134,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
     var _burnValue;
     if (!_burnSelected || _burnIndex < 0) {
       await widget.arguments.setBurnOptions(db, null);
+      print("Close Send Burn Message");
     } else {
       _burnValue = BurnViewUtil.burnValueArray[_burnIndex].inSeconds;
       await widget.arguments.setBurnOptions(db, _burnValue);
@@ -139,7 +146,31 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
     );
     sendMsg.isOutbound = true;
     sendMsg.burnAfterSeconds = _burnValue;
-    sendMsg.content = sendMsg.toActionContentOptionsData();
+    sendMsg.content = sendMsg.toContentOptionData(0);
+
+    print("Send Burn Message"+sendMsg.content.toString());
+    _chatBloc.add(SendMessage(sendMsg));
+  }
+
+  _saveAndSendDeviceToken() async{
+    String deviceToken = '';
+    if (_acceptNotification == true){
+      deviceToken = await account.client.fetchDeviceToken();
+    }
+    else{
+      deviceToken = '';
+    }
+    widget.arguments.setNotificationOpen(db, _acceptNotification);
+
+    var sendMsg = MessageSchema.fromSendData(
+      from: accountChatId,
+      to: widget.arguments.clientAddress,
+      contentType: ContentType.eventContactOptions,
+      deviceToken: deviceToken,
+    );
+    sendMsg.isOutbound = true;
+    sendMsg.content = sendMsg.toContentOptionData(1);
+    sendMsg.deviceToken = deviceToken;
     _chatBloc.add(SendMessage(sendMsg));
   }
 
@@ -771,91 +802,170 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
     );
   }
 
-  getPersonView() {
-    return Scaffold(
-      backgroundColor: DefaultTheme.backgroundColor4,
-      appBar: Header(
-        title: '',
-        leading: BackButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        backgroundColor: DefaultTheme.backgroundColor4,
+  Widget _personListView(){
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.only(topLeft: const Radius.circular(12),
+          topRight: const Radius.circular(12),),
+        color: DefaultTheme.backgroundColor6,
       ),
-      body: Container(
-        child: Flex(direction: Axis.vertical, children: <Widget>[
-          Expanded(
-            flex: 0,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Stack(
-                  children: <Widget>[
-                    InkWell(
-                      onTap: () {
-                        if (widget.arguments.avatarFilePath != null) {
-                          Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
-                        }
-                      },
-                      child: Container(
-                        child: widget.arguments.avatarWidget(
-                          db,
-                          backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
-                          size: 48,
-                          fontColor: DefaultTheme.fontLightColor,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Button(
-                        padding: const EdgeInsets.all(0),
-                        width: 24,
-                        height: 24,
-                        backgroundColor: DefaultTheme.primaryColor,
-                        child: SvgPicture.asset(
-                          'assets/icons/camera.svg',
-                          width: 16,
-                        ),
-                        onPressed: () async {
-                          File savedImg = await getHeaderImage(accountPubkey);
-                          setState(() {
-                            widget.arguments.avatar = savedImg;
-                          });
-                          await widget.arguments.setAvatar(db, accountPubkey, savedImg);
-                          _chatBloc.add(RefreshMessages());
+      height: MediaQuery.of(context).size.height,
+      child: ListView.builder(
+        padding: EdgeInsets.only(top: 4, bottom: 32),
+        itemCount: 8,
+        itemBuilder: (BuildContext context, int index) {
+          if (index == 0){
+            return Container(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Stack(
+                    children: <Widget>[
+                      InkWell(
+                        onTap: () {
+                          if (widget.arguments.avatarFilePath != null) {
+                            Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
+                          }
                         },
+                        child: Container(
+                          child: widget.arguments.avatarWidget(
+                            db,
+                            backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
+                            size: 48,
+                            fontColor: DefaultTheme.fontLightColor,
+                          ),
+                        ),
                       ),
-                    )
-                  ],
-                ),
-                SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Label(
-                      widget.arguments.nickName ?? '',
-                      type: LabelType.bodyLarge,
-                      color: Colors.white,
-                      overflow: TextOverflow.fade,
-                      textAlign: TextAlign.center,
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Button(
+                          padding: const EdgeInsets.all(0),
+                          width: 24,
+                          height: 24,
+                          backgroundColor: DefaultTheme.primaryColor,
+                          child: SvgPicture.asset(
+                            'assets/icons/camera.svg',
+                            width: 16,
+                          ),
+                          onPressed: () async {
+                            File savedImg = await getHeaderImage(accountPubkey);
+                            setState(() {
+                              widget.arguments.avatar = savedImg;
+                            });
+                            await widget.arguments.setAvatar(db, accountPubkey, savedImg);
+                            _chatBloc.add(RefreshMessages());
+                          },
+                        ),
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Label(
+                        widget.arguments.nickName ?? '',
+                        type: LabelType.bodyLarge,
+                        color: Colors.white,
+                        overflow: TextOverflow.fade,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            );
+          }
+          else if (index == 1){
+            return Container(
+              decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
+              margin: EdgeInsets.symmetric(horizontal: 12,vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  FlatButton(
+                    padding: EdgeInsets.only(left: 16, right: 16, top: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                    onPressed: () {
+                      _firstNameController.text = widget.arguments.name;
+                      _detailChangeName(context);
+                    },
+                    child: Row(
+                      children: <Widget>[
+                        loadAssetIconsImage('user', color: DefaultTheme.primaryColor, width: 24),
+                        SizedBox(width: 10),
+                        Label(
+                          NL10ns.of(context).nickname,
+                          type: LabelType.bodyRegular,
+                          color: DefaultTheme.fontColor1,
+                          height: 1,
+                        ),
+                        SizedBox(width: 20),
+                        Expanded(
+                          child: Label(
+                            getName(),
+                            type: LabelType.bodyRegular,
+                            color: DefaultTheme.fontColor2,
+                            overflow: TextOverflow.fade,
+                            textAlign: TextAlign.right,
+                            height: 1,
+                          ),
+                        ),
+                        SvgPicture.asset(
+                          'assets/icons/right.svg',
+                          width: 24,
+                          color: DefaultTheme.fontColor2,
+                        )
+                      ],
                     ),
-//                      SizedBox(width: 10),
-//                      Icon(
-//                        Icons.edit,
-//                        color: DefaultTheme.fontColor2,
-//                        size: 18,
-//                      ),
-                  ],
-                )
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Stack(
+                  ).sized(h: 48),
+                  FlatButton(
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
+                    onPressed: () {
+                      Navigator.pushNamed(context, ChatProfile.routeName, arguments: widget.arguments);
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        loadAssetChatPng(
+                          'chat_id',
+                          color: DefaultTheme.primaryColor,
+                          width: 22,
+                        ),
+                        SizedBox(width: 10),
+                        Label(
+                          NL10ns.of(context).d_chat_address,
+                          type: LabelType.bodyRegular,
+                          color: DefaultTheme.fontColor1,
+                          height: 1,
+                        ),
+                        SizedBox(width: 20),
+                        Expanded(
+                          child: Label(
+                            widget.arguments.clientAddress.substring(0, 8) + '...',
+                            type: LabelType.bodyRegular,
+                            color: DefaultTheme.fontColor2,
+                            textAlign: TextAlign.right,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        SvgPicture.asset(
+                          'assets/icons/right.svg',
+                          width: 24,
+                          color: DefaultTheme.fontColor2,
+                        )
+                      ],
+                    ),
+                  ).sized(h: 48),
+                ],
+              ),
+            );
+            return Stack(
               alignment: Alignment.bottomCenter,
               children: <Widget>[
                 BodyBox(
@@ -868,223 +978,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Container(
-                              decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
-                              margin: EdgeInsets.symmetric(horizontal: 12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  FlatButton(
-                                    padding: EdgeInsets.only(left: 16, right: 16, top: 10),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
-                                    onPressed: () {
-                                      _firstNameController.text = widget.arguments.name;
-                                      _detailChangeName(context);
-                                    },
-                                    child: Row(
-                                      children: <Widget>[
-                                        loadAssetIconsImage('user', color: DefaultTheme.primaryColor, width: 24),
-                                        SizedBox(width: 10),
-                                        Label(
-                                          NL10ns.of(context).nickname,
-                                          type: LabelType.bodyRegular,
-                                          color: DefaultTheme.fontColor1,
-                                          height: 1,
-                                        ),
-                                        SizedBox(width: 20),
-                                        Expanded(
-                                          child: Label(
-                                            getName(),
-                                            type: LabelType.bodyRegular,
-                                            color: DefaultTheme.fontColor2,
-                                            overflow: TextOverflow.fade,
-                                            textAlign: TextAlign.right,
-                                            height: 1,
-                                          ),
-                                        ),
-                                        SvgPicture.asset(
-                                          'assets/icons/right.svg',
-                                          width: 24,
-                                          color: DefaultTheme.fontColor2,
-                                        )
-                                      ],
-                                    ),
-                                  ).sized(h: 48),
-                                  FlatButton(
-                                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
-                                    onPressed: () {
-                                      Navigator.pushNamed(context, ChatProfile.routeName, arguments: widget.arguments);
-                                    },
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      children: <Widget>[
-                                        loadAssetChatPng(
-                                          'chat_id',
-                                          color: DefaultTheme.primaryColor,
-                                          width: 22,
-                                        ),
-                                        SizedBox(width: 10),
-                                        Label(
-                                          NL10ns.of(context).d_chat_address,
-                                          type: LabelType.bodyRegular,
-                                          color: DefaultTheme.fontColor1,
-                                          height: 1,
-                                        ),
-                                        SizedBox(width: 20),
-                                        Expanded(
-                                          child: Label(
-                                            widget.arguments.clientAddress.substring(0, 8) + '...',
-                                            type: LabelType.bodyRegular,
-                                            color: DefaultTheme.fontColor2,
-                                            textAlign: TextAlign.right,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        SvgPicture.asset(
-                                          'assets/icons/right.svg',
-                                          width: 24,
-                                          color: DefaultTheme.fontColor2,
-                                        )
-                                      ],
-                                    ),
-                                  ).sized(h: 48),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                            Container(
-                              decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
-                              margin: EdgeInsets.only(left: 16, right: 16, top: 10),
-                              child: FlatButton(
-                                onPressed: () async {
-//                                // _burnValue = await BurnViewUtil.showBurnViewDialog(context, widget.arguments, _chatBloc);
-                                  setState(() {
-                                    _burnSelected = !_burnSelected;
-                                    _saveAndSendBurnMessage();
-                                  });
-                                },
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: _burnSelected ? 0.symm(v: 5.5) : 0.pad(),
-                                  child: Column(
-                                    mainAxisAlignment: _burnSelected ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
-                                    children: <Widget>[
-                                      Row(
-                                        children: [
-                                          loadAssetWalletImage('xiaohui', color: DefaultTheme.primaryColor, width: 24),
-                                          SizedBox(width: 10),
-                                          Label(
-                                            NL10ns.of(context).burn_after_reading,
-                                            type: LabelType.bodyRegular,
-                                            color: DefaultTheme.fontColor1,
-                                            textAlign: TextAlign.start,
-                                          ),
-                                          Spacer(),
-                                          CupertinoSwitch(
-                                            value: _burnSelected,
-                                            activeColor: DefaultTheme.primaryColor,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                _burnSelected = value;
-                                                _saveAndSendBurnMessage();
-                                              });
-                                            },
-                                          ),
-//                                        SvgPicture.asset('assets/icons/right.svg', width: 24, color: DefaultTheme.fontColor2)
-                                        ],
-                                      ),
-                                      _burnSelected
-                                          ? Row(
-                                              mainAxisSize: MainAxisSize.max,
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Icon(Icons.alarm_on, size: 24, color: Colours.blue_0f).pad(r: 10),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Label(
-                                                        (!_burnSelected || _burnIndex < 0)
-                                                            ? NL10ns.of(context).off
-                                                            : BurnViewUtil.getStringFromSeconds(context, BurnViewUtil.burnValueArray[_burnIndex].inSeconds),
-                                                        type: LabelType.bodyRegular,
-                                                        color: Colours.gray_81,
-                                                        fontWeight: FontWeight.w700,
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow.ellipsis,
-                                                      ),
-                                                      Slider(
-                                                        value: _burnIndex.d,
-                                                        min: 0,
-                                                        max: (BurnViewUtil.burnValueArray.length - 1).d,
-                                                        activeColor: Colours.blue_0f,
-                                                        inactiveColor: Colours.gray_81,
-                                                        divisions: BurnViewUtil.burnValueArray.length - 1,
-                                                        label: BurnViewUtil.burnTextArray(context)[_burnIndex],
-                                                        onChanged: (value) {
-                                                          setState(() {
-                                                            _burnIndex = value.round();
-                                                            if (_burnIndex > BurnViewUtil.burnValueArray.length - 1) {
-                                                              _burnIndex = BurnViewUtil.burnValueArray.length - 1;
-                                                            }
-                                                          });
-                                                        },
-                                                        onChangeEnd: (value) {
-                                                          _saveAndSendBurnMessage();
-                                                        },
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            )
-                                          : Space.empty,
-                                    ],
-                                  ),
-                                ),
-                              ).sized(h: _burnSelected ? 112 : 50, w: double.infinity),
-                            ),
-                            Label(
-                              (!_burnSelected || _burnIndex < 0)
-                                  ? NL10ns.of(context).burn_after_reading_desc
-                                  : NL10ns.of(context).burn_after_reading_desc_disappear(
-                                      BurnViewUtil.burnTextArray(context)[_burnIndex],
-                                    ),
-                              type: LabelType.bodySmall,
-                              color: Colours.gray_81,
-                              fontWeight: FontWeight.w600,
-                              softWrap: true,
-                            ).pad(t: 6, b: 8, l: 20, r: 20),
-                            Container(
-                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-                              margin: EdgeInsets.only(left: 16, right: 16, top: 10),
-                              child: FlatButton(
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
-                                child: Container(
-                                  width: double.infinity,
-                                  child: Row(
-                                    children: <Widget>[
-                                      SvgPicture.asset('assets/icons/chat.svg', width: 24, color: DefaultTheme.primaryColor),
-//                                      loadAssetChatPng('send_message', width: 22),
-                                      SizedBox(width: 10),
-                                      Label(NL10ns.of(context).send_message, type: LabelType.bodyRegular, color: DefaultTheme.fontColor1),
-                                      Spacer(),
-                                      SvgPicture.asset('assets/icons/right.svg', width: 24, color: DefaultTheme.fontColor2)
-                                    ],
-                                  ),
-                                ),
-                                onPressed: () {
-//                                  _setContactOptions();
-                                  Navigator.of(context)
-                                      .pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
-                                },
-                              ).sized(h: 50, w: double.infinity),
-                            ),
+
                             SizedBox(height: 40),
                             getStatusView(),
                           ],
@@ -1094,10 +988,235 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                   ),
                 ).pad(t: 28),
               ],
-            ),
-          )
-        ]),
+            );
+          }
+          else if (index == 2){
+            return SizedBox(height: 10);
+          }
+          else if (index == 3){
+            return Container(
+              decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
+              margin: EdgeInsets.only(left: 16, right: 16, top: 10),
+              child: FlatButton(
+                onPressed: () async {
+                  setState(() {
+                    _burnSelected = !_burnSelected;
+                    _saveAndSendBurnMessage();
+                  });
+                },
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                child: Container(
+                  width: double.infinity,
+                  padding: _burnSelected ? 0.symm(v: 5.5) : 0.pad(),
+                  child: Column(
+                    mainAxisAlignment: _burnSelected ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
+                    children: <Widget>[
+                      Row(
+                        children: [
+                          loadAssetWalletImage('xiaohui', color: DefaultTheme.primaryColor, width: 24),
+                          SizedBox(width: 10),
+                          Label(
+                            NL10ns.of(context).burn_after_reading,
+                            type: LabelType.bodyRegular,
+                            color: DefaultTheme.fontColor1,
+                            textAlign: TextAlign.start,
+                          ),
+                          Spacer(),
+                          CupertinoSwitch(
+                            value: _burnSelected,
+                            activeColor: DefaultTheme.primaryColor,
+                            onChanged: (value) {
+                              setState(() {
+                                _burnSelected = value;
+                                _saveAndSendBurnMessage();
+                              });
+                            },
+                          ),
+//                                        SvgPicture.asset('assets/icons/right.svg', width: 24, color: DefaultTheme.fontColor2)
+                        ],
+                      ),
+                      _burnSelected
+                          ? Row(
+                        mainAxisSize: MainAxisSize.max,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.alarm_on, size: 24, color: Colours.blue_0f).pad(r: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Label(
+                                  (!_burnSelected || _burnIndex < 0)
+                                      ? NL10ns.of(context).off
+                                      : BurnViewUtil.getStringFromSeconds(context, BurnViewUtil.burnValueArray[_burnIndex].inSeconds),
+                                  type: LabelType.bodyRegular,
+                                  color: Colours.gray_81,
+                                  fontWeight: FontWeight.w700,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Slider(
+                                  value: _burnIndex.d,
+                                  min: 0,
+                                  max: (BurnViewUtil.burnValueArray.length - 1).d,
+                                  activeColor: Colours.blue_0f,
+                                  inactiveColor: Colours.gray_81,
+                                  divisions: BurnViewUtil.burnValueArray.length - 1,
+                                  label: BurnViewUtil.burnTextArray(context)[_burnIndex],
+                                  onChanged:(value){
+                                    setState(() {
+                                      _burnIndex = value.round();
+                                      if (_burnIndex > BurnViewUtil.burnValueArray.length - 1) {
+                                        _burnIndex = BurnViewUtil.burnValueArray.length - 1;
+                                      }
+                                    });
+                                  },
+                                  onChangeEnd:(value){
+                                    print('Value is'+value.toString());
+                                    _saveAndSendBurnMessage();
+                                  }
+                                )
+                              ],
+                            ),
+                          ),
+                        ],
+                      )
+                          : Space.empty,
+                    ],
+                  ),
+                ),
+              ).sized(h: _burnSelected ? 112 : 50, w: double.infinity),
+            );
+          }
+          else if (index == 4){
+            return Label(
+              (!_burnSelected || _burnIndex < 0)
+                  ? NL10ns.of(context).burn_after_reading_desc
+                  : NL10ns.of(context).burn_after_reading_desc_disappear(
+                BurnViewUtil.burnTextArray(context)[_burnIndex],
+              ),
+              type: LabelType.bodySmall,
+              color: Colours.gray_81,
+              fontWeight: FontWeight.w600,
+              softWrap: true,
+            ).pad(t: 6, b: 8, l: 20, r: 20);
+          }
+          else if (index == 5){
+            if (Platform.isAndroid){
+              return Container(
+                height: 1,
+              );
+            }
+            return Container(
+              decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
+              margin: EdgeInsets.only(left: 16, right: 16, top: 10),
+              child: FlatButton(
+                onPressed: () async {
+                  setState(() {
+                    _acceptNotification = !_acceptNotification;
+                    _saveAndSendDeviceToken();
+                  });
+                },
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                child: Container(
+                  width: double.infinity,
+                  padding: _acceptNotification ? 0.symm(v: 5.5) : 0.pad(),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Row(
+                        children: [
+                          loadAssetIconsImage('notification_bell', color: DefaultTheme.primaryColor, width: 24),
+                          SizedBox(width: 10),
+                          Label(
+                            NL10ns.of(context).remote_notification,
+                            type: LabelType.bodyRegular,
+                            color: DefaultTheme.fontColor1,
+                            textAlign: TextAlign.start,
+                          ),
+                          Spacer(),
+                          CupertinoSwitch(
+                            value: _acceptNotification,
+                            activeColor: DefaultTheme.primaryColor,
+                            onChanged: (value) {
+                              setState(() {
+                                _acceptNotification = value;
+                                _saveAndSendDeviceToken();
+                              });
+                            },
+                          ),
+//                                        SvgPicture.asset('assets/icons/right.svg', width: 24, color: DefaultTheme.fontColor2)
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ).sized(h: 50, w: double.infinity),
+            );
+          }
+          else if (index == 6){
+            if (Platform.isAndroid){
+              return Container(
+                height: 1,
+              );
+            }
+            return Label(
+              // (_acceptNotification)
+              //     ? NL10ns.of(context).setting_accept_notification
+              //     : NL10ns.of(context).setting_deny_notification,
+              NL10ns.of(context).accept_notification,
+              type: LabelType.bodySmall,
+              color: Colours.gray_81,
+              fontWeight: FontWeight.w600,
+              softWrap: true,
+            ).pad(t: 6, b: 8, l: 20, r: 20);
+          }
+          else if (index == 7){
+            return Container(
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+              margin: EdgeInsets.only(left: 16, right: 16, top: 10),
+              child: FlatButton(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                child: Container(
+                  width: double.infinity,
+                  child: Row(
+                    children: <Widget>[
+                      SvgPicture.asset('assets/icons/chat.svg', width: 24, color: DefaultTheme.primaryColor),
+//                                      loadAssetChatPng('send_message', width: 22),
+                      SizedBox(width: 10),
+                      Label(NL10ns.of(context).send_message, type: LabelType.bodyRegular, color: DefaultTheme.fontColor1),
+                      Spacer(),
+                      SvgPicture.asset('assets/icons/right.svg', width: 24, color: DefaultTheme.fontColor2)
+                    ],
+                  ),
+                ),
+                onPressed: () {
+//                                  _setContactOptions();
+                  Navigator.of(context)
+                      .pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
+                },
+              ).sized(h: 50, w: double.infinity),
+            );
+          }
+          return Container();
+        },
       ),
+    );
+  }
+
+  getPersonView() {
+    return Scaffold(
+      backgroundColor: DefaultTheme.backgroundColor4,
+      appBar: Header(
+        title: '',
+        leading: BackButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        backgroundColor: DefaultTheme.backgroundColor4,
+      ),
+      body: _personListView()
     );
   }
 }

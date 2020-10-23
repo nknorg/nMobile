@@ -93,7 +93,7 @@ class NknClientProxy with Tag {
     }
   }
 
-  Future<Uint8List> sendText(List<String> dests, String data, {int maxHoldingSeconds = Duration.secondsPerDay * 30}) {
+  Future<Uint8List> sendText(List<String> dests, String data, {int maxHoldingSeconds = Duration.secondsPerDay * 30}) async{
     assert(_isConnected);
     return _NknClientPlugin.sendText(dests, data, maxHoldingSeconds: maxHoldingSeconds);
   }
@@ -101,6 +101,24 @@ class NknClientProxy with Tag {
   Future<Uint8List> publishText(String topicHash, String data, {int maxHoldingSeconds = Duration.secondsPerDay * 30}) {
     assert(_isConnected);
     return _NknClientPlugin.publishText(topicHash, data, maxHoldingSeconds: maxHoldingSeconds);
+  }
+
+  Future<String> fetchDeviceToken() async{
+    try {
+      final String deviceToken = await _NknClientPlugin.fetchDeviceToken();
+      return deviceToken;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<int> getBlockHeight() async{
+    try {
+      final int blockHeight = await _NknClientPlugin.fetchBlockHeight();
+      return blockHeight;
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<String> subscribe({
@@ -297,6 +315,17 @@ class _NknClientPlugin {
           _LOG.i('send, pid: $pid');
           _clientEventQueue[key].complete(pid);
           break;
+        case 'fetchDeviceToken':
+          String key = res['_id'];
+          _LOG.i('fetch_device_token'+res.toString());
+          _clientEventQueue[key].complete(true);
+          break;
+        case 'getBlockHeight':
+          String key = res['_id'];
+          Uint8List pid = res['height'];
+          _LOG.i('receivedHeight: $pid');
+          _clientEventQueue[key].complete(pid);
+          break;
         default:
           Map data = res;
           _LOG.i('default, data: $data');
@@ -324,10 +353,46 @@ class _NknClientPlugin {
     });
   }
 
-  @deprecated
-  static Future<bool> isConnected() async {
-    _LOG.i('isConnected');
-    return await _methodChannel.invokeMethod('isConnected');
+  static Future<int> fetchBlockHeight() async{
+    _LOG.i('fetch block height');
+    Completer<Map> completer = Completer<Map>();
+    String id = completer.hashCode.toString();
+    _clientEventQueue[id] = completer;
+    completer.future.whenComplete(() {
+      _clientEventQueue.remove(id);
+    });
+    try {
+      _methodChannel.invokeMethod('getBlockHeight', {
+        '_id': id,
+      });
+      Map resp = await completer.future;
+      int blockHeight = resp['height'];
+      return blockHeight;
+    } catch (e) {
+      _LOG.e('fetch device e', e);
+      completer.completeError(e);
+    }
+  }
+
+  static Future<String> fetchDeviceToken() async{
+    _LOG.i('fetch client device token');
+    Completer<Map> completer = Completer<Map>();
+    String id = completer.hashCode.toString();
+    _clientEventQueue[id] = completer;
+    completer.future.whenComplete(() {
+      _clientEventQueue.remove(id);
+    });
+    try {
+      _methodChannel.invokeMethod('fetchDeviceToken', {
+        '_id': id,
+      });
+      Map resp = await completer.future;
+      String deviceToken = resp['device_token'];
+      return deviceToken;
+    } catch (e) {
+      _LOG.e('fetch device e', e);
+      completer.completeError(e);
+    }
   }
 
   static Future<bool> createClient(Uint8List seed, {String identifier, String clientUrl}) async {

@@ -3,11 +3,7 @@ import 'package:bloc/bloc.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
-import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/model/db/sqlite_storage.dart';
-import 'package:nmobile/model/data/dchat_account.dart';
 import 'package:nmobile/schemas/contact.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class ContactBloc extends Bloc<ContactEvent, ContactState> with AccountDependsBloc {
   @override
@@ -44,6 +40,8 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> with AccountDependsBl
         list[findIndex].sourceProfile = item.sourceProfile;
         list[findIndex].profileVersion = item.profileVersion;
         list[findIndex].profileExpiresAt = item.profileExpiresAt;
+        list[findIndex].deviceToken = item.deviceToken;
+        list[findIndex].notificationOpen = item.notificationOpen;
       } else {
         list.add(item);
       }

@@ -430,91 +430,9 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
                           }
 
                           if (message.contentType == ContentType.eventContactOptions) {
-                            var content = jsonDecode(message.content);
-                            if (content['content'] != null) {
-                              var deleteAfterSeconds = content['content']['deleteAfterSeconds'];
-                              if (deleteAfterSeconds != null && deleteAfterSeconds > 0) {
-                                return ChatSystem(
-                                  child: Wrap(
-                                    alignment: WrapAlignment.center,
-                                    crossAxisAlignment: WrapCrossAlignment.center,
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(Icons.alarm_on, size: 16, color: DefaultTheme.fontColor2).pad(b: 1, r: 4),
-                                              Label(Format.durationFormat(Duration(seconds: content['content']['deleteAfterSeconds'])),
-                                                  type: LabelType.bodySmall),
-                                            ],
-                                          ).pad(b: 4),
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Label(
-                                                message.isOutbound ? NL10ns.of(context).you : widget.arguments.contact.name,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                              Label(' ${NL10ns.of(context).update_burn_after_reading}', softWrap: true),
-                                            ],
-                                          ).pad(b: 4),
-                                          InkWell(
-                                            child: Label(NL10ns.of(context).click_to_change, color: DefaultTheme.primaryColor, type: LabelType.bodyRegular),
-                                            onTap: () {
-                                              Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: widget.arguments.contact);
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              } else {
-                                return ChatSystem(
-                                  child: Wrap(
-                                    alignment: WrapAlignment.center,
-                                    crossAxisAlignment: WrapCrossAlignment.center,
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(Icons.alarm_off, size: 16, color: DefaultTheme.fontColor2).pad(b: 1, r: 4),
-                                              Label(NL10ns.of(context).off, type: LabelType.bodySmall, fontWeight: FontWeight.bold),
-                                            ],
-                                          ).pad(b: 4),
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Label(
-                                                message.isOutbound ? NL10ns.of(context).you : widget.arguments.contact.name,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                              Label(' ${NL10ns.of(context).close_burn_after_reading}'),
-                                            ],
-                                          ).pad(b: 4),
-                                          InkWell(
-                                            child: Label(NL10ns.of(context).click_to_change, color: DefaultTheme.primaryColor, type: LabelType.bodyRegular),
-                                            onTap: () {
-                                              Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: widget.arguments.contact);
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }
-                            } else {
-                              return Container();
-                            }
-                          } else {
+                            return _contactOptionWidget(index);
+                          }
+                          else {
                             return ChatBubble(
                               message: message,
                               showTime: showTime,
@@ -710,6 +628,137 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
         ),
       ),
     );
+  }
+
+  Widget _contactOptionWidget(int index){
+    var message = _messages[index];
+    Map optionData = jsonDecode(message.content);
+    if (optionData['content'] != null) {
+      var deleteAfterSeconds = optionData['content']['deleteAfterSeconds'];
+      if (deleteAfterSeconds != null && deleteAfterSeconds > 0) {
+        return ChatSystem(
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.alarm_on, size: 16, color: DefaultTheme.fontColor2).pad(b: 1, r: 4),
+                      Label(Format.durationFormat(Duration(seconds: optionData['content']['deleteAfterSeconds'])),
+                          type: LabelType.bodySmall),
+                    ],
+                  ).pad(b: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Label(
+                        message.isOutbound ? NL10ns.of(context).you : widget.arguments.contact.name,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      Label(' ${NL10ns.of(context).update_burn_after_reading}', softWrap: true),
+                    ],
+                  ).pad(b: 4),
+                  InkWell(
+                    child: Label(NL10ns.of(context).click_to_change, color: DefaultTheme.primaryColor, type: LabelType.bodyRegular),
+                    onTap: () {
+                      Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: widget.arguments.contact);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+
+      }
+      else if (optionData['content']['deviceToken'] != null){
+        String deviceToken = optionData['content']['deviceToken'];
+
+        String deviceDesc = "";
+        if (deviceToken.length == 0){
+          deviceDesc = '${NL10ns.of(context).setting_deny_notification}';
+        }
+        else{
+          deviceDesc = '${NL10ns.of(context).setting_accept_notification}';
+        }
+        return ChatSystem(
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Label(
+                        message.isOutbound ? NL10ns.of(context).you : widget.arguments.contact.name,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      Label('$deviceDesc'),
+                    ],
+                  ).pad(b: 4),
+                  InkWell(
+                    child: Label(NL10ns.of(context).click_to_change, color: DefaultTheme.primaryColor, type: LabelType.bodyRegular),
+                    onTap: () {
+                      Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: widget.arguments.contact);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      }
+      else {
+        return ChatSystem(
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.alarm_off, size: 16, color: DefaultTheme.fontColor2).pad(b: 1, r: 4),
+                      Label(NL10ns.of(context).off, type: LabelType.bodySmall, fontWeight: FontWeight.bold),
+                    ],
+                  ).pad(b: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Label(
+                        message.isOutbound ? NL10ns.of(context).you : widget.arguments.contact.name,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      Label(' ${NL10ns.of(context).close_burn_after_reading}'),
+                    ],
+                  ).pad(b: 4),
+                  InkWell(
+                    child: Label(NL10ns.of(context).click_to_change, color: DefaultTheme.primaryColor, type: LabelType.bodyRegular),
+                    onTap: () {
+                      Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: widget.arguments.contact);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      }
+    } else {
+      return Container();
+    }
   }
 
   getBurnTimeView() {

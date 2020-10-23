@@ -23,6 +23,19 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		EFB52E0F2521F1D700D2F3AF /* NWSecTools.m in Sources */ = {isa = PBXBuildFile; fileRef = EFB52DF92521F1D700D2F3AF /* NWSecTools.m */; };
+		EFB52E102521F1D700D2F3AF /* NWHub.m in Sources */ = {isa = PBXBuildFile; fileRef = EFB52DFC2521F1D700D2F3AF /* NWHub.m */; };
+		EFB52E112521F1D700D2F3AF /* NWPushFeedback.m in Sources */ = {isa = PBXBuildFile; fileRef = EFB52DFD2521F1D700D2F3AF /* NWPushFeedback.m */; };
+		EFB52E122521F1D700D2F3AF /* NWPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = EFB52DFE2521F1D700D2F3AF /* NWPusher.m */; };
+		EFB52E132521F1D700D2F3AF /* NWSSLConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = EFB52DFF2521F1D700D2F3AF /* NWSSLConnection.m */; };
+		EFB52E142521F1D700D2F3AF /* NWNotification.m in Sources */ = {isa = PBXBuildFile; fileRef = EFB52E042521F1D700D2F3AF /* NWNotification.m */; };
+		EFB52E152521F1D700D2F3AF /* NKNPushService.m in Sources */ = {isa = PBXBuildFile; fileRef = EFB52E052521F1D700D2F3AF /* NKNPushService.m */; };
+		EFB52E162521F1D700D2F3AF /* NWType.m in Sources */ = {isa = PBXBuildFile; fileRef = EFB52E082521F1D700D2F3AF /* NWType.m */; };
+		EFB52E172521F1D700D2F3AF /* NKNPush.cer in Resources */ = {isa = PBXBuildFile; fileRef = EFB52E0B2521F1D700D2F3AF /* NKNPush.cer */; };
+		EFB52E182521F1D700D2F3AF /* nkn.p12 in Resources */ = {isa = PBXBuildFile; fileRef = EFB52E0C2521F1D700D2F3AF /* nkn.p12 */; };
+		EFB52E192521F1D700D2F3AF /* pusher.p12 in Resources */ = {isa = PBXBuildFile; fileRef = EFB52E0D2521F1D700D2F3AF /* pusher.p12 */; };
+		EFB52E1A2521F1D700D2F3AF /* nkn_p.p12 in Resources */ = {isa = PBXBuildFile; fileRef = EFB52E0E2521F1D700D2F3AF /* nkn_p.p12 */; };
+		EFD9D10D25416AEB007525F5 /* Podfile in Resources */ = {isa = PBXBuildFile; fileRef = EFD9D10C25416AEB007525F5 /* Podfile */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -69,6 +82,29 @@
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9AF264DD066D37E7246FDB2F /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		CA27D5A7979FC190E81DB847 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		EFB52DF92521F1D700D2F3AF /* NWSecTools.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NWSecTools.m; sourceTree = "<group>"; };
+		EFB52DFA2521F1D700D2F3AF /* NWNotification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NWNotification.h; sourceTree = "<group>"; };
+		EFB52DFB2521F1D700D2F3AF /* NKNPushService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NKNPushService.h; sourceTree = "<group>"; };
+		EFB52DFC2521F1D700D2F3AF /* NWHub.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NWHub.m; sourceTree = "<group>"; };
+		EFB52DFD2521F1D700D2F3AF /* NWPushFeedback.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NWPushFeedback.m; sourceTree = "<group>"; };
+		EFB52DFE2521F1D700D2F3AF /* NWPusher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NWPusher.m; sourceTree = "<group>"; };
+		EFB52DFF2521F1D700D2F3AF /* NWSSLConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NWSSLConnection.m; sourceTree = "<group>"; };
+		EFB52E002521F1D700D2F3AF /* NWType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NWType.h; sourceTree = "<group>"; };
+		EFB52E012521F1D700D2F3AF /* NKNPushService-bridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NKNPushService-bridge.h"; sourceTree = "<group>"; };
+		EFB52E022521F1D700D2F3AF /* NWPushFeedback.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NWPushFeedback.h; sourceTree = "<group>"; };
+		EFB52E032521F1D700D2F3AF /* NWHub.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NWHub.h; sourceTree = "<group>"; };
+		EFB52E042521F1D700D2F3AF /* NWNotification.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NWNotification.m; sourceTree = "<group>"; };
+		EFB52E052521F1D700D2F3AF /* NKNPushService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NKNPushService.m; sourceTree = "<group>"; };
+		EFB52E062521F1D700D2F3AF /* NWSecTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NWSecTools.h; sourceTree = "<group>"; };
+		EFB52E072521F1D700D2F3AF /* NWPusher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NWPusher.h; sourceTree = "<group>"; };
+		EFB52E082521F1D700D2F3AF /* NWType.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NWType.m; sourceTree = "<group>"; };
+		EFB52E092521F1D700D2F3AF /* NWSSLConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NWSSLConnection.h; sourceTree = "<group>"; };
+		EFB52E0B2521F1D700D2F3AF /* NKNPush.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = NKNPush.cer; sourceTree = "<group>"; };
+		EFB52E0C2521F1D700D2F3AF /* nkn.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; path = nkn.p12; sourceTree = "<group>"; };
+		EFB52E0D2521F1D700D2F3AF /* pusher.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; path = pusher.p12; sourceTree = "<group>"; };
+		EFB52E0E2521F1D700D2F3AF /* nkn_p.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; path = nkn_p.p12; sourceTree = "<group>"; };
+		EFD9D10C25416AEB007525F5 /* Podfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Podfile; sourceTree = "<group>"; };
+		EFD9D3A12542B151007525F5 /* NknSecure.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NknSecure.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,6 +123,7 @@
 		14CDBDFD23F58D1D006E91AA /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				EFB52DF72521F1D700D2F3AF /* NKNPush */,
 				14CDBDFE23F58D2B006E91AA /* NknClientPlugin.swift */,
 				14CDBE0023F58D60006E91AA /* NknWalletPlugin.swift */,
 				14CDBE0223FACBA8006E91AA /* Wallet.swift */,
@@ -122,6 +159,7 @@
 		97C146E51CF9000F007C117D = {
 			isa = PBXGroup;
 			children = (
+				EFD9D10C25416AEB007525F5 /* Podfile */,
 				14CDBDFD23F58D1D006E91AA /* Classes */,
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
@@ -172,6 +210,51 @@
 				CA27D5A7979FC190E81DB847 /* Pods_Runner.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		EFB52DF72521F1D700D2F3AF /* NKNPush */ = {
+			isa = PBXGroup;
+			children = (
+				EFB52DF82521F1D700D2F3AF /* Classes */,
+				EFB52E0A2521F1D700D2F3AF /* Resource */,
+			);
+			path = NKNPush;
+			sourceTree = "<group>";
+		};
+		EFB52DF82521F1D700D2F3AF /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				EFB52E012521F1D700D2F3AF /* NKNPushService-bridge.h */,
+				EFB52DFB2521F1D700D2F3AF /* NKNPushService.h */,
+				EFB52E052521F1D700D2F3AF /* NKNPushService.m */,
+				EFB52E032521F1D700D2F3AF /* NWHub.h */,
+				EFB52DFC2521F1D700D2F3AF /* NWHub.m */,
+				EFB52DFA2521F1D700D2F3AF /* NWNotification.h */,
+				EFB52E042521F1D700D2F3AF /* NWNotification.m */,
+				EFB52E072521F1D700D2F3AF /* NWPusher.h */,
+				EFB52DFE2521F1D700D2F3AF /* NWPusher.m */,
+				EFB52E022521F1D700D2F3AF /* NWPushFeedback.h */,
+				EFB52DFD2521F1D700D2F3AF /* NWPushFeedback.m */,
+				EFB52E062521F1D700D2F3AF /* NWSecTools.h */,
+				EFB52DF92521F1D700D2F3AF /* NWSecTools.m */,
+				EFB52E092521F1D700D2F3AF /* NWSSLConnection.h */,
+				EFB52DFF2521F1D700D2F3AF /* NWSSLConnection.m */,
+				EFB52E002521F1D700D2F3AF /* NWType.h */,
+				EFB52E082521F1D700D2F3AF /* NWType.m */,
+			);
+			path = Classes;
+			sourceTree = "<group>";
+		};
+		EFB52E0A2521F1D700D2F3AF /* Resource */ = {
+			isa = PBXGroup;
+			children = (
+				EFB52E0B2521F1D700D2F3AF /* NKNPush.cer */,
+				EFB52E0C2521F1D700D2F3AF /* nkn.p12 */,
+				EFB52E0D2521F1D700D2F3AF /* pusher.p12 */,
+				EFB52E0E2521F1D700D2F3AF /* nkn_p.p12 */,
+				EFD9D3A12542B151007525F5 /* NknSecure.h */,
+			);
+			path = Resource;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -241,8 +324,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EFB52E1A2521F1D700D2F3AF /* nkn_p.p12 in Resources */,
+				EFB52E172521F1D700D2F3AF /* NKNPush.cer in Resources */,
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
+				EFB52E192521F1D700D2F3AF /* pusher.p12 in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
+				EFB52E182521F1D700D2F3AF /* nkn.p12 in Resources */,
+				EFD9D10D25416AEB007525F5 /* Podfile in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 			);
@@ -298,6 +386,7 @@
 				"${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework",
 				"${BUILT_PRODUCTS_DIR}/SDWebImageWebPCoder/SDWebImageWebPCoder.framework",
 				"${BUILT_PRODUCTS_DIR}/SQLCipher/SQLCipher.framework",
+				"${BUILT_PRODUCTS_DIR}/Sentry/Sentry.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftyGif/SwiftyGif.framework",
 				"${BUILT_PRODUCTS_DIR}/TOCropViewController/TOCropViewController.framework",
 				"${BUILT_PRODUCTS_DIR}/background_fetch/background_fetch.framework",
@@ -338,6 +427,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImage.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImageWebPCoder.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SQLCipher.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Sentry.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyGif.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/TOCropViewController.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/background_fetch.framework",
@@ -415,16 +505,24 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EFB52E152521F1D700D2F3AF /* NKNPushService.m in Sources */,
 				14CDBE0323FACBA8006E91AA /* Wallet.swift in Sources */,
+				EFB52E132521F1D700D2F3AF /* NWSSLConnection.m in Sources */,
+				EFB52E112521F1D700D2F3AF /* NWPushFeedback.m in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				14142455241A3EFB0089B50F /* Protocol.swift in Sources */,
 				14CDBE0123F58D60006E91AA /* NknWalletPlugin.swift in Sources */,
 				1451669E240E1EA0004121F0 /* Extension.swift in Sources */,
+				EFB52E142521F1D700D2F3AF /* NWNotification.m in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
+				EFB52E162521F1D700D2F3AF /* NWType.m in Sources */,
+				EFB52E122521F1D700D2F3AF /* NWPusher.m in Sources */,
+				EFB52E102521F1D700D2F3AF /* NWHub.m in Sources */,
 				14142453241A1FCA0089B50F /* LaunchController.swift in Sources */,
 				1414244D24160FBA0089B50F /* Debug.swift in Sources */,
 				14CDBDFF23F58D2B006E91AA /* NknClientPlugin.swift in Sources */,
 				14142457241A611B0089B50F /* Operations.swift in Sources */,
+				EFB52E0F2521F1D700D2F3AF /* NWSecTools.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -454,7 +552,6 @@
 /* Begin XCBuildConfiguration section */
 		249021D3217E4FDB00AE95B9 /* Profile */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
@@ -495,7 +592,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = iphoneos;
@@ -513,9 +610,16 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/nMobile.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 0.0.3;
+				CURRENT_PROJECT_VERSION = 147;
 				DEVELOPMENT_TEAM = 67P82ZQDAS;
 				ENABLE_BITCODE = NO;
+				FLUTTER_APPLICATION_PATH = /Users/rebloom/Documents/GitHub/nMobile;
+				FLUTTER_BUILD_DIR = build;
+				FLUTTER_BUILD_NAME = 1.0.2;
+				FLUTTER_BUILD_NUMBER = 143;
+				FLUTTER_FRAMEWORK_DIR = "/Users/rebloom/documents/flutter/bin/cache/artifacts/engine/ios-release";
+				FLUTTER_ROOT = /Users/rebloom/documents/flutter;
+				FLUTTER_TARGET = lib/main.dart;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
@@ -529,10 +633,11 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				NEW_SETTING = "";
 				PRODUCT_BUNDLE_IDENTIFIER = org.nkn.nmobile;
 				PRODUCT_NAME = Runner;
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_SWIFT_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -542,7 +647,6 @@
 		};
 		97C147031CF9000F007C117D /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
@@ -589,7 +693,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -599,7 +703,6 @@
 		};
 		97C147041CF9000F007C117D /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
@@ -641,7 +744,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = iphoneos;
@@ -653,16 +756,23 @@
 		};
 		97C147061CF9000F007C117D /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2DABD6A1BAEBF4D74C96B0EF /* Pods-Runner.debug.xcconfig */;
+			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/nMobile.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 0.0.3;
+				CURRENT_PROJECT_VERSION = 147;
 				DEVELOPMENT_TEAM = 67P82ZQDAS;
 				ENABLE_BITCODE = NO;
+				FLUTTER_APPLICATION_PATH = /Users/rebloom/Documents/GitHub/nMobile;
+				FLUTTER_BUILD_DIR = build;
+				FLUTTER_BUILD_NAME = 1.0.2;
+				FLUTTER_BUILD_NUMBER = 143;
+				FLUTTER_FRAMEWORK_DIR = "/Users/rebloom/documents/flutter/bin/cache/artifacts/engine/ios-release";
+				FLUTTER_ROOT = /Users/rebloom/documents/flutter;
+				FLUTTER_TARGET = lib/main.dart;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
@@ -676,10 +786,11 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				NEW_SETTING = "";
 				PRODUCT_BUNDLE_IDENTIFIER = org.nkn.nmobile;
 				PRODUCT_NAME = Runner;
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_SWIFT_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -698,9 +809,16 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 0.0.3;
+				CURRENT_PROJECT_VERSION = 147;
 				DEVELOPMENT_TEAM = 67P82ZQDAS;
 				ENABLE_BITCODE = NO;
+				FLUTTER_APPLICATION_PATH = /Users/rebloom/Documents/GitHub/nMobile;
+				FLUTTER_BUILD_DIR = build;
+				FLUTTER_BUILD_NAME = 1.0.2;
+				FLUTTER_BUILD_NUMBER = 143;
+				FLUTTER_FRAMEWORK_DIR = "/Users/rebloom/documents/flutter/bin/cache/artifacts/engine/ios-release";
+				FLUTTER_ROOT = /Users/rebloom/documents/flutter;
+				FLUTTER_TARGET = lib/main.dart;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
@@ -714,10 +832,11 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				NEW_SETTING = "";
 				PRODUCT_BUNDLE_IDENTIFIER = org.nkn.nmobile;
 				PRODUCT_NAME = Runner;
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_SWIFT_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
