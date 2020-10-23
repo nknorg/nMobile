@@ -4,6 +4,7 @@
  * Proprietary and confidential
  */
 
+import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 /// @author Chenai
@@ -108,7 +109,7 @@ class BlackListRepo {
   }
 
   static Future<void> create(Database db, int version) async {
-    assert(version >= 5);
+    assert(version >= SqliteStorage.currentVersion);
     // no table before version 5.
     //await db.execute(deleteSql);
     await db.execute(createSqlV5);
@@ -118,8 +119,8 @@ class BlackListRepo {
   }
 
   static Future<void> upgradeFromV5(Database db, int oldVersion, int newVersion) async {
-    assert(newVersion >= 5);
-    if (newVersion == 5) {
+    assert(newVersion >= SqliteStorage.currentVersion);
+    if (newVersion == SqliteStorage.currentVersion) {
       await create(db, newVersion);
     } else {
       throw UnsupportedError('unsupported upgrade from $oldVersion to $newVersion.');

@@ -25,7 +25,6 @@ public class NknWalletPlugin {
             result(FlutterMethodNotImplemented)
         }
     }
-    
 }
 
 public class NknWalletEventPlugin : NSObject, FlutterStreamHandler {

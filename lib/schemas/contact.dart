@@ -17,6 +17,7 @@ import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class ContactType {
@@ -59,8 +60,6 @@ class ContactSchema {
   String lastName;
   String notes;
 
-//  bool isMe;
-
   File avatar;
   OptionsSchema options;
   DateTime createdTime;
@@ -68,6 +67,10 @@ class ContactSchema {
   SourceProfile sourceProfile;
   String profileVersion;
   DateTime profileExpiresAt;
+
+  // deviceToken
+  String deviceToken;
+  bool notificationOpen;
 
   ContactSchema({
     this.id,
@@ -77,21 +80,16 @@ class ContactSchema {
     this.firstName,
     this.lastName,
     this.notes,
-//    this.isMe = false,
     this.avatar,
     this.options,
     this.createdTime,
     this.updatedTime,
     this.profileVersion,
     this.profileExpiresAt,
+    this.deviceToken,
+    this.notificationOpen,
   }) {
     name;
-
-//    if (type == ContactType.me || publickKey == Global.currentClient.publicKey) {
-//      isMe = true;
-//    } else {
-//      isMe = false;
-//    }
   }
 
   bool get isMe {
@@ -306,14 +304,36 @@ class ContactSchema {
         profile_expires_at INTEGER,
         is_top BOOLEAN DEFAULT 0
       )''';
+    final createSqlV4 = '''
+      CREATE TABLE $tableName (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT,
+        address TEXT,
+        first_name TEXT,
+        last_name TEXT,
+        data TEXT,
+        options TEXT,
+        avatar TEXT,
+        created_time INTEGER,
+        updated_time INTEGER,
+        profile_version TEXT,
+        profile_expires_at INTEGER,
+        is_top BOOLEAN DEFAULT 0,
+        device_token TEXT,
+        notification_open BOOLEAN DEFAULT 0
+      )''';
     // create table
     if (version == 2) {
       await db.execute(createSqlV2);
     } else if (version == 3) {
-      await db.execute(createSqlV3);
+      await db.execute(createSqlV4);
     } else if (version == 5) {
       await db.execute(createSqlV3);
-    } else {
+    }
+    else if (version == 6){
+      await db.execute(createSqlV4);
+    }
+    else {
       throw UnsupportedError('unsupported create operation version $version.');
     }
     // index
@@ -323,27 +343,6 @@ class ContactSchema {
     await db.execute('CREATE INDEX index_last_name ON $tableName (last_name)');
     await db.execute('CREATE INDEX index_created_time ON $tableName (created_time)');
     await db.execute('CREATE INDEX index_updated_time ON $tableName (updated_time)');
-  }
-
-  static upgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion == 2 && newVersion == 3) {
-      await _upgrade_2_3(db);
-    } else if (oldVersion == 3 && newVersion == 5) {
-      await _upgrade_3_5(db);
-    } else if (oldVersion == 2 && newVersion == 5) {
-      await _upgrade_2_3(db);
-      await _upgrade_3_5(db);
-    } else {
-      throw UnsupportedError('unsupported upgrade from $oldVersion to $newVersion.');
-    }
-  }
-
-  static _upgrade_2_3(Database db) async {
-    await db.execute('ALTER TABLE $tableName ADD COLUMN is_top BOOLEAN DEFAULT 0');
-  }
-
-  static _upgrade_3_5(Database db) async {
-    // nothing...
   }
 
   static Future<int> setTop(Future<Database> db, String chatIdOther, bool top) async {
@@ -392,6 +391,8 @@ class ContactSchema {
       updatedTime: DateTime.fromMillisecondsSinceEpoch(e['updated_time']),
       profileVersion: e['profile_version'],
       profileExpiresAt: e['profile_expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['profile_expires_at']) : DateTime.now(),
+      deviceToken: e['device_token'],
+      notificationOpen: e['notification_open']=='1'?true:false
     );
 //    contact.type = e['type'];
 
@@ -425,7 +426,6 @@ class ContactSchema {
 
   Future<int> insert(Future<Database> db, String accountPubkey) async {
     try {
-//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       int id = await (await db).insert(ContactSchema.tableName, toEntity(accountPubkey));
       return id;
     } catch (e) {
@@ -439,10 +439,8 @@ class ContactSchema {
     createdTime = now;
     updatedTime = now;
     try {
-//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       var countQuery = await (await db).query(
         ContactSchema.tableName,
-//        columns: ['COUNT(id) as count'],
         columns: ['*'],
         where: 'address = ?',
         whereArgs: [clientAddress],
@@ -466,7 +464,6 @@ class ContactSchema {
       await client.sendText([clientAddress], await toRequestData(type));
     } catch (e) {
       debugPrint(e?.toString());
-//      debugPrintStack();
     }
   }
 
@@ -475,14 +472,11 @@ class ContactSchema {
       await account.client.sendText([clientAddress], await toResponseData(account.dbHolder.db, myClientAddr, type));
     } catch (e) {
       debugPrint(e?.toString());
-//      debugPrintStack();
     }
   }
 
-//db.query('Test', where: 'name LIKE ?', whereArgs: ['%dummy%']);
   static Future<List<ContactSchema>> getContacts(Future<Database> db, {int limit = 20, int skip = 0}) async {
     try {
-//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       var res = await (await db).query(
         ContactSchema.tableName,
         columns: ['*'],
@@ -504,7 +498,6 @@ class ContactSchema {
 
   static Future<List<ContactSchema>> getStrangerContacts(Future<Database> db, {int limit = 20, int skip = 0}) async {
     try {
-//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       var res = await (await db).query(
         ContactSchema.tableName,
         columns: ['*'],
@@ -525,7 +518,6 @@ class ContactSchema {
 
   static Future<ContactSchema> getContactByAddress(Future<Database> db, String clientAddress) async {
     try {
-//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       var res = await (await db).query(
         ContactSchema.tableName,
         columns: ['*'],
@@ -540,7 +532,6 @@ class ContactSchema {
 
   Future setProfile(Future<Database> db, String accountPubkey, Map<String, dynamic> sourceData) async {
     try {
-//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       var res = await (await db).query(
         ContactSchema.tableName,
         columns: ['*'],
@@ -609,7 +600,6 @@ class ContactSchema {
       data['profile_version'] = profileVersion;
     }
     try {
-//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       var res = await (await db).query(
         ContactSchema.tableName,
         columns: ['*'],
@@ -654,7 +644,54 @@ class ContactSchema {
     }
 
     try {
-//      Database db = SqliteStorage(db: Global.currentChatDb).db;
+      var count = await (await db).update(
+        ContactSchema.tableName,
+        data,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      return count > 0;
+    } catch (e) {
+      debugPrint(e);
+      debugPrintStack();
+    }
+  }
+
+  Future<bool> setDeviceToken(Future<Database> db, String deviceToken) async {
+    Map<String, dynamic> data = {
+      'device_token': deviceToken,
+      'type': type,
+      'updated_time': DateTime.now().millisecondsSinceEpoch,
+    };
+    this.deviceToken = deviceToken;
+    if (type != ContactType.me) {
+      type = ContactType.friend;
+      data['type'] = type;
+    } else {
+      profileVersion = uuid.v4();
+      data['profile_version'] = profileVersion;
+    }
+    return updateContactDataById(db, data);
+  }
+
+  Future<bool> setNotificationOpen(Future<Database> db, bool notificationOpen) async {
+    Map<String, dynamic> data = {
+      'notification_open': notificationOpen?1:0,
+      'type': type,
+      'updated_time': DateTime.now().millisecondsSinceEpoch,
+    };
+    if (type != ContactType.me) {
+      type = ContactType.friend;
+      data['type'] = type;
+    } else {
+      profileVersion = uuid.v4();
+      data['profile_version'] = profileVersion;
+    }
+    return updateContactDataById(db, data);
+  }
+
+  Future <bool> updateContactDataById(Future<Database> db,Map data) async{
+    try {
       var count = await (await db).update(
         ContactSchema.tableName,
         data,
@@ -674,7 +711,6 @@ class ContactSchema {
     }
 
     try {
-//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       var res = await (await db).query(
         ContactSchema.tableName,
         columns: ['*'],
@@ -718,10 +754,6 @@ class ContactSchema {
   }
 
   Future<bool> setOptionColor(Future<Database> db, int backgroundColor, int color) async {
-//    if (type != ContactType.me) {
-//      type = ContactType.friend;
-//    }
-
     try {
 //      Database db = SqliteStorage(db: Global.currentChatDb).db;
       if (options == null) options = OptionsSchema();
@@ -748,9 +780,11 @@ class ContactSchema {
     if (type != ContactType.me) {
       type = ContactType.friend;
     }
+    int currentTimeStamp = DateTime.now().millisecondsSinceEpoch-5*1000;
+    // SharedPreferences prefs = await SharedPreferences.getInstance();
+    // prefs.setInt('set_burn_update_time', currentTimeStamp);
 
     try {
-//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       if (options == null) options = OptionsSchema();
       if (seconds != null && seconds > 0) {
         options.deleteAfterSeconds = seconds;
@@ -763,7 +797,7 @@ class ContactSchema {
         {
           'options': options.toJson(),
           'type': type,
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
+          'updated_time': currentTimeStamp,
         },
         where: 'id = ?',
         whereArgs: [id],

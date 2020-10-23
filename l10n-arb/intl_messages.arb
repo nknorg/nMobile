@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-08-25T19:32:41.620651",
+  "@@last_modified": "2020-10-22T17:40:05.918621",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -830,6 +830,36 @@
   },
   "burn_after_reading": "Burn After Reading",
   "@burn_after_reading": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "accept_notification": "When turned on, you will receive immediate notification when this person sends you messages.",
+  "@accept_notification": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "setting_deny_notification": "Have Deny Remote Notification",
+  "@setting_deny_notification": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "setting_accept_notification": "Have Accept Remote Notification",
+  "@setting_accept_notification": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "notification_push_content": "New Message!",
+  "@notification_push_content": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "remote_notification": "Message Noitification",
+  "@remote_notification": {
     "description": "",
     "type": "text",
     "placeholders": {}
