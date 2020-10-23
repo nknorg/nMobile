@@ -11,7 +11,7 @@ if (localPropertiesFile.exists()) {
 
 def flutterRoot = localProperties.getProperty('flutter.sdk')
 if (flutterRoot == null) {
-    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
+    throw new Exception("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
 }
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
@@ -42,6 +42,8 @@ android {
         ndk {
             abiFilters "arm64-v8a","armeabi-v7a"
         }
+
+        javaCompileOptions { annotationProcessorOptions { includeCompileClasspath = true } }
     }
 
     signingConfigs {
@@ -110,6 +112,22 @@ android {
     lintOptions {
         disable 'InvalidPackage'
     }
+//
+    packagingOptions{
+        exclude 'META-INF/io.netty.versions.properties'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/INDEX.LIST'
+        exclude 'META-INF/native-image/io.netty/codec-http/native-image.properties'
+        exclude 'META-INF/native-image/io.netty/common/native-image.properties'
+        exclude 'META-INF/native-image/io.netty/transport/native-image.properties'
+        exclude 'META-INF/native-image/io.netty/transport/reflection-config.json'
+        exclude 'META-INF/native-image/io.netty/buffer/native-image.properties'
+        exclude 'META-INF/native-image/io.netty/handler/native-image.properties'
+    }
 }
 
 // Put the highest bit +1. e.g: [1]01413935 -> [2]01413935 / [3]01413935 etc.
@@ -146,6 +164,8 @@ repositories {
     }
 }
 
+apply plugin: 'com.android.application'
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation(name: 'nkn', ext: 'aar')
@@ -155,4 +175,13 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     implementation "org.bouncycastle:bcprov-jdk15on:1.64"
     implementation 'com.google.protobuf:protobuf-java:3.11.4'
+
+    // bug检测
+    implementation 'io.sentry:sentry-android:1.7.27'
+    implementation 'org.slf4j:slf4j-nop:1.7.25'
+
+//    implementation group: 'com.google.auth', name: 'google-auth-library-oauth2-http', version: '0.21.1'
+//    implementation 'com.google.firebase:firebase-messaging:+'
 }
+
+//apply plugin: 'com.google.gms.google-services'  // Google Services plugin
