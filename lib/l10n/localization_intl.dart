@@ -582,6 +582,26 @@ class NL10ns {
     return Intl.message('Burn After Reading', name: 'burn_after_reading', desc: '');
   }
 
+  String get accept_notification {
+    return Intl.message('When turned on, you will receive immediate notification when this person sends you messages.', name: 'accept_notification', desc: '');
+  }
+
+  String get setting_deny_notification {
+    return Intl.message('Have Deny Remote Notification', name: 'setting_deny_notification', desc: '');
+  }
+
+  String get setting_accept_notification {
+    return Intl.message('Have Accept Remote Notification', name: 'setting_accept_notification', desc: '');
+  }
+
+  String get notification_push_content {
+    return Intl.message('New Message!', name: 'notification_push_content', desc: '');
+  }
+
+  String get remote_notification {
+    return Intl.message('Message Noitification', name: 'remote_notification', desc: '');
+  }
+
   String get pictures {
     return Intl.message('Pictures', name: 'pictures', desc: '');
   }

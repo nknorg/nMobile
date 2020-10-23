@@ -221,7 +221,7 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
     );
     sendMsg.isOutbound = true;
     sendMsg.burnAfterSeconds = _burnValue;
-    sendMsg.content = sendMsg.toActionContentOptionsData();
+    sendMsg.content = sendMsg.toContentOptionData(0);
     widget.chatBloc.add(SendMessage(sendMsg));
     Navigator.pop(context, _burnValue);
   }

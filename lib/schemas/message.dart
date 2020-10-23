@@ -8,11 +8,9 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/local_notification.dart';
-import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/model/data/dchat_account.dart';
-import 'package:nmobile/plugins/nkn_client.dart';
+import 'package:nmobile/schemas/contact.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:uuid/uuid.dart';
@@ -27,7 +25,6 @@ class ContentType {
   static const String media = 'media';
   static const String contact = 'contact';
   static const String eventContactOptions = 'event:contactOptions';
-//  static const String dchatSubscribe = 'dchat/subscribe';
   static const String eventSubscribe = 'event:subscribe';
   static const String eventUnsubscribe = 'event:unsubscribe';
   static const String ChannelInvitation = 'event:channelInvitation';
@@ -52,6 +49,9 @@ class MessageSchema extends Equatable {
   bool isOutbound = false;
   bool isSendError = false;
   int burnAfterSeconds;
+
+  String deviceToken;
+  int contactOptionsType;
 
   MessageSchema({this.from, this.to, this.pid, this.data}) {
     if (data != null) {
@@ -100,6 +100,7 @@ class MessageSchema extends Equatable {
     this.topic,
     this.content,
     this.contentType,
+    this.deviceToken,
     Duration deleteAfterSeconds,
   }) {
     timestamp = DateTime.now();
@@ -180,28 +181,59 @@ class MessageSchema extends Equatable {
     return jsonEncode(data);
   }
 
-  toActionContentOptionsData() {
+  toMeidaWithNotificationData(String deviceToken,String pushContent){
+    File file = this.content as File;
+    var mimeType = mime(file.path);
+    String content;
+    if (mimeType.indexOf('image') > -1) {
+      content = '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
+    }
+
     Map data = {
       'id': msgId,
-      'contentType': ContentType.eventContactOptions,
-      'content': {'deleteAfterSeconds': burnAfterSeconds},
+      'contentType': contentType ?? ContentType.text,
+      'content': content,
       'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
+    if (options != null && options.keys.length > 0) {
+      data['options'] = options;
+    }
+    if (topic != null) {
+      data['topic'] = topic;
+    }
+
+    if (deviceToken != null && deviceToken.length > 0){
+      // data['deviceToken'] = deviceToken;
+      // data['pushContent'] = pushContent;
+    }
 
     return jsonEncode(data);
   }
 
-//  toDchatSubscribeData() {
-//    Map data = {
-//      'id': msgId,
-//      'contentType': ContentType.dchatSubscribe,
-//      'content': 'Joined channel.',
-//      'topic': topic,
-//      'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-//    };
-//
-//    return jsonEncode(data);
-//  }
+  toContentOptionData(int contentOptionType){
+    this.contactOptionsType = contentOptionType;
+    Map data = Map();
+    /// 接受/取消远程消息推送 后面可继续扩展
+    if (contentOptionType == 0){
+      data = {
+        'id': msgId,
+        'contentType': ContentType.eventContactOptions,
+        'content': {'deleteAfterSeconds': burnAfterSeconds},
+        'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      };
+    }
+    else if (contentOptionType == 1){
+      data = {
+        'id': msgId,
+        'contentType': ContentType.eventContactOptions,
+        'content': {'deviceToken': deviceToken},
+        'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      };
+    }
+    print('Send Contact Event Option Data'+contentOptionType.toString()+'___'+data.toString());
+    data['optionType'] = contentOptionType.toString();
+    return jsonEncode(data);
+  }
 
   toEventSubscribeData() {
     Map data = {
@@ -370,7 +402,11 @@ class MessageSchema extends Equatable {
 
     if (message.contentType == ContentType.media) {
       message.content = File(join(Global.applicationRootDirectory.path, e['content']));
-    } else {
+    }
+    else if (message.contentType == ContentType.eventContactOptions){
+      message.content = e['content'];
+    }
+    else {
       message.content = e['content'];
     }
 

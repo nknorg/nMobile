@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:equatable/equatable.dart';
+import 'package:esys_flutter_share/esys_flutter_share.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,6 +16,7 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
@@ -25,6 +27,8 @@ import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/log_tag.dart';
+import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
   @override
@@ -106,13 +110,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
                     repoTopic: repoTopic,
                     membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
                     needUploadMetaCallback: (topicName) {
-//                    GroupChatPrivateChannel.uploadPermissionMeta(
-//                        client: account.client,
-//                        topicName: topicName,
-//                        accountPubkey: accountPubkey,
-//                        repoSub: repoSub,
-//                        repoBlackL: repoBl,
-//                        membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext));
+
                     });
                 if (await repoBl.getByTopicAndChatId(message.topic, accountChatId) != null ||
                     (accountPubkey != accountChatId && await repoBl.getByTopicAndChatId(message.topic, accountPubkey) != null)) {
@@ -128,10 +126,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
               pid = await account.client.publishText(genTopicHash(message.topic), message.toTextData());
             }
           } else {
-            pid = await account.client.sendText([message.to], message.toTextData());
+            Map dataInfo = await _checkIfSendNotification(message);
+            pid = await account.client.sendText([message.to], jsonEncode(dataInfo));
           }
           message.pid = pid;
           message.isSendError = false;
+          print("Send Text Message");
         } catch (e) {
           message.isSendError = true;
           _LOG.e('_mapSendMessageToState', e);
@@ -146,14 +146,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
           message.deleteTime = DateTime.now().add(Duration(seconds: message.options['deleteAfterSeconds']));
         }
         try {
-          var pid = await account.client.sendText([message.to], message.toTextData());
+          Map dataInfo = await _checkIfSendNotification(message);
+          var pid = await account.client.sendText([message.to], jsonEncode(dataInfo));
           message.pid = pid;
           message.isSendError = false;
         } catch (e) {
           message.isSendError = true;
-          _LOG.e('_mapSendMessageToState', e);
+          _LOG.e('textExtension _mapSendMessageToState', e);
         }
         await message.insert(db, accountPubkey);
+
+        print('Send Text Extension Message');
         yield MessagesUpdated(target: message.to, message: message);
         return;
       case ContentType.media:
@@ -192,20 +195,26 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
               pid = await account.client.publishText(genTopicHash(message.topic), message.toMediaData());
             }
           } else {
-            pid = await account.client.sendText([message.to], message.toMediaData());
+            var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(message.to));
+            await ContactSchema(type: ContactType.friend, clientAddress: message.to, nknWalletAddress: walletAddress).createContact(db);
+            var contact = await ContactSchema.getContactByAddress(db, message.to);
+            String sendData = message.toMeidaWithNotificationData(contact.deviceToken, "[收到图片]");
+            pid = await account.client.sendText([message.to], sendData);
           }
           message.pid = pid;
           message.isSendError = false;
         } catch (e) {
           message.isSendError = true;
-          _LOG.e('_mapSendMessageToState', e);
+          _LOG.e('Media _mapSendMessageToState', e);
         }
+        print('Send Media Message');
         await message.insert(db, accountPubkey);
         yield MessagesUpdated(target: message.to, message: message);
         return;
       case ContentType.eventContactOptions:
         try {
-          await account.client.sendText([message.to], message.toActionContentOptionsData());
+          print('contentType is'+message.contactOptionsType.toString());
+          await account.client.sendText([message.to], message.toContentOptionData(message.contactOptionsType));
         } catch (e) {
           _LOG.e('_mapSendMessageToState', e);
         }
@@ -385,11 +394,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         checkBurnOptions(message, contact);
         LocalNotification.messageNotification(title, message.content, message: message);
         await message.insert(db, accountPubkey);
+
         var unReadCount = await MessageSchema.unReadMessages(db, accountChatId);
-        if (message.deleteAfterSeconds != contact.options.deleteAfterSeconds) {
-          await contact.setBurnOptions(db, message.deleteAfterSeconds);
-          contactBloc.add(LoadContact(address: [contact.clientAddress]));
-        }
         FlutterAppBadger.updateBadgeCount(unReadCount);
         yield MessagesUpdated(target: message.from, message: message);
         return;
@@ -445,7 +451,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         } on FormatException catch (e) {
           _LOG.e('_mapReceiveMessageToState', e);
         }
-        await contact.setBurnOptions(db, data['content']['deleteAfterSeconds']);
+        if (data['optionType'] == 0 || data['optionType'] == '0'){
+          print('route1'+data['content'].toString());
+          await contact.setBurnOptions(db, data['content']['deleteAfterSeconds']);
+        }
+        else{
+          print('route2');
+          await contact.setDeviceToken(db, data['content']['deviceToken']);
+        }
         contactBloc.add(LoadContact(address: [contact.clientAddress]));
         message.isSuccess = true;
         message.isRead = true;
@@ -502,8 +515,43 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
   ///change burn status
   checkBurnOptions(MessageSchema message, ContactSchema contact) async {
     if (message.topic != null) return;
-    await contact.setBurnOptions(db, contact.options?.deleteAfterSeconds);
+    print('收到修改阅后即焚'+'__'+contact.options.deleteAfterSeconds.toString());
+    print('收到'+'__'+message.deleteAfterSeconds.toString());
+    if (message.deleteAfterSeconds != contact.options.deleteAfterSeconds){
+      await contact.setBurnOptions(db, contact.options?.deleteAfterSeconds);
+    }
     contactBloc.add(LoadContact(address: [contact.clientAddress]));
+  }
+
+  Future<int> _getBurnUpdateTime() async {
+    int burnUpdateTime;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    burnUpdateTime = await prefs.getInt('set_burn_update_time');
+    return burnUpdateTime;
+  }
+
+  /// check need send Notification
+  Future<Map> _checkIfSendNotification(MessageSchema message) async{
+    Map dataInfo;
+    if (message.contentType == ContentType.text || message.contentType == ContentType.textExtension){
+      dataInfo = jsonDecode(message.toTextData());
+    }
+    print('Data info message Option is '+dataInfo.toString());
+    var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(message.to));
+    await ContactSchema(type: ContactType.friend, clientAddress: message.to, nknWalletAddress: walletAddress).createContact(db);
+    var contact = await ContactSchema.getContactByAddress(db, message.to);
+    if (contact.deviceToken != null && contact.deviceToken.length > 0){
+      String pushContent = NL10ns.of(Global.appContext).notification_push_content;
+      print('Send Push notification content is '+pushContent);
+      dataInfo['deviceToken'] = contact.deviceToken;
+      dataInfo['pushContent'] = pushContent;
+
+      if (message.contentType == ContentType.media){
+        dataInfo = jsonDecode(message.toMeidaWithNotificationData(contact.deviceToken, pushContent));
+      }
+    }
+    print("final send data is"+dataInfo.toString());
+    return dataInfo;
   }
 }
 

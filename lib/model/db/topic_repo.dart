@@ -8,6 +8,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/utils/log_tag.dart';
@@ -213,7 +214,7 @@ class TopicRepo with Tag {
   }
 
   static Future<void> create(Database db, int version) async {
-    assert(version >= 5);
+    assert(version >= SqliteStorage.currentVersion);
     await db.execute(deleteSql);
     await db.execute(createSqlV5);
 
@@ -223,15 +224,15 @@ class TopicRepo with Tag {
   }
 
   static Future<void> upgradeFromV5(Database db, int oldVersion, int newVersion) async {
-    assert(newVersion >= 5);
-    if (newVersion == 5) {
+    assert(newVersion >= SqliteStorage.currentVersion);
+    if (newVersion == SqliteStorage.currentVersion) {
       await create(db, newVersion);
     } else {
       throw UnsupportedError('unsupported upgrade from $oldVersion to $newVersion.');
     }
   }
 
-  static final deleteSql = '''DROP TABLE Topic;''';
+  static final deleteSql = '''DROP TABLE IF EXISTS Topic;''';
   static final createSqlV5 = '''
       CREATE TABLE $tableName (
         $id INTEGER PRIMARY KEY AUTOINCREMENT,

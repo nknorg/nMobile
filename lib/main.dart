@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -17,17 +19,43 @@ import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/router/route_observer.dart';
 import 'package:nmobile/router/routes.dart';
-import 'package:nmobile/theme/slider_theme.dart';
+// import 'package:nmobile/theme/slider_theme.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:oktoast/oktoast.dart';
+// import 'package:sentry/browser_client.dart';
 
 import 'blocs/wallet/wallets_bloc.dart';
 import 'consts/theme.dart';
+
+// final sentry = SentryClient(
+//   // log
+//     dsn: 'https://0ca62d9fa0b5457d96c120115b299245@o460339.ingest.sentry.io/5460345',
+//     environmentAttributes: const Event(
+//       release: 'nMobile',
+//       environment: 'production',
+//     ));
 
 void main() async {
   Global.init(() {
     runApp(App());
   });
+  // runZonedGuarded(() {
+  //   Global.init(() {
+  //     runApp(App());
+  //   });
+  // }, (error, stackTrace) async {
+  //   await sentry.captureException(
+  //     exception: error,
+  //     stackTrace: stackTrace,
+  //   );
+  // });
+  //
+  // FlutterError.onError = (details, {bool forceReport = false}) {
+  //   sentry.captureException(
+  //     exception: details.exception,
+  //     stackTrace: details.stack,
+  //   );
+  // };
 }
 
 class App extends StatefulWidget {
@@ -110,7 +138,7 @@ class AppState extends State<App> with WidgetsBindingObserver, Tag {
                   overlayShape: RoundSliderOverlayShape(overlayRadius: 18),
                   trackHeight: 8,
                   tickMarkShape: RoundSliderTickMarkShape(tickMarkRadius: 0),
-                  thumbShape: SliderThemeShape(),
+                  // thumbShape: SliderThemeShape(),
                 ),
               ),
               home: AppScreen(),

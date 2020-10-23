@@ -46,11 +46,15 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
                 getSubscribers(call, result)
             case "getSubscription":
                 getSubscription(call, result)
+            case "fetchDeviceToken":
+                fetchDeviceToken(call, result)
+            case "getBlockHeight":
+                getBlockHeight(call, result)
             default:
                 result(FlutterMethodNotImplemented)
         }
     }
-    
+        
     private let clientConnectQueue = DispatchQueue(label: "org.nkn.sdk/client/connect", qos: .userInteractive)
 //    private let clientMessageQueue = DispatchQueue(label: "org.nkn.sdk/client/message", qos: .background)
     private let clientSendQueue = DispatchQueue(label: "org.nkn.sdk/client/send", qos: .userInteractive)
@@ -151,7 +155,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
                 "src": msg.src,
                 "data": String(data: msg.data!, encoding: String.Encoding.utf8)!,
                 "type": msg.type,
-                "encrypted": msg.encrypted,
+                "encryptedx": msg.encrypted,
                 "pid": FlutterStandardTypedData(bytes: msg.messageID!)
             ]
             var client1: [String: Any] = [String: Any]()
@@ -169,6 +173,20 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         let dests = args["dests"] as! [String]
         let data = args["data"] as! String
         let maxHoldingSeconds = args["maxHoldingSeconds"] as! Int32
+        
+        print("arge is ",args.description);
+        let dataInfo = getDictionaryFromJSONString(jsonString: data)
+        if (dataInfo["deviceToken"] != nil){
+            let deviceToken = dataInfo["deviceToken"] as! String;
+            if (deviceToken.count > 0){
+                let content = dataInfo["pushContent"] as! String;
+                if (content.count > 0){
+                    let pushService:NKNPushService = NKNPushService.shared();
+                    pushService.pushContent(content, token: deviceToken);
+                }
+            }
+        }
+        
         result(nil)
 
         guard let client = self.multiClient else {
@@ -407,54 +425,52 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         multiClient = nil
         isConnected = false
     }
-
-    //func createClient(_ call: FlutterMethodCall, _ result: FlutterResult) {
-    //    if(client != nil) {
-    //        do {
-    //             receiveMessageQueue.cancelAllOperations();
-    //            try client?.close()
-    //            client = nil;
-    //        } catch {
-    //             client = nil;
-    //
-    //        }
-    //    }
-    //    let args = call.arguments as! [String: Any]
-    //    let identifier = args["identifier"] as? String
-    //    let keystore = args["keystore"] as? String
-    //    let password = args["password"] as? String
-    //
-    //    let config = NknWalletConfig.init()
-    //    config.password = password ?? ""
-    //    var error: NSError?
-    //    let wallet = NknWalletFromJSON(keystore, config, &error)
-    //    if (error != nil) {
-    //        result(FlutterError.init(code: String(error?.code ?? 0), message: error?.localizedDescription, details: nil))
-    //        return
-    //    }
-    //    result(nil)
-    //
-    //    if(onconnectWorkItem?.isCancelled == false) {
-    //        onconnectWorkItem?.cancel()
-    //    }
-    //    onconnectWorkItem = DispatchWorkItem {
-    //        let account = NknNewAccount(wallet?.seed(), &error)
-    //        if (error != nil) {
-    //            clientEventSink?(FlutterError.init(code: String(error?.code ?? 0), message: error?.localizedDescription, details: nil))
-    //            return
-    //        }
-    //
-    //        let clientConfig = NknClientConfig()
-    ////        clientConfig.seedRPCServerAddr = NknStringArray.init(from: "https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
-    //        client = NknNewMultiClient(account, identifier, 3, true, clientConfig, &error)
-    //        if (error != nil) {
-    //            clientEventSink?(FlutterError.init(code: String(error?.code ?? 0), message: error?.localizedDescription, details: nil))
-    //            return
-    //        }
-    //        onConnect(client)
-    //    }
-    //    clientOnconnectQueue.async(execute: onconnectWorkItem!)
-    //}
+    
+    func getBlockHeight(_ call: FlutterMethodCall, _ result: FlutterResult){
+        let args = call.arguments as! [String: Any]
+        let _id = args["_id"] as! String
+        
+        guard let client = self.multiClient else {
+            clientEventSink?(FlutterError.init(code: _id, message: "no client", details: nil))
+            return
+        }
+        
+        clientConnectQueue.async {
+            do {
+                var height: Int32 = 0
+                try client.getHeight(&height);
+                var resp: [String: Any] = [String: Any]()
+                resp["_id"] = _id
+                resp["height"] = height
+                self.clientEventSink!(resp)
+            } catch let error {
+                self.clientEventSink!(FlutterError(code: _id, message: error.localizedDescription, details: nil))
+            }
+        }
+    }
+    
+    func fetchDeviceToken(_ call: FlutterMethodCall, _ result: FlutterResult) -> String{
+        let deviceToken = UserDefaults.standard.object(forKey: "nkn_device_token");
+        
+        let args = call.arguments as! [String:Any]
+        let _id = args["_id"] as! String;
+        
+        var resp: [String: Any] = [String: Any]()
+            resp["_id"] = _id
+            resp["event"] = "fetch_device_token"
+            resp["device_token"] = deviceToken
+            self.clientEventSink!(resp)
+        return "";
+    }
+    
+    func getDictionaryFromJSONString(jsonString:String) ->NSDictionary{
+        let jsonData:Data = jsonString.data(using: .utf8)!
+        let dict = try? JSONSerialization.jsonObject(with: jsonData, options: .mutableContainers)
+        if dict != nil {
+            return dict as! NSDictionary
+        }
+        return NSDictionary()
+    }
 }
 
 extension Data {

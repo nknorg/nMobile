@@ -810,6 +810,38 @@
     "type": "text",
     "placeholders": {}
   },
+
+  "accept_notification": "启用后，对方将可以即时的推送消息到您的设备。",
+  "@accept_notification": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "setting_deny_notification": "已关闭对方发送离线消息通知",
+  "@setting_deny_notification": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "setting_accept_notification": "已接受对方发送离线消息通知",
+  "@setting_accept_notification": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "notification_push_content": "新消息!",
+  "@notification_push_content": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "remote_notification": "消息通知",
+  "@remote_notification": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+
   "pictures": "图片",
   "@pictures": {
     "description": "",

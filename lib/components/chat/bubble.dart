@@ -69,8 +69,11 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
       items: [
         MenuItem(
           userInfo: 0,
-          title: NL10ns.of(context).copy,
-          textStyle: TextStyle(color: DefaultTheme.fontLightColor, fontSize: 12),
+          title: NL10ns
+              .of(context)
+              .copy,
+          textStyle: TextStyle(
+              color: DefaultTheme.fontLightColor, fontSize: 12),
         ),
       ],
       onClickMenu: (MenuItemProvider item) {
@@ -92,8 +95,11 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
       items: [
         MenuItem(
           userInfo: 0,
-          title: NL10ns.of(context).done,
-          textStyle: TextStyle(color: DefaultTheme.fontLightColor, fontSize: 12),
+          title: NL10ns
+              .of(context)
+              .done,
+          textStyle: TextStyle(
+              color: DefaultTheme.fontLightColor, fontSize: 12),
         ),
       ],
       onClickMenu: (MenuItemProvider item) {
@@ -118,7 +124,8 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
     BoxDecoration decoration;
     Widget timeWidget;
     Widget burnWidget = Container();
-    String timeFormat = NKNTimeUtil.formatChatTime(context, widget.message.timestamp);
+    String timeFormat = NKNTimeUtil.formatChatTime(
+        context, widget.message.timestamp);
     List<Widget> content = <Widget>[];
     timeWidget = Label(
       timeFormat,
@@ -138,14 +145,20 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
         ),
       );
       dark = true;
-      if (widget.message.options != null && widget.message.options['deleteAfterSeconds'] != null) {
+      if (widget.message.options != null &&
+          widget.message.options['deleteAfterSeconds'] != null) {
         burnWidget = Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Icon(FontAwesomeIcons.clock, size: 12, color: DefaultTheme.fontLightColor.withAlpha(178)).pad(b: 1, r: 4),
+            Icon(FontAwesomeIcons.clock, size: 12,
+                color: DefaultTheme.fontLightColor.withAlpha(178)).pad(
+                b: 1, r: 4),
             Label(
-              Format.timeFromNowFormat(widget.message.deleteTime ?? DateTime.now().add(Duration(seconds: widget.message.options['deleteAfterSeconds'] + 1))),
+              Format.timeFromNowFormat(widget.message.deleteTime ??
+                  DateTime.now().add(Duration(
+                      seconds: widget.message.options['deleteAfterSeconds'] +
+                          1))),
               type: LabelType.bodySmall,
               fontSize: DefaultTheme.iconTextFontSize,
               color: DefaultTheme.fontLightColor.withAlpha(178),
@@ -175,14 +188,19 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
         ),
       );
 
-      if (widget.message.options != null && widget.message.options['deleteAfterSeconds'] != null) {
+      if (widget.message.options != null &&
+          widget.message.options['deleteAfterSeconds'] != null) {
         burnWidget = Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Icon(FontAwesomeIcons.clock, size: 12, color: DefaultTheme.fontColor2).pad(b: 1, r: 4),
+            Icon(FontAwesomeIcons.clock, size: 12,
+                color: DefaultTheme.fontColor2).pad(b: 1, r: 4),
             Label(
-              Format.timeFromNowFormat(widget.message.deleteTime ?? DateTime.now().add(Duration(seconds: widget.message.options['deleteAfterSeconds'] + 1))),
+              Format.timeFromNowFormat(widget.message.deleteTime ??
+                  DateTime.now().add(Duration(
+                      seconds: widget.message.options['deleteAfterSeconds'] +
+                          1))),
               type: LabelType.bodySmall,
               fontSize: DefaultTheme.iconTextFontSize,
               color: DefaultTheme.fontColor2,
@@ -208,12 +226,20 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
           for (String s in chatContent) {
             if (s.contains(ChatUtil.reg)) {
               children.add(TextSpan(
-                  text: s, style: TextStyle(height: 1.15, color: Color(DefaultTheme.headerColor2), fontStyle: FontStyle.italic, fontWeight: FontWeight.bold)));
+                  text: s,
+                  style: TextStyle(height: 1.15,
+                      color: Color(DefaultTheme.headerColor2),
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.bold)));
             } else {
               if (widget.style == BubbleStyle.Me) {
-                children.add(TextSpan(text: s, style: TextStyle(color: DefaultTheme.fontLightColor, height: 1.25)));
+                children.add(TextSpan(text: s,
+                    style: TextStyle(
+                        color: DefaultTheme.fontLightColor, height: 1.25)));
               } else {
-                children.add(TextSpan(text: s, style: TextStyle(color: DefaultTheme.fontColor1, height: 1.25)));
+                children.add(TextSpan(text: s,
+                    style: TextStyle(
+                        color: DefaultTheme.fontColor1, height: 1.25)));
               }
             }
           }
@@ -268,7 +294,8 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
         );
         break;
     }
-    if (widget.message.options != null && widget.message.options['deleteAfterSeconds'] != null) {
+    if (widget.message.options != null &&
+        widget.message.options['deleteAfterSeconds'] != null) {
       content.add(burnWidget);
     }
     // fix by Wei.Chou
@@ -330,7 +357,8 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
               child: GestureDetector(
                 onTap: () {
                   if (!widget.hideHeader) {
-                    Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: widget.contact);
+                    Navigator.of(context).pushNamed(
+                        ContactScreen.routeName, arguments: widget.contact);
                   }
                 },
                 onLongPress: () {
@@ -352,7 +380,10 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
       return Padding(
         padding: EdgeInsets.only(top: 4.h),
         child: Align(
-          alignment: widget.style == BubbleStyle.Me || widget.style == BubbleStyle.SendError ? Alignment.centerRight : Alignment.centerLeft,
+          alignment: widget.style == BubbleStyle.Me ||
+              widget.style == BubbleStyle.SendError
+              ? Alignment.centerRight
+              : Alignment.centerLeft,
           child: Column(
             children: <Widget>[
               widget.showTime ? timeWidget : Container(),
@@ -374,7 +405,10 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
             widget.showTime ? timeWidget : Container(),
             widget.showTime ? SizedBox(height: 4.h) : Container(),
             Align(
-              alignment: widget.style == BubbleStyle.Me || widget.style == BubbleStyle.SendError ? Alignment.centerRight : Alignment.centerLeft,
+              alignment: widget.style == BubbleStyle.Me ||
+                  widget.style == BubbleStyle.SendError
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
               child: GestureDetector(
                 key: popupMenuKey,
                 onTap: popupMenu,
@@ -407,7 +441,8 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
     // TODO: get other name from contact.
     final inviteDesc = widget.style != BubbleStyle.Me
         ? NL10ns.of(context).invites_desc_me(widget.message.to.substring(0, 6))
-        : NL10ns.of(context).invites_desc_other(widget.message.to.substring(0, 6));
+        : NL10ns.of(context).invites_desc_other(
+        widget.message.to.substring(0, 6));
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20),
@@ -416,94 +451,92 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
         children: <Widget>[
           Column(
             children: [
-              Label(inviteDesc, type: LabelType.bodyRegular, color: Colours.dark_2d),
-              Label(topicSpotName.shortName, type: LabelType.bodyRegular, color: Colours.blue_0f)
+              Label(inviteDesc, type: LabelType.bodyRegular,
+                  color: Colours.dark_2d),
+              Label(topicSpotName.shortName, type: LabelType.bodyRegular,
+                  color: Colours.blue_0f)
             ],
           ),
           SizedBox(width: 5),
           widget.style == BubbleStyle.Me
               ? Space.empty
               : InkWell(
-                  onTap: () async {
-                    final topicName = widget.message.content;
-                    BottomDialog.of(Global.appContext).showAcceptDialog(
-                        title: NL10ns.of(context).accept_invitation,
-                        subTitle: inviteDesc,
-                        content: topicName,
-                        onPressed: () {
-                          GroupChatHelper.subscribeTopic(
-                              account: account,
-                              topicName: topicName,
-                              chatBloc: _chatBloc,
-                              callback: (success, e) async {
-                                if (success) {
-                                  if (topicSpotName.isPrivate) {
-                                    // TODO: delay pull action at least 3 minutes.
-                                    GroupChatPrivateChannel.pullSubscribersPrivateChannel(
-                                        client: account.client,
-                                        topicName: topicName,
-                                        accountPubkey: accountPubkey,
-                                        myChatId: accountChatId,
-                                        repoSub: SubscriberRepo(db),
-                                        repoBlackL: BlackListRepo(db),
-                                        repoTopic: TopicRepo(db),
-                                        membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
-                                        needUploadMetaCallback: (topicName) {
-                                          // The owner will not invite himself. In other words, current `account` is not the group owner.
-                                        });
-                                  } else {
-                                    GroupChatPublicChannel.pullSubscribersPublicChannel(
-                                      client: account.client,
-                                      topicName: topicName,
-                                      myChatId: accountChatId,
-                                      repoSub: SubscriberRepo(db),
-                                      repoTopic: TopicRepo(db),
-                                      membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
-                                    );
-                                  }
-                                  showToast(NL10ns.of(context).accepted);
-                                  Navigator.pop(context);
-                                } else {
-                                  final topicExists = await TopicRepo(db).getTopicByName(topicName);
-                                  if (topicExists.nonNull) {
-                                    showToast(NL10ns.of(context).accepted_already);
-                                    Navigator.pop(context);
-                                  } else
-                                    showToast(NL10ns.of(context).something_went_wrong);
-                                }
-                              });
-                        });
-                  },
-                  child: Label(
-                    NL10ns.of(context).accept,
-                    type: LabelType.bodyRegular,
-                    fontWeight: FontWeight.bold,
-                    color: DefaultTheme.primaryColor,
-                  ),
-                )
+            onTap: () async {
+              final topicName = widget.message.content;
+              BottomDialog.of(Global.appContext).showAcceptDialog(
+                  title: NL10ns
+                      .of(context)
+                      .accept_invitation,
+                  subTitle: inviteDesc,
+                  content: topicName,
+                  onPressed: () => _joinChannelByName(topicSpotName)
+              );
+            },
+            child: Label(
+              NL10ns
+                  .of(context)
+                  .accept,
+              type: LabelType.bodyRegular,
+              fontWeight: FontWeight.bold,
+              color: DefaultTheme.primaryColor,
+            ),
+          )
         ],
       ),
     );
   }
 
-//  getJoinOrLeaveView() {
-//    var groupName = " " + NMobileLocalizations.of(context).joined_channel;
-//    return Container(
-//      padding: EdgeInsets.symmetric(vertical: 20),
-//      child: Row(
-//        mainAxisAlignment: MainAxisAlignment.center,
-//        children: <Widget>[
-//          Column(
-//            children: <Widget>[
-//              Label(
-//                groupName,
-//                type: LabelType.bodyRegular,
-//                color: DefaultTheme.primaryColor,
-//              )
-//            ],
-//          )
-//        ],
-//      ),
-//    );
-//  }
+  _joinChannelByName(Topic theTopic) {
+    print("Channel name is "+theTopic.name);
+    GroupChatHelper.subscribeTopic(
+        account: account,
+        topicName: theTopic.name,
+        chatBloc: _chatBloc,
+        callback: (success, e) async {
+          if (success) {
+            if (theTopic.isPrivate) {
+              // TODO: delay pull action at least 3 minutes.
+              GroupChatPrivateChannel.pullSubscribersPrivateChannel(
+                  client: account.client,
+                  topicName: theTopic.name,
+                  accountPubkey: accountPubkey,
+                  myChatId: accountChatId,
+                  repoSub: SubscriberRepo(db),
+                  repoBlackL: BlackListRepo(db),
+                  repoTopic: TopicRepo(db),
+                  membersBloc: BlocProvider.of<ChannelMembersBloc>(
+                      Global.appContext),
+                  needUploadMetaCallback: (topicName) {
+                    // The owner will not invite himself. In other words, current `account` is not the group owner.
+                  });
+            } else {
+              GroupChatPublicChannel.pullSubscribersPublicChannel(
+                client: account.client,
+                topicName: theTopic.name,
+                myChatId: accountChatId,
+                repoSub: SubscriberRepo(db),
+                repoTopic: TopicRepo(db),
+                membersBloc: BlocProvider.of<ChannelMembersBloc>(
+                    Global.appContext),
+              );
+            }
+            showToast(NL10ns
+                .of(context)
+                .accepted);
+            Navigator.pop(context);
+          } else {
+            final topicExists = await TopicRepo(db).getTopicByName(
+                theTopic.topic);
+            if (topicExists.nonNull) {
+              showToast(NL10ns
+                  .of(context)
+                  .accepted_already);
+              Navigator.pop(context);
+            } else
+              showToast(NL10ns
+                  .of(context)
+                  .something_went_wrong);
+          }
+        });
+  }
 }

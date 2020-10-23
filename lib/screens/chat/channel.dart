@@ -248,6 +248,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
               state.message.isSuccess = true;
               state.message.isRead = true;
               if (state.message.options != null && state.message.options['deleteAfterSeconds'] != null) {
+                print("YYYYYYY look here "+state.message.options['deleteAfterSeconds'].toString());
                 state.message.deleteTime = DateTime.now().add(Duration(seconds: state.message.options['deleteAfterSeconds'] + 1));
               }
               state.message.readMessage(db).then((n) {

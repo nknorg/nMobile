@@ -4,6 +4,7 @@
  * Proprietary and confidential
  */
 
+import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -184,7 +185,7 @@ class SubscriberRepo with Tag {
   }
 
   static Future<void> create(Database db, int version) async {
-    assert(version >= 5);
+    assert(version >= SqliteStorage.currentVersion);
     await db.execute(deleteSql);
     await db.execute(createSqlV5);
 
@@ -193,15 +194,15 @@ class SubscriberRepo with Tag {
   }
 
   static Future<void> upgradeFromV5(Database db, int oldVersion, int newVersion) async {
-    assert(newVersion >= 5);
-    if (newVersion == 5) {
+    assert(newVersion >= SqliteStorage.currentVersion);
+    if (newVersion == SqliteStorage.currentVersion) {
       await create(db, newVersion);
     } else {
       throw UnsupportedError('unsupported upgrade from $oldVersion to $newVersion.');
     }
   }
 
-  static final deleteSql = '''DROP TABLE Subscribers;''';
+  static final deleteSql = '''DROP TABLE IF EXISTS Subscribers;''';
   static final createSqlV5 = '''
       CREATE TABLE $tableName (
         $id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -262,25 +263,3 @@ Map<String, dynamic> toEntity(Subscriber subs) {
     upload_done: subs.uploadDone ? 1 : 0,
   };
 }
-
-//@Entity(
-//    tableName = "subscriber",
-//    indices = [Index("topic", "chat_id", unique = true), Index("time_create")]
-//)
-//// All are white list in this table.
-//data class Subscriber(
-//@PrimaryKey(autoGenerate = true)
-//@ColumnInfo(name = "id", index = true) val id: Long,
-//
-////@ForeignKey()
-//@ColumnInfo(name = "topic") val topic: String,
-//@ColumnInfo(name = "chat_id") val chatId: String,
-//@ColumnInfo(name = "prm_p_i") val indexPermissionPage: Int,
-//
-//@ColumnInfo(name = "time_create") val timeCreate: Long,
-//@ColumnInfo(name = "expire_at") val blockHeightExpireAt: Int,
-//
-//@ColumnInfo(name = "uploaded") val uploaded: Boolean,
-//@ColumnInfo(name = "subscribed") val subscribed: Boolean,
-//@ColumnInfo(name = "upload_done") val uploadDone: Boolean
-//)
