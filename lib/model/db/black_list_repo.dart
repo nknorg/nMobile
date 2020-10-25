@@ -113,7 +113,7 @@ class BlackListRepo {
     // no table before version 5.
     //await db.execute(deleteSql);
     await db.execute(createSqlV5);
-    await db.execute('CREATE UNIQUE INDEX'
+    await db.execute('CREATE UNIQUE INDEX IF NOT EXISTS'
         ' index_${tableName}_${topic}_$cid_r_pk'
         ' ON $tableName ($topic, $cid_r_pk);');
   }
@@ -128,7 +128,7 @@ class BlackListRepo {
   }
 
   static final createSqlV5 = '''
-      CREATE TABLE $tableName (
+      CREATE TABLE IF NOT EXISTS $tableName (
         $id INTEGER PRIMARY KEY AUTOINCREMENT,
         $topic TEXT,
         $cid_r_pk TEXT,

@@ -532,10 +532,10 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
                   .of(context)
                   .accepted_already);
               Navigator.pop(context);
-            } else
-              showToast(NL10ns
-                  .of(context)
-                  .something_went_wrong);
+            }
+            else{
+              showToast('bubble create topic failed');
+            }
           }
         });
   }

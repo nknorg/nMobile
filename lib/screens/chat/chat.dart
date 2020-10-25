@@ -17,6 +17,7 @@ import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
 import 'package:nmobile/screens/chat/no_wallet_account.dart';
 import 'package:nmobile/utils/log_tag.dart';
+import 'package:oktoast/oktoast.dart';
 
 class ChatScreen extends StatefulWidget {
   static const String routeName = '/chat';
@@ -172,7 +173,7 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                   });
                 } else {
                   noConnPageShowing = false;
-                  authHelper.wallet = null;
+                  // authHelper.wallet = null;
                   if (!homePageShowing) {
                     timerAuth.onHomePageFirstShow(context);
                   }
@@ -184,14 +185,14 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
           } else {
             noConnPageShowing = false;
             homePageShowing = false;
-            authHelper.wallet = null;
+            // authHelper.wallet = null;
             timerAuth.onNoConnection();
             return NoWalletAccount(timerAuth);
           }
         }
         noConnPageShowing = false;
         homePageShowing = false;
-        authHelper.wallet = null;
+        // authHelper.wallet = null;
         timerAuth.onNoConnection();
         return Container();
       },

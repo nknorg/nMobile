@@ -134,11 +134,12 @@ class TopicRepo with Tag {
       if (list.length > 1) _log.w("getTopicByName, size: ${list.length}");
       return list[0];
     }
-    _log.w('getTopicByName($topicName), null');
+    _log.w('getTopicByName Null($topicName), null');
     return null;
   }
 
   Future<void> insertOrUpdateTime(Topic topic) async {
+    print('Topic info is'+topic.name);
     _log.i('insertOrUpdateTime(${topic.topic})');
     if (await getTopicByName(topic.topic) == null) {
       await insertOrIgnore(topic);
@@ -150,7 +151,9 @@ class TopicRepo with Tag {
   // @Insert(onConflict = OnConflictStrategy.IGNORE)
   Future<void> insertOrIgnore(Topic topic) async {
     _log.i('insertOrIgnore(${topic.topic})');
-    await (await _db).insert(tableName, toEntity(topic), conflictAlgorithm: ConflictAlgorithm.ignore);
+    if (getTopicByName(topic.topic) != null){
+      await (await _db).insert(tableName, toEntity(topic), conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
   }
 
   // @Query("""UPDATE topic SET time_update = :timeUpdate WHERE topic = :topic""")
@@ -215,11 +218,11 @@ class TopicRepo with Tag {
 
   static Future<void> create(Database db, int version) async {
     assert(version >= SqliteStorage.currentVersion);
-    await db.execute(deleteSql);
+    // await db.execute(deleteSql);
     await db.execute(createSqlV5);
 
     // equivalent to PRIMARY KEY
-    // await db.execute('CREATE     INDEX index_${tableName}_$id    ON tableName ($id);');
+    await db.execute('CREATE     INDEX index_${tableName}_$id    ON tableName ($id);');
     await db.execute('CREATE UNIQUE INDEX index_${tableName}_$topic ON $tableName ($topic);');
   }
 
@@ -287,7 +290,6 @@ Topic parseEntity(Map<String, dynamic> row) {
 
 Map<String, dynamic> toEntity(Topic subs) {
   return {
-//    id: subs.id,
     topic: subs.topic,
     count: subs.numSubscribers,
     avatar: subs.avatarUri,

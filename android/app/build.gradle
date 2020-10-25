@@ -40,7 +40,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
-            abiFilters "arm64-v8a","armeabi-v7a"
+            abiFilters'armeabi-v7a'
         }
 
         javaCompileOptions { annotationProcessorOptions { includeCompileClasspath = true } }
@@ -55,6 +55,11 @@ android {
             storePassword useDebugConf ? KEYSTORE_STOREPWD : System.getenv("KEY_STORE_STORE_PWD")
             keyAlias useDebugConf ? KEYSTORE_ALIAS : System.getenv("KEY_STORE_KEY_ALIAS")
             keyPassword useDebugConf ? KEYSTORE_PASSWORD : System.getenv("KEY_STORE_KEY_PWD")
+
+            println("---------->>> signingConfigs.storeFile | useDebugConf: $storeFile")
+            println("---------->>> signingConfigs.storePassword | useDebugConf: $storePassword")
+            println("---------->>> signingConfigs.keyAlias | useDebugConf: $keyAlias")
+            println("---------->>> signingConfigs.keyPassword | useDebugConf: $keyPassword")
             v2SigningEnabled true
         }
         debug {
@@ -68,18 +73,30 @@ android {
     }
     buildTypes {
         release {
+            ndk{
+                //这里其实我觉可以直接是用"armeabi-v7a"，但国内几个大哥之前使用的都是"armeabi"
+                abiFilters "armeabi"
+            }
             shrinkResources false
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
         debug {
-            applicationIdSuffix ".flutter"
-            versionNameSuffix "-flutter"
-
-            ndk {
-                abiFilters "arm64-v8a"
+//            ndk {
+//                //这里要加上，否则debug包会出问题,后面三个为可选，x86建议加上不然部分模拟器回报错
+//                abiFilters "armeabi", "armeabi-v7a","arm64-v8a", "x86"
+//            }
+            ndk{
+                //这里其实我觉可以直接是用"armeabi-v7a"，但国内几个大哥之前使用的都是"armeabi"
+                abiFilters "armeabi"
             }
+            applicationIdSuffix ".flutter"
+            versionNameSuffix "-debug"
+
+//            ndk {
+//                abiFilters "armeabi", "armeabi-v7a","arm64-v8a", "x86"
+//            }
         }
     }
 
