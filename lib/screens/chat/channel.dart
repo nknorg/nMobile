@@ -657,20 +657,17 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
             // TODO:
           } else {
             EasyLoading.show();
-//            LocalStorage.removeTopicFromUnsubscribeList(accountPubkey, targetId);
             Global.removeTopicCache(targetId);
             GroupChatHelper.subscribeTopic(
                 account: account,
                 topicName: widget.arguments.topic.topic,
                 chatBloc: _chatBloc,
                 callback: (success, e) {
-//                    setState(() {
-//                      isUnSubscribed = LocalStorage.getUnsubscribeTopicList(accountPubkey).contains(targetId);
-//                    });
                   _refreshUnSubscribed(widget.arguments.topic.topic);
                   EasyLoading.dismiss();
                   if (!success && e != null) {
-                    showToast(NL10ns.of(context).something_went_wrong);
+                    showToast('channel subscribe failed');
+                    // showToast(NL10ns.of(context).something_went_wrong);
                   }
                 });
           }

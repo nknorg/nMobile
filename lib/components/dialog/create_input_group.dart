@@ -446,6 +446,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
               // see below.
             } else {
               // see below.
+              showToast('create_input_group topic failed');
             }
           });
       EasyLoading.dismiss();
@@ -455,7 +456,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
     }
     group = await topicRepo.getTopicByName(topicName);
     if (group == null) {
-      showToast(NL10ns.of(context).something_went_wrong);
+      showToast('group is Null something_went_wrong');
+      // showToast(NL10ns.of(context).something_went_wrong);
     } else {
       Navigator.of(context).pushReplacementNamed(
         ChatGroupPage.routeName,
