@@ -430,7 +430,16 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
             assert(topic.nonNull);
             Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
           } else {
-            showToast(NL10ns.of(context).something_went_wrong);
+            if (e.toString().contains('duplicate subscription exist in block')){
+              print('duplicate subscription exist in block');
+              final topic = await TopicRepo(db).getTopicByName(popular.topic);
+              assert(topic.nonNull);
+              Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
+            }
+            else{
+              showToast(e.toString());
+              // showToast(NL10ns.of(context).something_went_wrong);
+            }
           }
         });
   }

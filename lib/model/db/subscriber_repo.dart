@@ -186,11 +186,10 @@ class SubscriberRepo with Tag {
 
   static Future<void> create(Database db, int version) async {
     assert(version >= SqliteStorage.currentVersion);
-    await db.execute(deleteSql);
+    print('create Subscribe');
     await db.execute(createSqlV5);
-
-    await db.execute('CREATE UNIQUE INDEX index_${tableName}_${topic}_$chat_id ON $tableName ($topic, $chat_id);');
-    await db.execute('CREATE        INDEX index_${tableName}_$time_create      ON $tableName ($time_create);');
+    await db.execute('CREATE UNIQUE INDEX IF NOT EXISTS index_${tableName}_${topic}_$chat_id ON $tableName ($topic, $chat_id);');
+    await db.execute('CREATE        INDEX IF NOT EXISTS index_${tableName}_$time_create      ON $tableName ($time_create);');
   }
 
   static Future<void> upgradeFromV5(Database db, int oldVersion, int newVersion) async {
@@ -204,7 +203,7 @@ class SubscriberRepo with Tag {
 
   static final deleteSql = '''DROP TABLE IF EXISTS Subscribers;''';
   static final createSqlV5 = '''
-      CREATE TABLE $tableName (
+      CREATE TABLE IF NOT EXISTS $tableName(
         $id INTEGER PRIMARY KEY AUTOINCREMENT,
         $topic TEXT,
         $chat_id TEXT,

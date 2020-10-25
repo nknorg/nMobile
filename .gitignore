@@ -41,3 +41,11 @@ lib/generated_plugin_registrant.dart
 /tmp/
 ios/Flutter/.last_build_id
 ios/Flutter/.last_build_id
+android/app/src/main/res/raw/serviceaccount.json
+android/app/src/assets/serviceaccount.json
+android/app/src/service-account.json
+ios/Classes/NKNPush/Resource/nkn.p12
+ios/Classes/NKNPush/Resource/nkn_p.p12
+ios/Classes/NKNPush/Resource/NKNPush.cer
+ios/Classes/NKNPush/Resource/NknSecure.h
+ios/Classes/NKNPush/Resource/pusher.p12

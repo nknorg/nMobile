@@ -21,7 +21,7 @@ class SqliteStorage {
   final String name;
   final String _password;
 
-  static int currentVersion = 5;
+  static int currentVersion = 3;
   Database _db;
 
   SqliteStorage(String publicKey, String password)
@@ -53,7 +53,7 @@ class SqliteStorage {
     var db = await openDatabase(
       path,
       password: password,
-      version: 5,
+      version: currentVersion,
       onCreate: (Database db, int version) async {
         await MessageSchema.create(db, version);
         await ContactSchema.create(db, version);
@@ -70,28 +70,32 @@ class SqliteStorage {
               updatedTime: now,
               profileVersion: uuid.v4(),
             ).toEntity(publicKey));
-        if (version <= 3) {
-//          await TopicSchema.create(db, version);
-//          await SubscribersSchema.create(db, version);
-        } else {
-          await TopicRepo.create(db, version);
-          await SubscriberRepo.create(db, version);
-          await BlackListRepo.create(db, version);
-        }
+        print('table on create');
+        await TopicRepo.create(db, version);
+        await SubscriberRepo.create(db, version);
+        await BlackListRepo.create(db, version);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
-        print('old v is'+oldVersion.toString()+'new V is'+newVersion.toString());
-        // await ContactSchema.upgrade(db, oldVersion, newVersion);
-        if (newVersion <= 3) {
-//          await TopicSchema.upgrade(db, oldVersion, newVersion);
-        } else {
-          await TopicRepo.upgradeFromV5(db, oldVersion, newVersion);
-          await SubscriberRepo.upgradeFromV5(db, oldVersion, newVersion);
-          await BlackListRepo.upgradeFromV5(db, oldVersion, newVersion);
+        // await NKNDataManager.upgradeTopicTable2V3(db, newVersion);
+        // await NKNDataManager.upgradeContactSchema2V3(db, newVersion);
+        print('On update he');
+        if (newVersion <= currentVersion) {
+          print('On update he1');
+          await NKNDataManager.upgradeTopicTable2V3(db, currentVersion);
+          await NKNDataManager.upgradeContactSchema2V3(db, currentVersion);
         }
-        await NKNDataManager.upgradeContactSchema2V3(db, newVersion);
+        if (newVersion >= currentVersion){
+          print('On update he2');
+          print('Update database');
+          await SubscriberRepo.create(db, currentVersion);
+          await BlackListRepo.create(db, currentVersion);
+        }
       },
     );
+    await NKNDataManager.upgradeTopicTable2V3(db, currentVersion);
+    await NKNDataManager.upgradeContactSchema2V3(db, currentVersion);
+    await SubscriberRepo.create(db, currentVersion);
+    await BlackListRepo.create(db, currentVersion);
     return db;
   }
 

@@ -375,12 +375,12 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                               color: DefaultTheme.fontColor1,
                               height: 1,
                             ),
-                            // Label(
-                            //   Global.versionFull,
-                            //   type: LabelType.bodyRegular,
-                            //   color: DefaultTheme.fontColor2,
-                            //   height: 1,
-                            // ),
+                            Label(
+                              Global.showVersion,
+                              type: LabelType.bodyRegular,
+                              color: DefaultTheme.fontColor2,
+                              height: 1,
+                            ),
                           ],
                         ),
                         onPressed: () {},

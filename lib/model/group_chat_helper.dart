@@ -10,6 +10,7 @@ import 'dart:math';
 
 import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/components/dialog/dialog.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/model/data/dchat_account.dart';
