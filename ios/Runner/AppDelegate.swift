@@ -14,7 +14,7 @@ var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
     ) -> Bool {
         super.application(application, didFinishLaunchingWithOptions: launchOptions)
         SentrySDK.start { options in
-            options.dsn = "https://2bd8b927608948399d93f55d784d48dc@o460339.ingest.sentry.io/5478166"
+            options.dsn = "https://e566a6e5c45845dd93e07c41c22c0113@o466976.ingest.sentry.io/5483299"
             options.debug = true
             options.environment = "production"
             options.releaseName = "nMobile"

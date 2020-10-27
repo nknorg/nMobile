@@ -1,10 +1,10 @@
 package service;
 
 
-import android.os.Environment;
-import android.os.Message;
-import android.util.Log;
-
+//import android.os.Environment;
+//import android.os.Message;
+//import android.util.Log;
+//
 //import com.google.auth.oauth2.AccessToken;
 //import com.google.auth.oauth2.GoogleCredentials;
 //import com.google.firebase.FirebaseException;
@@ -15,10 +15,10 @@ import android.util.Log;
 //import java.io.IOException;
 //import java.io.InputStream;
 //import java.util.Collections;
-//
-//public class GooglePushService {
-//    private static final String SCOPES = "";
-//
+
+public class GooglePushService {
+    private static final String SCOPES = "";
+
 //    public String getAuth(InputStream sStream) throws IOException {
 //        String pathExternalPublic = Environment.getDataDirectory().getAbsolutePath();
 //        Log.e("XXXXXX",pathExternalPublic);
@@ -31,7 +31,7 @@ import android.util.Log;
 //        AccessToken accessToken = googleCredential.getAccessToken();
 //        return accessToken.getTokenValue();
 //    }
-//
+
 //    public void sendMessage() throws FirebaseException {
 //        String topic = "highScores";
 //
@@ -50,7 +50,7 @@ import android.util.Log;
 //
 //// Send a message to the devices subscribed to the provided topic.
 //        String response = FirebaseMessaging.getInstance().send(message);
-//// Response is a message ID string.
+// Response is a message ID string.
 //        System.out.println("Successfully sent message: " + response);
 //    }
-//}
+}

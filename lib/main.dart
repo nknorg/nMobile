@@ -14,48 +14,44 @@ import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/global/global_bloc.dart';
 import 'package:nmobile/blocs/global/global_state.dart';
 import 'package:nmobile/blocs/wallet/filtered_wallets_bloc.dart';
+import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/router/route_observer.dart';
 import 'package:nmobile/router/routes.dart';
-// import 'package:nmobile/theme/slider_theme.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:oktoast/oktoast.dart';
-// import 'package:sentry/browser_client.dart';
+import 'package:sentry/sentry.dart';
 
 import 'blocs/wallet/wallets_bloc.dart';
-import 'consts/theme.dart';
 
-// final sentry = SentryClient(
-//   // log
-//     dsn: 'https://0ca62d9fa0b5457d96c120115b299245@o460339.ingest.sentry.io/5460345',
-//     environmentAttributes: const Event(
-//       release: 'nMobile',
-//       environment: 'production',
-//     ));
 
 void main() async {
-  Global.init(() {
-    runApp(App());
+  SentryClient sentry;
+  runZonedGuarded(() {
+    Global.init(() {
+      sentry = SentryClient(
+        // log
+          dsn: 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
+          environmentAttributes: const Event(
+            release: 'nMobile',
+            environment: 'production',
+          ));
+      runApp(App());
+    });
+  }, (error, stackTrace) async {
+    await sentry.captureException(
+      exception: error,
+      stackTrace: stackTrace,
+    );
   });
-  // runZonedGuarded(() {
-  //   Global.init(() {
-  //     runApp(App());
-  //   });
-  // }, (error, stackTrace) async {
-  //   await sentry.captureException(
-  //     exception: error,
-  //     stackTrace: stackTrace,
-  //   );
-  // });
-  //
-  // FlutterError.onError = (details, {bool forceReport = false}) {
-  //   sentry.captureException(
-  //     exception: details.exception,
-  //     stackTrace: details.stack,
-  //   );
-  // };
+  FlutterError.onError = (details, {bool forceReport = false}) {
+    sentry.captureException(
+      exception: details.exception,
+      stackTrace: details.stack,
+    );
+  };
 }
 
 class App extends StatefulWidget {

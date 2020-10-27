@@ -469,7 +469,7 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
                       .accept_invitation,
                   subTitle: inviteDesc,
                   content: topicName,
-                  onPressed: () => _joinChannelByName(topicSpotName)
+                  onPressed: () => _joinChannelByName(topicSpotName,topicName)
               );
             },
             child: Label(
@@ -486,11 +486,10 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
     );
   }
 
-  _joinChannelByName(Topic theTopic) {
-    print("Channel name is "+theTopic.name);
+  _joinChannelByName(Topic theTopic,String topicName) {
     GroupChatHelper.subscribeTopic(
         account: account,
-        topicName: theTopic.name,
+        topicName: topicName,
         chatBloc: _chatBloc,
         callback: (success, e) async {
           if (success) {
@@ -534,7 +533,7 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
               Navigator.pop(context);
             }
             else{
-              showToast('bubble create topic failed');
+              showToast('bubble create topic failed'+e.toString());
             }
           }
         });

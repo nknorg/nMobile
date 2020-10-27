@@ -8,6 +8,7 @@ import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart' as chat;
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
+import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/data/dchat_account.dart';
@@ -56,6 +57,7 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
   }
 
   Stream<ClientState> _mapCreateClientToState(CreateClient event) async* {
+    LocalNotification.messageNotification('<[DEBUG]> _mapCreateClientToState', 'Show Connect-1' + '');
     yield* _connect(event.wallet, event.password);
   }
 
@@ -111,50 +113,32 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
   _updateTopicBlock() async{
     List<Topic> list = await TopicRepo(db).getAllTopics();
     int blockHeight = await account.client.getBlockHeight();
+    print('getBlock current Height is'+blockHeight.toString());
+    showToast('getBlock current Height is'+blockHeight.toString());
     for(Topic topic in list){
       if (topic.blockHeightExpireAt == -1){
         final String topicHash = genTopicHash(topic.name);
-        print('topic info'+topic.name);
         final Map<String, dynamic> subscription = await account.client.getSubscription(topicHash: topicHash, subscriber: account.client.myChatId);
         TopicRepo(db).updateOwnerExpireBlockHeight(topic.name, subscription['expiresAt']);
       }
-      if ((topic.blockHeightExpireAt - blockHeight) < (400000-300000)){
-        print('current block height is'+blockHeight.toString());
-        print('subscription previous blockHeight'+topic.blockHeightExpireAt.toString());
+      else if ((topic.blockHeightExpireAt - blockHeight) < (400000-300000)){
+        String topicName = topic.topic;
+        print('Update topic block Height__' +topic.topic+'__'+topic.blockHeightExpireAt.toString());
         GroupChatHelper.subscribeTopic(
             account: account,
-            topicName: topic.name,
+            topicName: topicName,
             chatBloc: chatBloc,
             callback: (success, e) {
             });
 
         final String topicHash = genTopicHash(topic.name);
         final Map<String, dynamic> subscription = await account.client.getSubscription(topicHash: topicHash, subscriber: account.client.myChatId);
-        TopicRepo(db).updateOwnerExpireBlockHeight(topic.name, subscription['expiresAt']);
-        print('subscription update to blockHeight'+subscription['expiresAt'].toString());
+        TopicRepo(db).updateOwnerExpireBlockHeight(topicName, subscription['expiresAt']);
+        print('Topic'+'__$topicName'+'subscription update to blockHeight'+subscription['expiresAt'].toString());
       }
       else{
-        print('Not in time');
+        print('topic订阅未过期:__'+topic.topic);
       }
-
-      // print('Chat id is'+account.client.myChatId);
-      //
-      // print('topic info time'+topic.blockHeightExpireAt.toString());
-      //
-      // print('subscription is '+account.client.myChatId);
-      // final Map<String, dynamic> subscription = await account.client.getSubscription(topicHash: topicHash, subscriber: account.client.myChatId);
-      // //
-      // print('subscription is '+subscription.toString());
-      // if (now.millisecondsSinceEpoch - topic.timeUpdate > 300){
-      //   GroupChatHelper.subscribeTopic(
-      //       account: account,
-      //       topicName: topic.name,
-      //       chatBloc: chatBloc,
-      //       callback: (success, e) {
-      //         print('reSubscribe success');
-      //       });
-      //   TopicRepo(db).updateTimeUpdate(topic.name, now.millisecondsSinceEpoch);
-      // }
     }
   }
 

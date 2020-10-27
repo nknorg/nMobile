@@ -151,8 +151,15 @@ class TopicRepo with Tag {
   // @Insert(onConflict = OnConflictStrategy.IGNORE)
   Future<void> insertOrIgnore(Topic topic) async {
     _log.i('insertOrIgnore(${topic.topic})');
-    if (getTopicByName(topic.topic) != null){
+    /// 没有才可以去创建
+    Topic insertTopic = await getTopicByName(topic.topic);
+    if (insertTopic == null){
+      print('Insert topic name'+topic.topic);
       await (await _db).insert(tableName, toEntity(topic), conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+    else{
+      /// 这里执行更新操作
+      print('already have topic'+insertTopic.topic+"__"+insertTopic.blockHeightExpireAt.toString());
     }
   }
 
@@ -220,9 +227,6 @@ class TopicRepo with Tag {
     assert(version >= SqliteStorage.currentVersion);
     // await db.execute(deleteSql);
     await db.execute(createSqlV5);
-
-    // equivalent to PRIMARY KEY
-    await db.execute('CREATE     INDEX index_${tableName}_$id    ON tableName ($id);');
     await db.execute('CREATE UNIQUE INDEX index_${tableName}_$topic ON $tableName ($topic);');
   }
 
@@ -300,26 +304,3 @@ Map<String, dynamic> toEntity(Topic subs) {
     options: subs.options?.toJson(),
   };
 }
-
-//@Entity(
-//    tableName = "topic",
-//    indices = [Index("topic", unique = true)]
-//)
-//data class Topic(
-//@PrimaryKey(autoGenerate = true)
-//@ColumnInfo(name = "id", index = true) val id: Long,
-//
-//// TopicType.Private/TopicType.Public
-////@ColumnInfo(name = "type", index = true) val type: String,
-//@ColumnInfo(name = "topic"/*, index = true*/) val topic: String,
-////@ColumnInfo(name = "owner", index = true) val owner: String?,
-//@ColumnInfo(name = "count") val numSubscribers: Int,
-//
-//@ColumnInfo(name = "avatar") val avatarUri: String?,
-//@ColumnInfo(name = "theme_id") val themeId: Int,
-//
-//@ColumnInfo(name = "time_update") val timeUpdate: Long,
-//@ColumnInfo(name = "expire_at") val blockHeightExpireAt: Int,
-
-//@ColumnInfo(name = "is_top") val isTop: Boolean
-//)
