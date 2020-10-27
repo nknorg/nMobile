@@ -40,7 +40,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
-            abiFilters'armeabi-v7a'
+            abiFilters "armeabi-v7a", "x86"
         }
 
         javaCompileOptions { annotationProcessorOptions { includeCompileClasspath = true } }
@@ -75,59 +75,39 @@ android {
         release {
             ndk{
                 //这里其实我觉可以直接是用"armeabi-v7a"，但国内几个大哥之前使用的都是"armeabi"
-                abiFilters "armeabi"
+                abiFilters "armeabi-v7a"
             }
             shrinkResources false
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
+            versionNameSuffix "(build-$flutterVersionCode)"
         }
         debug {
 //            ndk {
 //                //这里要加上，否则debug包会出问题,后面三个为可选，x86建议加上不然部分模拟器回报错
 //                abiFilters "armeabi", "armeabi-v7a","arm64-v8a", "x86"
 //            }
-            ndk{
-                //这里其实我觉可以直接是用"armeabi-v7a"，但国内几个大哥之前使用的都是"armeabi"
-                abiFilters "armeabi"
-            }
+//            ndk{
+//                //这里其实我觉可以直接是用"armeabi-v7a"，但国内几个大哥之前使用的都是"armeabi"
+//                abiFilters "armeabi"
+//            }
             applicationIdSuffix ".flutter"
             versionNameSuffix "-debug"
 
-//            ndk {
-//                abiFilters "armeabi", "armeabi-v7a","arm64-v8a", "x86"
-//            }
+            ndk {
+                abiFilters "armeabi-v7a", "x86"
+            }
         }
     }
-
-//    splits {
-//        abi {
-//            reset()
-//            enable true
-//            universalApk false  // If true, also generate a universal APK
-//            include "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
-//        }
-//    }
-//    // applicationVariants are e.g. debug, release
-//    applicationVariants.all { variant ->
-//        variant.outputs.each { output ->
-//            // For each separate APK per architecture, set a unique version code as described here:
-//            // http://tools.android.com/tech-docs/new-build-system/user-guide/apk-splits
-//            def versionCodes = ["arm64-v8a": 1, "armeabi-v7a": 2, "x86": 3, "x86_64": 4]
-//            def abi = output.getFilter(OutputFile.ABI)
-//            def verCode = defaultConfig.versionCode
-//            if (abi != null) {  // null for the universal-debug, universal-release variants
-//                output.versionCodeOverride = versionCodes.get(abi) * version4Abi(verCode) + verCode
-//                println("versionCode: $output.versionCodeOverride : $variant.applicationId : $abi")
-//            }
-//        }
-//    }
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
+
     lintOptions {
-        disable 'InvalidPackage'
+        checkReleaseBuilds false
+        abortOnError false
     }
 //
     packagingOptions{
@@ -197,8 +177,8 @@ dependencies {
     implementation 'io.sentry:sentry-android:1.7.27'
     implementation 'org.slf4j:slf4j-nop:1.7.25'
 
-//    implementation group: 'com.google.auth', name: 'google-auth-library-oauth2-http', version: '0.21.1'
-//    implementation 'com.google.firebase:firebase-messaging:+'
+    implementation group: 'com.google.auth', name: 'google-auth-library-oauth2-http', version: '0.21.1'
+    implementation 'com.google.firebase:firebase-messaging:+'
 }
 
 //apply plugin: 'com.google.gms.google-services'  // Google Services plugin

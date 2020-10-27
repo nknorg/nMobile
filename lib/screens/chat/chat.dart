@@ -167,10 +167,12 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                   noConnPageShowing = true;
                   homePageShowing = false;
                   timerAuth.onNoConnection();
+                  LocalNotification.messageNotification('<[DEBUG]> Screen Ready', 'Show Connect0' + '');
                   DChatAuthenticationHelper.loadDChatUseWalletByState(state, onGetWallet);
                   return NoConnectScreen(() {
                     authHelper.prepareConnect(onGetPassword);
                   });
+                  // return _testOnConnectButton();
                 } else {
                   noConnPageShowing = false;
                   // authHelper.wallet = null;
@@ -198,6 +200,20 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
       },
     );
   }
+
+  // Widget _testOnConnectButton(){
+  //   double leftM = MediaQuery.of(context).size.width/4;
+  //   double topM = MediaQuery.of(context).size.height/4;
+  //   return GestureDetector(
+  //     child: Container(
+  //       color: Colors.purple,
+  //       margin: EdgeInsets.only(left: leftM,top: topM),
+  //       width: MediaQuery.of(context).size.width/2,
+  //       child: Text('连接测试按钮'),
+  //     ),
+  //     onTap: onGetPassword,
+  //   );
+  // }
 
   @override
   bool get wantKeepAlive => true;

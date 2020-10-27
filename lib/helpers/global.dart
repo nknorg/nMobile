@@ -35,7 +35,7 @@ class Global {
 
   static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
 
-  static String get showVersion => '${Global.version}';
+  static String get showVersion => '${Global.buildVersion}';
 
   static Future<bool> get isInBackground async {
     // If app startup in background or after deep sleep, the system would

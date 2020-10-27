@@ -406,6 +406,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
         _loading = true;
       });
       EasyLoading.show();
+      print('create Input create topic11');
       await GroupChatHelper.subscribeTopic(
           account: account,
           topicName: topicName,

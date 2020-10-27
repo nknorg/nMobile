@@ -38,24 +38,33 @@ class WalletSchema extends Equatable with Tag {
   @override
   String toString() => 'WalletSchema { address: $address }';
 
+  Future<String> _showDialog(String reason) {
+    return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NL10ns.of(Global.appContext).verify_wallet_password);
+  }
+
   Future<String> getPassword({bool showDialogIfCanceledBiometrics = true, bool forceShowInputDialog = false}) async {
     LOG(tag, usePrint: false).d('getPassword');
-    Future<String> _showDialog(String reason) {
-      LocalNotification.debugNotification('<[DEBUG]> showInputPasswordDialog', 'reason: $reason, ' + DateTime.now().toLocal().toString());
-      return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NL10ns.of(Global.appContext).verify_wallet_password);
-    }
 
     if (forceShowInputDialog) {
       return _showDialog('force');
     }
+    LocalNotification.messageNotification('<[DEBUG]> getpassword step2', 'in isProtectionEnabled');
     final _localAuth = await LocalAuthenticationService.instance;
+    LocalNotification.messageNotification('<[DEBUG]> getpassword step3', 'in isProtectionEnabled');
     if (_localAuth.isProtectionEnabled) {
-      final password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');
+      String password = '';
+      LocalNotification.messageNotification('<[DEBUG]> getpassword step4'+password.length.toString(), 'after isProtectionEnabled');
       if (password == null) {
         return _showDialog('no password');
       } else {
         bool auth = await _localAuth.authenticate();
         if (auth) {
+          try{
+            password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');
+          }
+          catch(e){
+            LocalNotification.messageNotification('<[DEBUG]>E'+e.toString(), 'after isProtectionEnabled');
+          }
           return password;
         } else if (showDialogIfCanceledBiometrics) {
           return _showDialog('auth failed');
@@ -64,20 +73,29 @@ class WalletSchema extends Equatable with Tag {
         }
       }
     } else {
+      LocalNotification.messageNotification('<[DEBUG]> E false', '_localAuth.isProtectionEnabled == NO');
       return _showDialog('disabled');
     }
   }
 
   Future<String> getKeystore() async {
+    LocalNotification.messageNotification('<[DEBUG]address-'+address.toString(), 'xxx');
+    Map localMap = await _secureStorage.getAll();
+    localMap.forEach((key, value) {
+      LocalNotification.messageNotification('<[DEBUG]lk-'+key+'-lv-'+value, 'xxx');
+    });
     return await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
   }
 
   Future exportWallet(password) async {
     try {
-      var wallet = await NknWalletPlugin.openWallet(await getKeystore(), password);
+      String keystore = await getKeystore();
+      var wallet = await NknWalletPlugin.openWallet(keystore, password);
+      LocalNotification.messageNotification('<[DEBUG]key'+keystore.substring(0,15), '_localAuth.isProtectionEnabled == NO');
       await _secureStorage.set('${SecureStorage.PASSWORDS_KEY}:$address', password);
       return wallet;
     } catch (e) {
+      LocalNotification.messageNotification('<[DEBUG]exportWallet E!!'+e.toString(), '_localAuth.isProtectionEnabled == NO');
       throw e;
     }
   }

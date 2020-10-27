@@ -334,11 +334,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         numSubscribers: -1,
         themeId: themeId,
         timeUpdate: DateTime.now().millisecondsSinceEpoch,
-        blockHeightExpireAt: -1,
         isTop: false,
         options: OptionsSchema.random(themeId: themeId).toJson(),
       );
-      // repoTopic.insertOrIgnore(topic);
+      print('Topic Info received'+message.topic);
+      repoTopic.insertOrIgnore(topic);
     }
 
     var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(message.from));
