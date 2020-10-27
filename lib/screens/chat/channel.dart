@@ -658,6 +658,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with AccountDependsBloc {
           } else {
             EasyLoading.show();
             Global.removeTopicCache(targetId);
+            print('Channel create topic11');
             GroupChatHelper.subscribeTopic(
                 account: account,
                 topicName: widget.arguments.topic.topic,

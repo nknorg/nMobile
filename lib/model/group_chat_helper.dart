@@ -22,6 +22,7 @@ import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/log_tag.dart';
+import 'package:oktoast/oktoast.dart';
 
 /// @author Wei.Chou
 /// @version 1.0, 24/04/2020
@@ -119,7 +120,6 @@ class GroupChatPublicChannel {
               chatId: chatId,
               indexPermiPage: -1,
               timeCreate: DateTime.now().millisecondsSinceEpoch,
-              blockHeightExpireAt: -1,
               uploaded: true,
               subscribed: true,
               uploadDone: true));
@@ -143,6 +143,7 @@ class GroupChatPublicChannel {
 class GroupChatHelper {
   static Future<void> subscribeTopic({DChatAccount account, String topicName, ChatBloc chatBloc, void callback(bool success, dynamic error)}) async {
     try {
+      print('GroupChatHelper create topic11'+topicName.toString());
       final hash = await account.client.subscribe(topicHash: genTopicHash(topicName));
       if (nonEmpty(hash) && hash.length >= 32) {
         // TODO: Theme.genThemeId(topicNameAdjusted),
@@ -154,7 +155,6 @@ class GroupChatHelper {
           avatarUri: null,
           themeId: themeId,
           timeUpdate: DateTime.now().millisecondsSinceEpoch,
-          blockHeightExpireAt: -1,
           options: OptionsSchema.random(themeId: themeId).toJson(),
         ));
         // TODO: to be improved.
@@ -167,6 +167,7 @@ class GroupChatHelper {
         sendMsg.content = sendMsg.toEventSubscribeData();
         chatBloc.add(SendMessage(sendMsg));
         callback(true, null);
+        showToast('success');
       } else {
         callback(false, null);
       }
@@ -263,7 +264,6 @@ class GroupChatHelper {
         chatId: chatId,
         indexPermiPage: sub?.indexPermiPage ?? -1,
         timeCreate: DateTime.now().millisecondsSinceEpoch,
-        blockHeightExpireAt: -1,
         uploaded: false,
         subscribed: sub?.subscribed ?? false,
         uploadDone: false,
@@ -629,7 +629,6 @@ class GroupChatPrivateChannel {
                   chatId: chatId,
                   indexPermiPage: getPageIndex(chatId, -1),
                   timeCreate: DateTime.now().millisecondsSinceEpoch,
-                  blockHeightExpireAt: -1,
                   uploaded: false,
                   subscribed: true
                   // since this case is subscribers.
@@ -644,7 +643,6 @@ class GroupChatPrivateChannel {
                 chatId: chatId,
                 indexPermiPage: getPageIndex(chatId, -1),
                 timeCreate: DateTime.now().millisecondsSinceEpoch,
-                blockHeightExpireAt: -1,
                 uploaded: true,
                 subscribed: true
                 // since this case is subscribers.

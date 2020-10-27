@@ -13,6 +13,7 @@ import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
+import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/contact.dart';
@@ -66,6 +67,7 @@ class BottomDialog extends StatefulWidget {
           text: NL10ns.of(context).continue_text,
           width: double.infinity,
           onPressed: () {
+            LocalNotification.messageNotification('<[DEBUG]> checkAuth3', '_passwordController' + 'on Get password');
             Navigator.of(context).pop(_passwordController.text);
           },
         ),

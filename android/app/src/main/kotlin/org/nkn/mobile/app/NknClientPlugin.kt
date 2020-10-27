@@ -94,6 +94,9 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             "getSubscription" -> {
                 getSubscription(call, result)
             }
+            "getBlockHeight" -> {
+                getBlockHeight(call, result)
+            }
             else -> {
                 result.notImplemented()
             }
@@ -415,6 +418,29 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                         "_id" to _id,
                         "meta" to subscription.meta,
                         "expiresAt" to subscription.expiresAt
+                )
+                App.runOnMainThread {
+                    clientEventSink.success(resp)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "getSubscription | e:", e)
+                App.runOnMainThread {
+                    clientEventSink.error(_id, e.message, null)
+                }
+            }
+        }
+    }
+
+    private fun getBlockHeight(call: MethodCall, result: MethodChannel.Result) {
+        val _id = call.argument<String>("_id")!!
+        result.success(null)
+
+        subscribersHandler.post {
+            try {
+                val height = multiClient!!.height;
+                val resp = hashMapOf(
+                        "_id" to _id,
+                        "height" to height
                 )
                 App.runOnMainThread {
                     clientEventSink.success(resp)

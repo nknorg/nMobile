@@ -20,6 +20,7 @@ import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
+import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
@@ -376,7 +377,14 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
             }
           }
         } else {
+          LocalNotification.messageNotification('<[DEBUG]>await widget.wallet.getPassword();', 'Show Connect-2' + '');
           var password = await widget.wallet.getPassword();
+          if (password == null){
+            LocalNotification.messageNotification('<[DEBUG]>password null;', 'password null');
+          }
+          else{
+            LocalNotification.messageNotification('<[DEBUG]>await password1;', 'password ok');
+          }
           if (password != null) {
             try {
               var wallet = await widget.wallet.exportWallet(password);
