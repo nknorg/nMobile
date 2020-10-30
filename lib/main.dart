@@ -29,6 +29,9 @@ import 'blocs/wallet/wallets_bloc.dart';
 
 void main() async {
   SentryClient sentry;
+    // Global.init(() {
+    //   runApp(App());
+    // });
   runZonedGuarded(() {
     Global.init(() {
       sentry = SentryClient(
