@@ -377,14 +377,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> with Acco
             }
           }
         } else {
-          LocalNotification.messageNotification('<[DEBUG]>await widget.wallet.getPassword();', 'Show Connect-2' + '');
           var password = await widget.wallet.getPassword();
-          if (password == null){
-            LocalNotification.messageNotification('<[DEBUG]>password null;', 'password null');
-          }
-          else{
-            LocalNotification.messageNotification('<[DEBUG]>await password1;', 'password ok');
-          }
           if (password != null) {
             try {
               var wallet = await widget.wallet.exportWallet(password);
