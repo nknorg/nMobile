@@ -1,6 +1,8 @@
 package org.nkn.mobile.app
 
+import android.os.Build
 import android.os.Bundle
+import android.os.StrictMode
 import android.util.Log
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -13,6 +15,11 @@ import org.nkn.mobile.app.abs.Tag
 import org.nkn.mobile.app.dchat.MessagingServiceFlutterPlugin
 import org.nkn.mobile.app.util.Bytes2String.withAndroidPrefix
 import java.util.*
+import android.content.res.AssetManager
+import de.esys.esysfluttershare.EsysFlutterSharePlugin
+import service.GooglePushService
+import java.io.InputStream
+
 
 class MainActivity : FlutterFragmentActivity(), Tag {
     val TAG by lazy { tag() }
@@ -25,23 +32,21 @@ class MainActivity : FlutterFragmentActivity(), Tag {
 
     /*private */var clientPlugin: NknClientPlugin? = null
     private var isActive : Boolean =  false;
-    
+
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine);
         Log.e(TAG, "<<<---configureFlutterEngine--->>>".withAndroidPrefix())
 
-        Sentry.init("https://06a570b6f7d5489eade00b7f60d797c0@o460339.ingest.sentry.io/5478173",
-                AndroidSentryClientFactory(this.applicationContext))
-        try {
-            Log.d("sentrytest1","try")
-            throw Exception("This is a test.")
-
-        } catch (e: Exception) {
-            Log.d("sentrytest1","catch")
-            Sentry.capture(e)
-        }
-
         GeneratedPluginRegistrant.registerWith(flutterEngine)
+        Sentry.init("https://e8e2c15b0e914295a8b318919f766701@o466976.ingest.sentry.io/5483308",
+                AndroidSentryClientFactory(this.applicationContext))
+
+//        val am: AssetManager = getAssets()
+//        val `is`: InputStream = am.open("serviceaccount.json")
+//
+//        val service = GooglePushService()
+//        val token = service.getAuth(`is`);
+//        Log.e(TAG,"Token is "+token.toString());
 
 //        var filePath = "/data/service-account.json";
 //        filePath = Environment.getDataDirectory().path+"/service-account.json";
@@ -89,14 +94,16 @@ class MainActivity : FlutterFragmentActivity(), Tag {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT > 9) {
+            val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
+            StrictMode.setThreadPolicy(policy)
+        }
 //        val content = File("serviceaccount.json").readText()
 //        println(content)
 //        val fileStream : InputStream = assets.open("src/assets/serviceaccount.json")
 //        val input = Context.asse
 //
-//        val service = GooglePushService()
-//        val token = service.getAuth(fileStream);
-//        Log.e(TAG,"Token is "+token.toString());
+
         Log.e(TAG, "<<<---onCreate--->>>".withAndroidPrefix())
     }
 

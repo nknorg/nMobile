@@ -45,7 +45,7 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
       yield* _mapCreateClientToState(event);
     } else if (event is ConnectedClient) {
       print('Connected !!!!');
-      _updateTopicBlock();
+      yield _updateTopicBlock();
       yield Connected();
     } else if (event is OnConnect) {
       yield* _mapOnConnectToState(event);
