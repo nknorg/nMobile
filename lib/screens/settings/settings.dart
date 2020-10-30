@@ -531,26 +531,19 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
     var password = await BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NL10ns.of(Global.appContext).verify_wallet_password);
 
     String testCode = wallet.address;
-    LocalNotification.messageNotification('<[DEBUG]> checkAuth1_'+testCode.toString(), password.length.toString());
 
     // _secureStorage.set('${SecureStorage.PASSWORDS_KEY}:$address', password);
     // _secureStorage.set('${SecureStorage.NKN_KEYSTORES_KEY}:${wallet.address}', keystore)
     if (password != null) {
       try {
-        LocalNotification.messageNotification('<[DEBUG]> checkAuth2-'+password.length.toString(), password.length.toString());
         var w = await wallet.exportWallet(password);
-        LocalNotification.messageNotification('<[DEBUG]> checkAuth3', password.length.toString());
         _localStorage.set('${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}', value);
-        LocalNotification.messageNotification('<[DEBUG]> checkAuth4', password.length.toString());
         final _localAuth = await LocalAuthenticationService.instance;
-        LocalNotification.messageNotification('<[DEBUG]> checkAuth5', password.length.toString());
         _localAuth.isProtectionEnabled = value;
         setState(() {
           _authSelected = value;
         });
       } catch (e) {
-        LocalNotification.messageNotification('<[DEBUG]> E!!'+e.toString(), e.toString());
-        print('Eeeeee'+e.toString());
         showToast('Ee'+e.toString());
         if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
           showToast(NL10ns.of(context).tip_password_error);
