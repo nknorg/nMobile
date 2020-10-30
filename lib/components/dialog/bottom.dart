@@ -67,7 +67,6 @@ class BottomDialog extends StatefulWidget {
           text: NL10ns.of(context).continue_text,
           width: double.infinity,
           onPressed: () {
-            LocalNotification.messageNotification('<[DEBUG]> checkAuth3', '_passwordController' + 'on Get password');
             Navigator.of(context).pop(_passwordController.text);
           },
         ),

@@ -57,7 +57,6 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
   }
 
   Stream<ClientState> _mapCreateClientToState(CreateClient event) async* {
-    LocalNotification.messageNotification('<[DEBUG]> _mapCreateClientToState', 'Show Connect-1' + '');
     yield* _connect(event.wallet, event.password);
   }
 

@@ -167,7 +167,6 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                   noConnPageShowing = true;
                   homePageShowing = false;
                   timerAuth.onNoConnection();
-                  LocalNotification.messageNotification('<[DEBUG]> Screen Ready', 'Show Connect0' + '');
                   DChatAuthenticationHelper.loadDChatUseWalletByState(state, onGetWallet);
                   return NoConnectScreen(() {
                     authHelper.prepareConnect(onGetPassword);
