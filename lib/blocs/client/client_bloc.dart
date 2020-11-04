@@ -113,7 +113,6 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
     List<Topic> list = await TopicRepo(db).getAllTopics();
     int blockHeight = await account.client.getBlockHeight();
     print('getBlock current Height is'+blockHeight.toString());
-    showToast('getBlock current Height is'+blockHeight.toString());
     for(Topic topic in list){
       if (topic.blockHeightExpireAt == -1){
         final String topicHash = genTopicHash(topic.name);
