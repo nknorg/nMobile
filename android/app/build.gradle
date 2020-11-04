@@ -177,7 +177,9 @@ dependencies {
     implementation 'io.sentry:sentry-android:1.7.27'
     implementation 'org.slf4j:slf4j-nop:1.7.25'
 
-    implementation group: 'com.google.auth', name: 'google-auth-library-oauth2-http', version: '0.21.1'
+    implementation 'com.google.api-client:google-api-client:+'
+//    implementation 'com.google.auth:google-auth-library-oauth2-http:0.22.0'
+
     implementation 'com.google.firebase:firebase-messaging:+'
 }
 

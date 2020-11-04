@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -139,6 +140,12 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
   Widget build(BuildContext context) {
     super.build(context);
     initData();
+
+    String showVersion = Global.version;
+    if (Platform.isIOS){
+      showVersion = Global.versionFull;
+    }
+
     return Scaffold(
       backgroundColor: DefaultTheme.primaryColor,
       appBar: Header(
@@ -377,7 +384,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                               height: 1,
                             ),
                             Label(
-                              Global.version,
+                              showVersion,
                               type: LabelType.bodyRegular,
                               color: DefaultTheme.fontColor2,
                               height: 1,
