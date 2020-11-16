@@ -52,6 +52,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 class ContactScreen extends StatefulWidget {
   static const String routeName = '/contact';
 
+
   final ContactSchema arguments;
 
   ContactScreen({this.arguments});
@@ -79,9 +80,13 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
 
   bool _acceptNotification = false;
 
+  static const fcmGapString = '__FCMToken__:';
+
   initAsync() async {
     _sourceProfile = widget.arguments.sourceProfile;
     setState(() {});
+
+    NLog.d('getAndroidXXXX');
   }
 
   @override
@@ -106,6 +111,8 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
   @override
   Future<void> initState() {
     super.initState();
+    NLog.d('getAndroidXXXX');
+
     _chatBloc = BlocProvider.of<ChatBloc>(context);
     initAsync();
     int burnAfterSeconds = widget.arguments.options?.deleteAfterSeconds;
@@ -156,9 +163,19 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
     String deviceToken = '';
     if (_acceptNotification == true){
       deviceToken = await account.client.fetchDeviceToken();
+      if (Platform.isIOS){
+        String fcmToken = await account.client.fetchFCMToken();
+        if (fcmToken != null && fcmToken.length > 0){
+          deviceToken = deviceToken+"$fcmGapString$fcmToken";
+        }
+      }
+      if (Platform.isAndroid && deviceToken.length == 0){
+        showToast('暂不支持没有Google服务的机型');
+      }
     }
     else{
       deviceToken = '';
+      showToast('关闭');
     }
     widget.arguments.setNotificationOpen(db, _acceptNotification);
 
@@ -1102,11 +1119,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
             ).pad(t: 6, b: 8, l: 20, r: 20);
           }
           else if (index == 5){
-            if (Platform.isAndroid){
-              return Container(
-                height: 1,
-              );
-            }
             return Container(
               decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
               margin: EdgeInsets.only(left: 16, right: 16, top: 10),

@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
@@ -226,7 +227,8 @@ class MessageSchema extends Equatable {
       data = {
         'id': msgId,
         'contentType': ContentType.eventContactOptions,
-        'content': {'deviceToken': deviceToken},
+        'content': {'deviceToken': deviceToken
+        },
         'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       };
     }

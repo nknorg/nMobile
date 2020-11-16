@@ -63,7 +63,7 @@ static NKNPushService * sharedService = nil;
         dispatch_async(dispatch_get_main_queue(), ^{
             if (hub) {
                 NSString *summary = [NWSecTools summaryWithCertificate:_certificate];
-                NSLog(@"Connected to APN: %@ (%@)", summary, descriptionForEnvironent(NWEnvironmentProduction));
+                NSLog(@"Connected to APN: %@ (%@)", summary, descriptionForEnvironent(preferredEnvironment));
                 _hub = hub;
             }
             else
@@ -81,16 +81,52 @@ static NKNPushService * sharedService = nil;
     return (environmentOptions & NWEnvironmentOptionSandbox) ? NWEnvironmentSandbox : NWEnvironmentProduction;
 }
 
+- (void)pushContentToFCM:(NSString *)pushContent byToken:(NSString *)fcmToken
+{
+    static NSString * FCM_SEND_V0_URL = @"https://fcm.googleapis.com/fcm/send";
+    static NSString * v0TokenString = @"AAAA5GLjU2E:APA91bF6_GGE0OgxHpfTRP7OQYk71WxKRNTE0OZifagqDHy4O5E0HUTY5-cxJfWzk7_lzNCKbj9WaJRUWeEtbIq6RMeeB_OVKz_FFWbi7BnG54Q4dDnY6s2ePd-BBgKQWoJUU8-FM2xZ";
+    NSString * keyString = [NSString stringWithFormat:@"key=%@",v0TokenString];
+    
+    NSMutableURLRequest * mRequest = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:FCM_SEND_V0_URL]];
+    [mRequest setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    [mRequest setValue:keyString forHTTPHeaderField:@"Authorization"];
+    [mRequest setHTTPMethod:@"POST"];
+
+    NSMutableDictionary * postBody = [NSMutableDictionary dictionary];
+    NSMutableDictionary * postParams = [NSMutableDictionary dictionary];
+    [postParams setObject:@"New Message!" forKey:@"title"];
+    [postParams setObject:pushContent forKey:@"body"];
+    [postBody setObject:postParams forKey:@"notification"];
+    [postBody setObject:fcmToken forKey:@"to"];
+    NSData * postData = [NSJSONSerialization dataWithJSONObject:postBody options:NSJSONWritingPrettyPrinted error:nil];
+    [mRequest setHTTPBody:postData];
+    
+    if (self.session == nil){
+        self.session = [NSURLSession sharedSession];
+    }
+    
+    self.dataTask = [self.session dataTaskWithRequest:mRequest completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        if (data == nil){
+            return;
+        }
+        NSDictionary *dict=[NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableLeaves error:nil];
+        NSString * code = [[dict objectForKey:@"statusCode"] description];
+        NSLog(@"response String = %@",code);
+        NSLog(@"response String = %@",dict);
+        NSLog(@"response String = %@",response);
+    }];
+    [self.dataTask resume];
+}
+
 - (void)pushContent:(NSString *)pushContent token:(NSString *)pushToken{
-//    NSString *payload = [NSString stringWithFormat:@"{\"aps\":{\"alert\":\"%@\",\"badge\":1,\"sound\":\"default\"}}", pushContent];
     NSLog(@"Pushing..");
     NSLog(@"Push Content %@ With Token %@",pushContent,pushToken);
     
 //    if (_hub){
 //        [_hub disconnect];
 //    }
-    
     NSString *payload = [NSString stringWithFormat:@"{\"aps\":{\"alert\":\"%@\",\"badge\":1,\"sound\":\"default\"}}", pushContent];
+    payload = @"{\"aps\":{\"alert\":"",\"content-available\":1}}";
     NSString *token = pushToken;
     dispatch_async(_serial, ^{
         NSError *error = nil;
@@ -103,7 +139,7 @@ static NKNPushService * sharedService = nil;
         dispatch_async(dispatch_get_main_queue(), ^{
             if (_hub) {
                 NSString *summary = [NWSecTools summaryWithCertificate:_certificate];
-                NSLog(@"Connected to APN: %@ (%@)", summary, descriptionForEnvironent(NWEnvironmentProduction));
+                NSLog(@"Connected to APN: %@ (%@)", summary, descriptionForEnvironent(preferredEnvironment));
 //                _hub = hub;
             }
             else
@@ -111,7 +147,6 @@ static NKNPushService * sharedService = nil;
                 NSLog(@"Unable to connect: %@", error.localizedDescription);
             }
         });
-        
 
         NSUInteger failed = [_hub pushPayload:payload token:token];
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC));

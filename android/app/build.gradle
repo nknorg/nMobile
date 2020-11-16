@@ -40,7 +40,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
-            abiFilters "armeabi-v7a", "x86"
+            abiFilters "arm64-v8a", "armeabi-v7a"
         }
 
         javaCompileOptions { annotationProcessorOptions { includeCompileClasspath = true } }
@@ -75,7 +75,7 @@ android {
         release {
             ndk{
                 //这里其实我觉可以直接是用"armeabi-v7a"，但国内几个大哥之前使用的都是"armeabi"
-                abiFilters "armeabi-v7a"
+                abiFilters "arm64-v8a", "armeabi-v7a"
             }
             shrinkResources false
             minifyEnabled false
@@ -92,11 +92,11 @@ android {
 //                //这里其实我觉可以直接是用"armeabi-v7a"，但国内几个大哥之前使用的都是"armeabi"
 //                abiFilters "armeabi"
 //            }
-            applicationIdSuffix ".flutter"
+            applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
 
             ndk {
-                abiFilters "armeabi-v7a", "x86"
+                abiFilters "armeabi-v7a","arm64-v8a"
             }
         }
     }
@@ -181,6 +181,10 @@ dependencies {
 //    implementation 'com.google.auth:google-auth-library-oauth2-http:0.22.0'
 
     implementation 'com.google.firebase:firebase-messaging:+'
+    implementation platform('com.google.firebase:firebase-bom:25.12.0')
 }
 
-//apply plugin: 'com.google.gms.google-services'  // Google Services plugin
+apply plugin: 'com.google.gms.google-services'
+
+
+

@@ -24,7 +24,7 @@ static NSUInteger const NWPushPort = 2195;
     if (_connection) [_connection disconnect]; _connection = nil;
     if (environment == NWEnvironmentAuto) environment = [NWSecTools environmentForIdentity:identity];
     NSString *host = (environment == NWEnvironmentSandbox) ? NWSandboxPushHost : NWPushHost;
-    host = NWPushHost;
+//    host = NWPushHost;
     NWSSLConnection *connection = [[NWSSLConnection alloc] initWithHost:host port:NWPushPort identity:identity];
     BOOL connected = [connection connectWithError:error];
     if (!connected) {

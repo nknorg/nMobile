@@ -45,14 +45,17 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
       yield* _mapCreateClientToState(event);
     } else if (event is ConnectedClient) {
       print('Connected !!!!');
-      yield _updateTopicBlock();
       yield Connected();
+      _updateTopicBlock();
     } else if (event is OnConnect) {
       yield* _mapOnConnectToState(event);
     } else if (event is OnMessage) {
       yield* _mapOnMessageToState(event);
     } else if (event is DisConnected) {
       yield* _mapDisConnect();
+    }
+    else if (event is OnMessages){
+      yield* _mapOnMessageList(event);
     }
   }
 
@@ -110,32 +113,35 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
   }
 
   _updateTopicBlock() async{
-    List<Topic> list = await TopicRepo(db).getAllTopics();
-    int blockHeight = await account.client.getBlockHeight();
-    print('getBlock current Height is'+blockHeight.toString());
-    for(Topic topic in list){
-      if (topic.blockHeightExpireAt == -1){
-        final String topicHash = genTopicHash(topic.name);
-        final Map<String, dynamic> subscription = await account.client.getSubscription(topicHash: topicHash, subscriber: account.client.myChatId);
-        TopicRepo(db).updateOwnerExpireBlockHeight(topic.name, subscription['expiresAt']);
-      }
-      else if ((topic.blockHeightExpireAt - blockHeight) < (400000-300000)){
-        String topicName = topic.topic;
-        print('Update topic block Height__' +topic.topic+'__'+topic.blockHeightExpireAt.toString());
-        GroupChatHelper.subscribeTopic(
-            account: account,
-            topicName: topicName,
-            chatBloc: chatBloc,
-            callback: (success, e) {
-            });
+    bool bgStatus = await Global.isInBackground;
+    if (bgStatus == false){
+      List<Topic> list = await TopicRepo(db).getAllTopics();
+      int blockHeight = await account.client.getBlockHeight();
+      print('getBlock current Height is'+blockHeight.toString());
+      for(Topic topic in list){
+        if (topic.blockHeightExpireAt == -1){
+          final String topicHash = genTopicHash(topic.name);
+          final Map<String, dynamic> subscription = await account.client.getSubscription(topicHash: topicHash, subscriber: account.client.myChatId);
+          TopicRepo(db).updateOwnerExpireBlockHeight(topic.name, subscription['expiresAt']);
+        }
+        else if ((topic.blockHeightExpireAt - blockHeight) < (400000-300000)){
+          String topicName = topic.topic;
+          print('Update topic block Height__' +topic.topic+'__'+topic.blockHeightExpireAt.toString());
+          GroupChatHelper.subscribeTopic(
+              account: account,
+              topicName: topicName,
+              chatBloc: chatBloc,
+              callback: (success, e) {
+              });
 
-        final String topicHash = genTopicHash(topic.name);
-        final Map<String, dynamic> subscription = await account.client.getSubscription(topicHash: topicHash, subscriber: account.client.myChatId);
-        TopicRepo(db).updateOwnerExpireBlockHeight(topicName, subscription['expiresAt']);
-        print('Topic'+'__$topicName'+'subscription update to blockHeight'+subscription['expiresAt'].toString());
-      }
-      else{
-        print('topic订阅未过期:__'+topic.topic);
+          final String topicHash = genTopicHash(topic.name);
+          final Map<String, dynamic> subscription = await account.client.getSubscription(topicHash: topicHash, subscriber: account.client.myChatId);
+          TopicRepo(db).updateOwnerExpireBlockHeight(topicName, subscription['expiresAt']);
+          print('Topic'+'__$topicName'+'subscription update to blockHeight'+subscription['expiresAt'].toString());
+        }
+        else{
+          print('topic订阅未过期:__'+topic.topic);
+        }
       }
     }
   }
@@ -155,6 +161,12 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> with AccountDependsBloc,
       Connected currentState = (state as Connected);
       currentState.message = event.message;
       chatBloc.add(chat.ReceiveMessage(currentState.message));
+    }
+  }
+
+  Stream<ClientState> _mapOnMessageList(OnMessages event) async* {
+    if (state is Connected) {
+      chatBloc.add(chat.ReceiveMessageList(event.messageList));
     }
   }
 }
@@ -190,6 +202,11 @@ class ClientEventListener extends ClientEventDispatcher {
         ),
       );
     }
+  }
+
+  @override
+  void onMessages(List messageList) {
+    _clientBloc.add(OnMessages(messageList));
   }
 }
 
@@ -231,6 +248,11 @@ class OnMessage extends ClientEvent {
   final MessageSchema message;
 
   const OnMessage(this.message);
+}
+
+class OnMessages extends ClientEvent{
+  final List messageList;
+  const OnMessages(this.messageList);
 }
 
 abstract class ClientState extends Equatable {

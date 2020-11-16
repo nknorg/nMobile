@@ -1,18 +1,22 @@
 package org.nkn.mobile.app
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.HandlerThread
 import android.os.Process
+import android.provider.Settings
 import android.util.Log
+import androidx.core.app.NotificationManagerCompat
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugin.common.EventChannel
 import nkn.*
+import org.json.JSONObject
 import org.nkn.mobile.app.abs.Tag
 import org.nkn.mobile.app.util.Bytes2String.toHex
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
-import kotlin.collections.hashMapOf
+import service.GooglePushService
 
 class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEngine) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler, Tag {
     val TAG by lazy { tag() }
@@ -97,6 +101,9 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             "getBlockHeight" -> {
                 getBlockHeight(call, result)
             }
+            "fetchDeviceToken" -> {
+                getDeviceToken(call, result)
+            }
             else -> {
                 result.notImplemented()
             }
@@ -108,7 +115,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         val identifier = call.argument<String>("identifier")
         val seedBytes = call.argument<ByteArray>("seedBytes")!!
         val clientUrl = call.argument<String>("clientUrl")
-        print("XXXXXXXXXX"+clientUrl.toString());
+        print("XXXXXXXXXX" + clientUrl.toString());
         result.success(null)
 
         msgSendHandler.post {
@@ -236,6 +243,19 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         val data = call.argument<String>("data")!!
         val maxHoldingSeconds = call.argument<Int>("maxHoldingSeconds")!!
         result.success(null)
+
+        val dataObj = JSONObject(data)
+        Log.e("111111", "Data is" + dataObj.toString())
+        if (dataObj.optString("deviceToken").isNotEmpty()){
+            val deviceToken = dataObj["deviceToken"].toString()
+            Log.e("222222", "deviceToken is" + dataObj["deviceToken"].toString().length.toString());
+
+            val pushContent = dataObj["pushContent"].toString()
+            if (pushContent?.length > 0){
+                val service = GooglePushService()
+                service.sendMessageToFireBase(deviceToken, pushContent);
+            }
+        }
 
         var nknDests: StringArray? = null
         for (d in dests) {
@@ -441,6 +461,32 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 val resp = hashMapOf(
                         "_id" to _id,
                         "height" to height
+                )
+                App.runOnMainThread {
+                    clientEventSink.success(resp)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "getSubscription | e:", e)
+                App.runOnMainThread {
+                    clientEventSink.error(_id, e.message, null)
+                }
+            }
+        }
+    }
+
+    private fun getDeviceToken(call: MethodCall, result: MethodChannel.Result){
+        val _id = call.argument<String>("_id")!!
+        result.success(null)
+        subscribersHandler.post {
+            try {
+                val _id = call.argument<String>("_id")!!
+                val sharedPreferences = App.get().getSharedPreferences("fcmToken", Context.MODE_PRIVATE);
+                val deviceToken = sharedPreferences.getString("token", "");
+                Log.e(TAG, "getDeviceToken | e:" + deviceToken.toString())
+                val resp = hashMapOf(
+                        "_id" to _id,
+                        "event" to "fetch_device_token",
+                        "device_token" to deviceToken.toString()
                 )
                 App.runOnMainThread {
                     clientEventSink.success(resp)

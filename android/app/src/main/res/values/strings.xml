@@ -5,4 +5,5 @@
     <string name="something_went_wrong_format_html"><![CDATA[
         Oops! Something went wrong: <b><font color="#ff0000">%s</font></b>, please retry.
         ]]></string>
+    <string name="default_notification_channel_id">org_nkn_notification_channel</string>
 </resources>
