@@ -49,3 +49,5 @@ ios/Classes/NKNPush/Resource/nkn_p.p12
 ios/Classes/NKNPush/Resource/NKNPush.cer
 ios/Classes/NKNPush/Resource/NknSecure.h
 ios/Classes/NKNPush/Resource/pusher.p12
+android/gradle.properties
+android/gradle.properties

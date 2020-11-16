@@ -30,6 +30,8 @@ abstract class ClientEventDispatcher {
 //          "pid" to msgNkn.messageID
 //      )
   void onMessage(String myChatId, Map data);
+
+  void onMessages(List messageList);
 }
 
 class NknClientProxy with Tag {
@@ -112,6 +114,15 @@ class NknClientProxy with Tag {
     }
   }
 
+  Future<String> fetchFCMToken() async{
+    try {
+      final String deviceToken = await _NknClientPlugin.fetchFcmToken();
+      return deviceToken;
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<int> getBlockHeight() async{
     try {
       final int blockHeight = await _NknClientPlugin.fetchBlockHeight();
@@ -186,6 +197,14 @@ class NknClientProxy with Tag {
     }
   }
 
+  void backOn(){
+    _NknClientPlugin.backOn();
+  }
+
+  void backOff(){
+    _NknClientPlugin.backOff();
+  }
+
   void onDisConnect() {
     _LOG.i('onDisConnect');
     _isConnected = false;
@@ -203,6 +222,9 @@ class NknClientProxy with Tag {
     _clientEvent.onMessage(myChatId, data);
   }
 
+  void onMessages(List messages) async{
+    _clientEvent.onMessages(messages);
+  }
 ///////////////////////////////////////////////////////////////////////////
 
   void _ensureConnect() async {
@@ -284,6 +306,7 @@ class _NknClientPlugin {
           break;
         case 'onConnect':
           final clientAddr = res['client']['address'];
+          _LOG.w('onConnectonConnectonConnect: $clientAddr');
           if (_clientProxy.myChatId == clientAddr) {
             Map node = res['node']; // NodeInfoSchema(address: node['address'], publicKey: node['publicKey'])
             _clientProxy.onConnect(clientAddr, node['address'], node['publicKey']);
@@ -307,6 +330,13 @@ class _NknClientPlugin {
             _LOG.i('<<<<<<<<< onMessage <<<<<<<<< DONE <<<<<<<<<');
           } else {
             _LOG.w('_clientProxy.myChatId != clientAddr: $clientAddr');
+          }
+          break;
+        case 'onMessages':
+          _LOG.i('________收到消息列表____________');
+          List messageList = res['data'];
+          if (messageList != null && messageList.length > 0){
+            _clientProxy.onMessages(messageList);
           }
           break;
         case 'send':
@@ -395,6 +425,27 @@ class _NknClientPlugin {
     }
   }
 
+  static Future<String> fetchFcmToken() async{
+    _LOG.i('fetch client fcm token');
+    Completer<Map> completer = Completer<Map>();
+    String id = completer.hashCode.toString();
+    _clientEventQueue[id] = completer;
+    completer.future.whenComplete(() {
+      _clientEventQueue.remove(id);
+    });
+    try {
+      _methodChannel.invokeMethod('fetchFcmToken', {
+        '_id': id,
+      });
+      Map resp = await completer.future;
+      String fcmToken = resp['fcm_token'];
+      return fcmToken;
+    } catch (e) {
+      _LOG.e('fetch fcmToken: e', e);
+      completer.completeError(e);
+    }
+  }
+
   static Future<bool> createClient(Uint8List seed, {String identifier, String clientUrl}) async {
     _LOG.i('createClient');
     Completer<bool> completer = Completer<bool>();
@@ -425,6 +476,16 @@ class _NknClientPlugin {
   static Future<void> startReceiveMessages() async {
     _LOG.i('startReceiveMessages');
     await _methodChannel.invokeMethod('startReceiveMessages');
+  }
+
+  static Future<void> backOn() async {
+    _LOG.i('backOn');
+    await _methodChannel.invokeMethod('backOn');
+  }
+
+  static Future<void> backOff() async {
+    _LOG.i('backOff');
+    await _methodChannel.invokeMethod('backOff');
   }
 
   static Future<void> disConnect() async {

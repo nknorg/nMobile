@@ -21,9 +21,14 @@ NS_ASSUME_NONNULL_BEGIN
     NWCertificateRef _certificate;
 }
 
+@property (nonatomic, strong) NSURLSession * session;
+@property (nonatomic, strong) NSURLSessionDataTask * dataTask;
+
 + (NKNPushService *)sharedService;
 
 - (void)pushContent:(NSString *)pushContent token:(NSString *)pushToken;
+
+- (void)pushContentToFCM:(NSString *)pushContent byToken:(NSString *)fcmToken;
 
 - (void)connectAPNS;
 

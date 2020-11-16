@@ -1,10 +1,15 @@
 package org.nkn.mobile.app
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
+import android.provider.Settings
 import android.util.Log
 import androidx.annotation.NonNull
+import androidx.core.app.NotificationManagerCompat
+import com.google.android.gms.common.GoogleApiAvailability
+import com.google.firebase.messaging.FirebaseMessaging
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -15,10 +20,6 @@ import org.nkn.mobile.app.abs.Tag
 import org.nkn.mobile.app.dchat.MessagingServiceFlutterPlugin
 import org.nkn.mobile.app.util.Bytes2String.withAndroidPrefix
 import java.util.*
-import android.content.res.AssetManager
-import de.esys.esysfluttershare.EsysFlutterSharePlugin
-import service.GooglePushService
-import java.io.InputStream
 
 
 class MainActivity : FlutterFragmentActivity(), Tag {
@@ -41,38 +42,22 @@ class MainActivity : FlutterFragmentActivity(), Tag {
         Sentry.init("https://e8e2c15b0e914295a8b318919f766701@o466976.ingest.sentry.io/5483308",
                 AndroidSentryClientFactory(this.applicationContext))
 
-//        val am: AssetManager = getAssets()
-//        val `is`: InputStream = am.open("serviceaccount.json")
-//
-//        val service = GooglePushService()
+//        val am: AssetManager = assets;
+//        var `is`:InputStream = am.open("nmobile-firebase-adminsdk-scioc-a2002be548.json");
+//        val inputAsString = `is`.bufferedReader().use { it.readText() }  // defaults to UTF-8
+//        Log.e("Inopasndlkasj", inputAsString);
+        
+
+        //send V1 Message
+//        `is` = am.open("nmobile-firebase-adminsdk-scioc-a2002be548.json");
 //        val token = service.getAuth(`is`);
-//        Log.e(TAG,"Token is "+token.toString());
+//        Log.e(TAG, "Token is " + token.toString());
+//        service.setAccessToken(token.toString());
+//        service.sendMessage()
 
-//        var filePath = "/data/service-account.json";
-//        filePath = Environment.getDataDirectory().path+"/service-account.json";
-//        var stream = assets.open("service-account.json");
-//        filePath = resources.openRawResource(R.raw.)
+        // send V0 Message
+//        service.sendV0Message();
 
-
-//        FirebaseInstanceId.getInstance().instanceId
-//                .addOnCompleteListener(OnCompleteListener { task ->
-//                    if (!task.isSuccessful) {
-//                        Log.d(TAG, "getInstanceId failed", task.exception)
-//                        return@OnCompleteListener
-//                    }
-//
-//                    // Get new Instance ID token
-//                    val token = task.result?.token
-//
-//                    // Log and toast
-////                    Log.d(TAG, token)
-//                    Log.e(TAG, token.toString().withAndroidPrefix())
-//                    System.out.println(token);
-//                    Toast.makeText(instance, token, Toast.LENGTH_SHORT).show()
-//                })
-
-        NknWalletPlugin(flutterEngine)
-        clientPlugin = NknClientPlugin(this, flutterEngine)
         MethodChannel(flutterEngine.dartExecutor, N_MOBILE_COMMON).setMethodCallHandler { methodCall, result ->
             if (methodCall.method == "backDesktop") {
                 result.success(true)
@@ -85,6 +70,8 @@ class MainActivity : FlutterFragmentActivity(), Tag {
                 result.success(true)
             }
         }
+        clientPlugin = NknClientPlugin(this, flutterEngine)
+        NknWalletPlugin(flutterEngine)
         MessagingServiceFlutterPlugin.config(flutterEngine)
     }
 
@@ -98,12 +85,6 @@ class MainActivity : FlutterFragmentActivity(), Tag {
             val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
             StrictMode.setThreadPolicy(policy)
         }
-//        val content = File("serviceaccount.json").readText()
-//        println(content)
-//        val fileStream : InputStream = assets.open("src/assets/serviceaccount.json")
-//        val input = Context.asse
-//
-
         Log.e(TAG, "<<<---onCreate--->>>".withAndroidPrefix())
     }
 
@@ -144,4 +125,41 @@ class MainActivity : FlutterFragmentActivity(), Tag {
         Log.e(TAG, ">>>---onDestroy---<<<".withAndroidPrefix())
         super.onDestroy()
     }
+
+    public fun openNotificationFunction(){
+        val manager = NotificationManagerCompat.from(this)
+        val isOpened = manager.areNotificationsEnabled()
+
+        if (isOpened) {
+
+        } else {
+            val intent: Intent = Intent()
+            try {
+                intent.action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+
+                //8.0及以后版本使用这两个extra.  >=API 26
+                intent.putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                intent.putExtra(Settings.EXTRA_CHANNEL_ID, applicationInfo.uid)
+
+                //5.0-7.1 使用这两个extra.  <= API 25, >=API 21
+                intent.putExtra("app_package", packageName)
+                intent.putExtra("app_uid", applicationInfo.uid)
+
+                startActivity(intent)
+            } catch (e: Exception) {
+                e.printStackTrace()
+
+                //其他低版本或者异常情况，走该节点。进入APP设置界面
+                intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                intent.putExtra("package", packageName)
+
+                //val uri = Uri.fromParts("package", packageName, null)
+                //intent.data = uri
+                startActivity(intent)
+            }
+        }
+    }
+
+
+
 }

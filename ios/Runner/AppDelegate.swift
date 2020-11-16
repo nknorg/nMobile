@@ -3,30 +3,32 @@ import Flutter
 import BackgroundTasks
 
 import Sentry
-
-var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
+import Firebase
+import Nkn
 
 @UIApplicationMain
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, MessagingDelegate{
+    
     override func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
         super.application(application, didFinishLaunchingWithOptions: launchOptions)
+        if #available(iOS 10.0, *) {
+            UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
+        }
         SentrySDK.start { options in
             options.dsn = "https://e566a6e5c45845dd93e07c41c22c0113@o466976.ingest.sentry.io/5483299"
-            options.debug = true
-            options.environment = "production"
-            options.releaseName = "nMobile"
+//            options.debug = true
+//            options.environment = "production"
+//            options.releaseName = "nMobile"
         }
-
-        UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
-        
+                
         if(!UserDefaults.standard.bool(forKey: "Notification")) {
             UIApplication.shared.cancelAllLocalNotifications()
             UserDefaults.standard.set(true, forKey: "Notification")
         }
-        
+//
         let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
         
         let walletMethodChannel = FlutterMethodChannel(name: "org.nkn.sdk/wallet", binaryMessenger: controller.binaryMessenger)
@@ -46,10 +48,31 @@ var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
                   }
             }
         GeneratedPluginRegistrant.register(with: self)
-        
         registerNotification()
         
+        registerGoogleFCM()
         return true
+    }
+    
+    func registerGoogleFCM(){
+        //注册谷歌Firebase Messaging
+        FirebaseApp.configure()
+        Messaging.messaging().delegate = self
+
+        Messaging.messaging().token { token, error in
+          if let error = error {
+            print("Error fetching FCM registration token: \(error)")
+          } else if let token = token {
+            print("FCM registration token: \(token)")
+          }
+        }
+    }
+    
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String) {
+        print("Firebase registration token: \(String(describing: fcmToken))")
+        let dataDict:[String: String] = ["token": fcmToken ?? ""]
+        // 存储FCMToken到本地
+        UserDefaults.standard.setValue(fcmToken, forKey: "nkn_fcm_token")
     }
     
     override func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
@@ -68,6 +91,10 @@ var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
         print("获取DeviceToken", formatDeviceToken)
         // 存储DeviceToken到本地
         UserDefaults.standard.setValue(formatDeviceToken, forKey: "nkn_device_token")
+        
+        // 发送DeviceToken给谷歌
+        Messaging.messaging().apnsToken = deviceToken
+        
         let pushService:NKNPushService = NKNPushService.shared();
         sleep(3);
         pushService.connectAPNS();
@@ -87,6 +114,7 @@ var backgroundChatTask: UIBackgroundTaskIdentifier! = nil
             // 代表从后台接受消息后进入app
             UIApplication.shared.applicationIconBadgeNumber = 0
         }
+        UIApplication.shared.applicationIconBadgeNumber = 99
         completionHandler(.newData)
     }
     

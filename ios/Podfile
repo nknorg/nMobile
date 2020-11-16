@@ -44,6 +44,11 @@ target 'Runner' do
   
   pod 'Sentry', '~> 6.0.4'
   
+  # Add the Firebase pod for Google Analytics
+  # pod 'Firebase/Analytics'
+  # Add the pod for Firebase Cloud Messaging
+  pod 'Firebase/Messaging'
+  
   use_modular_headers!
  
   # Flutter Pod

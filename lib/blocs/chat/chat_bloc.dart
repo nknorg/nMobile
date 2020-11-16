@@ -26,7 +26,6 @@ import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/log_tag.dart';
-import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
@@ -65,6 +64,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
       yield MessagesUpdated(target: event.target);
     } else if (event is GetAndReadMessages) {
       yield* _mapGetAndReadMessagesToState(event);
+    }
+    else if (event is ReceiveMessageList){
+      yield* _mapReceiveMessages(event);
     }
   }
 
@@ -269,10 +271,83 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
     }
   }
 
+  Stream<ChatState> _mapReceiveMessages(ReceiveMessageList event) async*{
+    _LOG.d('_________Receiving  Messages:_________');
+    List messageList = event.messageList;
+    print('MessageList is '+messageList.toString());
+
+    for (int i = 0; i < messageList.length; i++){
+      Map messageInfo = messageList[i];
+      MessageSchema message = MessageSchema(from: messageInfo['src'], to: messageInfo['address'], data: messageInfo['data'], pid: messageInfo['pid']);
+
+    }
+  }
+
+  _handleSingleMessage(MessageSchema message) async {
+    /// 处理单条收到的消
+    print('将要处理消息__'+message.content+"__");
+    /// 消息已存入数据库
+    if (await message.isExist(db)){
+      return;
+    }
+    /// 如果是群消息
+    if (message.topic != null){
+
+    }
+  }
+
+  _handleGroupMessage(MessageSchema message) async {
+    // List<String> dests = await repoSub.getTopicChatIds(message.topic);
+    // if (!dests.contains(message.from)) {
+    //   if (isPrivateTopic(message.topic)) {
+    //     await GroupChatPrivateChannel.pullSubscribersPrivateChannel(
+    //         client: account.client,
+    //         topicName: message.topic,
+    //         accountPubkey: accountPubkey,
+    //         myChatId: accountChatId,
+    //         repoSub: repoSub,
+    //         repoBlackL: repoBl,
+    //         repoTopic: repoTopic,
+    //         membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+    //         needUploadMetaCallback: (topicName) {});
+    //     if (await repoBl.getByTopicAndChatId(message.topic, accountChatId) != null ||
+    //         (accountPubkey != accountChatId && await repoBl.getByTopicAndChatId(message.topic, accountPubkey) != null)) {
+    //       yield GroupEvicted(message.topic);
+    //       return;
+    //     } else {
+    //       dests = await repoSub.getTopicChatIds(message.topic);
+    //       if (!dests.contains(message.from)) {
+    //         _LOG.w('$dests not contains ${message.from}');
+    //       } else {
+    //         _LOG.d('$dests contains ${message.from}');
+    //       }
+    //     }
+    //   } else {
+    //     await GroupChatPublicChannel.pullSubscribersPublicChannel(
+    //       client: account.client,
+    //       topicName: message.topic,
+    //       myChatId: accountChatId,
+    //       repoSub: SubscriberRepo(db),
+    //       repoTopic: TopicRepo(db),
+    //       membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+    //     );
+    //     dests = await repoSub.getTopicChatIds(message.topic);
+    //     if (!dests.contains(message.from)) {
+    //       _LOG.w('PUBLIC GROUP MEMBERS not contains ${message.from}');
+    //       return;
+    //     } else {
+    //       _LOG.d('PUBLIC GROUP MEMBERS contains ${message.from}');
+    //     }
+    //   }
+    // } else {
+    //   _LOG.d('GROUP MEMBERS contains ${message.from}');
+    // }
+  }
+
   Stream<ChatState> _mapReceiveMessageToState(ReceiveMessage event) async* {
     _LOG.d('=======receive  message ==============');
     var message = event.message;
-    // TODO: upgrade DB for UNIQUE INDEX.
+    // TODO: upgrade DB for UNIQUE IND_EX.
     if (await message.isExist(db)) {
       return;
     }
@@ -541,6 +616,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
     var contact = await ContactSchema.getContactByAddress(db, message.to);
     if (contact.deviceToken != null && contact.deviceToken.length > 0){
       String pushContent = NL10ns.of(Global.appContext).notification_push_content;
+      pushContent = "from:"+accountChatId.substring(0, 8) + "...";
       print('Send Push notification content is '+pushContent);
       dataInfo['deviceToken'] = contact.deviceToken;
       dataInfo['pushContent'] = pushContent;
@@ -594,6 +670,12 @@ class ReceiveMessage extends ChatEvent {
   final MessageSchema message;
 
   const ReceiveMessage(this.message);
+}
+
+class ReceiveMessageList extends ChatEvent{
+  final List messageList;
+
+  const ReceiveMessageList(this.messageList);
 }
 
 class SendMessage extends ChatEvent {
