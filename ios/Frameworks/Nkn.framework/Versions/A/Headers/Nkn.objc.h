@@ -10,8 +10,6 @@
 #include "ref.h"
 #include "Universe.objc.h"
 
-#include "Transaction.objc.h"
-#include "Ncp.objc.h"
 
 @class NknAccount;
 @class NknAmount;
@@ -89,7 +87,7 @@
 0. If seed has zero length (including nil), a random seed will be generated.
  */
 - (nullable instancetype)init:(NSData* _Nullable)seed;
-// skipped field Account.Account with unsupported type: *github.com/nknorg/nkn/vault.Account
+// skipped field Account.Account with unsupported type: *github.com/nknorg/nkn/v2/vault.Account
 
 - (NSData* _Nullable)privKey;
 /**
@@ -121,7 +119,7 @@ safe.
 will be parsed as 0.1 NKN.
  */
 - (nullable instancetype)init:(NSString* _Nullable)s;
-// skipped field Amount.Fixed64 with unsupported type: github.com/nknorg/nkn/common.Fixed64
+// skipped field Amount.Fixed64 with unsupported type: github.com/nknorg/nkn/v2/common.Fixed64
 
 // skipped method Amount.Deserialize with unsupported parameter or return types
 
@@ -154,6 +152,10 @@ will be used.
 @property (nonatomic) NknOnConnect* _Nullable onConnect;
 @property (nonatomic) NknOnMessage* _Nullable onMessage;
 /**
+ * Account returns the account of the client.
+ */
+- (NknAccount* _Nullable)account;
+/**
  * Address returns the NKN client address of the client. Client address is in
 the form of
   identifier.pubKeyHex
@@ -180,7 +182,7 @@ failed.
 /**
  * Close closes the client.
  */
-- (void)close;
+- (BOOL)close:(NSError* _Nullable* _Nullable)error;
 /**
  * DeleteName is a shortcut for DeleteName using this client as SignerRPCClient.
  */
@@ -264,6 +266,10 @@ compatibility.
  */
 - (BOOL)publishText:(NSString* _Nullable)topic data:(NSString* _Nullable)data config:(NknMessageConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
 /**
+ * Reconnect forces the client to find node and connect again.
+ */
+- (void)reconnect;
+/**
  * RegisterName is a shortcut for RegisterName using this client as
 SignerRPCClient.
  */
@@ -280,12 +286,8 @@ client/wallet with the same key pair and should be kept secret and safe.
 compatibility.
  */
 - (NknOnMessage* _Nullable)sendBinary:(NknStringArray* _Nullable)dests data:(NSData* _Nullable)data config:(NknMessageConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
-/**
- * SendRawTransaction is the same as package level SendRawTransaction, but using
-connected node as the RPC server, followed by this client's SeedRPCServerAddr
-if failed.
- */
-- (NSString* _Nonnull)sendRawTransaction:(TransactionTransaction* _Nullable)txn error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.SendRawTransaction with unsupported parameter or return types
+
 /**
  * SendText is a wrapper of Send without interface type for gomobile
 compatibility.
@@ -293,10 +295,8 @@ compatibility.
 - (NknOnMessage* _Nullable)sendText:(NknStringArray* _Nullable)dests data:(NSString* _Nullable)data config:(NknMessageConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
 // skipped method Client.SetWriteDeadline with unsupported parameter or return types
 
-/**
- * SignTransaction signs an unsigned transaction using this client's key pair.
- */
-- (BOOL)signTransaction:(TransactionTransaction* _Nullable)tx error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.SignTransaction with unsupported parameter or return types
+
 /**
  * Subscribe is a shortcut for Subscribe using this client as SignerRPCClient.
 
@@ -360,7 +360,8 @@ SignerRPCClient.
 @property (nonatomic) int32_t minReconnectInterval;
 @property (nonatomic) int32_t maxReconnectInterval;
 @property (nonatomic) NknMessageConfig* _Nullable messageConfig;
-@property (nonatomic) NcpConfig* _Nullable sessionConfig;
+// skipped field ClientConfig.SessionConfig with unsupported type: *github.com/nknorg/ncp-go.Config
+
 /**
  * GetRandomSeedRPCServerAddr returns a random seed rpc server address from the
 client config.
@@ -378,7 +379,8 @@ client config.
 - (nonnull instancetype)initWithRef:(_Nonnull id)ref;
 - (nonnull instancetype)init;
 @property (nonatomic) int32_t dialTimeout;
-@property (nonatomic) NcpConfig* _Nullable sessionConfig;
+// skipped field DialConfig.SessionConfig with unsupported type: *github.com/nknorg/ncp-go.Config
+
 @end
 
 /**
@@ -455,12 +457,12 @@ be used.
 @property (nonatomic) NknOnMessage* _Nullable onMessage;
 // skipped method MultiClient.Accept with unsupported parameter or return types
 
+// skipped method MultiClient.AcceptSession with unsupported parameter or return types
+
 /**
- * AcceptSession will wait and return the first incoming session from allowed
-remote addresses. If multiclient is closed, it will return immediately with
-ErrClosed.
+ * Account returns the account of the multiclient.
  */
-- (NcpSession* _Nullable)acceptSession:(NSError* _Nullable* _Nullable)error;
+- (NknAccount* _Nullable)account;
 // skipped method MultiClient.Addr with unsupported parameter or return types
 
 /**
@@ -500,17 +502,10 @@ SignerRPCClient.
 - (NSString* _Nonnull)deleteName:(NSString* _Nullable)name config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
 // skipped method MultiClient.Dial with unsupported parameter or return types
 
-/**
- * DialSession dials a session to a remote client address using this
-multiclient's dial config.
- */
-- (NcpSession* _Nullable)dialSession:(NSString* _Nullable)remoteAddr error:(NSError* _Nullable* _Nullable)error;
-/**
- * DialWithConfig dials a session with a dial config. For any zero value field
-in config, this default dial config value of this multiclient will be used.
-If config is nil, the default dial config of this multiclient will be used.
- */
-- (NcpSession* _Nullable)dialWithConfig:(NSString* _Nullable)remoteAddr config:(NknDialConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.DialSession with unsupported parameter or return types
+
+// skipped method MultiClient.DialWithConfig with unsupported parameter or return types
+
 /**
  * GetClient returns a client with a given index.
  */
@@ -602,6 +597,10 @@ compatibility.
  */
 - (BOOL)publishText:(NSString* _Nullable)topic data:(NSString* _Nullable)data config:(NknMessageConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
 /**
+ * Reconnect forces all clients to find node and connect again.
+ */
+- (void)reconnect;
+/**
  * RegisterName is a shortcut for RegisterName using this multiclient as
 SignerRPCClient.
  */
@@ -624,12 +623,8 @@ compatibility.
 for gomobile compatibility.
  */
 - (NknOnMessage* _Nullable)sendBinaryWithClient:(long)clientID dests:(NknStringArray* _Nullable)dests data:(NSData* _Nullable)data config:(NknMessageConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
-/**
- * SendRawTransaction is the same as package level SendRawTransaction, but using
-connected node as the RPC server, followed by this multiclient's
-SeedRPCServerAddr if failed.
- */
-- (NSString* _Nonnull)sendRawTransaction:(TransactionTransaction* _Nullable)txn error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.SendRawTransaction with unsupported parameter or return types
+
 /**
  * SendText is a wrapper of Send without interface type for gomobile
 compatibility.
@@ -642,11 +637,8 @@ gomobile compatibility.
 - (NknOnMessage* _Nullable)sendTextWithClient:(long)clientID dests:(NknStringArray* _Nullable)dests data:(NSString* _Nullable)data config:(NknMessageConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
 // skipped method MultiClient.SendWithClient with unsupported parameter or return types
 
-/**
- * SignTransaction signs an unsigned transaction using this multiclient's key
-pair.
- */
-- (BOOL)signTransaction:(TransactionTransaction* _Nullable)tx error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.SignTransaction with unsupported parameter or return types
+
 /**
  * Subscribe is a shortcut for Subscribe using this multiclient as
 SignerRPCClient.
@@ -681,12 +673,8 @@ payment amount can increase monotonically.
 
 - (nonnull instancetype)initWithRef:(_Nonnull id)ref;
 - (nonnull instancetype)init;
-/**
- * IncrementAmount increments the NanoPay amount by delta and returns the signed
-NanoPay transaction. Delta is the string representation of the amount in unit
-of NKN to avoid precision loss. For example, "0.1" will be parsed as 0.1 NKN.
- */
-- (TransactionTransaction* _Nullable)incrementAmount:(NSString* _Nullable)delta error:(NSError* _Nullable* _Nullable)error;
+// skipped method NanoPay.IncrementAmount with unsupported parameter or return types
+
 /**
  * Recipient returns the recipient wallet address.
  */
@@ -708,14 +696,8 @@ blockchain periodically.
 amount) of this NanoPayClaimer.
  */
 - (NknAmount* _Nullable)amount;
-/**
- * Claim accepts a NanoPay transaction and update NanoPay state. If the NanoPay
-in transaction has the same ID as before, it will be considered as an update
-to the previous NanoPay. If it has a different ID, it will be considered a
-new NanoPay, and previous NanoPay state will be flushed and sent to chain
-before accepting new one.
- */
-- (NknAmount* _Nullable)claim:(TransactionTransaction* _Nullable)tx error:(NSError* _Nullable* _Nullable)error;
+// skipped method NanoPayClaimer.Claim with unsupported parameter or return types
+
 /**
  * Close closes the NanoPayClaimer.
  */
@@ -813,6 +795,10 @@ function.
  * Next waits and returns the next element from the channel.
  */
 - (NknMessage* _Nullable)next;
+/**
+ * Next waits and returns the next element from the channel, timeout in millisecond.
+ */
+- (NknMessage* _Nullable)nextWithTimeout:(int32_t)timeout;
 @end
 
 /**
@@ -988,6 +974,10 @@ wallet from the generated wallet JSON.
  */
 - (nullable instancetype)init:(NknAccount* _Nullable)account config:(NknWalletConfig* _Nullable)config;
 /**
+ * Account returns the account of the wallet.
+ */
+- (NknAccount* _Nullable)account;
+/**
  * Address returns the NKN wallet address of the wallet.
  */
 - (NSString* _Nonnull)address;
@@ -1073,15 +1063,10 @@ SignerRPCClient.
 client/wallet with the same key pair and should be kept secret and safe.
  */
 - (NSData* _Nullable)seed;
-/**
- * SendRawTransaction is the same as package level SendRawTransaction, but using
-this wallet's SeedRPCServerAddr.
- */
-- (NSString* _Nonnull)sendRawTransaction:(TransactionTransaction* _Nullable)txn error:(NSError* _Nullable* _Nullable)error;
-/**
- * SignTransaction signs an unsigned transaction using this wallet's key pair.
- */
-- (BOOL)signTransaction:(TransactionTransaction* _Nullable)tx error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.SendRawTransaction with unsupported parameter or return types
+
+// skipped method Wallet.SignTransaction with unsupported parameter or return types
+
 /**
  * Subscribe is a shortcut for Subscribe using this wallet as SignerRPCClient.
 
@@ -1108,10 +1093,10 @@ SignerRPCClient.
  */
 - (NSString* _Nonnull)unsubscribe:(NSString* _Nullable)identifier topic:(NSString* _Nullable)topic config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
 /**
- * VerifyPassword returns whether a password is the correct password of this
-wallet.
+ * VerifyPassword returns nil if provided password is the correct password of
+this wallet.
  */
-- (BOOL)verifyPassword:(NSString* _Nullable)password;
+- (BOOL)verifyPassword:(NSString* _Nullable)password error:(NSError* _Nullable* _Nullable)error;
 @end
 
 /**
@@ -1197,11 +1182,7 @@ FOUNDATION_EXPORT const int32_t NknTextType;
 + (NSError* _Nullable) errAddrNotAllowed;
 + (void) setErrAddrNotAllowed:(NSError* _Nullable)v;
 
-/**
- * Error definitions.
- */
-+ (NcpGenericError* _Nullable) errClosed;
-+ (void) setErrClosed:(NcpGenericError* _Nullable)v;
+// skipped variable ErrClosed with unsupported type: *github.com/nknorg/ncp-go.GenericError
 
 /**
  * Error definitions.
@@ -1360,11 +1341,8 @@ fields set to default.
  */
 FOUNDATION_EXPORT NknClientConfig* _Nullable NknGetDefaultClientConfig(void);
 
-/**
- * GetDefaultDialConfig returns the default dial config with nil pointer fields
-set to default.
- */
-FOUNDATION_EXPORT NknDialConfig* _Nullable NknGetDefaultDialConfig(NcpConfig* _Nullable baseSessionConfig);
+// skipped function GetDefaultDialConfig with unsupported parameter or return types
+
 
 /**
  * GetDefaultMessageConfig returns the default message config.
@@ -1377,10 +1355,8 @@ set to default.
  */
 FOUNDATION_EXPORT NknRPCConfig* _Nullable NknGetDefaultRPCConfig(void);
 
-/**
- * GetDefaultSessionConfig returns the default session config.
- */
-FOUNDATION_EXPORT NcpConfig* _Nullable NknGetDefaultSessionConfig(void);
+// skipped function GetDefaultSessionConfig with unsupported parameter or return types
+
 
 /**
  * GetDefaultTransactionConfig returns the default rpc config with nil pointer
@@ -1455,11 +1431,8 @@ recursively. Any non zero value fields will override the default config.
  */
 FOUNDATION_EXPORT NknClientConfig* _Nullable NknMergeClientConfig(NknClientConfig* _Nullable conf, NSError* _Nullable* _Nullable error);
 
-/**
- * MergeDialConfig merges a given dial config with the default dial config
-recursively. Any non zero value fields will override the default config.
- */
-FOUNDATION_EXPORT NknDialConfig* _Nullable NknMergeDialConfig(NcpConfig* _Nullable baseSessionConfig, NknDialConfig* _Nullable conf, NSError* _Nullable* _Nullable error);
+// skipped function MergeDialConfig with unsupported parameter or return types
+
 
 /**
  * MergeMessageConfig merges a given message config with the default message
@@ -1574,11 +1547,8 @@ FOUNDATION_EXPORT NSString* _Nonnull NknPubKeyToWalletAddr(NSData* _Nullable pub
  */
 FOUNDATION_EXPORT NSData* _Nullable NknRandomBytes(long numBytes, NSError* _Nullable* _Nullable error);
 
-/**
- * SendRawTransaction RPC sends a signed transaction to chain and returns txn
-hash hex string.
- */
-FOUNDATION_EXPORT NSString* _Nonnull NknSendRawTransaction(TransactionTransaction* _Nullable txn, id<NknRPCConfigInterface> _Nullable config, NSError* _Nullable* _Nullable error);
+// skipped function SendRawTransaction with unsupported parameter or return types
+
 
 /**
  * VerifyWalletAddress returns error if the given wallet address is invalid.

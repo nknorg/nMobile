@@ -62,7 +62,7 @@ dependencies:
   image_cropper: ^1.2.1
   flutter_native_image: ^0.0.5+2
   flutter_sound: ^2.1.1
-  background_fetch: ^0.5.5
+  background_fetch: ^0.5.6
   common_utils: ^1.1.1
   flustars: ^0.2.5+1
   flutter_screenutil: ^1.1.0

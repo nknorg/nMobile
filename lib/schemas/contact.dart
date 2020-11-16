@@ -392,9 +392,14 @@ class ContactSchema {
       profileVersion: e['profile_version'],
       profileExpiresAt: e['profile_expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['profile_expires_at']) : DateTime.now(),
       deviceToken: e['device_token'],
-      notificationOpen: e['notification_open']=='1'?true:false
+      // notificationOpen: e['notification_open']=='1'?true:false
     );
-//    contact.type = e['type'];
+    if (e['notification_open'] == '1' || e['notification_open'].toString() == 'true' || e['notification_open'] == 1){
+      contact.notificationOpen = true;
+
+      print("NOtification Open is"+contact.notificationOpen.toString());
+    }
+
 
     if (e['data'] != null) {
       try {
@@ -687,6 +692,7 @@ class ContactSchema {
       profileVersion = uuid.v4();
       data['profile_version'] = profileVersion;
     }
+    print("setNotification Open"+notificationOpen.toString());
     return updateContactDataById(db, data);
   }
 
@@ -698,6 +704,8 @@ class ContactSchema {
         where: 'id = ?',
         whereArgs: [id],
       );
+      print("notification Id is"+data.toString());
+      print("notification Id is"+clientAddress.toString());
       return count > 0;
     } catch (e) {
       debugPrint(e);
