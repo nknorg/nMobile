@@ -114,6 +114,15 @@ class NknClientProxy with Tag {
     }
   }
 
+  Future <bool> getGoogleService() async{
+    try {
+      final bool googleServiceOn = await _NknClientPlugin.googleServiceOn();
+      return googleServiceOn;
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<String> fetchFCMToken() async{
     try {
       final String deviceToken = await _NknClientPlugin.fetchFcmToken();
@@ -350,6 +359,11 @@ class _NknClientPlugin {
           _LOG.i('fetch_device_token'+res.toString());
           _clientEventQueue[key].complete(true);
           break;
+        case 'checkGoogleService':
+          String key = res['_id'];
+          _LOG.i('checkGoogleService'+res.toString());
+          _clientEventQueue[key].complete(true);
+          break;
         case 'getBlockHeight':
           String key = res['_id'];
           Uint8List pid = res['height'];
@@ -419,6 +433,27 @@ class _NknClientPlugin {
       Map resp = await completer.future;
       String deviceToken = resp['device_token'];
       return deviceToken;
+    } catch (e) {
+      _LOG.e('fetch device e', e);
+      completer.completeError(e);
+    }
+  }
+
+  static Future<bool> googleServiceOn() async{
+    Completer<Map> completer = Completer<Map>();
+    String id = completer.hashCode.toString();
+    _clientEventQueue[id] = completer;
+    completer.future.whenComplete(() {
+      _clientEventQueue.remove(id);
+    });
+    try {
+      _methodChannel.invokeMethod('checkGoogleService', {
+        '_id': id,
+      });
+      Map resp = await completer.future;
+      bool googleServiceOn = resp['googleServiceOn'];
+      print("Resp is E"+resp.toString());
+      return googleServiceOn;
     } catch (e) {
       _LOG.e('fetch device e', e);
       completer.completeError(e);
