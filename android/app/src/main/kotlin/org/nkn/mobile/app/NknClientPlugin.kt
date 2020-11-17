@@ -1,25 +1,21 @@
 package org.nkn.mobile.app
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.HandlerThread
 import android.os.Process
-import android.provider.Settings
 import android.util.Log
-import androidx.core.app.NotificationManagerCompat
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import nkn.*
 import org.json.JSONObject
-import org.nkn.mobile.app.abs.Tag
 import org.nkn.mobile.app.util.Bytes2String.toHex
 import service.GooglePushService
 
-class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEngine) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler, Tag {
-    val TAG by lazy { tag() }
+class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEngine) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
 
     companion object {
         private const val N_MOBILE_SDK_CLIENT = "org.nkn.sdk/client"
@@ -104,8 +100,74 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             "fetchDeviceToken" -> {
                 getDeviceToken(call, result)
             }
+            "checkGoogleService" -> {
+                onCheckGooglePlayServices(call, result)
+            }
             else -> {
                 result.notImplemented()
+            }
+        }
+    }
+
+    private fun getDeviceToken(call: MethodCall, result: MethodChannel.Result){
+        val _id = call.argument<String>("_id")!!
+        result.success(null)
+        msgSendHandler.post {
+            try {
+                val _id = call.argument<String>("_id")!!
+                val sharedPreferences = App.get().getSharedPreferences("fcmToken", Context.MODE_PRIVATE);
+                val deviceToken = sharedPreferences.getString("token", "");
+                Log.e("getDeviceToken", "getDeviceToken | e:" + deviceToken.toString())
+                val resp = hashMapOf(
+                        "_id" to _id,
+                        "event" to "fetch_device_token",
+                        "device_token" to deviceToken.toString()
+                )
+                App.runOnMainThread {
+                    clientEventSink.success(resp)
+                }
+            } catch (e: Exception) {
+                Log.e("getDeviceTokenE", "getSubscription | e:", e)
+                App.runOnMainThread {
+                    clientEventSink.error(_id, e.message, null)
+                }
+            }
+        }
+    }
+
+    /**
+     * 检查 Google Play 服务
+     */
+    private fun onCheckGooglePlayServices(call: MethodCall, result: MethodChannel.Result) {
+        // 验证是否已在此设备上安装并启用Google Play服务，以及此设备上安装的旧版本是否为此客户端所需的版本
+        val code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(acty)
+        var googleServiceOn:Boolean = true;
+        if (code == ConnectionResult.SUCCESS) {
+            // 支持Google服务
+            Log.e("GoogleC","GoogleService Available")
+        } else {
+            googleServiceOn = false;
+            Log.e("GoogleC","GoogleService Unavailable")
+        }
+        val _id = call.argument<String>("_id")!!
+        result.success(null)
+
+        msgSendHandler.post {
+            try {
+                val _id = call.argument<String>("_id")!!
+                val resp = hashMapOf(
+                        "_id" to _id,
+                        "event" to "google_service_on",
+                        "googleServiceOn" to googleServiceOn
+                )
+                App.runOnMainThread {
+                    clientEventSink.success(resp)
+                }
+            } catch (e: Exception) {
+                Log.e("serviceCheck", "onCheckGooglePlayServices | e:", e)
+                App.runOnMainThread {
+                    clientEventSink.error(_id, e.message, null)
+                }
             }
         }
     }
@@ -115,7 +177,6 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         val identifier = call.argument<String>("identifier")
         val seedBytes = call.argument<ByteArray>("seedBytes")!!
         val clientUrl = call.argument<String>("clientUrl")
-        print("XXXXXXXXXX" + clientUrl.toString());
         result.success(null)
 
         msgSendHandler.post {
@@ -133,14 +194,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 }
                 if (client != null) acty?.onClientCreated()
             } catch (e: Exception) {
-                Log.e(TAG, "createClient | e:", e)
-//                App.runOnMainThread {
-//                    @UiThread
-//                    result.error(String errorCode,
-//                      @Nullable String errorMessage,
-//                      @Nullable Object errorDetails)
-//                    result.success(0)
-//                }
+                Log.e("createClient", "createClient | e:", e)
                 val resp = hashMapOf(
                         "_id" to _id,
                         "event" to "createClient",
@@ -169,7 +223,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                     clientEventSink.success(data)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "connect | e:", e)
+                Log.e("connectE", "connect | e:", e)
             }
         }
     }
@@ -231,7 +285,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                     receiveMessages()
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "receiveMessages | e:", e)
+                Log.e("receiveMessagesRun", "receiveMessages | e:", e)
                 msgReceiveHandler.postDelayed({ receiveMessages() }, 5000)
             }
         }
@@ -245,10 +299,8 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         result.success(null)
 
         val dataObj = JSONObject(data)
-        Log.e("111111", "Data is" + dataObj.toString())
         if (dataObj.optString("deviceToken").isNotEmpty()){
             val deviceToken = dataObj["deviceToken"].toString()
-            Log.e("222222", "deviceToken is" + dataObj["deviceToken"].toString().length.toString());
 
             val pushContent = dataObj["pushContent"].toString()
             if (pushContent?.length > 0){
@@ -288,7 +340,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                     clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "sendText | e:", e)
+                Log.e("sendTextE", "sendText | e:", e)
                 App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
@@ -319,7 +371,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                     clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "publishText | e:", e)
+                Log.e("publishTextE", "publishText | e:", e)
                 App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
@@ -350,7 +402,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                     clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "subscribe | e:", e)
+                Log.e("subscribeE", "subscribe | e:", e)
                 App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
@@ -379,7 +431,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                     clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "unsubscribe | e:", e)
+                Log.e("unsubscribe", "unsubscribe | e:", e)
                 App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
@@ -417,7 +469,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                     clientEventSink.success(map)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "getSubscribers | e:", e)
+                Log.e("getSubscribers", "getSubscribers | e:", e)
                 App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
@@ -443,7 +495,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                     clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "getSubscription | e:", e)
+                Log.e("getSubscriptionE", "getSubscription | e:", e)
                 App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
@@ -466,33 +518,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                     clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "getSubscription | e:", e)
-                App.runOnMainThread {
-                    clientEventSink.error(_id, e.message, null)
-                }
-            }
-        }
-    }
-
-    private fun getDeviceToken(call: MethodCall, result: MethodChannel.Result){
-        val _id = call.argument<String>("_id")!!
-        result.success(null)
-        subscribersHandler.post {
-            try {
-                val _id = call.argument<String>("_id")!!
-                val sharedPreferences = App.get().getSharedPreferences("fcmToken", Context.MODE_PRIVATE);
-                val deviceToken = sharedPreferences.getString("token", "");
-                Log.e(TAG, "getDeviceToken | e:" + deviceToken.toString())
-                val resp = hashMapOf(
-                        "_id" to _id,
-                        "event" to "fetch_device_token",
-                        "device_token" to deviceToken.toString()
-                )
-                App.runOnMainThread {
-                    clientEventSink.success(resp)
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "getSubscription | e:", e)
+                Log.e("getBlockHeightE", "getSubscription | e:", e)
                 App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
@@ -516,7 +542,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                     clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "getSubscribersCount | e:", e)
+                Log.e("getSubscribersCount", "getSubscribersCount | e:", e)
                 App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }
@@ -530,9 +556,9 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             null
         } else {
             val pubkey = account.pubKey().toHex()
-            Log.i(TAG, "ensureSameAccount | new: $pubkey")
+            Log.i("ensureSameAccount", "ensureSameAccount | new: $pubkey")
             if (accountPubkeyHex != pubkey) {
-                Log.i(TAG, "ensureSameAccount | old: ${accountPubkeyHex ?: "null"}, new: $pubkey")
+                Log.i("ensureSameAccountE", "ensureSameAccount | old: ${accountPubkeyHex ?: "null"}, new: $pubkey")
                 closeClientIfExists()
             }
             pubkey
@@ -566,7 +592,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
     }
 
     private fun closeClientIfExists() {
-        Log.w(TAG, "closeClientIfExists")
+        Log.w("closeClientIfExists", "closeClientIfExists")
         try {
             multiClient?.close()
         } catch (ex: Exception) {
