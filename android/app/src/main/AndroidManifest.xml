@@ -75,7 +75,7 @@
             android:name=".dchat.DChatServiceForFlutter"
             android:process=":messaging" />
 
-        <!--       通知栏显示的 应用名称字体颜色和下拉查看通知详情的箭头的颜色-->
+        <!-- 通知栏显示的 应用名称字体颜色和下拉查看通知详情的箭头的颜色-->
         <meta-data android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@android:color/holo_red_dark" />
 

@@ -8,22 +8,18 @@ import android.provider.Settings
 import android.util.Log
 import androidx.annotation.NonNull
 import androidx.core.app.NotificationManagerCompat
+import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
-import com.google.firebase.messaging.FirebaseMessaging
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugins.GeneratedPluginRegistrant
 import io.sentry.Sentry
 import io.sentry.android.AndroidSentryClientFactory
-import org.nkn.mobile.app.abs.Tag
-import org.nkn.mobile.app.dchat.MessagingServiceFlutterPlugin
 import org.nkn.mobile.app.util.Bytes2String.withAndroidPrefix
 import java.util.*
 
 
-class MainActivity : FlutterFragmentActivity(), Tag {
-    val TAG by lazy { tag() }
+class MainActivity : FlutterFragmentActivity(){
 
     val instance by lazy { this } //这里使用了委托，表示只有使用到instance才会执行该段代码
 
@@ -36,9 +32,8 @@ class MainActivity : FlutterFragmentActivity(), Tag {
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine);
-        Log.e(TAG, "<<<---configureFlutterEngine--->>>".withAndroidPrefix())
+        Log.e("MainActivityE", "<<<---configureFlutterEngine--->>>".withAndroidPrefix())
 
-        GeneratedPluginRegistrant.registerWith(flutterEngine)
         Sentry.init("https://e8e2c15b0e914295a8b318919f766701@o466976.ingest.sentry.io/5483308",
                 AndroidSentryClientFactory(this.applicationContext))
 
@@ -72,7 +67,7 @@ class MainActivity : FlutterFragmentActivity(), Tag {
         }
         clientPlugin = NknClientPlugin(this, flutterEngine)
         NknWalletPlugin(flutterEngine)
-        MessagingServiceFlutterPlugin.config(flutterEngine)
+//        MessagingServiceFlutterPlugin.config(flutterEngine)
     }
 
     fun onClientCreated() {
@@ -85,44 +80,44 @@ class MainActivity : FlutterFragmentActivity(), Tag {
             val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
             StrictMode.setThreadPolicy(policy)
         }
-        Log.e(TAG, "<<<---onCreate--->>>".withAndroidPrefix())
+        Log.e("MainActivityE", "<<<---onCreate--->>>".withAndroidPrefix())
     }
 
     override fun onStart() {
         super.onStart()
-        Log.d(TAG, "<<<---onStart--->>>".withAndroidPrefix())
+        Log.d("MainActivityE", "<<<---onStart--->>>".withAndroidPrefix())
         isActive = true
     }
 
     override fun onResume() {
         super.onResume()
-        Log.d(TAG, "<<<---onResume--->>>".withAndroidPrefix())
+        Log.d("MainActivityE", "<<<---onResume--->>>".withAndroidPrefix())
     }
 
     override fun onPause() {
-        Log.d(TAG, ">>>---onPause---<<<".withAndroidPrefix())
+        Log.d("MainActivityE", ">>>---onPause---<<<".withAndroidPrefix())
         super.onPause()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        Log.d(TAG, ">>>---onSaveInstanceState---<<<".withAndroidPrefix())
+        Log.d("MainActivityE", ">>>---onSaveInstanceState---<<<".withAndroidPrefix())
         // e.g:
         val bundle = Bundle()
         bundle.putString("key", "value")
-        outState.putParcelable("app:$TAG", bundle)
-        outState.putString("app:${TAG.toLowerCase(Locale.US)}:key", "value")
+        outState.putParcelable("app:$\"MainActivityE\"", bundle)
+        outState.putString("app:${"MainActivityE".toLowerCase(Locale.US)}:key", "value")
     }
 
     override fun onStop() {
-        Log.d(TAG, ">>>---onStop---<<<".withAndroidPrefix())
+        Log.d("MainActivityE", ">>>---onStop---<<<".withAndroidPrefix())
         isActive = false
         super.onStop()
     }
 
     override fun onDestroy() {
         clientPlugin?.close()
-        Log.e(TAG, ">>>---onDestroy---<<<".withAndroidPrefix())
+        Log.e("MainActivityE", ">>>---onDestroy---<<<".withAndroidPrefix())
         super.onDestroy()
     }
 

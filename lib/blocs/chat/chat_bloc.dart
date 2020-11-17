@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
@@ -344,6 +346,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
     // }
   }
 
+  _judgeSendLocalMessageNotificationDueToGoogleServiceStatus(bool googleService,String title,MessageSchema message){
+    if (Platform.isAndroid && googleService == true){
+      // Android 拥有谷歌推送服务的使用后台消息通知,不再发送本地消息统治
+    }
+    else{
+      LocalNotification.messageNotification(title, message.content, message: message);
+    }
+  }
+
   Stream<ChatState> _mapReceiveMessageToState(ReceiveMessage event) async* {
     _LOG.d('=======receive  message ==============');
     var message = event.message;
@@ -351,7 +362,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
     if (await message.isExist(db)) {
       return;
     }
-//    if (message.topic != null && LocalStorage.isBlank(accountPubkey, message.topic)) return;
+    var googleServiceOn = false;
+    if (Platform.isAndroid){
+      googleServiceOn = await account.client.getGoogleService();
+
+    }
     if (message.topic != null) {
       List<String> dests = await repoSub.getTopicChatIds(message.topic);
       if (!dests.contains(message.from)) {
@@ -441,7 +456,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         message.receipt(account);
         message.isSuccess = true;
         checkBurnOptions(message, contact);
-        LocalNotification.messageNotification(title, message.content, message: message);
+
+        _judgeSendLocalMessageNotificationDueToGoogleServiceStatus(googleServiceOn, title, message);
+
         await message.insert(db, accountPubkey);
         var unReadCount = await MessageSchema.unReadMessages(db, accountChatId);
         FlutterAppBadger.updateBadgeCount(unReadCount);
@@ -450,7 +467,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
       case ContentType.ChannelInvitation:
         message.receipt(account);
         message.isSuccess = true;
-        LocalNotification.messageNotification(title, message.content, message: message);
+        _judgeSendLocalMessageNotificationDueToGoogleServiceStatus(googleServiceOn, title, message);
         await message.insert(db, accountPubkey);
         var unReadCount = await MessageSchema.unReadMessages(db, accountChatId);
         FlutterAppBadger.updateBadgeCount(unReadCount);
@@ -458,7 +475,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         return;
       case ContentType.receipt:
         // todo debug
-//        LocalNotification.debugNotification('[debug] receipt ' + contact.name, message.msgId);
         await message.receiptMessage(db);
         yield MessagesUpdated(target: message.from, message: message);
         return;
@@ -466,7 +482,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         message.receipt(account);
         message.isSuccess = true;
         checkBurnOptions(message, contact);
-        LocalNotification.messageNotification(title, message.content, message: message);
+        _judgeSendLocalMessageNotificationDueToGoogleServiceStatus(googleServiceOn, title, message);
         await message.insert(db, accountPubkey);
 
         var unReadCount = await MessageSchema.unReadMessages(db, accountChatId);
@@ -486,7 +502,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
         message.receipt(account);
         message.isSuccess = true;
         checkBurnOptions(message, contact);
-        LocalNotification.messageNotification(title, message.content, message: message);
+        _judgeSendLocalMessageNotificationDueToGoogleServiceStatus(googleServiceOn, title, message);
         await message.loadMedia(accountPubkey);
         await message.insert(db, accountPubkey);
         var unReadCount = await MessageSchema.unReadMessages(db, accountChatId);

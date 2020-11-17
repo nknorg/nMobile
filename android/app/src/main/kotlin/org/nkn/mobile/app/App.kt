@@ -5,67 +5,44 @@
  */
 
 package org.nkn.mobile.app
-
-//import com.google.firebase.FirebaseApp
-
 import android.app.Activity
 import android.app.ActivityManager
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.os.*
 import android.os.StrictMode.VmPolicy
 import android.util.Log
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import io.flutter.app.FlutterApplication
-import nkn.Wallet
-import org.nkn.mobile.app.abs.Tag
-import org.nkn.mobile.app.dchat.DChatServiceForFlutter
-import org.nkn.mobile.app.util.Bytes2String.withAndroidPrefix
 import java.util.concurrent.TimeUnit
 
-/**
- * @author Wei.Chou
- * @version 1.0, 05/02/2020
- */
-class App : FlutterApplication(), Tag {
-    val TAG by lazy { tag() }
+class App : FlutterApplication() {
 
     init {
         instance = this
     }
 
     override fun onCreate() {
-//        FirebaseApp.initializeApp(this)
         super.onCreate()
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, bundle: Bundle?) {}
 
             override fun onActivityStarted(activity: Activity) {
-                onStartStopInsCount++
-                DChatServiceForFlutter.stopFg(applicationContext)
+
             }
 
             override fun onActivityResumed(activity: Activity) {}
             override fun onActivityPaused(activity: Activity) {}
             override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
             override fun onActivityStopped(activity: Activity) {
-                if (--onStartStopInsCount == 0) {
-                    mainActy = activity as MainActivity
-                    DChatServiceForFlutter.startFg(applicationContext)
-                }
+
             }
 
             override fun onActivityDestroyed(activity: Activity) {
-                if (activity == mainActy) mainActy = null
-                if (onStartStopInsCount <= 0) {
-                    DChatServiceForFlutter.forceStartWork(applicationContext)
-                }
+
             }
         })
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            // android.os.FileUriExposedException: file:///storage/emulated/0/DCIM/Camera/IMG_xxx.jpg
-            // exposed beyond app through Intent.getData()
             StrictMode.setVmPolicy(VmPolicy.Builder().build())
         }
 
@@ -92,13 +69,13 @@ class App : FlutterApplication(), Tag {
                 }
             }
         }, filter)
+
     }
 
     private fun isMainProcess(): Boolean {
         fun getProcessName(pid: Int): String? {
             val actyManager = getSystemService(ActivityManager::class.java)
             for (info in actyManager.getRunningAppProcesses()) {
-                Log.i(TAG, String.format("[process]id: %s, name: %s.", info.pid, info.processName).withAndroidPrefix())
                 if (info.pid == pid) return info.processName
             }
             return null
@@ -111,10 +88,10 @@ class App : FlutterApplication(), Tag {
     private val serviceForceStartWorkRun by lazy {
         Runnable {
             if (!isScreenOn && onStartStopInsCount <= 0 && isMainProcess()) {
-                DChatServiceForFlutter.forceStartWork(applicationContext)
+//                DChatServiceForFlutter.forceStartWork(applicationContext)
                 postDelayed(TimeUnit.SECONDS.toMillis(10)) {
                     if (!isScreenOn && onStartStopInsCount <= 0) {
-                        Log.w(TAG, "pauseClient on ui process: ${mainActy?.javaClass?.name}".withAndroidPrefix())
+//                        Log.w(TAG, "pauseClient on ui process: ${mainActy?.javaClass?.name}".withAndroidPrefix())
                         mainActy?.clientPlugin?.pauseClient()
                     }
                 }
@@ -126,8 +103,7 @@ class App : FlutterApplication(), Tag {
         postDelayed(TimeUnit.SECONDS.toMillis(10)) {
             // `onUiClientCreated()` is always at `main process`.
             if (isScreenOn && onStartStopInsCount > 0/* && isMainProcess()*/) {
-                Log.w(TAG, "service force stop work".withAndroidPrefix())
-                DChatServiceForFlutter.forceStopWork(applicationContext)
+
             }
         }
     }
@@ -135,7 +111,6 @@ class App : FlutterApplication(), Tag {
     val handler by lazy { Handler(mainLooper) }
 
     fun postOnIdle(times: Int = -1, action: () -> Unit) {
-        handler.looper.queue.addIdleHandler(MyIdleHandler(times, action))
     }
 
     private var onStartStopInsCount = 0
