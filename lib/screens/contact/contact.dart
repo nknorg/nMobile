@@ -40,7 +40,6 @@ import 'package:nmobile/screens/contact/show_chat_id.dart';
 import 'package:nmobile/screens/contact/show_my_chat_address.dart';
 import 'package:nmobile/screens/view/burn_view_utils.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
-import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
@@ -97,6 +96,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
 
   @override
   void dispose() {
+    _saveAndSendBurnMessage();
     RouteUtils.routeObserver.unsubscribe(this);
     super.dispose();
   }
@@ -543,13 +543,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
           );
           final localStorage = LocalStorage();
           await localStorage.set(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS, accountNew.wallet.address);
-
-          final localAuth = await LocalAuthenticationService.instance;
-          if (localAuth.isProtectionEnabled) {
-            // nothing, since the above
-            // `await wallet.exportWallet(password)`
-            // steps have saved the password.
-          }
 
           account.client.disConnect();
           changeAccount(accountNew);
@@ -1018,7 +1011,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                 onPressed: () async {
                   setState(() {
                     _burnSelected = !_burnSelected;
-                    _saveAndSendBurnMessage();
                   });
                 },
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
@@ -1045,7 +1037,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                             onChanged: (value) {
                               setState(() {
                                 _burnSelected = value;
-                                _saveAndSendBurnMessage();
                               });
                             },
                           ),
@@ -1088,10 +1079,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                       }
                                     });
                                   },
-                                  onChangeEnd:(value){
-                                    print('Value is'+value.toString());
-                                    _saveAndSendBurnMessage();
-                                  }
                                 )
                               ],
                             ),

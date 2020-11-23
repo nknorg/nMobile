@@ -123,6 +123,15 @@ class NknClientProxy with Tag {
     }
   }
 
+  Future <String> fetchDebugInfo() async{
+    try {
+      final String debugInfoString = await _NknClientPlugin.fetchDebugInfo();
+      return debugInfoString;
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<String> fetchFCMToken() async{
     try {
       final String deviceToken = await _NknClientPlugin.fetchFcmToken();
@@ -370,6 +379,11 @@ class _NknClientPlugin {
           _LOG.i('receivedHeight: $pid');
           _clientEventQueue[key].complete(pid);
           break;
+        case 'fetchDebugInfo':
+          String key = res['_id'];
+          _LOG.i('fetchDebugInfo'+res.toString());
+          _clientEventQueue[key].complete(true);
+          break;
         default:
           Map data = res;
           _LOG.i('default, data: $data');
@@ -477,6 +491,27 @@ class _NknClientPlugin {
       return fcmToken;
     } catch (e) {
       _LOG.e('fetch fcmToken: e', e);
+      completer.completeError(e);
+    }
+  }
+
+  static Future<String> fetchDebugInfo() async{
+    _LOG.i('fetch debugInfo');
+    Completer<Map> completer = Completer<Map>();
+    String id = completer.hashCode.toString();
+    _clientEventQueue[id] = completer;
+    completer.future.whenComplete(() {
+      _clientEventQueue.remove(id);
+    });
+    try {
+      _methodChannel.invokeMethod('fetchDebugInfo', {
+        '_id': id,
+      });
+      Map resp = await completer.future;
+      String debugInfo = resp['debugInfo'];
+      return debugInfo;
+    } catch (e) {
+      _LOG.e('fetch debugInfo E', e);
       completer.completeError(e);
     }
   }

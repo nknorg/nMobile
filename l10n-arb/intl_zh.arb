@@ -222,7 +222,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "input_wallet_address": "请输入钱包地址",
+  "input_wallet_address": "请输入账户地址",
   "@input_wallet_address": {
     "description": "",
     "type": "text",
@@ -336,7 +336,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "my_wallets": "我的钱包",
+  "my_wallets": "我的账户",
   "@my_wallets": {
     "description": "",
     "type": "text",
@@ -372,13 +372,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "wallet_name": "钱包名称",
+  "wallet_name": "账户名称",
   "@wallet_name": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "wallet_address": "钱包地址",
+  "wallet_address": "账户地址",
   "@wallet_address": {
     "description": "",
     "type": "text",
@@ -408,7 +408,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "password_wrong": "钱包密码或keystore错误",
+  "password_wrong": "账户密码或keystore错误",
   "@password_wrong": {
     "description": "",
     "type": "text",
@@ -426,7 +426,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "create_wallet": "创建钱包",
+  "create_wallet": "创建账户",
   "@create_wallet": {
     "description": "",
     "type": "text",
@@ -438,19 +438,19 @@
     "type": "text",
     "placeholders": {}
   },
-  "delete_wallet": "删除钱包",
+  "delete_wallet": "删除账户",
   "@delete_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "delete_wallet_confirm_title": "您确定要删除此钱包吗?",
+  "delete_wallet_confirm_title": "您确定要删除此账户吗?",
   "@delete_wallet_confirm_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "delete_wallet_confirm_text": "这将从您的设备中删除钱包。请确保您的钱包已备份，否则您的资金将丢失且无法找回。",
+  "delete_wallet_confirm_text": "这将从您的设备中删除账户。请确保您的账户已备份，否则您的资金将丢失且无法找回。",
   "@delete_wallet_confirm_text": {
     "description": "",
     "type": "text",
@@ -498,7 +498,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "export_wallet": "导出钱包",
+  "export_wallet": "导出账户",
   "@export_wallet": {
     "description": "",
     "type": "text",
@@ -522,13 +522,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "main_wallet": "主钱包",
+  "main_wallet": "主账户",
   "@main_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "eth_wallet": "Eth 钱包",
+  "eth_wallet": "Eth 账户",
   "@eth_wallet": {
     "description": "",
     "type": "text",
@@ -546,7 +546,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "verify_wallet_password": "验证钱包密码",
+  "verify_wallet_password": "验证账户密码",
   "@verify_wallet_password": {
     "description": "",
     "type": "text",
@@ -630,31 +630,31 @@
     "type": "text",
     "placeholders": {}
   },
-  "select_asset_to_send": "选择要发送资金的钱包",
+  "select_asset_to_send": "选择要发送资金的账户",
   "@select_asset_to_send": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "select_asset_to_receive": "选择要接收资金的钱包",
+  "select_asset_to_receive": "选择要接收资金的账户",
   "@select_asset_to_receive": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "select_another_wallet": "选择其他钱包",
+  "select_another_wallet": "选择其他账户",
   "@select_another_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "select_wallet_type": "选择钱包类型",
+  "select_wallet_type": "选择账户类型",
   "@select_wallet_type": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "select_wallet_type_desc": "选择创建或导入 NKN 主网钱包还是用来保存 NKN ERC-20 通证的以太坊钱包。两者是不兼容的。",
+  "select_wallet_type_desc": "选择创建或导入 NKN主网钱账户还是用来保存 NKN通证的以太坊账户。两者是不兼容的。",
   "@select_wallet_type_desc": {
     "description": "",
     "type": "text",
@@ -1134,7 +1134,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "menu_wallet": "钱包",
+  "menu_wallet": "账户",
   "@menu_wallet": {
     "description": "",
     "type": "text",
@@ -1182,49 +1182,49 @@
     "type": "text",
     "placeholders": {}
   },
-  "no_wallet_desc": "使用我们的智能钱包管理器管理您的主网和\nERC-20 NKN通证。",
+  "no_wallet_desc": "使用我们的智能账户管理器管理您的主网和\n NKN通证。",
   "@no_wallet_desc": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "no_wallet_create": "创建新钱包",
+  "no_wallet_create": "创建新账户",
   "@no_wallet_create": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "no_wallet_import": "导入已备份的钱包",
+  "no_wallet_import": "导入已备份的账户",
   "@no_wallet_import": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "import_wallet": "导入钱包",
+  "import_wallet": "导入账户",
   "@import_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "create_nkn_wallet": "创建主网钱包",
+  "create_nkn_wallet": "创建主网账户",
   "@create_nkn_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "create_ethereum_wallet": "创建以太坊钱包",
+  "create_ethereum_wallet": "创建以太坊账户",
   "@create_ethereum_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "import_nkn_wallet": "导入主网钱包",
+  "import_nkn_wallet": "导入主网账户",
   "@import_nkn_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "import_ethereum_wallet": "导入以太坊钱包",
+  "import_ethereum_wallet": "导入以太坊账户",
   "@import_ethereum_wallet": {
     "description": "",
     "type": "text",
@@ -1236,7 +1236,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "import_with_keystore_desc": "从已有的钱包中，找出如何导出keystore以及关联的密码，对二者进行备份，然后用其导入nMobile。",
+  "import_with_keystore_desc": "从已有的账户中，找出如何导出keystore以及关联的密码，对二者进行备份，然后用其导入nMobile。",
   "@import_with_keystore_desc": {
     "description": "",
     "type": "text",
@@ -1248,7 +1248,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "import_with_seed_desc": "从已有的钱包中，找出如何导出Seed（也称为“秘密种子”），对其进行备份，然后使用它导入nMobile。",
+  "import_with_seed_desc": "从已有的账户中，找出如何导出Seed（也称为“秘密种子”），对其进行备份，然后使用它导入nMobile。",
   "@import_with_seed_desc": {
     "description": "",
     "type": "text",
@@ -1292,7 +1292,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "error_nkn_address_format": "钱包地址无效",
+  "error_nkn_address_format": "账户地址无效",
   "@error_nkn_address_format": {
     "description": "",
     "type": "text",
@@ -1310,7 +1310,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "chat_no_wallet_desc": "您需要一个主网钱包，然后才能使用D-Chat。",
+  "chat_no_wallet_desc": "您需要一个主网账户，然后才能使用D-Chat。",
   "@chat_no_wallet_desc": {
     "description": "",
     "type": "text",
@@ -1448,7 +1448,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "hint_enter_wallet_name": "钱包名称",
+  "hint_enter_wallet_name": "账户名称",
   "@hint_enter_wallet_name": {
     "description": "",
     "type": "text",
@@ -1580,13 +1580,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "d_not_backed_up_title": "重要提示：请备份您的钱包！",
+  "d_not_backed_up_title": "重要提示：请备份您的账户！",
   "@d_not_backed_up_title": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "d_not_backed_up_desc": "当您更新您的 nMobile App 或者偶然地卸载 nMobile 时，您的钱包可能会丢失，这时您将无法访问您的资产！因此，请现在花3分钟时间备份所有钱包。",
+  "d_not_backed_up_desc": "当您更新您的 nMobile App 或者偶然地卸载 nMobile 时，您的账户可能会丢失，这时您将无法访问您的资产！因此，请现在花3分钟时间备份所有账户。",
   "@d_not_backed_up_desc": {
     "description": "",
     "type": "text",
@@ -1597,7 +1597,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "select_asset_to_backup": "选择要备份的钱包",
+  "select_asset_to_backup": "选择要备份的账户",
   "@select_asset_to_backup": {
     "type": "text",
     "placeholders": {}
@@ -1607,7 +1607,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "import_wallet_as_account": "导入钱包作为账户",
+  "import_wallet_as_account": "导入账户",
   "@import_wallet_as_account": {
     "type": "text",
     "placeholders": {}
@@ -1627,7 +1627,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "my_details_desc": "所有订阅和矿工费都将来自您选择的钱包。",
+  "my_details_desc": "所有订阅和矿工费都将来自您选择的账户。",
   "@my_details_desc": {
     "type": "text",
     "placeholders": {}
@@ -1662,7 +1662,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "account_switching_completed": "已完成账号切换",
+  "account_switching_completed": "已完成账户切换",
   "@account_switching_completed": {
     "type": "text",
     "placeholders": {}
@@ -1677,7 +1677,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "eth_keystore_export_desc": "当前版本暂不支持ERC20 Token交易，请立刻导出此钱包Keystore进行备份。",
+  "eth_keystore_export_desc": "当前版本暂不支持ERC20 Token交易，请立刻导出此账户Keystore进行备份。",
   "@eth_keystore_export_desc": {
     "type": "text",
     "placeholders": {}

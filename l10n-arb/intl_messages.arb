@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-10-22T17:40:05.918621",
+  "@@last_modified": "2020-11-20T14:10:02.001601",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -246,7 +246,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "input_wallet_address": "Please input Wallet Address",
+  "input_wallet_address": "Please input Account Address",
   "@input_wallet_address": {
     "description": "",
     "type": "text",
@@ -360,7 +360,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "my_wallets": "My Wallets",
+  "my_wallets": "My Accounts",
   "@my_wallets": {
     "description": "",
     "type": "text",
@@ -396,13 +396,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "wallet_name": "Wallet Name",
+  "wallet_name": "Account Name",
   "@wallet_name": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "wallet_address": "Wallet Address",
+  "wallet_address": "Account Address",
   "@wallet_address": {
     "description": "",
     "type": "text",
@@ -432,7 +432,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "password_wrong": "Wallet password or keystore file is wrong.",
+  "password_wrong": "Account password or keystore file is wrong.",
   "@password_wrong": {
     "description": "",
     "type": "text",
@@ -450,7 +450,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "create_wallet": "Create Wallet",
+  "create_wallet": "Create Account",
   "@create_wallet": {
     "description": "",
     "type": "text",
@@ -462,7 +462,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "delete_wallet": "Delete Wallet",
+  "delete_wallet": "Delete Account",
   "@delete_wallet": {
     "description": "",
     "type": "text",
@@ -522,7 +522,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "export_wallet": "Export Wallet",
+  "export_wallet": "Export Account",
   "@export_wallet": {
     "description": "",
     "type": "text",
@@ -546,13 +546,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "main_wallet": "Main Wallet",
+  "main_wallet": "Main Account",
   "@main_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "eth_wallet": "Eth Wallet",
+  "eth_wallet": "Eth Account",
   "@eth_wallet": {
     "description": "",
     "type": "text",
@@ -570,7 +570,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "verify_wallet_password": "Verify Wallet Password",
+  "verify_wallet_password": "Verify Account Password",
   "@verify_wallet_password": {
     "description": "",
     "type": "text",
@@ -666,13 +666,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "select_another_wallet": "Select Another Wallet",
+  "select_another_wallet": "Select Another Account",
   "@select_another_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "select_wallet_type": "Select Wallet Type",
+  "select_wallet_type": "Select Account Type",
   "@select_wallet_type": {
     "description": "",
     "type": "text",
@@ -1156,7 +1156,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "menu_wallet": "Wallet",
+  "menu_wallet": "Account",
   "@menu_wallet": {
     "description": "",
     "type": "text",
@@ -1204,49 +1204,49 @@
     "type": "text",
     "placeholders": {}
   },
-  "no_wallet_desc": "Manage both your Mainnet and ERC-20 NKN\n tokens with our smart wallet manager.",
+  "no_wallet_desc": "Manage both your Mainnet NKN\n tokens with our smart wallet manager.",
   "@no_wallet_desc": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "no_wallet_create": "Create New Wallet",
+  "no_wallet_create": "Create New Account",
   "@no_wallet_create": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "no_wallet_import": "Import Existing Wallet",
+  "no_wallet_import": "Import Existing Account",
   "@no_wallet_import": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "import_wallet": "Import Wallet",
+  "import_wallet": "Import Account",
   "@import_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "create_nkn_wallet": "Create Mainnet Wallet",
+  "create_nkn_wallet": "Create Mainnet Account",
   "@create_nkn_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "create_ethereum_wallet": "Create Ethereum Wallet",
+  "create_ethereum_wallet": "Create Ethereum Account",
   "@create_ethereum_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "import_nkn_wallet": "Import Mainnet Wallet",
+  "import_nkn_wallet": "Import Mainnet Account",
   "@import_nkn_wallet": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "import_ethereum_wallet": "Import Ethereum Wallet",
+  "import_ethereum_wallet": "Import Ethereum Account",
   "@import_ethereum_wallet": {
     "description": "",
     "type": "text",
@@ -1602,7 +1602,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "d_not_backed_up_title": "Important: Please Back Up\n Your Wallets!",
+  "d_not_backed_up_title": "Important: Please Back Up\n Your Accounts!",
   "@d_not_backed_up_title": {
     "description": "",
     "type": "text",
@@ -1629,7 +1629,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "import_wallet_as_account": "Import Wallet as Account",
+  "import_wallet_as_account": "Import Account",
   "@import_wallet_as_account": {
     "type": "text",
     "placeholders": {}

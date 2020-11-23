@@ -1,8 +1,7 @@
 package org.nkn.mobile.app
 
 import android.os.AsyncTask
-import android.os.HandlerThread
-import android.os.Process
+import android.security.keystore.KeyInfo
 import android.util.Log
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
@@ -13,8 +12,8 @@ import nkn.TransactionConfig
 import nkn.WalletConfig
 import org.nkn.mobile.app.util.Bytes2String.decodeHex
 import org.nkn.mobile.app.util.Bytes2String.toHex
-import org.nkn.mobile.app.util.WalletUtils
-import org.nkn.mobile.app.App
+import java.security.KeyStore
+import java.util.*
 
 class NknWalletPlugin(flutterEngine: FlutterEngine) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
     companion object {
@@ -61,6 +60,9 @@ class NknWalletPlugin(flutterEngine: FlutterEngine) : MethodChannel.MethodCallHa
             }
             "pubKeyToWalletAddr" -> {
                 pubKeyToWalletAddr(call, result)
+            }
+            "fetchDebugInfo" -> {
+                fetchDebugInfo(call, result)
             }
             else -> {
                 result.notImplemented()
@@ -214,4 +216,19 @@ class NknWalletPlugin(flutterEngine: FlutterEngine) : MethodChannel.MethodCallHa
         result.success(keystore)
     }
 
+    private fun fetchDebugInfo(call: MethodCall, result: MethodChannel.Result){
+        Log.e("222:","HereHere")
+        val ks: KeyStore = KeyStore.getInstance("AndroidKeyStore")
+        ks.load(null)
+        val aliases: Enumeration<String> = ks.aliases()
+
+        var keyStoreAliases:String = ""
+        while (aliases.hasMoreElements()){
+            val alias:String = aliases.nextElement()
+            keyStoreAliases = keyStoreAliases+alias
+        }
+        Log.e("111:"+keyStoreAliases,"keyStoreAliases:"+keyStoreAliases)
+
+        result.success(keyStoreAliases)
+    }
 }

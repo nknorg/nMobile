@@ -632,7 +632,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with AccountDependsBloc, Tag {
     var contact = await ContactSchema.getContactByAddress(db, message.to);
     if (contact.deviceToken != null && contact.deviceToken.length > 0){
       String pushContent = NL10ns.of(Global.appContext).notification_push_content;
-      pushContent = "from:"+accountChatId.substring(0, 8) + "...";
+      // pushContent = "from:"+accountChatId.substring(0, 8) + "...";
+      // pushContent = 'You have New Message!';
       print('Send Push notification content is '+pushContent);
       dataInfo['deviceToken'] = contact.deviceToken;
       dataInfo['pushContent'] = pushContent;

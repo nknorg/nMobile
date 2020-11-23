@@ -1,11 +1,14 @@
 package org.nkn.mobile.app
 
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.NonNull
 import androidx.core.app.NotificationManagerCompat
 import com.google.android.gms.common.ConnectionResult
@@ -13,6 +16,7 @@ import com.google.android.gms.common.GoogleApiAvailability
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugins.GeneratedPluginRegistrant
 import io.sentry.Sentry
 import io.sentry.android.AndroidSentryClientFactory
 import org.nkn.mobile.app.util.Bytes2String.withAndroidPrefix
@@ -31,7 +35,8 @@ class MainActivity : FlutterFragmentActivity(){
     private var isActive : Boolean =  false;
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
-        super.configureFlutterEngine(flutterEngine);
+        super.configureFlutterEngine(flutterEngine)
+//        GeneratedPluginRegistrant.registerWith(flutterEngine)
         Log.e("MainActivityE", "<<<---configureFlutterEngine--->>>".withAndroidPrefix())
 
         Sentry.init("https://e8e2c15b0e914295a8b318919f766701@o466976.ingest.sentry.io/5483308",
@@ -68,6 +73,7 @@ class MainActivity : FlutterFragmentActivity(){
         clientPlugin = NknClientPlugin(this, flutterEngine)
         NknWalletPlugin(flutterEngine)
 //        MessagingServiceFlutterPlugin.config(flutterEngine)
+
     }
 
     fun onClientCreated() {

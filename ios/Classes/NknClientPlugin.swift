@@ -240,7 +240,6 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
                             pushService.pushContent(content, token: dropFcmToken);
                         }
                     }
-                    
                 }
             }
             print("deviceToken length is",deviceToken.count)
