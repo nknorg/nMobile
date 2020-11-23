@@ -96,7 +96,6 @@ import Nkn
         Messaging.messaging().apnsToken = deviceToken
         
         let pushService:NKNPushService = NKNPushService.shared();
-        sleep(3);
         pushService.connectAPNS();
     }
     
