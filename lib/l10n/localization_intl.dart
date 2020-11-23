@@ -182,7 +182,7 @@ class NL10ns {
   }
 
   String get input_wallet_address {
-    return Intl.message('Please input Wallet Address', name: 'input_wallet_address', desc: '');
+    return Intl.message('Please input Account Address', name: 'input_wallet_address', desc: '');
   }
 
   String get input_notes {
@@ -258,7 +258,7 @@ class NL10ns {
   }
 
   String get my_wallets {
-    return Intl.message('My Wallets', name: 'my_wallets', desc: '');
+    return Intl.message('My Accounts', name: 'my_wallets', desc: '');
   }
 
   String get my_details {
@@ -282,11 +282,11 @@ class NL10ns {
   }
 
   String get wallet_name {
-    return Intl.message('Wallet Name', name: 'wallet_name', desc: '');
+    return Intl.message('Account Name', name: 'wallet_name', desc: '');
   }
 
   String get wallet_address {
-    return Intl.message('Wallet Address', name: 'wallet_address', desc: '');
+    return Intl.message('Account Address', name: 'wallet_address', desc: '');
   }
 
   String get wallet_password {
@@ -309,7 +309,7 @@ class NL10ns {
   }
 
   String get password_wrong {
-    return Intl.message('Wallet password or keystore file is wrong.', name: 'password_wrong', desc: '');
+    return Intl.message('Account password or keystore file is wrong.', name: 'password_wrong', desc: '');
   }
 
   String get confirm_password {
@@ -321,7 +321,7 @@ class NL10ns {
   }
 
   String get create_wallet {
-    return Intl.message('Create Wallet', name: 'create_wallet', desc: '');
+    return Intl.message('Create Account', name: 'create_wallet', desc: '');
   }
 
   String get save_contact {
@@ -329,7 +329,7 @@ class NL10ns {
   }
 
   String get delete_wallet {
-    return Intl.message('Delete Wallet', name: 'delete_wallet', desc: '');
+    return Intl.message('Delete Account', name: 'delete_wallet', desc: '');
   }
 
   String get delete_wallet_confirm_title {
@@ -370,7 +370,7 @@ class NL10ns {
   }
 
   String get export_wallet {
-    return Intl.message('Export Wallet', name: 'export_wallet', desc: '');
+    return Intl.message('Export Account', name: 'export_wallet', desc: '');
   }
 
   String get view_channel_members {
@@ -386,11 +386,11 @@ class NL10ns {
   }
 
   String get main_wallet {
-    return Intl.message('Main Wallet', name: 'main_wallet', desc: '');
+    return Intl.message('Main Account', name: 'main_wallet', desc: '');
   }
 
   String get eth_wallet {
-    return Intl.message('Eth Wallet', name: 'eth_wallet', desc: '');
+    return Intl.message('Eth Account', name: 'eth_wallet', desc: '');
   }
 
   String get view_qrcode {
@@ -402,7 +402,7 @@ class NL10ns {
   }
 
   String get verify_wallet_password {
-    return Intl.message('Verify Wallet Password', name: 'verify_wallet_password', desc: '');
+    return Intl.message('Verify Account Password', name: 'verify_wallet_password', desc: '');
   }
 
   String get seed_qrcode_dec {
@@ -467,11 +467,11 @@ class NL10ns {
   }
 
   String get select_another_wallet {
-    return Intl.message('Select Another Wallet', name: 'select_another_wallet', desc: '');
+    return Intl.message('Select Another Account', name: 'select_another_wallet', desc: '');
   }
 
   String get select_wallet_type {
-    return Intl.message('Select Wallet Type', name: 'select_wallet_type', desc: '');
+    return Intl.message('Select Account Type', name: 'select_wallet_type', desc: '');
   }
 
   String get select_wallet_type_desc {
@@ -775,7 +775,7 @@ class NL10ns {
   String get unsubscribed => Intl.message('Leaved', name: 'unsubscribed', desc: '');
 
   String get menu_wallet {
-    return Intl.message('Wallet', name: 'menu_wallet', desc: '');
+    return Intl.message('Account', name: 'menu_wallet', desc: '');
   }
 
   String get menu_news {
@@ -807,35 +807,35 @@ class NL10ns {
   }
 
   String get no_wallet_desc {
-    return Intl.message('Manage both your Mainnet and ERC-20 NKN\n tokens with our smart wallet manager.', name: 'no_wallet_desc', desc: '');
+    return Intl.message('Manage both your Mainnet NKN\n tokens with our smart wallet manager.', name: 'no_wallet_desc', desc: '');
   }
 
   String get no_wallet_create {
-    return Intl.message('Create New Wallet', name: 'no_wallet_create', desc: '');
+    return Intl.message('Create New Account', name: 'no_wallet_create', desc: '');
   }
 
   String get no_wallet_import {
-    return Intl.message('Import Existing Wallet', name: 'no_wallet_import', desc: '');
+    return Intl.message('Import Existing Account', name: 'no_wallet_import', desc: '');
   }
 
   String get import_wallet {
-    return Intl.message('Import Wallet', name: 'import_wallet', desc: '');
+    return Intl.message('Import Account', name: 'import_wallet', desc: '');
   }
 
   String get create_nkn_wallet {
-    return Intl.message('Create Mainnet Wallet', name: 'create_nkn_wallet', desc: '');
+    return Intl.message('Create Mainnet Account', name: 'create_nkn_wallet', desc: '');
   }
 
   String get create_ethereum_wallet {
-    return Intl.message('Create Ethereum Wallet', name: 'create_ethereum_wallet', desc: '');
+    return Intl.message('Create Ethereum Account', name: 'create_ethereum_wallet', desc: '');
   }
 
   String get import_nkn_wallet {
-    return Intl.message('Import Mainnet Wallet', name: 'import_nkn_wallet', desc: '');
+    return Intl.message('Import Mainnet Account', name: 'import_nkn_wallet', desc: '');
   }
 
   String get import_ethereum_wallet {
-    return Intl.message('Import Ethereum Wallet', name: 'import_ethereum_wallet', desc: '');
+    return Intl.message('Import Ethereum Account', name: 'import_ethereum_wallet', desc: '');
   }
 
   String get import_with_keystore_title {
@@ -1077,7 +1077,7 @@ class NL10ns {
   }
 
   String get d_not_backed_up_title {
-    return Intl.message('Important: Please Back Up\n Your Wallets!', name: 'd_not_backed_up_title', desc: '');
+    return Intl.message('Important: Please Back Up\n Your Accounts!', name: 'd_not_backed_up_title', desc: '');
   }
 
   String get d_not_backed_up_desc {
@@ -1093,7 +1093,7 @@ class NL10ns {
 
   String get create_account => Intl.message('Create Account', name: 'create_account');
 
-  String get import_wallet_as_account => Intl.message('Import Wallet as Account', name: 'import_wallet_as_account');
+  String get import_wallet_as_account => Intl.message('Import Account', name: 'import_wallet_as_account');
 
   String get transfer_initiated => Intl.message('Transfer Initiated', name: 'transfer_initiated');
 

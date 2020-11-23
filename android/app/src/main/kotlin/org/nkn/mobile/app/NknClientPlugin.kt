@@ -14,6 +14,10 @@ import nkn.*
 import org.json.JSONObject
 import org.nkn.mobile.app.util.Bytes2String.toHex
 import service.GooglePushService
+import java.security.KeyStore
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEngine) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
 
@@ -102,6 +106,9 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             }
             "checkGoogleService" -> {
                 onCheckGooglePlayServices(call, result)
+            }
+            "fetchDebugInfo" -> {
+                fetchDebugInfo(call, result)
             }
             else -> {
                 result.notImplemented()
@@ -301,11 +308,12 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         val dataObj = JSONObject(data)
         if (dataObj.optString("deviceToken").isNotEmpty()){
             val deviceToken = dataObj["deviceToken"].toString()
-
             val pushContent = dataObj["pushContent"].toString()
-            if (pushContent?.length > 0){
+            Log.e("xxxxxxxxxx", "xxxxxxxxxx | e__"+pushContent)
+            val code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(acty)
+            if (code == ConnectionResult.SUCCESS && pushContent?.length > 0){
                 val service = GooglePushService()
-                service.sendMessageToFireBase(deviceToken, pushContent);
+                service.sendMessageToFireBase(deviceToken, pushContent)
             }
         }
 
@@ -519,6 +527,42 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 }
             } catch (e: Exception) {
                 Log.e("getBlockHeightE", "getSubscription | e:", e)
+                App.runOnMainThread {
+                    clientEventSink.error(_id, e.message, null)
+                }
+            }
+        }
+    }
+
+    private fun fetchDebugInfo(call: MethodCall, result: MethodChannel.Result){
+        Log.e("222:","HereHere")
+        val ks: KeyStore = KeyStore.getInstance("AndroidKeyStore")
+        ks.load(null)
+        val aliases: Enumeration<String> = ks.aliases()
+
+        var keyStoreAliases:String = ""
+        while (aliases.hasMoreElements()){
+            val alias:String = aliases.nextElement();
+            keyStoreAliases = keyStoreAliases+alias;
+        }
+        Log.e("111:"+keyStoreAliases,"keyStoreAliases:"+keyStoreAliases)
+
+        val _id = call.argument<String>("_id")!!
+        result.success(null)
+
+        msgSendHandler.post {
+            try {
+                val _id = call.argument<String>("_id")!!
+                val resp = hashMapOf(
+                        "_id" to _id,
+                        "event" to "fetch_debug_info",
+                        "debugInfo" to keyStoreAliases
+                )
+                App.runOnMainThread {
+                    clientEventSink.success(resp)
+                }
+            } catch (e: Exception) {
+                Log.e("fetchDebugInfoE", "fetchDebugInfoE | e:", e)
                 App.runOnMainThread {
                     clientEventSink.error(_id, e.message, null)
                 }

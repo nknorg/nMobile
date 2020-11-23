@@ -64,25 +64,17 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <provider
-            android:name="hobby.wei.c.persist.SharedPreferencesProvider"
-            android:authorities="${applicationId}.MPSPREF"
-            android:exported="false"
-            android:multiprocess="false"
-            android:process=":spref" />
-
-        <service
-            android:name=".dchat.DChatServiceForFlutter"
-            android:process=":messaging" />
-
-        <!-- 通知栏显示的 应用名称字体颜色和下拉查看通知详情的箭头的颜色-->
-        <meta-data android:name="com.google.firebase.messaging.default_notification_color"
-            android:resource="@android:color/holo_red_dark" />
-
-        <!-- 只要传入的消息未明确设置通知渠道，FCM 就会使用此值-->
         <meta-data
-            android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="@string/default_notification_channel_id" />
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/icon_logo" />
+
+        <!-- Set color used with incoming notification messages. This is used when no color is set for the incoming
+             notification message. See README(https://goo.gl/6BKBk7) for more. -->
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/hint_color" />
+
         <service
             android:name="service.MyFirebaseMessagingService"
             android:exported="false">

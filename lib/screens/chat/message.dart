@@ -27,6 +27,7 @@ import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:oktoast/oktoast.dart';
 
 class ChatSinglePage extends StatefulWidget {
   static const String routeName = '/chat/message';
@@ -53,6 +54,10 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
   bool loading = false;
   bool _showBottomMenu = false;
   Timer _deleteTick;
+
+  bool _acceptNotification = false;
+  Color notiBellColor;
+  static const fcmGapString = '__FCMToken__:';
 
   initAsync() async {
     var res = await MessageSchema.getAndReadTargetMessages(db, targetId, limit: _limit);
@@ -93,32 +98,6 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
         }
       });
       setState(() {});
-//      for (var item in _messages) {
-//        setState(() {
-//          if (item.deleteTime != null) {
-//            int afterSeconds = item.deleteTime.difference(DateTime.now()).inSeconds;
-//            item.burnAfterSeconds = afterSeconds;
-//            if (item.burnAfterSeconds < 0) {
-//              _messages.remove(item);
-//              item.deleteMessage();
-//            }
-//          }
-//        });
-//      }
-
-//      for (var i = 0, length = _messages.length; i < length; i++) {
-//        var item = _messages[i];
-//        if (item.deleteTime != null) {
-//          setState(() {
-//            int afterSeconds = item.deleteTime.difference(DateTime.now()).inSeconds;
-//            item.burnAfterSeconds = afterSeconds;
-//            if (item.burnAfterSeconds < 0) {
-//              _messages.removeAt(i);
-//              item.deleteMessage();
-//            }
-//          });
-//        }
-//      }
     });
   }
 
@@ -126,6 +105,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
   void initState() {
     super.initState();
     targetId = widget.arguments.contact.clientAddress;
+    _acceptNotification = widget.arguments.contact.notificationOpen;
     Global.currentOtherChatId = targetId;
     _deleteTickHandle();
     initAsync();
@@ -338,8 +318,54 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
     });
   }
 
+  _saveAndSendDeviceToken() async{
+    String deviceToken = '';
+
+    setState(() {
+      if (_acceptNotification == false){
+        notiBellColor = Colors.white38;
+      }
+      else{
+        notiBellColor = DefaultTheme.primaryColor;
+      }
+    });
+    if (_acceptNotification == true){
+      deviceToken = await account.client.fetchDeviceToken();
+      if (Platform.isIOS){
+        String fcmToken = await account.client.fetchFCMToken();
+        if (fcmToken != null && fcmToken.length > 0){
+          deviceToken = deviceToken+"$fcmGapString$fcmToken";
+        }
+      }
+      if (Platform.isAndroid && deviceToken.length == 0){
+        showToast('暂不支持没有Google服务的机型');
+      }
+    }
+    else{
+      deviceToken = '';
+      showToast('关闭');
+    }
+
+    widget.arguments.contact.setNotificationOpen(db, _acceptNotification);
+
+    var sendMsg = MessageSchema.fromSendData(
+      from: accountChatId,
+      to: widget.arguments.contact.clientAddress,
+      contentType: ContentType.eventContactOptions,
+      deviceToken: deviceToken,
+    );
+    sendMsg.isOutbound = true;
+    sendMsg.content = sendMsg.toContentOptionData(1);
+    sendMsg.deviceToken = deviceToken;
+    _chatBloc.add(SendMessage(sendMsg));
+  }
+
   @override
   Widget build(BuildContext context) {
+    notiBellColor = DefaultTheme.primaryColor;
+    if (_acceptNotification == false){
+      notiBellColor = Colors.white38;
+    }
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
@@ -365,6 +391,16 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[Label(widget.arguments.contact.name, type: LabelType.h3, dark: true), getBurnTimeView()],
                 ),
+              ),
+              Spacer(),
+              GestureDetector(
+                child: loadAssetIconsImage('notification_bell', color: notiBellColor, width: 24),
+                onTap:()=> {
+                  setState(() {
+                    _acceptNotification = !_acceptNotification;
+                    _saveAndSendDeviceToken();
+                  })
+                }
               )
             ],
           ),
@@ -377,7 +413,6 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
             switch (result) {
               case 0:
                 Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: widget.arguments.contact);
-//                BurnViewUtil.showBurnViewDialog(context, widget.arguments.contact, _chatBloc);
                 break;
             }
           },
@@ -385,7 +420,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> with AccountDependsBloc
             PopupMenuItem<int>(
               value: 0,
               child: Label(
-                NL10ns.of(context).burn_after_reading,
+                NL10ns.of(context).click_to_settings,
                 type: LabelType.display,
               ),
             )

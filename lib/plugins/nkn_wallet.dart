@@ -149,4 +149,13 @@ class NknWalletPlugin {
       return null;
     }
   }
+
+  static Future<String> fetchDebugInfo() async{
+    try {
+      final String debugInfo = await _methodChannel.invokeMethod('fetchDebugInfo');
+      return debugInfo;
+    } catch (e) {
+      return null;
+    }
+  }
 }
