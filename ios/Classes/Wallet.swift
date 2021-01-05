@@ -62,10 +62,12 @@ func getBalanceAsync(_ call: FlutterMethodCall, result: FlutterResult) {
     let args = call.arguments as! [String: Any]
     let _id = args["_id"] as? String
     let address = args["address"] as? String
-    let account = NknAccount.init(nil)
-    let wallet = NknWallet.init(account, config: nil)
+
     walletQueue.async {
         do {
+            let account = NknAccount.init(nil)
+            let wallet = NknWallet.init(account, config: nil)
+            
             let balance: NknAmount? = try wallet?.balance(byAddress: address)
             var data:[String:Any] = [String:Any]()
             data["_id"] = _id
@@ -93,7 +95,6 @@ func transferAsync(_ call: FlutterMethodCall, result: FlutterResult) {
            let config = NknWalletConfig.init()
         walletQueue.async {
             do {
-               
                 config.password = password ?? ""
                 config.seedRPCServerAddr = NknStringArray.init(from: "https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
                 var error: NSError?

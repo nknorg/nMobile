@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
+import 'package:nmobile/blocs/chat/auth_bloc.dart';
+import 'package:nmobile/blocs/chat/auth_state.dart';
+import 'package:nmobile/blocs/nkn_client_caller.dart';
+import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/header/header.dart';
@@ -8,6 +13,7 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/screens/contact/add_contact.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/utils/extensions.dart';
@@ -17,7 +23,7 @@ class NoContactScreen extends StatefulWidget {
   _NoContactScreenState createState() => _NoContactScreenState();
 }
 
-class _NoContactScreenState extends State<NoContactScreen> with AccountDependsBloc {
+class _NoContactScreenState extends State<NoContactScreen> {
   @override
   void initState() {
     super.initState();
@@ -30,35 +36,43 @@ class _NoContactScreenState extends State<NoContactScreen> with AccountDependsBl
       appBar: Header(
         titleChild: GestureDetector(
           onTap: () async {
-            accountUser.then((user) {
-              Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: user);
-            });
+            ContactSchema currentUser = await ContactSchema.fetchCurrentUser();
+            Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: currentUser);
           },
-          child: accountUserBuilder(onUser: (ctx, user){
-            return  Flex(
-              direction: Axis.horizontal,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Expanded(
-                  flex: 0,
-                  child: Container(
-                    padding: const EdgeInsets.only(right: 16),
-                    alignment: Alignment.center,
-                    child: user.avatarWidget(db, backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 24),
+          child: BlocBuilder<AuthBloc, AuthState>(builder: (context, state){
+            if (state is AuthToUserState){
+              ContactSchema currentUser = state.currentUser;
+              return  Flex(
+                direction: Axis.horizontal,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(
+                    flex: 0,
+                    child: Container(
+                      padding: const EdgeInsets.only(right: 16),
+                      alignment: Alignment.center,
+                      child: Container(
+                        child: CommonUI.avatarWidget(
+                            radiusSize: 28,
+                            contact: currentUser,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Label(user.name, type: LabelType.h3, dark: true),
-                      Label(NL10ns.of(context).click_to_settings, type: LabelType.bodyRegular, color: DefaultTheme.fontLightColor.withAlpha(200))
-                    ],
-                  ),
-                )
-              ],
-            );
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Label(currentUser.name, type: LabelType.h3, dark: true),
+                        Label(NL10ns.of(context).click_to_settings, type: LabelType.bodyRegular, color: DefaultTheme.fontLightColor.withAlpha(200))
+                      ],
+                    ),
+                  )
+                ],
+              );
+            }
+            return Container();
           }),
         ),
         backgroundColor: DefaultTheme.primaryColor,

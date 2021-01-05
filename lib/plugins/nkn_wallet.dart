@@ -34,14 +34,11 @@ class NknWalletPlugin {
   }
 
   static Future<String> createWallet(String seed, String password) async {
-    NLog.d('createWallet   ', tag: TAG);
     try {
       final String wallet = await _methodChannel.invokeMethod('createWallet', {
         'seed': seed,
         'password': password,
       });
-
-      NLog.d(wallet);
       return wallet;
     } catch (e) {
       NLog.e(e);
@@ -51,7 +48,6 @@ class NknWalletPlugin {
 
   static Future<String> restoreWallet(String keystore, String password) async {
     try {
-      NLog.d('restoreWallet   ', tag: TAG);
       final String wallet = await _methodChannel.invokeMethod('restoreWallet', {
         'keystore': keystore,
         'password': password,
@@ -65,12 +61,10 @@ class NknWalletPlugin {
 
   static Future<Map<dynamic, dynamic>> openWallet(String keystore, String password) async {
     try {
-      NLog.d('openWallet   ', tag: TAG);
       final Map<dynamic, dynamic> wallet = await _methodChannel.invokeMethod('openWallet', {
         'keystore': keystore,
         'password': password,
       });
-      NLog.d(wallet);
       return wallet;
     } on PlatformException catch (e) {
       NLog.e(e.message);
@@ -80,7 +74,6 @@ class NknWalletPlugin {
 
   static Future<double> getBalance(String address) async {
     try {
-      NLog.d('getBalance   ');
       final String balance = await _methodChannel.invokeMethod('getBalance', {
         'address': address,
       });
@@ -108,7 +101,6 @@ class NknWalletPlugin {
     Completer<String> completer = Completer<String>();
     String id = completer.hashCode.toString();
     _walletEventQueue[id] = completer;
-    NLog.d('transferAsync   ');
     _methodChannel.invokeMethod('transferAsync', {
       'keystore': keystore,
       '_id': id,
@@ -124,7 +116,6 @@ class NknWalletPlugin {
 
   static Future<String> transfer(String keystore, String password, String address, String amount, String fee) async {
     try {
-      NLog.d('transfer   ');
       final String hash = await _methodChannel.invokeMethod('transfer', {
         'keystore': keystore,
         'password': password,
@@ -135,7 +126,6 @@ class NknWalletPlugin {
       return hash;
     } catch (e) {
       throw e;
-      return null;
     }
   }
 

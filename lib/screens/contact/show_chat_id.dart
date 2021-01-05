@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
+import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
@@ -16,7 +17,7 @@ class ShowMyChatID extends StatefulWidget {
   ShowMyChatIDState createState() => new ShowMyChatIDState();
 }
 
-class ShowMyChatIDState extends State<ShowMyChatID> with AccountDependsBloc {
+class ShowMyChatIDState extends State<ShowMyChatID> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,7 +38,7 @@ class ShowMyChatIDState extends State<ShowMyChatID> with AccountDependsBloc {
                 padding: EdgeInsets.all(16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16), bottom: Radius.circular(16))),
                 onPressed: () {
-                  CopyUtils.copyAction(context, accountChatId);
+                  CopyUtils.copyAction(context, NKNClientCaller.currentChatId);
                 },
                 child: Column(
                   children: <Widget>[
@@ -63,7 +64,7 @@ class ShowMyChatIDState extends State<ShowMyChatID> with AccountDependsBloc {
                       children: <Widget>[
                         Expanded(
                           child: Label(
-                            accountChatId,
+                            NKNClientCaller.currentChatId,
                             type: LabelType.bodyRegular,
                             color: DefaultTheme.fontColor2,
                             softWrap: true,
@@ -90,7 +91,7 @@ class ShowMyChatIDState extends State<ShowMyChatID> with AccountDependsBloc {
                   SizedBox(height: 20),
                   Center(
                     child: QrImage(
-                      data: accountChatId,
+                      data: NKNClientCaller.currentChatId,
                       backgroundColor: DefaultTheme.backgroundLightColor,
                       foregroundColor: DefaultTheme.primaryColor,
                       version: QrVersions.auto,

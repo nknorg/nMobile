@@ -149,20 +149,8 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: WalletItem(schema: w, index: index, type: w.type == WalletSchema.NKN_WALLET ? WalletType.nkn : WalletType.eth),
-//                        child: WalletItem(type: w.type == WalletSchema.NKN_WALLET ? WalletType.nkn : WalletType.eth, schema: w),
                       );
                     });
-//                return ListView(
-//                  padding: EdgeInsets.only(top: 14.h),
-//                  children: state.wallets
-//                      .map(
-//                        (w) => Padding(
-//                          padding: const EdgeInsets.only(bottom: 16),
-//                          child: WalletItem(type: w.type == WalletSchema.NKN_WALLET ? WalletType.nkn : WalletType.eth, schema: w),
-//                        ),
-//                      )
-//                      .toList(),
-//                );
               }
               return ListView();
             },
@@ -213,7 +201,8 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
         print('password: $password');
         if (password != null) {
           if (ws.type == WalletSchema.ETH_WALLET) {
-            EthWallet ethWallet = Ethereum.restoreWallet(name: ws.name, keystore: await ws.getKeystore(), password: password);
+            String keyStore = await ws.getKeystore(password);
+            EthWallet ethWallet = Ethereum.restoreWallet(name: ws.name, keystore: keyStore, password: password);
             Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
               'wallet': null,
               'keystore': ethWallet.keystore,

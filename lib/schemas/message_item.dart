@@ -1,3 +1,4 @@
+import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
@@ -27,7 +28,7 @@ class MessageItem {
     this.isTop = false,
   });
 
-  static Future<MessageItem> parseEntity(Future<Database> db, Map e) async {
+  static Future<MessageItem> parseEntity(Map e) async {
     var res = MessageItem(
       targetId: e['target_id'],
       sender: e['sender'],
@@ -37,47 +38,47 @@ class MessageItem {
       notReadCount: e['not_read'] as int,
     );
     if (e['topic'] != null) {
-      final repoTopic = TopicRepo(db);
+      final repoTopic = TopicRepo();
       res.topic = await repoTopic.getTopicByName(e['topic']);
       res.isTop = res.topic?.isTop ?? false;
     } else {
-      res.isTop = await ContactSchema.getIsTop(db, res.targetId);
+      res.isTop = await ContactSchema.getIsTop(res.targetId);
     }
     return res;
   }
 
-  static Future<List<MessageItem>> getLastChat(Future<Database> db, {int limit = 20, int offset = 0}) async {
-    try {
-//      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      var res = await (await db).query(
-        '${MessageSchema.tableName} as m',
-        columns: [
-          'm.*',
-          '(SELECT COUNT(id) from ${MessageSchema.tableName} WHERE target_id = m.target_id AND is_outbound = 0 AND is_read = 0) as not_read',
-          'MAX(send_time)'
-        ],
-        where: "type = ? or type = ? or type = ? or type = ? or type = ?",
-        whereArgs: [ContentType.text, ContentType.textExtension, ContentType.media, ContentType.ChannelInvitation, ContentType.eventSubscribe],
-        //ContentType.ChannelInvitation
-        groupBy: 'm.target_id',
-        orderBy: 'm.send_time desc',
-        limit: limit,
-        offset: offset,
-      );
-      List<MessageItem> list = <MessageItem>[];
-      for (var i = 0, length = res.length; i < length; i++) {
-        var item = res[i];
-        list.add(await MessageItem.parseEntity(db, item));
-      }
-      return list;
-    } catch (e) {
-      _log.e('getLastChat', e);
+  static Future<List<MessageItem>> getLastMessageList({int limit = 20, int offset = 0}) async {
+    Database cdb = await NKNDataManager.instance.currentDatabase();
+    if (cdb == null){
+      return  null;
     }
+    var res = await cdb.query(
+      '${MessageSchema.tableName} as m',
+      columns: [
+        'm.*',
+        '(SELECT COUNT(id) from ${MessageSchema.tableName} WHERE target_id = m.target_id AND is_outbound = 0 AND is_read = 0) as not_read',
+        'MAX(send_time)'
+      ],
+      where: "type = ? or type = ? or type = ? or type = ? or type = ?",
+      whereArgs: [ContentType.text, ContentType.textExtension, ContentType.media, ContentType.ChannelInvitation, ContentType.eventSubscribe],
+      groupBy: 'm.target_id',
+      orderBy: 'm.send_time desc',
+      limit: limit,
+      offset: offset,
+    );
+    List<MessageItem> list = <MessageItem>[];
+    for (var i = 0, length = res.length; i < length; i++) {
+      var item = res[i];
+      list.add(await MessageItem.parseEntity(item));
+    }
+    if (list.length > 0){
+      return list;
+    }
+    return null;
   }
 
   static Future<MessageItem> getTargetChat(Future<Database> db, String targetId) async {
     try {
-//      Database db = SqliteStorage(db: Global.currentChatDb).db;
       var res = await (await db).query(
         '${MessageSchema.tableName} as m',
         columns: ['m.*', '(SELECT COUNT(id) from ${MessageSchema.tableName} WHERE sender = m.target_id AND is_read = 0) as not_read', 'MAX(send_time)'],
@@ -87,7 +88,7 @@ class MessageItem {
       );
 
       if (res != null && res.length > 0) {
-        return await MessageItem.parseEntity(db, res.first);
+        return await MessageItem.parseEntity(res.first);
       } else {
         return null;
       }
@@ -96,8 +97,9 @@ class MessageItem {
     }
   }
 
-  static Future<int> deleteTargetChat(Future<Database> db, String targetId) async {
-    // Returns the number of changes made
-    return await (await db).delete(MessageSchema.tableName, where: 'target_id = ?', whereArgs: [targetId]);
+  static Future<int> deleteTargetChat(String targetId) async {
+    Database cdb = await NKNDataManager().currentDatabase();
+
+    return await cdb.delete(MessageSchema.tableName, where: 'target_id = ?', whereArgs: [targetId]);
   }
 }

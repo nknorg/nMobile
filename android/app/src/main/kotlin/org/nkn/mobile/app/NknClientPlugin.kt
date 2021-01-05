@@ -64,15 +64,8 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 createClient(call, result)
             }
             "connect" -> {
-                connect()
+                connectNKN()
                 result.success(null)
-            }
-            "startReceiveMessages" -> {
-                receiveMessages()
-                result.success(null)
-            }
-            "isConnected" -> {
-                isConnected(call, result)
             }
             "disConnect" -> {
                 disConnect(call, result, true)
@@ -200,6 +193,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                     clientEventSink.success(resp)
                 }
                 if (client != null) acty?.onClientCreated()
+                connectNKN()
             } catch (e: Exception) {
                 Log.e("createClient", "createClient | e:", e)
                 val resp = hashMapOf(
@@ -214,34 +208,46 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         }
     }
 
-    private fun connect() {
+    private fun connectNKN() {
+        if (isConnected) {
+            Log.e("connectNKN", "already Connected")
+            val data = hashMapOf(
+                    "event" to "onConnect",
+                    "node" to hashMapOf("address" to "reconnect", "publicKey" to "node"),
+                    "client" to hashMapOf("address" to this.multiClient?.address())
+            )
+            App.runOnMainThread {
+                Log.e("connectNKN", "already Connected call back")
+                clientEventSink.success(data)
+            }
+            return
+        }
+        if (multiClient == null) {
+            Log.e("connectNKN", "create Client First")
+            return
+        }
         msgSendHandler.post {
             try {
-                if (isConnected) return@post
-                val client = multiClient
-                val node = client!!.onConnect.next()
+                var node = this.multiClient?.onConnect?.next()
+                if (node == null) {
+                    return@post
+                }
                 isConnected = true
                 val data = hashMapOf(
                         "event" to "onConnect",
                         "node" to hashMapOf("address" to node.addr, "publicKey" to node.pubKey),
-                        "client" to hashMapOf("address" to client.address())
-                )
+                        "client" to hashMapOf("address" to this.multiClient?.address()))
                 App.runOnMainThread {
+                    Log.e("connectNKN", "Connect NKN End")
                     clientEventSink.success(data)
                 }
-            } catch (e: Exception) {
-                Log.e("connectE", "connect | e:", e)
+
+            }
+            catch (e: Exception) {
+                Log.e("connectNKN", "Connect E:", e)
             }
         }
-    }
-
-    @Deprecated(message = "No longer needed.")
-    private fun isConnected(call: MethodCall, result: MethodChannel.Result) {
-        if (multiClient != null) {
-            result.success(isConnected)
-        } else {
-            result.success(false)
-        }
+        receiveMessages()
     }
 
     private fun disConnect(call: MethodCall?, result: MethodChannel.Result?, callFromDart: Boolean) {
@@ -289,6 +295,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                     } else {
                         // nothing...
                     }
+                    Log.e("Log.e","onLoop Received")
                     receiveMessages()
                 }
             } catch (e: Exception) {
@@ -309,7 +316,6 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         if (dataObj.optString("deviceToken").isNotEmpty()){
             val deviceToken = dataObj["deviceToken"].toString()
             val pushContent = dataObj["pushContent"].toString()
-            Log.e("xxxxxxxxxx", "xxxxxxxxxx | e__"+pushContent)
             val code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(acty)
             if (code == ConnectionResult.SUCCESS && pushContent?.length > 0){
                 val service = GooglePushService()
@@ -595,17 +601,19 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
     }
 
     private fun ensureSameAccount(account: Account?): String? {
-        return if (account == null) {
-            closeClientIfExists()
-            null
-        } else {
-            val pubkey = account.pubKey().toHex()
-            Log.i("ensureSameAccount", "ensureSameAccount | new: $pubkey")
-            if (accountPubkeyHex != pubkey) {
-                Log.i("ensureSameAccountE", "ensureSameAccount | old: ${accountPubkeyHex ?: "null"}, new: $pubkey")
+        if (account == null){
+            closeClientIfExists();
+            return null
+        }
+        else{
+            val pubkey = account.pubKey().toHex() ?: return null
+            if (accountPubkeyHex == null){
+                return pubkey
+            }
+            if (accountPubkeyHex != pubkey){
                 closeClientIfExists()
             }
-            pubkey
+            return pubkey;
         }
     }
 

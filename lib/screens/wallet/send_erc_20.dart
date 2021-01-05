@@ -42,7 +42,7 @@ class SendErc20Screen extends StatefulWidget {
   _SendErc20ScreenState createState() => _SendErc20ScreenState();
 }
 
-class _SendErc20ScreenState extends State<SendErc20Screen> with AccountDependsBloc, Tag {
+class _SendErc20ScreenState extends State<SendErc20Screen> with Tag {
   final GetIt locator = GetIt.instance;
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;

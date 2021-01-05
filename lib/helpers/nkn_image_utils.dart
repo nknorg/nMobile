@@ -24,6 +24,9 @@ Future<File> getCameraFile(String accountPubkey, {@required ImageSource source})
 
 Future<File> getHeaderImage(String accountPubkey) async {
   File image = await ImagePicker.pickImage(source: ImageSource.gallery);
+  if (image == null){
+    return null;
+  }
   File croppedFile = await ImageCropper.cropImage(
     sourcePath: image.path,
     cropStyle: CropStyle.circle,

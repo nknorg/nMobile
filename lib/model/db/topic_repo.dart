@@ -5,17 +5,33 @@
  */
 
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/utils/log_tag.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 /// @author Chenai
 /// @version 1.0, 19/08/2020
+
+final tableName = 'topic';
+final id = 'id';
+final topic = 'topic';
+final count = 'count';
+final avatar = 'avatar';
+final theme_id = 'theme_id';
+final time_update = 'time_update';
+final expire_at = 'expire_at';
+final is_top = 'is_top';
+final options = 'options'; // json
 
 class Topic with Tag {
   final int id;
@@ -36,14 +52,12 @@ class Topic with Tag {
       {this.id,
       this.topic,
       this.numSubscribers,
-      // ignore: avoid_init_to_null
-      this.avatarUri = null,
+      this.avatarUri = '',
       this.themeId,
       this.timeUpdate,
       this.blockHeightExpireAt,
       this.isTop = false,
-      // ignore: avoid_init_to_null
-      options = null})
+      options = ''})
       : _options = options,
         assert(topic != null && topic.isNotEmpty) {
     _type = isPrivateTopic(topic) ? TopicType.private : TopicType.public;
@@ -87,7 +101,6 @@ class Topic with Tag {
   String get shortName => isPrivate ? name + '.' + owner.substring(0, 8) : name;
 
   OptionsSchema get options {
-    LOG(tag).w('option: $_options, jsonDecode: ${jsonDecode(_options)}');
     return _options == null ? null : _optionsSchema ??= OptionsSchema.parseEntity(jsonDecode(_options));
   }
 
@@ -101,22 +114,13 @@ extension TopicTypeString on TopicType {
 }
 
 class TopicRepo with Tag {
-  LOG _log;
-  final Future<Database> _db;
-
-  TopicRepo(this._db) {
-    _log = LOG(tag);
-  }
-
-  // @Query("SELECT * from topic")
   Future<List<Topic>> getAllTopics() async {
-    _log.i('getAllTopics()');
-    List<Map<String, dynamic>> result = await (await _db).query(tableName);
+    Database currentDataBase = await NKNDataManager().currentDatabase();
+    List<Map<String, dynamic>> result = await currentDataBase.query(tableName);
     return parseEntities(result);
   }
 
   Future<List<String>> getAllTopicNames() async {
-    _log.i('getAllTopicNames()');
     final rows = await getAllTopics();
     final result = <String>[];
     for (var row in rows) {
@@ -125,59 +129,48 @@ class TopicRepo with Tag {
     return result;
   }
 
-  // @Query("SELECT * from topic WHERE topic = :topic LIMIT 1 OFFSET 0")
   Future<Topic> getTopicByName(String topicName) async {
-    _log.i('getTopicByName($topicName)');
-    List<Map<String, dynamic>> result = await (await _db).query(tableName, where: '$topic = ?', whereArgs: [topicName]);
-    final list = parseEntities(result);
-    if (list.isNotEmpty) {
-      if (list.length > 1) _log.w("getTopicByName, size: ${list.length}");
-      return list[0];
-    }
-    _log.w('getTopicByName Null($topicName), null');
-    return null;
-  }
-
-  Future<void> insertOrUpdateTime(Topic topic) async {
-    print('Topic info is'+topic.name);
-    _log.i('insertOrUpdateTime(${topic.topic})');
-    if (await getTopicByName(topic.topic) == null) {
-      await insertOrIgnore(topic);
-    } else {
-      await updateTimeUpdate(topic.topic, topic.timeUpdate);
-    }
-  }
-
-  // @Insert(onConflict = OnConflictStrategy.IGNORE)
-  Future<void> insertOrIgnore(Topic topic) async {
-    _log.i('insertOrIgnore(${topic.topic})');
-    /// 没有才可以去创建
-    Topic insertTopic = await getTopicByName(topic.topic);
-    if (insertTopic == null){
-      print('Insert topic name'+topic.topic);
-      await (await _db).insert(tableName, toEntity(topic), conflictAlgorithm: ConflictAlgorithm.ignore);
+    Database currentDataBase = await NKNDataManager().currentDatabase();
+    List<Map<String, dynamic>> result = await currentDataBase.query(tableName, where: '$topic = ?', whereArgs: [topicName]);
+    if (result == null || result.length == 0){
+      return null;
     }
     else{
-      /// 这里执行更新操作
-      print('already have topic'+insertTopic.topic+"__"+insertTopic.blockHeightExpireAt.toString());
+      List topicList = parseEntities(result);
+      return topicList[0];
     }
   }
 
-  // @Query("""UPDATE topic SET time_update = :timeUpdate WHERE topic = :topic""")
-  Future<void> updateTimeUpdate(String topicName, int timeUpdate) async {
-    _log.i('updateTimeUpdate($topicName, $timeUpdate)');
-    await (await _db).update(
-      tableName,
-      {time_update: timeUpdate},
-      where: '$topic = ?',
-      whereArgs: [topicName],
-    );
+  Future<void> insertTopicByTopicName(String topicName) async{
+    Topic topic = await getTopicByName(topicName);
+    Database currentDataBase = await NKNDataManager().currentDatabase();
+    /// need create New Topic
+    if (topic == null){
+      final themeId = Random().nextInt(DefaultTheme.headerBackgroundColor.length);
+      String topicOption = OptionsSchema.random(themeId: themeId).toJson();
+      print('Insert topicOption'+topicOption);
+      topic = Topic(
+        id: 0,
+        topic: topicName,
+        numSubscribers: 0,
+        themeId: themeId,
+        timeUpdate: DateTime.now().millisecondsSinceEpoch,
+        blockHeightExpireAt: 0,
+        isTop: false,
+        options: topicOption,
+      );
+      int result = await currentDataBase.insert(tableName, toEntity(topic), conflictAlgorithm: ConflictAlgorithm.ignore);
+      print('Insert topic result __+'+result.toString());
+    }
+    else{
+      Global.debugLog('Topic Exists'+topicName);
+      Global.debugLog('Topic themeID +'+topic.themeId.toString());
+    }
   }
 
-  // @Query("""UPDATE topic SET expire_at = :expireAt WHERE topic = :topic""")
   Future<void> updateOwnerExpireBlockHeight(String topicName, int expiresAt) async {
-    _log.i('updateOwnerExpireBlockHeight($topicName, $expiresAt)');
-    await (await _db).update(
+    Database currentDataBase = await NKNDataManager().currentDatabase();
+    await currentDataBase.update(
       tableName,
       {expire_at: expiresAt},
       where: '$topic = ?',
@@ -185,10 +178,9 @@ class TopicRepo with Tag {
     );
   }
 
-  // @Query("""UPDATE topic SET avatar = :avatarUri WHERE topic = :topic""")
   Future<void> updateAvatar(String topicName, String avatarUri) async {
-    _log.i('updateAvatar($topicName, $avatarUri)');
-    await (await _db).update(
+    Database currentDataBase = await NKNDataManager().currentDatabase();
+    await currentDataBase.update(
       tableName,
       {avatar: avatarUri},
       where: '$topic = ?',
@@ -197,8 +189,8 @@ class TopicRepo with Tag {
   }
 
   Future<int> updateIsTop(String topicName, bool isTop) async {
-    _log.i('updateIsTop($topicName, $isTop)');
-    return await (await _db).update(
+    Database currentDataBase = await NKNDataManager().currentDatabase();
+    return await currentDataBase.update(
       tableName,
       {is_top: isTop ? 1 : 0},
       where: '$topic = ?',
@@ -206,10 +198,9 @@ class TopicRepo with Tag {
     );
   }
 
-  // @Query("""UPDATE topic SET number = :numSubscribers WHERE topic = :topic""")
   Future<void> updateSubscribersCount(String topicName, int numSubscribers) async {
-    _log.i('updateSubscribersCount($topicName, $numSubscribers)');
-    await (await _db).update(
+    Database currentDataBase = await NKNDataManager().currentDatabase();
+    await currentDataBase.update(
       tableName,
       {count: numSubscribers},
       where: '$topic = ?',
@@ -217,15 +208,14 @@ class TopicRepo with Tag {
     );
   }
 
-  // @Query("DELETE FROM topic WHERE topic = :topic")
   Future<void> delete(String topicName) async {
-    _log.i('delete($topicName)');
-    await (await _db).delete(tableName, where: '$topic = ?', whereArgs: [topicName]);
+    Database currentDataBase = await NKNDataManager.instance.currentDatabase();
+    await currentDataBase.delete(tableName, where: '$topic = ?', whereArgs: [topicName]);
   }
 
   static Future<void> create(Database db, int version) async {
     assert(version >= SqliteStorage.currentVersion);
-    // await db.execute(deleteSql);
+    print('Recreate Topic');
     await db.execute(createSqlV5);
     await db.execute('CREATE UNIQUE INDEX index_${tableName}_$topic ON $tableName ($topic);');
   }
@@ -253,17 +243,6 @@ class TopicRepo with Tag {
         $options TEXT
       )''';
 }
-
-final tableName = 'topic';
-final id = 'id';
-final topic = 'topic';
-final count = 'count';
-final avatar = 'avatar';
-final theme_id = 'theme_id';
-final time_update = 'time_update';
-final expire_at = 'expire_at';
-final is_top = 'is_top';
-final options = 'options'; // json
 
 List<Topic> parseEntities(List<Map<String, dynamic>> rows) {
   List<Topic> list = [];
@@ -293,14 +272,46 @@ Topic parseEntity(Map<String, dynamic> row) {
 }
 
 Map<String, dynamic> toEntity(Topic subs) {
+  String insertTopic = '';
+  int numSubscribers = 0;
+  String avatarUri = '';
+  int themeId = 0;
+  int timeUpdate = 0;
+  int blockHeightExpireAt = 0;
+  bool isTop = false;
+  String _options = '';
+  if (subs.topic != null){
+    insertTopic = subs.topic;
+  }
+  if (subs.numSubscribers > 0){
+    numSubscribers = subs.numSubscribers;
+  }
+  if (subs.avatarUri != null){
+    avatarUri = subs.avatarUri;
+  }
+  if (subs.themeId > 0){
+    themeId = subs.themeId;
+  }
+  if (subs.timeUpdate > 0){
+    timeUpdate = subs.timeUpdate;
+  }
+  if (subs.blockHeightExpireAt > 0){
+    blockHeightExpireAt = subs.blockHeightExpireAt;
+  }
+  if (subs.isTop != null){
+    isTop = subs.isTop;
+  }
+  if (subs.options != null){
+    _options = subs.options?.toJson();
+  }
   return {
-    topic: subs.topic,
-    count: subs.numSubscribers,
-    avatar: subs.avatarUri,
-    theme_id: subs.themeId,
-    time_update: subs.timeUpdate,
-    expire_at: subs.blockHeightExpireAt,
-    is_top: subs.isTop,
-    options: subs.options?.toJson(),
+    topic: insertTopic,
+    count: numSubscribers,
+    avatar: avatarUri,
+    theme_id: themeId,
+    time_update: timeUpdate,
+    expire_at: blockHeightExpireAt,
+    is_top: isTop?1:0,
+    options: _options,
   };
 }

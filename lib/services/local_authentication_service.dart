@@ -2,63 +2,64 @@ import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/local_storage.dart';
-import 'package:nmobile/utils/log_tag.dart';
-import 'package:synchronized/synchronized.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 
-class LocalAuthenticationService with Tag,AccountDependsBloc {
-  // ignore: non_constant_identifier_names
-  LOG _LOG;
+class LocalAuthenticationService {
 
-  LocalAuthenticationService._() {
-    _LOG = LOG(tag);
+  factory LocalAuthenticationService() => _getInstance();
+
+  static LocalAuthenticationService get instance => _getInstance();
+  static LocalAuthenticationService _instance;
+
+  LocalAuthenticationService._internal() {
+    _localAuth = LocalAuthentication();
   }
 
-  static LocalAuthenticationService _instance;
-  static Lock _lock = Lock();
+  LocalAuthentication _localAuth;
+  // BiometricType authType;
 
-  static Future<LocalAuthenticationService> get instance async {
-    if (_instance == null)
-      await _lock.synchronized(() async {
-        if (_instance == null) {
-          final ins = LocalAuthenticationService._();
-          final localStorage = LocalStorage();
-          ins.isProtectionEnabled = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}')) as bool ?? false;
-          ins.authType = await ins.getAuthType();
-          _instance = ins;
-        }
-      });
+  static LocalAuthenticationService _getInstance() {
+    if (_instance == null) {
+      _instance = new LocalAuthenticationService._internal();
+    }
     return _instance;
   }
 
-  final _localAuth = LocalAuthentication();
-  bool isProtectionEnabled = false;
-  BiometricType authType;
+  Future<bool> protectionStatus() async{
+    final localStorage = LocalStorage();
+    bool status = await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}');
+    if (status == null){
+      return true;
+    }
+    if (status == true){
+      return true;
+    }
+    return false;
+  }
 
   Future<BiometricType> getAuthType() async {
     try {
       List<BiometricType> availableBiometrics = await _localAuth.getAvailableBiometrics();
+      print('availableBiometrics __'+availableBiometrics.toString());
       if (availableBiometrics.contains(BiometricType.face)) {
         return BiometricType.face;
       } else if (availableBiometrics.contains(BiometricType.fingerprint)) {
         return BiometricType.fingerprint;
       }
-    } on PlatformException catch (e) {
-      _LOG.e('getAuthType | PlatformException', e);
-      LocalNotification.debugNotification('<[DEBUG]> getAuthType', 'PlatformException | ' + e?.message);
+    } on PlatformException
+    catch (e) {
+      Global.debugLog('getAuthType | PlatformException');
     } on MissingPluginException catch (e) {
-      _LOG.e('getAuthType | MissingPluginException', e);
-      LocalNotification.debugNotification('<[DEBUG]> getAuthType', 'MissingPluginException | ' + e?.message);
+      Global.debugLog('getAuthType | MissingPluginException');
     } catch (e) {
-      _LOG.e('getAuthType | ?', e);
-      LocalNotification.debugNotification('<[DEBUG]> getAuthType', '? | ' + e?.message);
+      Global.debugLog('getAuthType | ?');
     }
     return null;
   }
 
   Future<bool> authenticate() async {
+    bool isProtectionEnabled = await protectionStatus();
     if (isProtectionEnabled) {
       try {
         final success = await _localAuth.authenticateWithBiometrics(
@@ -66,34 +67,23 @@ class LocalAuthenticationService with Tag,AccountDependsBloc {
           useErrorDialogs: false,
           stickyAuth: true,
         );
-        if (!success) LocalNotification.debugNotification('<[DEBUG]> authenticate', 'isProtectionEnabled：$isProtectionEnabled, success: $success');
         return success;
       } on PlatformException catch (e) {
-        _LOG.e('authenticate | PlatformException', e);
-        LocalNotification.debugNotification('<[DEBUG]> authenticate', 'PlatformException | ' + e?.message);
+        Global.debugLog('authenticate | PlatformException'+ e.toString());
       } on MissingPluginException catch (e) {
-        _LOG.e('authenticate | MissingPluginException', e);
-        LocalNotification.debugNotification('<[DEBUG]> authenticate', 'MissingPluginException | ' + e?.message);
+        Global.debugLog('authenticate | MissingPluginException'+e.toString());
       } catch (e) {
-        _LOG.e('authenticate | ?', e);
-        LocalNotification.debugNotification('<[DEBUG]> authenticate', '? | ' + e?.message);
+        Global.debugLog('authenticate | ?'+e.toString());
       }
     }
     return false;
   }
 
-  Future<bool> cancelAuthentication() {
-    if (isProtectionEnabled) {
-      return _localAuth.stopAuthentication();
-    } else
-      return Future.value(true);
-  }
 
   Future<bool> hasBiometrics() async {
-    LocalAuthentication localAuth = new LocalAuthentication();
-    bool canCheck = await localAuth.canCheckBiometrics;
+    bool canCheck = await _localAuth.canCheckBiometrics;
     if (canCheck) {
-      List<BiometricType> availableBiometrics = await localAuth.getAvailableBiometrics();
+      List<BiometricType> availableBiometrics = await _localAuth.getAvailableBiometrics();
 
       if (availableBiometrics.contains(BiometricType.face)) {
         return true;

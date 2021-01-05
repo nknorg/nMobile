@@ -5,16 +5,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
@@ -36,7 +35,7 @@ class CreateGroupDialog extends StatefulWidget {
   _CreateGroupDialogState createState() => _CreateGroupDialogState();
 }
 
-class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDependsBloc {
+class _CreateGroupDialogState extends State<CreateGroupDialog> {
   ChatBloc _chatBloc;
   TextEditingController _topicController = TextEditingController();
   TextEditingController _feeController = TextEditingController();
@@ -390,63 +389,68 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
     );
   }
 
+  _createOrJoinGroupSuccess(String topicName) async{
+    await GroupChatHelper.insertTopicIfNotExists(topicName);
+    var group = await GroupChatHelper.fetchTopicInfoByName(topicName);
+    Navigator.of(context).pushReplacementNamed(
+      ChatGroupPage.routeName,
+      arguments: ChatSchema(
+        type: group.isPrivate ? ChatType.PrivateChannel : ChatType.Channel,
+        topic: group,
+      ),
+    );
+  }
+
   createOrJoinGroup(topicName) async {
     if (isEmpty(topicName)) {
       return;
     }
     if (_privateSelected) {
       if (!isPrivateTopic(topicName)) {
-        topicName = '$topicName.$accountPubkey';
+        String pubKey = NKNClientCaller.pubKey;
+        topicName = '$topicName.$pubKey';
       }
     }
-    final topicRepo = TopicRepo(db);
-    var group = await topicRepo.getTopicByName(topicName);
-    if (group == null) {
+    var group = await GroupChatHelper.fetchTopicInfoByName(topicName);
+    if (group != null){
+      _createOrJoinGroupSuccess(topicName);
+    }
+    else {
       setState(() {
         _loading = true;
       });
       EasyLoading.show();
-      print('create Input create topic11');
       await GroupChatHelper.subscribeTopic(
-          account: account,
           topicName: topicName,
           chatBloc: _chatBloc,
           callback: (success, e) async {
             if (success) {
+              print('topicName'+topicName.toString());
               final topicSpotName = Topic.spotName(name: topicName);
               if (topicSpotName.isPrivate) {
                 // TODO: delay pull action at least 3 minutes.
+                print('topicSpotName'+topicSpotName.toString());
                 GroupChatPrivateChannel.pullSubscribersPrivateChannel(
-                    client: account.client,
                     topicName: topicName,
-                    accountPubkey: accountPubkey,
-                    myChatId: accountChatId,
-                    repoSub: SubscriberRepo(db),
-                    repoBlackL: BlackListRepo(db),
-                    repoTopic: TopicRepo(db),
                     membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
                     needUploadMetaCallback: (topicName) {
                       GroupChatPrivateChannel.uploadPermissionMeta(
-                        client: account.client,
                         topicName: topicName,
-                        accountPubkey: accountPubkey,
-                        repoSub: SubscriberRepo(db),
-                        repoBlackL: BlackListRepo(db),
+                        repoSub: SubscriberRepo(),
+                        repoBlackL: BlackListRepo(),
                       );
                     });
               } else {
+                print('Subscribe Success, Wait to pullSubscribersPublicChannel');
                 GroupChatPublicChannel.pullSubscribersPublicChannel(
-                  client: account.client,
                   topicName: topicName,
-                  myChatId: accountChatId,
-                  repoSub: SubscriberRepo(db),
-                  repoTopic: TopicRepo(db),
                   membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
                 );
               }
-              // see below.
-            } else {
-              // see below.
+              _createOrJoinGroupSuccess(topicName);
+            }
+            else {
+              print('Create Or join Group E:'+e.toString());
               showToast('create_input_group topic failed');
             }
           });
@@ -454,19 +458,6 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> with AccountDepen
       setState(() {
         _loading = false;
       });
-    }
-    group = await topicRepo.getTopicByName(topicName);
-    if (group == null) {
-      showToast('group is Null something_went_wrong');
-      // showToast(NL10ns.of(context).something_went_wrong);
-    } else {
-      Navigator.of(context).pushReplacementNamed(
-        ChatGroupPage.routeName,
-        arguments: ChatSchema(
-          type: group.isPrivate ? ChatType.PrivateChannel : ChatType.Channel,
-          topic: group,
-        ),
-      );
     }
   }
 }

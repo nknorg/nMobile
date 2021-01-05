@@ -16,7 +16,6 @@ import 'package:path_provider/path_provider.dart';
 import 'local_notification.dart';
 
 class Global {
-  // ignore: non_constant_identifier_names
   static LOG _LOG = LOG('Global'.tag());
   static BuildContext appContext;
   static String locale;
@@ -37,17 +36,38 @@ class Global {
 
   static String get showVersion => '${Global.buildVersion}';
 
-  static Future<bool> get isInBackground async {
-    // If app startup in background or after deep sleep, the system would
-    // NOT call `AppState.didChangeAppLifecycleState()`, so the `state` will be null.
-    // But this app would be either state of `background` or `foreground`, at this time,
-    // must call native to determine exact state.
-    // `CommonNative.isActive()` worked for iOS.
-    return Global.state == null ? !(await CommonNative.isActive()) : Global.state == AppLifecycleState.paused || Global.state == AppLifecycleState.detached;
+  static bool upgradedGroupBlockHeight = false;
+  static bool clientCreated = false;
+
+  // 工厂模式
+  factory Global() => _getInstance();
+
+  static Global get instance => _getInstance();
+  static Global _instance;
+
+  /// 创建Map来记录发送的信息
+  static Map<String, dynamic> postNameMap = Map<String, dynamic>();
+  static Map<String, Map> sendDataMap = Map<String,Map>();
+  /// 这个是常驻listening的
+  static Map<String, dynamic> postEventListening = Map<String, dynamic>();
+
+  Global._internal() {
+    // 初始化
   }
 
-  static Future<bool> get isStateActive async {
-    return Global.state == null ? await CommonNative.isActive() : Global.state == AppLifecycleState.resumed;
+  static Global _getInstance() {
+    if (_instance == null) {
+      _instance = new Global._internal();
+
+    }
+    return _instance;
+  }
+
+
+  static debugLog(String logInfo){
+    if (Global.isRelease == false){
+      print(logInfo);
+    }
   }
 
   static Future init(VoidCallback callback) async {
@@ -69,12 +89,10 @@ class Global {
 
   static Future initData() async {
     NknWalletPlugin.init();
-//    NknClientPlugin.init();
     LocalNotification.init();
     Global.applicationRootDirectory = await getApplicationDocumentsDirectory();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     Global.version = packageInfo.version;
-//    Global.buildVersion = '101';
     Global.buildVersion = packageInfo.buildNumber.replaceAll('.', '');
     LocalStorage localStorage = LocalStorage();
     // load language

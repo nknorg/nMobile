@@ -1,6 +1,6 @@
 import UIKit
 import Flutter
-import BackgroundTasks
+//import BackgroundTasks
 
 import Sentry
 import Firebase
@@ -17,15 +17,24 @@ import Nkn
         if #available(iOS 10.0, *) {
             UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
         }
+
         SentrySDK.start { options in
             options.dsn = "https://e566a6e5c45845dd93e07c41c22c0113@o466976.ingest.sentry.io/5483299"
 //            options.debug = true
-//            options.environment = "production"
-//            options.releaseName = "nMobile"
+            let infoDictionary = Bundle.main.infoDictionary
+            if let infoDictionary = infoDictionary {
+                let appVersion = infoDictionary["CFBundleShortVersionString"]
+                let appBuild:String = infoDictionary["CFBundleVersion"] as! String
+                options.environment = appBuild
+            }
+            options.releaseName = "nMobile"
         }
-                
+        signal(SIGPIPE, SIG_IGN)
+             
+        GeneratedPluginRegistrant.register(with: self)
+        
         if(!UserDefaults.standard.bool(forKey: "Notification")) {
-            UIApplication.shared.cancelAllLocalNotifications()
+            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
             UserDefaults.standard.set(true, forKey: "Notification")
         }
 //
@@ -47,11 +56,40 @@ import Nkn
                       result(FlutterMethodNotImplemented)
                   }
             }
-        GeneratedPluginRegistrant.register(with: self)
-        registerNotification()
         
-        registerGoogleFCM()
+        isFcmAvailable()
+        registerNotification()
+
         return true
+    }
+    
+    func isFcmAvailable(){
+        let urlString = "http://ip-api.com/json"
+        let requestUrl = URL(string: urlString)
+        let task = URLSession.shared.dataTask(with: requestUrl!) { data, response, error in
+                guard error == nil else {
+                    print("ERROR: HTTP REQUEST ERROR!")
+                    return
+                }
+                guard let data = data else {
+                    print("ERROR: Empty data!")
+                    return
+                }
+            let responseString = NSString(data: data,encoding: String.Encoding.utf8.rawValue)! as String
+            let jsonData = responseString.data(using: String.Encoding.utf8, allowLossyConversion: false) ?? Data()
+            guard let json = try? JSONSerialization.jsonObject(with: jsonData, options: .mutableContainers) as? [String:AnyObject] else {
+                 return
+            }
+            let countryCode  = json["countryCode"] as! String
+            if (countryCode == "CN"){
+                return
+            }
+            else{
+                print("self.registerGoogleFCM()")
+                self.registerGoogleFCM()
+            }
+        }
+        task.resume()
     }
     
     func registerGoogleFCM(){
@@ -62,6 +100,10 @@ import Nkn
         Messaging.messaging().token { token, error in
           if let error = error {
             print("Error fetching FCM registration token: \(error)")
+            if let app = FirebaseApp.app() {
+                app.delete({ _  in })
+                Messaging.messaging().delegate = nil
+            }
           } else if let token = token {
             print("FCM registration token: \(token)")
           }
@@ -70,7 +112,7 @@ import Nkn
     
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String) {
         print("Firebase registration token: \(String(describing: fcmToken))")
-        let dataDict:[String: String] = ["token": fcmToken ?? ""]
+//        let dataDict:[String: String] = ["token": fcmToken ?? ""]
         // 存储FCMToken到本地
         UserDefaults.standard.setValue(fcmToken, forKey: "nkn_fcm_token")
     }
@@ -95,8 +137,10 @@ import Nkn
         // 发送DeviceToken给谷歌
         Messaging.messaging().apnsToken = deviceToken
         
-        let pushService:NKNPushService = NKNPushService.shared();
-        pushService.connectAPNS();
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
+            NKNPushService.shared().connectAPNS();
+            print("NKNPushService.shared().connectAPNS();");
+        }
     }
     
     override func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void){
@@ -113,7 +157,6 @@ import Nkn
             // 代表从后台接受消息后进入app
             UIApplication.shared.applicationIconBadgeNumber = 0
         }
-        UIApplication.shared.applicationIconBadgeNumber = 99
         completionHandler(.newData)
     }
     

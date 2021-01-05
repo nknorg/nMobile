@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
+import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_notification.dart';
@@ -8,8 +12,10 @@ import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
+import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/log_tag.dart';
+import 'package:oktoast/oktoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum WalletType { nkn, eth }
@@ -27,7 +33,6 @@ class WalletSchema extends Equatable with Tag {
   double balanceEth = 0;
   bool isBackedUp = false;
 
-//  final LocalStorage _localStorage = LocalStorage();
   final SecureStorage _secureStorage = SecureStorage();
 
   WalletSchema({this.address, this.type, this.name, this.balance = 0, this.balanceEth = 0, this.isBackedUp = false});
@@ -43,19 +48,19 @@ class WalletSchema extends Equatable with Tag {
   }
 
   Future<String> getPassword({bool showDialogIfCanceledBiometrics = true, bool forceShowInputDialog = false}) async {
-    LOG(tag, usePrint: false).d('getPassword');
-
     if (forceShowInputDialog) {
       return _showDialog('force');
     }
-    final _localAuth = await LocalAuthenticationService.instance;
-    if (_localAuth.isProtectionEnabled) {
+    bool protect = await LocalAuthenticationService.instance.protectionStatus();
+    print('_localAuth.isProtectionEnabled is'+protect.toString());
+    if (protect) {
       String password = '';
       if (password == null) {
         return _showDialog('no password');
       } else {
-        bool auth = await _localAuth.authenticate();
+        bool auth = await LocalAuthenticationService.instance.authenticate();
         if (auth) {
+          TimerAuth.instance.enableAuth();
           password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');
           return password;
         } else if (showDialogIfCanceledBiometrics) {
@@ -69,12 +74,27 @@ class WalletSchema extends Equatable with Tag {
     }
   }
 
-  Future<String> getKeystore() async {
-    return await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
+  Future<String> getKeystore(String password) async {
+    if (Platform.isAndroid){
+      LocalStorage storage = LocalStorage();
+      String keyStoreInLocal =  await storage.getValueDecryptByKey(password);
+      String keyStore = '';
+      if (keyStoreInLocal == null || keyStoreInLocal.length == 0){
+        keyStore = await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
+        storage.saveValueEncryptByKey(keyStore,password);
+        return keyStore;
+      }
+      else{
+        return keyStoreInLocal;
+      }
+    }
+    else{
+      return await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
+    }
   }
 
   Future exportWallet(password) async {
-    String keystore = await getKeystore();
+    String keystore = await getKeystore(password);
     var wallet = await NknWalletPlugin.openWallet(keystore, password);
     await _secureStorage.set('${SecureStorage.PASSWORDS_KEY}:$address', password);
     return wallet;

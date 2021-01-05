@@ -23,6 +23,7 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		EF1A020F255BFAC00002E723 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = EF1A020E255BFAC00002E723 /* GoogleService-Info.plist */; };
+		EF2D3A962598F7940072D8D4 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EF2D3A952598F7940072D8D4 /* StoreKit.framework */; };
 		EF356C3E2554132E00CF40DA /* Nkn.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14CDBDF523F58A92006E91AA /* Nkn.framework */; };
 		EFB52E0F2521F1D700D2F3AF /* NWSecTools.m in Sources */ = {isa = PBXBuildFile; fileRef = EFB52DF92521F1D700D2F3AF /* NWSecTools.m */; };
 		EFB52E102521F1D700D2F3AF /* NWHub.m in Sources */ = {isa = PBXBuildFile; fileRef = EFB52DFC2521F1D700D2F3AF /* NWHub.m */; };
@@ -71,6 +72,7 @@
 		9AF264DD066D37E7246FDB2F /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		CA27D5A7979FC190E81DB847 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		EF1A020E255BFAC00002E723 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		EF2D3A952598F7940072D8D4 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		EFB52DF92521F1D700D2F3AF /* NWSecTools.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NWSecTools.m; sourceTree = "<group>"; };
 		EFB52DFA2521F1D700D2F3AF /* NWNotification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NWNotification.h; sourceTree = "<group>"; };
 		EFB52DFB2521F1D700D2F3AF /* NKNPushService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NKNPushService.h; sourceTree = "<group>"; };
@@ -101,6 +103,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EF2D3A962598F7940072D8D4 /* StoreKit.framework in Frameworks */,
 				EF356C3E2554132E00CF40DA /* Nkn.framework in Frameworks */,
 				5E6C333F60C11EA8C2CA00BF /* Pods_Runner.framework in Frameworks */,
 			);
@@ -195,6 +198,7 @@
 		C387606AA16B9FF48AC4FF97 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				EF2D3A952598F7940072D8D4 /* StoreKit.framework */,
 				14142450241A1F690089B50F /* orientation.framework */,
 				14CDBDF523F58A92006E91AA /* Nkn.framework */,
 				CA27D5A7979FC190E81DB847 /* Pods_Runner.framework */,
@@ -382,9 +386,11 @@
 				"${BUILT_PRODUCTS_DIR}/Sentry/Sentry.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftyGif/SwiftyGif.framework",
 				"${BUILT_PRODUCTS_DIR}/TOCropViewController/TOCropViewController.framework",
+				"${BUILT_PRODUCTS_DIR}/Toast/Toast.framework",
 				"${BUILT_PRODUCTS_DIR}/background_fetch/background_fetch.framework",
 				"${BUILT_PRODUCTS_DIR}/esys_flutter_share/esys_flutter_share.framework",
 				"${BUILT_PRODUCTS_DIR}/file_picker/file_picker.framework",
+				"${BUILT_PRODUCTS_DIR}/flutter_aes_ecb_pkcs5/flutter_aes_ecb_pkcs5.framework",
 				"${BUILT_PRODUCTS_DIR}/flutter_app_badger/flutter_app_badger.framework",
 				"${BUILT_PRODUCTS_DIR}/flutter_image_compress/flutter_image_compress.framework",
 				"${BUILT_PRODUCTS_DIR}/flutter_local_notifications/flutter_local_notifications.framework",
@@ -392,7 +398,7 @@
 				"${BUILT_PRODUCTS_DIR}/flutter_plugin_android_lifecycle/flutter_plugin_android_lifecycle.framework",
 				"${BUILT_PRODUCTS_DIR}/flutter_secure_storage/flutter_secure_storage.framework",
 				"${BUILT_PRODUCTS_DIR}/flutter_sound/flutter_sound.framework",
-				"${BUILT_PRODUCTS_DIR}/flutter_vibrate/flutter_vibrate.framework",
+				"${BUILT_PRODUCTS_DIR}/fluttertoast/fluttertoast.framework",
 				"${BUILT_PRODUCTS_DIR}/image_cropper/image_cropper.framework",
 				"${BUILT_PRODUCTS_DIR}/image_picker/image_picker.framework",
 				"${BUILT_PRODUCTS_DIR}/image_save/image_save.framework",
@@ -427,9 +433,11 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Sentry.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyGif.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/TOCropViewController.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Toast.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/background_fetch.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/esys_flutter_share.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/file_picker.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_aes_ecb_pkcs5.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_app_badger.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_image_compress.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_local_notifications.framework",
@@ -437,7 +445,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_plugin_android_lifecycle.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_secure_storage.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_sound.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_vibrate.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/fluttertoast.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/image_cropper.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/image_picker.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/image_save.framework",
@@ -608,7 +616,7 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/nMobile.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 190;
 				DEVELOPMENT_TEAM = 67P82ZQDAS;
 				ENABLE_BITCODE = NO;
 				FLUTTER_APPLICATION_PATH = /Users/rebloom/Documents/GitHub/nMobile;
@@ -764,7 +772,7 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/nMobile.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 190;
 				DEVELOPMENT_TEAM = 67P82ZQDAS;
 				ENABLE_BITCODE = NO;
 				FLUTTER_APPLICATION_PATH = /Users/rebloom/Documents/GitHub/nMobile;
@@ -812,7 +820,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 163;
+				CURRENT_PROJECT_VERSION = 190;
 				DEVELOPMENT_TEAM = 67P82ZQDAS;
 				ENABLE_BITCODE = NO;
 				FLUTTER_APPLICATION_PATH = /Users/rebloom/Documents/GitHub/nMobile;

@@ -17,11 +17,9 @@ class TaskService with Tag {
   EthErc20Client _erc20client;
   Timer _queryNknWalletBalanceTask;
   bool _isInit = false;
-  LOG _LOG;
 
   init() {
     if (!_isInit) {
-      _LOG = LOG(tag);
       _walletsBloc = BlocProvider.of<WalletsBloc>(Global.appContext);
       _erc20client = EthErc20Client();
       _queryNknWalletBalanceTask = Timer.periodic(Duration(seconds: 60), (timer) {
@@ -35,43 +33,35 @@ class TaskService with Tag {
   queryNknWalletBalanceTask() {
     var state = _walletsBloc.state;
     if (state is WalletsLoaded) {
+      Global.debugLog('queryNknWalletBalanceTask begin');
       List<Future> futures = <Future>[];
       state.wallets.forEach((w) {
         if (w.type == WalletSchema.ETH_WALLET) {
           futures.add(_erc20client.getBalance(address: w.address).then((balance) {
-            _LOG.w('${w.name} | balance: ${balance.ether}');
+            Global.debugLog('Get Wallet:${w.name} | balance: ${balance.ether}');
             w.balanceEth = balance.ether;
             _walletsBloc.add(UpdateWallet(w));
           }));
           futures.add(_erc20client.getNknBalance(address: w.address).then((balance) {
             if (balance != null) {
-              _LOG.w('${w.name} | Nkn balance: ${balance.ether}');
+              Global.debugLog('Get Wallet:${w.name} | balance: ${balance.ether}');
               w.balance = balance.ether;
               _walletsBloc.add(UpdateWallet(w));
             }
           }));
         } else {
-          futures.add(NknWalletPlugin.getBalanceAsync(w.address).then((balance) {
+          futures.add(NknWalletPlugin.
+          getBalanceAsync(w.address).then((balance) {
             w.balance = balance;
             _walletsBloc.add(UpdateWallet(w));
           }));
         }
       });
+      Global.debugLog('queryNknWalletBalanceTask end');
       Future.wait(futures).then((data) {
         _walletsBloc.add(ReLoadWallets());
+        Global.debugLog('queryNknWalletBalanceTask Future.wait(futures)');
       });
     }
   }
-
-//  queryTopicCountTask() async {
-//    if (Global.currentChatDb == null) {
-//      return;
-//    }
-//    var topics = await TopicSchema.getAllTopic();
-//    if (topics != null) {
-//      topics.forEach((x) {
-//        x.getTopicCount();
-//      });
-//    }
-//  }
 }
