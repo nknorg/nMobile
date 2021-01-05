@@ -59,19 +59,6 @@ class LocalNotification {
     });
   }
 
-  static debugNotification(String title, String content, {int badgeNumber}) async {
-    if (!Settings.debug || !Platform.isIOS) return;
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(badgeNumber: badgeNumber);
-
-    var platformChannelSpecifics = NotificationDetails(null, iOSPlatformChannelSpecifics);
-    try {
-      await _flutterLocalNotificationsPlugin.show(_notificationIdDebug++, title, content, platformChannelSpecifics);
-    } catch (e) {
-      debugPrint(e);
-      debugPrintStack();
-    }
-  }
-
   static messageNotification(String title, String content, {int badgeNumber, MessageSchema message}) async {
     if (message != null && Global.state == AppLifecycleState.resumed) {
       if (message.topic != null) {

@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/blocs/nkn_client_caller.dart';
+import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -20,8 +23,6 @@ import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
-import 'package:nmobile/schemas/options.dart';
-import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/utils/copy_utils.dart';
@@ -40,12 +41,12 @@ class ChannelSettingsScreen extends StatefulWidget {
   _ChannelSettingsScreenState createState() => _ChannelSettingsScreenState();
 }
 
-class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with AccountDependsBloc {
+class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
   ChatBloc _chatBloc;
   bool isUnSubscribed = false;
 
   initAsync() async {
-    SubscriberRepo(db).getByTopicAndChatId(widget.arguments.topic, accountChatId).then((subs) {
+    SubscriberRepo().getByTopicAndChatId(widget.arguments.topic, NKNClientCaller.currentChatId).then((subs) {
       bool unSubs = subs == null;
       if (isUnSubscribed != unSubs) {
         if (mounted)
@@ -59,7 +60,6 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
   @override
   void initState() {
     super.initState();
-//    isUnSubscribe = LocalStorage.getUnsubscribeTopicList(accountPubkey).contains(widget.arguments.topic);
     Global.removeTopicCache(widget.arguments.topic);
     initAsync();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
@@ -67,12 +67,6 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
 
   @override
   Widget build(BuildContext context) {
-//    List<Widget> topicWidget = [
-//      Label(widget.arguments.shortName, type: LabelType.h3, dark: true).pad(l: 6),
-//    ];
-//    if (widget.arguments.type == TopicType.private) {
-//      topicWidget.insert(0, SvgPicture.asset('assets/icons/lock.svg', width: 18, color: DefaultTheme.fontLightColor));
-//    }
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
@@ -86,53 +80,44 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
       ),
       body: Container(
         decoration: BoxDecoration(color: DefaultTheme.backgroundColor4),
-        child: ConstrainedBox(
-          constraints: BoxConstraints.expand(),
+        child: Container(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               Container(
-                height: 100,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                margin: EdgeInsets.only(bottom: 20),
+                child: Stack(
                   children: <Widget>[
-                    Stack(
-                      children: <Widget>[
-                        Container(
-                          child: TopicSchema.avatarWidget(
-                            topicName: widget.arguments.topic,
-                            size: 64,
-                            avatar: widget.arguments.avatarUri == null ? null : File(widget.arguments.avatarUri),
-                            options: widget.arguments.options ?? OptionsSchema.random(themeId: widget.arguments.themeId),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Button(
-                            padding: const EdgeInsets.all(0),
-                            width: 24,
-                            height: 24,
-                            backgroundColor: DefaultTheme.primaryColor,
-                            child: SvgPicture.asset(
-                              'assets/icons/camera.svg',
-                              width: 16,
-                            ),
-                            onPressed: () async {
-                              File savedImg = await getHeaderImage(accountPubkey);
-                              if (savedImg == null) return;
-                              final topicRepo = TopicRepo(db);
-                              await topicRepo.updateAvatar(widget.arguments.topic, savedImg.path);
-//                              final topicSaved = topicRepo.getTopicByName(widget.arguments.topic);
-                              setState(() {
-                                widget.arguments = widget.arguments.copyWith(avatarUri: savedImg.path);
-                              });
-                              _chatBloc.add(RefreshMessages());
-                            },
-                          ),
-                        )
-                      ],
+                    Container(
+                      child: CommonUI.avatarWidget(
+                        radiusSize: 48,
+                        topic: widget.arguments,
+                      ),
                     ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Button(
+                        padding: const EdgeInsets.all(0),
+                        width: 24,
+                        height: 24,
+                        backgroundColor: DefaultTheme.primaryColor,
+                        child: SvgPicture.asset(
+                          'assets/icons/camera.svg',
+                          width: 16,
+                        ),
+                        onPressed: () async {
+                          File savedImg = await getHeaderImage(NKNClientCaller.pubKey);
+                          if (savedImg == null) return;
+                          final topicRepo = TopicRepo();
+                          await topicRepo.updateAvatar(widget.arguments.topic, savedImg.path);
+                          setState(() {
+                            widget.arguments = widget.arguments.copyWith(avatarUri: savedImg.path);
+                          });
+                          _chatBloc.add(RefreshMessageListEvent());
+                        },
+                      ),
+                    )
                   ],
                 ),
               ),
@@ -340,6 +325,13 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
     }
   }
 
+  _unSubscriberGoesSuccess(){
+    showToast(NL10ns.of(context).unsubscribed);
+    Timer(Duration(seconds: 1), () {
+      Navigator.of(context).pop(true);
+    });
+  }
+
   unSubscriberAction() async {
     SimpleConfirm(
       context: context,
@@ -347,16 +339,22 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
       content: NL10ns.of(context).leave_group_confirm_title,
       callback: (b) {
         if (b) {
+          EasyLoading.show();
           GroupChatHelper.unsubscribeTopic(
-              account: account,
               topicName: widget.arguments.topic,
               chatBloc: _chatBloc,
               callback: (success, e) {
+                EasyLoading.dismiss();
+                print('success'+success.toString()+'__'+e.toString());
                 if (success) {
-                  showToast(NL10ns.of(context).unsubscribed);
-                  Navigator.of(context).pop(true);
+                  _unSubscriberGoesSuccess();
                 } else {
-                  showToast(NL10ns.of(context).something_went_wrong);
+                  if (e.toString().contains('can not append tx to txpool')){
+                    _unSubscriberGoesSuccess();
+                  }
+                  else{
+                    showToast(NL10ns.of(context).something_went_wrong);
+                  }
                 }
               });
         }
@@ -366,46 +364,41 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> with Acco
   }
 
   subscriberAction() {
+    EasyLoading.show();
     GroupChatHelper.subscribeTopic(
-        account: account,
         topicName: widget.arguments.topic,
         chatBloc: _chatBloc,
         callback: (success, e) {
+          EasyLoading.dismiss();
           if (success) {
-            showToast(NL10ns.of(context).subscribed);
+            showToast(NL10ns().subscribed);
             Navigator.pop(context);
           } else {
-            showToast(NL10ns.of(context).something_went_wrong);
+            showToast(NL10ns().something_went_wrong);
           }
         });
   }
 
   acceptPrivateAction(address) async {
-    // TODO: check address is a valid chatId.
-    //if (!isValidChatId(address)) return;
-
     final topic = widget.arguments;
-    // Anyone can invite anyone.
-    var sendMsg = MessageSchema.fromSendData(from: accountChatId, content: topic.topic, to: address, contentType: ContentType.ChannelInvitation);
+    var sendMsg = MessageSchema.fromSendData(from: NKNClientCaller.currentChatId,
+        content: topic.topic,
+        to: address,
+        contentType: ContentType.ChannelInvitation);
     sendMsg.isOutbound = true;
-    _chatBloc.add(SendMessage(sendMsg));
-    showToast(NL10ns.of(context).invitation_sent);
+    _chatBloc.add(SendMessageEvent(sendMsg));
+    showToast(NL10ns
+        .of(context)
+        .invitation_sent);
 
-    if (topic.isPrivate && topic.isOwner(accountPubkey) && address != accountChatId) {
+    if (topic.isPrivate && topic.isOwner(NKNClientCaller.pubKey) &&
+        address != NKNClientCaller.currentChatId) {
       await GroupChatHelper.moveSubscriberToWhiteList(
-          account: account,
           topic: topic,
           chatId: address,
           callback: () {
             // refreshMembers();
           });
     }
-
-    // This message will only be sent when yourself subscribe.
-//    var sendMsg1 = MessageSchema.fromSendData(
-//        from: accountChatId, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
-//    sendMsg1.isOutbound = true;
-
-//      _chatBloc.add(SendMessage(sendMsg1));
   }
 }

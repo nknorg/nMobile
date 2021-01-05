@@ -5,15 +5,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nmobile/blocs/account_depends_bloc.dart';
+import 'package:nmobile/blocs/chat/auth_bloc.dart';
+import 'package:nmobile/blocs/chat/auth_state.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
+import 'package:nmobile/blocs/nkn_client_caller.dart';
+import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
-import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/event/eventbus.dart';
 import 'package:nmobile/helpers/format.dart';
@@ -21,8 +23,6 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
-import 'package:nmobile/schemas/options.dart';
-import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/contact/add_contact.dart';
 import 'package:nmobile/screens/contact/contact.dart';
@@ -42,7 +42,7 @@ class ContactHome extends StatefulWidget {
   }
 }
 
-class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
+class _ContactHomeState extends State<ContactHome> {
   ScrollController _scrollController = ScrollController();
   List<ContactSchema> _friends = <ContactSchema>[];
   List<ContactSchema> _strangerContacts = <ContactSchema>[];
@@ -59,9 +59,10 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
   StreamSubscription _addContactSubscription;
 
   initAsync() async {
-    var topic = widget.arguments ? <Topic>[] : await TopicRepo(db).getAllTopics();
-    var friends = await ContactSchema.getContacts(db, limit: _limit);
-    var stranger = await ContactSchema.getStrangerContacts(db, limit: 10);
+    var topic = widget.arguments ? <Topic>[] : await TopicRepo().getAllTopics();
+    print('______topic count is'+topic.length.toString());
+    var friends = await ContactSchema.getContacts(limit: _limit);
+    var stranger = await ContactSchema.getStrangerContacts(limit: 10);
     setState(() {
       _friends = friends ?? [];
       _strangerContacts = stranger ?? [];
@@ -119,38 +120,47 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
         appBar: Header(
           titleChild: GestureDetector(
             onTap: () async {
-              accountUser.then((user) {
-                Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: user);
-              });
+              ContactSchema currentUser = await ContactSchema.fetchCurrentUser();
+              Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: currentUser);
             },
-            child: accountUserBuilder(onUser: (ctx, user) {
-              return Flex(
-                direction: Axis.horizontal,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: <Widget>[
-                  Expanded(
-                    flex: 0,
-                    child: Container(
-                      padding: const EdgeInsets.only(right: 16),
-                      alignment: Alignment.center,
-                      child: Hero(
-                        tag: 'header_avatar:$accountChatId',
-                        child: user.avatarWidget(db, backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 28),
+            child: BlocBuilder<AuthBloc, AuthState>(builder: (context, state){
+              if (state is AuthToUserState){
+                ContactSchema currentUser = state.currentUser;
+                String currentChatId = NKNClientCaller.currentChatId;
+                return Flex(
+                  direction: Axis.horizontal,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Expanded(
+                      flex: 0,
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        alignment: Alignment.center,
+                        child: Hero(
+                          tag: 'header_avatar:$currentChatId',
+                          child: Container(
+                            child: CommonUI.avatarWidget(
+                                radiusSize: 24,
+                                contact: currentUser,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Label(user.name, type: LabelType.h3, dark: true),
-                        Label(NL10ns.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor),
-                      ],
-                    ),
-                  )
-                ],
-              );
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Label(currentUser.name, type: LabelType.h3, dark: true),
+                          Label(NL10ns.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor),
+                        ],
+                      ),
+                    )
+                  ],
+                );
+              }
+              return Container();
             }),
           ),
           backgroundColor: DefaultTheme.primaryColor,
@@ -297,14 +307,15 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
                           Expanded(
                             flex: 0,
                             child: Container(
-                              padding: const EdgeInsets.only(right: 16),
+                              margin: const EdgeInsets.only(right: 8),
                               alignment: Alignment.center,
                               child: Hero(
                                 tag: 'avatar:${item.clientAddress}',
-                                child: item.avatarWidget(
-                                  db,
-                                  size: 24,
-                                  backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
+                                child: Container(
+                                  child: CommonUI.avatarWidget(
+                                      radiusSize: 24,
+                                      contact: item,
+                                  ),
                                 ),
                               ),
                             ),
@@ -394,7 +405,7 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
         },
         onDismissed: (direction) async {
           if (direction == DismissDirection.endToStart) {
-            item.deleteContact(db).then((count) {
+            item.deleteContact().then((count) {
               if (count > 0) {
                 setState(() {
                   _friends.remove(item);
@@ -436,12 +447,13 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
                 Expanded(
                   flex: 0,
                   child: Container(
-                    padding: const EdgeInsets.only(right: 16),
+                    margin: const EdgeInsets.only(right: 8),
                     alignment: Alignment.center,
-                    child: item.avatarWidget(
-                      db,
-                      size: 24,
-                      backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
+                    child: Container(
+                      child: CommonUI.avatarWidget(
+                          radiusSize: 24,
+                          contact: item
+                      ),
                     ),
                   ),
                 ),
@@ -548,12 +560,13 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
               Expanded(
                 flex: 0,
                 child: Container(
-                  padding: const EdgeInsets.only(right: 16),
+                  margin: const EdgeInsets.only(right: 8),
                   alignment: Alignment.center,
-                  child: item.avatarWidget(
-                    db,
-                    size: 24,
-                    backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
+                  child: Container(
+                    child: CommonUI.avatarWidget(
+                        radiusSize: 24,
+                        contact: item,
+                    ),
                   ),
                 ),
               ),
@@ -646,7 +659,7 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
     for (var item in _topic) {
       topicList.add(InkWell(
         onTap: () async {
-          Topic topic = await TopicRepo(db).getTopicByName(item.topic);
+          Topic topic = await TopicRepo().getTopicByName(item.topic);
           Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
         },
         child: Container(
@@ -659,13 +672,13 @@ class _ContactHomeState extends State<ContactHome> with AccountDependsBloc {
               Expanded(
                 flex: 0,
                 child: Container(
-                  padding: const EdgeInsets.only(right: 16),
+                  margin: const EdgeInsets.only(right: 8),
                   alignment: Alignment.center,
-                  child: TopicSchema.avatarWidget(
-                    topicName: item.topic,
-                    size: 48,
-                    avatar: item.avatarUri == null ? null : File(item.avatarUri),
-                    options: item.options ?? OptionsSchema.random(themeId: item.themeId),
+                  child: Container(
+                    child: CommonUI.avatarWidget(
+                      radiusSize: 24,
+                      topic: item,
+                    ),
                   ),
                 ),
               ),

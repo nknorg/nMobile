@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
+import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/blocs/wallet/filtered_wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/filtered_wallets_state.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
@@ -44,7 +45,7 @@ class SendNknScreen extends StatefulWidget {
   _SendNknScreenState createState() => _SendNknScreenState();
 }
 
-class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
+class _SendNknScreenState extends State<SendNknScreen> {
   final GetIt locator = GetIt.instance;
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
@@ -89,14 +90,19 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
       final txHash = await NknWalletPlugin.transferAsync(nw['keystore'], password, _sendTo, _amount, _fee.toString());
       if (txHash != null) {
         locator<TaskService>().queryNknWalletBalanceTask();
+        return txHash.length > 10;
       }
-      return txHash.length > 10;
+      return false;
     } catch (e) {
-      if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+      if (e.toString() == ConstUtils.WALLET_PASSWORD_ERROR){
         showToast(NL10ns.of(Global.appContext).password_wrong);
-      } else if (e.message == 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds') {
-        showToast(e.message);
-      } else {
+      }
+      else if (e.toString() == 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds'){
+        if (e.message != null){
+          showToast(e.message);
+        }
+      }
+      else {
         showToast(NL10ns.of(Global.appContext).failure);
       }
       return false;
@@ -304,7 +310,7 @@ class _SendNknScreenState extends State<SendNknScreen> with AccountDependsBloc {
                                                     hintText: NL10ns.of(context).enter_receive_address,
                                                     suffixIcon: GestureDetector(
                                                       onTap: () async {
-                                                        if (account?.client != null) {
+                                                        if (NKNClientCaller.pubKey != null) {
                                                           var contact = await Navigator.of(context).pushNamed(ContactHome.routeName, arguments: true);
                                                           if (contact is ContactSchema) {
                                                             _sendToController.text = contact.nknWalletAddress;

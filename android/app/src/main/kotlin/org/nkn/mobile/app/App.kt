@@ -10,9 +10,6 @@ import android.app.ActivityManager
 import android.content.*
 import android.os.*
 import android.os.StrictMode.VmPolicy
-import android.util.Log
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.GoogleApiAvailability
 import io.flutter.app.FlutterApplication
 import java.util.concurrent.TimeUnit
 

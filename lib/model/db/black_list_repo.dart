@@ -4,6 +4,7 @@
  * Proprietary and confidential
  */
 
+import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -28,13 +29,9 @@ class BlackList {
 }
 
 class BlackListRepo {
-  final Future<Database> _db;
-
-  BlackListRepo(this._db);
-
-  // @Query("SELECT * from blacklist WHERE topic = :topic")
   Future<List<BlackList>> getByTopic(String topicName) async {
-    List<Map<String, dynamic>> result = await (await _db).query(
+    Database cdb = await NKNDataManager().currentDatabase();
+    List<Map<String, dynamic>> result = await cdb.query(
       tableName,
       where: '$topic = ?',
       whereArgs: [topicName],
@@ -42,9 +39,9 @@ class BlackListRepo {
     return parseEntities(result);
   }
 
-  // @Query("SELECT * from blacklist WHERE topic = :topic AND chat_id = :chatId")
   Future<BlackList> getByTopicAndChatId(String topicName, String chatIdOrPubkey) async {
-    List<Map<String, dynamic>> result = await (await _db).query(
+    Database cdb = await NKNDataManager().currentDatabase();
+    List<Map<String, dynamic>> result = await cdb.query(
       tableName,
       where: '$topic = ? AND $cid_r_pk = ?',
       whereArgs: [topicName, chatIdOrPubkey],
@@ -60,17 +57,14 @@ class BlackListRepo {
       await update(bl.topic, bl.chatIdOrPubkey, bl.indexPermiPage, bl.uploaded);
   }
 
-  // @Insert(onConflict = OnConflictStrategy.IGNORE)
   Future<void> insertOrIgnore(BlackList bl) async {
-    await (await _db).insert(tableName, toEntity(bl), conflictAlgorithm: ConflictAlgorithm.ignore);
+    Database cdb = await NKNDataManager().currentDatabase();
+    await cdb.insert(tableName, toEntity(bl), conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
-  // @Query(
-  //        """UPDATE blacklist SET prm_p_i = :prm_p_i, uploaded = :uploaded
-  //            WHERE topic = :topic AND chat_id = :chatId"""
-  //    )
   Future<void> update(String topicName, String chatIdOrPubkey, int pageIndex, bool uploaded_) async {
-    await (await _db).update(
+    Database cdb = await NKNDataManager().currentDatabase();
+    await cdb.update(
       tableName,
       {prm_p_i: pageIndex, uploaded: uploaded_ ? 1 : 0},
       where: '$topic = ? AND $cid_r_pk = ?',
@@ -78,9 +72,9 @@ class BlackListRepo {
     );
   }
 
-  // @Query("UPDATE blacklist SET prm_p_i = :prm_p_i WHERE topic = :topic AND chat_id = :chatId")
   Future<void> updatePermiPageIndex(String topicName, String chatIdOrPubkey, int pageIndex) async {
-    await (await _db).update(
+    Database cdb = await NKNDataManager().currentDatabase();
+    await cdb.update(
       tableName,
       {prm_p_i: pageIndex},
       where: '$topic = ? AND $cid_r_pk = ?',
@@ -88,9 +82,9 @@ class BlackListRepo {
     );
   }
 
-  // @Query("""UPDATE blacklist SET uploaded = 1 WHERE topic = :topic AND prm_p_i = :pageIndex""")
   Future<void> updatePageUploaded(String topicName, int pageIndex) async {
-    await (await _db).update(
+    Database cdb = await NKNDataManager().currentDatabase();
+    await cdb.update(
       tableName,
       {uploaded: 1},
       where: '$topic = ? AND $prm_p_i = ?',
@@ -98,20 +92,18 @@ class BlackListRepo {
     );
   }
 
-  // @Query("DELETE FROM blacklist WHERE topic = :topic AND chat_id = :chatId")
   Future<void> delete(String topicName, String chatIdOrPubkey) async {
-    await (await _db).delete(tableName, where: '$topic = ? AND $cid_r_pk = ?', whereArgs: [topicName, chatIdOrPubkey]);
+    Database cdb = await NKNDataManager().currentDatabase();
+    await cdb.delete(tableName, where: '$topic = ? AND $cid_r_pk = ?', whereArgs: [topicName, chatIdOrPubkey]);
   }
 
-  // @Query("DELETE FROM blacklist WHERE topic = :topic")
   Future<void> deleteAll(String topicName) async {
-    await (await _db).delete(tableName, where: '$topic = ?', whereArgs: [topicName]);
+    Database cdb = await NKNDataManager().currentDatabase();
+    await cdb.delete(tableName, where: '$topic = ?', whereArgs: [topicName]);
   }
 
   static Future<void> create(Database db, int version) async {
-    assert(version >= SqliteStorage.currentVersion);
-    // no table before version 5.
-    //await db.execute(deleteSql);
+    // assert(version >= SqliteStorage.currentVersion);
     await db.execute(createSqlV5);
     await db.execute('CREATE UNIQUE INDEX IF NOT EXISTS'
         ' index_${tableName}_${topic}_$cid_r_pk'
@@ -119,7 +111,7 @@ class BlackListRepo {
   }
 
   static Future<void> upgradeFromV5(Database db, int oldVersion, int newVersion) async {
-    assert(newVersion >= SqliteStorage.currentVersion);
+    // assert(newVersion >= SqliteStorage.currentVersion);
     if (newVersion == SqliteStorage.currentVersion) {
       await create(db, newVersion);
     } else {
@@ -166,7 +158,6 @@ BlackList parseEntity(Map<String, dynamic> row) {
 
 Map<String, dynamic> toEntity(BlackList bl) {
   return {
-//    id: bl.id,
     topic: bl.topic,
     cid_r_pk: bl.chatIdOrPubkey,
     prm_p_i: bl.indexPermiPage,
@@ -175,18 +166,3 @@ Map<String, dynamic> toEntity(BlackList bl) {
   };
 }
 
-//@Entity(
-//    tableName = "blacklist",
-//    indices = [Index("topic", "chat_id", unique = true)]
-//)
-//data class BlackList(
-//@PrimaryKey(autoGenerate = true)
-//@ColumnInfo(name = "id", index = true) val id: Long,
-//
-//@ColumnInfo(name = "topic") val topic: String,
-//@ColumnInfo(name = "chat_id") val chatId: String,
-//
-//@ColumnInfo(name = "prm_p_i") val indexPermissionPage: Int,
-//@ColumnInfo(name = "uploaded") val uploaded: Boolean,
-//@ColumnInfo(name = "subscribed") val subscribed: Boolean // only record for `subscriber` table.
-//)

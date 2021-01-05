@@ -1,14 +1,21 @@
+
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nmobile/blocs/client/client_bloc.dart';
+import 'package:nmobile/blocs/chat/auth_bloc.dart';
+import 'package:nmobile/blocs/chat/auth_event.dart';
+import 'package:nmobile/blocs/chat/auth_state.dart';
+import 'package:nmobile/blocs/client/client_event.dart';
+import 'package:nmobile/blocs/client/client_state.dart';
+import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
+import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
 import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/local_notification.dart';
-import 'package:nmobile/helpers/local_storage.dart';
-import 'package:nmobile/plugins/common_native.dart';
+import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/router/route_observer.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/active_page.dart';
@@ -16,6 +23,7 @@ import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
 import 'package:nmobile/screens/chat/no_wallet_account.dart';
+import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:oktoast/oktoast.dart';
 
@@ -30,113 +38,41 @@ class ChatScreen extends StatefulWidget {
   _ChatScreenState createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMixin, RouteAware, WidgetsBindingObserver, Tag {
+class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMixin, RouteAware, Tag{
   final DChatAuthenticationHelper authHelper = DChatAuthenticationHelper();
-  bool noConnPageShowing = true;
-  bool homePageShowing = false;
-  bool fromBackground = false;
-  bool uiShowed = false;
-  ClientBloc clientBloc;
-  LocalStorage localStorage;
-  TimerAuth timerAuth;
 
-  // ignore: non_constant_identifier_names
-  LOG _LOG;
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    _LOG.i('didChangeAppLifecycleState($state), ${DateTime.now().toLocal().toString()}');
-    if (state == AppLifecycleState.resumed) {
-      if (fromBackground) {
-        fromBackground = false;
-        authHelper.canShow = noConnPageShowing;
-        authHelper.ensureAutoShowAuthentication('lifecycle', onGetPassword);
-      }
-    } else if (state == AppLifecycleState.paused) {
-      // When app brought to foreground again,
-      // lifecycle state order is: inactive -> resumed.
-      // so...only judge if is `inactive` not enough.
-      fromBackground = true;
-    }
-    timerAuth.homePageShowing = homePageShowing;
-    if (state == AppLifecycleState.resumed) {
-      timerAuth.onHomePageResumed(context);
-    }
-    if (state == AppLifecycleState.paused) {
-      timerAuth.onHomePagePaused(context);
-    }
-  }
-
-  void onCurrPageActive(active) {
-    _LOG.i('onCurrPageActive($active)');
-    Timer(Duration(milliseconds: 350), () {
-      authHelper.setPageActive(PageAction.force, active);
-      authHelper.ensureAutoShowAuthentication('tab change', onGetPassword);
-      timerAuth.homePageShowing = homePageShowing;
-      timerAuth.ensureVerifyPassword(context);
-    });
-  }
+  WalletsBloc _walletBloc;
+  NKNClientBloc _clientBloc;
+  AuthBloc _authBloc;
+  bool firstShowAuth = false;
 
   @override
   void didPopNext() {
     super.didPopNext();
-    _LOG.i('canShow: $noConnPageShowing, call _authHelper.ensureAutoShowXxx()');
-    Timer(Duration(milliseconds: 350), () {
-      authHelper.canShow = noConnPageShowing;
-      authHelper.setPageActive(PageAction.popToCurr);
-      authHelper.ensureAutoShowAuthentication('popToCurr', onGetPassword);
-    });
+    TimerAuth.instance.pageDidPop();
+    if (TimerAuth.authed == false){
+
+    }
   }
 
   @override
   void didPushNext() {
-    _LOG.i('didPushNext()');
-    authHelper.setPageActive(PageAction.pushNext);
+    TimerAuth.instance.pageDidPushed();
     super.didPushNext();
-  }
-
-  void whenUiFirstShowing() async {
-    WidgetsBinding.instance.addPostFrameCallback((timestamp) async {
-      uiShowed = true;
-      if (await Global.isInBackground) {
-        fromBackground = true;
-        timerAuth.onHomePagePaused(context);
-      }
-      _LOG.d('whenUiFirstShowing | isInBackground: ${await Global.isInBackground}, isStateActive: ${await Global.isStateActive}, ' +
-          DateTime.now().toLocal().toString());
-      LocalNotification.debugNotification(
-          '<[DEBUG]> whenUiFirstShowing',
-          'isInBackground: ${await Global.isInBackground}, isStateActive: ${await Global.isStateActive}'
-              ', nativeActive: ${await CommonNative.isActive()}, ${DateTime.now().toLocal().toString()}');
-      authHelper.canShow = uiShowed && noConnPageShowing && !(await Global.isInBackground);
-      authHelper.ensureAutoShowAuthentication('first show', onGetPassword);
-    });
-  }
-
-  void onGetWallet(WalletSchema accountWallet) async {
-    if (authHelper.wallet != null && authHelper.wallet.address == accountWallet.address) return;
-    // When account changed, `authHelper.wallet` should be changed.
-    authHelper.wallet = accountWallet;
-    // fix bug of `showing-input-pwd-dialog` in background.
-    authHelper.canShow = uiShowed && noConnPageShowing && !(await Global.isInBackground);
-    authHelper.ensureAutoShowAuthentication('wallet', onGetPassword);
-  }
-
-  void onGetPassword(WalletSchema wallet, String password) {
-    clientBloc.add(CreateClient(wallet, password));
   }
 
   @override
   void initState() {
     super.initState();
-    _LOG = LOG(tag);
-    LocalNotification.debugNotification('<[DEBUG]> chatPageInitState', '${DateTime.now().toLocal().toString()}');
-    whenUiFirstShowing();
-    WidgetsBinding.instance.addObserver(this);
-    clientBloc = BlocProvider.of<ClientBloc>(context);
-    authHelper.setPageActive(PageAction.init, widget.activePage.isCurrPageActive);
-    widget.activePage.addOnCurrPageActive(onCurrPageActive);
-    timerAuth = TimerAuth(widget.activePage);
+
+    _walletBloc = BlocProvider.of<WalletsBloc>(context);
+    _walletBloc.add(LoadWallets());
+    _clientBloc = BlocProvider.of<NKNClientBloc>(context);
+    NKNClientCaller.clientBloc = _clientBloc;
+    _authBloc = BlocProvider.of<AuthBloc>(context);
+
+    _clientBloc.aBloc = _authBloc;
   }
 
   @override
@@ -148,10 +84,54 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
   @override
   void dispose() {
     RouteUtils.routeObserver.unsubscribe(this);
-    WidgetsBinding.instance.removeObserver(this);
-    DChatAuthenticationHelper.cancelAuthentication();
-    widget.activePage.removeOnCurrPageActive(onCurrPageActive);
     super.dispose();
+  }
+
+
+  void onGetPassword(WalletSchema wallet, String password) async{
+    Global.debugLog('chat.dart onGetPassword');
+    TimerAuth.instance.enableAuth();
+    _authBloc.add(AuthSuccessEvent());
+    _clientBloc.add(NKNCreateClientEvent(wallet, password));
+  }
+
+  void _clickConnect() async{
+    WalletSchema wallet = await DChatAuthenticationHelper.loadUserDefaultWallet();
+    if (wallet == null){
+      showToast('Error Loading wallet');
+      return;
+    }
+    var password = await wallet.getPassword();
+    if (password != null) {
+      try {
+        var w = await wallet.exportWallet(password);
+        if (w['address'] == wallet.address) {
+          onGetPassword(wallet, password);
+        } else {
+          showToast(NL10ns.of(context).tip_password_error);
+        }
+      } catch (e) {
+        if (Platform.isAndroid){
+          Global.debugLog('exportWallet E:'+e.toString());
+          /// Android DecryptFail present this
+          if (e.toString().contains('Failed to get string encoded:')){
+            showToast(NL10ns.of(context).tip_password_error);
+          }
+          else if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+            showToast(NL10ns.of(context).tip_password_error);
+          }
+        }
+        if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+          showToast(NL10ns.of(context).tip_password_error);
+        }
+      }
+    }
+  }
+
+  _delayAuth(){
+    Timer(Duration(milliseconds: 200), () async {
+      _clickConnect();
+    });
   }
 
   @override
@@ -161,59 +141,67 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
       builder: (context, state) {
         if (state is WalletsLoaded) {
           if (state.wallets.length > 0) {
-            return BlocBuilder<ClientBloc, ClientState>(
-              builder: (context, clientState) {
-                if (clientState is NoConnect) {
-                  noConnPageShowing = true;
-                  homePageShowing = false;
-                  timerAuth.onNoConnection();
-                  DChatAuthenticationHelper.loadDChatUseWalletByState(state, onGetWallet);
-                  return NoConnectScreen(() {
-                    authHelper.prepareConnect(onGetPassword);
-                  });
-                  // return _testOnConnectButton();
-                } else {
-                  noConnPageShowing = false;
-                  // authHelper.wallet = null;
-                  if (!homePageShowing) {
-                    timerAuth.onHomePageFirstShow(context);
-                  }
-                  homePageShowing = true;
-                  return ChatHome(timerAuth);
+            return BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, authState) {
+                if (authState is AuthToUserState){
+                  print('chat AuthState'+authState.currentUser.toString());
+                  return BlocBuilder<NKNClientBloc, NKNClientState>(
+                    builder: (context, clientState) {
+                      if (state is NKNNoConnectState){
+                        return NoConnectScreen(() {
+                          authHelper.wallet = null;
+                          _clickConnect();
+                        });
+                      }
+                      return ChatHome(TimerAuth.instance);
+                    },
+                  );
                 }
+                if (authState is AuthedSuccessState){
+                  if (authState.success == false){
+                    print('on No Auth');
+                    if (firstShowAuth == false){
+                      _delayAuth();
+                      firstShowAuth = true;
+                    }
+                    return NoConnectScreen(() {
+                      _clickConnect();
+                    });
+                  }
+                  if (authState.success == true){
+                    return BlocBuilder<NKNClientBloc, NKNClientState>(
+                      builder: (context, clientState) {
+                        if (state is NKNNoConnectState){
+                          return NoConnectScreen(() {
+                            authHelper.wallet = null;
+                            _clickConnect();
+                          });
+                        }
+                        return ChatHome(TimerAuth.instance);
+                      },
+                    );
+                  }
+                }
+                return NoConnectScreen(() {
+                  authHelper.wallet = null;
+                  _clickConnect();
+                });
               },
             );
-          } else {
-            noConnPageShowing = false;
-            homePageShowing = false;
-            // authHelper.wallet = null;
-            timerAuth.onNoConnection();
-            return NoWalletAccount(timerAuth);
           }
+          else{
+            print('Wallet Length is '+state.wallets.length.toString());
+          }
+          authHelper.wallet = null;
+          return NoWalletAccount(TimerAuth.instance);
         }
-        noConnPageShowing = false;
-        homePageShowing = false;
-        // authHelper.wallet = null;
-        timerAuth.onNoConnection();
-        return Container();
+        authHelper.wallet = null;
+        return NoWalletAccount(TimerAuth.instance);
       },
     );
   }
 
-  // Widget _testOnConnectButton(){
-  //   double leftM = MediaQuery.of(context).size.width/4;
-  //   double topM = MediaQuery.of(context).size.height/4;
-  //   return GestureDetector(
-  //     child: Container(
-  //       color: Colors.purple,
-  //       margin: EdgeInsets.only(left: leftM,top: topM),
-  //       width: MediaQuery.of(context).size.width/2,
-  //       child: Text('连接测试按钮'),
-  //     ),
-  //     onTap: onGetPassword,
-  //   );
-  // }
-
   @override
   bool get wantKeepAlive => true;
 }
+

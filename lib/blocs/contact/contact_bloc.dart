@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
-import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
+import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/schemas/contact.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
-class ContactBloc extends Bloc<ContactEvent, ContactState> with AccountDependsBloc {
+class ContactBloc extends Bloc<ContactEvent, ContactState> {
   @override
   ContactState get initialState => ContactNotLoad();
 
@@ -26,7 +27,9 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> with AccountDependsBl
     if (state is ContactLoaded) {
       list = List.from((state as ContactLoaded).contacts);
     }
-    var contactsRes = await (await db).rawQuery('SELECT * FROM ${ContactSchema.tableName} WHERE address IN (${address.map((x) => '\'$x\'').join(',')})');
+    Database cdb = await NKNDataManager.instance.currentDatabase();
+    var contactsRes = await cdb.rawQuery('SELECT * FROM ${ContactSchema.tableName} WHERE address IN (${address.map((x) => '\'$x\'').join(',')})');
+
     List<ContactSchema> contacts = contactsRes.map((x) => ContactSchema.parseEntity(x)).toList();
     for (var i = 0, length = contactsRes.length; i < length; i++) {
       var item = contacts[i];

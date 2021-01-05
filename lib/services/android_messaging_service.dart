@@ -4,11 +4,16 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
-import 'package:nmobile/blocs/client/client_bloc.dart';
+import 'package:nmobile/blocs/client/client_event.dart';
+import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
+import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/model/db/contact_repo.dart';
+import 'package:nmobile/model/db/nkn_data_manager.dart';
+import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/utils/log_tag.dart';
 
@@ -42,24 +47,27 @@ class AndroidMessagingService {
   }
 }
 
-ClientBloc _clientBloc;
+NKNClientBloc _clientBloc;
 
 Future<void> _onNativeReady() async {
   _LOG.i('_onNativeReady');
-  _clientBloc ??= ClientBloc(chatBloc: ChatBloc(contactBloc: ContactBloc()));
+
+  ChatBloc chatBloc = ChatBloc(contactBloc: ContactBloc());
+  _clientBloc ??= NKNClientBloc(cBloc: chatBloc);
 
   await Global.initData();
   final walletBloc = WalletsBloc();
   walletBloc.add(LoadWallets());
-  DChatAuthenticationHelper.loadDChatUseWallet(walletBloc, (wallet) {
-    DChatAuthenticationHelper.getPassword4BackgroundFetch(
-      wallet: wallet,
-      verifyProtectionEnabled: false,
-      onGetPassword: (wallet, password) {
-        _clientBloc.add(CreateClient(wallet, password));
-      },
-    );
-  });
+
+  WalletSchema wallet = await DChatAuthenticationHelper.loadUserDefaultWallet();
+  DChatAuthenticationHelper.getPassword4BackgroundFetch(
+    wallet: wallet,
+    verifyProtectionEnabled: false,
+    onGetPassword: (wallet, password) {
+      Global.debugLog('android_messaging_service.dart onGetPassword');
+      _clientBloc.add(NKNCreateClientEvent(wallet, password));
+    },
+  );
 }
 
 void _realCallback(Map eventAndData) async {
@@ -70,8 +78,8 @@ void _realCallback(Map eventAndData) async {
       await _onNativeReady();
       break;
     case 'destroy':
-      _clientBloc.account.client.disConnect();
-      _clientBloc.account.dbHolder.close();
+      NKNClientCaller.disConnect();
+      NKNDataManager().close();
       _clientBloc.close();
       break;
     default:
