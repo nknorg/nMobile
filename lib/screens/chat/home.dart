@@ -4,8 +4,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:nmobile/blocs/account_depends_bloc.dart';
-import 'package:nmobile/blocs/client/client_bloc.dart';
+import 'package:nmobile/blocs/chat/auth_bloc.dart';
+import 'package:nmobile/blocs/chat/auth_state.dart';
+import 'package:nmobile/blocs/client/client_state.dart';
+import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
+import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/create_input_group.dart';
@@ -13,6 +16,7 @@ import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
@@ -36,109 +40,114 @@ class ChatHome extends StatefulWidget {
   _ChatHomeState createState() => _ChatHomeState();
 }
 
-class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin, AccountDependsBloc, Tag {
+class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin, Tag {
   GlobalKey _floatingActionKey = GlobalKey();
 
-//  TabController _tabController;
+  ContactSchema currentUser;
 
   @override
   void initState() {
     super.initState();
-    widget.timerAuth.addOnStateChanged(onStateChanged);
-//    _tabController = TabController(length: 2, vsync: this);
   }
 
-  void onStateChanged() {
-    setState(() {});
-  }
 
   @override
   void dispose() {
-    widget.timerAuth.removeOnStateChanged(onStateChanged);
     super.dispose();
+  }
+
+  Widget _blocHeader(){
+    return Header(
+      titleChild: GestureDetector(
+        onTap: () async {
+          if (TimerAuth.authed) {
+            ContactSchema currentUser = await ContactSchema.fetchCurrentUser();
+            Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: currentUser);
+          } else {
+            widget.timerAuth.ensureVerifyPassword(context);
+          }
+        },
+        child: Container(
+          margin: EdgeInsets.only(left: 12),
+          child: Flex(
+            direction: Axis.horizontal,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                margin: EdgeInsets.only(right: 12),
+                child: BlocBuilder<AuthBloc, AuthState>(builder: (context, state){
+                  if (state is AuthToUserState){
+                    currentUser = state.currentUser;
+                  }
+                  if (currentUser != null){
+                    return CommonUI.avatarWidget(
+                      radiusSize: 24,
+                      contact: currentUser,
+                    );
+                  }
+                  return Container();
+                }),
+              ),
+              Expanded(
+                flex: 1,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    BlocBuilder<AuthBloc, AuthState>(builder: (context, state){
+                      if (currentUser != null){
+                        return Label(currentUser.name, type: LabelType.h3, dark: true);
+                      }
+                      return Container();
+                    }),
+                    BlocBuilder<NKNClientBloc, NKNClientState>(
+                      builder: (context, clientState) {
+                        if (clientState is NKNConnectedState) {
+                          return Label(NL10ns.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor);
+                        } else {
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: <Widget>[
+                              Label(NL10ns.of(context).connecting, type: LabelType.bodySmall, color: DefaultTheme.fontLightColor.withAlpha(200)),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 2, left: 4),
+                                child: SpinKitThreeBounce(
+                                  color: DefaultTheme.loadingColor,
+                                  size: 10,
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+      hasBack: false,
+      backgroundColor: DefaultTheme.primaryColor,
+      action: IconButton(
+        icon: loadAssetIconsImage('addbook', color: Colors.white, width: 24),
+        onPressed: () {
+          if (TimerAuth.authed) {
+            Global.debugLog('route to Contact 1');
+            Navigator.of(context).pushNamed(ContactHome.routeName);
+          } else {
+            widget.timerAuth.ensureVerifyPassword(context);
+          }
+        },
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-//    List<String> tabs = [NMobileLocalizations.of(context).chat_tab_messages, NMobileLocalizations.of(context).chat_tab_group];
     return Scaffold(
       backgroundColor: DefaultTheme.primaryColor,
-      appBar: Header(
-        titleChild: GestureDetector(
-          onTap: () async {
-            if (widget.timerAuth.enabled) {
-              accountUser.then((currentUser) {
-                Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: currentUser);
-              });
-            } else {
-              widget.timerAuth.ensureVerifyPassword(context);
-            }
-          },
-          child: Padding(
-            padding: EdgeInsets.only(left: 16),
-            child: Flex(
-              direction: Axis.horizontal,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Expanded(
-                  flex: 0,
-                  child: Container(
-                    padding: EdgeInsets.only(right: 16),
-                    alignment: Alignment.center,
-                    child: accountUserBuilder(onUser: (context, user) {
-                      return user.avatarWidget(db, backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(200), size: 28);
-                    }),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      accountUserBuilder(onUser: (context, user) {
-                        return Label(user.name, type: LabelType.h3, dark: true);
-                      }),
-                      BlocBuilder<ClientBloc, ClientState>(
-                        builder: (context, clientState) {
-                          if (clientState is Connected) {
-                            return Label(NL10ns.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor);
-                          } else {
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: <Widget>[
-                                Label(NL10ns.of(context).connecting, type: LabelType.bodySmall, color: DefaultTheme.fontLightColor.withAlpha(200)),
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 2, left: 4),
-                                  child: SpinKitThreeBounce(
-                                    color: DefaultTheme.loadingColor,
-                                    size: 10,
-                                  ),
-                                ),
-                              ],
-                            );
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                )
-              ],
-            ),
-          ),
-        ),
-        hasBack: false,
-        backgroundColor: DefaultTheme.primaryColor,
-        action: IconButton(
-          icon: loadAssetIconsImage('addbook', color: Colors.white, width: 24),
-          onPressed: () {
-            if (widget.timerAuth.enabled) {
-              Navigator.of(context).pushNamed(ContactHome.routeName);
-            } else {
-              widget.timerAuth.ensureVerifyPassword(context);
-            }
-          },
-        ),
-      ),
+      appBar: _blocHeader(),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: FloatingActionButton(
         key: _floatingActionKey,
@@ -146,7 +155,7 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
         backgroundColor: DefaultTheme.primaryColor,
         child: loadAssetIconsImage('pencil', width: 24),
         onPressed: () {
-          if (widget.timerAuth.enabled) {
+          if (TimerAuth.authed) {
             showBottomMenu();
           } else {
             widget.timerAuth.ensureVerifyPassword(context);
@@ -314,8 +323,8 @@ class _ChatHomeState extends State<ChatHome> with SingleTickerProviderStateMixin
                                       .showInputAddressDialog(title: NL10ns.of(context).new_whisper, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
                                   if (address != null) {
                                     ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
-                                    await contact.createContact(db);
-                                    var c = await ContactSchema.getContactByAddress(db, address);
+                                    await contact.insertContact();
+                                    var c = await ContactSchema.fetchContactByAddress(address);
                                     if (c != null) {
                                       Navigator.of(context)
                                           .pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: c));

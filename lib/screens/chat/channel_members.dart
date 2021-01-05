@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/blocs/nkn_client_caller.dart';
+import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/header/header.dart';
@@ -22,8 +23,6 @@ import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
-import 'package:nmobile/schemas/options.dart';
-import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
@@ -60,7 +59,7 @@ class MemberVo {
   });
 }
 
-class _ChannelMembersScreenState extends State<ChannelMembersScreen> with AccountDependsBloc {
+class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
   ScrollController _scrollController = ScrollController();
   List<MemberVo> _members = [];
   ChatBloc _chatBloc;
@@ -72,19 +71,18 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
   void initState() {
     super.initState();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
-    repoSub = SubscriberRepo(db);
-    repoBla = BlackListRepo(db);
+    repoSub = SubscriberRepo();
+    repoBla = BlackListRepo();
     _topicCount = widget.topic.numSubscribers;
     refreshMembers();
     uploadPermissionMeta();
   }
 
   uploadPermissionMeta() {
-    if (widget.topic.isPrivate && widget.topic.isOwner(accountPubkey)) {
+    if (widget.topic.isPrivate && widget.topic.isOwner(NKNClientCaller.currentChatId)) {
       GroupChatPrivateChannel.uploadPermissionMeta(
-        client: account.client,
         topicName: widget.topic.topic,
-        accountPubkey: account.client.pubkey,
+        accountPubkey: NKNClientCaller.pubKey,
         repoSub: repoSub,
         repoBlackL: repoBla,
       );
@@ -95,9 +93,8 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
     List<MemberVo> list = [];
     final subscribers = await repoSub.getByTopicExceptNone(widget.topic.topic);
     for (final sub in subscribers) {
-//      var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(sub.chatId));
-      final contactType = sub.chatId == accountChatId ? ContactType.me : ContactType.stranger;
-      final cta = await ContactSchema.getContactByAddress(db, sub.chatId) ?? ContactSchema(clientAddress: sub.chatId, type: contactType);
+      final contactType = sub.chatId == NKNClientCaller.currentChatId ? ContactType.me : ContactType.stranger;
+      final cta = await ContactSchema.fetchContactByAddress(sub.chatId) ?? ContactSchema(clientAddress: sub.chatId, type: contactType);
       list.add(MemberVo(
         name: cta.name,
         chatId: sub.chatId,
@@ -110,8 +107,8 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
     }
     final blackList = await repoBla.getByTopic(widget.topic.topic);
     for (final sub in blackList) {
-      final contactType = (sub.chatIdOrPubkey == accountChatId || sub.chatIdOrPubkey == accountPubkey) ? ContactType.me : ContactType.stranger;
-      final cta = await ContactSchema.getContactByAddress(db, sub.chatIdOrPubkey) ?? ContactSchema(clientAddress: sub.chatIdOrPubkey, type: contactType);
+      final contactType = (sub.chatIdOrPubkey == NKNClientCaller.currentChatId || sub.chatIdOrPubkey == NKNClientCaller.currentChatId) ? ContactType.me : ContactType.stranger;
+      final cta = await ContactSchema.fetchContactByAddress(sub.chatIdOrPubkey) ?? ContactSchema(clientAddress: sub.chatIdOrPubkey, type: contactType);
       list.add(MemberVo(
         name: cta.name,
         chatId: sub.chatIdOrPubkey,
@@ -136,7 +133,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
     if (_members.length > 0) {
       MemberVo owner = !widget.topic.isPrivate ? null : _members.firstWhere((c) => widget.topic.isOwner(c.chatId), orElse: () => null);
       if (owner != null) _members.remove(owner);
-      MemberVo me = _members.firstWhere((c) => c.chatId == accountChatId, orElse: () => null);
+      MemberVo me = _members.firstWhere((c) => c.chatId == NKNClientCaller.currentChatId, orElse: () => null);
       if (me != null) _members.remove(me);
       _members.sort((a, b) => (a.isBlack && b.isBlack || !a.isBlack && !b.isBlack) ? a.name.compareTo(b.name) : (!a.isBlack ? -1 : 1));
       if (me != null) _members.insert(0, me);
@@ -172,14 +169,13 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
             padding: EdgeInsets.only(bottom: 20.h, left: 16.w, right: 16.w),
             child: Row(
               children: [
-                TopicSchema.avatarWidget(
-                  topicName: widget.topic.topic,
-//                      backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
-                  size: 48,
-//                      fontColor: DefaultTheme.fontLightColor,
-                  avatar: widget.topic.avatarUri == null ? null : File(widget.topic.avatarUri),
-                  options: widget.topic.options ?? OptionsSchema.random(themeId: widget.topic.themeId),
-                ).pad(r: 16),
+                Container(
+                  margin: EdgeInsets.only(right: 12),
+                  child: CommonUI.avatarWidget(
+                    radiusSize: 48,
+                    topic: widget.topic,
+                  ),
+                ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -249,14 +245,13 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            member.contact
-                .avatarWidget(
-                  db,
-                  size: 24,
-                  backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
-                )
-                .pad(l: 16, r: 16)
-                .center,
+            Container(
+              padding: EdgeInsets.only(left: 16,right: 16),
+              child: CommonUI.avatarWidget(
+                  radiusSize: 24,
+                  contact: member.contact,
+              ),
+            ),
             Expanded(
               child: Container(
                 decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6, color: Colours.light_e9))),
@@ -292,20 +287,20 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
     String option;
     if (widget.topic.type == TopicType.private) {
       if (widget.topic.isOwner(member.chatId /*.toPubkey*/)) {
-        if (member.chatId == accountChatId) {
+        if (member.chatId == NKNClientCaller.currentChatId) {
           option = '(${NL10ns.of(context).you}, ${NL10ns.of(context).owner})';
         } else {
           option = '(${NL10ns.of(context).owner})';
         }
-      } else if (member.chatId == accountChatId) {
+      } else if (member.chatId == NKNClientCaller.currentChatId) {
         option = '(${NL10ns.of(context).you})';
-      } else if (widget.topic.isOwner(accountPubkey)) {
+      } else if (widget.topic.isOwner(NKNClientCaller.pubKey)) {
         // Me is owner, but current user is not me.
         option = member.isBlack
             ? '(${NL10ns.of(context).rejected})'
             : (member.subscribed ? null /*'(${NL10ns.of(context).accepted})'*/ : '(${NL10ns.of(context).invitation_sent})');
       }
-    } else if (member.chatId == accountChatId) {
+    } else if (member.chatId == NKNClientCaller.currentChatId) {
       option = '(${NL10ns.of(context).you})';
     }
     return [
@@ -335,11 +330,10 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
 
   List<Widget> getToolBtns(MemberVo member) {
     List<Widget> toolBtns = <Widget>[];
-    if (widget.topic.isPrivate && widget.topic.isOwner(accountPubkey) && member.chatId != accountChatId) {
+    if (widget.topic.isPrivate && widget.topic.isOwner(NKNClientCaller.pubKey) && member.chatId != NKNClientCaller.currentChatId) {
       acceptAction() async {
         if (member.isBlack) {
           await GroupChatHelper.moveSubscriberToWhiteList(
-              account: account,
               topic: widget.topic,
               chatId: member.chatId,
               callback: () {
@@ -352,7 +346,6 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
       rejectAction() async {
         if (!member.isBlack) {
           await GroupChatHelper.moveSubscriberToBlackList(
-              account: account,
               topic: widget.topic,
               chatId: member.chatId,
               callback: () {
@@ -385,26 +378,18 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> with Accoun
 
     final topic = widget.topic;
     // Anyone can invite anyone.
-    var sendMsg = MessageSchema.fromSendData(from: accountChatId, content: topic.topic, to: address, contentType: ContentType.ChannelInvitation);
+    var sendMsg = MessageSchema.fromSendData(from: NKNClientCaller.currentChatId, content: topic.topic, to: address, contentType: ContentType.ChannelInvitation);
     sendMsg.isOutbound = true;
-    _chatBloc.add(SendMessage(sendMsg));
+    _chatBloc.add(SendMessageEvent(sendMsg));
     showToast(NL10ns.of(context).invitation_sent);
 
-    if (topic.isPrivate && topic.isOwner(accountPubkey) && address != accountChatId) {
+    if (topic.isPrivate && topic.isOwner(NKNClientCaller.pubKey) && address != NKNClientCaller.currentChatId) {
       await GroupChatHelper.moveSubscriberToWhiteList(
-          account: account,
           topic: topic,
           chatId: address,
           callback: () {
             refreshMembers();
           });
     }
-
-    // This message will only be sent when yourself subscribe.
-//    var sendMsg1 = MessageSchema.fromSendData(
-//        from: accountChatId, topic: widget.arguments.topic, contentType: ContentType.eventSubscribe, content: 'Accepting user $address');
-//    sendMsg1.isOutbound = true;
-
-//      _chatBloc.add(SendMessage(sendMsg1));
   }
 }

@@ -10,6 +10,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:nmobile/blocs/global/global_bloc.dart';
 import 'package:nmobile/blocs/global/global_event.dart';
 import 'package:nmobile/blocs/global/global_state.dart';
+import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/header/header.dart';
@@ -17,9 +18,7 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/select_list/select_list_item.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/local_storage.dart';
-import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
@@ -40,7 +39,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAliveClientMixin {
   final LocalStorage _localStorage = LocalStorage();
-  final SecureStorage _secureStorage = SecureStorage();
   GlobalBloc _globalBloc;
   StreamSubscription _globalBlocSubs;
   List<SelectListItem> _languageList;
@@ -71,11 +69,11 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
   }
 
   initAsync() async {
-    final _localAuth = await LocalAuthenticationService.instance;
-    _authSelected = _localAuth.isProtectionEnabled;
-    if (_localAuth.authType == BiometricType.face) {
+    _authSelected = await LocalAuthenticationService.instance.protectionStatus();
+    BiometricType authType = await LocalAuthenticationService.instance.getAuthType();
+    if (authType == BiometricType.face) {
       _authTypeString = NL10ns.of(Global.appContext).face_id;
-    } else if (_localAuth.authType == BiometricType.fingerprint) {
+    } else if (authType == BiometricType.fingerprint) {
       _authTypeString = NL10ns.of(Global.appContext).touch_id;
     }
     setState(() {});
@@ -532,30 +530,40 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
   @override
   bool get wantKeepAlive => true;
 
+  int target = 1;
+
   changeAuthAction(bool value) async {
     var wallet = await WalletSchema.getWallet();
-    if (wallet == null) return;
+    if (wallet == null) {
+      CommonUI.showAlertMessage(context, '没有找到钱包信息,退出重新导入');
+      return;
+    }
     var password = await BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NL10ns.of(Global.appContext).verify_wallet_password);
 
-    String testCode = wallet.address;
-
-    // _secureStorage.set('${SecureStorage.PASSWORDS_KEY}:$address', password);
-    // _secureStorage.set('${SecureStorage.NKN_KEYSTORES_KEY}:${wallet.address}', keystore)
     if (password != null) {
       try {
         var w = await wallet.exportWallet(password);
         _localStorage.set('${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}', value);
-        final _localAuth = await LocalAuthenticationService.instance;
-        _localAuth.isProtectionEnabled = value;
         setState(() {
           _authSelected = value;
         });
       } catch (e) {
-        showToast('Ee'+e.toString());
+        print("changeAuthActionE"+e.toString());
         if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
           showToast(NL10ns.of(context).tip_password_error);
         }
+        else{
+          CommonUI.showChooseAlert(context, '发生严重错误', e.toString().substring(0,200)+'\n'+'点击确定清除缓存重新导入账户', '确定', '取消', ()=>_shutDown());
+        }
       }
     }
+  }
+
+  _shutDown(){
+    _localStorage.clear();
+    clearDbFile(Global.applicationRootDirectory);
+    Timer(Duration(milliseconds: 200), () async {
+      exit(0);
+    });
   }
 }

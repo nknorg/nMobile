@@ -5,19 +5,16 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
-import 'package:nmobile/components/label.dart';
+import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
-import 'package:nmobile/model/data/dchat_account.dart';
-import 'package:nmobile/plugins/nkn_client.dart';
+import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/options.dart';
-import 'package:nmobile/utils/log_tag.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:path/path.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class ContactType {
@@ -121,22 +118,12 @@ class ContactSchema {
   }
 
   Future<SourceProfile> getSourceProfile(Future<Database> db) async {
-    var res = await getContactByAddress(db, clientAddress);
+    var res = await fetchContactByAddress(clientAddress);
 
     if (res.sourceProfile != null) {
       return res.sourceProfile;
     }
     return null;
-  }
-
-  OptionsSchema getOptions(FutureOr<Database> db) {
-    int random = Random().nextInt(DefaultTheme.headerBackgroundColor.length);
-    int backgroundColor = DefaultTheme.headerBackgroundColor[random];
-    int color = DefaultTheme.headerColor[random];
-    if (options == null || options.backgroundColor == null || options.color == null) {
-      setOptionColor(db, backgroundColor, color);
-    }
-    return options;
   }
 
   String get avatarFilePath {
@@ -151,84 +138,6 @@ class ContactSchema {
     }
   }
 
-  Widget avatarWidget(
-    FutureOr<Database> db, {
-    Color backgroundColor,
-    double size,
-    Color fontColor,
-    Widget bottomRight,
-    GestureTapCallback onTap,
-  }) {
-    Widget view;
-
-    LabelType fontType = LabelType.h4;
-    if (size > 60) {
-      fontType = LabelType.h1;
-    } else if (size > 50) {
-      fontType = LabelType.h2;
-    } else if (size > 40) {
-      fontType = LabelType.h3;
-    } else if (size > 30) {
-      fontType = LabelType.h4;
-    }
-
-    if (avatar == null || avatar.path == null) {
-      if (sourceProfile?.avatar != null) {
-        view = CircleAvatar(
-          child: Align(
-            alignment: Alignment.bottomRight,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 3, right: 1),
-              child: bottomRight,
-            ),
-          ),
-          radius: size,
-          backgroundImage: FileImage(sourceProfile.avatar),
-        );
-      } else {
-        var wid = <Widget>[
-          CircleAvatar(
-            radius: size,
-            backgroundColor: Color(getOptions(db).backgroundColor),
-            child: Label(
-              name.length > 2 ? name.substring(0, 2).toUpperCase() : name,
-              type: fontType,
-              color: Color(getOptions(db).color),
-            ),
-          ),
-        ];
-
-        if (bottomRight != null) {
-          wid.add(
-            Positioned(
-              bottom: 3,
-              right: 1,
-              child: bottomRight,
-            ),
-          );
-        }
-
-        view = Stack(
-          children: wid,
-        );
-      }
-    } else {
-      view = CircleAvatar(
-        child: Align(
-          alignment: Alignment.bottomRight,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 3, right: 1),
-            child: bottomRight,
-          ),
-        ),
-        radius: size,
-        backgroundImage: FileImage(avatar),
-      );
-    }
-
-    return view;
-  }
-
   Future<String> toRequestData(String requestType) async {
     // Saved other's contact data.
     Map data = {
@@ -241,8 +150,9 @@ class ContactSchema {
     return jsonEncode(data);
   }
 
-  Future<String> toResponseData(Future<Database> db, String myClientAddr, String requestType) async {
-    final me = await getContactByAddress(db, myClientAddr);
+  Future<String> toResponseData(String requestType) async {
+    String myChatId = NKNClientCaller.pubKey;
+    final me = await fetchContactByAddress(myChatId);
     Map data = {
       'id': uuid.v4(),
       'contentType': ContentType.contact,
@@ -345,13 +255,15 @@ class ContactSchema {
     await db.execute('CREATE INDEX index_updated_time ON $tableName (updated_time)');
   }
 
-  static Future<int> setTop(Future<Database> db, String chatIdOther, bool top) async {
-    // Returns the number of changes made
-    return await (await db).update(tableName, {'is_top': top ? 1 : 0}, where: 'address = ?', whereArgs: [chatIdOther]);
+  static Future<int> setTop(String chatIdOther, bool top) async {
+    Database cdb = await NKNDataManager().currentDatabase();
+
+    return await cdb.update(tableName, {'is_top': top ? 1 : 0}, where: 'address = ?', whereArgs: [chatIdOther]);
   }
 
-  static Future<bool> getIsTop(Future<Database> db, String chatIdOther) async {
-    var res = await (await db).query(tableName, columns: ['is_top'], where: 'address = ?', whereArgs: [chatIdOther]);
+  static Future<bool> getIsTop(String chatIdOther) async {
+    Database cdb = await NKNDataManager().currentDatabase();
+    var res = await cdb.query(tableName, columns: ['is_top'], where: 'address = ?', whereArgs: [chatIdOther]);
     return res.length > 0 && res[0]['is_top'] as int == 1;
   }
 
@@ -392,14 +304,10 @@ class ContactSchema {
       profileVersion: e['profile_version'],
       profileExpiresAt: e['profile_expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['profile_expires_at']) : DateTime.now(),
       deviceToken: e['device_token'],
-      // notificationOpen: e['notification_open']=='1'?true:false
     );
     if (e['notification_open'] == '1' || e['notification_open'].toString() == 'true' || e['notification_open'] == 1){
       contact.notificationOpen = true;
-
-      print("NOtification Open is"+contact.notificationOpen.toString());
     }
-
 
     if (e['data'] != null) {
       try {
@@ -429,22 +337,14 @@ class ContactSchema {
     return contact;
   }
 
-  Future<int> insert(Future<Database> db, String accountPubkey) async {
-    try {
-      int id = await (await db).insert(ContactSchema.tableName, toEntity(accountPubkey));
-      return id;
-    } catch (e) {
-      debugPrint(e);
-      debugPrintStack();
-    }
-  }
 
-  Future<int> createContact(Future<Database> db) async {
+  Future <int> insertContact() async{
+    Database cdb = await NKNDataManager().currentDatabase();
     DateTime now = DateTime.now();
     createdTime = now;
     updatedTime = now;
     try {
-      var countQuery = await (await db).query(
+      var countQuery = await cdb.query(
         ContactSchema.tableName,
         columns: ['*'],
         where: 'address = ?',
@@ -457,32 +357,33 @@ class ContactSchema {
         if (nknWalletAddress == null || nknWalletAddress.isEmpty) {
           nknWalletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
         }
-        return await (await db).insert(ContactSchema.tableName, toEntity(clientAddress));
+        return await cdb.insert(ContactSchema.tableName, toEntity(clientAddress));
       }
     } catch (e) {
-      NLog.d(e);
+      return 0;
     }
   }
 
-  Future requestProfile(NknClientProxy client, {String type = RequestType.header}) async {
+  Future requestProfile({String type = RequestType.header}) async {
     try {
-      await client.sendText([clientAddress], await toRequestData(type));
+      await NKNClientCaller.sendText([clientAddress], await toRequestData(type));
     } catch (e) {
       debugPrint(e?.toString());
     }
   }
 
-  Future responseProfile(DChatAccount account, String myClientAddr, {String type = RequestType.header}) async {
+  Future responseProfile({String type = RequestType.header}) async {
     try {
-      await account.client.sendText([clientAddress], await toResponseData(account.dbHolder.db, myClientAddr, type));
+      await NKNClientCaller.sendText([clientAddress], await toResponseData(type));
     } catch (e) {
       debugPrint(e?.toString());
     }
   }
 
-  static Future<List<ContactSchema>> getContacts(Future<Database> db, {int limit = 20, int skip = 0}) async {
+  static Future<List<ContactSchema>> getContacts({int limit = 20, int skip = 0}) async {
     try {
-      var res = await (await db).query(
+      Database cdb = await NKNDataManager().currentDatabase();
+      var res = await cdb.query(
         ContactSchema.tableName,
         columns: ['*'],
         orderBy: 'updated_time desc',
@@ -501,9 +402,10 @@ class ContactSchema {
     }
   }
 
-  static Future<List<ContactSchema>> getStrangerContacts(Future<Database> db, {int limit = 20, int skip = 0}) async {
+  static Future<List<ContactSchema>> getStrangerContacts({int limit = 20, int skip = 0}) async {
     try {
-      var res = await (await db).query(
+      Database cdb = await NKNDataManager().currentDatabase();
+      var res = await cdb.query(
         ContactSchema.tableName,
         columns: ['*'],
         orderBy: 'updated_time desc',
@@ -521,23 +423,39 @@ class ContactSchema {
     }
   }
 
-  static Future<ContactSchema> getContactByAddress(Future<Database> db, String clientAddress) async {
-    try {
-      var res = await (await db).query(
-        ContactSchema.tableName,
-        columns: ['*'],
-        where: 'address = ?',
-        whereArgs: [clientAddress],
-      );
-      return ContactSchema.parseEntity(res?.first);
-    } catch (e) {
-      LOG('ContactSchema@static').e('getContactByAddress', e);
+  static Future<ContactSchema> fetchContactByAddress(String clientAddress) async{
+    Database cdb = await NKNDataManager().currentDatabase();
+    var res = await cdb.query(
+      ContactSchema.tableName,
+      columns: ['*'],
+      where: 'address = ?',
+      whereArgs: [clientAddress],
+    );
+    if (res.length > 0){
+      return ContactSchema.parseEntity(res.first);
     }
+    return null;
   }
 
-  Future setProfile(Future<Database> db, String accountPubkey, Map<String, dynamic> sourceData) async {
+  static Future<ContactSchema> fetchCurrentUser() async{
+    Database cdb = await NKNDataManager().currentDatabase();
+    var res = await cdb.query(
+      ContactSchema.tableName,
+      columns: ['*'],
+      where: 'address = ?',
+      whereArgs: [NKNClientCaller.currentChatId],
+    );
+    if (res.length > 0){
+      return ContactSchema.parseEntity(res.first);
+    }
+    return null;
+  }
+
+  Future setProfile(Map<String, dynamic> sourceData) async {
     try {
-      var res = await (await db).query(
+      Database cdb = await NKNDataManager().currentDatabase();
+      String pubKey = NKNClientCaller.pubKey;
+      var res = await cdb.query(
         ContactSchema.tableName,
         columns: ['*'],
         where: 'id = ?',
@@ -558,19 +476,19 @@ class ContactSchema {
               } else {
                 avatarData = content['avatar']['data'].toString().split(",")[1];
               }
-              String path = getContactCachePath(accountPubkey);
+              String path = getContactCachePath(pubKey);
               var extension = 'jpg';
               var bytes = base64Decode(avatarData);
               String name = hexEncode(md5.convert(bytes).bytes);
               File avatar = File(join(path, name + '.$extension'));
               avatar.writeAsBytesSync(bytes);
-              data['avatar'] = getLocalContactPath(accountPubkey, avatar.path);
+              data['avatar'] = getLocalContactPath(pubKey, avatar.path);
             }
           } else {
             data.remove('avatar');
           }
 
-          var count = await (await db).update(
+          var count = await cdb.update(
             ContactSchema.tableName,
             {
               'data': jsonEncode(data),
@@ -589,7 +507,9 @@ class ContactSchema {
     }
   }
 
-  Future<bool> setAvatar(Future<Database> db, String accountPubkey, File image) async {
+  Future<bool> setAvatar(String accountPubkey, File image) async {
+    Database cdb = await NKNDataManager().currentDatabase();
+
     avatar = image;
     Map<String, dynamic> data = {
       'avatar': getLocalContactPath(accountPubkey, image.path),
@@ -598,14 +518,20 @@ class ContactSchema {
     };
 
     if (type != ContactType.me) {
-      type = ContactType.friend;
+      if (type == ContactType.friend){
+        type = ContactType.friend;
+      }
+      else{
+        type = ContactType.stranger;
+      }
       data['type'] = type;
-    } else {
+    }
+    else {
       profileVersion = uuid.v4();
       data['profile_version'] = profileVersion;
     }
     try {
-      var res = await (await db).query(
+      var res = await cdb.query(
         ContactSchema.tableName,
         columns: ['*'],
         where: 'id = ?',
@@ -619,7 +545,7 @@ class ContactSchema {
           file.delete();
         }
       }
-      var count = await (await db).update(
+      var count = await cdb.update(
         ContactSchema.tableName,
         data,
         where: 'id = ?',
@@ -632,7 +558,7 @@ class ContactSchema {
     }
   }
 
-  Future<bool> setName(Future<Database> db, String firstName) async {
+  Future<bool> setName(String firstName) async {
     Map<String, dynamic> data = {
       'first_name': firstName,
       'last_name': "",
@@ -641,7 +567,12 @@ class ContactSchema {
     };
     this.firstName = firstName;
     if (type != ContactType.me) {
-      type = ContactType.friend;
+      if (type == ContactType.friend){
+        type = ContactType.friend;
+      }
+      else{
+        type = ContactType.stranger;
+      }
       data['type'] = type;
     } else {
       profileVersion = uuid.v4();
@@ -649,7 +580,8 @@ class ContactSchema {
     }
 
     try {
-      var count = await (await db).update(
+      Database cdb = await NKNDataManager().currentDatabase();
+      var count = await cdb.update(
         ContactSchema.tableName,
         data,
         where: 'id = ?',
@@ -662,7 +594,7 @@ class ContactSchema {
     }
   }
 
-  Future<bool> setDeviceToken(Future<Database> db, String deviceToken) async {
+  Future<bool> setDeviceToken(String deviceToken) async {
     Map<String, dynamic> data = {
       'device_token': deviceToken,
       'type': type,
@@ -670,42 +602,51 @@ class ContactSchema {
     };
     this.deviceToken = deviceToken;
     if (type != ContactType.me) {
-      type = ContactType.friend;
+      if (type == ContactType.friend){
+        type = ContactType.friend;
+      }
+      else{
+        type = ContactType.stranger;
+      }
       data['type'] = type;
     } else {
       profileVersion = uuid.v4();
       data['profile_version'] = profileVersion;
     }
-    return updateContactDataById(db, data);
+    return updateContactDataById(data);
   }
 
-  Future<bool> setNotificationOpen(Future<Database> db, bool notificationOpen) async {
+  Future<bool> setNotificationOpen(bool notificationOpen) async {
     Map<String, dynamic> data = {
       'notification_open': notificationOpen?1:0,
       'type': type,
       'updated_time': DateTime.now().millisecondsSinceEpoch,
     };
     if (type != ContactType.me) {
-      type = ContactType.friend;
+      if (type == ContactType.friend){
+        type = ContactType.friend;
+      }
+      else{
+        type = ContactType.stranger;
+      }
       data['type'] = type;
     } else {
       profileVersion = uuid.v4();
       data['profile_version'] = profileVersion;
     }
     print("setNotification Open"+notificationOpen.toString());
-    return updateContactDataById(db, data);
+    return updateContactDataById(data);
   }
 
-  Future <bool> updateContactDataById(Future<Database> db,Map data) async{
+  Future <bool> updateContactDataById(Map data) async{
     try {
-      var count = await (await db).update(
+      Database cdb = await NKNDataManager().currentDatabase();
+      var count = await cdb.update(
         ContactSchema.tableName,
         data,
         where: 'id = ?',
         whereArgs: [id],
       );
-      print("notification Id is"+data.toString());
-      print("notification Id is"+clientAddress.toString());
       return count > 0;
     } catch (e) {
       debugPrint(e);
@@ -713,13 +654,18 @@ class ContactSchema {
     }
   }
 
-  Future<bool> setNotes(Future<Database> db, String notes) async {
+  Future<bool> setNotes(String notes) async {
     if (type != ContactType.me) {
-      type = ContactType.friend;
+      if (type == ContactType.friend){
+        type = ContactType.friend;
+      }
+      else{
+        type = ContactType.stranger;
+      }
     }
-
     try {
-      var res = await (await db).query(
+      Database cdb = await NKNDataManager().currentDatabase();
+      var res = await cdb.query(
         ContactSchema.tableName,
         columns: ['*'],
         where: 'id = ?',
@@ -733,7 +679,7 @@ class ContactSchema {
         data = {};
       }
       data['notes'] = notes;
-      var count = await (await db).update(
+      var count = await cdb.update(
         ContactSchema.tableName,
         {
           'data': jsonEncode(data),
@@ -751,47 +697,48 @@ class ContactSchema {
     }
   }
 
-  Future sendActionContactOptions(NknClientProxy client) async {
+  Future sendActionContactOptions() async {
     Map data = {
       'id': uuid.v4(),
       'contentType': ContentType.eventContactOptions,
       'content': {'deleteAfterSeconds': options?.deleteAfterSeconds},
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
-    await client.sendText([clientAddress], jsonEncode(data));
+    await NKNClientCaller.sendText([clientAddress], jsonEncode(data));
   }
 
-  Future<bool> setOptionColor(Future<Database> db, int backgroundColor, int color) async {
-    try {
-//      Database db = SqliteStorage(db: Global.currentChatDb).db;
-      if (options == null) options = OptionsSchema();
-      options.backgroundColor = backgroundColor;
-      options.color = color;
-
-      var count = await (await db).update(
-        ContactSchema.tableName,
-        {
-          'options': options.toJson(),
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'id = ?',
-        whereArgs: [id],
-      );
-      return count > 0;
-    } catch (e) {
-      debugPrint(e);
-      debugPrintStack();
+  Future<bool> setOptionColor() async {
+    int random = Random().nextInt(DefaultTheme.headerBackgroundColor.length);
+    int backgroundColor = DefaultTheme.headerBackgroundColor[random];
+    int color = DefaultTheme.headerColor[random];
+    Database cdb = await NKNDataManager().currentDatabase();
+    print('Update setOptionColor is'+clientAddress.toString());
+    if (options == null){
+      options = OptionsSchema(backgroundColor: backgroundColor,color: color);
     }
+    var count = await cdb.update(
+      ContactSchema.tableName,
+      {
+        'options': options.toJson(),
+        'updated_time': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'address = ?',
+      whereArgs: [clientAddress],
+    );
+    return count > 0;
   }
 
-  Future<bool> setBurnOptions(Future<Database> db, int seconds) async {
+  Future<bool> setBurnOptions(int seconds) async {
+    Database cdb = await NKNDataManager().currentDatabase();
     if (type != ContactType.me) {
-      type = ContactType.friend;
+      if (type == ContactType.friend){
+        type = ContactType.friend;
+      }
+      else{
+        type = ContactType.stranger;
+      }
     }
     int currentTimeStamp = DateTime.now().millisecondsSinceEpoch-5*1000;
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
-    // prefs.setInt('set_burn_update_time', currentTimeStamp);
-
     try {
       if (options == null) options = OptionsSchema();
       if (seconds != null && seconds > 0) {
@@ -800,7 +747,7 @@ class ContactSchema {
         options.deleteAfterSeconds = null;
       }
 
-      var count = await (await db).update(
+      var count = await cdb.update(
         ContactSchema.tableName,
         {
           'options': options.toJson(),
@@ -817,7 +764,8 @@ class ContactSchema {
     }
   }
 
-  Future<bool> setFriend(Future<Database> db, {bool isFriend = true}) async {
+  Future<bool> setFriend({bool isFriend = true}) async {
+    Database cdb = await NKNDataManager().currentDatabase();
     if (type != ContactType.me) {
       if (isFriend) {
         type = ContactType.friend;
@@ -825,11 +773,8 @@ class ContactSchema {
         type = ContactType.stranger;
       }
     }
-
     try {
-//      Database db = SqliteStorage(db: Global.currentChatDb).db;
-
-      var count = await (await db).update(
+      var count = await cdb.update(
         ContactSchema.tableName,
         {
           'type': type,
@@ -846,9 +791,9 @@ class ContactSchema {
     }
   }
 
-  Future<int> deleteContact(Future<Database> db) async {
-//    Database db = SqliteStorage(db: Global.currentChatDb).db;
-    var count = await (await db).delete(ContactSchema.tableName, where: 'id = ?', whereArgs: [id]);
+  Future<int> deleteContact() async {
+    Database cdb = await NKNDataManager().currentDatabase();
+    var count = await cdb.delete(ContactSchema.tableName, where: 'id = ?', whereArgs: [id]);
 
     return count;
   }

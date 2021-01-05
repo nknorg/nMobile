@@ -31,7 +31,7 @@ import 'package:nmobile/screens/wallet/wallet.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
 Map<String, WidgetBuilder> routes = {
-  AppScreen.routeName: (BuildContext context) => AppScreen(),
+  AppScreen.routeName: (BuildContext context) => AppScreen(0),
   HomeScreen.routeName: (BuildContext context) => HomeScreen(),
   ScannerScreen.routeName: (BuildContext context) => ScannerScreen(),
   SelectScreen.routeName: (BuildContext context, {arguments}) => SelectScreen(arguments: arguments),
@@ -47,7 +47,7 @@ Map<String, WidgetBuilder> routes = {
 //  NoConnectScreen.routeName: (BuildContext context) => NoConnectScreen(),
   ChatSinglePage.routeName: (BuildContext context, {arguments}) => ChatSinglePage(arguments: arguments),
   ChatGroupPage.routeName: (BuildContext context, {arguments}) => ChatGroupPage(arguments: arguments),
-  ContactScreen.routeName: (BuildContext context, {arguments}) => ContactScreen(arguments: arguments),
+  ContactScreen.routeName: (BuildContext context, {arguments}) => ContactScreen(contactInfo: arguments),
   ContactHome.routeName: (BuildContext context, {arguments}) => ContactHome(arguments: arguments),
   ChannelSettingsScreen.routeName: (BuildContext context, {arguments}) => ChannelSettingsScreen(arguments: arguments),
   ChannelMembersScreen.routeName: (BuildContext context, {arguments}) => ChannelMembersScreen(topic: arguments),

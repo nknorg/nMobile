@@ -37,12 +37,17 @@
 	<string></string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>AppleMusic permission is required for apple music usage.</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Calendars usage permission is required for read calendar.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>App will uses your camera to take photos and for barcode scanning.</string>
+	<string>App will use your camera to take photos and for barcode scanning.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Contacts permission is required for read contacts.</string>
 	<key>NSFaceIDUsageDescription</key>
@@ -58,7 +63,7 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Granting access will allow you to take and share photos with your nMobile contacts</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>App will let you choose which photos from your library to send.</string>
+	<string>App want to access your Photo Library to send image message or set avatar</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

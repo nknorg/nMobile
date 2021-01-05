@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:nmobile/blocs/account_depends_bloc.dart';
-import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/markdown.dart';
@@ -58,7 +58,7 @@ class ChatBubble extends StatefulWidget {
   _ChatBubbleState createState() => _ChatBubbleState();
 }
 
-class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
+class _ChatBubbleState extends State<ChatBubble> {
   GlobalKey popupMenuKey = GlobalKey();
   ChatBloc _chatBloc;
 
@@ -212,7 +212,7 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
     EdgeInsetsGeometry contentPadding = EdgeInsets.zero;
 
     if (widget.message.contentType == ContentType.ChannelInvitation) {
-      return getChannelInviteView(accountChatId);
+      return getChannelInviteView();
     } else if (widget.message.contentType == ContentType.eventSubscribe) {
       return Container();
     }
@@ -368,11 +368,10 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
                 },
                 child: Opacity(
                   opacity: !widget.hideHeader ? 1.0 : 0.0,
-                  child: widget.contact.avatarWidget(
-                    _chatBloc.db,
-                    size: 20,
-                    backgroundColor: DefaultTheme.primaryColor.withAlpha(25),
-                  ),
+                  child: CommonUI.avatarWidget(
+                    radiusSize: 24,
+                    contact: widget.contact,
+                  )
                 ),
               ),
             ));
@@ -436,7 +435,7 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
     }
   }
 
-  getChannelInviteView(String myChatId) {
+  getChannelInviteView() {
     Topic topicSpotName = Topic.spotName(name: widget.message.content);
     // TODO: get other name from contact.
     final inviteDesc = widget.style != BubbleStyle.Me
@@ -487,55 +486,65 @@ class _ChatBubbleState extends State<ChatBubble> with AccountDependsBloc {
   }
 
   _joinChannelByName(Topic theTopic,String topicName) {
+    EasyLoading.show();
     GroupChatHelper.subscribeTopic(
-        account: account,
         topicName: topicName,
         chatBloc: _chatBloc,
         callback: (success, e) async {
+          EasyLoading.dismiss();
           if (success) {
-            if (theTopic.isPrivate) {
-              // TODO: delay pull action at least 3 minutes.
-              GroupChatPrivateChannel.pullSubscribersPrivateChannel(
-                  client: account.client,
-                  topicName: theTopic.name,
-                  accountPubkey: accountPubkey,
-                  myChatId: accountChatId,
-                  repoSub: SubscriberRepo(db),
-                  repoBlackL: BlackListRepo(db),
-                  repoTopic: TopicRepo(db),
-                  membersBloc: BlocProvider.of<ChannelMembersBloc>(
-                      Global.appContext),
-                  needUploadMetaCallback: (topicName) {
-                    // The owner will not invite himself. In other words, current `account` is not the group owner.
-                  });
-            } else {
-              GroupChatPublicChannel.pullSubscribersPublicChannel(
-                client: account.client,
-                topicName: theTopic.name,
-                myChatId: accountChatId,
-                repoSub: SubscriberRepo(db),
-                repoTopic: TopicRepo(db),
-                membersBloc: BlocProvider.of<ChannelMembersBloc>(
-                    Global.appContext),
-              );
-            }
-            showToast(NL10ns
-                .of(context)
-                .accepted);
-            Navigator.pop(context);
+
           } else {
-            final topicExists = await TopicRepo(db).getTopicByName(
-                theTopic.topic);
-            if (topicExists.nonNull) {
-              showToast(NL10ns
-                  .of(context)
-                  .accepted_already);
-              Navigator.pop(context);
+            if (e.toString().contains('duplicate subscription exist in block')){
+              print('duplicate subscription exist in block');
+
             }
             else{
-              showToast('bubble create topic failed'+e.toString());
+              showToast(e.toString());
+              // showToast(NL10ns.of(context).something_went_wrong);
             }
           }
         });
-  }
+    }
+  //   GroupChatHelper.subscribeTopic(
+  //       topicName: topicName,
+  //       chatBloc: _chatBloc,
+  //       callback: (success, e) async {
+  //         if (success) {
+  //           if (theTopic.isPrivate) {
+  //             // TODO: delay pull action at least 3 minutes.
+  //             GroupChatPrivateChannel.pullSubscribersPrivateChannel(
+  //                 topicName: theTopic.name,
+  //                 membersBloc: BlocProvider.of<ChannelMembersBloc>(
+  //                     Global.appContext),
+  //                 needUploadMetaCallback: (topicName) {
+  //                   // The owner will not invite himself. In other words, current `account` is not the group owner.
+  //                 });
+  //           } else {
+  //             print('Here on bubble');
+  //             GroupChatPublicChannel.pullSubscribersPublicChannel(
+  //               topicName: theTopic.name,
+  //               membersBloc: BlocProvider.of<ChannelMembersBloc>(
+  //                   Global.appContext),
+  //             );
+  //           }
+  //           showToast(NL10ns
+  //               .of(context)
+  //               .accepted);
+  //           Navigator.pop(context);
+  //         } else {
+  //           final topicExists = await TopicRepo().getTopicByName(
+  //               theTopic.topic);
+  //           if (topicExists.nonNull) {
+  //             showToast(NL10ns
+  //                 .of(context)
+  //                 .accepted_already);
+  //             Navigator.pop(context);
+  //           }
+  //           else{
+  //             showToast('bubble create topic failed'+e.toString());
+  //           }
+  //         }
+  //       });
+  // }
 }

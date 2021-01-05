@@ -13,7 +13,6 @@ import 'package:nmobile/utils/log_tag.dart';
 /// @version 1.0, 09/07/2020
 void retryForceful({@required int delayMillis, int times = 8, int increase = 0, int from = 8,
   @required bool action(int times)}) async {
-  LOG('retryForceful').i('delayMillis: $delayMillis, times: $times, increase: $increase, from: $from');
   if (!action(times) && times > 1) {
     Timer(Duration(milliseconds: (times - 1) < from ? delayMillis + increase * (from - (times - 1)) : delayMillis),
             () {

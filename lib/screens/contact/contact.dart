@@ -1,18 +1,22 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nmobile/blocs/account_depends_bloc.dart';
+import 'package:nmobile/blocs/chat/auth_bloc.dart';
+import 'package:nmobile/blocs/chat/auth_event.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
-import 'package:nmobile/blocs/client/client_bloc.dart';
+import 'package:nmobile/blocs/client/client_event.dart';
+import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
+import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
+import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -21,13 +25,12 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/nkn_image_utils.dart';
-import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/model/data/dchat_account.dart';
+import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/router/custom_router.dart';
-import 'package:nmobile/router/route_observer.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
@@ -40,11 +43,10 @@ import 'package:nmobile/screens/contact/show_chat_id.dart';
 import 'package:nmobile/screens/contact/show_my_chat_address.dart';
 import 'package:nmobile/screens/view/burn_view_utils.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
+import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
-import 'package:nmobile/utils/log_tag.dart';
-import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -52,16 +54,16 @@ class ContactScreen extends StatefulWidget {
   static const String routeName = '/contact';
 
 
-  final ContactSchema arguments;
+  final ContactSchema contactInfo;
 
-  ContactScreen({this.arguments});
+  ContactScreen({this.contactInfo});
 
   @override
   _ContactScreenState createState() => _ContactScreenState();
 }
 
-class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountDependsBloc {
-  ChatBloc _chatBloc;
+class _ContactScreenState extends State<ContactScreen> {
+
   TextEditingController _firstNameController = TextEditingController();
   TextEditingController _notesController = TextEditingController();
   FocusNode _firstNameFocusNode = FocusNode();
@@ -73,51 +75,43 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
   bool _initBurnSelected = false;
   int _burnIndex = -1;
   int _initBurnIndex = -1;
-  SourceProfile _sourceProfile;
-  String nickName;
   WalletSchema _walletDefault;
 
   bool _acceptNotification = false;
 
+  ContactSchema currentUser;
+
+  String nickName;
+  String chatAddress;
+  String walletAddress;
+
   static const fcmGapString = '__FCMToken__:';
 
-  initAsync() async {
-    _sourceProfile = widget.arguments.sourceProfile;
-    setState(() {});
-
-    NLog.d('getAndroidXXXX');
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    RouteUtils.routeObserver.subscribe(this, ModalRoute.of(context));
-  }
+  AuthBloc _authBloc;
+  NKNClientBloc _clientBloc;
+  ChatBloc _chatBloc;
 
   @override
   void dispose() {
     _saveAndSendBurnMessage();
-    RouteUtils.routeObserver.unsubscribe(this);
     super.dispose();
   }
 
   @override
-  void didPop() {
-//    _setContactOptions();
-    NLog.d('didPop');
-    super.didPop();
-  }
-
-  @override
-  Future<void> initState() {
+  initState() {
     super.initState();
-    NLog.d('getAndroidXXXX');
 
+    _authBloc = BlocProvider.of<AuthBloc>(context);
+    _clientBloc = BlocProvider.of<NKNClientBloc>(context);
     _chatBloc = BlocProvider.of<ChatBloc>(context);
-    initAsync();
-    int burnAfterSeconds = widget.arguments.options?.deleteAfterSeconds;
 
-    if (widget.arguments.notificationOpen != null && widget.arguments.notificationOpen == true){
+    _clientBloc.aBloc = _authBloc;
+
+    currentUser = widget.contactInfo;
+
+    int burnAfterSeconds = currentUser?.options?.deleteAfterSeconds;
+
+    if (currentUser.notificationOpen != null && currentUser.notificationOpen == true){
       _acceptNotification = true;
     }
 
@@ -132,23 +126,26 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
     _initBurnSelected = _burnSelected;
     _initBurnIndex = _burnIndex;
 
-    nickName = widget.arguments.name;
-    _notesController.text = widget.arguments.notes;
+    this.nickName = currentUser.nickName;
+    this.chatAddress = currentUser.clientAddress;
+    this.walletAddress = currentUser.nknWalletAddress;
+
+    _notesController.text = currentUser.notes;
   }
 
   _saveAndSendBurnMessage() async {
     if (_burnSelected == _initBurnSelected && _burnIndex == _initBurnIndex) return;
     var _burnValue;
     if (!_burnSelected || _burnIndex < 0) {
-      await widget.arguments.setBurnOptions(db, null);
+      await currentUser.setBurnOptions(null);
       print("Close Send Burn Message");
     } else {
       _burnValue = BurnViewUtil.burnValueArray[_burnIndex].inSeconds;
-      await widget.arguments.setBurnOptions(db, _burnValue);
+      await currentUser.setBurnOptions(_burnValue);
     }
     var sendMsg = MessageSchema.fromSendData(
-      from: accountChatId,
-      to: widget.arguments.clientAddress,
+      from: NKNClientCaller.currentChatId,
+      to: currentUser.clientAddress,
       contentType: ContentType.eventContactOptions,
     );
     sendMsg.isOutbound = true;
@@ -156,15 +153,15 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
     sendMsg.content = sendMsg.toContentOptionData(0);
 
     print("Send Burn Message"+sendMsg.content.toString());
-    _chatBloc.add(SendMessage(sendMsg));
+    _chatBloc.add(SendMessageEvent(sendMsg));
   }
 
   _saveAndSendDeviceToken() async{
     String deviceToken = '';
     if (_acceptNotification == true){
-      deviceToken = await account.client.fetchDeviceToken();
+      deviceToken = await NKNClientCaller.fetchDeviceToken();
       if (Platform.isIOS){
-        String fcmToken = await account.client.fetchFCMToken();
+        String fcmToken = await NKNClientCaller.fetchFcmToken();
         if (fcmToken != null && fcmToken.length > 0){
           deviceToken = deviceToken+"$fcmGapString$fcmToken";
         }
@@ -177,23 +174,23 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
       deviceToken = '';
       showToast('关闭');
     }
-    widget.arguments.setNotificationOpen(db, _acceptNotification);
+    currentUser.setNotificationOpen(_acceptNotification);
 
     var sendMsg = MessageSchema.fromSendData(
-      from: accountChatId,
-      to: widget.arguments.clientAddress,
+      from: NKNClientCaller.currentChatId,
+      to: currentUser.clientAddress,
       contentType: ContentType.eventContactOptions,
       deviceToken: deviceToken,
     );
     sendMsg.isOutbound = true;
     sendMsg.content = sendMsg.toContentOptionData(1);
     sendMsg.deviceToken = deviceToken;
-    _chatBloc.add(SendMessage(sendMsg));
+    _chatBloc.add(SendMessageEvent(sendMsg));
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.arguments.isMe) {
+    if (currentUser.isMe) {
       return getSelfView();
     } else {
       return getPersonView();
@@ -248,11 +245,10 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
           onPressed: () async {
             _notesFormValid = (_notesFormKey.currentState as FormState).validate();
             if (_notesFormValid) {
-              var contact = widget.arguments;
-              contact.notes = _notesController.text.trim();
+              currentUser.notes = _notesController.text.trim();
 
-              await contact.setNotes(db, contact.notes);
-              _chatBloc.add(RefreshMessages());
+              await currentUser.setNotes(currentUser.notes);
+              _chatBloc.add(RefreshMessageListEvent());
               Navigator.of(context).pop();
             }
           },
@@ -300,13 +296,12 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
           onPressed: () async {
             _nameFormValid = (_nameFormKey.currentState as FormState).validate();
             if (_nameFormValid) {
-              var contact = widget.arguments;
-              contact.firstName = _firstNameController.text.trim();
-              await contact.setName(db, contact.firstName);
+              currentUser.firstName = _firstNameController.text.trim();
+              await currentUser.setName(currentUser.firstName);
               setState(() {
-                nickName = widget.arguments.name;
+                nickName = currentUser.name;
               });
-              _chatBloc.add(RefreshMessages());
+              _chatBloc.add(RefreshMessageListEvent());
               Navigator.of(context).pop();
             }
           },
@@ -320,16 +315,16 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
   }
 
   updatePic() async {
-    File savedImg = await getHeaderImage(accountPubkey);
+    File savedImg = await getHeaderImage(NKNClientCaller.pubKey);
     if (savedImg == null) return;
-    await widget.arguments.setAvatar(db, accountPubkey, savedImg);
+    await currentUser.setAvatar(NKNClientCaller.pubKey, savedImg);
     setState(() {
-      widget.arguments.avatar = savedImg;
+      currentUser.avatar = savedImg;
     });
   }
 
   showChangeSelfNameDialog() {
-    _firstNameController.text = widget.arguments.firstName;
+    _firstNameController.text = currentUser.firstName;
 
     BottomDialog.of(context).showBottomDialog(
       title: NL10ns.of(context).edit_nickname,
@@ -370,12 +365,11 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
           onPressed: () async {
             _nameFormValid = (_nameFormKey.currentState as FormState).validate();
             if (_nameFormValid) {
-              var contact = widget.arguments;
-              contact.firstName = _firstNameController.text.trim();
+              currentUser.firstName = _firstNameController.text.trim();
               setState(() {
-                nickName = widget.arguments.name;
+                nickName = currentUser.name;
               });
-              contact.setName(db, contact.firstName);
+              currentUser.setName(currentUser.firstName);
               Navigator.of(context).pop();
             }
           },
@@ -386,14 +380,14 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
 
   showQRDialog() {
     String qrContent;
-    if (widget.arguments.name.length == 6 && widget.arguments.clientAddress.startsWith(widget.arguments.name)) {
-      qrContent = widget.arguments.clientAddress;
+    if (currentUser.name.length == 6 && currentUser.clientAddress.startsWith(currentUser.name)) {
+      qrContent = currentUser.clientAddress;
     } else {
-      qrContent = widget.arguments.name + "@" + widget.arguments.clientAddress;
+      qrContent = currentUser.name + "@" + currentUser.clientAddress;
     }
 
     BottomDialog.of(context).showBottomDialog(
-      title: widget.arguments.name,
+      title: currentUser.name,
       height: 480,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -442,19 +436,19 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
           buttonColor: Colors.red,
           callback: (v) {
             if (v) {
-              widget.arguments.setFriend(db, isFriend: false);
+              currentUser.setFriend(isFriend: false);
               setState(() {});
             }
           }).show();
     } else {
-      widget.arguments.setFriend(db, isFriend: b);
+      currentUser.setFriend(isFriend: b);
       setState(() {});
       showToast(NL10ns.of(context).success);
     }
   }
 
   getStatusView() {
-    if (widget.arguments.type == ContactType.stranger) {
+    if (currentUser.type == ContactType.stranger) {
       return Container(
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
         margin: EdgeInsets.only(left: 16, right: 16, top: 10),
@@ -507,18 +501,11 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
     }
   }
 
-  String getName() {
-    String name =
-        '${_sourceProfile?.name != null && _sourceProfile.name.isNotEmpty && (widget.arguments.firstName != null && widget.arguments.firstName.isNotEmpty || widget.arguments.lastName != null && widget.arguments.lastName.isNotEmpty) ? '(${_sourceProfile?.name})' : ''}';
-    return widget.arguments.name;
-  }
-
   _selectWallets() {
     BottomDialog.of(context).showSelectWalletDialog(
       title: NL10ns.of(context).select_another_wallet,
       onlyNkn: true,
       callback: (wallet) async {
-        LOG('_selectWallets').w(wallet);
         Timer(Duration(milliseconds: 30), () {
           _changeAccount(wallet);
         });
@@ -526,50 +513,72 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
     );
   }
 
+  void onGetPassword(WalletSchema wallet, String password) async{
+    Global.debugLog('contact.dart NKNCreateClientEvent');
+
+    _clientBloc.add(NKNDisConnectClientEvent());
+
+    var eWallet = await wallet.exportWallet(password);
+    EasyLoading.show();
+
+    currentUser = await ContactSchema.fetchContactByAddress(eWallet['publicKey']);
+    if (currentUser == null) {
+      DateTime now = DateTime.now();
+      currentUser = ContactSchema(
+        type: ContactType.me,
+        clientAddress: eWallet['publicKey'],
+        nknWalletAddress: eWallet['address'],
+        createdTime: now,
+        updatedTime: now,
+        profileVersion: uuid.v4(),
+      );
+      await currentUser.insertContact();
+      Global.debugLog('AuthBlock insert current User'+currentUser.clientAddress);
+    }
+    setState(() {
+      print('Change Wallet info is'+eWallet.toString());
+      this.nickName = currentUser.nickName;
+      this.chatAddress = currentUser.clientAddress;
+      this.walletAddress = currentUser.nknWalletAddress;
+    });
+
+    TimerAuth.instance.enableAuth();
+    _authBloc.add(AuthSuccessEvent());
+
+    final localStorage = LocalStorage();
+    await localStorage.set(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS, eWallet['address']);
+
+    NKNDataManager.instance.close();
+    _clientBloc.add(NKNCreateClientEvent(wallet, password));
+    EasyLoading.dismiss();
+
+    showToast('切换成功');
+  }
+
   _changeAccount(WalletSchema wallet) async {
-    if (wallet.address == widget.arguments.nknWalletAddress) return;
-    DChatAuthenticationHelper.authToVerifyPassword(
-        forceShowInputDialog: true,
-        wallet: wallet,
-        onGot: (nw) async {
-          final walletAddr = nw['address'];
-          final publicKey = nw['publicKey'];
-
-          final accountNew = DChatAccount(
-            walletAddr,
-            publicKey,
-            Uint8List.fromList(hexDecode(nw['seed'])),
-            ClientEventListener(BlocProvider.of<ClientBloc>(context)),
-          );
-          final localStorage = LocalStorage();
-          await localStorage.set(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS, accountNew.wallet.address);
-
-          account.client.disConnect();
-          changeAccount(accountNew);
-          // Must be behind `changeAccount()`, since you need to use the new `db` object.
-          final currentUser = await ContactSchema.getContactByAddress(db, publicKey);
-          if (currentUser == null) {
-            DateTime now = DateTime.now();
-            await ContactSchema(
-              type: ContactType.me,
-              clientAddress: publicKey,
-              nknWalletAddress: walletAddr,
-              createdTime: now,
-              updatedTime: now,
-              profileVersion: uuid.v4(),
-            ).createContact(db);
-          }
-          showToast(NL10ns.of(context).account_switching_completed);
-          setState(() {
-            nickName = accountNew.client.myChatId.substring(0, 6);
-            _walletDefault = wallet;
-          });
-        },
-        onError: (pwdIncorrect, e) {
-          if (pwdIncorrect) {
-            showToast(NL10ns.of(context).tip_password_error);
-          }
-        });
+    if (wallet.address == currentUser.nknWalletAddress) return;
+    var password = await BottomDialog.of(Global.appContext)
+        .showInputPasswordDialog(title: NL10ns
+        .of(Global.appContext)
+        .verify_wallet_password);
+    if (password != null) {
+      try {
+        var w = await wallet.exportWallet(password);
+        if (w['address'] == wallet.address) {
+          onGetPassword(wallet, password);
+        } else {
+          showToast(NL10ns
+              .of(context)
+              .tip_password_error);
+        }
+      } catch (e) {
+        if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+          showToast(NL10ns
+              .of(context)
+              .tip_password_error);
+        }
+      }
+    }
   }
 
   getSelfView() {
@@ -586,18 +595,14 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                 children: <Widget>[
                   Stack(
                     children: <Widget>[
-                      InkWell(
-                        onTap: () {
-                          if (widget?.arguments?.avatarFilePath != null) {
-                            Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
-                          }
+                      GestureDetector(
+                        onTap: (){
+                          updatePic();
                         },
                         child: Container(
-                          child: widget.arguments.avatarWidget(
-                            db,
-                            backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
-                            size: 48,
-                            fontColor: DefaultTheme.fontLightColor,
+                          child: CommonUI.avatarWidget(
+                            radiusSize: 48,
+                            contact:currentUser,
                           ),
                         ),
                       ),
@@ -696,7 +701,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                     SizedBox(width: 20),
                                     Expanded(
                                       child: Label(
-                                        accountChatId.substring(0, 8) + "...",
+                                        chatAddress.substring(0, 8) + "...",
                                         type: LabelType.bodyRegular,
                                         textAlign: TextAlign.right,
                                         color: DefaultTheme.fontColor2,
@@ -716,7 +721,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
                                 onPressed: () {
                                   Navigator.pushNamed(context, ShowMyChatAddress.routeName,
-                                      arguments: _walletDefault?.address ?? widget.arguments.nknWalletAddress);
+                                      arguments: _walletDefault?.address ?? currentUser.nknWalletAddress);
                                 },
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -736,7 +741,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                     SizedBox(width: 20),
                                     Expanded(
                                       child: Label(
-                                        (_walletDefault?.address ?? widget.arguments.nknWalletAddress).substring(0, 8) + "...",
+                                        walletAddress.substring(0, 8) + "...",
                                         type: LabelType.bodyRegular,
                                         color: DefaultTheme.fontColor2,
                                         textAlign: TextAlign.right,
@@ -765,7 +770,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                                             builder: (ctx, state) {
                                               if (state is WalletsLoaded) {
                                                 final wallet = state.wallets.firstWhere((w) {
-                                                  return w.address == widget.arguments.nknWalletAddress;
+                                                  return w.address == currentUser.nknWalletAddress;
                                                 }, orElse: null);
                                                 if (wallet != null) {
                                                   _walletDefault = wallet;
@@ -833,16 +838,14 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                     children: <Widget>[
                       InkWell(
                         onTap: () {
-                          if (widget.arguments.avatarFilePath != null) {
-                            Navigator.push(context, CustomRoute(PhotoPage(arguments: widget.arguments.avatarFilePath)));
+                          if (currentUser.avatarFilePath != null) {
+                            Navigator.push(context, CustomRoute(PhotoPage(arguments:currentUser.avatarFilePath)));
                           }
                         },
                         child: Container(
-                          child: widget.arguments.avatarWidget(
-                            db,
-                            backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(30),
-                            size: 48,
-                            fontColor: DefaultTheme.fontLightColor,
+                          child: CommonUI.avatarWidget(
+                              radiusSize: 48,
+                              contact: currentUser,
                           ),
                         ),
                       ),
@@ -859,12 +862,14 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                             width: 16,
                           ),
                           onPressed: () async {
-                            File savedImg = await getHeaderImage(accountPubkey);
-                            setState(() {
-                              widget.arguments.avatar = savedImg;
-                            });
-                            await widget.arguments.setAvatar(db, accountPubkey, savedImg);
-                            _chatBloc.add(RefreshMessages());
+                            File savedImg = await getHeaderImage(NKNClientCaller.pubKey);
+                            if (savedImg != null){
+                              await currentUser.setAvatar(NKNClientCaller.pubKey, savedImg);
+                              setState(() {
+                                currentUser.avatar = savedImg;
+                              });
+                              _chatBloc.add(RefreshMessageListEvent());
+                            }
                           },
                         ),
                       )
@@ -875,7 +880,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Label(
-                        widget.arguments.nickName ?? '',
+                        currentUser.nickName ?? '',
                         type: LabelType.bodyLarge,
                         color: Colors.white,
                         overflow: TextOverflow.fade,
@@ -899,7 +904,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                     padding: EdgeInsets.only(left: 16, right: 16, top: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
                     onPressed: () {
-                      _firstNameController.text = widget.arguments.name;
+                      _firstNameController.text = currentUser.name;
                       _detailChangeName(context);
                     },
                     child: Row(
@@ -915,7 +920,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                         SizedBox(width: 20),
                         Expanded(
                           child: Label(
-                            getName(),
+                            currentUser.nickName,
                             type: LabelType.bodyRegular,
                             color: DefaultTheme.fontColor2,
                             overflow: TextOverflow.fade,
@@ -935,7 +940,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                     padding: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
                     onPressed: () {
-                      Navigator.pushNamed(context, ChatProfile.routeName, arguments: widget.arguments);
+                      Navigator.pushNamed(context, ChatProfile.routeName, arguments: currentUser);
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -956,7 +961,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                         SizedBox(width: 20),
                         Expanded(
                           child: Label(
-                            widget.arguments.clientAddress.substring(0, 8) + '...',
+                            currentUser.clientAddress.substring(0, 8) + '...',
                             type: LabelType.bodyRegular,
                             color: DefaultTheme.fontColor2,
                             textAlign: TextAlign.right,
@@ -974,30 +979,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                   ).sized(h: 48),
                 ],
               ),
-            );
-            return Stack(
-              alignment: Alignment.bottomCenter,
-              children: <Widget>[
-                BodyBox(
-                  color: DefaultTheme.backgroundColor6,
-                  padding: EdgeInsets.only(top: 20),
-                  child: Column(
-                    children: <Widget>[
-                      Expanded(
-                        flex: 1,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-
-                            SizedBox(height: 40),
-                            getStatusView(),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ).pad(t: 28),
-              ],
             );
           }
           else if (index == 2){
@@ -1040,7 +1021,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                               });
                             },
                           ),
-//                                        SvgPicture.asset('assets/icons/right.svg', width: 24, color: DefaultTheme.fontColor2)
                         ],
                       ),
                       _burnSelected
@@ -1144,7 +1124,6 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                               });
                             },
                           ),
-//                                        SvgPicture.asset('assets/icons/right.svg', width: 24, color: DefaultTheme.fontColor2)
                         ],
                       ),
                     ],
@@ -1192,7 +1171,7 @@ class _ContactScreenState extends State<ContactScreen> with RouteAware, AccountD
                 onPressed: () {
 //                                  _setContactOptions();
                   Navigator.of(context)
-                      .pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: widget.arguments));
+                      .pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: currentUser));
                 },
               ).sized(h: 50, w: double.infinity),
             );

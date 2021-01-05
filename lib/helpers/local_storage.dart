@@ -1,12 +1,17 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flustars/flustars.dart';
+import 'package:flutter_aes_ecb_pkcs5/flutter_aes_ecb_pkcs5.dart';
+import 'package:nmobile/components/CommonUI.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorage {
   static const String NKN_WALLET_KEY = 'WALLETS';
   static const String SETTINGS_KEY = 'SETTINGS';
   static const String LENGTH_SUFFIX = 'length';
+
+  static const String preAuthTime = 'preAuthTime';
 
   static const String LOCALE_KEY = 'locale';
   static const String LOCAL_NOTIFICATION_TYPE_KEY = 'local_notification_type';
@@ -23,6 +28,12 @@ class LocalStorage {
   static const String UN_SUBSCRIBE_LIST = 'UN_SUBSCRIBE_LIST';
   static const String DEFAULT_D_CHAT_WALLET_ADDRESS = 'default_d_chat_wallet_address';
 
+  static const String WALLET_KEYSTORE_ENCRYPT_VALUE = 'WALLET_KEYSTORE_ENCRYPT_VALUE';
+  static const String WALLET_KEYSTORE_ENCRYPT_SKEY = 'WALLET_KEYSTORE_AESVALUE_KEY';
+  static const String WALLET_KEYSTORE_ENCRYPT_IV   = 'WALLET_KEYSTORE_ENCRYPT_IV';
+
+  static const String WALLET_KEYSTORE_AES_FILENAME = '/keystore.aes';
+
   set(String key, val) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (val == null) {
@@ -36,6 +47,44 @@ class LocalStorage {
     } else if (val is Map) {
       await prefs.setString(key, jsonEncode(val));
     }
+  }
+
+  saveValueEncryptByKey(String encodeValue,String key) async {
+    if (encodeValue == null || encodeValue.length == 0){
+      return;
+    }
+    var randomKey = await FlutterAesEcbPkcs5.generateDesKey(128);
+    print('randomKey is'+randomKey);
+    set(WALLET_KEYSTORE_ENCRYPT_SKEY, randomKey);
+    if (key.length > 0 || key.length < 32){
+      randomKey = randomKey.substring(key.length)+key;
+    }
+    print('save Encrypt Value'+randomKey);
+    var encryptString = await FlutterAesEcbPkcs5.encryptString(encodeValue, randomKey);
+    print('save Encrypt Value'+encryptString);
+    set(WALLET_KEYSTORE_ENCRYPT_VALUE, encryptString);
+  }
+
+  Future<String> getValueDecryptByKey(String key) async{
+    String decryptKey = await get(WALLET_KEYSTORE_ENCRYPT_SKEY);
+    if (decryptKey == null || decryptKey.length == 0){
+      return '';
+    }
+    if (key.length > 0 || key.length < 32 && decryptKey.length == 32){
+      decryptKey = decryptKey.substring(key.length)+key;
+    }
+    String decodedValue = await get(WALLET_KEYSTORE_ENCRYPT_VALUE);
+    if (decodedValue == null || decodedValue.length == 0){
+      return '';
+    }
+    print('解密中'+decodedValue);
+    print('解密中'+decryptKey);
+    String decryptValue = await FlutterAesEcbPkcs5.decryptString(decodedValue, decryptKey);
+    if (decryptValue == null || decryptValue.length == 0){
+      return '';
+    }
+    print('解密成功'+decryptValue);
+    return decryptValue;
   }
 
   Future<dynamic> get(key) async {
@@ -136,36 +185,4 @@ class LocalStorage {
     }
     SpUtil.putString(to + accountPubkey, content);
   }
-
-//  static saveUnsubscribeTopic(String accountPubkey, String topic) {
-//    List<String> list = SpUtil.getStringList(UN_SUBSCRIBE_LIST + accountPubkey, defValue: <String>[]);
-//    if (!list.contains(topic)) {
-//      list.add(topic);
-//      SpUtil.putStringList(UN_SUBSCRIBE_LIST + accountPubkey, list);
-//    }
-//  }
-//
-//  static removeTopicFromUnsubscribeList(String accountPubkey, String topic) {
-//    List<String> list = getUnsubscribeTopicList(accountPubkey);
-//    if (list.contains(topic)) {
-//      list.remove(topic);
-//      SpUtil.putStringList(UN_SUBSCRIBE_LIST + accountPubkey, list);
-//    }
-//  }
-//
-//  static List<String> getUnsubscribeTopicList(String accountPubkey) {
-//    return SpUtil.getStringList(UN_SUBSCRIBE_LIST + accountPubkey, defValue: <String>[]);
-//  }
-//
-//  //leave group list cache
-//  static bool isBlank(String accountPubkey, String topic) {
-//    List<String> list = getUnsubscribeTopicList(accountPubkey);
-//    if (list == null || list.length == 0) return false;
-//
-//    if (list.contains(topic)) {
-//      return true;
-//    } else {
-//      return false;
-//    }
-//  }
 }

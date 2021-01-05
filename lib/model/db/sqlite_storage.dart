@@ -1,17 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:markdown/markdown.dart';
 import 'package:nmobile/model/db/black_list_repo.dart';
-import 'package:nmobile/model/db/contact_repo.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
-import 'package:nmobile/schemas/nkn_data_manager.dart';
-import 'package:nmobile/schemas/subscribers.dart';
-import 'package:nmobile/schemas/topic.dart';
+import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -58,6 +54,7 @@ class SqliteStorage {
         await MessageSchema.create(db, version);
         await ContactSchema.create(db, version);
         var now = DateTime.now();
+        print('Database name is'+name.toString());
         var publicKey = name.replaceFirst(_CHAT_DATABASE_NAME + '_', '');
         var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(publicKey);
         await db.insert(
@@ -70,32 +67,27 @@ class SqliteStorage {
               updatedTime: now,
               profileVersion: uuid.v4(),
             ).toEntity(publicKey));
-        print('table on create');
         await TopicRepo.create(db, version);
         await SubscriberRepo.create(db, version);
         await BlackListRepo.create(db, version);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
-        // await NKNDataManager.upgradeTopicTable2V3(db, newVersion);
-        // await NKNDataManager.upgradeContactSchema2V3(db, newVersion);
-        print('On update he');
         if (newVersion <= currentVersion) {
-          print('On update he1');
           await NKNDataManager.upgradeTopicTable2V3(db, currentVersion);
           await NKNDataManager.upgradeContactSchema2V3(db, currentVersion);
         }
         if (newVersion >= currentVersion){
-          print('On update he2');
-          print('Update database');
           await SubscriberRepo.create(db, currentVersion);
           await BlackListRepo.create(db, currentVersion);
         }
       },
     );
-    await NKNDataManager.upgradeTopicTable2V3(db, currentVersion);
-    await NKNDataManager.upgradeContactSchema2V3(db, currentVersion);
-    await SubscriberRepo.create(db, currentVersion);
-    await BlackListRepo.create(db, currentVersion);
+    if (currentVersion < 3){
+      await NKNDataManager.upgradeTopicTable2V3(db, currentVersion);
+      await NKNDataManager.upgradeContactSchema2V3(db, currentVersion);
+      await SubscriberRepo.create(db, currentVersion);
+      await BlackListRepo.create(db, currentVersion);
+    }
     return db;
   }
 

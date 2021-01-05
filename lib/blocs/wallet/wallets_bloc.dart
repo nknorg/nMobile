@@ -142,7 +142,6 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
   }
 
   Future _setWallet(int n, WalletSchema wallet) async {
-//    NLog.d('wallet.isBackedUp: ${wallet.isBackedUp}');
     List<Future> futures = <Future>[];
     Map<String, dynamic> data = {'name': wallet.name, 'type': wallet.type, 'address': wallet.address, 'isBackedUp': wallet.isBackedUp};
     if (wallet.balance != null) {

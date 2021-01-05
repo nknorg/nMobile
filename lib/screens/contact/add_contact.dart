@@ -4,6 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
+import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/header/header.dart';
@@ -29,7 +30,7 @@ class AddContact extends StatefulWidget {
   AddContactState createState() => new AddContactState();
 }
 
-class AddContactState extends State<AddContact> with AccountDependsBloc {
+class AddContactState extends State<AddContact> {
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
   FocusNode _nameFocusNode = FocusNode();
@@ -295,22 +296,22 @@ class AddContactState extends State<AddContact> with AccountDependsBloc {
       String address = _addressController.text;
       String note = _notesController.text;
       ContactSchema contact = ContactSchema(firstName: name, clientAddress: pubKey, nknWalletAddress: address, type: ContactType.friend, notes: note);
-      var result = await contact.createContact(db);
-      contact.setFriend(db);
+      var result = await contact.insertContact();
+      contact.setFriend();
       eventBus.fire(AddContactEvent());
       Navigator.pop(context);
     }
   }
 
   _updatePic() async {
-    File savedImg = await getHeaderImage(accountPubkey);
+    File savedImg = await getHeaderImage(NKNClientCaller.pubKey);
     if (savedImg == null) return;
   }
 
   String createContactFilePath(File file) {
     String name = hexEncode(md5.convert(file.readAsBytesSync()).bytes);
     Directory rootDir = Global.applicationRootDirectory;
-    String p = join(rootDir.path, accountPubkey, 'contact');
+    String p = join(rootDir.path, NKNClientCaller.pubKey, 'contact');
     Directory dir = Directory(p);
     if (!dir.existsSync()) {
       dir.createSync(recursive: true);

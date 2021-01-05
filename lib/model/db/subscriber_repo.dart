@@ -4,6 +4,9 @@
  * Proprietary and confidential
  */
 
+import 'package:nmobile/blocs/nkn_client_caller.dart';
+import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -35,48 +38,35 @@ class Subscriber {
 }
 
 class SubscriberRepo with Tag {
-  LOG _log;
-  final Future<Database> _db;
 
-  SubscriberRepo(this._db) {
-    _log = LOG(tag);
-  }
-
-  // """SELECT * from subscriber WHERE topic = :topic AND subscribed = 1 ORDER BY time_create ASC"""
   Future<List<Subscriber>> getByTopic(String topicName) async {
-    _log.i('getByTopic($topicName)');
+    Database cdb = await NKNDataManager().currentDatabase();
     List<Map<String, dynamic>> result =
-        await (await _db).query(tableName, where: '$topic = ? AND $subscribed = ?', whereArgs: [topicName, 1], orderBy: '$time_create ASC');
-    _log.i('getByTopic($topicName), result: ${result.length}');
+        await cdb.query(tableName, where: '$topic = ? AND $subscribed = ?', whereArgs: [topicName, 1], orderBy: '$time_create ASC');
     return parseEntities(result);
   }
 
-  // """SELECT * from subscriber WHERE topic = :topic ORDER BY time_create ASC"""
   Future<List<Subscriber>> getByTopicExceptNone(String topicName) async {
-    _log.i('getByTopicExceptNone($topicName)');
-    List<Map<String, dynamic>> result = await (await _db).query(tableName, where: '$topic = ?', whereArgs: [topicName], orderBy: '$time_create ASC');
+    Database cdb = await NKNDataManager().currentDatabase();
+    List<Map<String, dynamic>> result = await cdb.query(tableName, where: '$topic = ?', whereArgs: [topicName], orderBy: '$time_create ASC');
     return parseEntities(result);
   }
 
-  // @Query(
-  //        """SELECT chat_id from subscriber WHERE topic = :topic AND subscribed = 1
-  //            ORDER BY time_create ASC"""
-  //    )
-  Future<List<String>> getTopicChatIds(String topicName) async {
-    _log.i('getTopicChatIds($topicName)');
-    List<Map<String, dynamic>> rows =
-        await (await _db).query(tableName, columns: [chat_id], where: '$topic = ? AND $subscribed = ?', whereArgs: [topicName, 1], orderBy: '$time_create ASC');
-    List<String> list = [];
-    for (var row in rows) {
-      list.add(row[chat_id]);
+  Future <List<String>> getAllSubscriberByTopic(String topicName) async{
+    Database cdb = await NKNDataManager().currentDatabase();
+    String sql = '$tableName WHERE topic="$topicName"';
+    List result = await cdb.query(sql);
+    List <String> members = List();
+    for (Map subInfo in result){
+      print('member is'+subInfo.toString());
+      members.add(subInfo['chat_id']);
     }
-    return list;
+    return members;
   }
 
-  // "SELECT COUNT(*) FROM subscriber WHERE topic = :topic AND subscribed = 1"
   Future<int> getCountOfTopic(topicName) async {
-    _log.i('getCountOfTopic($topicName)');
-    return Sqflite.firstIntValue(await (await _db).query(
+    Database cdb = await NKNDataManager().currentDatabase();
+    return Sqflite.firstIntValue(await cdb.query(
       tableName,
       columns: ['COUNT(*)'],
       where: '$topic = ? AND $subscribed = ?',
@@ -84,43 +74,79 @@ class SubscriberRepo with Tag {
     ));
   }
 
-  // """SELECT * from subscriber WHERE topic = :topic AND chat_id = :chatId ORDER BY time_create ASC"""
+  Future<int> batchUpdateSubscriberList(List <Subscriber> subs) async{
+    Database cdb = await NKNDataManager.instance.currentDatabase();
+    Batch dbBatch = cdb.batch();
+    for(Subscriber sub in subs){
+      String topicV = sub.topic;
+      String chatIDV = sub.chatId;
+      int prm_p_iV = sub.indexPermiPage;
+      int time_createV = sub.timeCreate;
+      int expire_atV = sub.blockHeightExpireAt;
+      bool uploadedV = sub.uploaded?true:false;
+      bool subscribedV = sub.subscribed?true:false;
+      bool upload_doneV = sub.uploadDone?true:false;
+
+      List<Map<String, dynamic>> result =
+      await cdb.query(tableName, where: '$topic = ? AND $chat_id = ?', whereArgs: [topicV, chatIDV], orderBy: '$time_create ASC');
+      final list = parseEntities(result);
+
+      if (list.length == 0){
+        print('query member in topic 0; excute insert');
+        String insertSql = 'INSERT INTO $tableName($topic,$chat_id,$prm_p_i,$time_create,$expire_at,$uploaded,$subscribed,$upload_done)'+
+            ' VALUES ("$topicV","$chatIDV","$prm_p_iV","$time_createV","$expire_atV","$uploadedV","$subscribedV","$upload_doneV")';
+        dbBatch.execute(insertSql);
+      }
+      else{
+        await cdb.query(tableName, where: '$topic = ?', whereArgs: [topicV], orderBy: '$time_create ASC');
+        final list = parseEntities(result);
+        for (Subscriber sub in list){
+          Global.debugLog('database exsits topic:'+sub.topic+'__chatID:'+sub.chatId);
+        }
+      }
+    }
+    List resultList = await dbBatch.commit();
+    for (dynamic result in resultList){
+      print('sql result is'+result.toString());
+    }
+    return resultList.length;
+  }
+
+
   Future<Subscriber> getByTopicAndChatId(String topicName, String chatId) async {
-    _log.i('getByTopicAndChatId($topicName, $chatId)');
+    Database cdb = await NKNDataManager().currentDatabase();
     List<Map<String, dynamic>> result =
-        await (await _db).query(tableName, where: '$topic = ? AND $chat_id = ?', whereArgs: [topicName, chatId], orderBy: '$time_create ASC');
+        await cdb.query(tableName, where: '$topic = ? AND $chat_id = ?', whereArgs: [topicName, chatId], orderBy: '$time_create ASC');
     final list = parseEntities(result);
     return list.isEmpty ? null : list[0];
   }
 
-  Future<void> insertOrUpdate(Subscriber subs) async {
-    _log.i('insertOrUpdate(${subs.chatId})');
-    if (await getByTopicAndChatId(subs.topic, subs.chatId) == null) {
-      await insertOrIgnore(subs);
-    } else
-      await update(subs.topic, subs.chatId, subs.indexPermiPage, subs.uploaded, subs.subscribed, subs.uploadDone);
+
+  Future insertSubscriber(Subscriber subscriber) async{
+    Database cdb = await NKNDataManager().currentDatabase();
+    Subscriber querySubscriber = await getByTopicAndChatId(subscriber.topic, subscriber.chatId);
+
+    /// insert Logic
+    if (querySubscriber == null){
+      print('Prepare to insert'+ toEntity(subscriber).toString());
+      int insertResult = await cdb.insert(tableName, toEntity(subscriber), conflictAlgorithm: ConflictAlgorithm.ignore);
+      print('Insert Subscriber finished with code'+insertResult.toString());
+    }
+    /// update Logic
+    else{
+      if (subscriber.chatId == NKNClientCaller.currentChatId){
+        await updateOwnerIsMe(subscriber.topic, subscriber.chatId, subscriber.subscribed, subscriber.uploadDone);
+      }
+      else{
+        await update(subscriber.topic, subscriber.chatId, subscriber.indexPermiPage, subscriber.uploaded, subscriber.subscribed, subscriber.uploadDone);
+      }
+    }
+    return 1;
   }
 
-  Future<void> insertOrUpdateOwnerIsMe(Subscriber subs) async {
-    _log.i('insertOrUpdateOwnerIsMe(${subs.chatId})');
-    if (await getByTopicAndChatId(subs.topic, subs.chatId) == null) {
-      await insertOrIgnore(subs);
-    } else
-      await updateOwnerIsMe(subs.topic, subs.chatId, subs.subscribed, subs.uploadDone);
-  }
-
-  // onConflict = OnConflictStrategy.IGNORE
-  Future<void> insertOrIgnore(Subscriber subs) async {
-    _log.i('insertOrIgnore(${subs.chatId})');
-    await (await _db).insert(tableName, toEntity(subs), conflictAlgorithm: ConflictAlgorithm.ignore);
-  }
-
-  // """UPDATE subscriber SET prm_p_i = :prm_p_i, uploaded = :uploaded, subscribed = :subscribed,
-  //            upload_done = :upload_done
-  //            WHERE topic = :topic AND chat_id = :chatId"""
   Future<void> update(String topicName, String chatId, int pageIndex, bool uploaded_, bool subscribed_, bool uploadDone) async {
-    _log.i('update($topicName, $chatId, $pageIndex, $uploaded_, $subscribed_, $uploadDone)');
-    await (await _db).update(
+    Database cdb = await NKNDataManager().currentDatabase();
+    await cdb.update(
       tableName,
       {
         prm_p_i: pageIndex,
@@ -133,13 +159,9 @@ class SubscriberRepo with Tag {
     );
   }
 
-  // @Query(
-  //      """UPDATE subscriber SET subscribed = :subscribed, upload_done = :upload_done
-  //            WHERE topic = :topic AND chat_id = :chatId"""
-  //  )
   Future<void> updateOwnerIsMe(String topicName, String chatId, bool subscribed_, bool uploadDone) async {
-    _log.i('updateOwnerIsMe($topicName, $chatId, $subscribed_, $uploadDone)');
-    await (await _db).update(
+    Database cdb = await NKNDataManager().currentDatabase();
+    await cdb.update(
       tableName,
       {
         subscribed: subscribed_ ? 1 : 0,
@@ -150,10 +172,9 @@ class SubscriberRepo with Tag {
     );
   }
 
-  // @Query("""UPDATE subscriber SET prm_p_i = :prm_p_i WHERE topic = :topic AND chat_id = :chatId""")
   Future<void> updatePermiPageIndex(String topicName, String chatId, int pageIndex) async {
-    _log.i('updatePermiPageIndex($topicName, $chatId, $pageIndex)');
-    await (await _db).update(
+    Database cdb = await NKNDataManager().currentDatabase();
+    await cdb.update(
       tableName,
       {prm_p_i: pageIndex},
       where: '$topic = ? AND $chat_id = ?',
@@ -161,10 +182,9 @@ class SubscriberRepo with Tag {
     );
   }
 
-  // @Query("""UPDATE subscriber SET uploaded = 1 WHERE topic = :topic AND prm_p_i = :pageIndex""")
   Future<void> updatePageUploaded(String topicName, int pageIndex) async {
-    _log.i('updatePageUploaded($topicName, $pageIndex)');
-    await (await _db).update(
+    Database cdb = await NKNDataManager().currentDatabase();
+    await cdb.update(
       tableName,
       {uploaded: 1},
       where: '$topic = ? AND $prm_p_i = ?',
@@ -172,16 +192,16 @@ class SubscriberRepo with Tag {
     );
   }
 
-  // @Query("DELETE FROM subscriber WHERE topic = :topic AND chat_id = :chatId")
   Future<void> delete(String topicName, String chatId) async {
-    _log.i('delete($topicName, $chatId)');
-    await (await _db).delete(tableName, where: '$topic = ? AND $chat_id = ?', whereArgs: [topicName, chatId]);
+    Database cdb = await NKNDataManager().currentDatabase();
+    print('delete from Subrepo');
+    await cdb.delete(tableName, where: '$topic = ? AND $chat_id = ?', whereArgs: [topicName, chatId]);
   }
 
-  //@Query("DELETE FROM subscriber WHERE topic = :topic")
   Future<void> deleteAll(String topicName) async {
-    _log.i('deleteAll($topicName)');
-    await (await _db).delete(tableName, where: '$topic = ?', whereArgs: [topicName]);
+    Database cdb = await NKNDataManager.instance.currentDatabase();
+    print('delete from Subrepo all');
+    await cdb.delete(tableName, where: '$topic = ?', whereArgs: [topicName]);
   }
 
   static Future<void> create(Database db, int version) async {
@@ -193,7 +213,7 @@ class SubscriberRepo with Tag {
   }
 
   static Future<void> upgradeFromV5(Database db, int oldVersion, int newVersion) async {
-    assert(newVersion >= SqliteStorage.currentVersion);
+    // assert(newVersion >= SqliteStorage.currentVersion);
     if (newVersion == SqliteStorage.currentVersion) {
       await create(db, newVersion);
     } else {
@@ -251,7 +271,6 @@ Subscriber parseEntity(Map<String, dynamic> row) {
 
 Map<String, dynamic> toEntity(Subscriber subs) {
   return {
-//    id: subs.id,
     topic: subs.topic,
     chat_id: subs.chatId,
     prm_p_i: subs.indexPermiPage,

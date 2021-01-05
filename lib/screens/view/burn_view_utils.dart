@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
@@ -96,7 +97,7 @@ class BurnViewPage extends StatefulWidget {
   BurnViewPageState createState() => new BurnViewPageState();
 }
 
-class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
+class BurnViewPageState extends State<BurnViewPage> {
   int currentIndex = -1;
 
   @override
@@ -210,19 +211,19 @@ class BurnViewPageState extends State<BurnViewPage> with AccountDependsBloc {
     var _burnValue;
     if (currentIndex != -1) {
       _burnValue = BurnViewUtil.burnValueArray[currentIndex].inSeconds;
-      await widget.contact.setBurnOptions(db, _burnValue);
+      await widget.contact.setBurnOptions(_burnValue);
     } else {
-      await widget.contact.setBurnOptions(db, null);
+      await widget.contact.setBurnOptions(null);
     }
     var sendMsg = MessageSchema.fromSendData(
-      from: accountChatId,
+      from: NKNClientCaller.currentChatId,
       to: widget.contact.clientAddress,
       contentType: ContentType.eventContactOptions,
     );
     sendMsg.isOutbound = true;
     sendMsg.burnAfterSeconds = _burnValue;
     sendMsg.content = sendMsg.toContentOptionData(0);
-    widget.chatBloc.add(SendMessage(sendMsg));
+    widget.chatBloc.add(SendMessageEvent(sendMsg));
     Navigator.pop(context, _burnValue);
   }
 }

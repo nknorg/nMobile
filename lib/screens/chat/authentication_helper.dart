@@ -5,19 +5,15 @@
  */
 
 import 'dart:async';
-import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
-import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
-import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/log_tag.dart';
@@ -28,112 +24,100 @@ import 'package:oktoast/oktoast.dart';
 enum PageAction { init, pushNext, popToCurr, force }
 
 class TimerAuth {
-  final ActivePage activePage;
-  bool _enabled = true;
-  bool _authError = false;
-  bool _canDisable = false;
-  bool homePageShowing = false;
+  factory TimerAuth() => _getInstance();
 
-//  Timer _timer;
+  static TimerAuth get instance => _getInstance();
+  static TimerAuth _instance;
+  TimerAuth._internal() {
+    // 初始化
+  }
+
+  static TimerAuth _getInstance() {
+    if (_instance == null) {
+      _instance = new TimerAuth._internal();
+
+    }
+    return _instance;
+  }
+
+  final int gapTime = 1000*60;
+  static bool authed = false;
+
+  static bool _pagePushed = false;
+  static bool onOtherPage = false;
+
   DateTime _startTime;
-  Set<VoidCallback> _observers = HashSet();
 
-  TimerAuth(this.activePage);
+  bool get pagePushed => _pagePushed;
 
-  bool get enabled => _enabled;
-
-  addOnStateChanged(VoidCallback callback) {
-    _observers.add(callback);
+  int onHomePageResumed(BuildContext context){
+    if (_startTime == null){
+      return 1;
+    }
+    bool shouldAuth = DateTime.now().millisecondsSinceEpoch - _startTime.millisecondsSinceEpoch >= gapTime;
+    print('cal Gap Time is'+(DateTime.now().millisecondsSinceEpoch - _startTime.millisecondsSinceEpoch).toString());
+    if (authed == false){
+      print('auth Returned');
+      return 1;
+    }
+    if (shouldAuth){
+      authed = false;
+      print('authDisabled');
+      return 1;
+    }
+    authed = true;
+    return -1;
   }
 
-  removeOnStateChanged(VoidCallback callback) {
-    _observers.remove(callback);
+  enableAuth(){
+    print('enableAuth');
+    authed = true;
+    _startTime = DateTime.now();
   }
 
-  _notifyObservers() async {
-    for (final callback in _observers) {
-      callback();
-    }
+  pageDidPushed(){
+    _pagePushed = true;
   }
 
-  onHomePageResumed(BuildContext context) {
-    if (_startTime != null) {
-      _canDisable = DateTime.now().millisecondsSinceEpoch - _startTime.millisecondsSinceEpoch >= Duration.millisecondsPerMinute;
-    }
-    LocalNotification.debugNotification(
-      '<[DEBUG]> message list',
-      '${AppLifecycleState.resumed}, canDisable: $_canDisable, timer: ${/*_timer !=*/ null}, begin: ${_startTime?.toLocal().toString()}',
-    );
-//    _timer?.cancel();
-//    _timer = null;
-    if (_canDisable) {
-//      _canDisable = false;
-      // Pop all except `ChatScreen`, this page is in `ChatScreen`.
-      Navigator.of(context).popUntil(ModalRoute.withName(ModalRoute.of(context).settings.name));
-      _enabled = false;
-      _notifyObservers();
-      Timer(Duration(milliseconds: 350), () {
-        ensureVerifyPassword(context);
-      });
-    }
+  pageDidPop(){
+    _pagePushed = false;
   }
 
   onHomePagePaused(BuildContext context) {
-//    _timer?.cancel();
-    if (_authError) {
-//      _timer = null;
-      _canDisable = true;
-    } else {
+    if (authed == true){
+      print('startTime renew__:'+_startTime.toString());
       _startTime = DateTime.now();
-      // When system suspend, timer doesn't seems to keep going.
-//      _timer = Timer(Duration(minutes: 1), () {
-//        _timer = null;
-//        _canDisable = true;
-//      });
-    }
-  }
-
-  onNoConnection() {
-//    _timer?.cancel();
-//    _timer = null;
-    _enabled = true;
-    _authError = false;
-    _canDisable = false;
-    homePageShowing = false;
-  }
-
-  onHomePageFirstShow(BuildContext context) async {
-    LocalNotification.debugNotification(
-      '<[DEBUG]> homePageFirstShow',
-      'canDisable: $_canDisable, timer: ${/*_timer !=*/ null}, ${DateTime.now().toLocal().toString()}',
-    );
-//    _timer?.cancel();
-//    _timer = null;
-    _enabled = true;
-    _authError = false;
-    _canDisable = false;
-    homePageShowing = true;
-    if (await Global.isInBackground) {
-      onHomePagePaused(context);
     }
   }
 
   ensureVerifyPassword(BuildContext context) async {
-    if (enabled || !homePageShowing || !activePage.isCurrPageActive || await Global.isInBackground) return;
-    DChatAuthenticationHelper.loadDChatUseWallet(BlocProvider.of<WalletsBloc>(context), (wallet) {
-      // When show faceIdAuthentication dialog, lifecycle is inactive,
-      // this can prevent secondary ejection popup.
-      _canDisable = false;
-      _startTime = null;
+    WalletSchema wallet = await DChatAuthenticationHelper.loadUserDefaultWallet();
+    DChatAuthenticationHelper.authToVerifyPassword(
+      wallet: wallet,
+      onGot: (nw) {
+        print('enableAuth ensureVerifyPassword');
+        enableAuth();
+      },
+      onError: (pwdIncorrect, e) {
+        authed = false;
+        if (pwdIncorrect) {
+          showToast(NL10ns.of(context).tip_password_error);
+        }
+      },
+    );
+  }
+
+  ensureVerifyPasswordWithCallBack(BuildContext context,WalletSchema wallet,void callBack(WalletSchema wallet, String password)){
+    DChatAuthenticationHelper.authToPrepareConnect(wallet, (wallet, password) {
       DChatAuthenticationHelper.authToVerifyPassword(
         wallet: wallet,
         onGot: (nw) {
-          _authError = false;
-          _enabled = true;
-          _notifyObservers();
+          enableAuth();
+          print('enableAuth ensureVerifyPasswordWithCallBack');
+          callBack(wallet,password);
         },
         onError: (pwdIncorrect, e) {
-          _authError = true;
+          authed = false;
           if (pwdIncorrect) {
             showToast(NL10ns.of(context).tip_password_error);
           }
@@ -144,64 +128,13 @@ class TimerAuth {
 }
 
 class DChatAuthenticationHelper with Tag {
-  // ignore: non_constant_identifier_names
-  LOG _LOG;
-
-  DChatAuthenticationHelper() {
-    _LOG = LOG(tag, usePrint: false);
-  }
-
-  bool canShow = false;
   WalletSchema wallet;
 
-  bool _pageActiveInited = false;
-  bool _isPageActive = true; // e.g. isTabOnCurrentPageIndex
-
-  void setPageActive(PageAction action, [bool value]) {
-    if (_pageActiveInited) {
-      switch (action) {
-        case PageAction.init:
-//        _isPageActive = force;
-          throw 'illegal state';
-          break;
-        case PageAction.pushNext:
-          _isPageActive = false;
-          break;
-        case PageAction.popToCurr:
-          _isPageActive = true;
-          break;
-        case PageAction.force:
-          assert(value != null);
-          _isPageActive = value;
-          break;
-        default:
-          throw 'unknown';
-      }
-    } else {
-      switch (action) {
-        case PageAction.init:
-          _pageActiveInited = true;
-          _isPageActive = value;
-          break;
-        default:
-          throw 'illegal state';
-      }
-    }
-  }
-
-  ensureAutoShowAuthentication(String debug, void onGetPassword(WalletSchema wallet, String password)) {
-    _LOG.d('ensureAutoShowAuth...[$debug] | canShow: $canShow, _isPageActive: $_isPageActive,'
-        ' route: ${ModalRoute.of(Global.appContext).settings.name}, wallet: $wallet.');
-    LocalNotification.debugNotification('<[DEBUG]> ensureAutoShowAuth...',
-        '[$debug] canShow: $canShow, pageActive: $_isPageActive, wallet: ${wallet != null}, ' + DateTime.now().toLocal().toString());
-    if (canShow && _isPageActive && wallet != null) {
-      prepareConnect(onGetPassword);
-    }
-  }
-
   prepareConnect(void onGetPassword(WalletSchema wallet, String password)) {
+    print('step4');
     authToPrepareConnect(wallet, (wallet, password) {
-      canShow = false;
+      // canShow = false;
+      print('step5');
       onGetPassword(wallet, password);
     });
   }
@@ -217,10 +150,15 @@ class DChatAuthenticationHelper with Tag {
   static bool _authenticating = false;
 
   static Future<String> authToGetPassword(WalletSchema wallet, {bool forceShowInputDialog = false}) async {
+    print('step6');
     if (_authenticating) return null;
+    print('step7');
     _authenticating = true;
+    print('step8');
     final _password = await wallet.getPassword(showDialogIfCanceledBiometrics: true /*default*/, forceShowInputDialog: forceShowInputDialog);
+    print('step9');
     _authenticating = false;
+    print('___password is'+_password);
     return _password;
   }
 
@@ -234,7 +172,8 @@ class DChatAuthenticationHelper with Tag {
     // Since Android Native Service create a new `DartVM`, and not init other MethodChannel.
     bool isProtectionEnabled = false;
     if (verifyProtectionEnabled) {
-      isProtectionEnabled = (await LocalAuthenticationService.instance).isProtectionEnabled;
+      bool protection = await LocalAuthenticationService.instance.protectionStatus();
+      isProtectionEnabled = protection;
     } else {
       isProtectionEnabled = true;
     }
@@ -244,14 +183,6 @@ class DChatAuthenticationHelper with Tag {
         onGetPassword(wallet, _password);
       }
     }
-  }
-
-  static void cancelAuthentication() async {
-    // Must be canceled accompanied by `inputPasswordDialog`, or it only shows `inputPasswordDialog`.
-//    LocalAuthenticationService.instance.then((instance) {
-//      instance.cancelAuthentication();
-//    });
-    // TODO: cancel input password dialog, `_authenticating` also played a role.
   }
 
   static void verifyPassword({
@@ -282,44 +213,27 @@ class DChatAuthenticationHelper with Tag {
     }
   }
 
-  static void loadDChatUseWalletByState(WalletsLoaded state, void callback(WalletSchema wallet)) {
-    LocalStorage().get(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS).then((walletAddress) {
-      // `walletAddress` can be null.
-      final addr = walletAddress;
+  static Future<WalletSchema> loadUserDefaultWallet() async{
+    WalletSchema walletModel;
+    var walletAddress = await LocalStorage().get(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS);
+    List wallets = await LocalStorage().getArray(LocalStorage.NKN_WALLET_KEY);
 
-      void parse(WalletsLoaded state) {
-        final wallet = state.wallets.firstWhere((w) => w.address == addr, orElse: () => state.wallets.first);
-        callback(wallet);
+    if (walletAddress == null && wallets.length > 0){
+      Map resultWallet = wallets[0];
+      walletModel = WalletSchema(address: resultWallet['address'], type: resultWallet['type'], name: resultWallet['name']);
+      print('return walletAddress'+walletModel.address);
+      return walletModel;
+    }
+
+    for (Map wallet in wallets){
+      var walletModel = WalletSchema(address: wallet['address'], type: wallet['type'], name: wallet['name']);
+      if (walletModel.address == walletAddress){
+        return walletModel;
       }
-
-      parse(state);
-    });
-  }
-
-  static void loadDChatUseWallet(WalletsBloc walletBloc, void callback(WalletSchema wallet)) {
-    LocalStorage().get(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS).then((walletAddress) {
-      // `walletAddress` can be null.
-      final addr = walletAddress;
-
-      void parse(WalletsLoaded state) {
-        final wallet = state.wallets.firstWhere((w) => w.address == addr, orElse: () => state.wallets.first);
-        callback(wallet);
-      }
-
-      if (walletBloc.state is WalletsLoaded) {
-        parse(walletBloc.state as WalletsLoaded);
-      } else {
-        var subscription;
-
-        void onData(state) {
-          if (walletBloc.state is WalletsLoaded) {
-            parse(walletBloc.state as WalletsLoaded);
-            subscription.cancel();
-          }
-        }
-
-        subscription = walletBloc.listen(onData);
-      }
-    });
+    }
+    if (wallets.length > 0){
+      return wallets[0];
+    }
+    return null;
   }
 }

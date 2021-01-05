@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/components/box/body.dart';
@@ -19,7 +20,6 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
-import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/wallet/import_nkn_eth_wallet.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
@@ -53,6 +53,9 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
   }
 
   _createAccount() async {
+    if (_formValid == false){
+      return;
+    }
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
       EasyLoading.show();
@@ -61,7 +64,7 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
       String address = json['Address'];
       _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
       EasyLoading.dismiss();
-      Navigator.of(context).pushReplacementNamed(ChatHome.routeName, arguments: widget.timerAuth);
+      Navigator.of(context).pushReplacementNamed(AppScreen.routeName);
     }
   }
 
@@ -93,12 +96,6 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
                             textAlign: TextAlign.center,
                             softWrap: true,
                           ).pad(t: 12),
-//                          Label(
-//                            NMobileLocalizations.of(context).chat_no_wallet_desc,
-//                            type: LabelType.bodyRegular,
-//                            textAlign: TextAlign.center,
-//                            softWrap: true,
-//                          ).padd(48.pad(t: 8, b: 0)),
                         ],
                       ).pad(b: 32),
                     ),
@@ -204,7 +201,7 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
                                           style: TextStyle(fontSize: DefaultTheme.h3FontSize, fontWeight: FontWeight.bold, color: null),
                                         ),
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                                        onPressed: _formValid ? _createAccount : null,
+                                        onPressed: _createAccount,
                                       ),
                                     )))
                               ],
