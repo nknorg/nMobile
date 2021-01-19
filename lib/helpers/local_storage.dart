@@ -1,12 +1,10 @@
-import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flustars/flustars.dart';
-import 'package:nmobile/utils/nlog_util.dart';
-import 'package:oktoast/oktoast.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:flutter_aes_ecb_pkcs5/flutter_aes_ecb_pkcs5.dart';
+import 'package:nmobile/components/CommonUI.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorage {
   static const String NKN_WALLET_KEY = 'WALLETS';
@@ -28,28 +26,13 @@ class LocalStorage {
   static const String RN_WALLET_UPGRADED = 'RN_WALLET_UPGRADED';
 
   static const String UN_SUBSCRIBE_LIST = 'UN_SUBSCRIBE_LIST';
-  static const String DEFAULT_D_CHAT_WALLET_ADDRESS =
-      'default_d_chat_wallet_address';
+  static const String DEFAULT_D_CHAT_WALLET_ADDRESS = 'default_d_chat_wallet_address';
 
-  static const String WALLET_KEYSTORE_ENCRYPT_VALUE =
-      'WALLET_KEYSTORE_ENCRYPT_VALUE';
-  static const String WALLET_KEYSTORE_ENCRYPT_SKEY =
-      'WALLET_KEYSTORE_AESVALUE_KEY';
-  static const String WALLET_KEYSTORE_ENCRYPT_IV = 'WALLET_KEYSTORE_ENCRYPT_IV';
+  static const String WALLET_KEYSTORE_ENCRYPT_VALUE = 'WALLET_KEYSTORE_ENCRYPT_VALUE';
+  static const String WALLET_KEYSTORE_ENCRYPT_SKEY = 'WALLET_KEYSTORE_AESVALUE_KEY';
+  static const String WALLET_KEYSTORE_ENCRYPT_IV   = 'WALLET_KEYSTORE_ENCRYPT_IV';
 
   static const String WALLET_KEYSTORE_AES_FILENAME = '/keystore.aes';
-
-  static const String NKN_RPC_NODE_LIST = 'NKN_RPC_NODE_LIST';
-
-  static const String NKN_MESSAGE_NOTIFICATION_ALERT =
-      'NKN_MESSAGE_NOTIFICATION_ALERT';
-
-  static const String NKN_ONE_PIECE_READY_JUDGE = 'NKN_ONE_PIECE_READY_JUDGE';
-
-  static const String NKN_USER_PROFILE_VERSION_RESPONSE_TIME =
-      'NKN_USER_PROFILE_VERSION_KEY';
-
-  static const String NKN_SUBSRIBE_GAP_TIME = 'NKN_USER_PROFILE_VERSION_KEY';
 
   set(String key, val) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -66,70 +49,20 @@ class LocalStorage {
     }
   }
 
-  saveKeyStoreInFile(String address, String keyStore) async {
-    String addressKey = '$WALLET_KEYSTORE_ENCRYPT_VALUE' + '_' + address;
-    set(addressKey, keyStore);
-
-    if (keyStore != null && addressKey != null) {
-      NLog.w('save Keystore to Local__' + addressKey + '___' + keyStore);
-    } else {
-      showToast('keyStore is null');
-    }
+  saveKeyStoreInFile(String keyStore) async{
+    set(WALLET_KEYSTORE_ENCRYPT_VALUE, keyStore);
   }
 
-  // saveValueEncryptByKey(String encodeValue,String key) async {
-  //   if (encodeValue == null || encodeValue.length == 0){
-  //     return;
-  //   }
-  //   var randomKey = await FlutterAesEcbPkcs5.generateDesKey(128);
-  //   print('randomKey is'+randomKey);
-  //   set(WALLET_KEYSTORE_ENCRYPT_SKEY, randomKey);
-  //   if (key.length > 0 || key.length < 32){
-  //     randomKey = randomKey.substring(key.length)+key;
-  //   }
-  //   print('save Encrypt Value'+randomKey);
-  //   var encryptString = await FlutterAesEcbPkcs5.encryptString(encodeValue, randomKey);
-  //   print('save Encrypt Value'+encryptString);
-  //   set(WALLET_KEYSTORE_ENCRYPT_VALUE, encryptString);
-  // }
-
-  Future<String> getValueDecryptByKey(String key, String address) async {
+  Future<String> getKeyStoreValue() async{
     String decryptKey = await get(WALLET_KEYSTORE_ENCRYPT_SKEY);
-    if (decryptKey == null || decryptKey.length == 0) {
+    if (decryptKey != null && decryptKey.length > 0){
+      set(WALLET_KEYSTORE_ENCRYPT_SKEY, '');
+      set(WALLET_KEYSTORE_ENCRYPT_VALUE, '');
+      print('Clear 1.0.3 logic');
+    }
+    String keyStore = await get(WALLET_KEYSTORE_ENCRYPT_VALUE);
+    if (keyStore == null && keyStore.length == 0){
       return '';
-    }
-    if (key.length > 0 || key.length < 32 && decryptKey.length == 32) {
-      decryptKey = decryptKey.substring(key.length) + key;
-    }
-    String decodedValue = await get(WALLET_KEYSTORE_ENCRYPT_VALUE);
-    if (decodedValue == null || decodedValue.length == 0) {
-      String addressKey = '$WALLET_KEYSTORE_ENCRYPT_VALUE' + '_' + address;
-      decodedValue = await get(addressKey);
-      if (decodedValue == null || decodedValue.length == 0) {
-        return '';
-      }
-    }
-    print('解密中' + decodedValue);
-    print('解密中' + decryptKey);
-    String decryptValue =
-        await FlutterAesEcbPkcs5.decryptString(decodedValue, decryptKey);
-    if (decryptValue == null || decryptValue.length == 0) {
-      return '';
-    }
-    print('解密成功' + decryptValue);
-    return decryptValue;
-  }
-
-  Future<String> getKeyStoreValue(String address) async {
-    String addressKey = '$WALLET_KEYSTORE_ENCRYPT_VALUE' + '_' + address;
-    String keyStore = await get(addressKey);
-    if (keyStore == null) {
-      // keyStore = await get(WALLET_KEYSTORE_ENCRYPT_VALUE);
-      if (keyStore == null) {
-        NLog.w('getKeyStoreValue is null');
-      }
-    } else {
-      NLog.w('getKeyStoreValue is not null');
     }
     return keyStore;
   }
@@ -225,8 +158,7 @@ class LocalStorage {
     return SpUtil.getString(to + accountPubkey);
   }
 
-  static saveChatUnSendContentWithId(String accountPubkey, String to,
-      {String content}) async {
+  static saveChatUnSendContentWithId(String accountPubkey, String to, {String content}) async {
     if (to.length == 0) return;
     if (content == null || content.length == 0) {
       SpUtil.remove(to + accountPubkey);

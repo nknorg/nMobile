@@ -8,15 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:nmobile/blocs/chat/auth_bloc.dart';
-import 'package:nmobile/blocs/chat/auth_event.dart';
-import 'package:nmobile/blocs/chat/auth_state.dart';
+import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
-import 'package:nmobile/blocs/client/client_state.dart';
-import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
+import 'package:nmobile/blocs/data_linker.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/button.dart';
@@ -25,8 +22,6 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
-import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
@@ -44,23 +39,20 @@ import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:oktoast/oktoast.dart';
 
-class MessagesTab extends StatefulWidget {
+class MessageListPage extends StatefulWidget {
   final TimerAuth timerAuth;
 
-  MessagesTab(this.timerAuth);
+  MessageListPage(this.timerAuth);
 
   @override
   _MessagesTabState createState() => _MessagesTabState();
 }
 
-class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin, Tag {
+class _MessagesTabState extends State<MessageListPage> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin, Tag {
   List<MessageItem> _messagesList = <MessageItem>[];
-
-  AuthBloc _authBloc;
   ChatBloc _chatBloc;
   ContactBloc _contactBloc;
 
-  StreamSubscription _chatSubscription;
   ScrollController _scrollController = ScrollController();
   int _limit = 20;
   int _skip = 20;
@@ -70,21 +62,22 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
 
   int timeBegin = 0;
 
+  LOG _LOG;
+
   @override
   void initState() {
     super.initState();
+    _LOG = LOG(tag);
 
     timeBegin = DateTime.now().millisecondsSinceEpoch;
 
     isHideTip = SpUtil.getBool(LocalStorage.WALLET_TIP_STATUS, defValue: false);
     populars = PopularChannel.defaultData();
-
-    _authBloc = BlocProvider.of<AuthBloc>(context);
     _chatBloc = BlocProvider.of<ChatBloc>(context);
     _contactBloc = BlocProvider.of<ContactBloc>(context);
 
-    _refreshMessage();
 
+    _addMessageOnListening();
     _scrollController.addListener(() {
       double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
       if (offsetFromBottom < 50 && !loading) {
@@ -94,98 +87,38 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         });
       }
     });
+
+    _fetchData();
+  }
+
+  _addMessageOnListening(){
+    DataLinker.instance.onListeningEvent(RequestTag.listenOnMessages, (backInfo){
+      print('backInfo is'+backInfo.toString());
+    });
   }
 
   @override
   void dispose() {
-    _chatSubscription?.cancel();
     super.dispose();
   }
 
-  _refreshMessage() async{
-    _updateTopicBlock();
+  _fetchData() async{
     var res = await MessageItem.getLastMessageList(limit: _limit);
     if (res == null) return;
-    Global.debugLog('Refresh got message count is'+res.length.toString());
     _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
-    _skip = 20;
-    _messagesList = (res);
-  }
-
-  _routeToGroupChatPage(topicName) async{
-    final topic = await GroupChatHelper.fetchTopicInfoByName(topicName);
-    Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic)).then((value){
-      if (value == true){
-        _refreshMessage();
-      }
-    });
-  }
-
-  _updateTopicBlock() async{
-    if (Global.upgradedGroupBlockHeight == true){
-      Global.debugLog('_updateTopicBlock begin');
-      Global.upgradedGroupBlockHeight = false;
-      NKNClientCaller.fetchBlockHeight().then((blockHeight) {
-        Global.debugLog('_updateTopicBlock end___'+blockHeight.toString());
-        if (blockHeight == null || blockHeight == 0){
-          return;
+    if (mounted) {
+      setState(() {
+        try {
+          _skip = 20;
+          _messagesList = (res);
+        } catch (e) {
+          _LOG.e('initAsync', e);
         }
-        TopicRepo().getAllTopics().then((topicList){
-          for(Topic topic in topicList){
-            Global.debugLog('检索Topic:__'+topic.topic+'__'+topic.blockHeightExpireAt.toString());
-            if (topic.blockHeightExpireAt == -1 || topic.blockHeightExpireAt == null){
-              final String topicHash = genTopicHash(topic.name);
-              NKNClientCaller.getSubscription(topicHash: topicHash, subscriber: NKNClientCaller.pubKey).then((subscription){
-                if (subscription['expiresAt'] != null){
-                  TopicRepo().updateOwnerExpireBlockHeight(topic.name, int.parse(subscription['expiresAt'].toString()));
-                  Global.debugLog('升级'+topic.topic+'成功'+'__'+subscription.toString());
-                }
-              });
-            }
-            else if ((topic.blockHeightExpireAt - blockHeight) < (400000-300000)){
-              String topicName = topic.topic;
-              if (topic.isPrivate == false){
-                Global.debugLog('更新Topic:' +topic.topic+'__Topic块高度:'+topic.blockHeightExpireAt.toString());
-                GroupChatHelper.subscribeTopic(
-                    topicName: topicName,
-                    chatBloc: _chatBloc,
-                    callback: (success, e) {
-                      Global.debugLog('_updateTopicBlock success');
-                    });
-
-                final String topicHash = genTopicHash(topic.name);
-                NKNClientCaller.getSubscription(topicHash: topicHash, subscriber: NKNClientCaller.pubKey).then((subscription) {
-                  if (subscription['expiresAt'] != null){
-                    TopicRepo().updateOwnerExpireBlockHeight(topic.name, int.parse(subscription['expiresAt'].toString()));
-                    Global.debugLog('更新'+topic.topic+'成功'+'__'+subscription.toString());
-                  }
-                });
-              }
-              else{
-                /// Update PrivateChannel Logic
-
-              }
-            }
-            else{
-              Global.debugLog('topic订阅未过期:__'+topic.topic);
-              Global.debugLog('Topic themeID +'+topic.themeId.toString());
-              // final String topicHash = genTopicHash(topic.name);
-              // final Map<String, dynamic> subscription = await account.client.getSubscription(topicHash: topicHash, subscriber: account.client.myChatId);
-              // if (subscription['expiresAt'] != null){
-              //   await TopicRepo(db).updateOwnerExpireBlockHeight(topic.name, 0);
-              //   Global.debugLog('测试重制'+topic.topic+'成功'+'__'+subscription.toString());
-              // }
-            }
-          }
-        });
       });
     }
   }
 
   Future _loadMore() async {
-    if (Global.clientCreated == false){
-      return;
-    }
     var res = await MessageItem.getLastMessageList(limit: _limit, offset: _skip);
     if (res != null) {
       _skip += res.length;
@@ -199,51 +132,142 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, authState){
-        if (authState is AuthToUserState){
-          _messagesList.clear();
-          _refreshMessage();
-          _authBloc.add(AuthSuccessEvent());
-        }
-        return BlocBuilder<NKNClientBloc, NKNClientState>(
-          builder: (context, clientState){
-            if (clientState is NKNConnectedState){
-              _updateTopicBlock();
-            }
-            if (clientState is NKNConnectedState ||
-            clientState is NKNConnectingState) {
-              return BlocBuilder<ContactBloc, ContactState>(
-                builder: (context, contactState) {
-                  if (contactState is ContactLoaded){
-                    return BlocBuilder<ChatBloc, ChatState>(
-                      builder: (context, chatState) {
-                        if (chatState is MessageUpdateState){
-                          _refreshMessage();
-                          _chatBloc.add(RefreshMessageEndEvent());
-                        }
-                        if (_messagesList != null && _messagesList.length > 0) {
-                          _messagesList.sort((a, b) => a.isTop ? (b.isTop ? -1 /*hold position original*/ : -1) : (b.isTop ? 1 : b.lastReceiveTime.compareTo(a.lastReceiveTime)));
-                          return _messageListWidget();
-                        } else {
-                          return _noMessageWidget();
-                        }
-                      },
-                    );
-                  }
-                  if (_messagesList != null && _messagesList.length > 0) {
-                    _messagesList.sort((a, b) => a.isTop ? (b.isTop ? -1 /*hold position original*/ : -1) : (b.isTop ? 1 : b.lastReceiveTime.compareTo(a.lastReceiveTime)));
-                    return _messageListWidget();
-                  }
-                  return _noMessageWidget();
-                },
-              );
-            }
-            return _noMessageWidget();
-          },
-        );
-      },
-    );
+    if (TimerAuth.authed && _messagesList != null && _messagesList.length > 0) {
+      final duration = ((DateTime.now().millisecondsSinceEpoch - timeBegin) / 1000.0).toStringAsFixed(3);
+      _messagesList.sort((a, b) => a.isTop ? (b.isTop ? -1 /*hold position original*/ : -1) : (b.isTop ? 1 : b.lastReceiveTime.compareTo(a.lastReceiveTime)));
+      return Flex(
+        direction: Axis.vertical,
+        children: [
+          getTipView(),
+          Expanded(
+            flex: 1,
+            child: ListView.builder(
+              padding: EdgeInsets.only(bottom: 72),
+              controller: _scrollController,
+              itemCount: _messagesList.length,
+              itemBuilder: (BuildContext context, int index) {
+                var item = _messagesList[index];
+                return BlocBuilder<ContactBloc, ContactState>(
+                  builder: (context, state) {
+                    if (state is ContactLoaded) {
+                      Widget widget;
+                      if (item.topic != null) {
+                        widget = getTopicItemView(item, state);
+                      } else {
+                        widget = getSingleChatItemView(item, state);
+                      }
+                      return InkWell(
+                        onLongPress: () {
+                          showMenu(item, index);
+                        },
+                        child: widget,
+                      );
+                    } else {
+                      return Container();
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Flex(
+        direction: Axis.vertical,
+        children: <Widget>[
+          Expanded(
+            flex: 1,
+            child: Padding(
+              padding: EdgeInsets.only(top: 0),
+              child: Scrollbar(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 32),
+                    child: Container(
+                      child: Flex(
+                        direction: Axis.vertical,
+                        children: <Widget>[
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Label(
+                                NL10ns.of(context).popular_channels,
+                                type: LabelType.h3,
+                                textAlign: TextAlign.left,
+                              ).pad(l: 20)
+                            ],
+                          ),
+                          Container(
+                            height: 180,
+                            margin: 0.pad(t: 8),
+                            child: ListView.builder(
+                                itemCount: populars.length,
+                                scrollDirection: Axis.horizontal,
+                                itemBuilder: (context, index) {
+                                  return getPopularItemView(index, populars.length, populars[index]);
+                                }),
+                          ),
+                          Expanded(
+                            flex: 0,
+                            child: Column(
+                              children: <Widget>[
+                                Padding(
+                                  padding: EdgeInsets.only(top: 32),
+                                  child: Label(
+                                    NL10ns.of(context).chat_no_messages_title,
+                                    type: LabelType.h2,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(top: 8, left: 0, right: 0),
+                                  child: Label(
+                                    NL10ns.of(context).chat_no_messages_desc,
+                                    type: LabelType.bodyRegular,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                          Button(
+                            width: -1,
+                            height: 54,
+                            padding: 0.pad(l: 36, r: 36),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                loadAssetIconsImage('pencil', width: 24, color: DefaultTheme.backgroundLightColor).pad(r: 12),
+                                Label(NL10ns.of(context).new_message, type: LabelType.h3)
+                              ],
+                            ),
+                            onPressed: () async {
+                              if (TimerAuth.authed) {
+                                var address = await BottomDialog.of(context)
+                                    .showInputAddressDialog(title: NL10ns.of(context).new_whisper, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
+                                if (address != null) {
+                                  ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
+                                  await contact.insertContact();
+                                  Navigator.of(context)
+                                      .pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
+                                }
+                              } else {
+                                widget.timerAuth.ensureVerifyPassword(context);
+                              }
+                            },
+                          ).pad(t: 54),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
   }
 
   showMenu(MessageItem item, int index) {
@@ -300,151 +324,14 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     );
   }
 
-  Widget _noMessageWidget(){
-    return Flex(
-      direction: Axis.vertical,
-      children: <Widget>[
-        Expanded(
-          flex: 1,
-          child: Padding(
-            padding: EdgeInsets.only(top: 0),
-            child: Scrollbar(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.only(top: 32),
-                  child: Container(
-                    child: Flex(
-                      direction: Axis.vertical,
-                      children: <Widget>[
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Label(
-                              NL10ns.of(context).popular_channels,
-                              type: LabelType.h3,
-                              textAlign: TextAlign.left,
-                            ).pad(l: 20)
-                          ],
-                        ),
-                        Container(
-                          height: 188,
-                          margin: 0.pad(t: 8),
-                          child: ListView.builder(
-                              itemCount: populars.length,
-                              scrollDirection: Axis.horizontal,
-                              itemBuilder: (context, index) {
-                                return getPopularItemView(index, populars.length, populars[index]);
-                              }),
-                        ),
-                        Expanded(
-                          flex: 0,
-                          child: Column(
-                            children: <Widget>[
-                              Padding(
-                                padding: EdgeInsets.only(top: 32),
-                                child: Label(
-                                  NL10ns.of(context).chat_no_messages_title,
-                                  type: LabelType.h2,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.only(top: 8, left: 0, right: 0),
-                                child: Label(
-                                  NL10ns.of(context).chat_no_messages_desc,
-                                  type: LabelType.bodyRegular,
-                                  textAlign: TextAlign.center,
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        Button(
-                          width: -1,
-                          height: 54,
-                          padding: 0.pad(l: 36, r: 36),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              loadAssetIconsImage('pencil', width: 24, color: DefaultTheme.backgroundLightColor).pad(r: 12),
-                              Label(NL10ns.of(context).new_message, type: LabelType.h3)
-                            ],
-                          ),
-                          onPressed: () async {
-                            if (TimerAuth.authed) {
-                              var address = await BottomDialog.of(context)
-                                  .showInputAddressDialog(title: NL10ns.of(context).new_whisper, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
-                              if (address != null) {
-                                ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
-                                await contact.insertContact();
-                                Navigator.of(context)
-                                    .pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
-                              }
-                            } else {
-                              widget.timerAuth.ensureVerifyPassword(context);
-                            }
-                          },
-                        ).pad(t: 54),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _messageListWidget(){
-    return Flex(
-      direction: Axis.vertical,
-      children: [
-        getTipView(),
-        Expanded(
-          flex: 1,
-          child: ListView.builder(
-            padding: EdgeInsets.only(bottom: 72),
-            controller: _scrollController,
-            itemCount: _messagesList.length,
-            itemBuilder: (BuildContext context, int index) {
-              var item = _messagesList[index];
-              return BlocBuilder<ContactBloc, ContactState>(
-                builder: (context, state) {
-                  if (state is ContactLoaded) {
-                    Widget widget;
-                    if (item.topic != null) {
-                      widget = getTopicItemView(item, state);
-                    } else {
-                      widget = getSingleChatItemView(item, state);
-                    }
-                    return InkWell(
-                      onLongPress: () {
-                        showMenu(item, index);
-                      },
-                      child: widget,
-                    );
-                  } else {
-                    return Container();
-                  }
-                },
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   bool get wantKeepAlive => true;
 
   Widget getPopularItemView(int index, int length, PopularChannel model) {
     return Container(
       child: Container(
-        width: 120,
-        height: 120,
+        width: 136,
+        height: 172,
         margin: 8.pad(l: 20, r: index == length - 1 ? 20 : 12),
         decoration: BoxDecoration(color: DefaultTheme.backgroundColor2, borderRadius: BorderRadius.circular(12)),
         child: Column(
@@ -508,13 +395,19 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         callback: (success, e) async {
           EasyLoading.dismiss();
           if (success) {
-            _routeToGroupChatPage(popular.topic);
+            final topic = await TopicRepo().getTopicByName(popular.topic);
+            assert(topic.nonNull);
+            Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
           } else {
             if (e.toString().contains('duplicate subscription exist in block')){
-              _routeToGroupChatPage(popular.topic);
+              print('duplicate subscription exist in block');
+              final topic = await TopicRepo().getTopicByName(popular.topic);
+              assert(topic.nonNull);
+              Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
             }
             else{
               showToast(e.toString());
+              // showToast(NL10ns.of(context).something_went_wrong);
             }
           }
         });
@@ -583,8 +476,6 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
       return Container();
     }
     Widget contentWidget;
-    // double topFontSize = 16;
-    double bottomFontSize = 14;
     String draft = LocalStorage.getChatUnSendContentFromId(NKNClientCaller.pubKey, item.targetId);
     if (draft != null && draft.length > 0) {
       contentWidget = Row(
@@ -600,7 +491,6 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
             draft,
             type: LabelType.bodySmall,
             overflow: TextOverflow.ellipsis,
-            fontSize: bottomFontSize,
           ),
         ],
       );
@@ -627,7 +517,6 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         type: LabelType.bodySmall,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        fontSize: bottomFontSize,
       );
     }
     else if (item.contentType == ContentType.eventSubscribe) {
@@ -636,7 +525,6 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         maxLines: 1,
         type: LabelType.bodySmall,
         overflow: TextOverflow.ellipsis,
-        fontSize: bottomFontSize,
       );
     }
     else {
@@ -645,21 +533,18 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         maxLines: 1,
         type: LabelType.bodySmall,
         overflow: TextOverflow.ellipsis,
-        fontSize: bottomFontSize,
       );
     }
     List<Widget> topicWidget = [
-      Label(item.topic.shortName,
-          fontSize: 18,
-          type: LabelType.h4
-      ),
+      Label(item.topic.shortName, type: LabelType.h4),
     ];
     if (item.topic.type == TopicType.private) {
       topicWidget.insert(0, loadAssetIconsImage('lock', width: 18, color: DefaultTheme.primaryColor));
     }
     return InkWell(
       onTap: () async {
-        _routeToGroupChatPage(item.topic.topic);
+        final topic = await TopicRepo().getTopicByName(item.topic.topic);
+        Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
       },
       child: Container(
         color: item.isTop ? Colours.light_fb : Colours.transparent,
@@ -668,9 +553,8 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              margin: EdgeInsets.only(left: 16, right: 16),
               child: CommonUI.avatarWidget(
-                radiusSize: 24,
+                radiusSize: 48,
                 topic: item.topic,
               ),
             ),
@@ -817,6 +701,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     }
     return InkWell(
       onTap: () {
+        print('Tapppeeddd');
         Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
       },
       child: Container(
@@ -826,7 +711,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              margin: EdgeInsets.only(left: 16, right: 16),
+              padding: EdgeInsets.only(left: 20, right: 16),
               child: CommonUI.avatarWidget(
                   radiusSize: 24,
                   contact: contact,
