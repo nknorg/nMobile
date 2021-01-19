@@ -60,7 +60,7 @@ class MessageItem {
         'MAX(send_time)'
       ],
       where: "type = ? or type = ? or type = ? or type = ? or type = ?",
-      whereArgs: [ContentType.text, ContentType.textExtension, ContentType.media, ContentType.ChannelInvitation, ContentType.eventSubscribe],
+      whereArgs: [ContentType.text, ContentType.textExtension, ContentType.nknImage, ContentType.ChannelInvitation, ContentType.eventSubscribe],
       groupBy: 'm.target_id',
       orderBy: 'm.send_time desc',
       limit: limit,

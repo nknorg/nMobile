@@ -11,7 +11,7 @@ description: nMobile
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.0.4+194
+version: 1.1.0+199
 
 environment:
   sdk: ">=2.6.0 <3.0.0"
@@ -33,7 +33,7 @@ dependencies:
   shared_preferences: ^0.5.12+4
   flutter_secure_storage: ^3.3.5
   flutter_aes_ecb_pkcs5: ^0.1.1
-  local_auth: ^0.6.3+3
+  local_auth: 0.6.3+3
   get_it: ^3.1.0
   bs58check: ^1.0.1
   orientation: ^1.1.0
@@ -62,8 +62,6 @@ dependencies:
   mime_type: ^0.2.5
   image_cropper: ^1.2.1
   flutter_native_image: ^0.0.5+2
-  flutter_sound: ^2.1.1
-  background_fetch: 0.5.6
   common_utils: ^1.1.1
   flustars: ^0.2.5+1
   flutter_screenutil: ^1.1.0
@@ -76,7 +74,16 @@ dependencies:
   event_bus: ^1.1.0
   flutter_image_compress: ^0.6.8
   image_save: ^3.0.0
-#  flutter_vibrate: ^1.0.0
+
+  flutter_sound: 7.4.14+1
+  vibration: ^1.7.3
+#  flutter_sound: ^7.5.1+2
+  flutter_plugin_record: ^0.3.5
+  flutter_colored_progress_indicators: ^1.2.0
+#  background_fetch: 0.5.6
+
+  permission_handler: ^5.0.1+1
+
   # Logger
   logger: ^0.9.1
   sentry: ^3.0.1

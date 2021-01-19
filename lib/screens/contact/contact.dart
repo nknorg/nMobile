@@ -518,6 +518,7 @@ class _ContactScreenState extends State<ContactScreen> {
 
     _clientBloc.add(NKNDisConnectClientEvent());
 
+    print('exportWallet___55');
     var eWallet = await wallet.exportWallet(password);
     EasyLoading.show();
 
@@ -563,6 +564,7 @@ class _ContactScreenState extends State<ContactScreen> {
         .verify_wallet_password);
     if (password != null) {
       try {
+        print('exportWallet___66');
         var w = await wallet.exportWallet(password);
         if (w['address'] == wallet.address) {
           onGetPassword(wallet, password);
@@ -716,47 +718,47 @@ class _ContactScreenState extends State<ContactScreen> {
                                   ],
                                 ),
                               ).sized(h: 48),
-                              FlatButton(
-                                padding: const EdgeInsets.only(left: 16, right: 16),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
-                                onPressed: () {
-                                  Navigator.pushNamed(context, ShowMyChatAddress.routeName,
-                                      arguments: _walletDefault?.address ?? currentUser.nknWalletAddress);
-                                },
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    loadAssetIconsImage(
-                                      'wallet',
-                                      color: DefaultTheme.primaryColor,
-                                      width: 24,
-                                    ),
-                                    SizedBox(width: 10),
-                                    Label(
-                                      NL10ns.of(context).wallet_address,
-                                      type: LabelType.bodyRegular,
-                                      color: DefaultTheme.fontColor1,
-                                      height: 1,
-                                    ),
-                                    SizedBox(width: 20),
-                                    Expanded(
-                                      child: Label(
-                                        walletAddress.substring(0, 8) + "...",
-                                        type: LabelType.bodyRegular,
-                                        color: DefaultTheme.fontColor2,
-                                        textAlign: TextAlign.right,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    SvgPicture.asset(
-                                      'assets/icons/right.svg',
-                                      width: 24,
-                                      color: DefaultTheme.fontColor2,
-                                    )
-                                  ],
-                                ),
-                              ).sized(h: 48),
+                              // FlatButton(
+                              //   padding: const EdgeInsets.only(left: 16, right: 16),
+                              //   shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
+                              //   onPressed: () {
+                              //     Navigator.pushNamed(context, ShowMyChatAddress.routeName,
+                              //         arguments: _walletDefault?.address ?? currentUser.nknWalletAddress);
+                              //   },
+                              //   child: Row(
+                              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              //     children: <Widget>[
+                              //       loadAssetIconsImage(
+                              //         'wallet',
+                              //         color: DefaultTheme.primaryColor,
+                              //         width: 24,
+                              //       ),
+                              //       SizedBox(width: 10),
+                              //       Label(
+                              //         NL10ns.of(context).wallet_address,
+                              //         type: LabelType.bodyRegular,
+                              //         color: DefaultTheme.fontColor1,
+                              //         height: 1,
+                              //       ),
+                              //       SizedBox(width: 20),
+                              //       Expanded(
+                              //         child: Label(
+                              //           walletAddress.substring(0, 8) + "...",
+                              //           type: LabelType.bodyRegular,
+                              //           color: DefaultTheme.fontColor2,
+                              //           textAlign: TextAlign.right,
+                              //           maxLines: 1,
+                              //           overflow: TextOverflow.ellipsis,
+                              //         ),
+                              //       ),
+                              //       SvgPicture.asset(
+                              //         'assets/icons/right.svg',
+                              //         width: 24,
+                              //         color: DefaultTheme.fontColor2,
+                              //       )
+                              //     ],
+                              //   ),
+                              // ).sized(h: 48),
                               FlatButton(
                                 padding: const EdgeInsets.only(left: 16, right: 16),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
@@ -827,7 +829,7 @@ class _ContactScreenState extends State<ContactScreen> {
       height: MediaQuery.of(context).size.height,
       child: ListView.builder(
         padding: EdgeInsets.only(top: 4, bottom: 32),
-        itemCount: 8,
+        itemCount: 9,
         itemBuilder: (BuildContext context, int index) {
           if (index == 0){
             return Container(
@@ -1175,6 +1177,9 @@ class _ContactScreenState extends State<ContactScreen> {
                 },
               ).sized(h: 50, w: double.infinity),
             );
+          }
+          else if (index == 8){
+            return getStatusView();
           }
           return Container();
         },
