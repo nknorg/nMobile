@@ -207,6 +207,7 @@ class _RecordAudioState extends State<RecordAudio> {
   stopAndSendRecordFunction() async{
     await _mRecorder.stopRecorder();
     await _mPlayer.stopPlayer();
+
     _cancelRecorderSubscriptions();
     _timer.cancel();
     _timer = null;
@@ -225,7 +226,6 @@ class _RecordAudioState extends State<RecordAudio> {
   @override
   Widget build(BuildContext context) {
     double cellWidth = MediaQuery.of(context).size.width/3;
-
 
     return Opacity(
       opacity: widget.cOpacity,
