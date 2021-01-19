@@ -36,10 +36,34 @@ void main() async {
     runZonedGuarded(() {
       Global.init(() {
         sentry = SentryClient(
+          // log
             dsn: 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
             environmentAttributes: const Event(
-              release: '186',
-              environment: 'Android186',
+              release: 'nMobile',
+              environment: 'production',
+            ));
+        runApp(App());
+      });
+    }, (error, stackTrace) async {
+      await sentry.captureException(
+        exception: error,
+        stackTrace: stackTrace,
+      );
+    });
+    FlutterError.onError = (details, {bool forceReport = false}) {
+      sentry.captureException(
+        exception: details.exception,
+        stackTrace: details.stack,
+      );
+    };
+    return;
+    runZonedGuarded(() {
+      Global.init(() {
+        sentry = SentryClient(
+            dsn: 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
+            environmentAttributes: const Event(
+              release: '195',
+              environment: 'Android195',
             ));
         runApp(App());
       });

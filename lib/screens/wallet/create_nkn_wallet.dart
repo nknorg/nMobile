@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nmobile/app.dart';
@@ -13,6 +14,7 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
@@ -46,11 +48,25 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
 
   next() async {
     if ((_formKey.currentState as FormState).validate()) {
+
       (_formKey.currentState as FormState).save();
+      EasyLoading.show();
+
       String keystore = await NknWalletPlugin.createWallet(null, _password);
       var json = jsonDecode(keystore);
+
       String address = json['Address'];
       _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
+
+
+      await SecureStorage().set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
+      var wallet = WalletSchema(name: _name, address: address);
+
+      var w = await wallet.exportWallet(_password);
+
+      print('ExportWallet Success___'+w.toString());
+
+      EasyLoading.dismiss();
       Navigator.of(context).pushReplacementNamed(AppScreen.routeName);
     }
   }
@@ -165,6 +181,7 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                                                         hintText: NL10ns.of(context).input_password,
                                                         onSaved: (v) => _password = v,
                                                         onFieldSubmitted: (_) {
+                                                          print('on___________');
                                                           FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
                                                         },
                                                         textInputAction: TextInputAction.next,

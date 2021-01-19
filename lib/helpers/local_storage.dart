@@ -49,42 +49,22 @@ class LocalStorage {
     }
   }
 
-  saveValueEncryptByKey(String encodeValue,String key) async {
-    if (encodeValue == null || encodeValue.length == 0){
-      return;
-    }
-    var randomKey = await FlutterAesEcbPkcs5.generateDesKey(128);
-    print('randomKey is'+randomKey);
-    set(WALLET_KEYSTORE_ENCRYPT_SKEY, randomKey);
-    if (key.length > 0 || key.length < 32){
-      randomKey = randomKey.substring(key.length)+key;
-    }
-    print('save Encrypt Value'+randomKey);
-    var encryptString = await FlutterAesEcbPkcs5.encryptString(encodeValue, randomKey);
-    print('save Encrypt Value'+encryptString);
-    set(WALLET_KEYSTORE_ENCRYPT_VALUE, encryptString);
+  saveKeyStoreInFile(String keyStore) async{
+    set(WALLET_KEYSTORE_ENCRYPT_VALUE, keyStore);
   }
 
-  Future<String> getValueDecryptByKey(String key) async{
+  Future<String> getKeyStoreValue() async{
     String decryptKey = await get(WALLET_KEYSTORE_ENCRYPT_SKEY);
-    if (decryptKey == null || decryptKey.length == 0){
+    if (decryptKey != null && decryptKey.length > 0){
+      set(WALLET_KEYSTORE_ENCRYPT_SKEY, '');
+      set(WALLET_KEYSTORE_ENCRYPT_VALUE, '');
+      print('Clear 1.0.3 logic');
+    }
+    String keyStore = await get(WALLET_KEYSTORE_ENCRYPT_VALUE);
+    if (keyStore == null && keyStore.length == 0){
       return '';
     }
-    if (key.length > 0 || key.length < 32 && decryptKey.length == 32){
-      decryptKey = decryptKey.substring(key.length)+key;
-    }
-    String decodedValue = await get(WALLET_KEYSTORE_ENCRYPT_VALUE);
-    if (decodedValue == null || decodedValue.length == 0){
-      return '';
-    }
-    print('解密中'+decodedValue);
-    print('解密中'+decryptKey);
-    String decryptValue = await FlutterAesEcbPkcs5.decryptString(decodedValue, decryptKey);
-    if (decryptValue == null || decryptValue.length == 0){
-      return '';
-    }
-    print('解密成功'+decryptValue);
-    return decryptValue;
+    return keyStore;
   }
 
   Future<dynamic> get(key) async {

@@ -15,6 +15,7 @@ import 'package:nmobile/components/selector_text.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
@@ -59,10 +60,21 @@ class _NoWalletAccountState extends State<NoWalletAccount> {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
       EasyLoading.show();
+
       String keystore = await NknWalletPlugin.createWallet(null, _password);
       var json = jsonDecode(keystore);
+
       String address = json['Address'];
       _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
+
+
+      await SecureStorage().set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
+      var wallet = WalletSchema(name: _name, address: address);
+
+      var w = await wallet.exportWallet(_password);
+
+      print('ExportWallet Success___'+w.toString());
+
       EasyLoading.dismiss();
       Navigator.of(context).pushReplacementNamed(AppScreen.routeName);
     }
