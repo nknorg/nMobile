@@ -201,7 +201,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
       future.then((password) async {
         if (password != null) {
           if (ws.type == WalletSchema.ETH_WALLET) {
-            String keyStore = await ws.getKeystore(password);
+            String keyStore = await ws.getKeystore();
             EthWallet ethWallet = Ethereum.restoreWallet(name: ws.name, keystore: keyStore, password: password);
             Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
               'wallet': null,
@@ -213,6 +213,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
             });
           } else {
             try {
+              print('exportWallet___77');
               var wallet = await ws.exportWallet(password);
               if (wallet['address'] == ws.address) {
                 Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
