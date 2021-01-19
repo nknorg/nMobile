@@ -336,9 +336,20 @@ class NKNClientCaller{
           if (clientBloc != null){
             Global.debugLog('ClientBloc not null__\n'+NKNClientCaller.currentChatId);
           }
-          Global.debugLog('onMessage Data'+data.toString());
           try{
             MessageSchema messageInfo = MessageSchema(from: data['src'], to: NKNClientCaller.currentChatId, data: data['data'], pid: data['pid']);
+            Global.debugLog('onMessage Data'+data.toString());
+            if (data['src'] != null && data['pid'] != null){
+              if (NKNClientCaller.currentChatId != null){
+                Global.debugLog('currentChatId is__'+NKNClientCaller.currentChatId+'\nfrom__'+data['src'].toString()+'\npid__'+data['pid'].toString());
+              }
+              else{
+                Global.debugLog('currentChatId is null');
+              }
+            }
+            else{
+              Global.debugLog('src or pid is null');
+            }
             clientBloc.add(NKNOnMessageEvent(messageInfo));
           }
           catch(e){
