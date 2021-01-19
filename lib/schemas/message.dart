@@ -6,15 +6,13 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
-import 'package:nmobile/model/data/dchat_account.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
-import 'package:nmobile/schemas/contact.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -25,7 +23,8 @@ class ContentType {
   static const String text = 'text';
   static const String receipt = 'receipt';
   static const String textExtension = 'textExtension';
-  static const String media = 'media';
+  static const String nknImage = 'image';
+  static const String nknAudio = 'audio';
   static const String contact = 'contact';
   static const String eventContactOptions = 'event:contactOptions';
   static const String eventSubscribe = 'event:subscribe';
@@ -56,6 +55,9 @@ class MessageSchema extends Equatable {
   String deviceToken;
   int contactOptionsType;
 
+  double audioFileDuration;
+  Map dbMap;
+
   MessageSchema({this.from, this.to, this.pid, this.data}) {
     if (data != null) {
       try {
@@ -69,21 +71,16 @@ class MessageSchema extends Equatable {
         options = msg['options'];
         switch (contentType) {
           case ContentType.text:
-            content = msg['content'];
-            break;
-          case ContentType.receipt:
-            content = msg['targetID'];
-            break;
           case ContentType.textExtension:
-            content = msg['content'];
-            break;
           case ContentType.ChannelInvitation:
-            content = msg['content'];
-            break;
           case ContentType.eventSubscribe:
             content = msg['content'];
             break;
-          case ContentType.media:
+          case ContentType.nknImage:
+          case ContentType.nknAudio:
+            break;
+          case ContentType.receipt:
+            content = msg['targetID'];
             break;
           default:
             content = data;
@@ -104,12 +101,17 @@ class MessageSchema extends Equatable {
     this.content,
     this.contentType,
     this.deviceToken,
+    this.audioFileDuration,
+    this.dbMap,
     Duration deleteAfterSeconds,
   }) {
     timestamp = DateTime.now();
     msgId = uuid.v4();
     if (options == null) {
       options = {};
+    }
+    if (audioFileDuration != null){
+      options['audioDuration'] = audioFileDuration.toString();
     }
     if (deleteAfterSeconds != null) {
       options['deleteAfterSeconds'] = deleteAfterSeconds.inSeconds;
@@ -120,9 +122,11 @@ class MessageSchema extends Equatable {
   loadMedia() async {
     String currentPubkey = NKNClientCaller.pubKey;
     var msg = jsonDecode(data);
+
     var match = RegExp(r'\(data:(.*);base64,(.*)\)').firstMatch(msg['content']);
     var mimeType = match?.group(1);
     var fileBase64 = match?.group(2);
+    print('message content is______'+msg['content']);
     var extension;
     if (mimeType.indexOf('image/jpg') > -1) {
       extension = 'jpg';
@@ -133,16 +137,34 @@ class MessageSchema extends Equatable {
     } else if (mimeType.indexOf('image/webp') > -1) {
       extension = 'webp';
     } else if (mimeType.indexOf('image/') > -1) {
-      extension = mimeType.split('/').last;
+      extension = mimeType
+          .split('/')
+          .last;
+    }
+    else if (mimeType.indexOf('aac') > -1) {
+      extension = 'aac';
+      print('got index aac');
+    }
+    else{
+      print('got other extension'+extension);
     }
     if (fileBase64.isNotEmpty) {
       var bytes = base64Decode(fileBase64);
-      String name = hexEncode(md5.convert(bytes).bytes);
+      String name = hexEncode(md5
+          .convert(bytes)
+          .bytes);
       String path = getCachePath(currentPubkey);
-      File file = File(join(path, name + '.$extension'));
-      file.writeAsBytesSync(bytes);
 
-      content = file;
+      File file = File(join(path, name + '.$extension'));
+      file.writeAsBytesSync(bytes,flush: true);
+      this.content = file;
+    }
+
+    if (msg['options'] != null) {
+      if (msg['options']['audioDuration'] != null) {
+        audioFileDuration = double.parse(msg['options']['audioDuration'].toString());
+        options['audioDuration'] = msg['options']['audioDuration'].toString();
+      }
     }
   }
 
@@ -162,7 +184,35 @@ class MessageSchema extends Equatable {
     return jsonEncode(data);
   }
 
-  toMediaData() {
+  toAudioData() {
+    File file = this.content as File;
+    var mimeType = mime(file.path);
+
+    String transContent;
+    if (mimeType.split('aac').length > 1) {
+       transContent = '![audio](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
+    }
+    else{
+      print('mimeType is____'+mimeType);
+    }
+
+    Map data = {
+      'id': msgId,
+      'contentType': ContentType.nknAudio,
+      'content': transContent,
+      'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+    };
+    if (options != null && options.keys.length > 0) {
+      data['options'] = options;
+    }
+    if (topic != null) {
+      data['topic'] = topic;
+    }
+    print('Send Audio Data is__'+transContent.toString());
+    return jsonEncode(data);
+  }
+
+  toImageData() {
     File file = this.content as File;
     var mimeType = mime(file.path);
     String content;
@@ -185,34 +235,28 @@ class MessageSchema extends Equatable {
     return jsonEncode(data);
   }
 
-  toMeidaWithNotificationData(String deviceToken,String pushContent){
-    File file = this.content as File;
-    var mimeType = mime(file.path);
-    String content;
-    if (mimeType.indexOf('image') > -1) {
-      content = '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
-    }
-
-    Map data = {
-      'id': msgId,
-      'contentType': contentType ?? ContentType.text,
-      'content': content,
-      'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-    };
-    if (options != null && options.keys.length > 0) {
-      data['options'] = options;
-    }
-    if (topic != null) {
-      data['topic'] = topic;
-    }
-
-    if (deviceToken != null && deviceToken.length > 0){
-      // data['deviceToken'] = deviceToken;
-      // data['pushContent'] = pushContent;
-    }
-
-    return jsonEncode(data);
-  }
+  // toMediaDataWithNotification(String deviceToken,String pushContent){
+  //   File file = this.content as File;
+  //   var mimeType = mime(file.path);
+  //   String content;
+  //   if (mimeType.indexOf('image') > -1) {
+  //     content = '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
+  //   }
+  //
+  //   Map data = {
+  //     'id': msgId,
+  //     'contentType': contentType ?? ContentType.text,
+  //     'content': content,
+  //     'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+  //   };
+  //   if (options != null && options.keys.length > 0) {
+  //     data['options'] = options;
+  //   }
+  //   if (topic != null) {
+  //     data['topic'] = topic;
+  //   }
+  //   return jsonEncode(data);
+  // }
 
   toContentOptionData(int contentOptionType){
     this.contactOptionsType = contentOptionType;
@@ -230,12 +274,10 @@ class MessageSchema extends Equatable {
       data = {
         'id': msgId,
         'contentType': ContentType.eventContactOptions,
-        'content': {'deviceToken': deviceToken
-        },
+        'content': {'deviceToken': deviceToken},
         'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       };
     }
-    print('Send Contact Event Option Data'+contentOptionType.toString()+'___'+data.toString());
     data['optionType'] = contentOptionType.toString();
     return jsonEncode(data);
   }
@@ -378,17 +420,24 @@ class MessageSchema extends Equatable {
       'send_time': timestamp.millisecondsSinceEpoch,
       'delete_time': deleteTime?.millisecondsSinceEpoch,
     };
-    if (contentType == ContentType.media) {
+    if (contentType == ContentType.nknImage) {
       map['content'] = getLocalPath(accountPubkey, (content as File).path);
-    } else if (contentType == ContentType.eventContactOptions) {
+    }
+    else if (contentType == ContentType.nknAudio) {
+      options['audioDuration'] = audioFileDuration.toString();
+      map['options'] = jsonEncode(options);
+      map['content'] = getLocalPath(accountPubkey, (content as File).path);
+      print('FetchAudioMessageInfo'+map.toString());
+    }
+    else if (contentType == ContentType.eventContactOptions) {
       map['content'] = content;
       if (map['send_time'] == null) {
         map['send_time'] = now.millisecondsSinceEpoch;
       }
-    } else {
+    }
+    else {
       map['content'] = content;
     }
-
     return map;
   }
 
@@ -411,16 +460,33 @@ class MessageSchema extends Equatable {
     message.receiveTime = DateTime.fromMillisecondsSinceEpoch(e['receive_time']);
     message.deleteTime = e['delete_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['delete_time']) : null;
 
-    if (message.contentType == ContentType.media) {
+    if (message.contentType == ContentType.nknImage) {
       message.content = File(join(Global.applicationRootDirectory.path, e['content']));
     }
-    else if (message.contentType == ContentType.eventContactOptions){
-      message.content = e['content'];
+    else if (message.contentType == ContentType.nknAudio){
+      if (message.options != null){
+        if (message.options['audioDuration'] != null){
+          String audioDS = message.options['audioDuration'];
+          if (audioDS == null || audioDS.toString() == 'null'){
+            print('Audio Duration is Null__'+message.options.toString());
+          }
+          else{
+            print('get Duration __'+audioDS);
+            message.audioFileDuration = double.parse(audioDS);
+          }
+        }
+        else{
+          print('Audio Duration is Null'+message.options['audioDuration']);
+        }
+      }
+      String filePath = join(Global.applicationRootDirectory.path, e['content']);
+      message.content = File(filePath);
+
+      print('InsertAudioMessage'+message.options.toString());
     }
     else {
       message.content = e['content'];
     }
-
     return message;
   }
 
@@ -545,6 +611,18 @@ class MessageSchema extends Equatable {
     );
 
     return count;
+  }
+
+  updateMessageOptions() async{
+    Database cdb = await NKNDataManager().currentDatabase();
+    await cdb.update(
+      MessageSchema.tableName,
+      {
+        'options': options,
+      },
+      where: 'msg_id = ?',
+      whereArgs: [msgId],
+    );
   }
 
   Future<int> readMessage() async {
