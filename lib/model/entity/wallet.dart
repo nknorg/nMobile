@@ -23,9 +23,7 @@ class WalletSchema extends Equatable with Tag {
   final String type;
   String name;
   double balance = 0;
-  String keystore;
 
-  //String publicKey; // fixme: null!!!
   double balanceEth = 0;
   bool isBackedUp = false;
 
@@ -48,7 +46,6 @@ class WalletSchema extends Equatable with Tag {
       return _showDialog('force');
     }
     bool protect = await LocalAuthenticationService.instance.protectionStatus();
-    print('_localAuth.isProtectionEnabled is'+protect.toString());
     if (protect) {
       String password = '';
       if (password == null) {
@@ -74,13 +71,21 @@ class WalletSchema extends Equatable with Tag {
     if (Platform.isAndroid){
       LocalStorage storage = LocalStorage();
       /// Clear 1.0.3 Storage to ASE(Keystore) it is not secureStrong
-      ///
-      String keyStore = await storage.getKeyStoreValue();
-      if (keystore == null || keystore.length == 0){
+
+      String keyStore = await storage.getKeyStoreValue(address);
+      if (keyStore == null || keyStore.length == 0){
+        /// In other case: New Comer
+        // storage.getKeyStoreValue();
+
+        /// if not new Comer
         keyStore = await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
-        storage.saveKeyStoreInFile(keyStore);
+        if (keyStore == null){
+          keyStore = await storage.getKeyStoreValue(address);
+        }
+        else {
+          storage.saveKeyStoreInFile(address,keyStore);
+        }
       }
-      print('_____got keyStore__'+keyStore);
       return keyStore;
     }
     else{
@@ -89,8 +94,10 @@ class WalletSchema extends Equatable with Tag {
   }
 
   Future exportWallet(password) async {
-    String keystore = await getKeystore();
-    var wallet = await NknWalletPlugin.openWallet(keystore, password);
+    String exportKeystore = await getKeystore();
+
+    var wallet = await NknWalletPlugin.openWallet(exportKeystore, password);
+
     await _secureStorage.set('${SecureStorage.PASSWORDS_KEY}:$address', password);
     return wallet;
   }
