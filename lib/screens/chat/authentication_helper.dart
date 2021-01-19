@@ -150,15 +150,10 @@ class DChatAuthenticationHelper with Tag {
   static bool _authenticating = false;
 
   static Future<String> authToGetPassword(WalletSchema wallet, {bool forceShowInputDialog = false}) async {
-    print('step6');
     if (_authenticating) return null;
-    print('step7');
     _authenticating = true;
-    print('step8');
     final _password = await wallet.getPassword(showDialogIfCanceledBiometrics: true /*default*/, forceShowInputDialog: forceShowInputDialog);
-    print('step9');
     _authenticating = false;
-    print('___password is'+_password);
     return _password;
   }
 
@@ -171,14 +166,26 @@ class DChatAuthenticationHelper with Tag {
     // No implementation found for method getAvailableBiometrics on channel plugins.flutter.io/local_auth)
     // Since Android Native Service create a new `DartVM`, and not init other MethodChannel.
     bool isProtectionEnabled = false;
+    print('step6');
+
     if (verifyProtectionEnabled) {
+      print('step7');
+
       bool protection = await LocalAuthenticationService.instance.protectionStatus();
+      print('step9__'+protection.toString());
+
       isProtectionEnabled = protection;
     } else {
       isProtectionEnabled = true;
+      print('step8');
     }
     if (isProtectionEnabled) {
+
+      print('step 9 walletAddress is__'+wallet.address);
+
       final _password = await SecureStorage().get('${SecureStorage.PASSWORDS_KEY}:${wallet.address}');
+      print('step 10___password is'+_password);
+
       if (_password != null && _password.length > 0) {
         onGetPassword(wallet, _password);
       }
@@ -192,6 +199,7 @@ class DChatAuthenticationHelper with Tag {
     void onError(bool pwdIncorrect, dynamic e),
   }) async {
     try {
+      print('exportWallet___33');
       final nknWallet = await wallet.exportWallet(password);
       onGot(nknWallet);
     } catch (e) {
@@ -221,7 +229,6 @@ class DChatAuthenticationHelper with Tag {
     if (walletAddress == null && wallets.length > 0){
       Map resultWallet = wallets[0];
       walletModel = WalletSchema(address: resultWallet['address'], type: resultWallet['type'], name: resultWallet['name']);
-      print('return walletAddress'+walletModel.address);
       return walletModel;
     }
 

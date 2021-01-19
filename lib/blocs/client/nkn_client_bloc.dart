@@ -34,6 +34,7 @@ class NKNClientBloc extends Bloc<NKNClientEvent, NKNClientState>{
   Stream<NKNClientState> mapEventToState(NKNClientEvent event) async* {
     if (event is NKNCreateClientEvent) {
       print('Create Client begin');
+      print('exportWallet___22');
       var wallet = event.wallet;
       var password = event.password;
       var eWallet = await wallet.exportWallet(password);
