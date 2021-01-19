@@ -98,6 +98,7 @@ class _AppScreenState extends State<AppScreen> with SingleTickerProviderStateMix
       }
     }
     else if (ensureShow == -1){
+      print('ensureShowAuth -1');
       _authBloc.add(AuthSuccessEvent());
       Timer(Duration(milliseconds: 350), () async {
         if (TimerAuth.authed == true) {
@@ -170,7 +171,6 @@ class _AppScreenState extends State<AppScreen> with SingleTickerProviderStateMix
         Global.debugLog('app.dart got password'+password);
         if (password != null) {
           try {
-            print('exportWallet___11');
             var w = await wallet.exportWallet(password);
             if (w['address'] == wallet.address) {
               onGetPassword(wallet, password);
@@ -206,7 +206,7 @@ class _AppScreenState extends State<AppScreen> with SingleTickerProviderStateMix
 
     instanceOf<TaskService>().init();
     if (Platform.isAndroid){
-      // instanceOf<BackgroundFetchService>().init();
+      instanceOf<BackgroundFetchService>().init();
     }
 
     Color _color = Theme.of(context).unselectedWidgetColor;

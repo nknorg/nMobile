@@ -99,10 +99,10 @@ class SubscriberRepo with Tag {
       }
       else{
         await cdb.query(tableName, where: '$topic = ?', whereArgs: [topicV], orderBy: '$time_create ASC');
-        // final list = parseEntities(result);
-        // for (Subscriber sub in list){
-        //   Global.debugLog('database exsits topic:'+sub.topic+'__chatID:'+sub.chatId);
-        // }
+        final list = parseEntities(result);
+        for (Subscriber sub in list){
+          Global.debugLog('database exsits topic:'+sub.topic+'__chatID:'+sub.chatId);
+        }
       }
     }
     List resultList = await dbBatch.commit();

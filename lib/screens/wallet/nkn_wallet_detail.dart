@@ -379,10 +379,10 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
           var password = await widget.wallet.getPassword();
           if (password != null) {
             try {
-              print('exportWallet___88');
               var wallet = await widget.wallet.exportWallet(password);
               if (wallet['address'] == widget.wallet.address) {
                 TimerAuth.instance.enableAuth();
+                print('enableauth wallet detail');
                 Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
                   'wallet': wallet,
                   'keystore': wallet['keystore'],

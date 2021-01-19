@@ -716,8 +716,6 @@ class ContactSchema {
     if (options == null){
       options = OptionsSchema(backgroundColor: backgroundColor,color: color);
     }
-    options.backgroundColor = backgroundColor;
-    options.color = color;
     var count = await cdb.update(
       ContactSchema.tableName,
       {
