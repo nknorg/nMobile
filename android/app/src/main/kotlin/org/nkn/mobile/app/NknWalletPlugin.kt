@@ -118,7 +118,6 @@ class NknWalletPlugin(flutterEngine: FlutterEngine) : MethodChannel.MethodCallHa
         result.success(hash)
     }
 
-
     private fun transferAsync(call: MethodCall, result: MethodChannel.Result) {
         val keystore = call.argument<String>("keystore") ?: null
         val password = call.argument<String>("password") ?: ""
@@ -142,7 +141,8 @@ class NknWalletPlugin(flutterEngine: FlutterEngine) : MethodChannel.MethodCallHa
                     )
                     walletEventSink?.success(hash)
                 }
-            }catch (e : Exception){
+            }
+            catch (e : Exception){
                 App.runOnMainThread {
                     walletEventSink?.error(_id,"","")
                 }
@@ -151,10 +151,7 @@ class NknWalletPlugin(flutterEngine: FlutterEngine) : MethodChannel.MethodCallHa
         }
     }
 
-
-
     private fun getBalanceAsync(call: MethodCall, result: MethodChannel.Result) {
-
         val _id = call.argument<String>("_id") ?: null
         val address = call.argument<String>("address") ?: null
         val account = Nkn.newAccount(Nkn.randomBytes(32))
