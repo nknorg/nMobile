@@ -121,7 +121,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           message.isSendError = true;
         }
         break;
-      case ContentType.media:
+      case ContentType.nknImage:
+      case ContentType.nknAudio:
         message.isOutbound = true;
         message.isRead = true;
         if (message.options != null && message.options['deleteAfterSeconds'] != null) {
@@ -132,8 +133,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           if (message.topic != null) {
             pid = await _sendGroupMessage(message);
           } else {
-            var contact = await ContactSchema.fetchContactByAddress(message.to);
-            String sendData = message.toMeidaWithNotificationData(contact.deviceToken, "[收到图片]");
+            String sendData = '';
+            if (message.contentType == ContentType.nknImage){
+              sendData = message.toImageData();
+            }
+            else if (message.contentType == ContentType.nknAudio){
+              sendData = message.toAudioData();
+            }
             pid = await NKNClientCaller.sendText([message.to], sendData);
           }
           message.pid = pid;
@@ -142,6 +148,27 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           message.isSendError = true;
         }
         break;
+      // case ContentType.nknAudio:
+      //   message.isOutbound = true;
+      //   message.isRead = true;
+      //   if (message.options != null && message.options['deleteAfterSeconds'] != null) {
+      //     message.deleteTime = DateTime.now().add(Duration(seconds: message.options['deleteAfterSeconds']));
+      //   }
+      //   try {
+      //     var pid;
+      //     if (message.topic != null) {
+      //       pid = await _sendGroupMessage(message);
+      //     } else {
+      //       var contact = await ContactSchema.fetchContactByAddress(message.to);
+      //       String sendData = message.toImageData();
+      //       pid = await NKNClientCaller.sendText([message.to], sendData);
+      //     }
+      //     message.pid = pid;
+      //     message.isSendError = false;
+      //   } catch (e) {
+      //     message.isSendError = true;
+      //   }
+      //   break;
       case ContentType.eventContactOptions:
         try {
           await NKNClientCaller.sendText([message.to], message.toContentOptionData(message.contactOptionsType));
@@ -179,6 +206,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         return;
     }
     await message.insert();
+    if (message.contentType == ContentType.nknAudio){
+      print('SendInsertAudioMessage__'+message.options.toString());
+    }
     yield MessageUpdateState(target: message.to, message: message);
   }
 
@@ -188,8 +218,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     if (message.contentType == ContentType.text){
       encodeSendJsonData = message.toTextData();
     }
-    else if (message.contentType == ContentType.media){
-      encodeSendJsonData = message.toMediaData();
+    else if (message.contentType == ContentType.nknImage){
+      encodeSendJsonData = message.toImageData();
+    }
+    else if (message.contentType == ContentType.nknAudio){
+      encodeSendJsonData = message.toAudioData();
     }
     else if (message.contentType == ContentType.eventSubscribe){
       encodeSendJsonData = message.toEventSubscribeData();
@@ -199,8 +232,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     }
     if (isPrivateTopic(message.topic)) {
       List<String> dests = await GroupChatHelper.fetchGroupMembers(message.topic);
-      Global.debugLog('Send GroupMessage to__'+dests.toString());
-      Global.debugLog('Send GroupMessage count__'+dests.length.toString());
       if (dests != null && dests.length > 0){
         pid = await NKNClientCaller.sendText(dests, encodeSendJsonData);
       }
@@ -209,7 +240,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       }
     }
     else {
+      List<String> members = await GroupChatHelper.fetchGroupMembers(message.topic);
+      print('GroupMember is__'+members.toString());
+      print('GroupMember count is__'+members.length.toString()+'__');
       pid = await NKNClientCaller.publishText(genTopicHash(message.topic), encodeSendJsonData);
+      Global.debugLog('PublishText to Topic__'+message.topic+'__'+message.content);
     }
     return pid;
   }
@@ -221,7 +256,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     else{
       LocalNotification.messageNotification(title, message.content, message: message);
     }
-    // LocalNotification.messageNotification(title, message.content, message: message);
   }
 
   Stream<ChatState> _mapReceiveMessageToState(ReceiveMessageEvent event) async* {
@@ -249,8 +283,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       else{
         /// Check If the Group contains the Member;
         bool existMember = await GroupChatHelper.checkMemberIsInGroup(message.from, message.topic);
-        print('GroupMessage from__'+message.from+'__'+message.topic);
-        print('Exists Member'+existMember.toString());
         if (existMember == false){
           GroupChatPublicChannel.pullSubscribersPublicChannel(
             topicName: message.topic,
@@ -259,12 +291,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         }
       }
     }
-    else{
-      _checkContactIfExists(message.from);
-    }
+
     /// message.topic is not null Means TopicChat
 
-    var contact = await ContactSchema.fetchContactByAddress(message.from);
+    var contact = await _checkContactIfExists(message.from);
+    if (message.topic != null){
+      Global.debugLog('GroupMessage from__'+message.from+'__'+message.topic);
+    }
+    else{
+      Global.debugLog('SingleChat from__'+message.from);
+    }
+
     final String title = (topic?.isPrivate ?? false) ? topic.shortName : contact.name;
     if (!contact.isMe && message.contentType != ContentType.contact && Global.isLoadProfile(contact.publicKey)) {
       if (contact.profileExpiresAt == null || DateTime.now().isAfter(contact.profileExpiresAt)) {
@@ -320,7 +357,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         FlutterAppBadger.updateBadgeCount(unReadCount);
         yield MessageUpdateState(target: message.from, message: message);
         return;
-      case ContentType.media:
+      case ContentType.nknImage:
+      case ContentType.nknAudio:
         if (message.topic != null && message.from == NKNClientCaller.currentChatId) {
           await message.receiptTopic();
           message.isSuccess = true;
@@ -439,6 +477,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         getPublicKeyByClientAddr(clientAddress));
     var contact = await ContactSchema.fetchContactByAddress(clientAddress);
     if (contact == null) {
+      Global.debugLog('Insert contact stranger__'+clientAddress.toString());
       contact = ContactSchema(type: ContactType.stranger,
           clientAddress: clientAddress,
           nknWalletAddress: walletAddress);
@@ -464,9 +503,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       dataInfo['deviceToken'] = contact.deviceToken;
       dataInfo['pushContent'] = pushContent;
 
-      if (message.contentType == ContentType.media){
-        dataInfo = jsonDecode(message.toMeidaWithNotificationData(contact.deviceToken, pushContent));
+      if (message.contentType == ContentType.nknImage){
+        dataInfo = jsonDecode(message.toImageData());
       }
+      else if (message.contentType == ContentType.nknAudio){
+        dataInfo = jsonDecode(message.toAudioData());
+      }
+      print('Send Message Data__'+dataInfo.toString());
     }
     return dataInfo;
   }

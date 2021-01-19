@@ -216,7 +216,7 @@ class Ethereum {
   }
 
   static Future<EthWallet> restoreWalletSaved({@required WalletSchema schema, @required String password}) async {
-    return restoreWallet(name: schema.name, keystore: await schema.getKeystore(password), password: password);
+    return restoreWallet(name: schema.name, keystore: await schema.getKeystore(), password: password);
   }
 
   static void saveWallet({@required EthWallet ethWallet, @required WalletsBloc walletsBloc}) async {
