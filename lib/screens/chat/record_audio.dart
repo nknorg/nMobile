@@ -57,7 +57,7 @@ class RecordAudio extends StatefulWidget {
 class _RecordAudioState extends State<RecordAudio> {
 
   /// countDown audio duration
-  int _maxLength = 30;
+  int _maxLength = 60;
 
   double starty = 0.0;
   // double offset = 0.0;
@@ -67,12 +67,12 @@ class _RecordAudioState extends State<RecordAudio> {
   // String voiceIco = "images/voice_volume_1.png";
 
   String recordLength = '0:00';
-  String cancelText = 'Cancel';
+  String cancelText = '取消';
   Color recordingColor = Colors.red;
 
 
   /// LongPress Var
-  String moveLeftToCancelRecord = '<  Slide cancel  <';
+  String moveLeftToCancelRecord = '<  滑动以取消  <';
 
   ///默认隐藏状态
   bool voiceState = true;
@@ -99,14 +99,12 @@ class _RecordAudioState extends State<RecordAudio> {
 
   @override
   void initState() {
-    super.initState();
-
     _mPlayer.openAudioSession().then((value) {
       setState(() {
         _mPlayerIsInited = true;
       });
     });
-
+    super.initState();
     openTheRecorder().then((value) {
       setState(() {
         _mRecorderIsInited = true;
@@ -132,12 +130,8 @@ class _RecordAudioState extends State<RecordAudio> {
         mode: SessionMode.modeDefault,
         device: AudioDevice.speaker);
 
-    if (_mPlayer != null){
-      await _mPlayer.setSubscriptionDuration(Duration(milliseconds: 30));
-    }
-    if (_mRecorder != null){
-      await _mRecorder.setSubscriptionDuration(Duration(milliseconds: 30));
-    }
+    await _mPlayer.setSubscriptionDuration(Duration(milliseconds: 60));
+    await _mRecorder.setSubscriptionDuration(Duration(milliseconds: 60));
 
     widget.cancelCurrentRecord = ()=>cancelCurrentRecordFunction();
     widget.stopAndSendAudioMessage = ()=>stopAndSendRecordFunction();
@@ -198,9 +192,9 @@ class _RecordAudioState extends State<RecordAudio> {
   _stopRecordButNotSend(){
     _mPlayer.stopPlayer();
     _mRecorder.pauseRecorder();
-    // _cancelRecorderSubscriptions();
-    // _timer.cancel();
-    // _timer = null;
+    _cancelRecorderSubscriptions();
+    _timer.cancel();
+    _timer = null;
   }
 
   /// For Message to cancel
@@ -211,22 +205,18 @@ class _RecordAudioState extends State<RecordAudio> {
 
   /// For Message to stop
   stopAndSendRecordFunction() async{
-    if (_mRecorder != null){
-      await _mRecorder.stopRecorder();
-    }
-
+    await _mRecorder.stopRecorder();
     await _mPlayer.stopPlayer();
     _cancelRecorderSubscriptions();
-    if (_timer != null){
-      _timer.cancel();
-      _timer = null;
-    }
+    _timer.cancel();
+    _timer = null;
+
     widget.stopRecord(_mPath, duration);
   }
 
   _cancelRecord() {
     print('moveLeftToCancelRecord__'+moveLeftToCancelRecord.toString());
-    if (moveLeftToCancelRecord == 'Cancel'){
+    if (moveLeftToCancelRecord == '取消'){
       widget.cancelRecord();
       _resetAudio();
     }
@@ -235,6 +225,7 @@ class _RecordAudioState extends State<RecordAudio> {
   @override
   Widget build(BuildContext context) {
     double cellWidth = MediaQuery.of(context).size.width/3;
+
 
     return Opacity(
       opacity: widget.cOpacity,
@@ -305,7 +296,7 @@ class _RecordAudioState extends State<RecordAudio> {
         ),
       );
     }
-    String sendText = 'Send';
+    String sendText = '发送';
     return GestureDetector(
       child: Container(
         margin: EdgeInsets.only(right: 16,left: 5),
@@ -430,7 +421,6 @@ class _RecordAudioState extends State<RecordAudio> {
       throw RecordingPermissionException('Microphone permission not granted');
     }
 
-
     await _resetMPath();
     await _mRecorder.openAudioSession();
     _mRecorderIsInited = true;
@@ -442,7 +432,7 @@ class _RecordAudioState extends State<RecordAudio> {
     String name = nowDate.toString().replaceAll(new RegExp(r"\s+\b|\b\s"), "");
     name = name+'.aac';
 
-    _mPath = join(tempDir.path, NKNClientCaller.currentChatId,name);
+    _mPath = join(tempDir.path, NKNClientCaller.pubKey,name);
     var outputFile = File(_mPath);
     if (outputFile.existsSync()) {
       await outputFile.delete();
@@ -455,9 +445,7 @@ class _RecordAudioState extends State<RecordAudio> {
       toFile: _mPath,
       codec: Codec.aacADTS,
     );
-    if (mounted){
-      setState(() {});
-    }
+    setState(() {});
   }
 
   Future<void> stopRecordFunc() async {
@@ -492,18 +480,14 @@ class _RecordAudioState extends State<RecordAudio> {
     _cancelRecorderSubscriptions();
     _cancelPlayerSubscriptions();
 
-    if (_mRecorder != null){
-      if (_mRecorder.isRecording){
-        _mRecorder.stopRecorder();
-      }
-      _mRecorder.closeAudioSession();
-      _mRecorder = null;
+    if (_mRecorder.isRecording){
+      _mRecorder.stopRecorder();
     }
+    _mRecorder.closeAudioSession();
+    _mRecorder = null;
 
-    if (_timer != null){
-      _timer.cancel();
-      _timer = null;
-    }
+    _timer.cancel();
+    _timer = null;
   }
 
   @override

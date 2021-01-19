@@ -12,9 +12,7 @@ import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/log_tag.dart';
-import 'package:oktoast/oktoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:web3dart/credentials.dart';
 
 enum WalletType { nkn, eth }
 
@@ -25,7 +23,9 @@ class WalletSchema extends Equatable with Tag {
   final String type;
   String name;
   double balance = 0;
+  String keystore;
 
+  //String publicKey; // fixme: null!!!
   double balanceEth = 0;
   bool isBackedUp = false;
 
@@ -47,16 +47,17 @@ class WalletSchema extends Equatable with Tag {
     if (forceShowInputDialog) {
       return _showDialog('force');
     }
-
-    bool underProtection = await LocalAuthenticationService.instance.protectionStatus();
-    if (underProtection) {
-      String password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');
-
+    bool protect = await LocalAuthenticationService.instance.protectionStatus();
+    print('_localAuth.isProtectionEnabled is'+protect.toString());
+    if (protect) {
+      String password = '';
       if (password == null) {
         return _showDialog('no password');
       } else {
         bool auth = await LocalAuthenticationService.instance.authenticate();
         if (auth) {
+          TimerAuth.instance.enableAuth();
+          password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');
           return password;
         } else if (showDialogIfCanceledBiometrics) {
           return _showDialog('auth failed');
@@ -73,19 +74,13 @@ class WalletSchema extends Equatable with Tag {
     if (Platform.isAndroid){
       LocalStorage storage = LocalStorage();
       /// Clear 1.0.3 Storage to ASE(Keystore) it is not secureStrong
-
-      String keyStore = await storage.getKeyStoreValue(address);
-      if (keyStore == null || keyStore.length == 0){
-        /// if not new Comer
+      ///
+      String keyStore = await storage.getKeyStoreValue();
+      if (keystore == null || keystore.length == 0){
         keyStore = await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
-        if (keyStore == null){
-          /// keystore is broken
-          keyStore = '';
-        }
-        else {
-          storage.saveKeyStoreInFile(address,keyStore);
-        }
+        storage.saveKeyStoreInFile(keyStore);
       }
+      print('_____got keyStore__'+keyStore);
       return keyStore;
     }
     else{
@@ -93,17 +88,10 @@ class WalletSchema extends Equatable with Tag {
     }
   }
 
-  Future<Map> exportWallet(password) async {
-    String exportKeystore = await getKeystore();
-
-    if (exportKeystore == null || exportKeystore.length == 0){
-      return null;
-    }
-    var wallet = await NknWalletPlugin.openWallet(exportKeystore, password);
-
+  Future exportWallet(password) async {
+    String keystore = await getKeystore();
+    var wallet = await NknWalletPlugin.openWallet(keystore, password);
     await _secureStorage.set('${SecureStorage.PASSWORDS_KEY}:$address', password);
-
-    print('Save password for key__'+password+'___'+address);
     return wallet;
   }
 

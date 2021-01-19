@@ -16,15 +16,15 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/common_native.dart';
-import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/active_page.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/wallet/wallet.dart';
+import 'package:nmobile/services/background_fetch_service.dart';
 import 'package:nmobile/services/service_locator.dart';
 import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/image_utils.dart';
-import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 import 'screens/chat/chat.dart';
@@ -45,7 +45,7 @@ class _AppScreenState extends State<AppScreen> with SingleTickerProviderStateMix
   WalletsBloc _walletsBloc;
   int _currentIndex = 0;
   List<Widget> screens = <Widget>[
-    ChatScreen(),
+    ChatScreen(ActivePage(0)),
     WalletScreen(),
     SettingsScreen(),
   ];
@@ -59,66 +59,67 @@ class _AppScreenState extends State<AppScreen> with SingleTickerProviderStateMix
 
   @override
   didChangeAppLifecycleState(AppLifecycleState state){
-    /// When app enter background mode
     if (state == AppLifecycleState.paused){
-      _authBloc.add(AuthToBackgroundEvent());
       TimerAuth.instance.onHomePagePaused(context);
-      fromBackground = true;
-      // _clientBloc.add(NKNDisConnectClientEvent());
+      _authBloc.add(AuthFailEvent());
     }
-    /// This occurs when shows system bottom menu,choose picture from album or biometric Auth,or take a picture...
-    else if (state == AppLifecycleState.inactive){
-      /// do nothing
+    if (state == AppLifecycleState.resumed) {
+      // _authBloc.add(AuthFailEvent());
+      ensureAutoShowAuth();
     }
-    /// This calls when app awake from background
-    else if (state == AppLifecycleState.resumed){
-      if (fromBackground){
+    print('didChangeAppLifecycleState__'+state.toString());
+    if (state == AppLifecycleState.resumed) {
+      if (fromBackground) {
         fromBackground = false;
-        int result = TimerAuth.instance.onHomePageResumed(context);
-        if (result == -1){
-          _authBloc.add(AuthToFrontEvent());
-          // _clientBloc.add(NKNRecreateClientEvent());
-        }
-        else{
-          ensureAutoShowAuth();
-        }
       }
+    } else if (state == AppLifecycleState.paused) {
+      fromBackground = true;
     }
   }
 
   ensureAutoShowAuth(){
     int ensureShow = TimerAuth.instance.onHomePageResumed(context);
     if (ensureShow == 1){
-      _authBloc.add(AuthFailEvent());
+      print('ensureShowAuth 1');
       if (TimerAuth.onOtherPage == true){
         return;
       }
+
       if (TimerAuth.authed == false){
         if (TimerAuth.instance.pagePushed){
           while (Navigator.canPop(context)){
             Navigator.pop(context);
           }
         }
-        if (_currentIndex == 0){
+        if (fromBackground == true && _currentIndex == 0){
           _delayAuth();
+          print('wallet Loaded from _ensureAutoShowAuth');
         }
       }
     }
     else if (ensureShow == -1){
-      if (TimerAuth.authed == true){
-        _authBloc.add(AuthToFrontEvent());
-      }
-    }
-    else{
-      _authBloc.add(AuthFailEvent());
+      _authBloc.add(AuthSuccessEvent());
+      Timer(Duration(milliseconds: 350), () async {
+        if (TimerAuth.authed == true) {
+          WalletSchema wallet = await DChatAuthenticationHelper.loadUserDefaultWallet();
+          DChatAuthenticationHelper.getPassword4BackgroundFetch(
+            wallet: wallet,
+            verifyProtectionEnabled: false,
+            onGetPassword: (wallet, password) {
+              onGetPassword(wallet, password);
+            },
+          );
+        }
+      });
     }
   }
 
   void onGetPassword(WalletSchema wallet, String password) async{
+    Global.debugLog('app.dart onGetPassword');
     TimerAuth.instance.enableAuth();
     if (_authBloc != null && _clientBloc != null){
-      ContactSchema currentUser = await ContactSchema.fetchCurrentUser();
-      _authBloc.add(AuthToUserEvent(currentUser.publicKey, currentUser.clientAddress));
+      _authBloc.add(AuthSuccessEvent());
+      _clientBloc.add(NKNCreateClientEvent(wallet, password));
     }
   }
 
@@ -143,11 +144,13 @@ class _AppScreenState extends State<AppScreen> with SingleTickerProviderStateMix
     _tabController.addListener(() {
       setState(() {
         if (_currentIndex != _tabController.index){
+          print('index is'+_tabController.index.toString());
           _currentIndex = _tabController.index;
           if (_currentIndex == 0){
             if (TimerAuth.authed == false){
               _authBloc.add(AuthFailEvent());
               _delayAuth();
+              print('wallet Loaded from _tabController');
             }
           }
         }
@@ -157,21 +160,18 @@ class _AppScreenState extends State<AppScreen> with SingleTickerProviderStateMix
 
   _delayAuth(){
     Timer(Duration(milliseconds: 350), () async {
-      WalletSchema wallet = await TimerAuth.loadCurrentWallet();
+      WalletSchema wallet = await DChatAuthenticationHelper.loadUserDefaultWallet();
       if (wallet == null){
         showToast(NL10ns.of(context).something_went_wrong);
         return;
       }
       if (TimerAuth.authed == false){
-        var password = await TimerAuth.instance.onCheckAuthGetPassword(context);
+        var password = await wallet.getPassword();
+        Global.debugLog('app.dart got password'+password);
         if (password != null) {
-          NLog.w('app.dart _delayAuth__ got password'+password.toString());
           try {
+            print('exportWallet___11');
             var w = await wallet.exportWallet(password);
-            if (w == null){
-              showToast('keyStore file broken,Reimport your wallet,(due to 1.0.3 Error)');
-              return;
-            }
             if (w['address'] == wallet.address) {
               onGetPassword(wallet, password);
             } else {
@@ -236,9 +236,6 @@ class _AppScreenState extends State<AppScreen> with SingleTickerProviderStateMix
           labelColor: DefaultTheme.primaryColor,
           unselectedLabelColor: ColorValue.lightGreyColor,
           indicatorColor: Colors.white,
-          labelStyle: TextStyle(
-            fontSize: DefaultTheme.iconTextFontSize,
-          ),
           tabs: <Widget>[
             Tab(
               icon: loadAssetIconsImage('chat', color: _currentIndex == 0 ? _selectedColor : _color),
