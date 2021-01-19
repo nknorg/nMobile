@@ -183,7 +183,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                   msg.isSuccess = true;
                 });
               }
-            } else if (state.message.topic == targetId && state.message.contentType == ContentType.nknImage) {
+            } else if (state.message.topic == targetId && state.message.contentType == ContentType.media) {
               state.message.isSuccess = true;
               state.message.isRead = true;
               if (state.message.options != null && state.message.options['deleteAfterSeconds'] != null) {
@@ -242,7 +242,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     super.dispose();
   }
 
-  _sendText() async {
+  _send() async {
     LocalStorage.saveChatUnSendContentWithId(NKNClientCaller.pubKey, targetId);
     String text = _sendController.text;
     if (text == null || text.length == 0) return;
@@ -266,26 +266,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     }
   }
 
-  _sendAudio(File audioFile,double audioDuration) async{
-    String dest = targetId;
-    var sendMsg = MessageSchema.fromSendData(
-      from: NKNClientCaller.currentChatId,
-      to: dest,
-      content: audioFile,
-      contentType: ContentType.nknAudio,
-      audioFileDuration: audioDuration,
-    );
-    sendMsg.isOutbound = true;
-    try {
-      setState(() {
-        _messages.insert(0, sendMsg);
-      });
-      _chatBloc.add(SendMessageEvent(sendMsg));
-    } catch (e) {
-      print('send message error: $e');
-    }
-  }
-
   _sendImage(File savedImg) async {
     String dest = targetId;
 
@@ -293,7 +273,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       from: NKNClientCaller.currentChatId,
       topic: dest,
       content: savedImg,
-      contentType: ContentType.nknImage,
+      contentType: ContentType.media,
     );
     sendMsg.isOutbound = true;
     try {
@@ -431,7 +411,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                             showTime = true;
                           } else {
                             var preMessage = index == _messages.length ? message : _messages[index + 1];
-                            if (preMessage.contentType == ContentType.text || preMessage.contentType == ContentType.nknImage) {
+                            if (preMessage.contentType == ContentType.text || preMessage.contentType == ContentType.media) {
                               showTime = (message.timestamp.isAfter(preMessage.timestamp.add(Duration(minutes: 3))));
                             } else {
                               showTime = true;
@@ -690,7 +670,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
               ),
               //disabled: !_canSend,
               onPressed: () {
-                _sendText();
+                _send();
               },
             ),
           ),

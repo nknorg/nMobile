@@ -79,16 +79,10 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
   }
 
   Stream<WalletsState> _mapAddWalletToState(AddWallet event) async* {
-    print('_mapAddWalletToState state is____'+state.toString());
     if (state is WalletsLoaded) {
-      _addWallet(event.wallet, event.keystore);
-      print('Event state is____'+event.wallet.toString()+'_____'+event.keystore);
-
-
       final List<WalletSchema> list = List.from((state as WalletsLoaded).wallets)..add(event.wallet);
-
-      print('List length is____'+list.length.toString());
       yield WalletsLoaded(list);
+      _addWallet(event.wallet, event.keystore);
     }
   }
 

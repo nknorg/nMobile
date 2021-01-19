@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
+import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
@@ -12,6 +15,7 @@ import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/log_tag.dart';
+import 'package:oktoast/oktoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum WalletType { nkn, eth }
@@ -70,18 +74,19 @@ class WalletSchema extends Equatable with Tag {
     }
   }
 
-  Future<String> getKeystore() async {
+  Future<String> getKeystore(String password) async {
     if (Platform.isAndroid){
       LocalStorage storage = LocalStorage();
-      /// Clear 1.0.3 Storage to ASE(Keystore) it is not secureStrong
-      ///
-      String keyStore = await storage.getKeyStoreValue();
-      if (keystore == null || keystore.length == 0){
+      String keyStoreInLocal =  await storage.getValueDecryptByKey(password);
+      String keyStore = '';
+      if (keyStoreInLocal == null || keyStoreInLocal.length == 0){
         keyStore = await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
-        storage.saveKeyStoreInFile(keyStore);
+        storage.saveValueEncryptByKey(keyStore,password);
+        return keyStore;
       }
-      print('_____got keyStore__'+keyStore);
-      return keyStore;
+      else{
+        return keyStoreInLocal;
+      }
     }
     else{
       return await _secureStorage.get('${SecureStorage.NKN_KEYSTORES_KEY}:$address');
@@ -89,7 +94,7 @@ class WalletSchema extends Equatable with Tag {
   }
 
   Future exportWallet(password) async {
-    String keystore = await getKeystore();
+    String keystore = await getKeystore(password);
     var wallet = await NknWalletPlugin.openWallet(keystore, password);
     await _secureStorage.set('${SecureStorage.PASSWORDS_KEY}:$address', password);
     return wallet;

@@ -36,8 +36,9 @@ class MainActivity : FlutterFragmentActivity(){
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+//        GeneratedPluginRegistrant.registerWith(flutterEngine)
         Log.e("MainActivityE", "<<<---configureFlutterEngine--->>>".withAndroidPrefix())
-//        GeneratedPluginRegistrant.registerWith(flutterEngine);
+
         Sentry.init("https://e8e2c15b0e914295a8b318919f766701@o466976.ingest.sentry.io/5483308",
                 AndroidSentryClientFactory(this.applicationContext))
 

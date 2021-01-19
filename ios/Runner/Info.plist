@@ -57,16 +57,13 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Location permission is required for record your location.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>This app uses the microphone to record your speech and send it
-         as a message.</string>
+	<string>Microphone permission is required for record your voice when camera.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Motion permission is required for record motion data.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Granting access will allow you to take and share photos with your nMobile contacts</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>App want to access your Photo Library to send image message or set avatar</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Recognize speech</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
