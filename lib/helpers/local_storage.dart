@@ -49,21 +49,27 @@ class LocalStorage {
     }
   }
 
-  saveKeyStoreInFile(String keyStore) async{
-    set(WALLET_KEYSTORE_ENCRYPT_VALUE, keyStore);
+  saveKeyStoreInFile(String address,String keyStore) async{
+    String addressKey = '$WALLET_KEYSTORE_ENCRYPT_VALUE'+'_'+address;
+    set(addressKey, keyStore);
+    print('save Keystore to Local__'+addressKey+'___'+keyStore);
   }
 
-  Future<String> getKeyStoreValue() async{
+  Future<String> getKeyStoreValue(String address) async{
+    print('getKeyStoreValue begin');
     String decryptKey = await get(WALLET_KEYSTORE_ENCRYPT_SKEY);
     if (decryptKey != null && decryptKey.length > 0){
       set(WALLET_KEYSTORE_ENCRYPT_SKEY, '');
       set(WALLET_KEYSTORE_ENCRYPT_VALUE, '');
       print('Clear 1.0.3 logic');
     }
-    String keyStore = await get(WALLET_KEYSTORE_ENCRYPT_VALUE);
+
+    String addressKey = '$WALLET_KEYSTORE_ENCRYPT_VALUE'+'_'+address;
+    String keyStore = await get(addressKey);
     if (keyStore == null && keyStore.length == 0){
       return '';
     }
+    print('getKeyStoreValue end +'+keyStore);
     return keyStore;
   }
 

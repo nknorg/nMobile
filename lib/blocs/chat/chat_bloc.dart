@@ -148,27 +148,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           message.isSendError = true;
         }
         break;
-      // case ContentType.nknAudio:
-      //   message.isOutbound = true;
-      //   message.isRead = true;
-      //   if (message.options != null && message.options['deleteAfterSeconds'] != null) {
-      //     message.deleteTime = DateTime.now().add(Duration(seconds: message.options['deleteAfterSeconds']));
-      //   }
-      //   try {
-      //     var pid;
-      //     if (message.topic != null) {
-      //       pid = await _sendGroupMessage(message);
-      //     } else {
-      //       var contact = await ContactSchema.fetchContactByAddress(message.to);
-      //       String sendData = message.toImageData();
-      //       pid = await NKNClientCaller.sendText([message.to], sendData);
-      //     }
-      //     message.pid = pid;
-      //     message.isSendError = false;
-      //   } catch (e) {
-      //     message.isSendError = true;
-      //   }
-      //   break;
       case ContentType.eventContactOptions:
         try {
           await NKNClientCaller.sendText([message.to], message.toContentOptionData(message.contactOptionsType));
@@ -325,7 +304,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         checkBurnOptions(message, contact);
 
         _judgeSendLocalMessageNotificationDueToGoogleServiceStatus(googleServiceOn, title, message);
-
         await message.insert();
         var unReadCount = await MessageSchema.unReadMessages();
         FlutterAppBadger.updateBadgeCount(unReadCount);
@@ -372,7 +350,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         message.isSuccess = true;
         checkBurnOptions(message, contact);
         _judgeSendLocalMessageNotificationDueToGoogleServiceStatus(googleServiceOn, title, message);
-        await message.loadMedia();
+        message.loadMedia();
         await message.insert();
         var unReadCount = await MessageSchema.unReadMessages();
         FlutterAppBadger.updateBadgeCount(unReadCount);
