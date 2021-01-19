@@ -51,3 +51,5 @@ ios/Classes/NKNPush/Resource/NknSecure.h
 ios/Classes/NKNPush/Resource/pusher.p12
 android/gradle.properties
 android/gradle.properties
+android/app/src/main/java/service/GooglePushService.java
+android/app/src/main/java/service/GooglePushService.java

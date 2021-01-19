@@ -31,8 +31,6 @@ import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/schemas/message_item.dart';
-import 'package:nmobile/schemas/options.dart';
-import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/chat/message.dart';
@@ -496,7 +494,8 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
           ),
         ],
       );
-    } else if (item.contentType == ContentType.media) {
+    }
+    else if (item.contentType == ContentType.nknImage) {
       contentWidget = Padding(
         padding: const EdgeInsets.only(top: 0),
         child: Row(
@@ -511,21 +510,24 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
           ],
         ),
       );
-    } else if (item.contentType == ContentType.ChannelInvitation) {
+    }
+    else if (item.contentType == ContentType.ChannelInvitation) {
       contentWidget = Label(
         contact.name + ': ' + NL10ns.of(context).channel_invitation,
         type: LabelType.bodySmall,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
-    } else if (item.contentType == ContentType.eventSubscribe) {
+    }
+    else if (item.contentType == ContentType.eventSubscribe) {
       contentWidget = Label(
         NL10ns.of(context).joined_channel,
         maxLines: 1,
         type: LabelType.bodySmall,
         overflow: TextOverflow.ellipsis,
       );
-    } else {
+    }
+    else {
       contentWidget = Label(
         contact.name + ': ' + item.content,
         maxLines: 1,
@@ -667,7 +669,7 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
           ),
         ],
       );
-    } else if (item.contentType == ContentType.media) {
+    } else if (item.contentType == ContentType.nknImage) {
       contentWidget = Padding(
         padding: const EdgeInsets.only(top: 0),
         child: Row(
