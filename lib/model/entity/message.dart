@@ -505,19 +505,13 @@ class MessageSchema extends Equatable {
 
   Future<bool> isExist() async {
     Database cdb = await NKNDataManager().currentDatabase();
-    try {
-      var res = await cdb.query(
-        MessageSchema.tableName,
-        columns: ['COUNT(id) as count'],
-        where: 'msg_id = ? AND is_outbound = 0',
-        whereArgs: [msgId],
-      );
-      return Sqflite.firstIntValue(res) > 0;
-    } catch (e) {
-      debugPrint(e);
-      debugPrintStack();
-      return false;
-    }
+    var res = await cdb.query(
+      MessageSchema.tableName,
+      columns: ['COUNT(id) as count'],
+      where: 'msg_id = ? AND is_outbound = 0',
+      whereArgs: [msgId],
+    );
+    return Sqflite.firstIntValue(res) > 0;
   }
 
   static Future<List<MessageSchema>> getAndReadTargetMessages(String targetId, {int limit = 20, int skip = 0}) async {
