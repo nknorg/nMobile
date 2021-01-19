@@ -75,21 +75,16 @@ class _ChatBubbleState extends State<ChatBubble> {
   double audioLeft = 0.0;
 
   void startPlay() async {
-    if (_mPlayerIsInited == false){
-      _mPlayer.openAudioSession(
-          focus: AudioFocus.requestFocusTransient,
-          category: SessionCategory.playAndRecord,
-          mode: SessionMode.modeDefault,
-          device: AudioDevice.speaker).then((value) {
-        setState(() {
-          _mPlayerIsInited = true;
-          _readyToPlay();
-        });
+    _mPlayer.openAudioSession(
+        focus: AudioFocus.requestFocusTransient,
+        category: SessionCategory.playAndRecord,
+        mode: SessionMode.modeDefault,
+        device: AudioDevice.speaker).then((value) {
+      setState(() {
+        _mPlayerIsInited = true;
+        _readyToPlay();
       });
-    }
-    else{
-      _readyToPlay();
-    }
+    });
   }
 
   _readyToPlay() async{

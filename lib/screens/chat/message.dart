@@ -72,6 +72,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
   bool _showAudioLock = false;
 
   double _audioLockHeight = 90;
+  bool _audioLongPressEndStatus = false;
 
   TimerAuth timerAuth;
 
@@ -585,7 +586,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                           onLongPressEnd: (details) {
                             int afterSeconds = DateTime.now().difference(cTime).inSeconds;
                             setState(() {
-                              if (afterSeconds > 1 && _recordAudio.cOpacity > 0){
+                              if (afterSeconds > 0.2 && _recordAudio.cOpacity > 0){
                                 if (_recordAudio.showLongPressState == false){
 
                                 }
@@ -654,6 +655,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                               setState(() {
                                 _audioLockHeight = mL;
                                 _recordAudio.showLongPressState = false;
+                                _audioLongPressEndStatus = true;
                               });
                             }
                             if (details.globalPosition.dy > MediaQuery.of(context).size.height-(gapHeight)){
@@ -690,7 +692,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
   }
 
   _cancelAudioRecord(){
-    if (_showAudioLock == false){
+    if (_audioLongPressEndStatus == false){
       _recordAudio.cancelCurrentRecord();
     }
     setState(() {
@@ -929,6 +931,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
         flex: 0,
         child: Container(
           margin: EdgeInsets.only(top: 15, bottom: 15),
+          padding: const EdgeInsets.only(left: 8, right: 8),
           child: ButtonIcon(
             width: 50,
             height: 50,
@@ -948,6 +951,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
       flex: 0,
       child: Container(
         margin: EdgeInsets.only(top: 15, bottom: 15),
+        padding: const EdgeInsets.only(left: 8, right: 8),
         child: _voiceWidget(),
       ),
     );
