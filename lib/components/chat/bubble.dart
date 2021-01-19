@@ -31,7 +31,6 @@ import 'package:nmobile/utils/chat_utils.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/nkn_time_utils.dart';
-import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -47,15 +46,14 @@ class ChatBubble extends StatefulWidget {
   bool hideHeader;
 
   ChatBubble({this.message, this.contact, this.onChanged, this.preMessage, this.showTime = true, this.hideHeader = false}) {
-    if (message.messageStatus == MessageStatus.MessageReceived ||
-        message.messageStatus == MessageStatus.MessageReceivedRead) {
+    if (message.isOutbound) {
+      if (message.isSendError) {
+        style = BubbleStyle.SendError;
+      } else {
+        style = BubbleStyle.Me;
+      }
+    } else {
       style = BubbleStyle.Other;
-    }
-    else if (message.messageStatus == MessageStatus.MessageSendFail){
-      style = BubbleStyle.SendError;
-    }
-    else {
-      style = BubbleStyle.Me;
     }
   }
 
@@ -77,37 +75,44 @@ class _ChatBubbleState extends State<ChatBubble> {
   double audioLeft = 0.0;
 
   void startPlay() async {
-    _mPlayer.openAudioSession(
-        focus: AudioFocus.requestFocusTransient,
-        category: SessionCategory.playAndRecord,
-        mode: SessionMode.modeDefault,
-        device: AudioDevice.speaker).then((value) {
-          if (mounted){
-            setState(() {
-              _mPlayerIsInited = true;
-              _readyToPlay();
-            });
-          }
+    if (_mPlayerIsInited == false){
+      _mPlayer.openAudioSession(
+          focus: AudioFocus.requestFocusTransient,
+          category: SessionCategory.playAndRecord,
+          mode: SessionMode.modeDefault,
+          device: AudioDevice.speaker).then((value) {
+        setState(() {
+          _mPlayerIsInited = true;
+          _readyToPlay();
         });
+      });
+    }
+    else{
+      _readyToPlay();
+    }
   }
 
   _readyToPlay() async{
+
     if (widget.message.audioFileDuration == null){
-      NLog.w('Wrong!!! widget.message.audioFileDuration is null');
+      print('Not ready');
       return;
     }
 
     var status = await Permission.storage.request();
     if (status != PermissionStatus.granted) {
-      NLog.w('no auth to storage!!!');
-      showToast('open storage permission to this app');
+      print('no Auth to Storage');
+      // throw Storagi
+      // throw RecordingPermissionException('Microphone permission not granted');
+    }
+    else{
+      print('Auth to Storage');
     }
 
-    await _mPlayer.setSubscriptionDuration(Duration(milliseconds: 30));
+    await _mPlayer.setSubscriptionDuration(Duration(milliseconds: 60));
     _playerSubscription = _mPlayer.onProgress.listen((event) {
       double durationDV = event.duration.inMilliseconds/1000;
       double currentDV = event.position.inMilliseconds/1000;
-
       setState(() {
         if (widget.message.audioFileDuration == null){
           widget.message.audioFileDuration = durationDV;
@@ -116,6 +121,7 @@ class _ChatBubbleState extends State<ChatBubble> {
         }
         double cProgress = currentDV/durationDV+0.1;
         audioLeft = widget.message.audioFileDuration-currentDV;
+        print('audioLeft Duration is__'+audioLeft.toString());
 
         audioLeft = NumUtil.getNumByValueDouble(audioLeft, 2);
         if (audioLeft < 0.0){
@@ -132,10 +138,10 @@ class _ChatBubbleState extends State<ChatBubble> {
 
     File file = File(_mPath);
     if (file.existsSync()){
-      NLog.w('mPlayPath exists__'+_mPath);
+      print('mPlayPath exists__'+_mPath);
     }
     else{
-      NLog.w('mPlayPath does not exists__'+_mPath);
+      print('mPlayPath does not exists__'+_mPath);
     }
     audioCellIsPlaying = true;
 
@@ -147,17 +153,15 @@ class _ChatBubbleState extends State<ChatBubble> {
         fromURI: _mPath,
         codec: Codec.defaultCodec,
         whenFinished: () {
-          if (mounted){
-            setState(() {
-              NLog.w('mPlayPath finished:__'+_mPath);
-              audioCellIsPlaying = false;
-              audioProgress = 0.0;
-              audioLeft = widget.message.audioFileDuration;
-              _mPlayer.closeAudioSession();
-            });
-          }
+          setState(() {
+            print('mPlayPath finished:__'+_mPath);
+            audioCellIsPlaying = false;
+            audioProgress = 0.0;
+            audioLeft = widget.message.audioFileDuration;
+            _mPlayer.closeAudioSession();
+          });
         });
-    NLog.w('_mPlayer.startPlayer');
+    print('_mPlayer startPlayer');
   }
 
   Future<void> stopPlayer() async {
@@ -190,15 +194,29 @@ class _ChatBubbleState extends State<ChatBubble> {
     popupMenu.show(widgetKey: popupMenuKey);
   }
 
-  @override
-  void dispose() {
-    if (_mPlayer.isPlaying){
-      _mPlayer.stopPlayer();
-    }
-    if (_mPlayer.isOpen()){
-      _mPlayer.closeAudioSession();
-    }
-    super.dispose();
+  _mediaPopupMenuShow() {
+    PopupMenu popupMenu = PopupMenu(
+      context: context,
+      maxColumn: 4,
+      items: [
+        MenuItem(
+          userInfo: 0,
+          title: NL10ns
+              .of(context)
+              .done,
+          textStyle: TextStyle(
+              color: DefaultTheme.fontLightColor, fontSize: 12),
+        ),
+      ],
+      onClickMenu: (MenuItemProvider item) {
+        var index = (item as MenuItem).userInfo;
+        switch (index) {
+          case 0:
+            break;
+        }
+      },
+    );
+    popupMenu.show(widgetKey: popupMenuKey);
   }
 
   @override
@@ -216,7 +234,7 @@ class _ChatBubbleState extends State<ChatBubble> {
     Widget burnWidget = Container();
     String timeFormat = NKNTimeUtil.formatChatTime(
         context, widget.message.timestamp);
-    List<Widget> contentsWidget = <Widget>[];
+    List<Widget> content = <Widget>[];
     timeWidget = Label(
       timeFormat,
       type: LabelType.bodySmall,
@@ -256,8 +274,7 @@ class _ChatBubbleState extends State<ChatBubble> {
           ],
         ).pad(t: 1);
       }
-    }
-    else if (widget.style == BubbleStyle.SendError) {
+    } else if (widget.style == BubbleStyle.SendError) {
       decoration = BoxDecoration(
         color: DefaultTheme.fallColor.withAlpha(178),
         borderRadius: BorderRadius.only(
@@ -268,8 +285,7 @@ class _ChatBubbleState extends State<ChatBubble> {
         ),
       );
       dark = true;
-    }
-    else {
+    } else {
       decoration = BoxDecoration(
         color: DefaultTheme.backgroundColor1,
         borderRadius: BorderRadius.only(
@@ -303,7 +319,7 @@ class _ChatBubbleState extends State<ChatBubble> {
     }
     EdgeInsetsGeometry contentPadding = EdgeInsets.zero;
 
-    if (widget.message.contentType == ContentType.channelInvitation) {
+    if (widget.message.contentType == ContentType.ChannelInvitation) {
       return getChannelInviteView();
     } else if (widget.message.contentType == ContentType.eventSubscribe) {
       return Container();
@@ -348,7 +364,7 @@ class _ChatBubbleState extends State<ChatBubble> {
               }
             }
           }
-          contentsWidget.add(
+          content.add(
             Padding(
               padding: contentPadding,
               child: RichText(
@@ -361,7 +377,7 @@ class _ChatBubbleState extends State<ChatBubble> {
             ),
           );
         } else {
-          contentsWidget.add(
+          content.add(
             Padding(
               padding: contentPadding,
               child: Markdown(
@@ -373,7 +389,7 @@ class _ChatBubbleState extends State<ChatBubble> {
         }
         break;
       case ContentType.textExtension:
-        contentsWidget.add(
+        content.add(
           Padding(
             padding: contentPadding,
             child: Markdown(
@@ -384,10 +400,9 @@ class _ChatBubbleState extends State<ChatBubble> {
         );
         break;
       case ContentType.nknImage:
-      case ContentType.media:
         popupMenu = () {};
         String path = (widget.message.content as File).path;
-        contentsWidget.add(
+        content.add(
           InkWell(
             onTap: () {
               Navigator.push(context, CustomRoute(PhotoPage(arguments: path)));
@@ -401,7 +416,7 @@ class _ChatBubbleState extends State<ChatBubble> {
         break;
       case ContentType.nknAudio:
         popupMenu = () {};
-        contentsWidget.add(
+        content.add(
           InkWell(
             onTap: (){
               if(audioCellIsPlaying){
@@ -440,27 +455,19 @@ class _ChatBubbleState extends State<ChatBubble> {
 
     if (widget.message.options != null &&
         widget.message.options['deleteAfterSeconds'] != null) {
-      contentsWidget.add(burnWidget);
+      content.add(burnWidget);
     }
 
-    if (contentsWidget.isEmpty) {
-      contentsWidget.add(Space.empty);
+    if (content.isEmpty) {
+      content.add(Space.empty);
     }
-
-    double bOpacity = 0.4;
-    if (widget.message.messageStatus == MessageStatus.MessageSendReceipt ||
-        widget.message.messageStatus == MessageStatus.MessageReceived ||
-        widget.message.messageStatus == MessageStatus.MessageReceivedRead){
-      bOpacity = 1.0;
-    }
-
     if (widget.contact != null) {
       List<Widget> contents = <Widget>[
         GestureDetector(
           key: popupMenuKey,
           onTap: popupMenu,
           child: Opacity(
-            opacity: bOpacity,
+            opacity: widget.message.isSuccess ? 1 : 0.4,
             child: Container(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,7 +494,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                       constraints: BoxConstraints(maxWidth: 272.w),
                       child: Stack(
                         alignment: Alignment.topLeft,
-                        children: contentsWidget,
+                        children: content,
                       ),
                     ),
                   ),
@@ -501,7 +508,7 @@ class _ChatBubbleState extends State<ChatBubble> {
         contents.insert(
             0,
             Padding(
-              padding: EdgeInsets.only(right: 6),
+              padding: EdgeInsets.only(right: 10.w),
               child: GestureDetector(
                 onTap: () {
                   if (!widget.hideHeader) {
@@ -560,7 +567,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                 key: popupMenuKey,
                 onTap: popupMenu,
                 child: Opacity(
-                  opacity: bOpacity,
+                  opacity: widget.message.isSuccess ? 1 : 0.4,
                   child: Container(
                     padding: EdgeInsets.all(10.w),
                     decoration: decoration,
@@ -569,7 +576,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: contentsWidget,
+                        children: content,
                       ),
                     ),
                   ),
@@ -624,28 +631,22 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   _playAudio(){
     _mPath = (widget.message.content as File).path;
-
-    bool isOpen = _mPlayer.isOpen();
-    if (isOpen == false){
-      startPlay();
-      return;
-    }
-    if (_mPlayer.isPaused){
-      _mPlayer.startPlayer();
-      return;
-    }
-    if (_mPlayer.isPlaying){
-      return;
-    }
+    startPlay();
     setState(() {
+      print('startPlayAudio');
       audioCellIsPlaying = true;
     });
   }
 
-  _stopPlayAudio() async{
-    audioCellIsPlaying = false;
-    await _mPlayer.pausePlayer();
-    await _mPlayer.closeAudioSession();
+  _stopPlayAudio(){
+    bool isPlaying = _mPlayer.isPlaying;
+    if (isPlaying == true){
+      print('StopPlayAudio');
+      _mPlayer.stopPlayer();
+    }
+    setState(() {
+      audioCellIsPlaying = false;
+    });
   }
 
   getChannelInviteView() {
@@ -703,18 +704,18 @@ class _ChatBubbleState extends State<ChatBubble> {
     GroupChatHelper.subscribeTopic(
         topicName: topicName,
         chatBloc: _chatBloc,
-        callback: (success, e) {
+        callback: (success, e) async {
           EasyLoading.dismiss();
           if (success) {
-            showToast(NL10ns().subscribed);
-            Navigator.pop(context);
+
           } else {
             if (e.toString().contains('duplicate subscription exist in block')){
-              NLog.w('duplicate subscription exist in block');
-              showToast('Joining');
+              print('duplicate subscription exist in block');
+
             }
             else{
               showToast(e.toString());
+              // showToast(NL10ns.of(context).something_went_wrong);
             }
           }
         });

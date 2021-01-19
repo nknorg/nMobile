@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:bloc/bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
@@ -81,10 +79,15 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
   }
 
   Stream<WalletsState> _mapAddWalletToState(AddWallet event) async* {
+    print('_mapAddWalletToState state is____'+state.toString());
     if (state is WalletsLoaded) {
       _addWallet(event.wallet, event.keystore);
+      print('Event state is____'+event.wallet.toString()+'_____'+event.keystore);
+
 
       final List<WalletSchema> list = List.from((state as WalletsLoaded).wallets)..add(event.wallet);
+
+      print('List length is____'+list.length.toString());
       yield WalletsLoaded(list);
     }
   }
@@ -125,6 +128,7 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
 
   Future _addWallet(WalletSchema wallet, String keystore) async {
     List<Future> futures = <Future>[];
+
     Map<String, dynamic> data = {'name': wallet.name, 'type': wallet.type, 'address': wallet.address, 'isBackedUp': wallet.isBackedUp};
     if (wallet.balance != null) {
       data['balance'] = wallet.balance ?? 0;
@@ -139,14 +143,7 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
     } else {
       futures.add(_localStorage.setItem(LocalStorage.NKN_WALLET_KEY, index, data));
     }
-    if (Platform.isAndroid){
-      /// new Comer Android save Keystore to localStorage coz secureStorePlugin bug
-      futures.add(_localStorage.saveKeyStoreInFile(wallet.address, keystore));
-    }
-    else{
-      futures.add(_secureStorage.set('${SecureStorage.NKN_KEYSTORES_KEY}:${wallet.address}', keystore));
-    }
-
+    futures.add(_secureStorage.set('${SecureStorage.NKN_KEYSTORES_KEY}:${wallet.address}', keystore));
     await Future.wait(futures);
   }
 

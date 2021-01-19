@@ -20,7 +20,6 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/utils/image_utils.dart';
-import 'package:nmobile/utils/nlog_util.dart';
 
 class CreateNknWalletScreen extends StatefulWidget {
   static const String routeName = '/wallet/create_nkn_wallet';
@@ -63,12 +62,9 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
       await SecureStorage().set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
       var wallet = WalletSchema(name: _name, address: address);
 
-      try{
-        var w = await wallet.exportWallet(_password);
-      }
-      catch(e){
-        NLog.w('create_nkn_wallet.dart exportWallet E:'+e.toString());
-      }
+      var w = await wallet.exportWallet(_password);
+
+      print('ExportWallet Success___'+w.toString());
 
       EasyLoading.dismiss();
       Navigator.of(context).pushReplacementNamed(AppScreen.routeName);
@@ -185,6 +181,7 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                                                         hintText: NL10ns.of(context).input_password,
                                                         onSaved: (v) => _password = v,
                                                         onFieldSubmitted: (_) {
+                                                          print('on___________');
                                                           FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
                                                         },
                                                         textInputAction: TextInputAction.next,
