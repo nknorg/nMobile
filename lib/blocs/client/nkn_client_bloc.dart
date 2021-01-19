@@ -2,34 +2,28 @@ import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:nmobile/blocs/auth/auth_bloc.dart';
-import 'package:nmobile/blocs/auth/auth_event.dart';
-import 'package:nmobile/blocs/chat/chat_event.dart';
+import 'package:nmobile/blocs/chat/auth_bloc.dart';
+import 'package:nmobile/blocs/chat/auth_event.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
-import 'package:nmobile/model/entity/wallet.dart';
-import 'package:nmobile/utils/nlog_util.dart';
-import 'package:oktoast/oktoast.dart';
 
-class NKNClientBloc extends Bloc<NKNClientEvent, NKNClientState> {
+class NKNClientBloc extends Bloc<NKNClientEvent, NKNClientState>{
   ChatBloc cBloc;
   AuthBloc aBloc;
 
-  WalletSchema rWallet;
-  String rPassword;
-
-  NKNClientBloc({@required this.cBloc, this.aBloc}) {
+  NKNClientBloc({@required this.cBloc,this.aBloc}) {
     this.listen((state) {
-      NLog.w('ClientBloc | onData | $state');
+      print('ClientBloc | onData | $state');
     }, onDone: () {
-      NLog.w('ClientBloc | onDone.');
+      print('ClientBloc | onDone.');
     }, onError: (e) {
-      NLog.w('ClientBloc | onError | $e');
+      print('ClientBloc | onError | $e');
     });
   }
 
@@ -39,52 +33,51 @@ class NKNClientBloc extends Bloc<NKNClientEvent, NKNClientState> {
   @override
   Stream<NKNClientState> mapEventToState(NKNClientEvent event) async* {
     if (event is NKNCreateClientEvent) {
+      print('Create Client begin');
+      print('exportWallet___22');
       var wallet = event.wallet;
       var password = event.password;
-
-      if (event.wallet == null || event.password == null) {
-        showToast('wallet or password is null Exception!');
-        NLog.w('wallet or password is null Exception');
-      }
-
-      rWallet = wallet;
-      rPassword = password;
       var eWallet = await wallet.exportWallet(password);
       var walletAddress = eWallet['address'];
       var publicKey = eWallet['publicKey'];
 
       Uint8List seedList = Uint8List.fromList(hexDecode(eWallet['seed']));
-      if (seedList != null && seedList.isEmpty) {
-        NLog.w('Wrong!!! seedList.isEmpty');
+      if (seedList.isEmpty){
+        Global.debugLog('seedList.isEmpty');
       }
-      String _seedKey =
-          hexEncode(sha256(hexEncode(seedList.toList(growable: false))));
+      String _seedKey = hexEncode(sha256(hexEncode(seedList.toList(growable: false))));
 
-      if (NKNClientCaller.currentChatId == null ||
-          publicKey == NKNClientCaller.currentChatId ||
-          NKNClientCaller.currentChatId.length == 0) {
-        await NKNDataManager.instance.initDataBase(publicKey, _seedKey);
-      } else {
+      NKNClientCaller.instance.createClient(seedList, null, null);
+      if (NKNClientCaller.currentChatId == null || publicKey == NKNClientCaller.currentChatId || NKNClientCaller.currentChatId.length == 0){
+        NKNDataManager.instance.initDataBase(publicKey, _seedKey);
+      }
+      else{
         await NKNDataManager.instance.changeDatabase(publicKey, _seedKey);
       }
-      NKNClientCaller.instance.setChatId(publicKey);
+      NKNClientCaller.instance.setPubkeyAndChatId(publicKey, publicKey);
 
-      aBloc.add(AuthToUserEvent(publicKey, walletAddress));
+      aBloc.add(AuthToUserEvent(publicKey,walletAddress));
 
-      NKNClientCaller.instance.createClient(seedList, null, publicKey);
-
+      print('Create Client End');
       yield NKNConnectingState();
-    } else if (event is NKNRecreateClientEvent) {
-      this.add(NKNCreateClientEvent(rWallet, rPassword));
-      yield NKNConnectingState();
-    } else if (event is NKNConnectedClientEvent) {
+    }
+    else if (event is NKNConnectedClientEvent){
+      print('Connected on Connected');
       yield NKNConnectedState();
-    } else if (event is NKNDisConnectClientEvent) {
+    }
+    else if (event is NKNDisConnectClientEvent) {
+      print('Client Disconnect called');
       NKNClientCaller.disConnect();
       yield NKNNoConnectState();
-    } else if (event is NKNOnMessageEvent) {
-      cBloc.add(ReceiveMessageEvent(event.message));
+    }
+    else if (event is NKNOnMessageEvent){
+      print('Client Connected');
+      NKNConnectedState currentState = (state as NKNConnectedState);
+      currentState.message = event.message;
+      cBloc.add(ReceiveMessageEvent(currentState.message));
+      cBloc.add(RefreshMessageListEvent());
       yield NKNConnectedState();
     }
   }
 }
+

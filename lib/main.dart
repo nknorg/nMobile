@@ -8,8 +8,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nmobile/app.dart';
-import 'package:nmobile/blocs/auth/auth_bloc.dart';
-import 'package:nmobile/blocs/channel/channel_bloc.dart';
+import 'package:nmobile/blocs/chat/auth_bloc.dart';
+import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
@@ -24,22 +24,23 @@ import 'package:nmobile/router/routes.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:sentry/sentry.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'blocs/wallet/wallets_bloc.dart';
+
 
 void main() async {
   SentryClient sentry;
 
-  if (Platform.isAndroid) {
+  if (Platform.isAndroid){
     runZonedGuarded(() {
       Global.init(() {
         sentry = SentryClient(
-            // log
-            dsn:
-                'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
+          // log
+            dsn: 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
             environmentAttributes: const Event(
-              release: '217',
-              environment: 'Android217',
+              release: 'nMobile',
+              environment: 'production',
             ));
         runApp(App());
       });
@@ -59,8 +60,7 @@ void main() async {
     runZonedGuarded(() {
       Global.init(() {
         sentry = SentryClient(
-            dsn:
-                'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
+            dsn: 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
             environmentAttributes: const Event(
               release: '195',
               environment: 'Android195',
@@ -68,7 +68,7 @@ void main() async {
         runApp(App());
       });
     }, (error, stackTrace) async {
-      print('Error Occured' + error.toString());
+      print('Error Occured'+error.toString());
       await sentry.captureException(
         exception: error,
         stackTrace: stackTrace,
@@ -80,15 +80,15 @@ void main() async {
         stackTrace: details.stack,
       );
     };
-  } else {
+  }
+  else{
     runZonedGuarded(() {
       Global.init(() {
         sentry = SentryClient(
-            dsn:
-                'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
+            dsn: 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
             environmentAttributes: const Event(
-              release: '217',
-              environment: 'iOS217',
+              release: '186',
+              environment: 'iOS186',
             ));
         runApp(App());
       });
@@ -140,8 +140,8 @@ class AppState extends State<App> with WidgetsBindingObserver, Tag {
         cBloc: BlocProvider.of<ChatBloc>(context),
       ),
     ),
-    BlocProvider<ChannelBloc>(
-      create: (BuildContext context) => ChannelBloc(),
+    BlocProvider<ChannelMembersBloc>(
+      create: (BuildContext context) => ChannelMembersBloc(),
     ),
     BlocProvider<AuthBloc>(
       create: (BuildContext context) => AuthBloc(),
@@ -168,10 +168,7 @@ class AppState extends State<App> with WidgetsBindingObserver, Tag {
               builder: (context, child) {
                 return FlutterEasyLoading(child: child);
               },
-              navigatorObservers: [
-                BotToastNavigatorObserver(),
-                RouteUtils.routeObserver
-              ],
+              navigatorObservers: [BotToastNavigatorObserver(), RouteUtils.routeObserver],
               onGenerateTitle: (context) {
                 return NL10ns.of(context).title;
               },
@@ -188,9 +185,7 @@ class AppState extends State<App> with WidgetsBindingObserver, Tag {
                 ),
               ),
               home: AppScreen(0),
-              locale: Global.locale != null && Global.locale != 'auto'
-                  ? Locale.fromSubtags(languageCode: Global.locale)
-                  : null,
+              locale: Global.locale != null && Global.locale != 'auto' ? Locale.fromSubtags(languageCode: Global.locale) : null,
               localizationsDelegates: [
                 GlobalMaterialLocalizations.delegate,
                 GlobalWidgetsLocalizations.delegate,
