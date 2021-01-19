@@ -81,11 +81,9 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit);
     _chatBloc.add(RefreshMessageListEvent(target: targetId));
     if (res != null) {
-      if (mounted){
-        setState(() {
-          _messages = res;
-        });
-      }
+      setState(() {
+        _messages = res;
+      });
     }
     chatContact.requestProfile();
   }
@@ -96,11 +94,9 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     _chatBloc.add(RefreshMessageListEvent(target: targetId));
     if (res != null) {
       _skip += res.length;
-      if (mounted){
-        setState(() {
-          _messages.addAll(res);
-        });
-      }
+      setState(() {
+        _messages.addAll(res);
+      });
     }
   }
 
@@ -145,11 +141,9 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
 
     _sendFocusNode.addListener(() {
       if (_sendFocusNode.hasFocus) {
-        if (mounted){
-          setState(() {
-            _showBottomMenu = false;
-          });
-        }
+        setState(() {
+          _showBottomMenu = false;
+        });
       }
     });
 
@@ -167,11 +161,9 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
             state.message.readMessage().then((n) {
               _chatBloc.add(RefreshMessageListEvent());
             });
-            if (mounted){
-              setState(() {
-                _messages.insert(0, state.message);
-              });
-            }
+            setState(() {
+              _messages.insert(0, state.message);
+            });
           }
           else if (state.message.from == targetId && state.message.contentType == ContentType.ChannelInvitation) {
             state.message.isSuccess = true;
@@ -179,24 +171,20 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
             state.message.readMessage().then((n) {
               _chatBloc.add(RefreshMessageListEvent());
             });
-            if (mounted){
-              setState(() {
-                _messages.insert(0, state.message);
-              });
-            }
+            setState(() {
+              _messages.insert(0, state.message);
+            });
           }
           else if (state.message.contentType == ContentType.receipt && !state.message.isOutbound) {
             if (_messages != null && _messages.length > 0) {
               var msg = _messages.firstWhere((x) => x.msgId == state.message.content && x.isOutbound, orElse: () => null);
               if (msg != null) {
-                if (mounted){
-                  setState(() {
-                    msg.isSuccess = true;
-                    if (state.message.deleteTime != null) {
-                      msg.deleteTime = state.message.deleteTime;
-                    }
-                  });
-                }
+                setState(() {
+                  msg.isSuccess = true;
+                  if (state.message.deleteTime != null) {
+                    msg.deleteTime = state.message.deleteTime;
+                  }
+                });
               }
             }
           }
@@ -209,11 +197,9 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
             state.message.readMessage().then((n) {
               _chatBloc.add(RefreshMessageListEvent());
             });
-            if (mounted){
-              setState(() {
-                _messages.insert(0, state.message);
-              });
-            }
+            setState(() {
+              _messages.insert(0, state.message);
+            });
           }
           else if (state.message.from == targetId &&
               (state.message.contentType == ContentType.nknImage ||
@@ -226,28 +212,22 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
             state.message.readMessage().then((n) {
               _chatBloc.add(RefreshMessageListEvent());
             });
-            if (mounted){
-              setState(() {
-                print('Here insert');
-                _messages.insert(0, state.message);
-              });
-            }
+            setState(() {
+              print('Here insert');
+              _messages.insert(0, state.message);
+            });
           }
           else if (state.message.contentType == ContentType.eventContactOptions) {
-            if (mounted){
-              setState(() {
-                _messages.insert(0, state.message);
-              });
-            }
+            setState(() {
+              _messages.insert(0, state.message);
+            });
           }
         }
         else {
-          if (mounted){
-            if (state.message.contentType == ContentType.eventContactOptions) {
-              setState(() {
-                _messages.insert(0, state.message);
-              });
-            }
+          if (state.message.contentType == ContentType.eventContactOptions) {
+            setState(() {
+              _messages.insert(0, state.message);
+            });
           }
         }
       }
@@ -262,15 +242,14 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
         });
       }
     });
+
     Future.delayed(Duration(milliseconds: 100), () {
       String content = LocalStorage.getChatUnSendContentFromId(NKNClientCaller.pubKey, targetId) ?? '';
-      if (mounted)
-        setState(() {
-          _sendController.text = content;
-          _canSend = content.length > 0;
-        });
+      setState(() {
+        _sendController.text = content;
+        _canSend = content.length > 0;
+      });
     });
-    print('end Message');
   }
 
   @override
@@ -284,6 +263,46 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     _sendFocusNode?.dispose();
     _deleteTick?.cancel();
     super.dispose();
+  }
+
+  _sendTestMessage() async{
+    int contentIndex = 1;
+    Timer _testMessageTimer;
+    _testMessageTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      String dest = targetId;
+
+      String contentType = ContentType.text;
+      String content = 'Batch_single_TestMessage_'+contentIndex.toString();
+      contentIndex++;
+      if (contentIndex == 1001){
+        _testMessageTimer.cancel();
+      }
+      Duration deleteAfterSeconds;
+      if (chatContact?.options != null) {
+        if (chatContact?.options?.deleteAfterSeconds != null) {
+          contentType = ContentType.textExtension;
+          deleteAfterSeconds = Duration(seconds: chatContact.options.deleteAfterSeconds);
+        }
+      }
+      var sendMsg = MessageSchema.fromSendData(
+        from: NKNClientCaller.currentChatId,
+        to: dest,
+        content: content,
+        contentType: contentType,
+        deleteAfterSeconds: deleteAfterSeconds,
+      );
+      sendMsg.isOutbound = true;
+      try {
+        _chatBloc.add(SendMessageEvent(sendMsg));
+        if (mounted){
+          setState(() {
+            _messages.insert(0, sendMsg);
+          });
+        }
+      } catch (e) {
+        print('send message error: $e');
+      }
+    });
   }
 
   _sendAction() async {
@@ -306,6 +325,11 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
 
     if (widget.arguments.type == ChatType.PrivateChat) {
       String dest = targetId;
+
+      if (text == '测试消息'){
+        _sendTestMessage();
+        return;
+      }
 
       String contentType = ContentType.text;
       Duration deleteAfterSeconds;
@@ -532,6 +556,8 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                     children: <Widget>[
                       _messageList(),
                       Container(
+                        height: 90,
+                        margin: EdgeInsets.only(bottom: 0),
                         child: GestureDetector(
                           child: _menuWidget(),
                           onTapUp: (details) {
@@ -801,37 +827,34 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
         child: _recordAudio,
       );
     }
-    return Expanded(
-      flex: 0,
-      child: Container(
-        constraints: BoxConstraints(minHeight: 70, maxHeight: 160),
-        child: Flex(
-          direction: Axis.horizontal,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: <Widget>[
-            Expanded(
-              flex: 0,
-              child: Container(
-                margin: const EdgeInsets.only(left: 0, right: 0, top: 15, bottom: 15),
-                padding: const EdgeInsets.only(left: 8, right: 8),
-                child: ButtonIcon(
-                  width: 50,
-                  height: 50,
-                  icon: loadAssetIconsImage(
-                    'grid',
-                    width: 24,
-                    color: DefaultTheme.primaryColor,
-                  ),
-                  onPressed: () {
-                    _toggleBottomMenu();
-                  },
+    return Container(
+      constraints: BoxConstraints(minHeight: 70, maxHeight: 160),
+      child: Flex(
+        direction: Axis.horizontal,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: <Widget>[
+          Expanded(
+            flex: 0,
+            child: Container(
+              margin: const EdgeInsets.only(left: 0, right: 0, top: 15, bottom: 15),
+              padding: const EdgeInsets.only(left: 8, right: 8),
+              child: ButtonIcon(
+                width: 50,
+                height: 50,
+                icon: loadAssetIconsImage(
+                  'grid',
+                  width: 24,
+                  color: DefaultTheme.primaryColor,
                 ),
+                onPressed: () {
+                  _toggleBottomMenu();
+                },
               ),
             ),
-            _sendWidget(),
-            _voiceAndSendWidget(),
-          ],
-        ),
+          ),
+          _sendWidget(),
+          _voiceAndSendWidget(),
+        ],
       ),
     );
   }
