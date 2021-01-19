@@ -585,23 +585,21 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                           onLongPressEnd: (details) {
                             int afterSeconds = DateTime.now().difference(cTime).inSeconds;
                             setState(() {
-                              if (afterSeconds > 1 && _showAudioLock == false){
-                                if (_recordAudio.showLongPressState == false || _recordAudio.cOpacity > 0) {
+                              if (afterSeconds > 1 && _recordAudio.cOpacity > 0){
+                                if (_recordAudio.showLongPressState == false){
+
+                                }
+                                else{
                                   _recordAudio.stopAndSendAudioMessage();
                                 }
                               }
-                              if (afterSeconds > 1 && _recordAudio.showLongPressState) {
-                                _recordAudio.stopAndSendAudioMessage();
+                              else{
+                                _showAudioInput = false;
                               }
                               if (_showAudioLock){
                                 _showAudioLock = false;
                               }
-                              else{
-                                Vibration.vibrate();
-                                _showAudioInput = false;
-                              }
                             });
-
                           },
                           onLongPressMoveUpdate: (details) {
                             int afterSeconds = DateTime.now().difference(cTime).inSeconds;
@@ -660,27 +658,21 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                             }
                             if (details.globalPosition.dy > MediaQuery.of(context).size.height-(gapHeight)){
                               _audioLockHeight = 90;
-                              // _recordAudio.showLongPressState = true;
-                            }
-                          },
-                          onHorizontalDragUpdate: (details) {
-                            int afterSeconds = DateTime.now().difference(cTime).inSeconds;
-                            if (afterSeconds > 0.2){
-                              setState(() {
-                                _showAudioLock = true;
-                              });
-                            }
-                          },
-                          onVerticalDragUpdate: (details) {
-                            int afterSeconds = DateTime.now().difference(cTime).inSeconds;
-                            if (afterSeconds > 0.2){
-                              setState(() {
-                                _showAudioLock = true;
-                              });
                             }
                           },
                           onHorizontalDragEnd: (details) {
-                            _recordAudio.cancelCurrentRecord();
+                            print('onHorizontalDragEnd E');
+                            _cancelAudioRecord();
+                          },
+                          onHorizontalDragCancel: (){
+                            _cancelAudioRecord();
+                          },
+                          onVerticalDragCancel: (){
+                            _cancelAudioRecord();
+                          },
+                          onVerticalDragEnd: (details) {
+                            print('onVerticalDragEnd E');
+                            _cancelAudioRecord();
                           },
                         ),
                       ),
@@ -695,6 +687,15 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
         ),
       ),
     );
+  }
+
+  _cancelAudioRecord(){
+    if (_showAudioLock == false){
+      _recordAudio.cancelCurrentRecord();
+    }
+    setState(() {
+      _showAudioLock = false;
+    });
   }
 
   Widget _audioLockWidget() {
