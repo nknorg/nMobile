@@ -88,7 +88,6 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   _readyToPlay() async{
-
     if (widget.message.audioFileDuration == null){
       print('Not ready');
       return;
@@ -626,22 +625,63 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   _playAudio(){
     _mPath = (widget.message.content as File).path;
-    startPlay();
+
+    bool isOpen = _mPlayer.isOpen();
+    if (isOpen == false){
+      print('isOpenFalse startPlay');
+      startPlay();
+      return;
+    }
+    if (_mPlayer.isPaused){
+      print('isPaused startPlay');
+      _mPlayer.startPlayer();
+      return;
+    }
+    if (_mPlayer.isPlaying){
+      print('isPlaying return');
+      return;
+    }
     setState(() {
       print('startPlayAudio');
       audioCellIsPlaying = true;
     });
   }
 
-  _stopPlayAudio(){
-    bool isPlaying = _mPlayer.isPlaying;
-    if (isPlaying == true){
-      print('StopPlayAudio');
-      _mPlayer.stopPlayer();
-    }
-    setState(() {
-      audioCellIsPlaying = false;
-    });
+  _stopPlayAudio() async{
+
+    audioCellIsPlaying = false;
+    await _mPlayer.pausePlayer();
+    await _mPlayer.closeAudioSession();
+
+    // setState(() {
+    //   print('mPlayPath finished:__'+_mPath);
+    //   audioCellIsPlaying = false;
+    //   audioProgress = 0.0;
+    //   audioLeft = widget.message.audioFileDuration;
+    //   _mPlayer.closeAudioSession();
+    // });
+    // setState(() async{
+    //   // audioProgress = 0.0;
+    //   // audioLeft = widget.message.audioFileDuration;
+    //   // await +m
+    //   // _mPlayer.pausePlayer();
+    // });
+
+    // bool isPlaying = _mPlayer.isPlaying;
+    // if (isPlaying == true){
+    //   print('StopPlayAudio__');
+    //   await _mPlayer.pausePlayer();
+    // }
+    // else{
+    //   audioProgress = 0.0;
+    //   audioLeft = widget.message.audioFileDuration;
+    //   await _mPlayer.closeAudioSession();
+    //   await _mPlayer.stopPlayer();
+    // }
+    // setState(() {
+    //   audioCellIsPlaying = false;
+    //   print(' audioCellIsPlaying  setToFalse');
+    // });
   }
 
   getChannelInviteView() {
