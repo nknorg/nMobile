@@ -605,7 +605,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         ],
       );
     }
-    else if (item.contentType == ContentType.nknImage) {
+    else if (item.contentType == ContentType.media) {
       contentWidget = Padding(
         padding: const EdgeInsets.only(top: 0),
         child: Row(
@@ -785,7 +785,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
           ),
         ],
       );
-    } else if (item.contentType == ContentType.nknImage) {
+    } else if (item.contentType == ContentType.media) {
       contentWidget = Padding(
         padding: const EdgeInsets.only(top: 0),
         child: Row(

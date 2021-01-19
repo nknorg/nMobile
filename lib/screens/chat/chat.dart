@@ -104,7 +104,6 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
     var password = await wallet.getPassword();
     if (password != null) {
       try {
-        print('exportWallet___44');
         var w = await wallet.exportWallet(password);
         if (w['address'] == wallet.address) {
           onGetPassword(wallet, password);
