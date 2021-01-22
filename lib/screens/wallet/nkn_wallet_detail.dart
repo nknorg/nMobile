@@ -359,7 +359,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     switch (result) {
       case 0:
         if (widget.wallet.type == WalletSchema.ETH_WALLET) {
-          var password = await widget.wallet.getPassword();
+          var password = await TimerAuth.instance.onCheckAuthGetPassword(context);
           if (password != null) {
             try {
               final ethWallet = await Ethereum.restoreWalletSaved(schema: widget.wallet, password: password);
@@ -376,7 +376,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
             }
           }
         } else {
-          var password = await widget.wallet.getPassword();
+          var password = await TimerAuth.instance.onCheckAuthGetPassword(context);
           if (password != null) {
             try {
               print('exportWallet___88');

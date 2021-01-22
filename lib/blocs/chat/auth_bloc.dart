@@ -7,15 +7,15 @@ import 'package:nmobile/schemas/message.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   @override
-  AuthState get initialState => AuthedSuccessState(false);
+  AuthState get initialState => AuthFailState();
 
   @override
   Stream<AuthState> mapEventToState(AuthEvent event) async* {
     if (event is AuthSuccessEvent){
-      yield* _mapAuthedState(true);
+      yield AuthSuccessState();
     }
     else if (event is AuthFailEvent){
-      yield* _mapAuthedState(false);
+      yield AuthFailState();
     }
     else if (event is AuthToUserEvent){
       String publicKey = event.publicKey;
@@ -39,12 +39,5 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
       yield AuthToUserState(currentUser);
     }
-    else if (event is AuthToUserFinishedEvent){
-      yield AuthToUserFinishedState();
-    }
-  }
-
-  Stream<AuthState> _mapAuthedState(bool auth) async* {
-    yield AuthedSuccessState(auth);
   }
 }

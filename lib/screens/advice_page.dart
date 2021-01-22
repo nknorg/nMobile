@@ -16,6 +16,7 @@ import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/utils/const_utils.dart';
 
@@ -90,7 +91,7 @@ class _AdvancedPageState extends State<AdvancePage> {
                                   Timer(Duration(milliseconds: 200), () async {
                                     var walletData = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
                                     var wallet = WalletSchema(name: walletData['name'], address: walletData['address']);
-                                    var password = await wallet.getPassword();
+                                    var password = await TimerAuth.instance.onCheckAuthGetPassword(context);
                                     if (password != null) {
                                       try {
                                         var w = await wallet.exportWallet(password);
@@ -159,7 +160,7 @@ class _AdvancedPageState extends State<AdvancePage> {
                                   Timer(Duration(milliseconds: 200), () async {
                                     var walletData = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
                                     var wallet = WalletSchema(name: walletData['name'], address: walletData['address']);
-                                    var password = await wallet.getPassword();
+                                    var password = await TimerAuth.instance.onCheckAuthGetPassword(context);
                                     if (password != null) {
                                       try {
                                         var w = await wallet.exportWallet(password);

@@ -208,7 +208,6 @@ class MessageSchema extends Equatable {
     if (topic != null) {
       data['topic'] = topic;
     }
-    print('Send Audio Data is__'+transContent.toString());
     return jsonEncode(data);
   }
 
@@ -596,14 +595,12 @@ class MessageSchema extends Equatable {
         data['delete_time'] = deleteTime.millisecondsSinceEpoch;
       }
     }
-
     var count = await cdb.update(
       MessageSchema.tableName,
       data,
       where: 'msg_id = ?',
       whereArgs: [contentType == ContentType.receipt ? content : msgId],
     );
-
     return count;
   }
 

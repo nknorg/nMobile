@@ -7,12 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
+import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/eth_erc20_token.dart';
@@ -59,6 +59,9 @@ class _ImportKeystoreWalletState extends State<ImportKeystoreWallet> with Single
           String keystoreJson = await NknWalletPlugin.restoreWallet(_keystore, _password);
           var keystore = jsonDecode(keystoreJson);
           String address = keystore['Address'];
+          print('keystore is__'+keystoreJson);
+
+          await SecureStorage().set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
           _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystoreJson));
         } else {
           final ethWallet = Ethereum.restoreWallet(name: _name, keystore: _keystore, password: _password);
@@ -66,7 +69,8 @@ class _ImportKeystoreWalletState extends State<ImportKeystoreWallet> with Single
         }
         EasyLoading.dismiss();
         showToast(NL10ns.of(context).success);
-        Navigator.of(context).pushReplacementNamed(AppScreen.routeName);
+
+        Navigator.of(context).pop();
       } catch (e) {
         EasyLoading.dismiss();
         if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {

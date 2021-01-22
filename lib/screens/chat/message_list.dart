@@ -253,7 +253,7 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
                                       .pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
                                 }
                               } else {
-                                widget.timerAuth.ensureVerifyPassword(context);
+                                widget.timerAuth.onCheckAuthGetPassword(context);
                               }
                             },
                           ).pad(t: 54),
@@ -367,7 +367,7 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
                       if (TimerAuth.authed) {
                         _subscription(model);
                       } else {
-                        widget.timerAuth.ensureVerifyPassword(context);
+                        widget.timerAuth.onCheckAuthGetPassword(context);
                       }
                     },
                     child: Center(
