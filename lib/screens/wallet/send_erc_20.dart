@@ -25,6 +25,7 @@ import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/extensions.dart';
@@ -118,7 +119,7 @@ class _SendErc20ScreenState extends State<SendErc20Screen> with Tag {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
 
-      var password = await wallet.getPassword();
+      var password = await TimerAuth.instance.onCheckAuthGetPassword(context);
       if (password != null) {
         final result = transferAction(password);
         Navigator.pop(context, result);

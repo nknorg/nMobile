@@ -20,6 +20,7 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/wallet/create_eth_wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn_wallet.dart';
 import 'package:nmobile/screens/wallet/import_nkn_eth_wallet.dart';
@@ -196,7 +197,8 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
   _listen(WalletSchema ws) {
     NLog.d(ws);
     Future(() async {
-      final future = ws.getPassword();
+      final future = TimerAuth.instance.onCheckAuthGetPassword(context);
+      print('exportWallet___77');
       future.then((password) async {
         print('password: $password');
         if (password != null) {
@@ -213,7 +215,6 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
             });
           } else {
             try {
-              print('exportWallet___77');
               var wallet = await ws.exportWallet(password);
               if (wallet['address'] == ws.address) {
                 Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {

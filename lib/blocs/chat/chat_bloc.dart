@@ -33,6 +33,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
 
   ChatBloc({@required this.contactBloc});
 
+  /// This variable used to Check If the AndroidDevice got FCM Ability
+  /// If so,there is no need to alert Notification while in ForegroundState by Android Device
+  bool googleServiceOn =  false;
+  bool googleServiceOnInit = false;
+
   @override
   Stream<ChatState> mapEventToState(ChatEvent event) async* {
     if (event is NKNChatOnMessageEvent) {
@@ -228,9 +233,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     return pid;
   }
 
-  _judgeSendLocalMessageNotificationDueToGoogleServiceStatus(bool googleService,String title,MessageSchema message){
-    if (Platform.isAndroid && googleService == true){
-      // Android 拥有谷歌推送服务的使用后台消息通知,不再发送本地消息统治
+  _judgeIfCanSendLocalMessageNotification(String title, MessageSchema message) async{
+    if (Platform.isAndroid){
+      if (googleServiceOnInit == false){
+        if (Platform.isAndroid){
+          googleServiceOn = await NKNClientCaller.googleServiceOn();
+        }
+        /// Android when have ability to use FCM, no longer need Local push
+        if (googleServiceOn == false){
+          LocalNotification.messageNotification(title, message.content, message: message);
+        }
+      }
     }
     else{
       LocalNotification.messageNotification(title, message.content, message: message);
@@ -247,16 +260,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       Global.debugLog('message is not exists!');
       return;
     }
-    var googleServiceOn = false;
-    if (Platform.isAndroid){
-      googleServiceOn = await NKNClientCaller.googleServiceOn();
-    }
 
     Topic topic;
     if (message.topic != null){
       print('Receive Message from Topic'+message.topic);
       topic = await GroupChatHelper.fetchTopicInfoByName(message.topic);
       if (topic == null){
+        /// check Block pool if the group contains Me If so, CreateGroup and join
+
         return;
       }
       else{
@@ -272,7 +283,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     }
 
     /// message.topic is not null Means TopicChat
-
     var contact = await _checkContactIfExists(message.from);
     if (message.topic != null){
       Global.debugLog('GroupMessage from__'+message.from+'__'+message.topic);
@@ -303,7 +313,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         message.isSuccess = true;
         checkBurnOptions(message, contact);
 
-        _judgeSendLocalMessageNotificationDueToGoogleServiceStatus(googleServiceOn, title, message);
+        _judgeIfCanSendLocalMessageNotification(title, message);
         await message.insert();
         var unReadCount = await MessageSchema.unReadMessages();
         FlutterAppBadger.updateBadgeCount(unReadCount);
@@ -313,7 +323,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       case ContentType.ChannelInvitation:
         message.receipt();
         message.isSuccess = true;
-        _judgeSendLocalMessageNotificationDueToGoogleServiceStatus(googleServiceOn, title, message);
+        _judgeIfCanSendLocalMessageNotification(title, message);
         await message.insert();
         var unReadCount = await MessageSchema.unReadMessages();
         FlutterAppBadger.updateBadgeCount(unReadCount);
@@ -328,7 +338,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         message.receipt();
         message.isSuccess = true;
         checkBurnOptions(message, contact);
-        _judgeSendLocalMessageNotificationDueToGoogleServiceStatus(googleServiceOn, title, message);
+        _judgeIfCanSendLocalMessageNotification(title, message);
         await message.insert();
 
         var unReadCount = await MessageSchema.unReadMessages();
@@ -349,7 +359,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         message.receipt();
         message.isSuccess = true;
         checkBurnOptions(message, contact);
-        _judgeSendLocalMessageNotificationDueToGoogleServiceStatus(googleServiceOn, title, message);
+        _judgeIfCanSendLocalMessageNotification(title, message);
         message.loadMedia();
         await message.insert();
         var unReadCount = await MessageSchema.unReadMessages();
@@ -451,11 +461,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
   }
 
   Future<ContactSchema> _checkContactIfExists(String clientAddress) async {
-    var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(
-        getPublicKeyByClientAddr(clientAddress));
     var contact = await ContactSchema.fetchContactByAddress(clientAddress);
     if (contact == null) {
       Global.debugLog('Insert contact stranger__'+clientAddress.toString());
+
+      /// need Test
+      var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(
+      getPublicKeyByClientAddr(clientAddress));
+      print('Insert contact__clientAddress__\n'+clientAddress+'walletAddress__\n'+walletAddress.toString());
       contact = ContactSchema(type: ContactType.stranger,
           clientAddress: clientAddress,
           nknWalletAddress: walletAddress);

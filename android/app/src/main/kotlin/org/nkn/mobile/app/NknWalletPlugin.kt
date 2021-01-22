@@ -172,7 +172,6 @@ class NknWalletPlugin(flutterEngine: FlutterEngine) : MethodChannel.MethodCallHa
                App.runOnMainThread {
                    walletEventSink?.error(_id,"","")
                }
-
            }
         }
     }
