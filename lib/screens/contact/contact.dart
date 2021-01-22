@@ -544,16 +544,18 @@ class _ContactScreenState extends State<ContactScreen> {
     });
 
     TimerAuth.instance.enableAuth();
-    _authBloc.add(AuthSuccessEvent());
+    _authBloc.add(AuthToUserEvent(currentUser.publicKey,currentUser.clientAddress));
 
     final localStorage = LocalStorage();
     await localStorage.set(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS, eWallet['address']);
 
     NKNDataManager.instance.close();
-    _clientBloc.add(NKNCreateClientEvent(wallet, password));
-    EasyLoading.dismiss();
 
-    showToast('切换成功');
+    Timer(Duration(milliseconds: 200), () async {
+      _clientBloc.add(NKNCreateClientEvent(wallet, password));
+      EasyLoading.dismiss();
+      showToast('切换成功');
+    });
   }
 
   _changeAccount(WalletSchema wallet) async {

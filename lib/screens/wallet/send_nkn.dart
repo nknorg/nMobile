@@ -27,6 +27,7 @@ import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/services/task_service.dart';
@@ -76,7 +77,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
 
-      var password = await wallet.getPassword();
+      var password = await TimerAuth.instance.onCheckAuthGetPassword(context);
       if (password != null) {
         final result = transferAction(password);
         Navigator.pop(context, result);

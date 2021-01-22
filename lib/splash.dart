@@ -21,12 +21,14 @@ class SplashPageState extends State<SplashPage> {
     super.initState();
 
     Global.initData().then((v) {
+      print('Global.initData().then((v) ');
       Navigator.pushReplacementNamed(context, AppScreen.routeName);
     });
   }
 
   next() {
     if (splashTime && initTime) {
+      print('splashTime next()');
       Navigator.pushReplacementNamed(context, AppScreen.routeName);
     }
   }

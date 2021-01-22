@@ -75,7 +75,8 @@ class _ImportSeedWalletState extends State<ImportSeedWallet> with SingleTickerPr
         }
         EasyLoading.dismiss();
         showToast(NL10ns.of(context).success);
-        Navigator.pushReplacementNamed(context, AppScreen.routeName);
+
+        Navigator.of(context).pop();
       } catch (e) {
         EasyLoading.dismiss();
         showToast(e.message);

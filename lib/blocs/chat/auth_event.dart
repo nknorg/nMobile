@@ -15,7 +15,3 @@ class AuthToUserEvent extends AuthEvent{
   final String walletAddress;
   const AuthToUserEvent(this.publicKey,this.walletAddress);
 }
-
-class AuthToUserFinishedEvent extends AuthEvent{
-  const AuthToUserFinishedEvent();
-}

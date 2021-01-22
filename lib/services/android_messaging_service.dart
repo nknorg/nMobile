@@ -59,15 +59,18 @@ Future<void> _onNativeReady() async {
   final walletBloc = WalletsBloc();
   walletBloc.add(LoadWallets());
 
-  WalletSchema wallet = await DChatAuthenticationHelper.loadUserDefaultWallet();
-  DChatAuthenticationHelper.getPassword4BackgroundFetch(
-    wallet: wallet,
-    verifyProtectionEnabled: false,
-    onGetPassword: (wallet, password) {
-      Global.debugLog('android_messaging_service.dart onGetPassword');
-      _clientBloc.add(NKNCreateClientEvent(wallet, password));
-    },
-  );
+  WalletSchema wallet = await TimerAuth.loadCurrentWallet();
+  String password = await TimerAuth.instance.onCheckAuthGetPassword(Global.appContext);
+  _clientBloc.add(NKNCreateClientEvent(wallet, password));
+
+  // DChatAuthenticationHelper.getPassword4BackgroundFetch(
+  //   wallet: wallet,
+  //   verifyProtectionEnabled: false,
+  //   onGetPassword: (wallet, password) {
+  //     Global.debugLog('android_messaging_service.dart onGetPassword');
+  //     _clientBloc.add(NKNCreateClientEvent(wallet, password));
+  //   },
+  // );
 }
 
 void _realCallback(Map eventAndData) async {
