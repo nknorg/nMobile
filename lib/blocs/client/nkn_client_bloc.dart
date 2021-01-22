@@ -33,13 +33,13 @@ class NKNClientBloc extends Bloc<NKNClientEvent, NKNClientState>{
   @override
   Stream<NKNClientState> mapEventToState(NKNClientEvent event) async* {
     if (event is NKNCreateClientEvent) {
-      print('Create Client begin');
-      print('exportWallet___22');
       var wallet = event.wallet;
       var password = event.password;
+      print('NKNCreateClientEvent__'+wallet.toString()+"\n"+'____'+password.toString());
       var eWallet = await wallet.exportWallet(password);
       var walletAddress = eWallet['address'];
       var publicKey = eWallet['publicKey'];
+      print('Export Keystore___'+eWallet.toString());
 
       Uint8List seedList = Uint8List.fromList(hexDecode(eWallet['seed']));
       if (seedList.isEmpty){
@@ -47,14 +47,16 @@ class NKNClientBloc extends Bloc<NKNClientEvent, NKNClientState>{
       }
       String _seedKey = hexEncode(sha256(hexEncode(seedList.toList(growable: false))));
 
-      NKNClientCaller.instance.createClient(seedList, null, null);
       if (NKNClientCaller.currentChatId == null || publicKey == NKNClientCaller.currentChatId || NKNClientCaller.currentChatId.length == 0){
-        NKNDataManager.instance.initDataBase(publicKey, _seedKey);
+        await NKNDataManager.instance.initDataBase(publicKey, _seedKey);
       }
       else{
         await NKNDataManager.instance.changeDatabase(publicKey, _seedKey);
       }
       NKNClientCaller.instance.setPubkeyAndChatId(publicKey, publicKey);
+
+      /// bug need Fixed
+      NKNClientCaller.instance.createClient(seedList, null, null);
 
       aBloc.add(AuthToUserEvent(publicKey,walletAddress));
 

@@ -1,23 +1,21 @@
-import 'package:nmobile/model/entity/contact.dart';
+
+import 'package:nmobile/schemas/contact.dart';
 
 abstract class AuthState {
   const AuthState();
+}
+
+class AuthSuccessState extends AuthState {
+  const AuthSuccessState();
 }
 
 class AuthFailState extends AuthState {
   const AuthFailState();
 }
 
-class AuthToUserState extends AuthState {
+class AuthToUserState extends AuthState{
   final ContactSchema currentUser;
+  // final String publicKey;
+  // final String walletAddress;
   const AuthToUserState(this.currentUser);
-}
-
-class AuthToFrontState extends AuthState {
-  final ContactSchema currentUser;
-  const AuthToFrontState(this.currentUser);
-}
-
-class AuthToBackgroundState extends AuthState {
-  const AuthToBackgroundState();
 }

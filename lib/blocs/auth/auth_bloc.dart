@@ -1,10 +1,9 @@
 import 'package:bloc/bloc.dart';
-import 'package:nmobile/blocs/auth/auth_event.dart';
-import 'package:nmobile/blocs/auth/auth_state.dart';
-import 'package:nmobile/model/datacenter/contact_data_center.dart';
-import 'package:nmobile/model/entity/contact.dart';
-import 'package:nmobile/model/entity/message.dart';
-import 'package:nmobile/utils/nlog_util.dart';
+import 'package:nmobile/blocs/chat/auth_event.dart';
+import 'package:nmobile/blocs/chat/auth_state.dart';
+import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/schemas/message.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   @override
@@ -12,18 +11,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   @override
   Stream<AuthState> mapEventToState(AuthEvent event) async* {
-    if (event is AuthFailEvent) {
+    if (event is AuthSuccessEvent){
+      yield AuthSuccessState();
+    }
+    else if (event is AuthFailEvent){
       yield AuthFailState();
-    } else if (event is AuthToFrontEvent) {
-      ContactSchema currentUser = await ContactSchema.fetchCurrentUser();
-      yield AuthToFrontState(currentUser);
-    } else if (event is AuthToBackgroundEvent) {
-      yield AuthToBackgroundState();
-    } else if (event is AuthToUserEvent) {
+    }
+    else if (event is AuthToUserEvent){
       String publicKey = event.publicKey;
       String walletAddress = event.walletAddress;
-      ContactSchema currentUser =
-          await ContactSchema.fetchContactByAddress(event.publicKey);
+      ContactSchema currentUser = await ContactSchema.fetchContactByAddress(event.publicKey);
       if (currentUser == null) {
         DateTime now = DateTime.now();
         currentUser = ContactSchema(
@@ -35,9 +32,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           profileVersion: uuid.v4(),
         );
         await currentUser.insertContact();
-        NLog.w('AuthBloc insert User___' + currentUser.clientAddress);
+        Global.debugLog('AuthBlock insert current User'+currentUser.clientAddress);
       }
-
+      else{
+        Global.debugLog('AuthBloc find current User'+currentUser.clientAddress);
+      }
       yield AuthToUserState(currentUser);
     }
   }
