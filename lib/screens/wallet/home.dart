@@ -197,7 +197,8 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
   _listen(WalletSchema ws) {
     NLog.d(ws);
     Future(() async {
-      final future = ws.getPassword();
+      final future = TimerAuth.instance.onCheckAuthGetPassword(context);
+      print('exportWallet___77');
       future.then((password) async {
         if (password != null) {
           if (ws.type == WalletSchema.ETH_WALLET) {
@@ -213,7 +214,6 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
             });
           } else {
             try {
-              print('exportWallet___77');
               var wallet = await ws.exportWallet(password);
               if (wallet['address'] == ws.address) {
                 Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {

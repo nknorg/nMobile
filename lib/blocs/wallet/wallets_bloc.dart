@@ -18,6 +18,7 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
 
   @override
   Stream<WalletsState> mapEventToState(WalletsEvent event) async* {
+    print('Wallet Event is___'+event.toString());
     if (event is LoadWallets) {
       await _ensureRnWalletUpgraded();
       yield* _mapLoadWalletsToState();
@@ -146,6 +147,7 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
     else{
       futures.add(_secureStorage.set('${SecureStorage.NKN_KEYSTORES_KEY}:${wallet.address}', keystore));
     }
+
     await Future.wait(futures);
   }
 

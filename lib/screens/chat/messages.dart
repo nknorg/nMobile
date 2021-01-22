@@ -104,6 +104,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
 
   _refreshMessage() async{
     _updateTopicBlock();
+    Global.debugLog('_refreshMessage begin');
     var res = await MessageItem.getLastMessageList(limit: _limit);
     if (res == null) return;
     Global.debugLog('Refresh got message count is'+res.length.toString());
@@ -204,6 +205,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         if (authState is AuthToUserState){
           _messagesList.clear();
           _refreshMessage();
+
           _authBloc.add(AuthSuccessEvent());
         }
         return BlocBuilder<NKNClientBloc, NKNClientState>(
@@ -381,7 +383,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                                     .pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
                               }
                             } else {
-                              widget.timerAuth.ensureVerifyPassword(context);
+                              widget.timerAuth.onCheckAuthGetPassword(context);
                             }
                           },
                         ).pad(t: 54),
@@ -480,7 +482,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                       if (TimerAuth.authed) {
                         _subscription(model);
                       } else {
-                        widget.timerAuth.ensureVerifyPassword(context);
+                        widget.timerAuth.onCheckAuthGetPassword(context);
                       }
                     },
                     child: Center(
@@ -518,6 +520,9 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
             }
           }
         });
+    Timer(Duration(seconds: 5), () {
+      EasyLoading.dismiss();
+    });
   }
 
   getTipView() {

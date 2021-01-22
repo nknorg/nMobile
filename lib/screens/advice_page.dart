@@ -91,8 +91,7 @@ class _AdvancedPageState extends State<AdvancePage> {
                                   Timer(Duration(milliseconds: 200), () async {
                                     var walletData = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
                                     var wallet = WalletSchema(name: walletData['name'], address: walletData['address']);
-
-                                    var password = await wallet.getPassword();
+                                    var password = await TimerAuth.instance.onCheckAuthGetPassword(context);
                                     if (password != null) {
                                       try {
                                         var w = await wallet.exportWallet(password);
@@ -161,8 +160,7 @@ class _AdvancedPageState extends State<AdvancePage> {
                                   Timer(Duration(milliseconds: 200), () async {
                                     var walletData = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
                                     var wallet = WalletSchema(name: walletData['name'], address: walletData['address']);
-
-                                    var password = await wallet.getPassword();
+                                    var password = await TimerAuth.instance.onCheckAuthGetPassword(context);
                                     if (password != null) {
                                       try {
                                         var w = await wallet.exportWallet(password);

@@ -5,6 +5,10 @@ abstract class AuthState {
   const AuthState();
 }
 
+class AuthSuccessState extends AuthState {
+  const AuthSuccessState();
+}
+
 class AuthFailState extends AuthState {
   const AuthFailState();
 }
@@ -14,14 +18,4 @@ class AuthToUserState extends AuthState{
   // final String publicKey;
   // final String walletAddress;
   const AuthToUserState(this.currentUser);
-}
-
-class AuthToFrontState extends AuthState{
-
-  final ContactSchema currentUser;
-  const AuthToFrontState(this.currentUser);
-}
-
-class AuthToBackgroundState extends AuthState{
-  const AuthToBackgroundState();
 }

@@ -77,7 +77,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
 
-      var password = await wallet.getPassword();
+      var password = await TimerAuth.instance.onCheckAuthGetPassword(context);
       if (password != null) {
         final result = transferAction(password);
         Navigator.pop(context, result);

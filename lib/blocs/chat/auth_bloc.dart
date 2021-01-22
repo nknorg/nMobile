@@ -1,9 +1,9 @@
 import 'package:bloc/bloc.dart';
 import 'package:nmobile/blocs/chat/auth_event.dart';
 import 'package:nmobile/blocs/chat/auth_state.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
-import 'package:nmobile/utils/nlog_util.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   @override
@@ -11,16 +11,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   @override
   Stream<AuthState> mapEventToState(AuthEvent event) async* {
-    if (event is AuthFailEvent){
+    if (event is AuthSuccessEvent){
+      yield AuthSuccessState();
+    }
+    else if (event is AuthFailEvent){
       yield AuthFailState();
-    }
-    else if (event is AuthToFrontEvent){
-      ContactSchema currentUser = await ContactSchema.fetchCurrentUser();
-      NLog.w('!!!!!!AuthToFrontEvent called'+currentUser.name);
-      yield AuthToFrontState(currentUser);
-    }
-    else if (event is AuthToBackgroundEvent){
-      yield AuthToBackgroundState();
     }
     else if (event is AuthToUserEvent){
       String publicKey = event.publicKey;
@@ -37,11 +32,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           profileVersion: uuid.v4(),
         );
         await currentUser.insertContact();
-        NLog.w('AuthBloc insert User___'+currentUser.clientAddress);
+        Global.debugLog('AuthBlock insert current User'+currentUser.clientAddress);
       }
-
-      NLog.w('!!!!!!AuthToUserState called'+currentUser.name);
-
+      else{
+        Global.debugLog('AuthBloc find current User'+currentUser.clientAddress);
+      }
       yield AuthToUserState(currentUser);
     }
   }

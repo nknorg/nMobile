@@ -8,20 +8,18 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
-import 'package:nmobile/blocs/wallet/wallets_state.dart';
+import 'package:nmobile/blocs/chat/auth_bloc.dart';
+import 'package:nmobile/blocs/chat/auth_event.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
-import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:oktoast/oktoast.dart';
 
-/// @author Chenai
-/// @version 1.0, 14/07/2020
-enum PageAction { init, pushNext, popToCurr, force }
 
 class TimerAuth {
   factory TimerAuth() => _getInstance();
@@ -35,7 +33,6 @@ class TimerAuth {
   static TimerAuth _getInstance() {
     if (_instance == null) {
       _instance = new TimerAuth._internal();
-
     }
     return _instance;
   }
@@ -49,6 +46,8 @@ class TimerAuth {
   DateTime _startTime;
 
   bool get pagePushed => _pagePushed;
+
+  AuthBloc _authBloc;
 
   int onHomePageResumed(BuildContext context){
     if (_startTime == null){
@@ -90,138 +89,158 @@ class TimerAuth {
     }
   }
 
-  ensureVerifyPassword(BuildContext context) async {
-    WalletSchema wallet = await DChatAuthenticationHelper.loadUserDefaultWallet();
-    DChatAuthenticationHelper.authToVerifyPassword(
-      wallet: wallet,
-      onGot: (nw) {
-        print('enableAuth ensureVerifyPassword');
-        enableAuth();
-      },
-      onError: (pwdIncorrect, e) {
-        authed = false;
-        if (pwdIncorrect) {
+  Future<String> _checkUserInput(BuildContext context) async{
+    /// AuthFailed
+    TimerAuth.authed = false;
+    _authBloc = BlocProvider.of<AuthBloc>(context);
+    _authBloc.add(AuthFailEvent());
+
+    String password = await BottomDialog.of(context).showInputPasswordDialog(title: NL10ns.of(context).verify_wallet_password);
+    WalletSchema wallet = await loadCurrentWallet();
+    try  {
+      Map walletInfo = await wallet.exportWallet(password);
+    }
+    catch (e){
+      _authBloc = BlocProvider.of<AuthBloc>(context);
+      _authBloc.add(AuthFailEvent());
+
+      Global.debugLog('onCheckAuthGetPassword__'+e.toString());
+      showToast(NL10ns.of(context).tip_password_error);
+    }
+    return password;
+  }
+
+  Future<String> onCheckAuthGetPassword(BuildContext context) async{
+    bool protection = await LocalAuthenticationService.instance.protectionStatus();
+    /// Need authPassword can autoEnable Biometrics(eg:TouchId)
+    String password = '';
+    if (protection == false){
+      password = await _checkUserInput(context);
+    }
+    else{
+      bool auth = await LocalAuthenticationService.instance.authenticate();
+      if (auth) {
+        TimerAuth.instance.enableAuth();
+        WalletSchema wallet = await loadCurrentWallet();
+        String address = wallet.address;
+        try  {
+          password = await SecureStorage().get('${SecureStorage.PASSWORDS_KEY}:$address');
+          await wallet.exportWallet(password);
+        }
+        catch (e){
+          Global.debugLog('onCheckAuthGetPassword__'+e.toString());
           showToast(NL10ns.of(context).tip_password_error);
         }
-      },
-    );
-  }
-
-  ensureVerifyPasswordWithCallBack(BuildContext context,WalletSchema wallet,void callBack(WalletSchema wallet, String password)){
-    DChatAuthenticationHelper.authToPrepareConnect(wallet, (wallet, password) {
-      DChatAuthenticationHelper.authToVerifyPassword(
-        wallet: wallet,
-        onGot: (nw) {
-          enableAuth();
-          print('enableAuth ensureVerifyPasswordWithCallBack');
-          callBack(wallet,password);
-        },
-        onError: (pwdIncorrect, e) {
-          authed = false;
-          if (pwdIncorrect) {
-            showToast(NL10ns.of(context).tip_password_error);
-          }
-        },
-      );
-    });
-  }
-}
-
-class DChatAuthenticationHelper with Tag {
-  WalletSchema wallet;
-
-  prepareConnect(void onGetPassword(WalletSchema wallet, String password)) {
-    print('step4');
-    authToPrepareConnect(wallet, (wallet, password) {
-      // canShow = false;
-      print('step5');
-      onGetPassword(wallet, password);
-    });
-  }
-
-  static void authToPrepareConnect(WalletSchema wallet, void onGetPassword(WalletSchema wallet, String password)) async {
-    final _wallet = wallet;
-    final _password = await authToGetPassword(_wallet);
-    if (_password != null && _password.length > 0) {
-      onGetPassword(_wallet, _password);
-    }
-  }
-
-  static bool _authenticating = false;
-
-  static Future<String> authToGetPassword(WalletSchema wallet, {bool forceShowInputDialog = false}) async {
-    if (_authenticating) return null;
-    _authenticating = true;
-    final _password = await wallet.getPassword(showDialogIfCanceledBiometrics: true /*default*/, forceShowInputDialog: forceShowInputDialog);
-    _authenticating = false;
-    return _password;
-  }
-
-  static getPassword4BackgroundFetch({
-    @required WalletSchema wallet,
-    bool verifyProtectionEnabled = true,
-    @required void onGetPassword(WalletSchema wallet, String password),
-  }) async {
-    // 22508-22760 E/flutter: [ERROR:flutter/lib/ui/ui_dart_state.cc(157)] Unhandled Exception: MissingPluginException(
-    // No implementation found for method getAvailableBiometrics on channel plugins.flutter.io/local_auth)
-    // Since Android Native Service create a new `DartVM`, and not init other MethodChannel.
-    bool isProtectionEnabled = false;
-    print('step6');
-
-    if (verifyProtectionEnabled) {
-      print('step7');
-
-      bool protection = await LocalAuthenticationService.instance.protectionStatus();
-      print('step9__'+protection.toString());
-
-      isProtectionEnabled = protection;
-    } else {
-      isProtectionEnabled = true;
-      print('step8');
-    }
-    if (isProtectionEnabled) {
-
-      print('step 9 walletAddress is__'+wallet.address);
-
-      final _password = await SecureStorage().get('${SecureStorage.PASSWORDS_KEY}:${wallet.address}');
-      print('step 10___password is'+_password);
-
-      if (_password != null && _password.length > 0) {
-        onGetPassword(wallet, _password);
+        return password;
+      }
+      else{
+        password = await _checkUserInput(context);
       }
     }
+    return password;
   }
 
-  static void verifyPassword({
-    @required WalletSchema wallet,
-    @required String password,
-    @required void onGot(Map nknWallet),
-    void onError(bool pwdIncorrect, dynamic e),
-  }) async {
-    try {
-      print('exportWallet___33');
-      final nknWallet = await wallet.exportWallet(password);
-      onGot(nknWallet);
-    } catch (e) {
-      if (onError != null) onError(e.message == ConstUtils.WALLET_PASSWORD_ERROR, e);
-    }
-  }
+  // Future<String> getStoredPassword() async{
+  //   String password = '';
+  //
+  //
+  //
+  //   return password;
+  // }
+  // Future<String> getPassword({bool showDialogIfCanceledBiometrics = true, bool forceShowInputDialog = false}) async {
+  //   if (forceShowInputDialog) {
+  //     return _showDialog('force');
+  //   }
+  //   bool protect = await LocalAuthenticationService.instance.protectionStatus();
+  //   if (protect) {
+  //     String password = '';
+  //     if (password == null) {
+  //       return _showDialog('no password');
+  //     } else {
+  //       bool auth = await LocalAuthenticationService.instance.authenticate();
+  //       if (auth) {
+  //         TimerAuth.instance.enableAuth();
+  //         password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');
+  //         return password;
+  //       } else if (showDialogIfCanceledBiometrics) {
+  //         return _showDialog('auth failed');
+  //       } else {
+  //         return null;
+  //       }
+  //     }
+  //   } else {
+  //     return _showDialog('disabled');
+  //   }
+  // }
 
-  static authToVerifyPassword({
-    @required WalletSchema wallet,
-    @required void onGot(Map nknWallet),
-    void onError(bool pwdIncorrect, dynamic e),
-    bool forceShowInputDialog = false,
-  }) async {
-    final _password = await authToGetPassword(wallet, forceShowInputDialog: forceShowInputDialog);
-    if (_password != null && _password.length > 0) {
-      verifyPassword(wallet: wallet, password: _password, onGot: onGot, onError: onError);
-    } else {
-      if (onError != null) onError(false, null);
-    }
-  }
+  // ensureVerifyPassword(BuildContext context) async {
+  //   WalletSchema wallet = await DChatAuthenticationHelper.loadUserDefaultWallet();
+  //   DChatAuthenticationHelper.authToVerifyPassword(
+  //     wallet: wallet,
+  //     onGot: (nw) {
+  //       print('enableAuth ensureVerifyPassword');
+  //       enableAuth();
+  //     },
+  //     onError: (pwdIncorrect, e) {
+  //       authed = false;
+  //       if (pwdIncorrect) {
+  //         showToast(NL10ns.of(context).tip_password_error);
+  //       }
+  //     },
+  //   );
+  // }
 
-  static Future<WalletSchema> loadUserDefaultWallet() async{
+  // Future<String> _showDialog(String reason) {
+  //   return BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NL10ns.of(Global.appContext).verify_wallet_password);
+  // }
+  //
+  // Future<String> getPassword({bool showDialogIfCanceledBiometrics = true, bool forceShowInputDialog = false}) async {
+  //   if (forceShowInputDialog) {
+  //     return _showDialog('force');
+  //   }
+  //   bool protect = await LocalAuthenticationService.instance.protectionStatus();
+  //   if (protect) {
+  //     String password = '';
+  //     if (password == null) {
+  //       return _showDialog('no password');
+  //     } else {
+  //       bool auth = await LocalAuthenticationService.instance.authenticate();
+  //       if (auth) {
+  //         TimerAuth.instance.enableAuth();
+  //         password = await _secureStorage.get('${SecureStorage.PASSWORDS_KEY}:$address');
+  //         return password;
+  //       } else if (showDialogIfCanceledBiometrics) {
+  //         return _showDialog('auth failed');
+  //       } else {
+  //         return null;
+  //       }
+  //     }
+  //   } else {
+  //     return _showDialog('disabled');
+  //   }
+  // }
+
+
+// ensureVerifyPasswordWithCallBack(BuildContext context,WalletSchema wallet,void callBack(WalletSchema wallet, String password)){
+  //   DChatAuthenticationHelper.authToPrepareConnect(wallet, (wallet, password) {
+  //     DChatAuthenticationHelper.authToVerifyPassword(
+  //       wallet: wallet,
+  //       onGot: (nw) {
+  //         enableAuth();
+  //         print('enableAuth ensureVerifyPasswordWithCallBack');
+  //         callBack(wallet,password);
+  //       },
+  //       onError: (pwdIncorrect, e) {
+  //         authed = false;
+  //         if (pwdIncorrect) {
+  //           showToast(NL10ns.of(context).tip_password_error);
+  //         }
+  //       },
+  //     );
+  //   });
+  // }
+
+  static Future<WalletSchema> loadCurrentWallet() async{
     WalletSchema walletModel;
     var walletAddress = await LocalStorage().get(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS);
     List wallets = await LocalStorage().getArray(LocalStorage.NKN_WALLET_KEY);
@@ -243,4 +262,94 @@ class DChatAuthenticationHelper with Tag {
     }
     return null;
   }
+}
+
+class DChatAuthenticationHelper with Tag {
+  // WalletSchema wallet;
+
+  // prepareConnect(void onGetPassword(WalletSchema wallet, String password)) {
+  //   print('step4');
+  //   authToPrepareConnect(wallet, (wallet, password) {
+  //     // canShow = false;
+  //     print('step5');
+  //     onGetPassword(wallet, password);
+  //   });
+  // }
+  //
+  // static void authToPrepareConnect(WalletSchema wallet, void onGetPassword(WalletSchema wallet, String password)) async {
+  //   final _wallet = wallet;
+  //   final _password = await authToGetPassword(_wallet);
+  //   if (_password != null && _password.length > 0) {
+  //     onGetPassword(_wallet, _password);
+  //   }
+  // }
+  //
+  // static bool _authenticating = false;
+  //
+  // static Future<String> authToGetPassword(WalletSchema wallet, {bool forceShowInputDialog = false}) async {
+  //   if (_authenticating) return null;
+  //   _authenticating = true;
+  //   final _password = await wallet.getPassword(showDialogIfCanceledBiometrics: true /*default*/, forceShowInputDialog: forceShowInputDialog);
+  //   _authenticating = false;
+  //   return _password;
+  // }
+  //
+  // static Future<String> getPasswordToAuth(String address) async{
+  //   bool protection = await LocalAuthenticationService.instance.protectionStatus();
+  //   String password = '';
+  //   password = await SecureStorage().get('${SecureStorage.PASSWORDS_KEY}:$address');
+  //   return password;
+  // }
+  //
+  // // static String getPassword4BackgroundFetch({
+  // //   @required WalletSchema wallet,
+  // //   bool verifyProtectionEnabled = true,
+  // //   @required void onGetPassword(WalletSchema wallet, String password),
+  // // }) async {
+  // //   bool isProtectionEnabled = false;
+  // //
+  // //   if (verifyProtectionEnabled) {
+  // //     bool protection = await LocalAuthenticationService.instance.protectionStatus();
+  // //     isProtectionEnabled = protection;
+  // //   } else {
+  // //     isProtectionEnabled = true;
+  // //   }
+  // //   if (isProtectionEnabled) {
+  // //     final _password = await SecureStorage().get('${SecureStorage.PASSWORDS_KEY}:${wallet.address}');
+  // //     if (_password != null && _password.length > 0) {
+  // //       onGetPassword(wallet, _password);
+  // //     }
+  // //   }
+  // // }
+  //
+  // static void verifyPassword({
+  //   @required WalletSchema wallet,
+  //   @required String password,
+  //   @required void onGot(Map nknWallet),
+  //   void onError(bool pwdIncorrect, dynamic e),
+  // }) async {
+  //   try {
+  //     print('exportWallet___33');
+  //     final nknWallet = await wallet.exportWallet(password);
+  //     onGot(nknWallet);
+  //   } catch (e) {
+  //     if (onError != null) onError(e.message == ConstUtils.WALLET_PASSWORD_ERROR, e);
+  //   }
+  // }
+  //
+  // static authToVerifyPassword({
+  //   @required WalletSchema wallet,
+  //   @required void onGot(Map nknWallet),
+  //   void onError(bool pwdIncorrect, dynamic e),
+  //   bool forceShowInputDialog = false,
+  // }) async {
+  //   final _password = await authToGetPassword(wallet, forceShowInputDialog: forceShowInputDialog);
+  //   if (_password != null && _password.length > 0) {
+  //     verifyPassword(wallet: wallet, password: _password, onGot: onGot, onError: onError);
+  //   } else {
+  //     if (onError != null) onError(false, null);
+  //   }
+  // }
+
+
 }
