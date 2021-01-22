@@ -5,9 +5,12 @@ abstract class AuthState {
   const AuthState();
 }
 
-class AuthedSuccessState extends AuthState {
-  final bool success;
-  const AuthedSuccessState(this.success);
+class AuthSuccessState extends AuthState {
+  const AuthSuccessState();
+}
+
+class AuthFailState extends AuthState {
+  const AuthFailState();
 }
 
 class AuthToUserState extends AuthState{
@@ -15,8 +18,4 @@ class AuthToUserState extends AuthState{
   // final String publicKey;
   // final String walletAddress;
   const AuthToUserState(this.currentUser);
-}
-
-class AuthToUserFinishedState extends AuthState{
-
 }
