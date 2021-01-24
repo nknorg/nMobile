@@ -4,6 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:nmobile/blocs/chat/auth_bloc.dart';
 import 'package:nmobile/blocs/chat/auth_event.dart';
+import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
@@ -73,7 +74,7 @@ class NKNClientBloc extends Bloc<NKNClientEvent, NKNClientState>{
       yield NKNNoConnectState();
     }
     else if (event is NKNOnMessageEvent){
-      print('Client Connected');
+      Global.debugLog('Client Connected');
       NKNConnectedState currentState = (state as NKNConnectedState);
       currentState.message = event.message;
       cBloc.add(ReceiveMessageEvent(currentState.message));

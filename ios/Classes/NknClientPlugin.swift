@@ -12,7 +12,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
     
     // Connect Queue
     private var onConnectWorkItem: DispatchWorkItem?
-    let onConnectQueue = DispatchQueue(label: "org.nkn.sdk/client/event/onmessage", qos: .default)
+    let onConnectQueue = DispatchQueue(label: "org.nkn.sdk/client/event/onmessage", qos: .userInteractive)
     
     // Receive Message Queue
     private var receiveMessageWorkItem: DispatchWorkItem?
@@ -60,7 +60,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
                 createClient(call, result)
             case "connect":
                 print("called onConnect")
-                result(nil)
+//                result(nil)
                 connectNkn()
             case "disConnect":
                 disConnect(call, result, true)
@@ -98,12 +98,14 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         let _id = args["_id"] as! String
         let seedBytes = args["seedBytes"] as! FlutterStandardTypedData
         
-        let identifier = args["identifier"] as? String
+        var identifier = args["identifier"] as? String
         let clientUrl = args["clientUrl"] as? String
         
-        if(onConnectWorkItem?.isCancelled == false) {
-            onConnectWorkItem?.cancel()
-        }
+//        identifier = "test"
+        
+//        if(onConnectWorkItem?.isCancelled == false) {
+//            onConnectWorkItem?.cancel()
+//        }
         createClientWorkItem = DispatchWorkItem {
             var error: NSError?
             let account = NknNewAccount(seedBytes.data, &error)
@@ -153,15 +155,15 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         
         print("Connect NKN end");
         
-        if(onConnectWorkItem?.isCancelled == false) {
-            onConnectWorkItem?.cancel()
-        }
+//        if(onConnectWorkItem?.isCancelled == false) {
+//            onConnectWorkItem?.cancel()
+//        }
         onAsyncMessageReceive();
     }
 
     func disConnect(_ call: FlutterMethodCall, _ result: FlutterResult, _ callFromDart: Bool) {
         let clientAddr = nknClient?.address()
-        print("Disconnect","disConnect called close")
+        print("Disconnect","disConnect called close")
         closeClientIfExists()
         if (!callFromDart) {
             var data: [String: Any] = [String: Any]()
@@ -192,8 +194,15 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             print("on No Message")
             return
         }
-        print("onMessageListening onMessage");
+        print("onMessageListening onMessage")
         var data: [String: Any] = [String: Any]()
+        
+        if (msg.data == nil){
+            let noDataString = "world"
+            msg.data = noDataString.data(using: .utf8)!
+            print("onMessageListening msg.data == nil")
+        }
+
         data["event"] = "onMessage"
         data["data"] = [
             "src": msg.src,
@@ -205,6 +214,13 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         var client1: [String: Any] = [String: Any]()
         client1["address"] = self.nknClient?.address()
         data["client"] = client1
+        
+        // test on Main
+//        DispatchQueue.main.async {
+//            self.clientEventSink!(data)
+//            self.onMessageListening()
+//        }
+        
         self.clientEventSink!(data)
         print("onMessageListening onMessage");
         
@@ -316,6 +332,8 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             let duration = args["duration"] as! Int
             let meta = args["meta"] as? String
             let fee = args["fee"] as? String ?? "0"
+            
+//            var identifier = "ddd"
         
             guard let client = self.nknClient else {
                 self.clientEventSink?(FlutterError.init(code: _id, message: "subscribe no client", details: nil))
@@ -451,13 +469,32 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
 
     func genClientIfNotExists(_ account: NknAccount, _ identifier: String?, _ customClientUrl: String?) -> NknMultiClient? {
         let clientConfig:NknClientConfig;
-        if (identifier != nil && customClientUrl != nil){
-            clientConfig = NknClientConfig()
-            clientConfig.seedRPCServerAddr = NknStringArray.init(from: customClientUrl)
-        }
-        else{
-            clientConfig = NknGetDefaultClientConfig() ?? NknClientConfig()
-        }
+        
+//        if (identifier != nil && customClientUrl != nil){
+//            clientConfig = NknClientConfig()
+//            clientConfig.seedRPCServerAddr = NknStringArray.init(from: customClientUrl)
+//        }
+//        else{
+//            clientConfig = NknGetDefaultClientConfig() ?? NknClientConfig()
+//        }
+//        var testClients = [String]()
+//
+//        testClients.append("http://164.132.20.90:30003")
+
+        clientConfig = NknClientConfig()
+        clientConfig.seedRPCServerAddr = NknStringArray.init(from: "http://164.132.20.90:30003")
+        clientConfig.seedRPCServerAddr?.append("http://164.132.20.90:30003")
+        clientConfig.seedRPCServerAddr?.append("http://47.251.10.190:30003")
+        clientConfig.seedRPCServerAddr?.append("http://52.87.235.140:30003")
+        clientConfig.seedRPCServerAddr?.append("http://3.218.141.154:30003")
+        clientConfig.seedRPCServerAddr?.append("http://18.144.161.238:30003")
+        clientConfig.seedRPCServerAddr?.append("http://54.221.0.200:30003")
+        clientConfig.seedRPCServerAddr?.append("http://18.217.73.910:30003")
+        clientConfig.seedRPCServerAddr?.append("http://18.209.241.129:30003")
+        clientConfig.seedRPCServerAddr?.append("http://34.231.20.187:30003")
+        clientConfig.seedRPCServerAddr?.append("http://52.15.48.66:30003")
+        clientConfig.seedRPCServerAddr?.append("http://143.110.233.244:30003")
+        
         var error: NSError?
         
         let client = NknNewMultiClient(account, identifier, 3, true, clientConfig, &error)
@@ -563,7 +600,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         receiveMessageWorkItem?.cancel()
         subscriberWorkItem?.cancel()
         createClientWorkItem?.cancel()
-        onConnectWorkItem?.cancel()
+//        onConnectWorkItem?.cancel()
     }
     
     @objc func becomeActive(noti:Notification){
@@ -583,11 +620,11 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         print("NKNClient进入后台")
 //        closeClientIfExists()
         NKNPushService.shared().disConnectAPNS()
-        sendMessageWorkItem?.cancel()
-        receiveMessageWorkItem?.cancel()
-        subscriberWorkItem?.cancel()
-        createClientWorkItem?.cancel()
-        onConnectWorkItem?.cancel()
+//        sendMessageWorkItem?.cancel()
+//        receiveMessageWorkItem?.cancel()
+//        subscriberWorkItem?.cancel()
+//        createClientWorkItem?.cancel()
+//        onConnectWorkItem?.cancel()
     }
 }
 
