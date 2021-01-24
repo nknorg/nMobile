@@ -25,9 +25,9 @@ class SendMessageEvent extends ChatEvent {
   const SendMessageEvent(this.message);
 }
 
-class UpdateChatEvent extends ChatEvent {
-  final String targetId;
-  const UpdateChatEvent(this.targetId);
+class UpdateMessageEvent extends ChatEvent {
+  final MessageSchema message;
+  const UpdateMessageEvent(this.message);
 }
 
 class GetAndReadMessages extends ChatEvent {

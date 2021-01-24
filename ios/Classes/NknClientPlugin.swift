@@ -16,11 +16,11 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
     
     // Receive Message Queue
     private var receiveMessageWorkItem: DispatchWorkItem?
-    private let receivedMessageQueue = DispatchQueue(label: "org.nkn.sdk/client/receive", qos: .userInteractive)
+    private let receivedMessageQueue = DispatchQueue(label: "org.nkn.sdk/client/receive", qos: .default)
     
     // Send Message Queue
     private var sendMessageWorkItem: DispatchWorkItem?
-    private let sendMessageQueue = DispatchQueue(label: "org.nkn.sdk/client/send", qos: .userInteractive)
+    private let sendMessageQueue = DispatchQueue(label: "org.nkn.sdk/client/send", qos: .default)
     
     // Subscribe Queue
     private var subscriberWorkItem: DispatchWorkItem?
@@ -33,26 +33,6 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
     private var accountSeedBytes:FlutterStandardTypedData = FlutterStandardTypedData()
     private var identifierC:String? = ""
     private var clientUrlC:String? = ""
-        
-    private var fetchRPCClientTimer: DispatchSourceTimer?
-    var rpcCountDown:Int = 0
-    var clientList = [String]()
-    var currentRpcNode:NknNode?
-    
-    let NKN_METHOD_SEND_TEXT = "sendText"
-    let NKN_METHOD_PUBLISH_TEXT = "publishText"
-    
-    let NKN_METHOD_SUBSCRIBER_TOPIC = "subscribe"
-    let NKN_METHOD_UNSUBSCRIBER_TOPIC = "unsubscribe"
-    
-    let NKN_METHOD_GET_SUBSCRIPTION = "getSubscription"
-    let NKN_METHOD_GET_BLOCK_HEIGHT = "getBlockHeight"
-    
-    let NKN_METHOD_GET_SUBSCRIBER_COUNT = "getSubscribersCount"
-    let NKN_METHOD_GET_SUBSCRIBERS = "getSubscribers"
-    
-    let NKN_METHOD_FETCH_DEVICE_TOKEN = "fetchDeviceToken"
-    let NKN_METHOD_FETCH_FCM_TOKEN = "fetchFcmToken"
 
     init(controller : FlutterViewController) {
         super.init()
@@ -60,7 +40,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         FlutterEventChannel(name: "org.nkn.sdk/client/event", binaryMessenger: controller.binaryMessenger).setStreamHandler(self)
         
         NotificationCenter.default.addObserver(self, selector:#selector(becomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector:#selector(becomeDeath), name: UIApplication.didEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector:#selector(becomeDeath), name: UIApplication.willResignActiveNotification, object: nil)
     }
 
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
@@ -76,84 +56,52 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         print("Method Called"+call.method)
         switch call.method {
             case "createClient":
+                result(nil)
                 createClient(call, result)
             case "connect":
                 print("called onConnect")
+//                result(nil)
                 connectNkn()
             case "disConnect":
-                disConnect(call, result)
-            case NKN_METHOD_SEND_TEXT:
+                disConnect(call, result, true)
+            case "sendText":
                 sendText(call, result);
-            case NKN_METHOD_PUBLISH_TEXT:
+            case "publishText":
                 publishText(call, result)
-            case NKN_METHOD_SUBSCRIBER_TOPIC:
+            case "subscribe":
                 subscribe(call, result)
-            case NKN_METHOD_UNSUBSCRIBER_TOPIC:
+            case "unsubscribe":
                 unsubscribe(call, result)
-            case NKN_METHOD_GET_SUBSCRIBER_COUNT:
+            case "getSubscribersCount":
                 getSubscribersCount(call, result)
-            case NKN_METHOD_GET_SUBSCRIBERS:
+            case "getSubscribers":
                 getSubscribers(call, result)
-            case NKN_METHOD_GET_SUBSCRIPTION:
+            case "getSubscription":
                 getSubscription(call, result)
-            case NKN_METHOD_FETCH_DEVICE_TOKEN:
+            case "fetchDeviceToken":
                 fetchDeviceToken(call, result)
-            case NKN_METHOD_GET_BLOCK_HEIGHT:
+            case "getBlockHeight":
                 getBlockHeight(call, result)
-            case NKN_METHOD_FETCH_FCM_TOKEN:
+            case "fetchFcmToken":
                 fetchFCMToken(call, result)
             default:
                 result(FlutterMethodNotImplemented)
         }
     }
 
-//    func reCreateClient() {
-//        let seedBytes = self.accountSeedBytes
-//        let identifier = self.identifierC
-//        let clientUrl = self.clientUrlC
-//
-//        let clientRpcCount:Int = clientUrl?.count ?? 0
-//        if (clientRpcCount > 0){
-//            clientList = clientUrl?.components(separatedBy: ",") ?? [""]
-//            for rpcNode in clientList{
-//                print("CreateClient With rpcNode__",rpcNode)
-//            }
-//        }
-//
-//        createClientWorkItem = DispatchWorkItem {
-//            var error: NSError?
-//            let account = NknNewAccount(seedBytes.data, &error)
-//            self.nknClient = self.genNKNClient(account!, identifier)
-//            if (self.nknClient != nil){
-//                self.connectNkn()
-//            }
-//        }
-//        createClientQueue.async(execute: createClientWorkItem!)
-//    }
-//
     func createClient(_ call: FlutterMethodCall, _ result: FlutterResult) {
-//        if (nknClient != nil){
-//            self.connectNkn()
-//            return;
-//        }
+        if (nknClient != nil){
+            self.connectNkn()
+            return;
+        }
         let args = call.arguments as! [String: Any]
         let _id = args["_id"] as! String
-        
         let seedBytes = args["seedBytes"] as! FlutterStandardTypedData
-        let identifier = args["identifier"] as? String
-        let clientUrl = args["rpcNodeList"] as? String
         
-        self.accountSeedBytes = seedBytes
-        self.identifierC = identifier
-        self.clientUrlC = clientUrl
-                                
-        let clientRpcCount:Int = clientUrl?.count ?? 0
-        if (clientRpcCount > 0){
-            clientList = clientUrl?.components(separatedBy: ",") ?? [""]
-            for rpcNode in clientList{
-                print("CreateClient With rpcNode__",rpcNode)
-            }
-        }
+        var identifier = args["identifier"] as? String
+        let clientUrl = args["clientUrl"] as? String
+        
+//        identifier = "test"
         
 //        if(onConnectWorkItem?.isCancelled == false) {
 //            onConnectWorkItem?.cancel()
@@ -165,25 +113,16 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
                 self.clientEventSink!(FlutterError(code: _id, message: error!.localizedDescription, details: nil))
                 return
             }
+            self.accountPubkeyHex = self.ensureSameAccount(account!)
+            self.nknClient = self.genClientIfNotExists(account!, identifier, clientUrl)
+            var resp: [String: Any] = [String: Any]()
+            resp["_id"] = _id
+            resp["event"] = "createClient"
+            resp["success"] = (self.nknClient == nil) ? 0 : 1
+            self.clientEventSink!(resp)
             
-            self.nknClient = self.genNKNClient(account!, identifier)
-            if (self.nknClient != nil){
-                var resp: [String: Any] = [String: Any]()
-                resp["_id"] = _id
-                resp["event"] = "createClient"
-                resp["success"] = (self.nknClient == nil) ? 0 : 1
-                self.clientEventSink!(resp)
-                
-                print("CreateClient End")
-                self.connectNkn()
-            }
-            else{
-                var resp: [String: Any] = [String: Any]()
-                resp["_id"] = _id
-                resp["event"] = "createClient"
-                resp["success"] = (self.nknClient == nil) ? 0 : 1
-                self.clientEventSink!(resp)
-            }
+            print("CreateClient End")
+            self.connectNkn()
         }
         createClientQueue.async(execute: createClientWorkItem!)
     }
@@ -204,7 +143,6 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             return
         }
         let node = self.nknClient?.onConnect?.next()
-        currentRpcNode = node
         if (node == nil) {
             return
         }
@@ -215,8 +153,6 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         resp["client"] = ["address": self.nknClient?.address()]
         self.clientEventSink?(resp)
         
-        self.startRPCTimer()
-        
         print("Connect NKN end");
         
 //        if(onConnectWorkItem?.isCancelled == false) {
@@ -224,76 +160,19 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
 //        }
         onAsyncMessageReceive();
     }
-    
-    @objc func timerFetchRPC() {
-        print("start RPC called")
-        let mClient = self.nknClient?.getClient(-1)
-        let mNode = mClient?.getNode() ?? nil
-        var mRpcAddress:String = mNode?.rpcAddr ?? ""
-        mRpcAddress = "http://"+mRpcAddress
-        print("RPC address is",mRpcAddress)
-        if (mRpcAddress.count > 7 && !self.clientList.contains(mRpcAddress)){
-            self.clientList.append(mRpcAddress)
-        }
-        for index in 0...3 {
-            let client = self.nknClient?.getClient(index)
-            let node = client?.getNode() ?? nil
-            var rpcAddress:String = node?.rpcAddr ?? ""
-            rpcAddress = "http://"+rpcAddress
-            print("RPC address is",rpcAddress)
-            if (rpcAddress.count > 7 && !self.clientList.contains(rpcAddress)){
-                self.clientList.append(rpcAddress)
-            }
-        }
-        if (self.clientList.count > 0){
-            print("stop RPC called")
-            self.stopRPCTimer()
-        }
-    }
-    
-    func startRPCTimer(){
-        // child operation generator timer
-        fetchRPCClientTimer = DispatchSource.makeTimerSource(flags: [], queue: DispatchQueue.global())
-        fetchRPCClientTimer?.schedule(deadline: .now() + .seconds(1), repeating: DispatchTimeInterval.seconds(10), leeway: DispatchTimeInterval.seconds(0))
-        fetchRPCClientTimer?.setEventHandler {
-            self.timerFetchRPC()
-        }
-        fetchRPCClientTimer?.resume()
-    }
-    
-    func stopRPCTimer() {
-        guard let timer = fetchRPCClientTimer else {
-            return
-        }
-        timer.cancel()
-        fetchRPCClientTimer = nil
-        print("stopTimer")
-        
-        let clientAddr = nknClient?.address()
-        
-        var data: [String: Any] = [String: Any]()
-        data["event"] = "onSaveNodeAddresses"
-        var client: [String: Any] = [String: Any]()
-        
-        let addressLString = clientList.joined(separator: ",");
-        client["nodeAddress"] = addressLString
-        client["clientAddress"] = clientAddr
-        
-        data["client"] = client
-        clientEventSink!(data)
-    }
 
-    func disConnect(_ call: FlutterMethodCall, _ result: FlutterResult) {
+    func disConnect(_ call: FlutterMethodCall, _ result: FlutterResult, _ callFromDart: Bool) {
         let clientAddr = nknClient?.address()
         print("Disconnect","disConnect called close")
-        closeNKNClient()
-        
-        var data: [String: Any] = [String: Any]()
-        data["event"] = "disConnect"
-        var client: [String: Any] = [String: Any]()
-        client["address"] = clientAddr
-        data["client"] = client
-        clientEventSink!(data)
+        closeClientIfExists()
+        if (!callFromDart) {
+            var data: [String: Any] = [String: Any]()
+            data["event"] = "onDisConnect"
+            var client: [String: Any] = [String: Any]()
+            client["address"] = clientAddr
+            data["client"] = client
+            clientEventSink!(data)
+        }
     }
     
     func onAsyncMessageReceive(){
@@ -336,6 +215,12 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         client1["address"] = self.nknClient?.address()
         data["client"] = client1
         
+        // test on Main
+//        DispatchQueue.main.async {
+//            self.clientEventSink!(data)
+//            self.onMessageListening()
+//        }
+        
         self.clientEventSink!(data)
         print("onMessageListening onMessage");
         
@@ -348,37 +233,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             let _id = args["_id"] as! String
             let dests = args["dests"] as! [String]
             let data = args["data"] as! String
-            let msgId = args["msgId"] as! String
             let maxHoldingSeconds = args["maxHoldingSeconds"] as! Int32
-            
-            let config: NknMessageConfig = NknMessageConfig.init()
-            config.maxHoldingSeconds = maxHoldingSeconds < 0 ? Int32.max : maxHoldingSeconds
-            config.messageID = NknRandomBytes(Int(NknMessageIDSize), nil)
-            config.noReply = true
-            
-            guard let client = self.nknClient else {
-                self.clientEventSink?(FlutterError.init(code: _id, message: self.NKN_METHOD_SEND_TEXT, details: "noClient"))
-                return
-            }
-
-            let nknDests = NknStringArray.init(from: nil)!
-            if(!dests.isEmpty) {
-                for dest in dests {
-                    nknDests.append(dest)
-                }
-            }
-
-            do {
-                try client.sendText(nknDests, data: data, config: config)
-                var resp: [String: Any] = [String: Any]()
-                resp["_id"] = _id
-                resp["event"] = self.NKN_METHOD_SEND_TEXT
-                resp["pid"] = config.messageID
-                resp["msgId"] = msgId
-                self.clientEventSink!(resp)
-            } catch let error {
-                self.clientEventSink!(FlutterError(code: _id, message: self.NKN_METHOD_SEND_TEXT, details: error.localizedDescription))
-            }
             
             let dataInfo = self.getDictionaryFromJSONString(jsonString: data)
             if (dataInfo["deviceToken"] != nil){
@@ -406,6 +261,33 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
                     }
                 }
             }
+            
+            let config: NknMessageConfig = NknMessageConfig.init()
+            config.maxHoldingSeconds = maxHoldingSeconds < 0 ? Int32.max : maxHoldingSeconds
+            config.messageID = NknRandomBytes(Int(NknMessageIDSize), nil)
+            config.noReply = true
+            guard let client = self.nknClient else {
+                self.clientEventSink?(FlutterError.init(code: _id, message: "sendText no client", details: nil))
+                return
+            }
+
+            let nknDests = NknStringArray.init(from: nil)!
+            if(!dests.isEmpty) {
+                for dest in dests {
+                    nknDests.append(dest)
+                }
+            }
+
+            do {
+                try client.sendText(nknDests, data: data, config: config)
+                var resp: [String: Any] = [String: Any]()
+                resp["_id"] = _id
+                resp["event"] = "send"
+                resp["pid"] = config.messageID
+                self.clientEventSink!(resp)
+            } catch let error {
+                self.clientEventSink!(FlutterError(code: _id, message: error.localizedDescription, details: nil))
+            }
         }
         sendMessageQueue.async(execute: sendMessageWorkItem!)
     }
@@ -419,7 +301,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             let maxHoldingSeconds = args["maxHoldingSeconds"] as! Int32
             
             guard let client = self.nknClient else {
-                self.clientEventSink?(FlutterError.init(code: _id, message: self.NKN_METHOD_PUBLISH_TEXT, details: "noClient"))
+                self.clientEventSink?(FlutterError.init(code: _id, message: "publishText no client", details: nil))
                 return
             }
             do {
@@ -431,11 +313,11 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
                 try client.publishText(topicHash, data: data, config: config)
                 var resp: [String: Any] = [String: Any]()
                     resp["_id"] = _id
-                    resp["event"] = self.NKN_METHOD_PUBLISH_TEXT
+                    resp["event"] = "send"
                     resp["pid"] = config.messageID
                     self.clientEventSink!(resp)
                 } catch let error {
-                    self.clientEventSink!(FlutterError(code: _id, message: self.NKN_METHOD_PUBLISH_TEXT, details: error.localizedDescription))
+                    self.clientEventSink!(FlutterError(code: _id, message: error.localizedDescription, details: nil))
                 }
         }
         sendMessageQueue.async(execute: sendMessageWorkItem!)
@@ -450,9 +332,11 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             let duration = args["duration"] as! Int
             let meta = args["meta"] as? String
             let fee = args["fee"] as? String ?? "0"
-                    
+            
+//            var identifier = "ddd"
+        
             guard let client = self.nknClient else {
-                self.clientEventSink?(FlutterError.init(code: _id, message:self.NKN_METHOD_SUBSCRIBER_TOPIC, details: "noClient"))
+                self.clientEventSink?(FlutterError.init(code: _id, message: "subscribe no client", details: nil))
                 return
             }
             
@@ -463,13 +347,12 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             
             let hash = client.subscribe(identifier, topic: topicHash, duration: duration, meta: meta, config: transactionConfig, error: &error)
             if (error != nil) {
-                self.clientEventSink!(FlutterError(code: _id, message: self.NKN_METHOD_SUBSCRIBER_TOPIC, details: error!.localizedDescription))
+                self.clientEventSink!(FlutterError(code: _id, message: error!.localizedDescription, details: nil))
                 return
             }
             var resp: [String: Any] = [String: Any]()
             resp["_id"] = _id
-            resp["data"] = hash
-            resp["event"] = self.NKN_METHOD_SUBSCRIBER_TOPIC
+            resp["result"] = hash
             self.clientEventSink!(resp)
         }
         subscriberQueue.async(execute: subscriberWorkItem!)
@@ -484,7 +367,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             let fee = args["fee"] as? String ?? "0"
             
             guard let client = self.nknClient else {
-                self.clientEventSink?(FlutterError.init(code: _id, message: self.NKN_METHOD_UNSUBSCRIBER_TOPIC, details: "noClient"))
+                self.clientEventSink?(FlutterError.init(code: _id, message: "unsubscribe no client", details: nil))
                 return
             }
 
@@ -495,13 +378,12 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             
             let hash = client.unsubscribe(identifier, topic: topicHash, config: transactionConfig, error: &error)
             if (error != nil) {
-                self.clientEventSink!(FlutterError(code: _id, message: self.NKN_METHOD_UNSUBSCRIBER_TOPIC, details: error!.localizedDescription))
+                self.clientEventSink!(FlutterError(code: _id, message: error!.localizedDescription, details: nil))
                 return
             }
             var resp: [String: Any] = [String: Any]()
             resp["_id"] = _id
-            resp["event"] = self.NKN_METHOD_UNSUBSCRIBER_TOPIC
-            resp["data"] = hash
+            resp["result"] = hash
             self.clientEventSink!(resp)
         }
         subscriberQueue.async(execute: subscriberWorkItem!)
@@ -517,24 +399,19 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             let meta = args["meta"] as? Bool ?? true
             let txPool = args["txPool"] as? Bool ?? true
             guard let client = self.nknClient else {
-                self.clientEventSink?(FlutterError.init(code: _id, message: self.NKN_METHOD_GET_SUBSCRIBERS, details: "noClient"))
+                self.clientEventSink?(FlutterError.init(code: _id, message: "getSubscribers no client", details: nil))
                 return
             }
 
             do{
                 let res: NknSubscribers? = try client.getSubscribers(topicHash, offset: offset, limit: limit, meta: meta, txPool: txPool)
-                
-                var resp: [String: Any] = [String: Any]()
-                resp["event"] = self.NKN_METHOD_GET_SUBSCRIBERS;
-                resp["_id"] = _id
-                
                 let mapPro = MapProtocol.init()
+                mapPro.result["_id"] = _id
                 res?.subscribersInTxPool?.range(mapPro)
                 res?.subscribers?.range(mapPro)
-                resp["data"] = mapPro.result
-                self.clientEventSink!(resp)
+                self.clientEventSink!(mapPro.result)
             } catch let error {
-                self.clientEventSink!(FlutterError(code: _id, message: self.NKN_METHOD_GET_SUBSCRIBERS, details: error.localizedDescription))
+                self.clientEventSink!(FlutterError(code: _id, message: error.localizedDescription, details: nil))
             }
         }
         subscriberQueue.async(execute: subscriberWorkItem!)
@@ -548,7 +425,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             let subscriber = args["subscriber"] as! String
             
             guard let client = self.nknClient else {
-                self.clientEventSink?(FlutterError.init(code: _id, message: self.NKN_METHOD_GET_SUBSCRIPTION, details: "noClient"))
+                self.clientEventSink?(FlutterError.init(code: _id, message: "getSubscription no client", details: nil))
                 return
             }
 
@@ -558,10 +435,9 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
                 resp["_id"] = _id
                 resp["meta"] = res?.meta
                 resp["expiresAt"] = res?.expiresAt
-                resp["event"] = self.NKN_METHOD_GET_SUBSCRIPTION
                 self.clientEventSink!(resp)
             } catch let error {
-                self.clientEventSink!(FlutterError(code: _id, message: self.NKN_METHOD_GET_SUBSCRIPTION, details: error.localizedDescription))
+                self.clientEventSink!(FlutterError(code: _id, message: error.localizedDescription, details: nil))
             }
         }
         subscriberQueue.async(execute: subscriberWorkItem!)
@@ -574,7 +450,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             let topicHash = args["topicHash"] as! String
             
             guard let client = self.nknClient else {
-                self.clientEventSink?(FlutterError.init(code: _id, message: self.NKN_METHOD_GET_SUBSCRIBER_COUNT, details: "noClient"))
+                self.clientEventSink?(FlutterError.init(code: _id, message: "getSubscribersCount no client", details: nil))
                 return
             }
             do {
@@ -582,53 +458,80 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
                 try client.getSubscribersCount(topicHash, ret0_: &count)
                 var resp: [String: Any] = [String: Any]()
                 resp["_id"] = _id
-                resp["data"] = count
-                resp["event"] = self.NKN_METHOD_GET_SUBSCRIBER_COUNT
+                resp["result"] = count
                 self.clientEventSink!(resp)
             } catch let error {
-                self.clientEventSink!(FlutterError(code: _id, message: self.NKN_METHOD_GET_SUBSCRIBER_COUNT, details: error.localizedDescription))
+                self.clientEventSink!(FlutterError(code: _id, message: error.localizedDescription, details: nil))
             }
         }
         subscriberQueue.async(execute: subscriberWorkItem!)
     }
 
-    func genNKNClient(_ account: NknAccount, _ identifier: String?) -> NknMultiClient? {
-        let clientConfig:NknClientConfig = NknGetDefaultClientConfig() ?? NknClientConfig()
+    func genClientIfNotExists(_ account: NknAccount, _ identifier: String?, _ customClientUrl: String?) -> NknMultiClient? {
+        let clientConfig:NknClientConfig;
         
-        for index in 0..<clientList.count {
-            let rpcAddress:String = clientList[index]
-            if (rpcAddress.count < 7){
-                print("rpcAddress node is not match",rpcAddress)
-            }
-            else{
-                if (index == 0){
-                    clientConfig.seedRPCServerAddr = NknStringArray.init(from: rpcAddress)
-                }
-                else{
-                    clientConfig.seedRPCServerAddr?.append(rpcAddress)
-                }
-            }
-        }
+//        if (identifier != nil && customClientUrl != nil){
+//            clientConfig = NknClientConfig()
+//            clientConfig.seedRPCServerAddr = NknStringArray.init(from: customClientUrl)
+//        }
+//        else{
+//            clientConfig = NknGetDefaultClientConfig() ?? NknClientConfig()
+//        }
+//        var testClients = [String]()
+//
+//        testClients.append("http://164.132.20.90:30003")
 
+        clientConfig = NknClientConfig()
+        clientConfig.seedRPCServerAddr = NknStringArray.init(from: "http://164.132.20.90:30003")
+        clientConfig.seedRPCServerAddr?.append("http://164.132.20.90:30003")
+        clientConfig.seedRPCServerAddr?.append("http://47.251.10.190:30003")
+        clientConfig.seedRPCServerAddr?.append("http://52.87.235.140:30003")
+        clientConfig.seedRPCServerAddr?.append("http://3.218.141.154:30003")
+        clientConfig.seedRPCServerAddr?.append("http://18.144.161.238:30003")
+        clientConfig.seedRPCServerAddr?.append("http://54.221.0.200:30003")
+        clientConfig.seedRPCServerAddr?.append("http://18.217.73.910:30003")
+        clientConfig.seedRPCServerAddr?.append("http://18.209.241.129:30003")
+        clientConfig.seedRPCServerAddr?.append("http://34.231.20.187:30003")
+        clientConfig.seedRPCServerAddr?.append("http://52.15.48.66:30003")
+        clientConfig.seedRPCServerAddr?.append("http://143.110.233.244:30003")
+        
         var error: NSError?
+        
         let client = NknNewMultiClient(account, identifier, 3, true, clientConfig, &error)
         if (error != nil) {
-            closeNKNClient()
+            closeClientIfExists()
             clientEventSink!(FlutterError.init(code: String(error?.code ?? 0), message: error?.localizedDescription, details: nil))
             return nil
         } else {
             self.nknClient = client
+            return client
         }
-        return self.nknClient;
     }
 
-    func closeNKNClient() {
+    func ensureSameAccount(_ account: NknAccount?) -> String? {
+        if (account == nil) {
+            closeClientIfExists()
+            return nil
+        } else {
+            let pubkey = account!.pubKey()?.toHex
+            if (pubkey == nil){
+                return nil;
+            }
+            if (accountPubkeyHex == nil){
+                return pubkey;
+            }
+            if (accountPubkeyHex != pubkey) {
+                closeClientIfExists()
+            }
+            return pubkey
+        }
+    }
+
+    func closeClientIfExists() {
         print("Client on close called");
         do {
             try nknClient?.close()
-        }
-        catch {
-            
+        } catch {
         }
         nknClient = nil
         isConnected = false
@@ -641,18 +544,17 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             
             do {
                 guard let client = self.nknClient else {
-                    self.clientEventSink?(FlutterError.init(code: _id, message: self.NKN_METHOD_GET_BLOCK_HEIGHT, details: "noClient"))
+                    self.clientEventSink?(FlutterError.init(code: _id, message: "getBlockHeight no client", details: nil))
                     return
                 }
                 var height: Int32 = 0
                 try client.getHeight(&height);
                 var resp: [String: Any] = [String: Any]()
-                resp["event"] = self.NKN_METHOD_GET_BLOCK_HEIGHT
                 resp["_id"] = _id
                 resp["height"] = height
                 self.clientEventSink!(resp)
             } catch let error {
-                self.clientEventSink!(FlutterError(code: _id, message: self.NKN_METHOD_GET_BLOCK_HEIGHT, details: error.localizedDescription))
+                self.clientEventSink!(FlutterError(code: _id, message: error.localizedDescription, details: nil))
             }
         }
         sendMessageQueue.async(execute: sendMessageWorkItem!)
@@ -665,8 +567,8 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         
         var resp: [String: Any] = [String: Any]()
             resp["_id"] = _id
+            resp["event"] = "fetch_device_token"
             resp["device_token"] = deviceToken
-            resp["event"] = self.NKN_METHOD_FETCH_DEVICE_TOKEN
         self.clientEventSink!(resp)
     }
     
@@ -677,7 +579,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         
         var resp: [String: Any] = [String: Any]()
             resp["_id"] = _id
-            resp["event"] = self.NKN_METHOD_FETCH_FCM_TOKEN
+            resp["event"] = "fetch_fcm_token"
             resp["fcm_token"] = fcmToken
         self.clientEventSink!(resp)
     }
@@ -691,23 +593,23 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         return NSDictionary()
     }
     
-//    func closeCurrentConnect(){
-//        closeClientIfExists()
-//        NKNPushService.shared().disConnectAPNS()
-//        sendMessageWorkItem?.cancel()
-//        receiveMessageWorkItem?.cancel()
-//        subscriberWorkItem?.cancel()
-//        createClientWorkItem?.cancel()
-////        onConnectWorkItem?.cancel()
-//    }
-    
+    func closeCurrentConnect(){
+        closeClientIfExists()
+        NKNPushService.shared().disConnectAPNS()
+        sendMessageWorkItem?.cancel()
+        receiveMessageWorkItem?.cancel()
+        subscriberWorkItem?.cancel()
+        createClientWorkItem?.cancel()
+//        onConnectWorkItem?.cancel()
+    }
     
     @objc func becomeActive(noti:Notification){
 //        guard self.accountSeedBytes.elementSize != 0 else {
 //            return
 //        }
-//
-//        reCreateClient()
+//        var error: NSError?
+//        let account = NknNewAccount(accountSeedBytes.data, &error)
+//        self.nknClient = genClientIfNotExists(account!,self.identifierC, self.identifierC)
 //        connectNkn()
 //        onAsyncMessageReceive()
         print("NKNClient进入前台")
@@ -716,9 +618,8 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
 
     @objc func becomeDeath(noti:Notification){
         print("NKNClient进入后台")
-//        closeNKNClient()
+//        closeClientIfExists()
         NKNPushService.shared().disConnectAPNS()
-        
 //        sendMessageWorkItem?.cancel()
 //        receiveMessageWorkItem?.cancel()
 //        subscriberWorkItem?.cancel()
