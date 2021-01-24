@@ -3,11 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/chat/channel_members.dart';
+import 'package:nmobile/blocs/chat/chat_event.dart';
+import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
@@ -17,6 +18,7 @@ import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/db/black_list_repo.dart';
+import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
@@ -25,6 +27,8 @@ import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/log_tag.dart';
+import 'package:oktoast/oktoast.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
   @override
@@ -37,6 +41,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
   /// If so,there is no need to alert Notification while in ForegroundState by Android Device
   bool googleServiceOn =  false;
   bool googleServiceOnInit = false;
+
+  List<MessageSchema> entityMessageList = new List();
+  List<MessageSchema> actionMessageList = new List();
+  Timer watchDog;
+  int delayBatchSeconds = 3;
 
   @override
   Stream<ChatState> mapEventToState(ChatEvent event) async* {
@@ -54,145 +63,208 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       FlutterAppBadger.updateBadgeCount(unReadCount);
       yield MessageUpdateState(target: event.target);
     }
-    else if (event is RefreshMessageEndEvent){
-      yield MessageUpdateFinishState();
+    else if (event is UpdateMessageEvent){
+      /// Update MessageList and badge
+
+      print('Insert IM From UpdateMessageEvent__ begin');
+
+      var message = event.message;
+      // message.setMessageStatus(MessageStatus.MessageReceived);
+      // message.sendReceiptMessage();
+
+      print('Insert IM From UpdateMessageEvent__'+message.content.toString());
+      this.add(RefreshMessageListEvent());
+      yield MessageUpdateState(message: message);
     }
     else if (event is GetAndReadMessages) {
       yield* _mapGetAndReadMessagesToState(event);
     }
   }
 
+  _handleBatchMessage() async{
+    /// Batch send ReceiptMessage
+    /// Batch Insert MessageToDatabase
+    Database cdb = await NKNDataManager.instance.currentDatabase();
+
+    String batchId = '';
+    Batch dbBatch = cdb.batch();
+    for (MessageSchema message in entityMessageList){
+      message.setMessageStatus(MessageStatus.MessageReceived);
+      print('BatchInsert NormalMessageContent__'+message.content);
+      batchId = batchId+','+message.msgId;
+
+      dbBatch.insert(MessageSchema.tableName, message.toEntity(NKNClientCaller.pubKey));
+    }
+    List results = await dbBatch.commit();
+    for(var resultString in results) {
+      print('BatchInsertMessage__'+resultString.toString());
+    }
+
+    if (results.length > 0){
+      print('BatchInsertMessage__Result__'+results.length.toString());
+      var unReadCount = await MessageSchema.unReadMessages();
+      FlutterAppBadger.updateBadgeCount(unReadCount);
+    }
+    for (MessageSchema message in entityMessageList){
+      print('BatchMessage.isSuccess_'+message.isSuccess.toString());
+      message.sendReceiptMessage();
+    }
+    if (entityMessageList.length > 500){
+      entityMessageList.removeRange(0, 500);
+      _sendBatchReceipt();
+    }
+    else{
+      entityMessageList.clear();
+    }
+  }
+
+  _sendBatchReceipt() async{
+    if (entityMessageList.length > 500){
+      _handleBatchMessage();
+    }
+    else if (entityMessageList.length > 10){
+      _handleBatchMessage();
+    }
+    else {
+      for (MessageSchema message in entityMessageList){
+        print('Handle less10');
+        bool insertS = await message.insertMessage();
+        if(insertS){
+          message.sendReceiptMessage();
+        }
+      }
+      entityMessageList.clear();
+    }
+    this.add(RefreshMessageListEvent());
+  }
+
+  _addToBatchReceiveMessage(MessageSchema message){
+    entityMessageList.add(message);
+
+    delayBatchSeconds = 3;
+    _startWatchDog();
+  }
+
+  _startWatchDog() {
+    if (watchDog == null || watchDog.isActive == false){
+      watchDog = Timer.periodic(Duration(milliseconds: 1000), (timer) {
+        delayBatchSeconds--;
+        if (delayBatchSeconds == 0){
+          _stopWatchDog();
+        }
+        if (entityMessageList.length > 500){
+          _sendBatchReceipt();
+          print('entityMessageList > 500 ==> sendBatchReceipt');
+        }
+      });
+    }
+  }
+
+  _stopWatchDog() {
+    _sendBatchReceipt();
+    print('_stopWatchDog > delayBatchSeconds==0 ==> sendBatchReceipt');
+    delayBatchSeconds = 3;
+    if(watchDog.isActive){
+      watchDog.cancel();
+      watchDog = null;
+    }
+  }
+
   Stream<ChatState> _mapSendMessageToState(SendMessageEvent event) async* {
     var message = event.message;
 
-    if (message.topic == null) {
-      _checkContactIfExists(message.to);
+    _debugLogMessage(message,0);
+
+
+    var pid;
+    String contentData = '';
+    message.setMessageStatus(MessageStatus.MessageSending);
+
+    /// Handle GroupMessage Sending
+    if (message.topic != null){
+      pid = await _sendGroupMessage(message);
+      if (pid != null){
+        message.pid = pid;
+        message.setMessageStatus(MessageStatus.MessageSendSuccess);
+      }
+      else{
+        message.setMessageStatus(MessageStatus.MessageSendFail);
+      }
+
+      bool insertMessageBack = await message.insertMessage();
+      print('InsertGroupMessageToDatabase___'+message.content+'___'+insertMessageBack.toString());
+
+      yield MessageUpdateState(target: message.to, message: message);
+      return;
     }
-    if (message.contentType == null){
-      Global.debugLog('Content Type is null!!');
-    }
+    /// Handle SingleMessage Sending
     else{
-      Global.debugLog('Content Type is__'+message.contentType.toString());
-    }
-    if (message.content == null){
-      Global.debugLog('Message Content is null!!');
-    }
-    else{
-      Global.debugLog('Message Content is__'+message.content.toString());
-    }
-    switch (message.contentType) {
-      case ContentType.ChannelInvitation:
-        message.isOutbound = true;
-        message.isRead = true;
-        try {
-          var pid;
-          NKNClientCaller.sendText([message.to], message.toTextData());
-          pid = await NKNClientCaller.sendText([message.to], message.toTextData());
-          message.pid = pid;
-          message.isSendError = false;
-        } catch (e) {
-          message.isSendError = true;
-        }
-        break;
-      case ContentType.text:
-        message.isOutbound = true;
-        message.isRead = true;
-        try {
-          var pid;
-          if (message.topic != null) {
-            pid = await _sendGroupMessage(message);
-          } else {
-            Map dataInfo = await _checkIfSendNotification(message);
-            pid = await NKNClientCaller.sendText([message.to], jsonEncode(dataInfo));
-          }
-          message.pid = pid;
-          message.isSendError = false;
-        } catch (e) {
-          message.isSendError = true;
-        }
-        break;
-      case ContentType.textExtension:
-        message.isOutbound = true;
-        message.isRead = true;
+      if (message.contentType == ContentType.text ||
+          message.contentType == ContentType.textExtension ||
+          message.contentType == ContentType.nknImage ||
+          message.contentType == ContentType.nknAudio){
         if (message.options != null && message.options['deleteAfterSeconds'] != null) {
           message.deleteTime = DateTime.now().add(Duration(seconds: message.options['deleteAfterSeconds']));
         }
-        try {
-          Map dataInfo = await _checkIfSendNotification(message);
-          var pid = await NKNClientCaller.sendText([message.to], jsonEncode(dataInfo));
-          message.pid = pid;
-          message.isSendError = false;
-        } catch (e) {
-          message.isSendError = true;
-        }
-        break;
-      case ContentType.nknImage:
-      case ContentType.nknAudio:
-        message.isOutbound = true;
-        message.isRead = true;
-        if (message.options != null && message.options['deleteAfterSeconds'] != null) {
-          message.deleteTime = DateTime.now().add(Duration(seconds: message.options['deleteAfterSeconds']));
-        }
-        try {
-          var pid;
-          if (message.topic != null) {
-            pid = await _sendGroupMessage(message);
-          } else {
-            String sendData = '';
-            if (message.contentType == ContentType.nknImage){
-              sendData = message.toImageData();
-            }
-            else if (message.contentType == ContentType.nknAudio){
-              sendData = message.toAudioData();
-            }
-            pid = await NKNClientCaller.sendText([message.to], sendData);
-          }
-          message.pid = pid;
-          message.isSendError = false;
-        } catch (e) {
-          message.isSendError = true;
-        }
-        break;
-      case ContentType.eventContactOptions:
-        try {
-          await NKNClientCaller.sendText([message.to], message.toContentOptionData(message.contactOptionsType));
-        } catch (e) {
-          Global.debugLog('Receive Message eventContactOptions'+e.toString());
-        }
-        break;
-      case ContentType.eventSubscribe:
-        if (message.topic != null) {
-          message.isOutbound = true;
-          message.isRead = true;
-          try {
-            var pid;
-            pid = await _sendGroupMessage(message);
-            message.pid = pid;
-            message.isSendError = false;
-          } catch (e) {
-            message.isSendError = true;
-          }
-        }
-        break;
-      case ContentType.eventUnsubscribe:
-        if (message.topic != null) {
-          message.isOutbound = true;
-          message.isRead = true;
-          try {
-            var pid;
-            pid = await _sendGroupMessage(message);
-            message.pid = pid;
-            message.isSendError = false;
-          } catch (e) {
-            message.isSendError = true;
-          }
-        }
-        return;
+
+        Map dataInfo = await _checkIfSendNotification(message);
+        contentData = jsonEncode(dataInfo);
+      }
+      else if (message.contentType == ContentType.eventContactOptions) {
+        contentData = message.toContentOptionData();
+      }
+      else if (message.contentType == ContentType.ChannelInvitation) {
+        contentData = message.toTextData();
+      }
+
+      try {
+        pid = await NKNClientCaller.sendText([message.to], contentData);
+        message.pid = pid;
+        print('SendMessageSuccess__'+message.contentType.toString()+'__'+message.to.toString());
+        message.setMessageStatus(MessageStatus.MessageSendSuccess);
+      }
+      catch(e) {
+        message.setMessageStatus(MessageStatus.MessageSendFail);
+      }
+
+    // case ContentType.eventContactOptions:
+    //
+    // break;
+    // case ContentType.ChannelInvitation:
+    // contentData = message.toTextData();
+    // break;
+    //   switch (message.contentType){
+    //     case ContentType.text:
+    //     case ContentType.nknImage:
+    //     case ContentType.nknAudio:
+    //       {
+    //
+    //         Map dataInfo = await _checkIfSendNotification(message);
+    //         contentData = jsonEncode(dataInfo);
+    //
+    //         // contentData = message.toTextData();
+    //       }
+    //       break;
+    //     case ContentType.textExtension:
+    //       if (message.options != null && message.options['deleteAfterSeconds'] != null) {
+    //         message.deleteTime = DateTime.now().add(Duration(seconds: message.options['deleteAfterSeconds']));
+    //       }
+    //       contentData = message.toTextData();
+    //       break;
+    //
+    //
+    //     default:
+    //       print('Unhandled Message Type___'+message.contentType);
+    //       break;
+    //   }
+    //
+    //   // Map dataInfo = await _checkIfSendNotification(message);
+
+
     }
-    await message.insert();
-    if (message.contentType == ContentType.nknAudio){
-      print('SendInsertAudioMessage__'+message.options.toString());
-    }
+    bool insertMessageBack = await message.insertMessage();
+    print('InsertMessageToDatabase___'+message.content+'___'+insertMessageBack.toString());
+
     yield MessageUpdateState(target: message.to, message: message);
   }
 
@@ -217,7 +289,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     if (isPrivateTopic(message.topic)) {
       List<String> dests = await GroupChatHelper.fetchGroupMembers(message.topic);
       if (dests != null && dests.length > 0){
-        pid = await NKNClientCaller.sendText(dests, encodeSendJsonData);
+        try{
+          pid = await NKNClientCaller.sendText(dests, encodeSendJsonData);
+        }
+        catch(e){
+          print('PrivateGroup Message SendFail____'+e.toString());
+          return null;
+        }
       }
       else{
         Global.debugLog('Error no member__'+message.topic);
@@ -225,9 +303,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     }
     else {
       List<String> members = await GroupChatHelper.fetchGroupMembers(message.topic);
-      print('GroupMember is__'+members.toString());
       print('GroupMember count is__'+members.length.toString()+'__');
-      pid = await NKNClientCaller.publishText(genTopicHash(message.topic), encodeSendJsonData);
+      try{
+        pid = await NKNClientCaller.publishText(genTopicHash(message.topic), encodeSendJsonData);
+        print('Publish Message toGroupSuccess__'+message.content.toString());
+      }
+      catch(e){
+        print('PublishMessage SendFail____'+e.toString());
+        return null;
+      }
       Global.debugLog('PublishText to Topic__'+message.topic+'__'+message.content);
     }
     return pid;
@@ -250,24 +334,64 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     }
   }
 
+  _debugLogMessage(MessageSchema message,int type){
+    String typeString = 'Sending_____\n';
+    if (type == 1){
+      typeString = 'Received_____\n';
+    }
+    if (message.contentType != null){
+      Global.debugLog('$typeString'+'Message ContentType is___'+message.contentType.toString());
+    }
+    if (message.topic != null){
+      Global.debugLog('$typeString'+'Message Topic is___'+message.topic.toString());
+    }
+    if (message.content != null){
+      Global.debugLog('$typeString'+'Message Content is___'+message.content.toString());
+    }
+    if (message.from != null){
+      Global.debugLog('$typeString'+'Message From is___'+message.from.toString());
+    }
+  }
+
+  _handleEntityMessage(MessageSchema message) async{
+    DateTime nDate = DateTime.now();
+    int timeGap = nDate.millisecondsSinceEpoch - message.timestamp.millisecondsSinceEpoch;
+    print('timeGap is___'+timeGap.toString());
+
+    /// Consider as OnlineMessage,If not consider the User is offline
+    if (timeGap/1000 < 5*60){
+      bool insertReceiveSuccess = await message.insertMessage();
+      if (insertReceiveSuccess){
+        message.setMessageStatus(MessageStatus.MessageReceived);
+        message.sendReceiptMessage();
+
+        print('Insert IM Received Message__'+message.content);
+        var unReadCount = await MessageSchema.unReadMessages();
+        FlutterAppBadger.updateBadgeCount(unReadCount);
+        this.add(RefreshMessageListEvent());
+        this.add(UpdateMessageEvent(message));
+      }
+    }
+    else{
+      _addToBatchReceiveMessage(message);
+    }
+  }
+
   Stream<ChatState> _mapReceiveMessageToState(ReceiveMessageEvent event) async* {
     var message = event.message;
-    print('Message received Begin');
-    if (message.content != null){
-      print('Receive Message'+message.content);
-    }
+    _debugLogMessage(message,1);
+
     if (await message.isExist()) {
-      Global.debugLog('message is not exists!');
+      print('ReceiveMessage from AnotherNode__');
       return;
     }
 
     Topic topic;
+    /// message.topic is not null Means TopicChat
     if (message.topic != null){
-      print('Receive Message from Topic'+message.topic);
       topic = await GroupChatHelper.fetchTopicInfoByName(message.topic);
       if (topic == null){
         /// check Block pool if the group contains Me If so, CreateGroup and join
-
         return;
       }
       else{
@@ -279,94 +403,55 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
             membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
           );
         }
-      }
-    }
+        else{
+          /// If Received self Send
+          if (message.from == NKNClientCaller.pubKey){
+            message.receiptTopic();
+            message.setMessageStatus(MessageStatus.MessageSendReceipt);
+            yield MessageUpdateState(target: message.from, message: message);
+            return;
+          }
 
-    /// message.topic is not null Means TopicChat
-    var contact = await _checkContactIfExists(message.from);
-    if (message.topic != null){
-      Global.debugLog('GroupMessage from__'+message.from+'__'+message.topic);
+          if (message.contentType == ContentType.text ||
+              message.contentType == ContentType.textExtension ||
+              message.contentType == ContentType.nknAudio ||
+              message.contentType == ContentType.nknImage){
+            if (message.contentType == ContentType.nknImage ||
+                message.contentType == ContentType.nknAudio){
+              message.loadMedia(this);
+              print('message LoadMedia'+message.contentType);
+            }
+
+            _handleEntityMessage(message);
+            yield MessageUpdateState(target: message.from, message: message);
+          }
+        }
+      }
     }
     else{
-      Global.debugLog('SingleChat from__'+message.from);
-    }
+      var contact = await _checkContactIfExists(message.from);
 
-    final String title = (topic?.isPrivate ?? false) ? topic.shortName : contact.name;
-    if (!contact.isMe && message.contentType != ContentType.contact && Global.isLoadProfile(contact.publicKey)) {
-      if (contact.profileExpiresAt == null || DateTime.now().isAfter(contact.profileExpiresAt)) {
-        Global.saveLoadProfile(contact.publicKey);
-        contact.requestProfile();
+      if (message.contentType == ContentType.eventContactOptions){
+        _checkBurnOptions(message, contact);
       }
-    }
-    switch (message.contentType) {
-      case ContentType.text:
-        if (message.topic != null && message.from == NKNClientCaller.currentChatId) {
-          await message.receiptTopic();
-          message.isSuccess = true;
-          message.isRead = true;
-          message.content = message.msgId;
-          message.contentType = ContentType.receipt;
-          yield MessageUpdateState(target: message.from, message: message);
-          return;
+      if (message.contentType == ContentType.text ||
+          message.contentType == ContentType.textExtension ||
+          message.contentType == ContentType.nknImage ||
+          message.contentType == ContentType.nknAudio){
+        _checkBurnOptions(message, contact);
+
+        if (message.contentType == ContentType.nknImage ||
+            message.contentType == ContentType.nknAudio){
+          message.loadMedia(this);
+          print('message LoadMedia'+message.contentType);
         }
-        message.receipt();
-        message.isSuccess = true;
-        checkBurnOptions(message, contact);
 
-        _judgeIfCanSendLocalMessageNotification(title, message);
-        await message.insert();
-        var unReadCount = await MessageSchema.unReadMessages();
-        FlutterAppBadger.updateBadgeCount(unReadCount);
+        _handleEntityMessage(message);
+        yield MessageUpdateState(target: message.from, message: message);
+        return;
+      }
 
-        yield MessageUpdateState(target: message.from, message: message);
-        return;
-      case ContentType.ChannelInvitation:
-        message.receipt();
-        message.isSuccess = true;
-        _judgeIfCanSendLocalMessageNotification(title, message);
-        await message.insert();
-        var unReadCount = await MessageSchema.unReadMessages();
-        FlutterAppBadger.updateBadgeCount(unReadCount);
-        yield MessageUpdateState(target: message.from, message: message);
-        return;
-      case ContentType.receipt:
-        // todo debug
-        await message.receiptMessage();
-        yield MessageUpdateState(target: message.from, message: message);
-        return;
-      case ContentType.textExtension:
-        message.receipt();
-        message.isSuccess = true;
-        checkBurnOptions(message, contact);
-        _judgeIfCanSendLocalMessageNotification(title, message);
-        await message.insert();
-
-        var unReadCount = await MessageSchema.unReadMessages();
-        FlutterAppBadger.updateBadgeCount(unReadCount);
-        yield MessageUpdateState(target: message.from, message: message);
-        return;
-      case ContentType.nknImage:
-      case ContentType.nknAudio:
-        if (message.topic != null && message.from == NKNClientCaller.currentChatId) {
-          await message.receiptTopic();
-          message.isSuccess = true;
-          message.isRead = true;
-          message.content = message.msgId;
-          message.contentType = ContentType.receipt;
-          yield MessageUpdateState(target: message.from, message: message);
-          return;
-        }
-        message.receipt();
-        message.isSuccess = true;
-        checkBurnOptions(message, contact);
-        _judgeIfCanSendLocalMessageNotification(title, message);
-        message.loadMedia();
-        await message.insert();
-        var unReadCount = await MessageSchema.unReadMessages();
-        FlutterAppBadger.updateBadgeCount(unReadCount);
-        yield MessageUpdateState(target: message.from, message: message);
-        return;
-      case ContentType.contact:
+      if (message.contentType == ContentType.contact){
         Map<String, dynamic> data;
         try {
           data = jsonDecode(message.content);
@@ -388,8 +473,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
             }
           }
         }
-        return;
-      case ContentType.eventContactOptions:
+      }
+      if (message.contentType == ContentType.eventContactOptions){
         Map<String, dynamic> data;
         try {
           data = jsonDecode(message.content);
@@ -403,15 +488,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           await contact.setDeviceToken(data['content']['deviceToken']);
         }
         contactBloc.add(LoadContact(address: [contact.clientAddress]));
-        message.isSuccess = true;
-        message.isRead = true;
-        await message.insert();
-        yield MessageUpdateState(target: message.from, message: message);
-        return;
-      case ContentType.eventSubscribe:
-      case ContentType.eventUnsubscribe:
-        Global.debugLog('Received ContentType.eventSubscribe__'+ContentType.eventSubscribe);
+      }
 
+      if (message.contentType == ContentType.eventSubscribe ||
+          message.contentType == ContentType.eventUnsubscribe){
+        Global.debugLog('Received ContentType.eventSubscribe__'+ContentType.eventSubscribe);
         Global.removeTopicCache(message.topic);
         if (message.from == NKNClientCaller.currentChatId) {
         } else {
@@ -437,7 +518,48 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
             );
           }
         }
-        return;
+      }
+
+      /// Receipt sendMessage do not need InsertToDataBase
+      if (message.contentType == ContentType.receipt){
+        message.receiptMessage();
+        print('Received ReceiptMessage');
+      }
+      else{
+        if (message.contentType == ContentType.text ||
+        message.contentType == ContentType.textExtension ||
+        message.contentType == ContentType.nknImage ||
+        message.contentType == ContentType.nknAudio){
+          yield MessageUpdateState(target: message.from, message: message);
+        }
+        else{
+          print('Enter Old Logic');
+          print('__message.contentType__'+ message.contentType.toString());
+          /// loadUserProfile
+          // final String title = (topic?.isPrivate ?? false) ? topic.shortName : contact.name;
+          // if (!contact.isMe && message.contentType != ContentType.contact && Global.isLoadProfile(contact.publicKey)) {
+          //   if (contact.profileExpiresAt == null || DateTime.now().isAfter(contact.profileExpiresAt)) {
+          //     Global.saveLoadProfile(contact.publicKey);
+          //     contact.requestProfile();
+          //   }
+          // }
+          // _judgeIfCanSendLocalMessageNotification(title, message);
+          //
+          // bool insertReceiveSuccess = await message.insertMessage();
+          // if (insertReceiveSuccess){
+          //   message.setMessageStatus(MessageStatus.MessageReceived);
+          //   message.sendReceiptMessage();
+          //
+          //   print('Insert NormalMessage__'+message.content);
+          //   var unReadCount = await MessageSchema.unReadMessages();
+          //   FlutterAppBadger.updateBadgeCount(unReadCount);
+          // }
+          // else{
+          //   showToast('Inert database failed');
+          // }
+        }
+      }
+      yield MessageUpdateState(target: message.from, message: message);
     }
   }
 
@@ -449,8 +571,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     yield MessageUpdateState(target: event.target);
   }
 
-  ///change burn status
-  checkBurnOptions(MessageSchema message, ContactSchema contact) async {
+  /// change burn status
+  _checkBurnOptions(MessageSchema message, ContactSchema contact) async {
     if (message.topic != null) return;
     if (contact.options == null ||
         (contact.options.deleteAfterSeconds == null && message.deleteAfterSeconds != null) ||
@@ -483,7 +605,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     if (message.contentType == ContentType.text || message.contentType == ContentType.textExtension){
       dataInfo = jsonDecode(message.toTextData());
     }
-
+    else if (message.contentType == ContentType.nknImage){
+      dataInfo = jsonDecode(message.toImageData());
+    }
+    else if (message.contentType == ContentType.nknAudio){
+      dataInfo = jsonDecode(message.toAudioData());
+    }
     ContactSchema contact = await _checkContactIfExists(message.to);
     if (contact.deviceToken != null && contact.deviceToken.length > 0){
       String pushContent = NL10ns.of(Global.appContext).notification_push_content;
@@ -493,77 +620,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       Global.debugLog('Send Push notification content is '+pushContent);
       dataInfo['deviceToken'] = contact.deviceToken;
       dataInfo['pushContent'] = pushContent;
-
-      if (message.contentType == ContentType.nknImage){
-        dataInfo = jsonDecode(message.toImageData());
-      }
-      else if (message.contentType == ContentType.nknAudio){
-        dataInfo = jsonDecode(message.toAudioData());
-      }
-      print('Send Message Data__'+dataInfo.toString());
     }
+
     return dataInfo;
   }
-}
-
-abstract class ChatState {
-  const ChatState();
-}
-
-class NoConnectState extends ChatState {}
-
-class OnConnectState extends ChatState {}
-
-class MessageUpdateState extends ChatState {
-  final String target;
-  final MessageSchema message;
-
-  const MessageUpdateState({this.target, this.message});
-}
-
-class MessageUpdateFinishState extends ChatState{
-
-}
-
-class GroupEvicted extends ChatState {
-  final String topicName;
-
-  const GroupEvicted(this.topicName);
-}
-
-abstract class ChatEvent extends Equatable {
-  const ChatEvent();
-
-  @override
-  List<Object> get props => [];
-}
-
-class NKNChatOnMessageEvent extends ChatEvent {}
-
-class RefreshMessageListEvent extends ChatEvent {
-  final String target;
-
-  const RefreshMessageListEvent({this.target});
-}
-
-class RefreshMessageEndEvent extends ChatEvent{
-
-}
-
-class ReceiveMessageEvent extends ChatEvent {
-  final MessageSchema message;
-
-  const ReceiveMessageEvent(this.message);
-}
-
-class SendMessageEvent extends ChatEvent {
-  final MessageSchema message;
-
-  const SendMessageEvent(this.message);
-}
-
-class GetAndReadMessages extends ChatEvent {
-  final String target;
-
-  const GetAndReadMessages({this.target});
 }

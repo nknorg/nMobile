@@ -8,6 +8,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/box/body.dart';
@@ -385,7 +386,6 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
         content: topic.topic,
         to: address,
         contentType: ContentType.ChannelInvitation);
-    sendMsg.isOutbound = true;
     _chatBloc.add(SendMessageEvent(sendMsg));
     showToast(NL10ns
         .of(context)

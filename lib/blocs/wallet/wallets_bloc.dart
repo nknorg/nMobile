@@ -18,7 +18,6 @@ class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {
 
   @override
   Stream<WalletsState> mapEventToState(WalletsEvent event) async* {
-    print('Wallet Event is___'+event.toString());
     if (event is LoadWallets) {
       await _ensureRnWalletUpgraded();
       yield* _mapLoadWalletsToState();
