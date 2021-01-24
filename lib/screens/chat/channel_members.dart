@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/box/body.dart';
@@ -379,7 +380,6 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
     final topic = widget.topic;
     // Anyone can invite anyone.
     var sendMsg = MessageSchema.fromSendData(from: NKNClientCaller.currentChatId, content: topic.topic, to: address, contentType: ContentType.ChannelInvitation);
-    sendMsg.isOutbound = true;
     _chatBloc.add(SendMessageEvent(sendMsg));
     showToast(NL10ns.of(context).invitation_sent);
 

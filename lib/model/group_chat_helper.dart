@@ -11,6 +11,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
@@ -174,7 +175,6 @@ class GroupChatHelper {
           topic: topicName,
           contentType: ContentType.eventSubscribe,
         );
-        sendMsg.isOutbound = true;
         sendMsg.content = sendMsg.toEventSubscribeData();
         chatBloc.add(SendMessageEvent(sendMsg));
         callback(true, null);
@@ -193,7 +193,6 @@ class GroupChatHelper {
           topic: topicName,
           contentType: ContentType.eventSubscribe,
         );
-        sendMsg.isOutbound = true;
         sendMsg.content = sendMsg.toEventSubscribeData();
         chatBloc.add(SendMessageEvent(sendMsg));
         callback(true, null);
@@ -221,7 +220,6 @@ class GroupChatHelper {
           topic: topicName,
           contentType: ContentType.eventUnsubscribe,
         );
-        sendMsg.isOutbound = true;
         sendMsg.content = sendMsg.toEventSubscribeData();
         chatBloc.add(SendMessageEvent(sendMsg));
         // chatBloc.add(RefreshMessageListEvent());

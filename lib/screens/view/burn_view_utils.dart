@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
@@ -220,9 +221,9 @@ class BurnViewPageState extends State<BurnViewPage> {
       to: widget.contact.clientAddress,
       contentType: ContentType.eventContactOptions,
     );
-    sendMsg.isOutbound = true;
     sendMsg.burnAfterSeconds = _burnValue;
-    sendMsg.content = sendMsg.toContentOptionData(0);
+    sendMsg.contactOptionsType = 0;
+    sendMsg.content = sendMsg.toContentOptionData();
     widget.chatBloc.add(SendMessageEvent(sendMsg));
     Navigator.pop(context, _burnValue);
   }

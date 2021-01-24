@@ -338,7 +338,9 @@ class NKNClientCaller{
           }
           try{
             MessageSchema messageInfo = MessageSchema(from: data['src'], to: NKNClientCaller.currentChatId, data: data['data'], pid: data['pid']);
-            Global.debugLog('onMessage Data'+data.toString());
+            if (data['data'] != null){
+              Global.debugLog('onMessage Data'+data.toString());
+            }
             if (data['src'] != null && data['pid'] != null){
               if (NKNClientCaller.currentChatId != null){
                 Global.debugLog('currentChatId is__'+NKNClientCaller.currentChatId+'\nfrom__'+data['src'].toString()+'\npid__'+data['pid'].toString());
