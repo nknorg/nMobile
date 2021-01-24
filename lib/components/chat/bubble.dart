@@ -46,14 +46,15 @@ class ChatBubble extends StatefulWidget {
   bool hideHeader;
 
   ChatBubble({this.message, this.contact, this.onChanged, this.preMessage, this.showTime = true, this.hideHeader = false}) {
-    if (message.isOutbound) {
-      if (message.isSendError) {
-        style = BubbleStyle.SendError;
-      } else {
-        style = BubbleStyle.Me;
-      }
-    } else {
+    if (message.messageStatus == MessageStatus.MessageReceived ||
+        message.messageStatus == MessageStatus.MessageReceivedRead) {
       style = BubbleStyle.Other;
+    }
+    else if (message.messageStatus == MessageStatus.MessageSendFail){
+      style = BubbleStyle.SendError;
+    }
+    else {
+      style = BubbleStyle.Me;
     }
   }
 
@@ -188,30 +189,30 @@ class _ChatBubbleState extends State<ChatBubble> {
     popupMenu.show(widgetKey: popupMenuKey);
   }
 
-  _mediaPopupMenuShow() {
-    PopupMenu popupMenu = PopupMenu(
-      context: context,
-      maxColumn: 4,
-      items: [
-        MenuItem(
-          userInfo: 0,
-          title: NL10ns
-              .of(context)
-              .done,
-          textStyle: TextStyle(
-              color: DefaultTheme.fontLightColor, fontSize: 12),
-        ),
-      ],
-      onClickMenu: (MenuItemProvider item) {
-        var index = (item as MenuItem).userInfo;
-        switch (index) {
-          case 0:
-            break;
-        }
-      },
-    );
-    popupMenu.show(widgetKey: popupMenuKey);
-  }
+  // _mediaPopupMenuShow() {
+  //   PopupMenu popupMenu = PopupMenu(
+  //     context: context,
+  //     maxColumn: 4,
+  //     items: [
+  //       MenuItem(
+  //         userInfo: 0,
+  //         title: NL10ns
+  //             .of(context)
+  //             .done,
+  //         textStyle: TextStyle(
+  //             color: DefaultTheme.fontLightColor, fontSize: 12),
+  //       ),
+  //     ],
+  //     onClickMenu: (MenuItemProvider item) {
+  //       var index = (item as MenuItem).userInfo;
+  //       switch (index) {
+  //         case 0:
+  //           break;
+  //       }
+  //     },
+  //   );
+  //   popupMenu.show(widgetKey: popupMenuKey);
+  // }
 
   @override
   void initState() {
@@ -268,7 +269,8 @@ class _ChatBubbleState extends State<ChatBubble> {
           ],
         ).pad(t: 1);
       }
-    } else if (widget.style == BubbleStyle.SendError) {
+    }
+    else if (widget.style == BubbleStyle.SendError) {
       decoration = BoxDecoration(
         color: DefaultTheme.fallColor.withAlpha(178),
         borderRadius: BorderRadius.only(
@@ -279,7 +281,8 @@ class _ChatBubbleState extends State<ChatBubble> {
         ),
       );
       dark = true;
-    } else {
+    }
+    else {
       decoration = BoxDecoration(
         color: DefaultTheme.backgroundColor1,
         borderRadius: BorderRadius.only(
@@ -455,13 +458,21 @@ class _ChatBubbleState extends State<ChatBubble> {
     if (content.isEmpty) {
       content.add(Space.empty);
     }
+
+    double bOpacity = 0.4;
+    if (widget.message.messageStatus == MessageStatus.MessageSendReceipt ||
+        widget.message.messageStatus == MessageStatus.MessageReceived ||
+        widget.message.messageStatus == MessageStatus.MessageReceivedRead){
+      bOpacity = 1.0;
+    }
+
     if (widget.contact != null) {
       List<Widget> contents = <Widget>[
         GestureDetector(
           key: popupMenuKey,
           onTap: popupMenu,
           child: Opacity(
-            opacity: widget.message.isSuccess ? 1 : 0.4,
+            opacity: bOpacity,
             child: Container(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,7 +572,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                 key: popupMenuKey,
                 onTap: popupMenu,
                 child: Opacity(
-                  opacity: widget.message.isSuccess ? 1 : 0.4,
+                  opacity: bOpacity,
                   child: Container(
                     padding: EdgeInsets.all(10.w),
                     decoration: decoration,

@@ -1,4 +1,5 @@
-import 'package:nmobile/model/entity/message.dart';
+
+import 'package:nmobile/schemas/message.dart';
 
 abstract class ChatState {
   const ChatState();
@@ -15,13 +16,9 @@ class MessageUpdateState extends ChatState {
   const MessageUpdateState({this.target, this.message});
 }
 
-class UpdateChatMessageState extends ChatState {
-  final List<MessageSchema> messageList;
-  const UpdateChatMessageState(this.messageList);
-}
-
 class GroupEvicted extends ChatState {
   final String topicName;
 
   const GroupEvicted(this.topicName);
 }
+

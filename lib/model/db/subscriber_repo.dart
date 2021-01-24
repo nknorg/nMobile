@@ -58,7 +58,6 @@ class SubscriberRepo with Tag {
     List result = await cdb.query(sql);
     List <String> members = List();
     for (Map subInfo in result){
-      print('member is'+subInfo.toString());
       members.add(subInfo['chat_id']);
     }
     return members;

@@ -12,6 +12,8 @@ import 'package:nmobile/blocs/chat/auth_bloc.dart';
 import 'package:nmobile/blocs/chat/auth_event.dart';
 import 'package:nmobile/blocs/chat/auth_state.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/blocs/chat/chat_event.dart';
+import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
@@ -215,31 +217,32 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
             }
             if (clientState is NKNConnectedState ||
             clientState is NKNConnectingState) {
-              return BlocBuilder<ContactBloc, ContactState>(
-                builder: (context, contactState) {
-                  if (contactState is ContactLoaded){
-                    return BlocBuilder<ChatBloc, ChatState>(
-                      builder: (context, chatState) {
-                        if (chatState is MessageUpdateState){
-                          _refreshMessage();
-                          _chatBloc.add(RefreshMessageEndEvent());
-                        }
+              return BlocBuilder<ChatBloc, ChatState>(
+                builder: (context, chatState) {
+                  if (chatState is MessageUpdateState){
+                    _refreshMessage();
+                  }
+                  return BlocBuilder<ContactBloc, ContactState>(
+                    builder: (context, contactState) {
+                      if (contactState is ContactLoaded){
                         if (_messagesList != null && _messagesList.length > 0) {
                           _messagesList.sort((a, b) => a.isTop ? (b.isTop ? -1 /*hold position original*/ : -1) : (b.isTop ? 1 : b.lastReceiveTime.compareTo(a.lastReceiveTime)));
                           return _messageListWidget();
-                        } else {
-                          return _noMessageWidget();
                         }
-                      },
-                    );
-                  }
+                      }
+                      return _noMessageWidget();
+                    },
+                  );
                   if (_messagesList != null && _messagesList.length > 0) {
                     _messagesList.sort((a, b) => a.isTop ? (b.isTop ? -1 /*hold position original*/ : -1) : (b.isTop ? 1 : b.lastReceiveTime.compareTo(a.lastReceiveTime)));
                     return _messageListWidget();
+                  } else {
+                    return _noMessageWidget();
                   }
-                  return _noMessageWidget();
                 },
               );
+
+
             }
             return _noMessageWidget();
           },
@@ -590,7 +593,10 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     Widget contentWidget;
     // double topFontSize = 16;
     double bottomFontSize = 14;
-    String draft = LocalStorage.getChatUnSendContentFromId(NKNClientCaller.pubKey, item.targetId);
+    String draft = '';
+    if (NKNClientCaller.pubKey != null){
+      LocalStorage.getChatUnSendContentFromId(NKNClientCaller.pubKey, item.targetId);
+    }
     if (draft != null && draft.length > 0) {
       contentWidget = Row(
         children: <Widget>[

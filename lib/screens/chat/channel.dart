@@ -10,6 +10,8 @@ import 'package:nmobile/blocs/chat/auth_bloc.dart';
 import 'package:nmobile/blocs/chat/auth_state.dart';
 import 'package:nmobile/blocs/chat/channel_members.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/blocs/chat/chat_event.dart';
+import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
@@ -76,7 +78,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   initAsync() async {
     var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit);
-    _contactBloc.add(LoadContact(address: res.where((x) => !x.isOutbound).map((x) => x.from).toList()));
+    _contactBloc.add(LoadContact(address: res.where((x) => !x.isSendMessage()).map((x) => x.from).toList()));
     _chatBloc.add(RefreshMessageListEvent(target: targetId));
     if (res != null) {
       if (mounted)
@@ -132,7 +134,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   Future _loadMore() async {
     var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit, skip: _skip);
-    _contactBloc.add(LoadContact(address: res.where((x) => !x.isOutbound).map((x) => x.from).toList()));
+    _contactBloc.add(LoadContact(address: res.where((x) => !x.isSendMessage()).map((x) => x.from).toList()));
     _chatBloc.add(RefreshMessageListEvent(target: targetId));
     if (res != null) {
       _skip += res.length;
@@ -158,57 +160,67 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
           });
         }
       });
+
       _chatBloc = BlocProvider.of<ChatBloc>(context);
+
       _chatSubscription = _chatBloc.listen((state) {
         if (state is MessageUpdateState && mounted) {
+
+          print('received ChanneMessage__'+state.message.topic.toString());
+          print('received targetId =+'+targetId.toString());
+
           if (state.message == null || state.message.topic == null) {
             return;
           }
-          if (!state.message.isOutbound) {
-            _contactBloc.add(LoadContact(address: [state.message.from]));
-            if (state.message.topic == targetId && state.message.contentType == ContentType.text) {
-              state.message.isSuccess = true;
-              state.message.isRead = true;
-              state.message.readMessage().then((n) {
+
+          if (_messages != null && _messages.length > 0) {
+            var msg = _messages.firstWhere((x) => x.msgId == state.message.msgId && x.isSendMessage(), orElse: () => null);
+            if (msg != null) {
+              setState(() {
+                msg.messageStatus = MessageStatus.MessageSendReceipt;
+              });
+            }
+          }
+
+          MessageSchema updateMessage = state.message;
+
+          if (updateMessage.isSendMessage() == false && updateMessage.topic == targetId) {
+            _contactBloc.add(LoadContact(address: [updateMessage.from]));
+
+            if (updateMessage.contentType == ContentType.text ||
+                updateMessage.contentType == ContentType.textExtension ||
+                updateMessage.contentType == ContentType.nknImage ||
+                updateMessage.contentType == ContentType.nknAudio) {
+
+              updateMessage.messageStatus = MessageStatus.MessageReceived;
+              updateMessage.markMessageRead().then((n) {
+                updateMessage.messageStatus = MessageStatus.MessageReceivedRead;
                 _chatBloc.add(RefreshMessageListEvent());
               });
-              setState(() {
-                _messages.insert(0, state.message);
-              });
-            } else if (state.message.contentType == ContentType.receipt && !state.message.isOutbound) {
-              var msg = _messages.firstWhere((x) => x.msgId == state.message.content && x.isOutbound, orElse: () => null);
-              if (msg != null) {
-                NLog.d('message send success');
-                setState(() {
-                  msg.isSuccess = true;
-                });
-              }
-            } else if (state.message.topic == targetId && state.message.contentType == ContentType.nknImage) {
-              state.message.isSuccess = true;
-              state.message.isRead = true;
-              if (state.message.options != null && state.message.options['deleteAfterSeconds'] != null) {
-                state.message.deleteTime = DateTime.now().add(Duration(seconds: state.message.options['deleteAfterSeconds'] + 1));
-              }
-              state.message.readMessage().then((n) {
-                _chatBloc.add(RefreshMessageListEvent());
-              });
-              setState(() {
-                _messages.insert(0, state.message);
-              });
-            } else if (state.message.topic == targetId && state.message.contentType == ContentType.eventSubscribe) {
               setState(() {
                 _messages.insert(0, state.message);
               });
             }
-          } else {
-            if (state.message.topic == targetId && state.message.contentType == ContentType.eventSubscribe) {
+            if (state.message.contentType == ContentType.eventSubscribe) {
               setState(() {
                 _messages.insert(0, state.message);
               });
+            }
+            if (state.message.contentType == ContentType.receipt) {
+              var msg = _messages.firstWhere((x) =>
+              x.msgId == state.message.content && x.isSendMessage(),
+                  orElse: () => null);
+              if (msg != null) {
+                NLog.d('message send success');
+                setState(() {
+                  msg.messageStatus = MessageStatus.MessageReceivedRead;
+                });
+              }
             }
           }
         }
       });
+
       _scrollController.addListener(() {
         double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
         if (offsetFromBottom < 50 && !loading) {
@@ -255,7 +267,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     Duration deleteAfterSeconds;
 
     var sendMsg = MessageSchema.fromSendData(from: NKNClientCaller.currentChatId, topic: dest, content: text, contentType: contentType, deleteAfterSeconds: deleteAfterSeconds);
-    sendMsg.isOutbound = true;
     try {
       _chatBloc.add(SendMessageEvent(sendMsg));
       setState(() {
@@ -275,7 +286,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       contentType: ContentType.nknAudio,
       audioFileDuration: audioDuration,
     );
-    sendMsg.isOutbound = true;
     try {
       setState(() {
         _messages.insert(0, sendMsg);
@@ -295,7 +305,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       content: savedImg,
       contentType: ContentType.nknImage,
     );
-    sendMsg.isOutbound = true;
     try {
       _chatBloc.add(SendMessageEvent(sendMsg));
       setState(() {
@@ -456,7 +465,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                       alignment: WrapAlignment.center,
                                       crossAxisAlignment: WrapCrossAlignment.center,
                                       children: <Widget>[
-                                        Label('${message.isOutbound ? currentUser.name : contact?.name} ${NL10ns.of(context).joined_channel}'),
+                                        Label('${message.isSendMessage() ? currentUser.name : contact?.name} ${NL10ns.of(context).joined_channel}'),
                                       ],
                                     ),
                                   );
@@ -464,7 +473,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                 return Container();
                               });
                             } else {
-                              if (message.isOutbound) {
+                              if (message.isSendMessage()) {
                                 return ChatBubble(
                                   message: message,
                                   showTime: showTime,

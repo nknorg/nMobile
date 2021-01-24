@@ -11,6 +11,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nmobile/blocs/chat/auth_bloc.dart';
 import 'package:nmobile/blocs/chat/auth_event.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
@@ -148,9 +149,9 @@ class _ContactScreenState extends State<ContactScreen> {
       to: currentUser.clientAddress,
       contentType: ContentType.eventContactOptions,
     );
-    sendMsg.isOutbound = true;
     sendMsg.burnAfterSeconds = _burnValue;
-    sendMsg.content = sendMsg.toContentOptionData(0);
+    sendMsg.contactOptionsType = 0;
+    sendMsg.content = sendMsg.toContentOptionData();
 
     print("Send Burn Message"+sendMsg.content.toString());
     _chatBloc.add(SendMessageEvent(sendMsg));
@@ -182,8 +183,8 @@ class _ContactScreenState extends State<ContactScreen> {
       contentType: ContentType.eventContactOptions,
       deviceToken: deviceToken,
     );
-    sendMsg.isOutbound = true;
-    sendMsg.content = sendMsg.toContentOptionData(1);
+    sendMsg.contactOptionsType = 1;
+    sendMsg.content = sendMsg.toContentOptionData();
     sendMsg.deviceToken = deviceToken;
     _chatBloc.add(SendMessageEvent(sendMsg));
   }
