@@ -77,15 +77,11 @@ dependencies:
 
   flutter_sound: 7.4.14+1
   vibration: ^1.7.3
-#  flutter_sound: ^7.5.1+2
   flutter_plugin_record: ^0.3.5
   flutter_colored_progress_indicators: ^1.2.0
-#  background_fetch: 0.5.6
 
   permission_handler: ^5.0.1+1
 
-  # used to cut Message body into pieces
-#  dart_reed_solomon: ^0.1.0+2
   # Logger
   logger: ^0.9.1
   sentry: ^3.0.1
