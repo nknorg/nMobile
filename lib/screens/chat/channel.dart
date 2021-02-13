@@ -8,7 +8,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nmobile/blocs/chat/auth_bloc.dart';
 import 'package:nmobile/blocs/chat/auth_state.dart';
-import 'package:nmobile/blocs/chat/channel_members.dart';
+import 'package:nmobile/blocs/chat/channel_bloc.dart';
+import 'package:nmobile/blocs/chat/channel_state.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
@@ -78,14 +79,14 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   initAsync() async {
     var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit);
+    if (res != null) {
+      setState(() {
+        _messages = res;
+      });
+    }
+
     _contactBloc.add(LoadContact(address: res.where((x) => !x.isSendMessage()).map((x) => x.from).toList()));
     _chatBloc.add(RefreshMessageListEvent(target: targetId));
-    if (res != null) {
-      if (mounted)
-        setState(() {
-          _messages = res;
-        });
-    }
     final topic = widget.arguments.topic;
     if (topic == null){
       Navigator.pop(context);
@@ -98,7 +99,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     if (topic.isPrivate) {
       GroupChatPrivateChannel.pullSubscribersPrivateChannel(
           topicName: topic.topic,
-          membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+          membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
           needUploadMetaCallback: (topicName) {
             GroupChatPrivateChannel.uploadPermissionMeta(
               topicName: topicName,
@@ -110,19 +111,24 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       GroupChatPublicChannel.pullSubscribersPublicChannel(
         topicName: topic.topic,
         myChatId: NKNClientCaller.currentChatId,
-        membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+        membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
       );
     }
   }
 
   refreshTop(String topicName) async{
-    print('Enter topic name +'+topicName);
+    if (topicName != null){
+      NLog.w('refreshTop topic Name__'+topicName);
+    }
     showJoin = await GroupChatHelper.checkMemberIsInGroup(NKNClientCaller.currentChatId, topicName);
-    print('is in group +'+topicName+'__'+showJoin.toString());
+    if (showJoin != null){
+      NLog.w('is in group +'+topicName+'__'+showJoin.toString());
+    }
     if (showJoin){
       _refreshSubscribers();
     }
     else{
+      ///work todo
       showToast('No longer in This Group');
       /// 删除本地Topic
       // GroupChatHelper.removeTopicAndSubscriber(topicName);
@@ -134,6 +140,10 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   Future _loadMore() async {
     var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit, skip: _skip);
+
+    if (res == null){
+      return;
+    }
     _contactBloc.add(LoadContact(address: res.where((x) => !x.isSendMessage()).map((x) => x.from).toList()));
     _chatBloc.add(RefreshMessageListEvent(target: targetId));
     if (res != null) {
@@ -149,7 +159,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     super.initState();
     targetId = widget.arguments.topic.topic;
     Global.currentOtherChatId = targetId;
-    _topicCount = widget.arguments.topic.numSubscribers;
+
     _contactBloc = BlocProvider.of<ContactBloc>(context);
     Future.delayed(Duration(milliseconds: 200), () {
       initAsync();
@@ -165,24 +175,34 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
       _chatSubscription = _chatBloc.listen((state) {
         if (state is MessageUpdateState && mounted) {
+          MessageSchema updateMessage = state.message;
 
-          print('received ChanneMessage__'+state.message.topic.toString());
-          print('received targetId =+'+targetId.toString());
-
-          if (state.message == null || state.message.topic == null) {
+          if (updateMessage == null || updateMessage.topic == null) {
+            if (_messages != null && _messages.length > 0) {
+              if (updateMessage.contentType == ContentType.receipt) {
+                var receiptMessage = _messages.firstWhere((x) =>
+                x.msgId == updateMessage.content && x.isSendMessage(),
+                    orElse: () => null);
+                if (receiptMessage != null) {
+                  setState(() {
+                    receiptMessage.setMessageStatus(MessageStatus.MessageSendReceipt);
+                  });
+                }
+              }
+            }
             return;
           }
 
-          if (_messages != null && _messages.length > 0) {
-            var msg = _messages.firstWhere((x) => x.msgId == state.message.msgId && x.isSendMessage(), orElse: () => null);
-            if (msg != null) {
-              setState(() {
-                msg.messageStatus = MessageStatus.MessageSendReceipt;
-              });
-            }
+          var receivedMessage = _messages.firstWhere((x) =>
+          x.msgId == updateMessage.msgId && x.isSendMessage() == false,
+              orElse: () => null);
+          if (receivedMessage != null) {
+            setState(() {
+              NLog.w('GroupChat MessageUpdateState duplicate');
+              receivedMessage.setMessageStatus(MessageStatus.MessageReceived);
+            });
+            return;
           }
-
-          MessageSchema updateMessage = state.message;
 
           if (updateMessage.isSendMessage() == false && updateMessage.topic == targetId) {
             _contactBloc.add(LoadContact(address: [updateMessage.from]));
@@ -190,6 +210,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             if (updateMessage.contentType == ContentType.text ||
                 updateMessage.contentType == ContentType.textExtension ||
                 updateMessage.contentType == ContentType.nknImage ||
+                updateMessage.contentType == ContentType.media ||
                 updateMessage.contentType == ContentType.nknAudio) {
 
               updateMessage.messageStatus = MessageStatus.MessageReceived;
@@ -198,24 +219,13 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 _chatBloc.add(RefreshMessageListEvent());
               });
               setState(() {
-                _messages.insert(0, state.message);
+                _messages.insert(0, updateMessage);
               });
             }
-            if (state.message.contentType == ContentType.eventSubscribe) {
+            if (updateMessage.contentType == ContentType.eventSubscribe) {
               setState(() {
-                _messages.insert(0, state.message);
+                _messages.insert(0, updateMessage);
               });
-            }
-            if (state.message.contentType == ContentType.receipt) {
-              var msg = _messages.firstWhere((x) =>
-              x.msgId == state.message.content && x.isSendMessage(),
-                  orElse: () => null);
-              if (msg != null) {
-                NLog.d('message send success');
-                setState(() {
-                  msg.messageStatus = MessageStatus.MessageReceivedRead;
-                });
-              }
             }
           }
         }
@@ -231,7 +241,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
         }
       });
 
-      String content = LocalStorage.getChatUnSendContentFromId(NKNClientCaller.pubKey, targetId) ?? '';
+      String content = LocalStorage.getChatUnSendContentFromId(NKNClientCaller.currentChatId, targetId) ?? '';
       if (mounted)
         setState(() {
           _sendController.text = content;
@@ -243,7 +253,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   @override
   void dispose() {
     Global.currentOtherChatId = null;
-    LocalStorage.saveChatUnSendContentWithId(NKNClientCaller.pubKey, targetId, content: _sendController.text);
+    LocalStorage.saveChatUnSendContentWithId(NKNClientCaller.currentChatId, targetId, content: _sendController.text);
     _chatBloc.add(RefreshMessageListEvent());
     _chatSubscription?.cancel();
     _scrollController?.dispose();
@@ -255,7 +265,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   }
 
   _sendText() async {
-    LocalStorage.saveChatUnSendContentWithId(NKNClientCaller.pubKey, targetId);
+    LocalStorage.saveChatUnSendContentWithId(NKNClientCaller.currentChatId, targetId);
     String text = _sendController.text;
     if (text == null || text.length == 0) return;
     _sendController.clear();
@@ -273,7 +283,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
         _messages.insert(0, sendMsg);
       });
     } catch (e) {
-      print('send message error: $e');
+      if (e != null){
+        NLog.w('_sendText E'+e.toString());
+      }
     }
   }
 
@@ -292,7 +304,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       });
       _chatBloc.add(SendMessageEvent(sendMsg));
     } catch (e) {
-      print('send message error: $e');
+      if (e != null){
+        NLog.w('_sendAudio E:'+e.toString());
+      }
     }
   }
 
@@ -303,7 +317,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       from: NKNClientCaller.currentChatId,
       topic: dest,
       content: savedImg,
-      contentType: ContentType.nknImage,
+      contentType: ContentType.media,
     );
     try {
       _chatBloc.add(SendMessageEvent(sendMsg));
@@ -311,14 +325,14 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
         _messages.insert(0, sendMsg);
       });
     } catch (e) {
-      print('send message error: $e');
+      NLog.w('Send Image Message E:'+e.toString());
     }
   }
 
   getImageFile({@required ImageSource source}) async {
     FocusScope.of(context).requestFocus(FocusNode());
     try {
-      File image = await getCameraFile(NKNClientCaller.pubKey, source: source);
+      File image = await getCameraFile(NKNClientCaller.currentChatId, source: source);
       if (image != null) {
         _sendImage(image);
       }
@@ -381,16 +395,11 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(children: topicWidget),
-                  BlocBuilder<ChannelMembersBloc, ChannelMembersState>(builder: (context, state) {
-                    if (state.membersCount != null && state.membersCount.topicName == targetId) {
-                      final count = state.membersCount.subscriberCount;
-                      if (_topicCount == null || count > _topicCount || state.membersCount.isFinal) {
-                        _topicCount = count;
+                  BlocBuilder<ChannelBloc, ChannelState>(builder: (context, state) {
+                    if (state is ChannelMembersState){
+                      if (state.memberCount != null && state.topicName == targetId) {
+                        _topicCount = state.memberCount;
                       }
-                      // if (state.membersCount.isFinal) {
-                      //   print('Member final call');
-                      //   refreshTop(state.membersCount.topicName);
-                      // }
                     }
                     return Label(
                       '${(_topicCount == null || _topicCount < 0) ? '--' : _topicCount} ' + NL10ns.of(context).members,
@@ -440,7 +449,10 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                             showTime = true;
                           } else {
                             var preMessage = index == _messages.length ? message : _messages[index + 1];
-                            if (preMessage.contentType == ContentType.text || preMessage.contentType == ContentType.nknImage) {
+                            if (preMessage.contentType == ContentType.text ||
+                                preMessage.contentType == ContentType.nknImage ||
+                                preMessage.contentType == ContentType.media ||
+                                preMessage.contentType == ContentType.nknAudio) {
                               showTime = (message.timestamp.isAfter(preMessage.timestamp.add(Duration(minutes: 3))));
                             } else {
                               showTime = true;
@@ -610,18 +622,18 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             // TODO:
           } else {
             EasyLoading.show();
-            Global.removeTopicCache(targetId);
-            print('GroupChatHelper.subscribeTopi on called');
+            NLog.w('GroupChat getBottomView on called');
             GroupChatHelper.subscribeTopic(
                 topicName: widget.arguments.topic.topic,
                 chatBloc: _chatBloc,
                 callback: (success, e) {
-                  print('join channel call back');
+                  if (success){
+                    NLog.w('getBottomView joinChannel success');
+                  }
                   refreshTop(widget.arguments.topic.topic);
                   EasyLoading.dismiss();
                   if (!success && e != null) {
                     showToast('channel subscribe failed');
-                    // showToast(NL10ns.of(context).something_went_wrong);
                   }
                 });
           }

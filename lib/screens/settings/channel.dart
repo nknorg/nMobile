@@ -7,6 +7,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:nmobile/blocs/chat/channel_bloc.dart';
+import 'package:nmobile/blocs/chat/channel_event.dart';
+import 'package:nmobile/blocs/chat/channel_state.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
@@ -44,6 +47,8 @@ class ChannelSettingsScreen extends StatefulWidget {
 
 class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
   ChatBloc _chatBloc;
+  ChannelBloc _channelBloc;
+
   bool isUnSubscribed = false;
 
   initAsync() async {
@@ -61,9 +66,11 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
   @override
   void initState() {
     super.initState();
-    Global.removeTopicCache(widget.arguments.topic);
+
     initAsync();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
+    _channelBloc = BlocProvider.of<ChannelBloc>(context);
+    _channelBloc.add(ChannelMemberCountEvent(widget.arguments.topic));
   }
 
   @override
@@ -108,7 +115,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                           width: 16,
                         ),
                         onPressed: () async {
-                          File savedImg = await getHeaderImage(NKNClientCaller.pubKey);
+                          File savedImg = await getHeaderImage(NKNClientCaller.currentChatId);
                           if (savedImg == null) return;
                           final topicRepo = TopicRepo();
                           await topicRepo.updateAvatar(widget.arguments.topic, savedImg.path);
@@ -195,13 +202,21 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                                         ),
                                         SizedBox(width: 20),
                                         Expanded(
-                                          child: Label(
-                                            '${widget.arguments.numSubscribers} ' + NL10ns.of(context).members,
-                                            type: LabelType.bodyRegular,
-                                            textAlign: TextAlign.right,
-                                            color: DefaultTheme.fontColor2,
-                                            maxLines: 1,
-                                          ),
+                                          child: BlocBuilder<ChannelBloc, ChannelState>(builder: (context, state) {
+                                            int memberCount = 0;
+                                            if (state is ChannelMembersState){
+                                              if (state.memberCount != null && state.topicName == widget.arguments.topic){
+                                                memberCount = state.memberCount;
+                                              }
+                                            }
+                                            return Label(
+                                              '$memberCount' + NL10ns.of(context).members,
+                                              type: LabelType.bodyRegular,
+                                              textAlign: TextAlign.right,
+                                              color: DefaultTheme.fontColor2,
+                                              maxLines: 1,
+                                            );
+                                          })
                                         ),
                                         SvgPicture.asset(
                                           'assets/icons/right.svg',
@@ -346,7 +361,6 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
               chatBloc: _chatBloc,
               callback: (success, e) {
                 EasyLoading.dismiss();
-                print('success'+success.toString()+'__'+e.toString());
                 if (success) {
                   _unSubscriberGoesSuccess();
                 } else {
@@ -385,13 +399,13 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
     var sendMsg = MessageSchema.fromSendData(from: NKNClientCaller.currentChatId,
         content: topic.topic,
         to: address,
-        contentType: ContentType.ChannelInvitation);
+        contentType: ContentType.channelInvitation);
     _chatBloc.add(SendMessageEvent(sendMsg));
     showToast(NL10ns
         .of(context)
         .invitation_sent);
 
-    if (topic.isPrivate && topic.isOwner(NKNClientCaller.pubKey) &&
+    if (topic.isPrivate && topic.isOwner(NKNClientCaller.currentChatId) &&
         address != NKNClientCaller.currentChatId) {
       await GroupChatHelper.moveSubscriberToWhiteList(
           topic: topic,

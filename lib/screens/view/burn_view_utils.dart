@@ -222,8 +222,8 @@ class BurnViewPageState extends State<BurnViewPage> {
       contentType: ContentType.eventContactOptions,
     );
     sendMsg.burnAfterSeconds = _burnValue;
-    sendMsg.contactOptionsType = 0;
-    sendMsg.content = sendMsg.toContentOptionData();
+    sendMsg.toContactBurnOptionData();
+
     widget.chatBloc.add(SendMessageEvent(sendMsg));
     Navigator.pop(context, _burnValue);
   }
