@@ -65,15 +65,6 @@ Future<void> _onNativeReady() async {
   String password =
       await TimerAuth.instance.onCheckAuthGetPassword(Global.appContext);
   _clientBloc.add(NKNCreateClientEvent(wallet, password));
-
-  // DChatAuthenticationHelper.getPassword4BackgroundFetch(
-  //   wallet: wallet,
-  //   verifyProtectionEnabled: false,
-  //   onGetPassword: (wallet, password) {
-  //     Global.debugLog('android_messaging_service.dart onGetPassword');
-  //     _clientBloc.add(NKNCreateClientEvent(wallet, password));
-  //   },
-  // );
 }
 
 void _realCallback(Map eventAndData) async {

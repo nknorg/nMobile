@@ -197,8 +197,7 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
   _listen(WalletSchema ws) {
     NLog.d(ws);
     Future(() async {
-      final future = TimerAuth.instance.onCheckAuthGetPassword(context);
-      print('exportWallet___77');
+      final future = ws.getPassword();
       future.then((password) async {
         if (password != null) {
           if (ws.type == WalletSchema.ETH_WALLET) {

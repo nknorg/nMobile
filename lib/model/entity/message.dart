@@ -9,11 +9,11 @@ import 'package:flutter/material.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
-import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:uuid/uuid.dart';
@@ -34,9 +34,16 @@ class ContentType {
   static const String text = 'text';
   static const String textExtension = 'textExtension';
   static const String nknImage = 'image';
+
+  /// in order to suit old version
+  static const String media = 'media';
+
+  /// in order to tear message into pieces
+  static const String nknOnePiece = 'nknOnePiece';
+
   static const String nknAudio = 'audio';
   static const String receipt = 'receipt';
-  static const String batchReceipt = 'batchReceipt';
+  // static const String batchReceipt = 'batchReceipt';
 
   static const String system = 'system';
   static const String contact = 'contact';
@@ -44,7 +51,7 @@ class ContentType {
   static const String eventContactOptions = 'event:contactOptions';
   static const String eventSubscribe = 'event:subscribe';
   static const String eventUnsubscribe = 'event:unsubscribe';
-  static const String ChannelInvitation = 'event:channelInvitation';
+  static const String channelInvitation = 'event:channelInvitation';
 }
 
 class MessageSchema extends Equatable {
@@ -76,6 +83,10 @@ class MessageSchema extends Equatable {
 
   double audioFileDuration;
 
+  String parentType;
+  int index;
+  int total;
+
   MessageSchema({this.from, this.to, this.pid, this.data}) {
     if (data != null) {
       try {
@@ -90,15 +101,22 @@ class MessageSchema extends Equatable {
         switch (contentType) {
           case ContentType.text:
           case ContentType.textExtension:
-          case ContentType.ChannelInvitation:
+          case ContentType.channelInvitation:
           case ContentType.eventSubscribe:
             content = msg['content'];
             break;
           case ContentType.nknImage:
+          case ContentType.media:
           case ContentType.nknAudio:
             break;
           case ContentType.receipt:
             content = msg['targetID'];
+            break;
+          case ContentType.nknOnePiece:
+            index = msg['index'];
+            total = msg['total'];
+            parentType = msg['parentType'];
+            content = msg['content'];
             break;
           default:
             content = data;
@@ -123,6 +141,12 @@ class MessageSchema extends Equatable {
   MessageSchema.fromSendData({
     this.from,
     this.to,
+    /// for nknOnePiece
+    this.index,
+    this.total,
+    this.msgId,
+    this.parentType,
+
     this.topic,
     this.content,
     this.contentType,
@@ -132,7 +156,9 @@ class MessageSchema extends Equatable {
   }) {
     timestamp = DateTime.now();
 
-    msgId = uuid.v4();
+    if (msgId == null){
+      msgId = uuid.v4();
+    }
     if (options == null) {
       options = {};
     }
@@ -144,17 +170,18 @@ class MessageSchema extends Equatable {
     }
     if (options.keys.length == 0) options = null;
 
+    isOutbound = true;
     messageStatus = MessageStatus.MessageSending;
   }
 
   loadMedia(ChatBloc cBloc) async {
-    String currentPubkey = NKNClientCaller.pubKey;
+    String publicKey = NKNClientCaller.currentChatId;
     var msg = jsonDecode(data);
 
     var match = RegExp(r'\(data:(.*);base64,(.*)\)').firstMatch(msg['content']);
     var mimeType = match?.group(1);
     var fileBase64 = match?.group(2);
-    print('message content is______'+msg['content']);
+
     var extension;
     if (mimeType.indexOf('image/jpg') > -1) {
       extension = 'jpg';
@@ -171,17 +198,20 @@ class MessageSchema extends Equatable {
     }
     else if (mimeType.indexOf('aac') > -1) {
       extension = 'aac';
-      print('got index aac');
+      NLog.w('Will Load AudioFile');
+
     }
     else{
-      print('got other extension'+extension);
+      if (extension != null){
+        NLog.w('got other extension'+extension);
+      }
     }
     if (fileBase64.isNotEmpty) {
       var bytes = base64Decode(fileBase64);
       String name = hexEncode(md5
           .convert(bytes)
           .bytes);
-      String path = getCachePath(currentPubkey);
+      String path = getCachePath(publicKey);
 
       File file = File(join(path, name + '.$extension'));
       file.writeAsBytesSync(bytes,flush: true);
@@ -194,11 +224,10 @@ class MessageSchema extends Equatable {
         options['audioDuration'] = msg['options']['audioDuration'].toString();
       }
     }
-    print('loadMedia Finished)');
-    cBloc.add(UpdateMessageEvent(this));
+    // cBloc.add(RefreshMessageListEvent(this));
   }
 
-  String toTextData() {
+  String toTextData(Map pushInfo) {
     Map data = {
       'id': msgId,
       'contentType': contentType ?? ContentType.text,
@@ -211,10 +240,30 @@ class MessageSchema extends Equatable {
     if (topic != null) {
       data['topic'] = topic;
     }
+    if (pushInfo != null){
+      data.addAll(pushInfo);
+    }
     return jsonEncode(data);
   }
 
-  String toAudioData() {
+  String toNknPieceMessageData(){
+    Map data = {
+      'id': msgId,
+      'contentType': ContentType.nknOnePiece,
+      'parentType': parentType,
+      'content': content,
+      'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'index': index,
+      'total': total,
+    };
+
+    if (topic != null) {
+      data['topic'] = topic;
+    }
+    return jsonEncode(data);
+  }
+
+  String toAudioData(Map pushInfo) {
     File file = this.content as File;
     var mimeType = mime(file.path);
 
@@ -223,7 +272,9 @@ class MessageSchema extends Equatable {
        transContent = '![audio](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     }
     else{
-      print('mimeType is____'+mimeType);
+      if (mimeType != null){
+        NLog.w('Wrong audio Extension!!!'+mimeType);
+      }
     }
 
     Map data = {
@@ -238,10 +289,13 @@ class MessageSchema extends Equatable {
     if (topic != null) {
       data['topic'] = topic;
     }
+    if (pushInfo != null){
+      data.addAll(pushInfo);
+    }
     return jsonEncode(data);
   }
 
-  String toImageData() {
+  String toImageData(Map pushInfo) {
     File file = this.content as File;
     var mimeType = mime(file.path);
     String content;
@@ -261,30 +315,31 @@ class MessageSchema extends Equatable {
     if (topic != null) {
       data['topic'] = topic;
     }
+    if (pushInfo != null){
+      data.addAll(pushInfo);
+    }
     return jsonEncode(data);
   }
 
-  String toContentOptionData(){
-    // this.contactOptionsType = contentOptionType;
-    Map data = Map();
-    /// 接受/取消远程消息推送 后面可继续扩展
-    if (contactOptionsType == 0){
-      data = {
-        'id': msgId,
-        'contentType': ContentType.eventContactOptions,
-        'content': {'deleteAfterSeconds': burnAfterSeconds},
-        'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      };
-    }
-    else if (contactOptionsType == 1){
-      data = {
-        'id': msgId,
-        'contentType': ContentType.eventContactOptions,
-        'content': {'deviceToken': deviceToken},
-        'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      };
-    }
-    data['optionType'] = contactOptionsType.toString();
+  String toContactBurnOptionData() {
+    data = {
+      'id': msgId,
+      'contentType': ContentType.eventContactOptions,
+      'content': {'deleteAfterSeconds': burnAfterSeconds},
+      'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+    };
+    data['optionType'] = '0';
+    return jsonEncode(data);
+  }
+
+  String toContactNoticeOptionData() {
+    data = {
+      'id': msgId,
+      'contentType': ContentType.eventContactOptions,
+      'content': {'deviceToken': deviceToken},
+      'timestamp': timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+    };
+    data['optionType'] = '1';
     return jsonEncode(data);
   }
 
@@ -311,6 +366,9 @@ class MessageSchema extends Equatable {
   }
 
   sendReceiptMessage() async {
+    if (msgId == null){
+      NLog.w('sendReceiptMessage Wrong!!! no msgId');
+    }
     Map data = {
       'id': uuid.v4(),
       'contentType': ContentType.receipt,
@@ -320,10 +378,9 @@ class MessageSchema extends Equatable {
     isSuccess = true;
 
     try {
-      NKNClientCaller.sendText([from], jsonEncode(data));
-      print('Send Receipt____'+from+'-----'+data.toString());
+      NKNClientCaller.sendText([from], jsonEncode(data), msgId);
     } catch (e) {
-      Global.debugLog('Message receipt() E:'+e.toString());
+      NLog.w('Wrong!!!sendReceiptMessage E:'+e.toString());
       Timer(Duration(seconds: 1), () {
         sendReceiptMessage();
       });
@@ -355,8 +412,7 @@ class MessageSchema extends Equatable {
         );
       }
     } catch (e) {
-      debugPrint(e);
-      debugPrintStack();
+      NLog.w('Wrong!!!!ReceiptTopic Success__'+msgId.toString());
     }
   }
 
@@ -411,64 +467,8 @@ class MessageSchema extends Equatable {
     await db.execute('CREATE INDEX index_delete_time ON Messages (delete_time)');
   }
 
-  setMessageStatus(int status){
-    messageStatus = status;
-    if (status == MessageStatus.MessageSendSuccess ||
-        status == MessageStatus.MessageSending){
-      isOutbound = true;
-      isSendError = false;
-      print('message Set to Succresss');
-    }
-    if (status == MessageStatus.MessageSendFail){
-      isOutbound = true;
-      isSendError = true;
-    }
-    if (status == MessageStatus.MessageReceived){
-      isOutbound = false;
-    }
-    if (status == MessageStatus.MessageReceivedRead){
-      isRead = true;
-    }
-    if (status == MessageStatus.MessageSendReceipt){
-      // isOutbound = true;
-      // isSendError = false;
-      isSuccess = true;
-      isSendError = false;
-    }
-    // if (messageStatus == MessageStatus.MessageSending ||
-    //     messageStatus == MessageStatus.MessageSendSuccess ||
-    //     messageStatus == MessageStatus.MessageSendFail ||
-    //     messageStatus == MessageStatus.MessageSendReceipt){
-    //   isOutbound = true;
-    // }
-    // if (messageStatus == MessageStatus.MessageSendSuccess){
-    //   isSuccess = true;
-    // }
-    // if (messageStatus == MessageStatus.MessageSendReceipt){
-    //   isRead = true;
-    // }
-    // if (messageStatus == MessageStatus.MessageSendFail){
-    //   isSendError = true;
-    // }
-  }
-
   Map toEntity(String accountPubkey) {
     DateTime now = DateTime.now();
-    // if (messageStatus == MessageStatus.MessageSending ||
-    //     messageStatus == MessageStatus.MessageSendSuccess ||
-    //     messageStatus == MessageStatus.MessageSendFail ||
-    //     messageStatus == MessageStatus.MessageSendReceipt){
-    //   isOutbound = true;
-    // }
-    // if (messageStatus == MessageStatus.MessageSendSuccess){
-    //   isSuccess = true;
-    // }
-    // if (messageStatus == MessageStatus.MessageSendReceipt){
-    //   isRead = true;
-    // }
-    // if (messageStatus == MessageStatus.MessageSendFail){
-    //   isSendError = true;
-    // }
 
     Map<String, dynamic> map = {
       'pid': pid != null ? hexEncode(pid) : null,
@@ -484,17 +484,21 @@ class MessageSchema extends Equatable {
       'is_success': isSuccess ? 1 : 0,
       'is_send_error': isSendError ? 1 : 0,
       'receive_time': now.millisecondsSinceEpoch,
-      'send_time': timestamp.millisecondsSinceEpoch,
+      'send_time': timestamp?.millisecondsSinceEpoch,
       'delete_time': deleteTime?.millisecondsSinceEpoch,
     };
-    if (contentType == ContentType.nknImage) {
+    if (contentType == ContentType.nknImage ||
+        contentType == ContentType.media) {
       map['content'] = getLocalPath(accountPubkey, (content as File).path);
     }
     else if (contentType == ContentType.nknAudio) {
       options['audioDuration'] = audioFileDuration.toString();
       map['options'] = jsonEncode(options);
       map['content'] = getLocalPath(accountPubkey, (content as File).path);
-      print('FetchAudioMessageInfo'+map.toString());
+
+      if (content == null){
+        NLog.w('FetchAudioMessageInfo Wrong!!! no content');
+      }
     }
     else if (contentType == ContentType.eventContactOptions) {
       map['content'] = content;
@@ -526,27 +530,31 @@ class MessageSchema extends Equatable {
     bool isSendError = e['is_send_error'] != 0 ? true : false;
 
     if (isOutbound){
-      print('content is__'+e.toString()+'isRead__'+isRead.toString()+'\n'+'isSuccess__'+isSuccess.toString()+'\n'+'isSendError__'+isSendError.toString()+'\n');
       message.messageStatus =  MessageStatus.MessageSending;
-      // if (isSuccess){
-      //   message.messageStatus = MessageStatus.MessageSendSuccess;
-      // }
       if (isSuccess){
         message.messageStatus = MessageStatus.MessageSendReceipt;
       }
       if (isSendError){
         message.messageStatus =  MessageStatus.MessageSendFail;
       }
+      if (isRead){
+        message.messageStatus = MessageStatus.MessageSendReceipt;
+      }
     }
     else{
       message.messageStatus =  MessageStatus.MessageReceived;
+    }
+
+    if (e['pid'] == null){
+      message.messageStatus =  MessageStatus.MessageSendFail;
     }
 
     message.timestamp = DateTime.fromMillisecondsSinceEpoch(e['send_time']);
     message.receiveTime = DateTime.fromMillisecondsSinceEpoch(e['receive_time']);
     message.deleteTime = e['delete_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['delete_time']) : null;
 
-    if (message.contentType == ContentType.nknImage) {
+    if (message.contentType == ContentType.nknImage ||
+        message.contentType == ContentType.media) {
       message.content = File(join(Global.applicationRootDirectory.path, e['content']));
     }
     else if (message.contentType == ContentType.nknAudio){
@@ -554,21 +562,30 @@ class MessageSchema extends Equatable {
         if (message.options['audioDuration'] != null){
           String audioDS = message.options['audioDuration'];
           if (audioDS == null || audioDS.toString() == 'null'){
-            print('Audio Duration is Null__'+message.options.toString());
+            NLog.w('Audio Duration is Null_'+message.options.toString());
           }
           else{
-            print('get Duration __'+audioDS);
+            NLog.w('Get Audio Duration__'+audioDS.toString());
             message.audioFileDuration = double.parse(audioDS);
           }
         }
         else{
-          print('Audio Duration is Null'+message.options['audioDuration']);
+          NLog.w('Wrong!!! Audio Duration is null');
         }
       }
       String filePath = join(Global.applicationRootDirectory.path, e['content']);
       message.content = File(filePath);
-
-      print('InsertAudioMessage'+message.options.toString());
+    }
+    else if (message.contentType == ContentType.nknOnePiece){
+      print('Parse is__'+e.toString());
+      // print('Find One Piece____'+message.contentType.toString());
+      // print('Find One Piece____'+message.msgId.toString());
+      // print('Find One Piece____'+message.content.toString());
+      // message.content = ep[]
+      message.index = e['index'];
+      message.total = e['total'];
+      message.parentType = e['parentType'];
+      message.content = e['content'];
     }
     else {
       message.content = e['content'];
@@ -576,21 +593,96 @@ class MessageSchema extends Equatable {
     return message;
   }
 
-  Future<bool> insertMessage() async {
+  Future<bool> insertSendMessage() async {
     Database cdb = await NKNDataManager().currentDatabase();
-    String pubKey = NKNClientCaller.pubKey;
+    String pubKey = NKNClientCaller.currentChatId;
 
-    int n = await cdb.insert(MessageSchema.tableName, toEntity(pubKey));
-    return n > 0;
+    var res = await cdb.query(
+      MessageSchema.tableName,
+      where: 'msg_id = ?',
+      whereArgs: [msgId],
+    );
+    if (res == null){
+      return false;
+    }
+    if (res.length > 0){
+      return false;
+    }
+    else{
+      /// stupid database deleteTime
+      if (contentType == ContentType.text ||
+          contentType == ContentType.textExtension ||
+          contentType == ContentType.nknAudio ||
+          contentType == ContentType.media ||
+          contentType == ContentType.nknImage){
+        if (options != null && options['deleteAfterSeconds'] != null) {
+          deleteTime = DateTime.now().add(Duration(seconds: options['deleteAfterSeconds']));
+        }
+      }
+      int n = await cdb.insert(MessageSchema.tableName, toEntity(pubKey));
+
+      var updateReceipt = await cdb.query(
+        MessageSchema.tableName,
+        where: 'target_id = ? AND type = ?',
+        whereArgs: [msgId,ContentType.receipt],
+      );
+      if (updateReceipt.length > 0){
+        await setMessageStatus(MessageStatus.MessageSendReceipt);
+      }
+      if (n > 0){
+        return true;
+      }
+    }
+    return false;
   }
 
-  Future<bool> isExist() async {
+  Future<bool> insertOnePieceMessage() async{
+    Database cdb = await NKNDataManager().currentDatabase();
+    String pubKey = NKNClientCaller.currentChatId;
+
+    try{
+      int n = await cdb.insert(MessageSchema.tableName, toEntity(pubKey));
+      if (n > 0){
+        return true;
+      }
+    }
+    catch (e){
+
+    }
+    return false;
+  }
+
+  Future<bool> insertReceivedMessage() async {
+    Database cdb = await NKNDataManager().currentDatabase();
+    String pubKey = NKNClientCaller.currentChatId;
+
+    var res = await cdb.query(
+      MessageSchema.tableName,
+      // columns: ['COUNT(id) as count'],
+      where: 'msg_id = ? AND is_outbound = 0',
+      whereArgs: [msgId],
+    );
+    if (res.length > 0){
+      var mmm = res[0];
+      NLog.w('Repeat Insert Message___'+mmm.toString());
+      return false;
+    }
+    else{
+      int n = await cdb.insert(MessageSchema.tableName, toEntity(pubKey));
+      if (n > 0){
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Future<bool> isReceivedMessageExist() async {
     Database cdb = await NKNDataManager().currentDatabase();
     var res = await cdb.query(
       MessageSchema.tableName,
       columns: ['COUNT(id) as count'],
-      where: 'msg_id = ? AND is_outbound = 0',
-      whereArgs: [msgId],
+      where: 'msg_id = ? AND is_outbound = 0 AND NOT type = ?',
+      whereArgs: [msgId,ContentType.nknOnePiece],
     );
     return Sqflite.firstIntValue(res) > 0;
   }
@@ -609,15 +701,13 @@ class MessageSchema extends Equatable {
       MessageSchema.tableName,
       columns: ['*'],
       orderBy: 'send_time desc',
-      where: 'target_id = ?',
-      whereArgs: [targetId],
+      where: 'target_id = ? AND NOT type = ?',
+      whereArgs: [targetId,ContentType.nknOnePiece],
       limit: limit,
       offset: skip,
     );
 
     List<MessageSchema> messages = <MessageSchema>[];
-
-    print('Message count is____'+res.length.toString());
 
     for (var i = 0; i < res.length; i++) {
       var messageItem = MessageSchema.parseEntity(res[i]);
@@ -655,39 +745,43 @@ class MessageSchema extends Equatable {
   }
 
   Future<int> receiptMessage() async {
-    Database cdb = await NKNDataManager.instance.currentDatabase();
+    Database cdb = await NKNDataManager().currentDatabase();
 
-    if (msgId == null){
-      print('--------------------------msgId == null');
+    if (contentType == null) {
+      return -1;
     }
-    var res = await cdb.query(
-      MessageSchema.tableName,
-      columns: ['*'],
-      where: 'msg_id = ?',
-      whereArgs: [contentType == ContentType.receipt ? content : msgId],
-    );
-    var record = res?.first;
+    String queryID = '';
+    if (contentType == ContentType.receipt){
+      if (content != null){
+        queryID = content;
+      }
+    }
+    else {
+      if (msgId != null){
+        queryID = msgId;
+      }
+    }
+    if (queryID.length == 0){
+      return -1;
+    }
 
     Map<String, dynamic> data = {
       'is_success': 1,
     };
 
-    // if (record['options'] != null) {
-    //   var options = jsonDecode(record['options']);
-    //   if (options['deleteAfterSeconds'] != null && record['delete_time'] == null) {
-    //     deleteTime = DateTime.now().add(Duration(seconds: options['deleteAfterSeconds']));
-    //     data['delete_time'] = deleteTime.millisecondsSinceEpoch;
-    //   }
-    // }
-    var count = await cdb.update(
-      MessageSchema.tableName,
-      data,
-      where: 'msg_id = ?',
-      whereArgs: [contentType == ContentType.receipt ? content : msgId],
-    );
-    setMessageStatus(MessageStatus.MessageSendReceipt);
-    print('--------------------------Map receiptMessage to Success'+msgId);
-    return count;
+    try{
+      var count = await cdb.update(
+        MessageSchema.tableName,
+        data,
+        where: 'msg_id = ?',
+        whereArgs: [queryID],
+      );
+      return count;
+    }
+    catch (e){
+      NLog.w('Wrong!!!__receiptMessage');
+    }
+    return 0;
   }
 
   updateMessageOptions() async{
@@ -700,6 +794,48 @@ class MessageSchema extends Equatable {
       where: 'msg_id = ?',
       whereArgs: [msgId],
     );
+  }
+
+  setMessageStatus(int status) async{
+    messageStatus = status;
+    if (status == MessageStatus.MessageSendSuccess ||
+        status == MessageStatus.MessageSending){
+      isOutbound = true;
+      isSendError = false;
+      isSuccess = false;
+    }
+    if (status == MessageStatus.MessageSendFail){
+      isOutbound = true;
+      isSendError = true;
+    }
+    if (status == MessageStatus.MessageReceived){
+      isOutbound = false;
+    }
+    if (status == MessageStatus.MessageReceivedRead){
+      isOutbound = false;
+      isRead = true;
+    }
+    if (status == MessageStatus.MessageSendReceipt){
+      isOutbound = true;
+      isSuccess = true;
+      isSendError = false;
+    }
+
+    Database cdb = await NKNDataManager().currentDatabase();
+    int result = await cdb.update(
+      MessageSchema.tableName,
+      {
+        'is_read': isRead ? 1 : 0,
+        'is_outbound': isOutbound ? 1 : 0,
+        'is_success': isSuccess ? 1 : 0,
+        'is_send_error': isSendError ? 1 : 0,
+      },
+      where: 'msg_id = ?',
+      whereArgs: [msgId],
+    );
+    if (result > 0){
+      NLog.w('updateMessageStatus success!__'+status.toString());
+    }
   }
 
   Future<int> markMessageRead() async {
@@ -715,14 +851,89 @@ class MessageSchema extends Equatable {
     return count;
   }
 
+  Future<int> onePieceCount() async{
+    Database cdb = await NKNDataManager().currentDatabase();
+
+    var res = await cdb.query(
+      MessageSchema.tableName,
+      where: 'msg_id = ? AND type = ?',
+      whereArgs: [msgId, ContentType.nknOnePiece],
+    );
+
+    if (res.length > 0){
+      return res.length;
+    }
+    return 0;
+  }
+
+  Future<List> allPieces() async{
+    Database cdb = await NKNDataManager().currentDatabase();
+
+    var res = await cdb.query(
+      MessageSchema.tableName,
+      where: 'msg_id = ? AND type = ?',
+      orderBy: 'send_time desc',
+      whereArgs: [msgId, ContentType.nknOnePiece],
+    );
+
+    List<MessageSchema> allPieceM = new List<MessageSchema>();
+    if (res.length > 0){
+      for (int i = 0; i < res.length; i++){
+        MessageSchema onePiece = MessageSchema.parseEntity(res[i]);
+        allPieceM.add(onePiece);
+      }
+      return allPieceM;
+    }
+    return null;
+  }
+
+  Future<bool> existOnePieceIndex() async{
+    Database cdb = await NKNDataManager().currentDatabase();
+
+    var res = await cdb.query(
+      MessageSchema.tableName,
+      where: 'msg_id = ? AND type = ?',
+      whereArgs: [msgId, ContentType.nknOnePiece],
+    );
+
+    for (int i = 0; i < res.length; i++){
+      MessageSchema existOnePieces = MessageSchema.parseEntity(res[i]);
+      if (existOnePieces.index == index){
+        return true;
+      }
+    }
+    return false;
+  }
+
   Future<int> deleteMessage() async {
     Database cdb = await NKNDataManager().currentDatabase();
-    var res = await cdb.delete(
+    int result = await cdb.update(
       MessageSchema.tableName,
+      {
+        'pid': null,
+        'msg_id': msgId,
+        'sender': null,
+        'receiver': null,
+        'target_id': null,
+        'type': null,
+        'topic': null,
+        'options': null,
+        'is_read': null,
+        'is_outbound': null,
+        'is_success': null,
+        'is_send_error': null,
+        'receive_time': null,
+        'send_time': null,
+        'delete_time': null,
+        'content': null,
+      },
       where: 'msg_id = ?',
-      whereArgs: [contentType == ContentType.receipt ? content : msgId],
+      whereArgs: [msgId],
     );
-    return res;
+    if (result > 0){
+      NLog.w('Message set to only Id'+msgId.toString());
+    }
+    return result;
   }
 
   int get deleteAfterSeconds {

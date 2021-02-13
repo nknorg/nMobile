@@ -12,6 +12,8 @@ import 'package:nmobile/blocs/chat/auth_state.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
+import 'package:nmobile/blocs/contact/contact_bloc.dart';
+import 'package:nmobile/blocs/contact/contact_state.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
@@ -27,7 +29,6 @@ import 'package:nmobile/components/selector_text.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
@@ -48,6 +49,7 @@ import 'package:nmobile/utils/log_tag.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/utils/extensions.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -59,7 +61,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMixin, RouteAware, Tag{
-  final DChatAuthenticationHelper authHelper = DChatAuthenticationHelper();
+  // final DChatAuthenticationHelper authHelper = DChatAuthenticationHelper();
 
   WalletsBloc _walletBloc;
   NKNClientBloc _clientBloc;
@@ -73,17 +75,12 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
   @override
   void didPopNext() {
     super.didPopNext();
-    print('ChatPage didPopNext');
     TimerAuth.instance.pageDidPop();
-    if (TimerAuth.authed == false){
-
-    }
   }
 
   @override
   void didPushNext() {
     TimerAuth.instance.pageDidPushed();
-    print('ChatPage didPushNext');
     super.didPushNext();
   }
 
@@ -113,73 +110,44 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
   }
 
   void _onGetPassword(String password) async{
-    Global.debugLog('chat.dart __onGetPassword');
     WalletSchema wallet = await TimerAuth.loadCurrentWallet();
     TimerAuth.instance.enableAuth();
 
-    print('Current state is___'+_clientBloc.state.toString());
-
+    print('chat.dart _onGetPassword');
     try{
       var eWallet = await wallet.exportWallet(password);
       var walletAddress = eWallet['address'];
       var publicKey = eWallet['publicKey'];
 
-      print('WalletInfo is___'+eWallet.toString());
       if (walletAddress != null && publicKey != null){
         _authBloc.add(AuthToUserEvent(publicKey, walletAddress));
       }
       else{
-        _authBloc.add(AuthSuccessEvent());
+        NLog.w('Wrong!!!!! walletAddress or publicKey is null');
       }
       if (_clientBloc.state is NKNNoConnectState){
+        NLog.w('chat.dart onCreateClient__'+password.toString());
         _clientBloc.add(NKNCreateClientEvent(wallet, password));
       }
     }
     catch(e){
+      NLog.w('chat.dart Export wallet E'+e.toString());
       showToast(NL10ns.of(context).password_wrong);
       _authBloc.add(AuthFailEvent());
     }
   }
 
   void _clickConnect() async{
-    print('_clickConnect() called');
     String password = await TimerAuth().onCheckAuthGetPassword(context);
-    _onGetPassword(password);
-    // WalletSchema wallet = await TimerAuth.loadCurrentWallet();
-    // if (wallet == null){
-    //   showToast('Error Loading wallet');
-    //   return;
-    // }
-    // var password = await wallet.getPassword();
-    // if (password != null) {
-    //   try {
-    //     print('exportWallet___44');
-    //     var w = await wallet.exportWallet(password);
-    //     if (w['address'] == wallet.address) {
-    //       onGetPassword(wallet, password);
-    //     } else {
-    //       showToast(NL10ns.of(context).tip_password_error);
-    //     }
-    //   } catch (e) {
-    //     if (Platform.isAndroid){
-    //       Global.debugLog('exportWallet E:'+e.toString());
-    //       /// Android DecryptFail present this
-    //       if (e.toString().contains('Failed to get string encoded:')){
-    //         showToast(NL10ns.of(context).tip_password_error);
-    //       }
-    //       else if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-    //         showToast(NL10ns.of(context).tip_password_error);
-    //       }
-    //     }
-    //     if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-    //       showToast(NL10ns.of(context).tip_password_error);
-    //     }
-    //   }
-    // }
+    if (password == null || password.length == 0){
+      showToast('Please input password');
+    }
+    else{
+      _onGetPassword(password);
+    }
   }
 
   _firstAutoShowAuth() {
-    print('___firstAutoShowAuth__');
     if (TimerAuth.authed == false && firstShowAuth == false){
       firstShowAuth = true;
       Timer(Duration(milliseconds: 200), () async {
@@ -195,18 +163,33 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
     return BlocBuilder<WalletsBloc, WalletsState>(
       builder: (context, walletState) {
         if (walletState is WalletsLoaded) {
-          print('walletState is___'+walletState.toString());
+          NLog.w('walletState is___'+walletState.toString());
 
           if (walletState.wallets.length > 0) {
             _firstAutoShowAuth();
             return BlocBuilder<AuthBloc, AuthState>(
               builder: (context, authState) {
-                print('authState is___'+authState.toString());
+                NLog.w('authState is___'+authState.toString());
 
-                if (authState is AuthToUserState || authState is AuthSuccessState){
+                if (authState is AuthToFrontState){
                   return BlocBuilder<NKNClientBloc, NKNClientState>(
                     builder: (context, clientState) {
-                      print('clientState is___'+clientState.toString());
+                      NLog.w('clientState is___'+clientState.toString());
+
+                      if (clientState is NKNNoConnectState){
+                        return _noConnectScreen();
+                      }
+                      return _chatHomeScreen();
+                    },
+                  );
+                }
+                if (authState is AuthToBackgroundState){
+                  return _noConnectScreen();
+                }
+                if (authState is AuthToUserState){
+                  return BlocBuilder<NKNClientBloc, NKNClientState>(
+                    builder: (context, clientState) {
+                      NLog.w('clientState is___'+clientState.toString());
 
                       if (clientState is NKNNoConnectState){
                         return _noConnectScreen();
@@ -220,8 +203,9 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
             );
           }
           else{
-            print('Wallet Length is '+walletState.wallets.length.toString());
+            NLog.w('Wallet Length is '+walletState.wallets.length.toString());
           }
+          return _noAccountScreen();
         }
         return _noAccountScreen();
       },
@@ -468,9 +452,7 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
       String address = json['Address'];
 
       await SecureStorage().set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
-      print('_createAccount__setPassword'+_password);
       _walletBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
-      print('_createAccount__setKeyStore'+keystore);
 
       EasyLoading.dismiss();
     }
@@ -485,7 +467,12 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
         onTap: () async {
           if (TimerAuth.authed) {
             currentUser = await ContactSchema.fetchCurrentUser();
-            Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: currentUser);
+            if(currentUser != null){
+              Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: currentUser);
+            }
+            else{
+              showToast('database error, can not find contact');
+            }
           } else {
             TimerAuth.instance.onCheckAuthGetPassword(context);
           }
@@ -498,9 +485,9 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
             children: <Widget>[
               Container(
                 margin: EdgeInsets.only(right: 12),
-                child: BlocBuilder<AuthBloc, AuthState>(builder: (context, state){
-                  if (state is AuthToUserState){
-                    currentUser = state.currentUser;
+                child: BlocBuilder<ContactBloc, ContactState>(builder: (context, contactState){
+                  if (contactState is UpdateUserInfoState){
+                    currentUser = contactState.userInfo;
                   }
                   if (currentUser != null){
                     return CommonUI.avatarWidget(
@@ -508,19 +495,45 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                       contact: currentUser,
                     );
                   }
-                  return Container();
-                }),
+                  return BlocBuilder<AuthBloc, AuthState>(builder: (context, authState){
+                    if (currentUser == null){
+                      if (authState is AuthToUserState){
+                        currentUser = authState.currentUser;
+                      }
+                      if (authState is AuthToFrontState){
+                        currentUser = authState.currentUser;
+                      }
+                    }
+                    return Container();
+                  });
+                })
               ),
               Expanded(
                 flex: 1,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    BlocBuilder<AuthBloc, AuthState>(builder: (context, state){
+                    BlocBuilder<ContactBloc, ContactState>(builder: (context, contactState){
+                      if (contactState is UpdateUserInfoState){
+                        currentUser = contactState.userInfo;
+                      }
                       if (currentUser != null){
                         return Label(currentUser.name, type: LabelType.h3, dark: true);
                       }
-                      return Container();
+                      return BlocBuilder<AuthBloc, AuthState>(builder: (context, authState){
+                        if (currentUser == null){
+                          if (authState is AuthToUserState){
+                            currentUser = authState.currentUser;
+                          }
+                          if (authState is AuthToFrontState){
+                            currentUser = authState.currentUser;
+                          }
+                        }
+                        if (currentUser != null){
+                          return Label(currentUser.name, type: LabelType.h3, dark: true);
+                        }
+                        return Container();
+                      });
                     }),
                     BlocBuilder<NKNClientBloc, NKNClientState>(
                       builder: (context, clientState) {
@@ -556,7 +569,6 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
         icon: loadAssetIconsImage('addbook', color: Colors.white, width: 24),
         onPressed: () {
           if (TimerAuth.authed) {
-            Global.debugLog('route to Contact 1');
             Navigator.of(context).pushNamed(ContactHome.routeName);
           } else {
             TimerAuth.instance.onCheckAuthGetPassword(context);
