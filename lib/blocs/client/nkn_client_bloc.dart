@@ -8,23 +8,28 @@ import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
+import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/utils/nlog_util.dart';
+import 'package:oktoast/oktoast.dart';
 
 class NKNClientBloc extends Bloc<NKNClientEvent, NKNClientState>{
   ChatBloc cBloc;
   AuthBloc aBloc;
 
+  WalletSchema rWallet;
+  String rPassword;
+
   NKNClientBloc({@required this.cBloc,this.aBloc}) {
     this.listen((state) {
-      print('ClientBloc | onData | $state');
+      NLog.w('ClientBloc | onData | $state');
     }, onDone: () {
-      print('ClientBloc | onDone.');
+      NLog.w('ClientBloc | onDone.');
     }, onError: (e) {
-      print('ClientBloc | onError | $e');
+      NLog.w('ClientBloc | onError | $e');
     });
   }
 
@@ -36,15 +41,22 @@ class NKNClientBloc extends Bloc<NKNClientEvent, NKNClientState>{
     if (event is NKNCreateClientEvent) {
       var wallet = event.wallet;
       var password = event.password;
-      print('NKNCreateClientEvent__'+wallet.toString()+"\n"+'____'+password.toString());
+
+      if (event.wallet == null || event.password == null){
+        showToast('wallet or password is null Exception!');
+        NLog.w('wallet or password is null Exception');
+      }
+
+      rWallet = wallet;
+      rPassword = password;
+
       var eWallet = await wallet.exportWallet(password);
       var walletAddress = eWallet['address'];
       var publicKey = eWallet['publicKey'];
-      print('Export Keystore___'+eWallet.toString());
 
       Uint8List seedList = Uint8List.fromList(hexDecode(eWallet['seed']));
-      if (seedList.isEmpty){
-        Global.debugLog('seedList.isEmpty');
+      if (seedList != null && seedList.isEmpty){
+        NLog.w('Wrong!!! seedList.isEmpty');
       }
       String _seedKey = hexEncode(sha256(hexEncode(seedList.toList(growable: false))));
 
@@ -54,31 +66,30 @@ class NKNClientBloc extends Bloc<NKNClientEvent, NKNClientState>{
       else{
         await NKNDataManager.instance.changeDatabase(publicKey, _seedKey);
       }
-      NKNClientCaller.instance.setPubkeyAndChatId(publicKey, publicKey);
+      NKNClientCaller.instance.setChatId(publicKey);
 
       /// bug need Fixed
-      NKNClientCaller.instance.createClient(seedList, null, null);
+      NKNClientCaller.instance.createClient(seedList, null, publicKey);
 
       aBloc.add(AuthToUserEvent(publicKey,walletAddress));
 
-      print('Create Client End');
+      yield NKNConnectingState();
+    }
+    else if (event is NKNRecreateClientEvent){
+      this.add(NKNCreateClientEvent(rWallet, rPassword));
       yield NKNConnectingState();
     }
     else if (event is NKNConnectedClientEvent){
-      print('Connected on Connected');
       yield NKNConnectedState();
     }
     else if (event is NKNDisConnectClientEvent) {
-      print('Client Disconnect called');
       NKNClientCaller.disConnect();
       yield NKNNoConnectState();
     }
     else if (event is NKNOnMessageEvent){
-      Global.debugLog('Client Connected');
       NKNConnectedState currentState = (state as NKNConnectedState);
       currentState.message = event.message;
       cBloc.add(ReceiveMessageEvent(currentState.message));
-      cBloc.add(RefreshMessageListEvent());
       yield NKNConnectedState();
     }
   }

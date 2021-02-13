@@ -9,6 +9,7 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:nmobile/utils/log_tag.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 /// @author Chenai
@@ -73,43 +74,42 @@ class SubscriberRepo with Tag {
     ));
   }
 
-  Future<int> batchUpdateSubscriberList(List <Subscriber> subs) async{
-    Database cdb = await NKNDataManager.instance.currentDatabase();
-    Batch dbBatch = cdb.batch();
-    for(Subscriber sub in subs){
-      String topicV = sub.topic;
-      String chatIDV = sub.chatId;
-      int prm_p_iV = sub.indexPermiPage;
-      int time_createV = sub.timeCreate;
-      int expire_atV = sub.blockHeightExpireAt;
-      bool uploadedV = sub.uploaded?true:false;
-      bool subscribedV = sub.subscribed?true:false;
-      bool upload_doneV = sub.uploadDone?true:false;
-
-      List<Map<String, dynamic>> result =
-      await cdb.query(tableName, where: '$topic = ? AND $chat_id = ?', whereArgs: [topicV, chatIDV], orderBy: '$time_create ASC');
-      final list = parseEntities(result);
-
-      if (list.length == 0){
-        print('query member in topic 0; excute insert');
-        String insertSql = 'INSERT INTO $tableName($topic,$chat_id,$prm_p_i,$time_create,$expire_at,$uploaded,$subscribed,$upload_done)'+
-            ' VALUES ("$topicV","$chatIDV","$prm_p_iV","$time_createV","$expire_atV","$uploadedV","$subscribedV","$upload_doneV")';
-        dbBatch.execute(insertSql);
-      }
-      else{
-        await cdb.query(tableName, where: '$topic = ?', whereArgs: [topicV], orderBy: '$time_create ASC');
-        // final list = parseEntities(result);
-        // for (Subscriber sub in list){
-        //   Global.debugLog('database exsits topic:'+sub.topic+'__chatID:'+sub.chatId);
-        // }
-      }
-    }
-    List resultList = await dbBatch.commit();
-    for (dynamic result in resultList){
-      print('sql result is'+result.toString());
-    }
-    return resultList.length;
-  }
+  // Future<int> batchUpdateSubscriberList(List <Subscriber> subs) async{
+  //   Database cdb = await NKNDataManager.instance.currentDatabase();
+  //   Batch dbBatch = cdb.batch();
+  //   for(Subscriber sub in subs){
+  //     String topicV = sub.topic;
+  //     String chatIDV = sub.chatId;
+  //     int prm_p_iV = sub.indexPermiPage;
+  //     int time_createV = sub.timeCreate;
+  //     int expire_atV = sub.blockHeightExpireAt;
+  //     bool uploadedV = sub.uploaded?true:false;
+  //     bool subscribedV = sub.subscribed?true:false;
+  //     bool upload_doneV = sub.uploadDone?true:false;
+  //
+  //     List<Map<String, dynamic>> result =
+  //     await cdb.query(tableName, where: '$topic = ? AND $chat_id = ?', whereArgs: [topicV, chatIDV], orderBy: '$time_create ASC');
+  //     final list = parseEntities(result);
+  //
+  //     if (list.length == 0){
+  //       String insertSql = 'INSERT INTO $tableName($topic,$chat_id,$prm_p_i,$time_create,$expire_at,$uploaded,$subscribed,$upload_done)'+
+  //           ' VALUES ("$topicV","$chatIDV","$prm_p_iV","$time_createV","$expire_atV","$uploadedV","$subscribedV","$upload_doneV")';
+  //       dbBatch.execute(insertSql);
+  //     }
+  //     else{
+  //       await cdb.query(tableName, where: '$topic = ?', whereArgs: [topicV], orderBy: '$time_create ASC');
+  //       // final list = parseEntities(result);
+  //       // for (Subscriber sub in list){
+  //       //   Global.debugLog('database exsits topic:'+sub.topic+'__chatID:'+sub.chatId);
+  //       // }
+  //     }
+  //   }
+  //   List resultList = await dbBatch.commit();
+  //   for (dynamic result in resultList){
+  //     NLog.w('batchUpdateSubscriberList result is__'+result.toString());
+  //   }
+  //   return resultList.length;
+  // }
 
 
   Future<Subscriber> getByTopicAndChatId(String topicName, String chatId) async {
@@ -121,15 +121,21 @@ class SubscriberRepo with Tag {
   }
 
 
-  Future insertSubscriber(Subscriber subscriber) async{
+  Future<bool> insertSubscriber(Subscriber subscriber) async{
     Database cdb = await NKNDataManager().currentDatabase();
     Subscriber querySubscriber = await getByTopicAndChatId(subscriber.topic, subscriber.chatId);
 
+    if (subscriber.chatId.length < 64){
+      return false;
+    }
     /// insert Logic
     if (querySubscriber == null){
-      print('Prepare to insert'+ toEntity(subscriber).toString());
       int insertResult = await cdb.insert(tableName, toEntity(subscriber), conflictAlgorithm: ConflictAlgorithm.ignore);
-      print('Insert Subscriber finished with code'+insertResult.toString());
+      NLog.w('Insert Subscriber finished__'+insertResult.toString());
+      if (insertResult > 0){
+        return true;
+      }
+      return false;
     }
     /// update Logic
     else{
@@ -140,7 +146,7 @@ class SubscriberRepo with Tag {
         await update(subscriber.topic, subscriber.chatId, subscriber.indexPermiPage, subscriber.uploaded, subscriber.subscribed, subscriber.uploadDone);
       }
     }
-    return 1;
+    return true;
   }
 
   Future<void> update(String topicName, String chatId, int pageIndex, bool uploaded_, bool subscribed_, bool uploadDone) async {
@@ -193,26 +199,40 @@ class SubscriberRepo with Tag {
 
   Future<void> delete(String topicName, String chatId) async {
     Database cdb = await NKNDataManager().currentDatabase();
-    print('delete from Subrepo');
-    await cdb.delete(tableName, where: '$topic = ? AND $chat_id = ?', whereArgs: [topicName, chatId]);
+    if (topicName != null && chatId != null){
+      int result = await cdb.delete(tableName, where: '$topic = ? AND $chat_id = ?', whereArgs: [topicName, chatId]);
+      if (result != null && result > 0 && chatId != null){
+        NLog.w('Delete subscriber__'+chatId);
+      }
+    }
+    else{
+      NLog.w('Wrong!!! topicName or chatId is null');
+    }
   }
 
   Future<void> deleteAll(String topicName) async {
-    Database cdb = await NKNDataManager.instance.currentDatabase();
-    print('delete from Subrepo all');
-    await cdb.delete(tableName, where: '$topic = ?', whereArgs: [topicName]);
+    Database cdb = await NKNDataManager().currentDatabase();
+    if (topicName != null){
+      int result = await cdb.delete(tableName, where: '$topic = ?', whereArgs: [topicName]);
+      if (result > 0){
+        NLog.w('deleteAll by topicName__'+result.toString());
+      }
+    }
+    else{
+      NLog.w('Wrong topicName is null');
+    }
   }
 
   static Future<void> create(Database db, int version) async {
     assert(version >= SqliteStorage.currentVersion);
-    print('create Subscribe');
+
     await db.execute(createSqlV5);
     await db.execute('CREATE UNIQUE INDEX IF NOT EXISTS index_${tableName}_${topic}_$chat_id ON $tableName ($topic, $chat_id);');
     await db.execute('CREATE        INDEX IF NOT EXISTS index_${tableName}_$time_create      ON $tableName ($time_create);');
+    NLog.w('CREATE UNIQUE INDEX');
   }
 
   static Future<void> upgradeFromV5(Database db, int oldVersion, int newVersion) async {
-    // assert(newVersion >= SqliteStorage.currentVersion);
     if (newVersion == SqliteStorage.currentVersion) {
       await create(db, newVersion);
     } else {

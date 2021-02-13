@@ -858,7 +858,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "remote_notification": "Message Noitification",
+  "remote_notification": "Message Notification",
   "@remote_notification": {
     "description": "",
     "type": "text",

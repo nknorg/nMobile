@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nmobile/blocs/chat/channel_members.dart';
+import 'package:nmobile/blocs/chat/channel_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/button.dart';
@@ -23,11 +23,10 @@ import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/model/popular_channel.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/model/group_chat_helper.dart';
-import 'package:nmobile/schemas/message.dart';
-import 'package:nmobile/schemas/topic.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class CreateGroupDialog extends StatefulWidget {
@@ -407,7 +406,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
     }
     if (_privateSelected) {
       if (!isPrivateTopic(topicName)) {
-        String pubKey = NKNClientCaller.pubKey;
+        String pubKey = NKNClientCaller.currentChatId;
         topicName = '$topicName.$pubKey';
       }
     }
@@ -425,14 +424,12 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
           chatBloc: _chatBloc,
           callback: (success, e) async {
             if (success) {
-              print('topicName'+topicName.toString());
               final topicSpotName = Topic.spotName(name: topicName);
               if (topicSpotName.isPrivate) {
                 // TODO: delay pull action at least 3 minutes.
-                print('topicSpotName'+topicSpotName.toString());
                 GroupChatPrivateChannel.pullSubscribersPrivateChannel(
                     topicName: topicName,
-                    membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+                    membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
                     needUploadMetaCallback: (topicName) {
                       GroupChatPrivateChannel.uploadPermissionMeta(
                         topicName: topicName,
@@ -441,16 +438,17 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                       );
                     });
               } else {
-                print('Subscribe Success, Wait to pullSubscribersPublicChannel');
                 GroupChatPublicChannel.pullSubscribersPublicChannel(
                   topicName: topicName,
-                  membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+                  membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
                 );
               }
               _createOrJoinGroupSuccess(topicName);
             }
             else {
-              print('Create Or join Group E:'+e.toString());
+              if (e != null){
+                NLog.w('Create Or join Group E:'+e.toString());
+              }
               showToast('create_input_group topic failed');
             }
           });

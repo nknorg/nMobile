@@ -119,7 +119,8 @@ class _SendErc20ScreenState extends State<SendErc20Screen> with Tag {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
 
-      var password = await TimerAuth.instance.onCheckAuthGetPassword(context);
+
+      var password = await wallet.getPassword();
       if (password != null) {
         final result = transferAction(password);
         Navigator.pop(context, result);

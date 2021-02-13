@@ -10,6 +10,7 @@ import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/utils/log_tag.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 class TaskService with Tag {
   Dio dio = Dio();
@@ -33,18 +34,18 @@ class TaskService with Tag {
   queryNknWalletBalanceTask() {
     var state = _walletsBloc.state;
     if (state is WalletsLoaded) {
-      Global.debugLog('queryNknWalletBalanceTask begin');
+      NLog.w('queryNknWalletBalanceTask begin');
       List<Future> futures = <Future>[];
       state.wallets.forEach((w) {
         if (w.type == WalletSchema.ETH_WALLET) {
           futures.add(_erc20client.getBalance(address: w.address).then((balance) {
-            Global.debugLog('Get Wallet:${w.name} | balance: ${balance.ether}');
+            NLog.w('Get Wallet:${w.name} | balance: ${balance.ether}');
             w.balanceEth = balance.ether;
             _walletsBloc.add(UpdateWallet(w));
           }));
           futures.add(_erc20client.getNknBalance(address: w.address).then((balance) {
             if (balance != null) {
-              Global.debugLog('Get Wallet:${w.name} | balance: ${balance.ether}');
+              NLog.w('Get Wallet:${w.name} | balance: ${balance.ether}');
               w.balance = balance.ether;
               _walletsBloc.add(UpdateWallet(w));
             }
@@ -57,10 +58,9 @@ class TaskService with Tag {
           }));
         }
       });
-      Global.debugLog('queryNknWalletBalanceTask end');
       Future.wait(futures).then((data) {
         _walletsBloc.add(ReLoadWallets());
-        Global.debugLog('queryNknWalletBalanceTask Future.wait(futures)');
+        NLog.w('queryNknWalletBalanceTask Future.wait(futures)');
       });
     }
   }

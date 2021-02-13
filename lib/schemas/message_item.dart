@@ -48,7 +48,7 @@ class MessageItem {
   }
 
   static Future<List<MessageItem>> getLastMessageList({int limit = 20, int offset = 0}) async {
-    Database cdb = await NKNDataManager.instance.currentDatabase();
+    Database cdb = await NKNDataManager().currentDatabase();
     if (cdb == null){
       return  null;
     }
@@ -59,13 +59,14 @@ class MessageItem {
         '(SELECT COUNT(id) from ${MessageSchema.tableName} WHERE target_id = m.target_id AND is_outbound = 0 AND is_read = 0) as not_read',
         'MAX(send_time)'
       ],
-      where: "type = ? or type = ? or type = ? or type = ? or type = ?",
-      whereArgs: [ContentType.text, ContentType.textExtension, ContentType.nknImage, ContentType.ChannelInvitation, ContentType.eventSubscribe],
+      where: "type = ? or type = ? or type = ? or type = ? or type = ? or type = ? or type = ?",
+      whereArgs: [ContentType.text, ContentType.textExtension, ContentType.nknImage, ContentType.channelInvitation, ContentType.eventSubscribe, ContentType.media, ContentType.nknAudio],
       groupBy: 'm.target_id',
       orderBy: 'm.send_time desc',
       limit: limit,
       offset: offset,
     );
+
     List<MessageItem> list = <MessageItem>[];
     for (var i = 0, length = res.length; i < length; i++) {
       var item = res[i];

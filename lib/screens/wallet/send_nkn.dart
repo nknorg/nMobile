@@ -77,7 +77,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
 
-      var password = await TimerAuth.instance.onCheckAuthGetPassword(context);
+      var password = await wallet.getPassword();
       if (password != null) {
         final result = transferAction(password);
         Navigator.pop(context, result);
@@ -129,7 +129,9 @@ class _SendNknScreenState extends State<SendNknScreen> {
             try {
               jsonData = jsonDecode(qrData);
               jsonFormat = true;
-            } on Exception catch (e) {
+            } on Exception
+            ///work todo
+            catch (e) {
               jsonFormat = false;
             }
             if (jsonFormat) {
@@ -311,7 +313,7 @@ class _SendNknScreenState extends State<SendNknScreen> {
                                                     hintText: NL10ns.of(context).enter_receive_address,
                                                     suffixIcon: GestureDetector(
                                                       onTap: () async {
-                                                        if (NKNClientCaller.pubKey != null) {
+                                                        if (NKNClientCaller.currentChatId != null) {
                                                           var contact = await Navigator.of(context).pushNamed(ContactHome.routeName, arguments: true);
                                                           if (contact is ContactSchema) {
                                                             _sendToController.text = contact.nknWalletAddress;

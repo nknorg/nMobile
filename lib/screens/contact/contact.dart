@@ -14,6 +14,8 @@ import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
+import 'package:nmobile/blocs/contact/contact_bloc.dart';
+import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
@@ -41,13 +43,13 @@ import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/screens/chat/photo_page.dart';
 import 'package:nmobile/screens/contact/chat_profile.dart';
 import 'package:nmobile/screens/contact/show_chat_id.dart';
-import 'package:nmobile/screens/contact/show_my_chat_address.dart';
 import 'package:nmobile/screens/view/burn_view_utils.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -92,6 +94,8 @@ class _ContactScreenState extends State<ContactScreen> {
   NKNClientBloc _clientBloc;
   ChatBloc _chatBloc;
 
+  ContactBloc _contactBloc;
+
   @override
   void dispose() {
     _saveAndSendBurnMessage();
@@ -105,6 +109,7 @@ class _ContactScreenState extends State<ContactScreen> {
     _authBloc = BlocProvider.of<AuthBloc>(context);
     _clientBloc = BlocProvider.of<NKNClientBloc>(context);
     _chatBloc = BlocProvider.of<ChatBloc>(context);
+    _contactBloc = BlocProvider.of<ContactBloc>(context);
 
     _clientBloc.aBloc = _authBloc;
 
@@ -113,7 +118,7 @@ class _ContactScreenState extends State<ContactScreen> {
     int burnAfterSeconds = currentUser?.options?.deleteAfterSeconds;
 
     if (currentUser.notificationOpen != null && currentUser.notificationOpen == true){
-      _acceptNotification = true;
+      // _acceptNotification = true;
     }
 
     _burnSelected = burnAfterSeconds != null;
@@ -127,11 +132,24 @@ class _ContactScreenState extends State<ContactScreen> {
     _initBurnSelected = _burnSelected;
     _initBurnIndex = _burnIndex;
 
-    this.nickName = currentUser.nickName;
+    this.nickName = currentUser.name;
+
     this.chatAddress = currentUser.clientAddress;
     this.walletAddress = currentUser.nknWalletAddress;
 
     _notesController.text = currentUser.notes;
+  }
+
+  String _chatAddress(){
+    if (currentUser != null){
+      if (currentUser.clientAddress != null){
+        if (currentUser.clientAddress.length > 8){
+          return currentUser.clientAddress.substring(0, 8) + '...';
+        }
+        return currentUser.clientAddress;
+      }
+    }
+    return '';
   }
 
   _saveAndSendBurnMessage() async {
@@ -139,7 +157,6 @@ class _ContactScreenState extends State<ContactScreen> {
     var _burnValue;
     if (!_burnSelected || _burnIndex < 0) {
       await currentUser.setBurnOptions(null);
-      print("Close Send Burn Message");
     } else {
       _burnValue = BurnViewUtil.burnValueArray[_burnIndex].inSeconds;
       await currentUser.setBurnOptions(_burnValue);
@@ -150,17 +167,17 @@ class _ContactScreenState extends State<ContactScreen> {
       contentType: ContentType.eventContactOptions,
     );
     sendMsg.burnAfterSeconds = _burnValue;
-    sendMsg.contactOptionsType = 0;
-    sendMsg.content = sendMsg.toContentOptionData();
+    sendMsg.content = sendMsg.toContactBurnOptionData();
 
-    print("Send Burn Message"+sendMsg.content.toString());
     _chatBloc.add(SendMessageEvent(sendMsg));
   }
 
   _saveAndSendDeviceToken() async{
     String deviceToken = '';
+    print('DeviceToken is11__'+deviceToken.toString());
     if (_acceptNotification == true){
       deviceToken = await NKNClientCaller.fetchDeviceToken();
+      print('DeviceToken is__'+deviceToken.toString());
       if (Platform.isIOS){
         String fcmToken = await NKNClientCaller.fetchFcmToken();
         if (fcmToken != null && fcmToken.length > 0){
@@ -183,9 +200,8 @@ class _ContactScreenState extends State<ContactScreen> {
       contentType: ContentType.eventContactOptions,
       deviceToken: deviceToken,
     );
-    sendMsg.contactOptionsType = 1;
-    sendMsg.content = sendMsg.toContentOptionData();
     sendMsg.deviceToken = deviceToken;
+    sendMsg.content = sendMsg.toContactNoticeOptionData();
     _chatBloc.add(SendMessageEvent(sendMsg));
   }
 
@@ -250,12 +266,16 @@ class _ContactScreenState extends State<ContactScreen> {
 
               await currentUser.setNotes(currentUser.notes);
               _chatBloc.add(RefreshMessageListEvent());
-              Navigator.of(context).pop();
+              _popWithInformation();
             }
           },
         ),
       ),
     );
+  }
+
+  _popWithInformation(){
+    Navigator.of(context).pop('yes');
   }
 
   _detailChangeName(BuildContext context) {
@@ -298,12 +318,13 @@ class _ContactScreenState extends State<ContactScreen> {
             _nameFormValid = (_nameFormKey.currentState as FormState).validate();
             if (_nameFormValid) {
               currentUser.firstName = _firstNameController.text.trim();
-              await currentUser.setName(currentUser.firstName);
               setState(() {
                 nickName = currentUser.name;
               });
               _chatBloc.add(RefreshMessageListEvent());
-              Navigator.of(context).pop();
+
+              _updateUserInfo(currentUser.name, null);
+              _popWithInformation();
             }
           },
         ),
@@ -316,12 +337,18 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   updatePic() async {
-    File savedImg = await getHeaderImage(NKNClientCaller.pubKey);
-    if (savedImg == null) return;
-    await currentUser.setAvatar(NKNClientCaller.pubKey, savedImg);
-    setState(() {
-      currentUser.avatar = savedImg;
-    });
+    File savedImg = await getHeaderImage(NKNClientCaller.currentChatId);
+    if (savedImg == null) {
+      showToast('Open camera or MediaLibrary for nMobile to update your profile');
+    }
+    else{
+      if (mounted){
+        setState(() {
+          currentUser.avatar = savedImg;
+        });
+      }
+      _updateUserInfo(null, savedImg);
+    }
   }
 
   showChangeSelfNameDialog() {
@@ -370,13 +397,26 @@ class _ContactScreenState extends State<ContactScreen> {
               setState(() {
                 nickName = currentUser.name;
               });
-              currentUser.setName(currentUser.firstName);
-              Navigator.of(context).pop();
+              _updateUserInfo(currentUser.firstName, null);
+              _popWithInformation();
             }
           },
         ),
       ),
     );
+  }
+
+  _updateUserInfo(String nickName,File avatarImage) async{
+    if (nickName != null && nickName.length > 0){
+      await currentUser.setName(currentUser.firstName);
+    }
+    else if (avatarImage != null){
+      await currentUser.setAvatar(NKNClientCaller.currentChatId, avatarImage);
+    }
+    _chatBloc.add(RefreshMessageListEvent());
+
+    _contactBloc.add(UpdateUserInfoEvent(currentUser));
+    print("Current user name is___"+currentUser.name);
   }
 
   showQRDialog() {
@@ -420,7 +460,7 @@ class _ContactScreenState extends State<ContactScreen> {
           text: NL10ns.of(context).close,
           width: double.infinity,
           onPressed: () async {
-            Navigator.pop(context);
+            _popWithInformation();
           },
         ),
       ),
@@ -437,12 +477,12 @@ class _ContactScreenState extends State<ContactScreen> {
           buttonColor: Colors.red,
           callback: (v) {
             if (v) {
-              currentUser.setFriend(isFriend: false);
+              currentUser.setFriend(false);
               setState(() {});
             }
           }).show();
     } else {
-      currentUser.setFriend(isFriend: b);
+      currentUser.setFriend(b);
       setState(() {});
       showToast(NL10ns.of(context).success);
     }
@@ -515,11 +555,8 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   void onGetPassword(WalletSchema wallet, String password) async{
-    Global.debugLog('contact.dart NKNCreateClientEvent');
-
     _clientBloc.add(NKNDisConnectClientEvent());
 
-    print('exportWallet___55');
     var eWallet = await wallet.exportWallet(password);
     EasyLoading.show();
 
@@ -535,11 +572,10 @@ class _ContactScreenState extends State<ContactScreen> {
         profileVersion: uuid.v4(),
       );
       await currentUser.insertContact();
-      Global.debugLog('AuthBlock insert current User'+currentUser.clientAddress);
     }
+
     setState(() {
-      print('Change Wallet info is'+eWallet.toString());
-      this.nickName = currentUser.nickName;
+      this.nickName = currentUser.name;
       this.chatAddress = currentUser.clientAddress;
       this.walletAddress = currentUser.nknWalletAddress;
     });
@@ -553,6 +589,7 @@ class _ContactScreenState extends State<ContactScreen> {
     NKNDataManager.instance.close();
 
     Timer(Duration(milliseconds: 200), () async {
+      NLog.w('contact.dart onCreateClient__'+password.toString());
       _clientBloc.add(NKNCreateClientEvent(wallet, password));
       EasyLoading.dismiss();
       showToast('切换成功');
@@ -567,7 +604,7 @@ class _ContactScreenState extends State<ContactScreen> {
         .verify_wallet_password);
     if (password != null) {
       try {
-        print('exportWallet___66');
+
         var w = await wallet.exportWallet(password);
         if (w['address'] == wallet.address) {
           onGetPassword(wallet, password);
@@ -600,14 +637,16 @@ class _ContactScreenState extends State<ContactScreen> {
                 children: <Widget>[
                   Stack(
                     children: <Widget>[
-                      GestureDetector(
-                        onTap: (){
-                          updatePic();
-                        },
-                        child: Container(
-                          child: CommonUI.avatarWidget(
-                            radiusSize: 48,
-                            contact:currentUser,
+                      Container(
+                        child: GestureDetector(
+                          onTap: (){
+                            updatePic();
+                          },
+                          child: Container(
+                            child: CommonUI.avatarWidget(
+                              radiusSize: 48,
+                              contact:currentUser,
+                            ),
                           ),
                         ),
                       ),
@@ -706,7 +745,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                     SizedBox(width: 20),
                                     Expanded(
                                       child: Label(
-                                        chatAddress.substring(0, 8) + "...",
+                                        _chatAddress(),
                                         type: LabelType.bodyRegular,
                                         textAlign: TextAlign.right,
                                         color: DefaultTheme.fontColor2,
@@ -721,47 +760,6 @@ class _ContactScreenState extends State<ContactScreen> {
                                   ],
                                 ),
                               ).sized(h: 48),
-                              // FlatButton(
-                              //   padding: const EdgeInsets.only(left: 16, right: 16),
-                              //   shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
-                              //   onPressed: () {
-                              //     Navigator.pushNamed(context, ShowMyChatAddress.routeName,
-                              //         arguments: _walletDefault?.address ?? currentUser.nknWalletAddress);
-                              //   },
-                              //   child: Row(
-                              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              //     children: <Widget>[
-                              //       loadAssetIconsImage(
-                              //         'wallet',
-                              //         color: DefaultTheme.primaryColor,
-                              //         width: 24,
-                              //       ),
-                              //       SizedBox(width: 10),
-                              //       Label(
-                              //         NL10ns.of(context).wallet_address,
-                              //         type: LabelType.bodyRegular,
-                              //         color: DefaultTheme.fontColor1,
-                              //         height: 1,
-                              //       ),
-                              //       SizedBox(width: 20),
-                              //       Expanded(
-                              //         child: Label(
-                              //           walletAddress.substring(0, 8) + "...",
-                              //           type: LabelType.bodyRegular,
-                              //           color: DefaultTheme.fontColor2,
-                              //           textAlign: TextAlign.right,
-                              //           maxLines: 1,
-                              //           overflow: TextOverflow.ellipsis,
-                              //         ),
-                              //       ),
-                              //       SvgPicture.asset(
-                              //         'assets/icons/right.svg',
-                              //         width: 24,
-                              //         color: DefaultTheme.fontColor2,
-                              //       )
-                              //     ],
-                              //   ),
-                              // ).sized(h: 48),
                               FlatButton(
                                 padding: const EdgeInsets.only(left: 16, right: 16),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
@@ -841,16 +839,17 @@ class _ContactScreenState extends State<ContactScreen> {
                 children: [
                   Stack(
                     children: <Widget>[
-                      InkWell(
-                        onTap: () {
+                      GestureDetector(
+                        onTap: (){
+                          print('currentUser.avatarFilePath is__'+currentUser.avatarFilePath.toString());
                           if (currentUser.avatarFilePath != null) {
                             Navigator.push(context, CustomRoute(PhotoPage(arguments:currentUser.avatarFilePath)));
                           }
                         },
                         child: Container(
                           child: CommonUI.avatarWidget(
-                              radiusSize: 48,
-                              contact: currentUser,
+                            radiusSize: 48,
+                            contact: currentUser,
                           ),
                         ),
                       ),
@@ -867,17 +866,16 @@ class _ContactScreenState extends State<ContactScreen> {
                             width: 16,
                           ),
                           onPressed: () async {
-                            File savedImg = await getHeaderImage(NKNClientCaller.pubKey);
+                            File savedImg = await getHeaderImage(NKNClientCaller.currentChatId);
                             if (savedImg != null){
-                              await currentUser.setAvatar(NKNClientCaller.pubKey, savedImg);
                               setState(() {
                                 currentUser.avatar = savedImg;
                               });
-                              _chatBloc.add(RefreshMessageListEvent());
+                              _updateUserInfo(null, savedImg);
                             }
                           },
                         ),
-                      )
+                      ),
                     ],
                   ),
                   SizedBox(height: 10),
@@ -885,7 +883,7 @@ class _ContactScreenState extends State<ContactScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Label(
-                        currentUser.nickName ?? '',
+                        currentUser.name,
                         type: LabelType.bodyLarge,
                         color: Colors.white,
                         overflow: TextOverflow.fade,
@@ -925,7 +923,7 @@ class _ContactScreenState extends State<ContactScreen> {
                         SizedBox(width: 20),
                         Expanded(
                           child: Label(
-                            currentUser.nickName,
+                            currentUser.name,
                             type: LabelType.bodyRegular,
                             color: DefaultTheme.fontColor2,
                             overflow: TextOverflow.fade,
@@ -966,7 +964,7 @@ class _ContactScreenState extends State<ContactScreen> {
                         SizedBox(width: 20),
                         Expanded(
                           child: Label(
-                            currentUser.clientAddress.substring(0, 8) + '...',
+                            _chatAddress(),
                             type: LabelType.bodyRegular,
                             color: DefaultTheme.fontColor2,
                             textAlign: TextAlign.right,
@@ -1174,7 +1172,6 @@ class _ContactScreenState extends State<ContactScreen> {
                   ),
                 ),
                 onPressed: () {
-//                                  _setContactOptions();
                   Navigator.of(context)
                       .pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: currentUser));
                 },
@@ -1194,10 +1191,9 @@ class _ContactScreenState extends State<ContactScreen> {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title: '',
         leading: BackButton(
           onPressed: () {
-            Navigator.of(context).pop();
+            _popWithInformation();
           },
         ),
         backgroundColor: DefaultTheme.backgroundColor4,

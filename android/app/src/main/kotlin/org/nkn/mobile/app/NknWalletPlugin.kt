@@ -61,23 +61,22 @@ class NknWalletPlugin(flutterEngine: FlutterEngine) : MethodChannel.MethodCallHa
             "pubKeyToWalletAddr" -> {
                 pubKeyToWalletAddr(call, result)
             }
-            "fetchDebugInfo" -> {
-                fetchDebugInfo(call, result)
-            }
+//            "fetchDebugInfo" -> {
+//                fetchDebugInfo(call, result)
+//            }
             else -> {
                 result.notImplemented()
             }
         }
     }
 
-
-
     private fun pubKeyToWalletAddr(call: MethodCall, result: MethodChannel.Result) {
         val pubkey = call.argument<String>("publicKey") ?: null
 
         try {
             result.success(Nkn.pubKeyToWalletAddr(pubkey?.decodeHex()))
-        }catch (e : Exception){
+        }
+        catch (e : Exception){
             result.error("0", e.localizedMessage, "")
         }
     }
@@ -212,19 +211,19 @@ class NknWalletPlugin(flutterEngine: FlutterEngine) : MethodChannel.MethodCallHa
         result.success(keystore)
     }
 
-    private fun fetchDebugInfo(call: MethodCall, result: MethodChannel.Result){
-        Log.e("222:","HereHere")
-        val ks: KeyStore = KeyStore.getInstance("AndroidKeyStore")
-        ks.load(null)
-        val aliases: Enumeration<String> = ks.aliases()
-
-        var keyStoreAliases:String = ""
-        while (aliases.hasMoreElements()){
-            val alias:String = aliases.nextElement()
-            keyStoreAliases = keyStoreAliases+alias
-        }
-        Log.e("111:"+keyStoreAliases,"keyStoreAliases:"+keyStoreAliases)
-
-        result.success(keyStoreAliases)
-    }
+//    private fun fetchDebugInfo(call: MethodCall, result: MethodChannel.Result){
+//        Log.e("222:","HereHere")
+//        val ks: KeyStore = KeyStore.getInstance("AndroidKeyStore")
+//        ks.load(null)
+//        val aliases: Enumeration<String> = ks.aliases()
+//
+//        var keyStoreAliases:String = ""
+//        while (aliases.hasMoreElements()){
+//            val alias:String = aliases.nextElement()
+//            keyStoreAliases = keyStoreAliases+alias
+//        }
+//        Log.e("111:"+keyStoreAliases,"keyStoreAliases:"+keyStoreAliases)
+//
+//        result.success(keyStoreAliases)
+//    }
 }
