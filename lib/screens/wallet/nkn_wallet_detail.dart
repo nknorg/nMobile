@@ -21,6 +21,7 @@ import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
+import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
@@ -37,6 +38,7 @@ import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
+import 'package:web3dart/credentials.dart';
 
 class NknWalletDetailScreen extends StatefulWidget {
   static const String routeName = '/wallet/nkn_wallet_detail';
@@ -102,6 +104,32 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     });
   }
 
+  Widget _ethLogoWidget(){
+    if (widget.wallet.type == WalletSchema.NKN_WALLET){
+      return Positioned(
+          top: 16,
+          left: 60,
+          child: Container(
+            width: 0,
+            height: 0,
+            alignment: Alignment.center,
+            // decoration: BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
+          )
+      );
+    }
+    return Positioned(
+        top: 16,
+        left: 60,
+        child: Container(
+          width: 20,
+          height: 20,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
+          child: SvgPicture.asset('assets/ethereum-logo.svg'),
+        )
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -160,19 +188,7 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                                 ),
                                 child: SvgPicture.asset('assets/logo.svg', color: Colours.purple_2e),
                               ).symm(h: 16, v: 20),
-                              widget.wallet.type == WalletSchema.NKN_WALLET
-                                  ? Space.empty
-                                  : Positioned(
-                                      top: 16,
-                                      left: 60,
-                                      child: Container(
-                                        width: 20,
-                                        height: 20,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
-                                        child: SvgPicture.asset('assets/ethereum-logo.svg'),
-                                      ),
-                                    )
+                              _ethLogoWidget(),
                             ],
                           ),
                         ),
@@ -359,10 +375,11 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     switch (result) {
       case 0:
         if (widget.wallet.type == WalletSchema.ETH_WALLET) {
-          var password = await TimerAuth.instance.onCheckAuthGetPassword(context);
+          var password = await widget.wallet.getPassword();
           if (password != null) {
             try {
               final ethWallet = await Ethereum.restoreWalletSaved(schema: widget.wallet, password: password);
+
               Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
                 'wallet': null,
                 'keystore': ethWallet.keystore,
@@ -376,13 +393,13 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
             }
           }
         } else {
-          var password = await TimerAuth.instance.onCheckAuthGetPassword(context);
+          var password = await widget.wallet.getPassword();
           if (password != null) {
             try {
-              print('exportWallet___88');
               var wallet = await widget.wallet.exportWallet(password);
               if (wallet['address'] == widget.wallet.address) {
                 TimerAuth.instance.enableAuth();
+
                 Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
                   'wallet': wallet,
                   'keystore': wallet['keystore'],
@@ -410,8 +427,8 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                 callback: (v) async {
                   if (v) {
                     _walletsBloc.add(DeleteWallet(widget.wallet));
-                    if (NKNClientCaller.pubKey != null) {
-                      var walletAddr = await NknWalletPlugin.pubKeyToWalletAddr(NKNClientCaller.pubKey);
+                    if (NKNClientCaller.currentChatId != null) {
+                      var walletAddr = await NknWalletPlugin.pubKeyToWalletAddr(NKNClientCaller.currentChatId);
                       if (walletAddr == widget.wallet.address) {
                         NLog.d('delete client');
                         _clientBloc.add(NKNDisConnectClientEvent());

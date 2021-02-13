@@ -618,7 +618,7 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/nMobile.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 193;
+				CURRENT_PROJECT_VERSION = 203;
 				DEVELOPMENT_TEAM = 67P82ZQDAS;
 				ENABLE_BITCODE = NO;
 				FLUTTER_APPLICATION_PATH = /Users/rebloom/Documents/GitHub/nMobile;
@@ -774,7 +774,7 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/nMobile.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 193;
+				CURRENT_PROJECT_VERSION = 203;
 				DEVELOPMENT_TEAM = 67P82ZQDAS;
 				ENABLE_BITCODE = NO;
 				FLUTTER_APPLICATION_PATH = /Users/rebloom/Documents/GitHub/nMobile;
@@ -822,7 +822,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 193;
+				CURRENT_PROJECT_VERSION = 203;
 				DEVELOPMENT_TEAM = 67P82ZQDAS;
 				ENABLE_BITCODE = NO;
 				FLUTTER_APPLICATION_PATH = /Users/rebloom/Documents/GitHub/nMobile;

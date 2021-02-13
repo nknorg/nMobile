@@ -6,7 +6,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nmobile/blocs/chat/channel_members.dart';
+import 'package:mime_type/mime_type.dart';
+import 'package:nmobile/blocs/chat/channel_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
@@ -16,8 +17,8 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_notification.dart';
 import 'package:nmobile/helpers/utils.dart';
-import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/db/black_list_repo.dart';
+import 'package:nmobile/model/db/message_data_center.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
@@ -27,8 +28,7 @@ import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/log_tag.dart';
-import 'package:oktoast/oktoast.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
   @override
@@ -45,7 +45,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
   List<MessageSchema> entityMessageList = new List();
   List<MessageSchema> actionMessageList = new List();
   Timer watchDog;
-  int delayBatchSeconds = 3;
+  int delayResendSeconds = 15;
+
+  Map judgeToResendMessage = new Map();
+
+  Uint8List messageIn, messageOut;
+
+  bool useOnePiece = false;
+  int perPieceLength = 1024;
 
   @override
   Stream<ChatState> mapEventToState(ChatEvent event) async* {
@@ -63,136 +70,110 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       FlutterAppBadger.updateBadgeCount(unReadCount);
       yield MessageUpdateState(target: event.target);
     }
-    else if (event is UpdateMessageEvent){
-      /// Update MessageList and badge
-
-      print('Insert IM From UpdateMessageEvent__ begin');
-
-      var message = event.message;
-      // message.setMessageStatus(MessageStatus.MessageReceived);
-      // message.sendReceiptMessage();
-
-      print('Insert IM From UpdateMessageEvent__'+message.content.toString());
-      this.add(RefreshMessageListEvent());
-      yield MessageUpdateState(message: message);
+    else if (event is UpdateChatEvent){
+      String targetId = event.targetId;
+      
+      var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: 20);
+      this.add(RefreshMessageListEvent(target: targetId));
+      yield UpdateChatMessageState(res);
     }
     else if (event is GetAndReadMessages) {
       yield* _mapGetAndReadMessagesToState(event);
     }
   }
 
-  _handleBatchMessage() async{
-    /// Batch send ReceiptMessage
-    /// Batch Insert MessageToDatabase
-    Database cdb = await NKNDataManager.instance.currentDatabase();
+  _resendMessage(MessageSchema message) async{
+    var cdb = await NKNDataManager().currentDatabase();
 
-    String batchId = '';
-    Batch dbBatch = cdb.batch();
-    for (MessageSchema message in entityMessageList){
-      message.setMessageStatus(MessageStatus.MessageReceived);
-      print('BatchInsert NormalMessageContent__'+message.content);
-      batchId = batchId+','+message.msgId;
+    var res = await cdb.query(
+      MessageSchema.tableName,
+      columns: ['*'],
+      orderBy: 'send_time desc',
+      where: 'sender = ? AND receiver = ? AND is_success = 0 AND NOT type = ? AND NOT type = ? AND NOT type = ? AND NOT type = ? AND NOT type = ?',
+      whereArgs: [message.to,message.from, ContentType.nknOnePiece, ContentType.eventContactOptions,ContentType.eventSubscribe,ContentType.eventUnsubscribe,ContentType.channelInvitation],
+      limit: 20,
+      offset: 0,
+    );
 
-      dbBatch.insert(MessageSchema.tableName, message.toEntity(NKNClientCaller.pubKey));
+    List<MessageSchema> messages = <MessageSchema>[];
+    for (var i = 0; i < res.length; i++) {
+      var messageItem = MessageSchema.parseEntity(res[i]);
+      messages.add(messageItem);
     }
-    List results = await dbBatch.commit();
-    for(var resultString in results) {
-      print('BatchInsertMessage__'+resultString.toString());
-    }
-
-    if (results.length > 0){
-      print('BatchInsertMessage__Result__'+results.length.toString());
-      var unReadCount = await MessageSchema.unReadMessages();
-      FlutterAppBadger.updateBadgeCount(unReadCount);
-    }
-    for (MessageSchema message in entityMessageList){
-      print('BatchMessage.isSuccess_'+message.isSuccess.toString());
-      message.sendReceiptMessage();
-    }
-    if (entityMessageList.length > 500){
-      entityMessageList.removeRange(0, 500);
-      _sendBatchReceipt();
-    }
-    else{
-      entityMessageList.clear();
-    }
-  }
-
-  _sendBatchReceipt() async{
-    if (entityMessageList.length > 500){
-      _handleBatchMessage();
-    }
-    else if (entityMessageList.length > 10){
-      _handleBatchMessage();
-    }
-    else {
-      for (MessageSchema message in entityMessageList){
-        print('Handle less10');
-        bool insertS = await message.insertMessage();
-        if(insertS){
-          message.sendReceiptMessage();
+    if (res.isNotEmpty){
+      NLog.w('ResendMessage___'+res.length.toString());
+      for (MessageSchema message in messages){
+        NLog.w('ResendMessage___xxxx'+message.content.toString());
+        NLog.w('ResendMessage___xxxx'+message.timestamp.toString());
+        if (message.isSuccess == false && message.isSendMessage()){
+          this.add(SendMessageEvent(message));
         }
       }
-      entityMessageList.clear();
     }
-    this.add(RefreshMessageListEvent());
   }
 
-  _addToBatchReceiveMessage(MessageSchema message){
-    entityMessageList.add(message);
+  _judgeResend() async{
+    /// Query UnreadMessage and resend it to the very ClientAddress
+    if (delayResendSeconds == 0){
+      for (String key in judgeToResendMessage.keys){
+        MessageSchema message = judgeToResendMessage[key];
+        _resendMessage(message);
+      }
 
-    delayBatchSeconds = 3;
-    _startWatchDog();
+      _stopWatchDog();
+    }
+    delayResendSeconds--;
   }
 
-  _startWatchDog() {
+  _startWatchDog(MessageSchema msg) {
     if (watchDog == null || watchDog.isActive == false){
-      watchDog = Timer.periodic(Duration(milliseconds: 1000), (timer) {
-        delayBatchSeconds--;
-        if (delayBatchSeconds == 0){
-          _stopWatchDog();
-        }
-        if (entityMessageList.length > 500){
-          _sendBatchReceipt();
-          print('entityMessageList > 500 ==> sendBatchReceipt');
-        }
+      /// because it is Receipt message, so keep msg.from
+      if (!judgeToResendMessage.containsKey(msg.from)){
+        judgeToResendMessage[msg.from] = msg;
+      }
+
+      delayResendSeconds = 15;
+      watchDog = Timer.periodic(Duration(milliseconds: 1000), (timer) async {
+        _judgeResend();
       });
     }
   }
 
   _stopWatchDog() {
-    _sendBatchReceipt();
-    print('_stopWatchDog > delayBatchSeconds==0 ==> sendBatchReceipt');
-    delayBatchSeconds = 3;
+    print('_stopWatchDog > delayResend ==0 ==> ');
+    delayResendSeconds = 15;
     if(watchDog.isActive){
       watchDog.cancel();
       watchDog = null;
     }
   }
 
+  _watchSendMessage(MessageSchema message) async{
+    bool pidExists = await MessageDataCenter.judgeMessagePid(message.msgId);
+    if (pidExists == false){
+      message.setMessageStatus(MessageStatus.MessageSendFail);
+    }
+  }
+
   Stream<ChatState> _mapSendMessageToState(SendMessageEvent event) async* {
     var message = event.message;
 
-    _debugLogMessage(message,0);
-
-
-    var pid;
+    // Uint8List pid;
     String contentData = '';
-    message.setMessageStatus(MessageStatus.MessageSending);
+    await message.insertSendMessage();
 
+    Timer(Duration(seconds: 11), () {
+      _watchSendMessage(message);
+    });
     /// Handle GroupMessage Sending
     if (message.topic != null){
-      pid = await _sendGroupMessage(message);
-      if (pid != null){
-        message.pid = pid;
-        message.setMessageStatus(MessageStatus.MessageSendSuccess);
+      try {
+        _sendGroupMessage(message);
+        // message.setMessageStatus(MessageStatus.MessageSending);
       }
-      else{
-        message.setMessageStatus(MessageStatus.MessageSendFail);
+      catch(e) {
+        // message.setMessageStatus(MessageStatus.MessageSendFail);
       }
-
-      bool insertMessageBack = await message.insertMessage();
-      print('InsertGroupMessageToDatabase___'+message.content+'___'+insertMessageBack.toString());
 
       yield MessageUpdateState(target: message.to, message: message);
       return;
@@ -201,84 +182,154 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     else{
       if (message.contentType == ContentType.text ||
           message.contentType == ContentType.textExtension ||
-          message.contentType == ContentType.nknImage ||
-          message.contentType == ContentType.nknAudio){
-        if (message.options != null && message.options['deleteAfterSeconds'] != null) {
-          message.deleteTime = DateTime.now().add(Duration(seconds: message.options['deleteAfterSeconds']));
+          message.contentType == ContentType.nknAudio ||
+          message.contentType == ContentType.media ||
+          message.contentType == ContentType.nknImage) {
+        // if (message.options != null && message.options['deleteAfterSeconds'] != null) {
+        //   message.deleteTime = DateTime.now().add(Duration(seconds: message.options['deleteAfterSeconds']));
+        // }
+        if (useOnePiece && (message.contentType == ContentType.nknAudio ||
+                message.contentType == ContentType.media ||
+                message.contentType == ContentType.nknImage)) {
+          _sendOnePieceMessage(message);
+          return;
         }
-
-        Map dataInfo = await _checkIfSendNotification(message);
-        contentData = jsonEncode(dataInfo);
+        else{
+          contentData = await _checkIfSendNotification(message);
+        }
+      }
+      else if (message.contentType == ContentType.nknOnePiece){
+        contentData = message.toNknPieceMessageData();
       }
       else if (message.contentType == ContentType.eventContactOptions) {
-        contentData = message.toContentOptionData();
+        contentData = message.content;
       }
-      else if (message.contentType == ContentType.ChannelInvitation) {
-        contentData = message.toTextData();
-      }
-
-      try {
-        pid = await NKNClientCaller.sendText([message.to], contentData);
-        message.pid = pid;
-        print('SendMessageSuccess__'+message.contentType.toString()+'__'+message.to.toString());
-        message.setMessageStatus(MessageStatus.MessageSendSuccess);
-      }
-      catch(e) {
-        message.setMessageStatus(MessageStatus.MessageSendFail);
+      else if (message.contentType == ContentType.channelInvitation) {
+        contentData = await _checkIfSendNotification(message);
       }
 
-    // case ContentType.eventContactOptions:
-    //
-    // break;
-    // case ContentType.ChannelInvitation:
-    // contentData = message.toTextData();
-    // break;
-    //   switch (message.contentType){
-    //     case ContentType.text:
-    //     case ContentType.nknImage:
-    //     case ContentType.nknAudio:
-    //       {
-    //
-    //         Map dataInfo = await _checkIfSendNotification(message);
-    //         contentData = jsonEncode(dataInfo);
-    //
-    //         // contentData = message.toTextData();
-    //       }
-    //       break;
-    //     case ContentType.textExtension:
-    //       if (message.options != null && message.options['deleteAfterSeconds'] != null) {
-    //         message.deleteTime = DateTime.now().add(Duration(seconds: message.options['deleteAfterSeconds']));
-    //       }
-    //       contentData = message.toTextData();
-    //       break;
-    //
-    //
-    //     default:
-    //       print('Unhandled Message Type___'+message.contentType);
-    //       break;
-    //   }
-    //
-    //   // Map dataInfo = await _checkIfSendNotification(message);
+      if (_judgeShowReconnect() == false){
+        try{
+          Uint8List pid = await NKNClientCaller.sendText([message.to], contentData, message.msgId);
 
-
+          NLog.w('Pid is-__'+pid.toString());
+          MessageDataCenter.updateMessagePid(pid, message.msgId);
+        }
+        catch(e){
+          NLog.w('Wrong___'+e.toString());
+          message.setMessageStatus(MessageStatus.MessageSendFail);
+        }
+      }
     }
-    bool insertMessageBack = await message.insertMessage();
-    print('InsertMessageToDatabase___'+message.content+'___'+insertMessageBack.toString());
 
+    this.add(RefreshMessageListEvent());
     yield MessageUpdateState(target: message.to, message: message);
   }
 
-  Future<Uint8List> _sendGroupMessage(MessageSchema message) async{
-    Uint8List pid;
+  bool _judgeShowReconnect(){
+    return false;
+  }
+
+  _combineOnePieceMessage(MessageSchema onePieceMessage) async{
+    bool exist = await onePieceMessage.existOnePieceIndex();
+    if (exist == false){
+      await onePieceMessage.insertOnePieceMessage();
+    }
+
+    int total = onePieceMessage.total;
+    int receivedOnePieces = await onePieceMessage.onePieceCount();
+
+    print('Check onePieceCount!!!__'+receivedOnePieces.toString());
+    if (total == receivedOnePieces){
+      print('OnePiece Find');
+      Uint8List fileBytes;
+
+      List allPieces = await onePieceMessage.allPieces();
+
+      print('All Piecei is )__'+allPieces.length.toString());
+      for (int i = 0; i < allPieces.length; i++){
+        MessageSchema onePiece = allPieces[i];
+        print('Content is____'+ onePiece.content.runtimeType.toString());
+        Uint8List pieceList = new Uint8List.fromList(onePiece.content.codeUnits);
+        print('pieceList is____'+ pieceList.toString());
+
+        print('FileBytes length is)___'+fileBytes.length.toString());
+      }
+    }
+    else{
+      /// not enough to Combine the Message
+    }
+  }
+
+  _sendOnePiece(List mpList,MessageSchema parentMessage){
+    for (int index = 0; index < mpList.length; index++){
+      List fileP = mpList[index];
+
+      String content = fileP.toString();
+      var nknOnePieceMessage = MessageSchema.fromSendData(
+        msgId: parentMessage.msgId,
+        from: parentMessage.from,
+        to: parentMessage.to,
+        parentType: parentMessage.contentType,
+
+        content: content,
+        contentType: ContentType.nknOnePiece,
+        index: index,
+        total: mpList.length,
+      );
+      this.add(SendMessageEvent(nknOnePieceMessage));
+    }
+  }
+
+  _sendOnePieceMessage(MessageSchema message) async{
+    File file = message.content as File;
+    var mimeType = mime(file.path);
+    String content;
+
+    if (mimeType.indexOf('image') > -1) {
+      List fileBytesList = file.readAsBytesSync();
+      print('File length is____'+fileBytesList.length.toString());
+
+      int filePieces = fileBytesList.length~/(perPieceLength);
+      int leftPiece = fileBytesList.length%(perPieceLength);
+      if (leftPiece > 0){
+        filePieces += 1;
+      }
+      List filePieceList = new List();
+      for (int i = 0; i < filePieces; i++){
+        int startIndex = i*perPieceLength;
+        int endIndex = (i+1)*perPieceLength;
+        if (endIndex > fileBytesList.length){
+          endIndex = fileBytesList.length;
+        }
+
+        List fileP = fileBytesList.sublist(startIndex,endIndex);
+
+        print('File PLength is___'+fileP.length.toString());
+        if (fileP.length > 10){
+          print('File Piece is___'+i.toString()+'\n'+fileP.sublist(0,10).toString());
+        }
+        else{
+          print('File Final Piece is___'+i.toString()+'\n'+fileP.toString());
+        }
+        filePieceList.add(fileP);
+      }
+
+      _sendOnePiece(filePieceList, message);
+    }
+  }
+
+  _sendGroupMessage(MessageSchema message) async{
     String encodeSendJsonData;
     if (message.contentType == ContentType.text){
-      encodeSendJsonData = message.toTextData();
+      encodeSendJsonData = message.toTextData(null);
     }
-    else if (message.contentType == ContentType.nknImage){
-      encodeSendJsonData = message.toImageData();
+    else if (message.contentType == ContentType.nknImage ||
+             message.contentType == ContentType.media){
+      encodeSendJsonData = message.toImageData(null);
     }
     else if (message.contentType == ContentType.nknAudio){
-      encodeSendJsonData = message.toAudioData();
+      encodeSendJsonData = message.toAudioData(null);
     }
     else if (message.contentType == ContentType.eventSubscribe){
       encodeSendJsonData = message.toEventSubscribeData();
@@ -289,35 +340,39 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     if (isPrivateTopic(message.topic)) {
       List<String> dests = await GroupChatHelper.fetchGroupMembers(message.topic);
       if (dests != null && dests.length > 0){
-        try{
-          pid = await NKNClientCaller.sendText(dests, encodeSendJsonData);
-        }
-        catch(e){
-          print('PrivateGroup Message SendFail____'+e.toString());
-          return null;
+        if (_judgeShowReconnect() == false){
+          Uint8List pid = await NKNClientCaller.sendText(dests, encodeSendJsonData, message.msgId);
+          MessageDataCenter.updateMessagePid(pid, message.msgId);
         }
       }
       else{
-        Global.debugLog('Error no member__'+message.topic);
+        if (message.topic != null){
+          NLog.w('Wrong !!!Topic got no Member'+message.topic);
+        }
       }
     }
     else {
-      List<String> members = await GroupChatHelper.fetchGroupMembers(message.topic);
-      print('GroupMember count is__'+members.length.toString()+'__');
-      try{
-        pid = await NKNClientCaller.publishText(genTopicHash(message.topic), encodeSendJsonData);
-        print('Publish Message toGroupSuccess__'+message.content.toString());
+      if (_judgeShowReconnect() == false){
+        Uint8List pid;
+        try{
+          pid = await NKNClientCaller.publishText(genTopicHash(message.topic), encodeSendJsonData);
+          message.setMessageStatus(MessageStatus.MessageSendSuccess);
+        }
+        catch(e){
+          message.setMessageStatus(MessageStatus.MessageSendFail);
+        }
+        if (pid != null) {
+          MessageDataCenter.updateMessagePid(pid, message.msgId);
+        }
       }
-      catch(e){
-        print('PublishMessage SendFail____'+e.toString());
-        return null;
-      }
-      Global.debugLog('PublishText to Topic__'+message.topic+'__'+message.content);
     }
-    return pid;
   }
 
   _judgeIfCanSendLocalMessageNotification(String title, MessageSchema message) async{
+
+    // final String title = (topic?.isPrivate ?? false) ? topic.shortName : contact.name;
+
+
     if (Platform.isAndroid){
       if (googleServiceOnInit == false){
         if (Platform.isAndroid){
@@ -334,178 +389,234 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     }
   }
 
-  _debugLogMessage(MessageSchema message,int type){
-    String typeString = 'Sending_____\n';
-    if (type == 1){
-      typeString = 'Received_____\n';
-    }
-    if (message.contentType != null){
-      Global.debugLog('$typeString'+'Message ContentType is___'+message.contentType.toString());
-    }
-    if (message.topic != null){
-      Global.debugLog('$typeString'+'Message Topic is___'+message.topic.toString());
-    }
-    if (message.content != null){
-      Global.debugLog('$typeString'+'Message Content is___'+message.content.toString());
-    }
-    if (message.from != null){
-      Global.debugLog('$typeString'+'Message From is___'+message.from.toString());
-    }
-  }
+  _insertMessage(MessageSchema message) async{
+    bool insertReceiveSuccess = await message.insertReceivedMessage();
+    if (insertReceiveSuccess){
+      message.setMessageStatus(MessageStatus.MessageReceived);
+      message.sendReceiptMessage();
 
-  _handleEntityMessage(MessageSchema message) async{
-    DateTime nDate = DateTime.now();
-    int timeGap = nDate.millisecondsSinceEpoch - message.timestamp.millisecondsSinceEpoch;
-    print('timeGap is___'+timeGap.toString());
-
-    /// Consider as OnlineMessage,If not consider the User is offline
-    if (timeGap/1000 < 5*60){
-      bool insertReceiveSuccess = await message.insertMessage();
-      if (insertReceiveSuccess){
-        message.setMessageStatus(MessageStatus.MessageReceived);
-        message.sendReceiptMessage();
-
-        print('Insert IM Received Message__'+message.content);
-        var unReadCount = await MessageSchema.unReadMessages();
-        FlutterAppBadger.updateBadgeCount(unReadCount);
-        this.add(RefreshMessageListEvent());
-        this.add(UpdateMessageEvent(message));
-      }
+      var unReadCount = await MessageSchema.unReadMessages();
+      FlutterAppBadger.updateBadgeCount(unReadCount);
     }
     else{
-      _addToBatchReceiveMessage(message);
+      NLog.w('Insert Message failed'+message.contentType.toString());
     }
   }
 
   Stream<ChatState> _mapReceiveMessageToState(ReceiveMessageEvent event) async* {
     var message = event.message;
-    _debugLogMessage(message,1);
 
-    if (await message.isExist()) {
-      print('ReceiveMessage from AnotherNode__');
+    bool messageExist = await message.isReceivedMessageExist();
+    if (messageExist == true) {
+
+      /// should retry here!!!
+      if (message.isSuccess == false &&
+          message.contentType != ContentType.nknOnePiece) {
+        message.sendReceiptMessage();
+      }
+      NLog.w('ReceiveMessage from AnotherNode__');
       return;
     }
 
-    Topic topic;
-    /// message.topic is not null Means TopicChat
-    if (message.topic != null){
-      topic = await GroupChatHelper.fetchTopicInfoByName(message.topic);
-      if (topic == null){
-        /// check Block pool if the group contains Me If so, CreateGroup and join
-        return;
-      }
-      else{
-        /// Check If the Group contains the Member;
-        bool existMember = await GroupChatHelper.checkMemberIsInGroup(message.from, message.topic);
-        if (existMember == false){
-          GroupChatPublicChannel.pullSubscribersPublicChannel(
-            topicName: message.topic,
-            membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
-          );
-        }
-        else{
-          /// If Received self Send
-          if (message.from == NKNClientCaller.pubKey){
-            message.receiptTopic();
-            message.setMessageStatus(MessageStatus.MessageSendReceipt);
-            yield MessageUpdateState(target: message.from, message: message);
-            return;
-          }
-
-          if (message.contentType == ContentType.text ||
-              message.contentType == ContentType.textExtension ||
-              message.contentType == ContentType.nknAudio ||
-              message.contentType == ContentType.nknImage){
-            if (message.contentType == ContentType.nknImage ||
-                message.contentType == ContentType.nknAudio){
-              message.loadMedia(this);
-              print('message LoadMedia'+message.contentType);
-            }
-
-            _handleEntityMessage(message);
-            yield MessageUpdateState(target: message.from, message: message);
-          }
-        }
+    /// todo Need Check
+    ContactSchema contact = await _checkContactIfExists(message.from);
+    if (!contact.isMe && message.contentType != ContentType.contact &&
+        Global.isLoadProfile(contact.publicKey)) {
+      if (contact.profileExpiresAt == null ||
+          DateTime.now().isAfter(contact.profileExpiresAt)) {
+        Global.saveLoadProfile(contact.publicKey);
+        contact.requestProfile(RequestType.header, contact.profileVersion);
       }
     }
-    else{
-      var contact = await _checkContactIfExists(message.from);
 
-      if (message.contentType == ContentType.eventContactOptions){
-        _checkBurnOptions(message, contact);
-      }
-      if (message.contentType == ContentType.text ||
-          message.contentType == ContentType.textExtension ||
-          message.contentType == ContentType.nknImage ||
-          message.contentType == ContentType.nknAudio){
-        _checkBurnOptions(message, contact);
+    if (message.contentType == ContentType.text ||
+        message.contentType == ContentType.textExtension ||
+        message.contentType == ContentType.nknAudio ||
+        message.contentType == ContentType.nknImage ||
+        message.contentType == ContentType.media ||
+        message.contentType == ContentType.eventContactOptions ||
+        message.contentType == ContentType.eventSubscribe ||
+        message.contentType == ContentType.eventUnsubscribe ||
+        message.contentType == ContentType.channelInvitation) {
+      /// If Received self Send
+      if (message.from == NKNClientCaller.currentChatId) {
+        message.receiptTopic();
 
-        if (message.contentType == ContentType.nknImage ||
-            message.contentType == ContentType.nknAudio){
-          message.loadMedia(this);
-          print('message LoadMedia'+message.contentType);
-        }
+        NLog.w('Message.tiocdakjsdka is____'+message.topic.toString());
+        NLog.w('Message.tiocdakjsdka is____'+message.topic.toString());
+        message.content = message.msgId;
+        message.contentType = ContentType.receipt;
+        message.topic = null;
 
-        _handleEntityMessage(message);
         yield MessageUpdateState(target: message.from, message: message);
         return;
       }
+      else{
+        message.setMessageStatus(MessageStatus.MessageReceived);
+        _insertMessage(message);
+      }
+    }
+    else {
+      /// todo Other Unsupported Message
+      NLog.w('Wrong!!!!___'+message.contentType.toString());
+      NLog.w('Wrong!!!!___'+message.content.toString());
+    }
+    /// Media Message
+    if (message.contentType == ContentType.nknAudio ||
+        message.contentType == ContentType.nknImage ||
+        message.contentType == ContentType.media) {
+      message.loadMedia(this);
+    }
 
-      if (message.contentType == ContentType.contact){
+    if (message.topic != null) {
+      /// Group Message
+      Topic topic = await GroupChatHelper.fetchTopicInfoByName(message.topic);
+
+      if (topic == null) {
+        await GroupChatHelper.insertTopicIfNotExists(message.topic);
+
+        GroupChatPublicChannel.pullSubscribersPublicChannel(
+          topicName: message.topic,
+          membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
+        );
+      }
+      else {
+        bool existMember = await GroupChatHelper.checkMemberIsInGroup(
+            message.from, message.topic);
+        if (existMember == false) {
+          NLog.w('Exist no Member___' + message.from.toString());
+
+          /// insertMember
+          Subscriber sub = Subscriber(
+              id: 0,
+              topic: message.topic.toString(),
+              chatId: message.from.toString(),
+              indexPermiPage: -1,
+              timeCreate: DateTime
+                  .now()
+                  .millisecondsSinceEpoch,
+              blockHeightExpireAt: -1,
+              uploaded: true,
+              subscribed: true,
+              uploadDone: true);
+
+          await GroupChatHelper.insertSubscriber(sub);
+          GroupChatPublicChannel.pullSubscribersPublicChannel(
+            topicName: message.topic,
+            membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
+          );
+        }
+      }
+    }
+    else {
+      /// Single Message
+      var contact = await _checkContactIfExists(message.from);
+      if (message.contentType == ContentType.text ||
+          message.contentType == ContentType.textExtension ||
+          message.contentType == ContentType.media ||
+          message.contentType == ContentType.nknImage ||
+          message.contentType == ContentType.nknAudio) {
+        message.sendReceiptMessage();
+        _checkBurnOptions(message, contact);
+      }
+      else if (message.contentType == ContentType.nknOnePiece) {
+        // print('Received One Piece___'+message.content.toString());
+        print('Received One Piece Index___' + message.index.toString());
+        print('Received One Piece Total___' + message.total.toString());
+        print('Message.content is___' + message.content.toString());
+        _combineOnePieceMessage(message);
+      }
+
+      /// Operation Message
+      else if (message.contentType == ContentType.contact) {
         Map<String, dynamic> data;
         try {
           data = jsonDecode(message.content);
         }
         on FormatException catch (e) {
-          Global.debugLog('ContentType.contact E:'+e.toString());
+          NLog.w('ContentType.contact Wrong!' + e.toString());
         }
-        if (data['requestType'] == RequestType.header) {
-          contact.responseProfile(type: RequestType.header);
-        } else if (data['requestType'] == RequestType.full) {
-          contact.responseProfile(type: RequestType.full);
-        } else {
+
+        /// Receive Contact Request
+        if (data['requestType'] != null) {
+          if (data['version'] != null) {
+            print('requestType version is___' + data['version'].toString());
+            if (data['requestType'] == RequestType.header) {
+              contact.responseProfile(RequestType.header, data['version']);
+            }
+            else if (data['requestType'] == RequestType.full) {
+              contact.responseProfile(RequestType.full, data['version']);
+            }
+          }
+          else {
+            /// 1.1.0 Version fit 1.0.3 before
+            if (data['requestType'] == RequestType.header) {
+              NLog.w('1.1.0 Version fit 1.0.3 before response a header');
+
+              contact.responseProfile(RequestType.header, data['version']);
+            }
+            else if (data['requestType'] == RequestType.full) {
+              NLog.w('RequestType.full to null Version');
+              contact.profileExpiresAt = DateTime.now();
+              contact.updateExpiresAtTime();
+              contact.responseProfile(RequestType.full, data['version']);
+            }
+            NLog.w('Wrong!!! data[version] is null');
+          }
+        }
+        /// Receive Contact Response
+        else {
           if (data['version'] != contact.profileVersion) {
+            if (data['responseType'] == RequestType.header) {
+              await contact.setOrUpdateBasicProfile(data);
+            }
+            else if (data['responseType'] == RequestType.full) {
+              await contact.setOrUpdateExtraProfile(data);
+            }
             if (data['content'] == null) {
-              contact.requestProfile(type: RequestType.full);
-            } else {
-              await contact.setProfile(data);
+              print('Received old Content__' + data.toString());
+              contact.requestProfile(RequestType.full, contact.profileVersion);
+            }
+            else {
+              await contact.setOrUpdateExtraProfile(data);
               contactBloc.add(LoadContact(address: [message.from]));
             }
           }
+          else {
+            NLog.w('Wrong!!!!! contactVersion is' +
+                contact.profileVersion.toString());
+            NLog.w('Wrong!!!!! dataVersion is' + data['version'].toString());
+          }
         }
       }
-      if (message.contentType == ContentType.eventContactOptions){
+      else if (message.contentType == ContentType.eventContactOptions) {
         Map<String, dynamic> data;
         try {
           data = jsonDecode(message.content);
         } on FormatException catch (e) {
-          Global.debugLog('ContentType.eventContactOptions E:'+e.toString());
+          NLog.w('ContentType.eventContactOptions E:' + e.toString());
         }
-        if (data['optionType'] == 0 || data['optionType'] == '0'){
+        if (data['optionType'] == 0 || data['optionType'] == '0') {
+          _checkBurnOptions(message, contact);
           await contact.setBurnOptions(data['content']['deleteAfterSeconds']);
         }
-        else{
+        else {
           await contact.setDeviceToken(data['content']['deviceToken']);
         }
         contactBloc.add(LoadContact(address: [contact.clientAddress]));
       }
-
-      if (message.contentType == ContentType.eventSubscribe ||
-          message.contentType == ContentType.eventUnsubscribe){
-        Global.debugLog('Received ContentType.eventSubscribe__'+ContentType.eventSubscribe);
-        Global.removeTopicCache(message.topic);
-        if (message.from == NKNClientCaller.currentChatId) {
-        } else {
+      else if (message.contentType == ContentType.eventSubscribe ||
+          message.contentType == ContentType.eventUnsubscribe) {
+        if (message.from == NKNClientCaller.currentChatId) {} else {
           assert(message.topic.nonNull);
           if (isPrivateTopic(message.topic)) {
-            print('PrivateGroup __'+ContentType.eventSubscribe);
             await GroupChatPrivateChannel.pullSubscribersPrivateChannel(
                 topicName: message.topic,
-                membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+                membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
                 needUploadMetaCallback: (topicName) {
                   GroupChatPrivateChannel.uploadPermissionMeta(
                     topicName: topicName,
-                    accountPubkey: NKNClientCaller.pubKey,
+                    accountPubkey: NKNClientCaller.currentChatId,
                     repoSub: SubscriberRepo(),
                     repoBlackL: BlackListRepo(),
                   );
@@ -514,60 +625,37 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
             GroupChatPublicChannel.pullSubscribersPublicChannel(
               topicName: message.topic,
               myChatId: NKNClientCaller.currentChatId,
-              membersBloc: BlocProvider.of<ChannelMembersBloc>(Global.appContext),
+              membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
             );
           }
         }
       }
 
       /// Receipt sendMessage do not need InsertToDataBase
-      if (message.contentType == ContentType.receipt){
-        message.receiptMessage();
-        print('Received ReceiptMessage');
-      }
-      else{
-        if (message.contentType == ContentType.text ||
-        message.contentType == ContentType.textExtension ||
-        message.contentType == ContentType.nknImage ||
-        message.contentType == ContentType.nknAudio){
-          yield MessageUpdateState(target: message.from, message: message);
+      else if (message.contentType == ContentType.receipt) {
+        int count = await message.receiptMessage();
+
+        if (count == 0) {
+          print('Duplicate insert');
+          message.insertReceivedMessage();
         }
-        else{
-          print('Enter Old Logic');
-          print('__message.contentType__'+ message.contentType.toString());
-          /// loadUserProfile
-          // final String title = (topic?.isPrivate ?? false) ? topic.shortName : contact.name;
-          // if (!contact.isMe && message.contentType != ContentType.contact && Global.isLoadProfile(contact.publicKey)) {
-          //   if (contact.profileExpiresAt == null || DateTime.now().isAfter(contact.profileExpiresAt)) {
-          //     Global.saveLoadProfile(contact.publicKey);
-          //     contact.requestProfile();
-          //   }
-          // }
-          // _judgeIfCanSendLocalMessageNotification(title, message);
-          //
-          // bool insertReceiveSuccess = await message.insertMessage();
-          // if (insertReceiveSuccess){
-          //   message.setMessageStatus(MessageStatus.MessageReceived);
-          //   message.sendReceiptMessage();
-          //
-          //   print('Insert NormalMessage__'+message.content);
-          //   var unReadCount = await MessageSchema.unReadMessages();
-          //   FlutterAppBadger.updateBadgeCount(unReadCount);
-          // }
-          // else{
-          //   showToast('Inert database failed');
-          // }
-        }
+        NLog.w('Received ReceiptMessage'+message.content.toString());
+
+        _startWatchDog(message);
       }
-      yield MessageUpdateState(target: message.from, message: message);
+      else {
+        NLog.w('Wrong!!! MessageType unhandled___'+message.contentType.toString());
+      }
     }
+    this.add(RefreshMessageListEvent());
+    yield MessageUpdateState(target: message.from, message: message);
   }
 
   Stream<ChatState> _mapGetAndReadMessagesToState(GetAndReadMessages event) async* {
     if (event.target != null) {
       MessageSchema.getAndReadTargetMessages(event.target);
     }
-    print('From _mapGetAndReadMessagesToState');
+    NLog.w('From _mapGetAndReadMessagesToState');
     yield MessageUpdateState(target: event.target);
   }
 
@@ -585,43 +673,62 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
   Future<ContactSchema> _checkContactIfExists(String clientAddress) async {
     var contact = await ContactSchema.fetchContactByAddress(clientAddress);
     if (contact == null) {
-      Global.debugLog('Insert contact stranger__'+clientAddress.toString());
-
       /// need Test
-      var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(
-      getPublicKeyByClientAddr(clientAddress));
-      print('Insert contact__clientAddress__\n'+clientAddress+'walletAddress__\n'+walletAddress.toString());
+      var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+
+      if (clientAddress != null){
+        NLog.w('Insert contact stranger__'+clientAddress.toString());
+      }
+      else{
+        NLog.w('got clientAddress Wrong!!!');
+      }
+      if (walletAddress == null){
+        NLog.w('got walletAddress Wrong!!!');
+      }
+
       contact = ContactSchema(type: ContactType.stranger,
           clientAddress: clientAddress,
           nknWalletAddress: walletAddress);
       await contact.insertContact();
+      NLog.w('Contact is___'+contact.clientAddress.toString());
+      NLog.w('Contact is____'+contact.name.toString());
+      NLog.w('Contact is___'+contact.profileVersion.toString());
     }
     return contact;
   }
 
   /// check need send Notification
-  Future<Map> _checkIfSendNotification(MessageSchema message) async{
+  Future<String> _checkIfSendNotification(MessageSchema message) async{
     Map dataInfo;
-    if (message.contentType == ContentType.text || message.contentType == ContentType.textExtension){
-      dataInfo = jsonDecode(message.toTextData());
-    }
-    else if (message.contentType == ContentType.nknImage){
-      dataInfo = jsonDecode(message.toImageData());
-    }
-    else if (message.contentType == ContentType.nknAudio){
-      dataInfo = jsonDecode(message.toAudioData());
-    }
     ContactSchema contact = await _checkContactIfExists(message.to);
+
     if (contact.deviceToken != null && contact.deviceToken.length > 0){
-      String pushContent = NL10ns.of(Global.appContext).notification_push_content;
-      pushContent = 'New Message!';
+      // String pushContent = NL10ns.of(Global.appContext).notification_push_content;
+      String pushContent = 'New Message!';
       // pushContent = "from:"+accountChatId.substring(0, 8) + "...";
       // pushContent = 'You have New Message!';
-      Global.debugLog('Send Push notification content is '+pushContent);
+
+      if (pushContent != null && pushContent.length > 0){
+        NLog.w('Send Push notification content__'+pushContent);
+      }
+      dataInfo = new Map();
       dataInfo['deviceToken'] = contact.deviceToken;
       dataInfo['pushContent'] = pushContent;
     }
 
-    return dataInfo;
+    String sendContent = '';
+    if (message.contentType == ContentType.text ||
+        message.contentType == ContentType.textExtension ||
+        message.contentType == ContentType.channelInvitation) {
+      sendContent = message.toTextData(dataInfo);
+    }
+    else if (message.contentType == ContentType.nknImage ||
+        message.contentType == ContentType.media){
+      sendContent = message.toImageData(dataInfo);
+    }
+    else if (message.contentType == ContentType.nknAudio){
+      sendContent = message.toAudioData(dataInfo);
+    }
+    return sendContent;
   }
 }

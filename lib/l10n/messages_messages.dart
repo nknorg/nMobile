@@ -259,7 +259,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "recent" : MessageLookupByLibrary.simpleMessage("Recently"),
     "rejected" : MessageLookupByLibrary.simpleMessage("rejected"),
     "remark" : MessageLookupByLibrary.simpleMessage("Remark"),
-    "remote_notification" : MessageLookupByLibrary.simpleMessage("Message Noitification"),
+    "remote_notification" : MessageLookupByLibrary.simpleMessage("Message Notification"),
     "rename" : MessageLookupByLibrary.simpleMessage("Rename"),
     "save" : MessageLookupByLibrary.simpleMessage("Save"),
     "save_contact" : MessageLookupByLibrary.simpleMessage("Save Contact"),

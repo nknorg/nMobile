@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:nmobile/blocs/chat/channel_members.dart';
+import 'package:nmobile/blocs/chat/channel_bloc.dart';
+import 'package:nmobile/blocs/chat/channel_event.dart';
+import 'package:nmobile/blocs/chat/channel_state.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
@@ -16,7 +18,6 @@ import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
@@ -27,6 +28,7 @@ import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class ChannelMembersScreen extends StatefulWidget {
@@ -63,19 +65,27 @@ class MemberVo {
 class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
   ScrollController _scrollController = ScrollController();
   List<MemberVo> _members = [];
-  ChatBloc _chatBloc;
+
   int _topicCount;
   SubscriberRepo repoSub;
   BlackListRepo repoBla;
+
+  ChatBloc _chatBloc;
+  ChannelBloc _channelBloc;
 
   @override
   void initState() {
     super.initState();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
+    _channelBloc = BlocProvider.of<ChannelBloc>(context);
+
     repoSub = SubscriberRepo();
     repoBla = BlackListRepo();
-    _topicCount = widget.topic.numSubscribers;
-    refreshMembers();
+    // _topicCount = widget.topic.numSubscribers;
+
+    _refreshMemberList();
+    NLog.w('MemberList called!!!!!');
+
     uploadPermissionMeta();
   }
 
@@ -83,67 +93,37 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
     if (widget.topic.isPrivate && widget.topic.isOwner(NKNClientCaller.currentChatId)) {
       GroupChatPrivateChannel.uploadPermissionMeta(
         topicName: widget.topic.topic,
-        accountPubkey: NKNClientCaller.pubKey,
+        accountPubkey: NKNClientCaller.currentChatId,
         repoSub: repoSub,
         repoBlackL: repoBla,
       );
     }
   }
 
-  refreshMembers() async {
-    List<MemberVo> list = [];
-    final subscribers = await repoSub.getByTopicExceptNone(widget.topic.topic);
-    for (final sub in subscribers) {
-      final contactType = sub.chatId == NKNClientCaller.currentChatId ? ContactType.me : ContactType.stranger;
-      final cta = await ContactSchema.fetchContactByAddress(sub.chatId) ?? ContactSchema(clientAddress: sub.chatId, type: contactType);
-      list.add(MemberVo(
-        name: cta.name,
-        chatId: sub.chatId,
-        indexPermiPage: sub.indexPermiPage,
-        uploaded: sub.uploaded,
-        subscribed: sub.subscribed,
-        isBlack: false,
-        contact: cta,
-      ));
-    }
-    final blackList = await repoBla.getByTopic(widget.topic.topic);
-    for (final sub in blackList) {
-      final contactType = (sub.chatIdOrPubkey == NKNClientCaller.currentChatId || sub.chatIdOrPubkey == NKNClientCaller.currentChatId) ? ContactType.me : ContactType.stranger;
-      final cta = await ContactSchema.fetchContactByAddress(sub.chatIdOrPubkey) ?? ContactSchema(clientAddress: sub.chatIdOrPubkey, type: contactType);
-      list.add(MemberVo(
-        name: cta.name,
-        chatId: sub.chatIdOrPubkey,
-        indexPermiPage: sub.indexPermiPage,
-        uploaded: sub.uploaded,
-        subscribed: sub.subscribed,
-        isBlack: true,
-        contact: cta,
-      ));
-    }
-    _members = list;
-    _topicCount = _members.length;
-    if (mounted) {
-      setState(() {});
-    }
-    // TODO: ???
-    Global.removeTopicCache(widget.topic.topic);
+  _refreshMemberList(){
+    // _channelBloc.add(ChannelMemberCountEvent(widget.topic.topic));
+    _channelBloc.add(FetchChannelMembersEvent(widget.topic.topic));
   }
+
+  // refreshMembers() async {
+  //
+  //   // _cha
+  //   //
+  //   // NLog.w('Got _members is____'+_members.length.toString());
+  //   //
+  //   // if (mounted) {
+  //   //   setState(() {
+  //   //     _members = list;
+  //   //     NLog.w('Got _members is____'+_members.length.toString());
+  //   //   });
+  //   // }
+  // }
 
   @override
   Widget build(BuildContext context) {
-    if (_members.length > 0) {
-      MemberVo owner = !widget.topic.isPrivate ? null : _members.firstWhere((c) => widget.topic.isOwner(c.chatId), orElse: () => null);
-      if (owner != null) _members.remove(owner);
-      MemberVo me = _members.firstWhere((c) => c.chatId == NKNClientCaller.currentChatId, orElse: () => null);
-      if (me != null) _members.remove(me);
-      _members.sort((a, b) => (a.isBlack && b.isBlack || !a.isBlack && !b.isBlack) ? a.name.compareTo(b.name) : (!a.isBlack ? -1 : 1));
-      if (me != null) _members.insert(0, me);
-      if (owner != null && owner != me) _members.insert(0, owner);
-    }
+
     List<Widget> topicWidget = [Label(widget.topic.shortName, type: LabelType.h3, dark: true)];
-    if (widget.topic.type == TopicType.private) {
-      topicWidget.insert(0, loadAssetIconsImage('lock', width: 18, color: DefaultTheme.fontLightColor).pad(r: 2));
-    }
+
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
@@ -181,16 +161,10 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(children: topicWidget),
-                    BlocBuilder<ChannelMembersBloc, ChannelMembersState>(builder: (context, state) {
-                      if (state.membersCount != null && state.membersCount.topicName == widget.topic.topic) {
-                        final count = state.membersCount.subscriberCount;
-                        if (_topicCount == null || count > _topicCount
-                            // only count of white list(subscribers), but here contains black list.
-                            /* || state.membersCount.isFinal*/) {
-                          _topicCount = count;
-                        }
-                        if (state.membersCount.isFinal) {
-                          // refreshMembers();
+                    BlocBuilder<ChannelBloc, ChannelState>(builder: (context, state) {
+                      if (state is ChannelMembersState){
+                        if (state.memberCount != null && state.topicName == widget.topic.topic){
+                          _topicCount = state.memberCount;
                         }
                       }
                       return Label(
@@ -214,15 +188,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                   children: <Widget>[
                     Expanded(
                       flex: 1,
-                      child: ListView.builder(
-                        padding: EdgeInsets.only(top: 4, bottom: 32),
-                        controller: _scrollController,
-                        itemCount: _members.length,
-                        itemExtent: 72,
-                        itemBuilder: (BuildContext context, int index) {
-                          return getItemView(_members[index]);
-                        },
-                      ),
+                      child: _memberListWidget(),
                     ),
                   ],
                 ),
@@ -232,6 +198,41 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
         ],
       ),
     );
+  }
+
+  Widget _memberListWidget(){
+    List<Widget> topicWidget = [Label(widget.topic.shortName, type: LabelType.h3, dark: true)];
+
+    return BlocBuilder<ChannelBloc, ChannelState>(
+        builder: (context, channelState){
+          NLog.w('channel state is___'+channelState.toString());
+          if (channelState is FetchChannelMembersState){
+            _members = channelState.memberList;
+            _topicCount = _members.length;
+
+            if (_members.length > 0) {
+              MemberVo owner = !widget.topic.isPrivate ? null : _members.firstWhere((c) => widget.topic.isOwner(c.chatId), orElse: () => null);
+              if (owner != null) _members.remove(owner);
+              MemberVo me = _members.firstWhere((c) => c.chatId == NKNClientCaller.currentChatId, orElse: () => null);
+              if (me != null) _members.remove(me);
+              _members.sort((a, b) => (a.isBlack && b.isBlack || !a.isBlack && !b.isBlack) ? a.name.compareTo(b.name) : (!a.isBlack ? -1 : 1));
+              if (me != null) _members.insert(0, me);
+              if (owner != null && owner != me) _members.insert(0, owner);
+            }
+            if (widget.topic.type == TopicType.private) {
+              topicWidget.insert(0, loadAssetIconsImage('lock', width: 18, color: DefaultTheme.fontLightColor).pad(r: 2));
+            }
+          }
+          return ListView.builder(
+            padding: EdgeInsets.only(top: 4, bottom: 32),
+            controller: _scrollController,
+            itemCount: _members.length,
+            itemExtent: 72,
+            itemBuilder: (BuildContext context, int index) {
+                return getItemView(_members[index]);
+              },
+          );
+        });
   }
 
   getItemView(MemberVo member) {
@@ -285,6 +286,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
 
   List<Widget> getNameLabels(MemberVo member) {
     String name = member.name;
+    NLog.w('getNameLabels____'+member.name);
     String option;
     if (widget.topic.type == TopicType.private) {
       if (widget.topic.isOwner(member.chatId /*.toPubkey*/)) {
@@ -295,7 +297,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
         }
       } else if (member.chatId == NKNClientCaller.currentChatId) {
         option = '(${NL10ns.of(context).you})';
-      } else if (widget.topic.isOwner(NKNClientCaller.pubKey)) {
+      } else if (widget.topic.isOwner(NKNClientCaller.currentChatId)) {
         // Me is owner, but current user is not me.
         option = member.isBlack
             ? '(${NL10ns.of(context).rejected})'
@@ -331,14 +333,14 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
 
   List<Widget> getToolBtns(MemberVo member) {
     List<Widget> toolBtns = <Widget>[];
-    if (widget.topic.isPrivate && widget.topic.isOwner(NKNClientCaller.pubKey) && member.chatId != NKNClientCaller.currentChatId) {
+    if (widget.topic.isPrivate && widget.topic.isOwner(NKNClientCaller.currentChatId) && member.chatId != NKNClientCaller.currentChatId) {
       acceptAction() async {
         if (member.isBlack) {
           await GroupChatHelper.moveSubscriberToWhiteList(
               topic: widget.topic,
               chatId: member.chatId,
               callback: () {
-                refreshMembers();
+                _refreshMemberList();
               });
         }
         showToast(NL10ns.of(context).accepted);
@@ -350,7 +352,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
               topic: widget.topic,
               chatId: member.chatId,
               callback: () {
-                refreshMembers();
+                _refreshMemberList();
               });
         }
         showToast(NL10ns.of(context).rejected);
@@ -379,16 +381,16 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
 
     final topic = widget.topic;
     // Anyone can invite anyone.
-    var sendMsg = MessageSchema.fromSendData(from: NKNClientCaller.currentChatId, content: topic.topic, to: address, contentType: ContentType.ChannelInvitation);
+    var sendMsg = MessageSchema.fromSendData(from: NKNClientCaller.currentChatId, content: topic.topic, to: address, contentType: ContentType.channelInvitation);
     _chatBloc.add(SendMessageEvent(sendMsg));
     showToast(NL10ns.of(context).invitation_sent);
 
-    if (topic.isPrivate && topic.isOwner(NKNClientCaller.pubKey) && address != NKNClientCaller.currentChatId) {
+    if (topic.isPrivate && topic.isOwner(NKNClientCaller.currentChatId) && address != NKNClientCaller.currentChatId) {
       await GroupChatHelper.moveSubscriberToWhiteList(
           topic: topic,
           chatId: address,
           callback: () {
-            refreshMembers();
+            _refreshMemberList();
           });
     }
   }
