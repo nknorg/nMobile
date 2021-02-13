@@ -7,11 +7,14 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flustars/flustars.dart';
 import 'package:flutter/services.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 class NKNClientCaller{
 
@@ -41,31 +44,47 @@ class NKNClientCaller{
   static NKNClientBloc clientBloc;
   static Map<String, Completer> _clientEventQueue = Map<String, Completer>();
 
-  createClient(Uint8List seed, String identifier, String clientUrl){
-    String eventId = _formEventID();
-    Completer completer = _clientEventQueue[eventId];
-    print('CreateClient Called'+eventId+'__'+seed.toString());
+  static Map<String, Map> _clientEventData = Map<String, Map>();
+
+  createClient(Uint8List seed, String identifier, String clientAddress){
+    Completer<String> completer = Completer<String>();
+    String eventId = completer.hashCode.toString();
+    _clientEventQueue[eventId] = completer;
+
+    String saveKey = LocalStorage.NKN_RPC_NODE_LIST+'_'+clientAddress.toString();
+    String rpcNodeListString = SpUtil.getString(saveKey);
+
+    if (rpcNodeListString != null){
+      if (rpcNodeListString.split(',').length > 10){
+
+      }
+      NLog.w('rpcNodeList read is__'+rpcNodeListString);
+    }
+    else{
+      rpcNodeListString = '';
+    }
+
+    NLog.w('CreateClient Called');
     try {
       _methodChannel.invokeMethod('createClient', {
         '_id': eventId,
         'identifier': identifier,
         'seedBytes': seed,
-        'clientUrl': clientUrl,
+        'rpcNodeList': rpcNodeListString,
       });
     } catch (e) {
-      Global.debugLog('createClient E:'+e.toString());
+      NLog.w('createClient E:'+e.toString());
       completer.completeError(e);
     }
   }
 
-  static String pubKey = '';
+  // static String pubKey = '';
   static String currentChatId = '';
 
-  setPubkeyAndChatId(String pubKey,String chatId){
-    NKNClientCaller.pubKey = pubKey;
+  setChatId(String chatId){
+    // NKNClientCaller.pubKey = pubKey;
     NKNClientCaller.currentChatId = chatId;
 
-    Global.debugLog('Change PubKey:'+pubKey+'\n'+'Change chatId:'+chatId);
   }
 
   static connectNKN(){
@@ -77,42 +96,47 @@ class NKNClientCaller{
     _methodChannel.invokeMethod('disConnect');
   }
 
-  static Future<Uint8List> sendText(List<String> dests, String data, {int maxHoldingSeconds = -1}) async {
+  static Future<Uint8List> sendText(List<String> dests, String data, String messageId) async {
     Completer<Uint8List> completer = Completer<Uint8List>();
-    String id = completer.hashCode.toString();
-    _clientEventQueue[id] = completer;
-    completer.future.whenComplete(() {
-      _clientEventQueue.remove(id);
-    });
+    String eventId = completer.hashCode.toString();
+    _clientEventQueue[eventId] = completer;
+
+    Map sendData = {
+      '_id': eventId,
+      'dests': dests,
+      'data': data,
+      'maxHoldingSeconds': -1,
+      'msgId': messageId,
+    };
+    _clientEventData[eventId] = sendData;
+
     try {
-      _methodChannel.invokeMethod('sendText', {
-        '_id': id,
-        'dests': dests,
-        'data': data,
-        'maxHoldingSeconds': maxHoldingSeconds,
-      });
-    } catch (e) {
+      _methodChannel.invokeMethod('sendText', sendData);
+    }
+    catch (e) {
+      NLog.w('sendText completeE:'+e.toString());
       completer.completeError(e);
     }
     return completer.future;
   }
 
   /// GroupChat sendText
-  static Future<Uint8List> publishText(String topicHash, String data, {int maxHoldingSeconds = -1}) async {
+  static Future<Uint8List> publishText(String topicHash, String data) async {
     Completer<Uint8List> completer = Completer<Uint8List>();
-    String id = completer.hashCode.toString();
-    _clientEventQueue[id] = completer;
-    completer.future.whenComplete(() {
-      _clientEventQueue.remove(id);
-    });
+    String eventId = completer.hashCode.toString();
+    _clientEventQueue[eventId] = completer;
+
+    Map publishData = {
+      '_id': eventId,
+      'topicHash': topicHash,
+      'data': data,
+      'maxHoldingSeconds': -1,
+    };
+    _clientEventData[eventId] = publishData;
     try {
-      _methodChannel.invokeMethod('publishText', {
-        '_id': id,
-        'topicHash': topicHash,
-        'data': data,
-        'maxHoldingSeconds': maxHoldingSeconds,
-      });
-    } catch (e) {
+      _methodChannel.invokeMethod('publishText', publishData);
+    }
+    catch (e) {
       completer.completeError(e);
     }
     return completer.future;
@@ -129,60 +153,85 @@ class NKNClientCaller{
     Completer<String> completer = Completer<String>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
-    _methodChannel.invokeMethod('subscribe', {
+
+    Map dataInfo = {
       '_id': id,
       'identifier': identifier,
       'topicHash': topicHash,
       'duration': duration,
       'fee': fee,
       'meta': meta,
-    });
-    return completer.future.whenComplete(() {
-      _clientEventQueue.remove(id);
-    });
+    };
+    try{
+      _methodChannel.invokeMethod('subscribe', dataInfo);
+
+    }
+    catch(e){
+      NLog.w('subscribe completeE:'+e.toString());
+      completer.completeError(e);
+    }
+    return completer.future;
   }
 
   static Future<String> unsubscribe({String identifier = '', String topicHash, String fee = '0'}) async {
     Completer<String> completer = Completer<String>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
-    _methodChannel.invokeMethod('unsubscribe', {
+
+    Map dataInfo = {
       '_id': id,
       'identifier': identifier,
       'topicHash': topicHash,
       'fee': fee,
-    });
-    return completer.future.whenComplete(() {
-      _clientEventQueue.remove(id);
-    });
+    };
+    try{
+      _methodChannel.invokeMethod('unsubscribe', dataInfo);
+    }
+    catch(e){
+      NLog.w('unsubscribe completeE:'+e.toString());
+      completer.completeError(e);
+    }
+    return completer.future;
   }
 
   static Future<int> getSubscribersCount(String topicHash) async {
     Completer<int> completer = Completer<int>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
-    _methodChannel.invokeMethod('getSubscribersCount', {
+
+    Map dataInfo = {
       '_id': id,
       'topicHash': topicHash,
-    });
-    return completer.future.whenComplete(() {
-      _clientEventQueue.remove(id);
-    });
+    };
+    try{
+      _methodChannel.invokeMethod('getSubscribersCount', dataInfo);
+    }
+    catch(e){
+      NLog.w('getSubscribersCount completeE:'+e.toString());
+      completer.completeError(e);
+    }
+    return completer.future;
   }
 
   static Future<Map<String, dynamic>> getSubscription({String topicHash, String subscriber}) async {
     Completer<Map<String, dynamic>> completer = Completer<Map<String, dynamic>>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
-    _methodChannel.invokeMethod('getSubscription', {
+
+    Map dataInfo = {
       '_id': id,
       'topicHash': topicHash,
       'subscriber': subscriber,
-    });
+    };
 
-    return completer.future.whenComplete(() {
-      _clientEventQueue.remove(id);
-    });
+    try{
+      _methodChannel.invokeListMethod('getSubscription',dataInfo);
+    }
+    catch(e){
+      NLog.w('getSubscription completeE:'+e.toString());
+      completer.completeError(e);
+    }
+    return completer.future;
   }
 
   static Future<Map<String, dynamic>> getSubscribers({
@@ -195,211 +244,301 @@ class NKNClientCaller{
     Completer<Map<String, dynamic>> completer = Completer<Map<String, dynamic>>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
-    _methodChannel.invokeMethod('getSubscribers', {
+    Map dataInfo = {
       '_id': id,
       'topicHash': topicHash,
       'offset': offset,
       'limit': limit,
       'meta': meta,
       'txPool': txPool,
-    });
-
-    return completer.future.whenComplete(() {
-      _clientEventQueue.remove(id);
-    });
+    };
+    try{
+      _methodChannel.invokeMethod('getSubscribers', dataInfo);
+    }
+    catch(e){
+      NLog.w('getSubscribers completeE:'+e.toString());
+      completer.completeError(e);
+    }
+    return completer.future;
   }
 
   static Future<int> fetchBlockHeight() async{
-    String eventId = NKNClientCaller.instance._formEventID();
-    Completer completer = _clientEventQueue[eventId];
+    Completer<int> completer = Completer<int>();
+    String eventId = completer.hashCode.toString();
+    _clientEventQueue[eventId] = completer;
+    Map dataInfo = {
+      '_id': eventId,
+    };
     try {
-      _methodChannel.invokeMethod('getBlockHeight', {
-        '_id': eventId,
-      });
-      Map resp = await completer.future;
-      int blockHeight = resp['height'];
-      Global.debugLog('fetchBlockHeight height is :'+blockHeight.toString());
-      return blockHeight;
+      _methodChannel.invokeMethod('getBlockHeight', dataInfo);
     } catch (e) {
-      Global.debugLog('fetch fetchBlockHeight E:'+e.toString());
+      NLog.w('fetchBlockHeight complete E:'+e.toString());
       completer.completeError(e);
-      return 0;
     }
+    return completer.future;
   }
 
   static Future<String> fetchDeviceToken() async{
-    String eventId = NKNClientCaller.instance._formEventID();
-    Completer completer = _clientEventQueue[eventId];
+    Completer<String> completer = Completer<String>();
+    String eventId = completer.hashCode.toString();
+    _clientEventQueue[eventId] = completer;
+    Map dataInfo = {
+      '_id': eventId,
+    };
     try {
-      _methodChannel.invokeMethod('fetchDeviceToken', {
-        '_id': eventId,
-      });
-      Map resp = await completer.future;
-      String deviceToken = resp['device_token'];
-      return deviceToken;
-    } catch (e) {
-      Global.debugLog('fetch fetchDeviceToken e'+e.toString());
-      completer.completeError(e);
-      return '';
+      _methodChannel.invokeMethod('fetchDeviceToken', dataInfo);
     }
+    catch(e){
+      NLog.w('fetchDeviceToken E:'+e.toString());
+      completer.completeError(e);
+    }
+    return completer.future;
   }
 
   static Future<bool> googleServiceOn() async{
-    String eventId = NKNClientCaller.instance._formEventID();
-    Completer completer = _clientEventQueue[eventId];
+    Completer<bool> completer = Completer<bool>();
+    String eventId = completer.hashCode.toString();
+    _clientEventQueue[eventId] = completer;
+
+    Map dataInfo = {
+      '_id': eventId,
+    };
     try {
-      _methodChannel.invokeMethod('checkGoogleService', {
-        '_id': eventId,
-      });
-      Map resp = await completer.future;
-      bool googleServiceOn = resp['googleServiceOn'];
-      print("Resp is E"+resp.toString());
-      return googleServiceOn;
+      _methodChannel.invokeMethod('checkGoogleService', dataInfo);
     } catch (e) {
-      Global.debugLog('fetch googleServiceOn e'+e.toString());
+      NLog.w('googleServiceOn completeE:'+e.toString());
       completer.completeError(e);
     }
-    return false;
+    return completer.future;;
   }
 
   static Future<String> fetchFcmToken() async{
-    String eventId = NKNClientCaller.instance._formEventID();
-    Completer completer = _clientEventQueue[eventId];
+    Completer<String> completer = Completer<String>();
+    String eventId = completer.hashCode.toString();
+    _clientEventQueue[eventId] = completer;
+    Map dataInfo = {
+      '_id': eventId,
+    };
     try {
-      _methodChannel.invokeMethod('fetchFcmToken', {
-        '_id': eventId,
-      });
-      Map resp = await completer.future;
-      String fcmToken = resp['fcm_token'];
-      return fcmToken;
+      _methodChannel.invokeMethod('fetchFcmToken',dataInfo);
     } catch (e) {
-      Global.debugLog('fetch fcmToken: e'+e.toString());
+      NLog.w('fetchFcmToken completeE:'+e.toString());
       completer.completeError(e);
     }
-    return '';
+    return completer.future;
   }
 
   static Future<String> fetchDebugInfo() async{
-    String eventId = NKNClientCaller.instance._formEventID();
-    Completer completer = _clientEventQueue[eventId];
-    try {
-      _methodChannel.invokeMethod('fetchDebugInfo', {
-        '_id': eventId,
-      });
-      Map resp = await completer.future;
-      String debugInfo = resp['debugInfo'];
-      return debugInfo;
-    } catch (e) {
-      Global.debugLog('fetch debugInfo E'+e.toString());
-      completer.completeError(e);
-    }
-    return '';
-  }
-
-  String _formEventID(){
-    Completer<Map> completer = Completer<Map>();
+    Completer<String> completer = Completer<String>();
     String eventId = completer.hashCode.toString();
     _clientEventQueue[eventId] = completer;
-    completer.future.whenComplete(() {
-      _clientEventQueue.remove(eventId);
-    });
-    return eventId;
+
+    Map dataInfo = {
+      '_id': eventId,
+    };
+    try {
+      _methodChannel.invokeMethod('fetchDebugInfo', dataInfo);
+    }
+    catch (e) {
+      NLog.w('fetchDebugInfo completeE:'+e.toString());
+      completer.completeError(e);
+    }
+    return completer.future;
   }
 
   addListening(){
     _eventChannel.receiveBroadcastStream().listen((res) async{
       final String event = res['event'].toString();
+      String eventKey = res['_id'];
+      NLog.w('NativeStream __'+event.toString());
+      NLog.w('NativeStream res__'+res.toString());
       switch (event) {
         case 'createClient':
           String key = res['_id'];
+          NLog.w('CreateClient Success___'+res.toString());
           if (_clientEventQueue[key] != null){
             bool success = res['success'] == 1;
             if (success){
-              Global.debugLog('CreateClientSuccess');
               Global.upgradedGroupBlockHeight = true;
               Global.clientCreated = true;
             }
           }
           break;
+        case 'onSaveNodeAddresses':
+          String rpcNodeAddress = res['client']['nodeAddress'];
+          String clientAddress = res['client']['clientAddress'];
+          print('onSaveNodeAddresses is __'+rpcNodeAddress.toString());
+
+          String saveKey = LocalStorage.NKN_RPC_NODE_LIST+'_'+clientAddress.toString();
+          String savedRpcNodeList = SpUtil.getString(saveKey);
+
+          if (savedRpcNodeList != null){
+            List savedList = savedRpcNodeList.split(',');
+            if (savedList.length > 10){
+              if (savedList.length > 10){
+                savedList.removeRange(0, savedList.length-10);
+              }
+            }
+            List savingList = rpcNodeAddress.split(',');
+            for(int i = 0; i < savingList.length; i++){
+              String savingNode = savingList[i];
+              if (savingNode != null){
+                if (!savedList.contains(savingList[i])){
+                  savedList.add(savingList[i]);
+                }
+                else{
+                  NLog.w('duplicate saved Node__'+savingNode.toString());
+                }
+              }
+            }
+            rpcNodeAddress = savedList.join(',');
+          }
+
+          if (rpcNodeAddress != null){
+            NLog.w('rpcNodeList save is__'+rpcNodeAddress);
+            SpUtil.putString(saveKey, rpcNodeAddress);
+          }
+          break;
         case 'onConnect':
           final clientAddr = res['client']['address'];
-          Global.debugLog('onConnect With ClientAddress__'+clientAddr);
           clientBloc.add(NKNConnectedClientEvent());
           break;
-        case 'onDisConnect':
-          final clientAddr = res['client']['address'];
-          Global.debugLog('DisConnect Client__'+clientAddr);
-          clientBloc.add(NKNDisConnectClientEvent());
+        case 'disConnect':
+          NLog.w('disConnect Native to dart___'+res.toString());
           break;
         case 'onMessage':
           Map data = res['data'];
           if (clientBloc != null){
-            Global.debugLog('ClientBloc not null__\n'+NKNClientCaller.currentChatId);
+            NLog.w('ClientBloc not null__\n'+NKNClientCaller.currentChatId);
           }
           try{
             MessageSchema messageInfo = MessageSchema(from: data['src'], to: NKNClientCaller.currentChatId, data: data['data'], pid: data['pid']);
             if (data['data'] != null){
-              Global.debugLog('onMessage Data'+data.toString());
+              NLog.w('onMessage Data'+data.toString());
             }
             if (data['src'] != null && data['pid'] != null){
               if (NKNClientCaller.currentChatId != null){
-                Global.debugLog('currentChatId is__'+NKNClientCaller.currentChatId+'\nfrom__'+data['src'].toString()+'\npid__'+data['pid'].toString());
+                NLog.w('currentChatId is__'+NKNClientCaller.currentChatId+'\nfrom__'+data['src'].toString()+'\npid__'+data['pid'].toString());
               }
               else{
-                Global.debugLog('currentChatId is null');
+                NLog.w('currentChatId is null');
               }
             }
             else{
-              Global.debugLog('src or pid is null');
+              NLog.w('src or pid is null');
             }
             clientBloc.add(NKNOnMessageEvent(messageInfo));
           }
           catch(e){
-            Global.debugLog('NKNOnMessageEvent Exception:'+e.toString());
+            NLog.w('NKNOnMessageEvent Exception:'+e.toString());
           }
           break;
-        case 'send':
-          String key = res['_id'];
+
+        case 'sendText':
           Uint8List pid = res['pid'];
-          _clientEventQueue[key].complete(pid);
+          _clientEventQueue[eventKey].complete(pid);
           break;
-        case 'fetchDeviceToken':
-          Global.debugLog('fetchDeviceToken callback'+res.toString());
+        case 'publishText':
+          NLog.w('publishText Success!!!!'+res.toString());
+          Uint8List pid = res['pid'];
+          _clientEventQueue[eventKey].complete(pid);
           break;
-        case 'checkGoogleService':
-          Global.debugLog('checkGoogleService callback'+res.toString());
+
+        case 'subscribe':
+          String result = res['data'];
+          NLog.w('subscribe result is__'+result.toString());
+          _clientEventQueue[eventKey].complete(result);
           break;
+        case 'unsubscribe':
+          String result = res['data'];
+          _clientEventQueue[eventKey].complete(result);
+          break;
+
+        case 'getSubscribersCount':
+          int count = res['data'];
+          _clientEventQueue[eventKey].complete(count);
+          break;
+        case 'getSubscription':
+          Map result = Map<String, dynamic>();
+          result['expiresAt'] = res['expiresAt'];
+          _clientEventQueue[eventKey].complete(result);
+          break;
+
+        case 'getSubscribers':
+          Map dataMap = res['data'];
+          Map subscriberMap = new Map<String,dynamic>();
+          for (String key in dataMap.keys){
+            subscriberMap[key] = '1';
+          }
+          _clientEventQueue[eventKey].complete(subscriberMap);
+          break;
+
         case 'getBlockHeight':
-          Global.debugLog('getBlockHeight callback'+res.toString());
+          int blockHeight = res['height'];
+          _clientEventQueue[eventKey].complete(blockHeight);
           break;
+
+        case 'fetchDeviceToken':
+          String deviceToken = res['device_token'];
+          _clientEventQueue[eventKey].complete(deviceToken);
+          break;
+
+          /// AndroidCheck
+        case 'checkGoogleService':
+          bool googleServiceOn = res['googleServiceOn'];
+          _clientEventQueue[eventKey].complete(googleServiceOn);
+          break;
+          /// iOS fetch to Match Android FCM
+        case 'fetchFcmToken':
+          String fcmToken = res['fcm_token'];
+          _clientEventQueue[eventKey].complete(fcmToken);
+          break;
+
         case 'fetchDebugInfo':
-          Global.debugLog('fetchDebugInfo callback'+res.toString());
+          NLog.w('debugInfo is__'+res.toString());
           break;
+
+
         default:
-          Map data = res;
-          String key = data['_id'];
-          var result;
-          if (data.containsKey('result')) {
-            result = data['result'];
-          } else {
-            var keys = data.keys.toList();
-            keys.remove('_id');
-            result = Map<String, dynamic>();
-            for (var key in keys) {
-              result[key] = data[key];
-            }
-          }
-          if (result != null){
-            _clientEventQueue[key].complete(result);
-          }
+          NLog.w('Missed kind___'+res.toString());
           break;
       }
+      _removeEventIdByKey(eventKey);
+
     }, onError: (err) {
-      Global.debugLog('_eventChannel.onError'+err.toString());
-      if (_clientEventQueue[err.code] != null) {
-        _clientEventQueue[err.code].completeError(err.message);
+      String errMsg = err.message.toString();
+      String errDetail = err.details.toString();
+      String errCode = err.code.toString();
+      if (errMsg.length > 0) {
+        /// update Message to Fail
+        if (errMsg == 'sendText' || errMsg == 'publishText') {
+          NLog.w('Wrong!!! sendE:'+errDetail.toString());
+          Map info = _clientEventData[errCode];
+          if (info != null) {
+            String messageId = info['msgId'];
+            // MessageDataCenter.updateMessageToSendFail(messageId);
+            _clientEventQueue[errCode].completeError(errMsg);
+          }
+        }
+        else if (errMsg == 'subscribe' || errMsg == 'unsubscribe') {
+          _clientEventQueue[errCode].completeError(errDetail);
+        }
+        else {
+          NLog.w('Wrong!!!__' + err.toString());
+        }
       }
+      _clientEventQueue[errCode].completeError(errMsg);
+      _removeEventIdByKey(errCode);
     });
+  }
+
+  _removeEventIdByKey(String key){
+    if (_clientEventData.containsKey(key)){
+      _clientEventData.remove(key);
+    }
+    if (_clientEventQueue.containsKey(key)){
+      _clientEventQueue.remove(key);
+    }
   }
 }
 

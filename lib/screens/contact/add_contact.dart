@@ -297,21 +297,22 @@ class AddContactState extends State<AddContact> {
       String note = _notesController.text;
       ContactSchema contact = ContactSchema(firstName: name, clientAddress: pubKey, nknWalletAddress: address, type: ContactType.friend, notes: note);
       var result = await contact.insertContact();
-      contact.setFriend();
+      contact.setFriend(true);
+
       eventBus.fire(AddContactEvent());
       Navigator.pop(context);
     }
   }
 
   _updatePic() async {
-    File savedImg = await getHeaderImage(NKNClientCaller.pubKey);
+    File savedImg = await getHeaderImage(NKNClientCaller.currentChatId);
     if (savedImg == null) return;
   }
 
   String createContactFilePath(File file) {
     String name = hexEncode(md5.convert(file.readAsBytesSync()).bytes);
     Directory rootDir = Global.applicationRootDirectory;
-    String p = join(rootDir.path, NKNClientCaller.pubKey, 'contact');
+    String p = join(rootDir.path, NKNClientCaller.currentChatId, 'contact');
     Directory dir = Directory(p);
     if (!dir.existsSync()) {
       dir.createSync(recursive: true);

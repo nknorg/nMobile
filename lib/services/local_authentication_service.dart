@@ -4,6 +4,7 @@ import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 class LocalAuthenticationService {
 
@@ -41,7 +42,6 @@ class LocalAuthenticationService {
   Future<BiometricType> getAuthType() async {
     try {
       List<BiometricType> availableBiometrics = await _localAuth.getAvailableBiometrics();
-      print('availableBiometrics __'+availableBiometrics.toString());
       if (availableBiometrics.contains(BiometricType.face)) {
         return BiometricType.face;
       } else if (availableBiometrics.contains(BiometricType.fingerprint)) {
@@ -49,11 +49,11 @@ class LocalAuthenticationService {
       }
     } on PlatformException
     catch (e) {
-      Global.debugLog('getAuthType | PlatformException');
+      NLog.w('getAuthType | PlatformException');
     } on MissingPluginException catch (e) {
-      Global.debugLog('getAuthType | MissingPluginException');
+      NLog.w('getAuthType | MissingPluginException');
     } catch (e) {
-      Global.debugLog('getAuthType | ?');
+      NLog.w('getAuthType | ?');
     }
     return null;
   }
@@ -62,19 +62,48 @@ class LocalAuthenticationService {
     bool isProtectionEnabled = await protectionStatus();
     if (isProtectionEnabled) {
       try {
+        bool canCheckBiometrics = await _localAuth.canCheckBiometrics;
+        if (canCheckBiometrics == false){
+          NLog.w('bug here when failed auth by times');
+          return false;
+        }
+
         final success = await _localAuth.authenticateWithBiometrics(
           localizedReason: NL10ns.of(Global.appContext).authenticate_to_access,
-          useErrorDialogs: false,
-          stickyAuth: true,
+          useErrorDialogs: true,
+          stickyAuth: false,
         );
         return success;
       } on PlatformException catch (e) {
-        Global.debugLog('authenticate | PlatformException'+ e.toString());
+        NLog.w('authenticate | PlatformException'+ e.toString());
       } on MissingPluginException catch (e) {
-        Global.debugLog('authenticate | MissingPluginException'+e.toString());
+        NLog.w('authenticate | MissingPluginException'+e.toString());
       } catch (e) {
-        Global.debugLog('authenticate | ?'+e.toString());
+        NLog.w('authenticate | ?'+e.toString());
       }
+    }
+    return false;
+  }
+
+  Future<bool> authenticateIfMay() async{
+    try {
+      bool canCheckBiometrics = await _localAuth.canCheckBiometrics;
+      if (canCheckBiometrics == false){
+        NLog.w('bug here when failed auth by times');
+        return false;
+      }
+      final success = await _localAuth.authenticateWithBiometrics(
+        localizedReason: NL10ns.of(Global.appContext).authenticate_to_access,
+        useErrorDialogs: false,
+        stickyAuth: true,
+      );
+      return success;
+    } on PlatformException catch (e) {
+      NLog.w('authenticate | PlatformException'+ e.toString());
+    } on MissingPluginException catch (e) {
+      NLog.w('authenticate | MissingPluginException'+e.toString());
+    } catch (e) {
+      NLog.w('authenticate | ?'+e.toString());
     }
     return false;
   }

@@ -19,6 +19,7 @@ import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/utils/const_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class ImportKeystoreWallet extends StatefulWidget {
@@ -59,7 +60,6 @@ class _ImportKeystoreWalletState extends State<ImportKeystoreWallet> with Single
           String keystoreJson = await NknWalletPlugin.restoreWallet(_keystore, _password);
           var keystore = jsonDecode(keystoreJson);
           String address = keystore['Address'];
-          print('keystore is__'+keystoreJson);
 
           await SecureStorage().set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
           _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystoreJson));
@@ -73,11 +73,14 @@ class _ImportKeystoreWalletState extends State<ImportKeystoreWallet> with Single
         Navigator.of(context).pop();
       } catch (e) {
         EasyLoading.dismiss();
-        if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-          showToast(NL10ns.of(context).password_wrong);
-        } else {
-          showToast(e.message);
-        }
+        showToast(NL10ns.of(context).password_wrong);
+        NLog.w('ImportKeystoreWallet__ E:'+e.toString());
+        // if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+        //
+        // } else {
+        //   showToast(NL10ns.of(context).password_wrong);
+        //   // showToast(e.message);
+        // }
       }
     }
   }

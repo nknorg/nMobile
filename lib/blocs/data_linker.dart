@@ -98,7 +98,6 @@ class DataLinker {
       _getInstance().removeNotification(postName);
     }
     else if(postEventListening.containsKey(postName)){
-      print('gotBackInfo'+backInfo.toString());
       GetObject getObject = postEventListening[postName];
       getObject(backInfo);
     }
@@ -119,7 +118,6 @@ class DataLinker {
   }
 
   static Future<void> backOff() async {
-    print('backOff__');
     await methodChannel.invokeMethod('backOff');
   }
 

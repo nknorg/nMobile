@@ -36,7 +36,7 @@ final options = 'options'; // json
 class Topic with Tag {
   final int id;
   final String topic;
-  final int numSubscribers;
+  // final int numSubscribers;
   final String avatarUri;
   final int themeId;
   final int timeUpdate;
@@ -51,7 +51,7 @@ class Topic with Tag {
   Topic(
       {this.id,
       this.topic,
-      this.numSubscribers,
+      // this.numSubscribers,
       this.avatarUri = '',
       this.themeId,
       this.timeUpdate,
@@ -81,7 +81,7 @@ class Topic with Tag {
     return Topic(
         id: id,
         topic: topic,
-        numSubscribers: numSubscribers,
+        // numSubscribers: numSubscribers,
         avatarUri: avatarUri,
         themeId: themeId,
         timeUpdate: timeUpdate,
@@ -116,17 +116,12 @@ extension TopicTypeString on TopicType {
 class TopicRepo with Tag {
   Future<List<Topic>> getAllTopics() async {
     Database currentDataBase = await NKNDataManager().currentDatabase();
-    List<Map<String, dynamic>> result = await currentDataBase.query(tableName);
-    return parseEntities(result);
-  }
 
-  Future<List<String>> getAllTopicNames() async {
-    final rows = await getAllTopics();
-    final result = <String>[];
-    for (var row in rows) {
-      result.add(row.name);
+    if (currentDataBase != null){
+      List<Map<String, dynamic>> result = await currentDataBase.query(tableName);
+      return parseEntities(result);
     }
-    return result;
+    return null;
   }
 
   Future<Topic> getTopicByName(String topicName) async {
@@ -142,17 +137,20 @@ class TopicRepo with Tag {
   }
 
   Future<void> insertTopicByTopicName(String topicName) async{
+    if (topicName == null){
+      NLog.w('Wrong!!! topicName is null');
+      return;
+    }
     Topic topic = await getTopicByName(topicName);
     Database currentDataBase = await NKNDataManager().currentDatabase();
     /// need create New Topic
     if (topic == null){
       final themeId = Random().nextInt(DefaultTheme.headerBackgroundColor.length);
       String topicOption = OptionsSchema.random(themeId: themeId).toJson();
-      print('Insert topicOption'+topicOption);
+
       topic = Topic(
         id: 0,
         topic: topicName,
-        numSubscribers: 0,
         themeId: themeId,
         timeUpdate: DateTime.now().millisecondsSinceEpoch,
         blockHeightExpireAt: 0,
@@ -160,11 +158,14 @@ class TopicRepo with Tag {
         options: topicOption,
       );
       int result = await currentDataBase.insert(tableName, toEntity(topic), conflictAlgorithm: ConflictAlgorithm.ignore);
-      print('Insert topic result __+'+result.toString());
+      if (result > 0){
+        NLog.w('Insert topic success__'+topicName);
+      }
     }
     else{
-      Global.debugLog('Topic Exists'+topicName);
-      Global.debugLog('Topic themeID +'+topic.themeId.toString());
+      if (topicName != null){
+        NLog.w('Insert Topic is Exists__'+topicName);
+      }
     }
   }
 
@@ -198,24 +199,25 @@ class TopicRepo with Tag {
     );
   }
 
-  Future<void> updateSubscribersCount(String topicName, int numSubscribers) async {
-    Database currentDataBase = await NKNDataManager().currentDatabase();
-    await currentDataBase.update(
-      tableName,
-      {count: numSubscribers},
-      where: '$topic = ?',
-      whereArgs: [topicName],
-    );
-  }
+  // Future<void> updateSubscribersCount(String topicName, int numSubscribers) async {
+  //   Database currentDataBase = await NKNDataManager().currentDatabase();
+  //   await currentDataBase.update(
+  //     tableName,
+  //     {count: numSubscribers},
+  //     where: '$topic = ?',
+  //     whereArgs: [topicName],
+  //   );
+  // }
 
   Future<void> delete(String topicName) async {
-    Database currentDataBase = await NKNDataManager.instance.currentDatabase();
+    Database currentDataBase = await NKNDataManager().currentDatabase();
     await currentDataBase.delete(tableName, where: '$topic = ?', whereArgs: [topicName]);
   }
 
   static Future<void> create(Database db, int version) async {
     assert(version >= SqliteStorage.currentVersion);
-    print('Recreate Topic');
+
+    NLog.w('topic_repo__CREATE UNIQUE INDEX index_');
     await db.execute(createSqlV5);
     await db.execute('CREATE UNIQUE INDEX index_${tableName}_$topic ON $tableName ($topic);');
   }
@@ -261,7 +263,7 @@ Topic parseEntity(Map<String, dynamic> row) {
   return Topic(
     id: row[id],
     topic: row[topic],
-    numSubscribers: row[count],
+    // numSubscribers: row[count],
     avatarUri: row[avatar],
     themeId: row[theme_id],
     timeUpdate: row[time_update],
@@ -283,9 +285,9 @@ Map<String, dynamic> toEntity(Topic subs) {
   if (subs.topic != null){
     insertTopic = subs.topic;
   }
-  if (subs.numSubscribers > 0){
-    numSubscribers = subs.numSubscribers;
-  }
+  // if (subs.numSubscribers > 0){
+  //   numSubscribers = subs.numSubscribers;
+  // }
   if (subs.avatarUri != null){
     avatarUri = subs.avatarUri;
   }

@@ -6,6 +6,7 @@ import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -97,8 +98,14 @@ class NKNDataManager{
     /// changeDataBase
     _publicKey = publicKey2DbName(pubKey);
     _password = password;
-    Global.debugLog('changeDatabase db__\n'+_publicKey);
-    _currentDatabase = await NKNDataManager.instance.open();
+
+    if (_publicKey != null && _password != null){
+      NLog.w('Change database__'+_publicKey);
+      _currentDatabase = await NKNDataManager.instance.open();
+    }
+    else{
+      NLog.w('Wrong!!! change database no _publicKey');
+    }
   }
 
   Future<Database> currentDatabase() async{
@@ -126,7 +133,7 @@ class NKNDataManager{
       await deleteDatabase(path);
     }
     catch(e){
-      Global.debugLog('CloseDatabase E:'+e.toString());
+      NLog.w('Close database E:'+e.toString());
     }
   }
 
@@ -152,9 +159,7 @@ class NKNDataManager{
     String topicTable = 'topic';
     var sql = "SELECT * FROM sqlite_master WHERE TYPE = 'table' AND NAME = '$topicTable'";
     var res = await db.rawQuery(sql);
-    var returnRes = (res!=null && res.length > 0);
     if (res == null){
-      print("Sql is"+res.toString());
       await db.execute(createTopicSql);
     }
     else{
@@ -185,7 +190,6 @@ class NKNDataManager{
 
     if (returnRes == false){
       /// 需要创建表
-      print('需要创建表');
       final createSqlV3 = '''
       CREATE TABLE $tableName (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

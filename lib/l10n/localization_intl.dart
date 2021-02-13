@@ -599,7 +599,7 @@ class NL10ns {
   }
 
   String get remote_notification {
-    return Intl.message('Message Noitification', name: 'remote_notification', desc: '');
+    return Intl.message('Message Notification', name: 'remote_notification', desc: '');
   }
 
   String get pictures {
