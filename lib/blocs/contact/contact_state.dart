@@ -23,3 +23,8 @@ class ContactLoaded extends ContactState {
     }
   }
 }
+
+class UpdateUserInfoState extends ContactState{
+  final ContactSchema userInfo;
+  const UpdateUserInfoState(this.userInfo);
+}

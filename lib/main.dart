@@ -9,7 +9,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/chat/auth_bloc.dart';
-import 'package:nmobile/blocs/chat/channel_members.dart';
+import 'package:nmobile/blocs/chat/channel_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
@@ -39,8 +39,8 @@ void main() async {
           // log
             dsn: 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
             environmentAttributes: const Event(
-              release: 'nMobile',
-              environment: 'production',
+              release: '203',
+              environment: 'Android203',
             ));
         runApp(App());
       });
@@ -87,8 +87,8 @@ void main() async {
         sentry = SentryClient(
             dsn: 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
             environmentAttributes: const Event(
-              release: '186',
-              environment: 'iOS186',
+              release: '203',
+              environment: 'iOS203',
             ));
         runApp(App());
       });
@@ -140,8 +140,8 @@ class AppState extends State<App> with WidgetsBindingObserver, Tag {
         cBloc: BlocProvider.of<ChatBloc>(context),
       ),
     ),
-    BlocProvider<ChannelMembersBloc>(
-      create: (BuildContext context) => ChannelMembersBloc(),
+    BlocProvider<ChannelBloc>(
+      create: (BuildContext context) => ChannelBloc(),
     ),
     BlocProvider<AuthBloc>(
       create: (BuildContext context) => AuthBloc(),

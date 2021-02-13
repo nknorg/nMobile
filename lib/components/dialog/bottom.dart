@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -7,19 +8,20 @@ import 'package:nmobile/blocs/wallet/filtered_wallets_event.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
 import 'package:nmobile/components/button.dart';
-import 'package:nmobile/components/dialog/input_channel.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
-import 'package:nmobile/helpers/local_notification.dart';
+import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/wallet.dart';
 import 'package:nmobile/screens/contact/home.dart';
+import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/extensions.dart';
+import 'package:nmobile/utils/image_utils.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class BottomDialog extends StatefulWidget {
@@ -56,9 +58,88 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  Future<String> showInputPasswordDialog({@required String title}) {
+  _openBiometric()async{
+    final success = await LocalAuthenticationService.instance.authenticateIfMay();
+    if (success){
+      LocalStorage().set('${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}', true);
+    }
+    Navigator.pop(context);
+  }
+
+  showOpenBiometric() async{
+    double height = 300;
+    show<String>(
+      height: height,
+      action: Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
+        child: Button(
+          text: 'Enable It!',
+          width: double.infinity,
+          onPressed:(){
+            _openBiometric();
+          }
+        ),
+      ),
+      builder: (context) => GestureDetector(
+        onTap: () {
+          FocusScope.of(context).requestFocus(FocusNode());
+        },
+        child: Container(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Flex(
+            direction: Axis.vertical,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Expanded(
+                flex: 0,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 24, bottom: 24),
+                  child: Label(
+                    'Tips',
+                    type: LabelType.h2,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Label(
+                      'Sick of password authentication?\nEnable Biometric Authentication!',
+                      type: LabelType.h4,
+                      textAlign: TextAlign.start,
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                child: Row(
+                  children: [
+                    Spacer(),
+                    Container(
+                      width: 48,
+                      height: 48,
+                      margin: const EdgeInsets.only(top: 10,),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(color: Colours.blue_0f_a1p, borderRadius: BorderRadius.circular(8)),
+                      child: Center(child: loadAssetIconsImage('lock', width: 24, color: DefaultTheme.primaryColor)),
+                    ),
+                    Spacer(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<String> showInputPasswordDialog({@required String title}) async{
     TextEditingController _passwordController = TextEditingController();
     double height = 280;
+
     return show<String>(
       height: height,
       action: Padding(

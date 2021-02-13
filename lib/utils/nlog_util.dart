@@ -22,8 +22,15 @@ class NLog {
   }
 
   static void w(dynamic object, {String tag}) {
+    if (object == null){
+      return;
+    }
     try {
-      if (!Global.isRelease) instanceOf.get<Logger>().w(object);
+      print('Logger__'+object.toString());
+      // if (Global.isRelease == false){
+      //   print('Logger__'+object.toString());
+      // }
+      // if (!Global.isRelease) {}instanceOf.get<Logger>().w(object.toString());
     } catch (e) {}
   }
 }

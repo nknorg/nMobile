@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/settings.dart';
-import 'package:nmobile/plugins/common_native.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/services/android_messaging_service.dart';
 import 'package:nmobile/services/service_locator.dart';
@@ -38,6 +37,7 @@ class Global {
 
   static bool upgradedGroupBlockHeight = false;
   static bool clientCreated = false;
+  static bool clientNoConnect = false;
 
   // 工厂模式
   factory Global() => _getInstance();
@@ -63,15 +63,8 @@ class Global {
     return _instance;
   }
 
-
-  static debugLog(String logInfo){
-    if (Global.isRelease == false){
-      print(logInfo);
-    }
-  }
-
   static Future init(VoidCallback callback) async {
-    _LOG.d('--->>> init --->>>');
+
     WidgetsFlutterBinding.ensureInitialized();
     // Do not set value here. Will be set in `AppState.didChangeAppLifecycleState()`.
     // state = AppLifecycleState.resumed;
@@ -117,10 +110,10 @@ class Global {
     }
   }
 
-  static removeTopicCache(String topic) {
-    loadTopicDataTime.remove(topic);
-    loadLoadSubscribers.remove(topic);
-  }
+  // static removeTopicCache(String topic) {
+  //   loadTopicDataTime.remove(topic);
+  //   loadLoadSubscribers.remove(topic);
+  // }
 
   static bool isLoadSubscribers(String topic) {
     num currentTime = num.parse(DateUtil.formatDate(DateTime.now(), format: "yyyyMMddHHmm"));

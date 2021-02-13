@@ -15,6 +15,9 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
     if (event is LoadContact) {
       yield* _mapLoadContactToState(event);
     }
+    else if (event is UpdateUserInfoEvent){
+      yield* _mapUpdateUserInfoState(event);
+    }
   }
 
   Stream<ContactState> _mapLoadContactToState(LoadContact event) async* {
@@ -22,14 +25,18 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
     yield ContactLoaded(contacts);
   }
 
+  Stream<ContactState> _mapUpdateUserInfoState(UpdateUserInfoEvent event) async* {
+    ContactSchema contactSchema = event.userInfo;
+    yield UpdateUserInfoState(contactSchema);
+  }
+
   Future<List<ContactSchema>> _queryContactsByAddress(List<String> address) async {
     List<ContactSchema> list = <ContactSchema>[];
     if (state is ContactLoaded) {
       list = List.from((state as ContactLoaded).contacts);
     }
-    Database cdb = await NKNDataManager.instance.currentDatabase();
+    Database cdb = await NKNDataManager().currentDatabase();
     var contactsRes = await cdb.rawQuery('SELECT * FROM ${ContactSchema.tableName} WHERE address IN (${address.map((x) => '\'$x\'').join(',')})');
-
     List<ContactSchema> contacts = contactsRes.map((x) => ContactSchema.parseEntity(x)).toList();
     for (var i = 0, length = contactsRes.length; i < length; i++) {
       var item = contacts[i];
@@ -43,8 +50,6 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
         list[findIndex].sourceProfile = item.sourceProfile;
         list[findIndex].profileVersion = item.profileVersion;
         list[findIndex].profileExpiresAt = item.profileExpiresAt;
-        list[findIndex].deviceToken = item.deviceToken;
-        list[findIndex].notificationOpen = item.notificationOpen;
       } else {
         list.add(item);
       }

@@ -6,18 +6,19 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
-import 'package:flutter/material.dart';
-import 'package:nmobile/blocs/chat/channel_members.dart';
+import 'package:nmobile/blocs/chat/channel_bloc.dart';
+import 'package:nmobile/blocs/chat/channel_event.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
+import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
+import 'package:nmobile/plugins/nkn_wallet.dart';
+import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/nlog_util.dart';
@@ -27,14 +28,34 @@ class GroupChatPublicChannel {
   static final SubscriberRepo _subscriberRepo = SubscriberRepo();
   static final TopicRepo _topicRepo = TopicRepo();
 
+  static Future<ContactSchema> checkContactIfExists(String clientAddress) async {
+    var contact = await ContactSchema.fetchContactByAddress(clientAddress);
+    if (contact == null) {
+      var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+      if (clientAddress != null){
+        NLog.w('Insert contact stranger__'+clientAddress.toString());
+      }
+      else{
+        NLog.w('got clientAddress Wrong!!!');
+      }
+      if (walletAddress == null){
+        NLog.w('got walletAddress Wrong!!!');
+      }
+      contact = ContactSchema(type: ContactType.stranger,
+          clientAddress: clientAddress,
+          nknWalletAddress: walletAddress);
+      await contact.insertContact();
+    }
+    return contact;
+  }
+
   static Future<int> pullSubscribersPublicChannel(
-      {String topicName, String myChatId, ChannelMembersBloc membersBloc}) async {
+      {String topicName, String myChatId, ChannelBloc membersBloc}) async {
     try {
       final topicHashed = genTopicHash(topicName);
 
       List<Subscriber> dataList = new List<Subscriber>();
-      NKNClientCaller.getSubscribers(topicHash: topicHashed, offset: 0, limit: 10000, meta: false, txPool: true).then((subscribersMap) {
-        print('got topic'+topicName+'__length is:'+subscribersMap.keys.length.toString());
+      NKNClientCaller.getSubscribers(topicHash: topicHashed, offset: 0, limit: 10000, meta: false, txPool: true).then((subscribersMap) async {
         for (String chatId in subscribersMap.keys){
           Subscriber sub = Subscriber(
               id: 0,
@@ -61,16 +82,20 @@ class GroupChatPublicChannel {
 
         dataList.add(selfSub);
         if (dataList.length > 0) {
-          _topicRepo.updateSubscribersCount(topicName, subscribersMap.length).then((value) {
-            membersBloc.add(MembersCount(topicName, subscribersMap.length, true));
-          });
-          _subscriberRepo.batchUpdateSubscriberList(dataList);
+          for (int i = 0; i < dataList.length; i++){
+            Subscriber subscriber = dataList[i];
+            _subscriberRepo.insertSubscriber(subscriber);
+          }
+          membersBloc.add(ChannelMemberCountEvent(topicName));
+
           return dataList.length;
         }
       });
       return 0;
     } catch (e) {
-      print('pull encount E:'+e.toString());
+      if (e != null){
+        NLog.w('group_chat_helper E:'+e.toString());
+      }
       return -1;
     }
   }
@@ -83,12 +108,19 @@ class GroupChatHelper {
 
   static Future<List<String>> fetchGroupMembers(String topicName) async{
     List <String> memberList = await _subscriberRepo.getAllSubscriberByTopic(topicName);
-    if (memberList.length > 0){
-      print('Member Count is:__'+memberList.length.toString());
+    if (memberList != null && memberList.length > 0){
+      if (topicName != null){
+        NLog.w('Got Topic__'+topicName.toString()+'count is__'+memberList.length.toString());
+      }
       return memberList;
     }
     else{
-      Global.debugLog('Assert group no Member__'+topicName);
+      if (topicName != null){
+        NLog.w('Wrong get no group member__'+topicName);
+      }
+      else{
+        NLog.w('Wrong!!! topic Name is null');
+      }
       return null;
     }
   }
@@ -99,10 +131,15 @@ class GroupChatHelper {
   }
 
   static insertTopicIfNotExists(String topicName) async{
-    await _topicRepo.insertTopicByTopicName(topicName);
+    if (topicName != null){
+      await _topicRepo.insertTopicByTopicName(topicName);
+      await insertSelfSubscriber(topicName);
 
-    await insertSelfSubscriber(topicName);
-    print('Insert selfSub'+topicName);
+      NLog.w('Insert topicName __'+topicName.toString());
+    }
+    else{
+      NLog.w('Wrong!!! insertTopicIfNotExists no topicName');
+    }
   }
 
   static insertSelfSubscriber(String topicName) async{
@@ -123,6 +160,10 @@ class GroupChatHelper {
     await _subscriberRepo.insertSubscriber(selfSub);
   }
 
+  static insertSubscriber(Subscriber sub) async{
+    await _subscriberRepo.insertSubscriber(sub);
+  }
+
   static Future<bool> checkMemberIsInGroup(String memberId,String topicName) async{
     Subscriber subscriber = await _subscriberRepo.getByTopicAndChatId(topicName, memberId);
     if (subscriber != null){
@@ -139,37 +180,13 @@ class GroupChatHelper {
     return true;
   }
 
-  static checkMessageSenderIsInGroupChat(String messageFrom,String topicName) async{
-    Subscriber subscriber = await _subscriberRepo.getByTopicAndChatId(topicName, messageFrom);
-    if (subscriber != null){
-      print('checkMessageSenderIsInGroupChat is'+subscriber.topic);
-      print('checkMessageSenderIsInGroupChat is'+subscriber.chatId);
-    }
-    else{
-      /// 需要插入
-      Subscriber insertSubscriber = Subscriber(
-          id: 0,
-          topic: topicName,
-          chatId: messageFrom,
-          indexPermiPage: -1,
-          timeCreate: DateTime.now().millisecondsSinceEpoch,
-          blockHeightExpireAt: -1,
-          uploaded: true,
-          subscribed: true,
-          uploadDone: true
-      );
-      _subscriberRepo.insertSubscriber(insertSubscriber);
-    }
-  }
-
   static Future<void> subscribeTopic({String topicName, ChatBloc chatBloc, void callback(bool success, dynamic error)}) async {
     try {
       final hash = await NKNClientCaller.subscribe(topicHash: genTopicHash(topicName));
+
+      NLog.w('hashhash got Exception:'+hash.toString());
       if (nonEmpty(hash) && hash.length >= 32) {
         await GroupChatHelper.insertTopicIfNotExists(topicName);
-
-        print('subscribeTopic insert1:'+topicName);
-
         var sendMsg = MessageSchema.fromSendData(
           from: NKNClientCaller.currentChatId,
           topic: topicName,
@@ -180,12 +197,14 @@ class GroupChatHelper {
         callback(true, null);
         showToast('success');
       } else {
-        print('GroupChatHelper E'+e.toString());
+        NLog.w('callback callback Exception:'+hash.toString());
         callback(false, null);
       }
     } catch (e) {
+      if (e != null){
+        NLog.w('Group_Chat_Helper__ got Exception:'+e.toString());
+      }
       if (e.toString().contains('duplicate subscription exist in block')){
-        print('resub topic by E:'+e.toString());
         await GroupChatHelper.insertTopicIfNotExists(topicName);
 
         var sendMsg = MessageSchema.fromSendData(
@@ -204,9 +223,13 @@ class GroupChatHelper {
   }
 
   static deleteTopicWithSubscriber(String topic){
-    Global.debugLog('Delete Topic:__'+topic+'__');
-    _topicRepo.delete(topic);
-    _subscriberRepo.deleteAll(topic);
+    if (topic != null){
+      _topicRepo.delete(topic);
+      _subscriberRepo.deleteAll(topic);
+    }
+    else{
+      NLog.w('Delete topic Wrong!!! topic is null');
+    }
   }
 
   static Future<void> unsubscribeTopic({String topicName, ChatBloc chatBloc, void callback(bool success, dynamic error)}) async {
@@ -229,9 +252,11 @@ class GroupChatHelper {
         callback(false, null);
       }
     } catch (e) {
+      if (e != null){
+        NLog.w('unsubscribeTopic E:'+e.toString());
+      }
       if (e.toString().contains('duplicate subscription exist in block') ||
       e.toString().contains('can not append tx to txpool')){
-        Global.debugLog('duplicate call success');
         deleteTopicWithSubscriber(topicName);
         callback(true, null);
         return;
@@ -246,7 +271,7 @@ class GroupChatHelper {
     double minerFee = 0,
     void callback(),
   }) async {
-    if (topic.isPrivate && topic.isOwner(NKNClientCaller.pubKey)) {
+    if (topic.isPrivate && topic.isOwner(NKNClientCaller.currentChatId)) {
       _timer4UploadAction?.cancel();
       _timer4UploadAction = null;
       final repoSub = SubscriberRepo();
@@ -271,7 +296,7 @@ class GroupChatHelper {
         GroupChatPrivateChannel.uploadPermissionMeta(
           topicName: topic.topic,
           minerFee: minerFee,
-          accountPubkey: NKNClientCaller.pubKey,
+          accountPubkey: NKNClientCaller.currentChatId,
           repoSub: repoSub,
           repoBlackL: repoBlack,
         );
@@ -286,7 +311,7 @@ class GroupChatHelper {
     double minerFee = 0,
     void callback(),
   }) async {
-    if (topic.isPrivate && topic.isOwner(NKNClientCaller.pubKey)) {
+    if (topic.isPrivate && topic.isOwner(NKNClientCaller.currentChatId)) {
       _timer4UploadAction?.cancel();
       _timer4UploadAction = null;
       final repoSub = SubscriberRepo();
@@ -311,7 +336,7 @@ class GroupChatHelper {
         GroupChatPrivateChannel.uploadPermissionMeta(
           topicName: topic.topic,
           minerFee: minerFee,
-          accountPubkey: NKNClientCaller.pubKey,
+          accountPubkey: NKNClientCaller.currentChatId,
           repoSub: repoSub,
           repoBlackL: repoBlack,
         );
@@ -500,8 +525,7 @@ class GroupChatPrivateChannel {
 
   static Future<int> pullSubscribersPrivateChannel(
       {String topicName,
-
-      ChannelMembersBloc membersBloc,
+        ChannelBloc membersBloc,
       void needUploadMetaCallback(String topicName)}) async {
     if (_topicIsLoading.containsKey(topicName) && _topicIsLoading[topicName]) return -1;
     _topicIsLoading[topicName] = true;
@@ -600,7 +624,7 @@ class GroupChatPrivateChannel {
       }
 
       /// 2. If I am the group owner, update the expired block height of the group.
-      final ownerIsMe = ownerIsMeFunc(topicName, NKNClientCaller.pubKey);
+      final ownerIsMe = ownerIsMeFunc(topicName, NKNClientCaller.currentChatId);
       if (ownerIsMe) {
         try {
           final Map<String, dynamic> subscription = await NKNClientCaller.getSubscription(topicHash: topicHashed, subscriber: NKNClientCaller.currentChatId);
@@ -713,8 +737,8 @@ class GroupChatPrivateChannel {
         //await repoTopic.deleteAll(topicName)
         // UI need black list to show.
         //await repoBlackL.deleteAll(topicName)
-        await repoTopic.updateSubscribersCount(topicName, -1);
-        membersBloc.add(MembersCount(topicName, -1, true));
+        // await repoTopic.updateSubscribersCount(topicName, -1);
+        membersBloc.add(ChannelMemberCountEvent(topicName));
         _topicIsLoading[topicName] = false;
         return -1;
       }
@@ -785,8 +809,10 @@ class GroupChatPrivateChannel {
       // but if the owner unsubscribed, he also in the white list,
       // this may cause `subscriber size < white list size`.
       final count = await repoSub.getCountOfTopic(topicName);
-      await repoTopic.updateSubscribersCount(topicName, count);
-      membersBloc.add(MembersCount(topicName, count, true));
+      // // await repoTopic.updateSubscribersCount(topicName, count);
+      // membersBloc.add(ChannelMemberCountEvent(topicName));
+
+      // membersBloc.add(ChannelMembersEvent(topicName));
       if (ownerIsMe && needUploadMeta) {
         needUploadMetaCallback(topicName);
       }

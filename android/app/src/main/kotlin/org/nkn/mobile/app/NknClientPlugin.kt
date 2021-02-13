@@ -18,6 +18,7 @@ import java.security.KeyStore
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+import kotlin.concurrent.schedule
 
 class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEngine) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
 
@@ -32,6 +33,9 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
     }
 
     private lateinit var clientEventSink: EventChannel.EventSink
+
+    private var clientList = ArrayList<String>()
+    private var mNode:Node = Node()
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
         clientEventSink = events
@@ -120,16 +124,16 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 Log.e("getDeviceToken", "getDeviceToken | e:" + deviceToken.toString())
                 val resp = hashMapOf(
                         "_id" to _id,
-                        "event" to "fetch_device_token",
+                        "event" to "fetchDeviceToken",
                         "device_token" to deviceToken.toString()
                 )
                 App.runOnMainThread {
                     clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
-                Log.e("getDeviceTokenE", "getSubscription | e:", e)
+                Log.e("getDeviceTokenE", "getDeviceToken | e:", e)
                 App.runOnMainThread {
-                    clientEventSink.error(_id, e.message, null)
+                    clientEventSink.error(_id, "fetchDeviceToken", e.message)
                 }
             }
         }
@@ -157,7 +161,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 val _id = call.argument<String>("_id")!!
                 val resp = hashMapOf(
                         "_id" to _id,
-                        "event" to "google_service_on",
+                        "event" to "checkGoogleService",
                         "googleServiceOn" to googleServiceOn
                 )
                 App.runOnMainThread {
@@ -166,9 +170,49 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             } catch (e: Exception) {
                 Log.e("serviceCheck", "onCheckGooglePlayServices | e:", e)
                 App.runOnMainThread {
-                    clientEventSink.error(_id, e.message, null)
+                    clientEventSink.error(_id, "checkGoogleService", e.message)
                 }
             }
+        }
+    }
+
+    private fun onSaveSeedRpc(call: MethodCall?, result: MethodChannel.Result?) {
+        var mClient = multiClient?.getClient(-1)
+        var mNode = mClient?.node
+        if (mNode != null){
+            if (mNode?.rpcAddr != null){
+                var mNodeAddress:String = "http://"+mNode?.rpcAddr
+                App.runOnMainThread{
+                    if (!clientList.contains(mNodeAddress)){
+                        clientList.add(mNodeAddress)
+                    }
+                }
+            }
+        }
+
+        for (index in 0..3) {
+            val lIndex: Long = index.toLong()
+            var client = multiClient?.getClient(lIndex)
+            var rpcNode = client?.node
+            if (rpcNode != null){
+                if (rpcNode?.rpcAddr != null){
+                    var rpcNodeAddress:String = "http://"+rpcNode?.rpcAddr
+                    if (!clientList.contains(rpcNodeAddress)){
+                        clientList.add(rpcNodeAddress)
+                    }
+                }
+            }
+        }
+
+        App.runOnMainThread {
+            val clientAddr = multiClient?.address()
+
+            val data = hashMapOf(
+                    "event" to "onSaveNodeAddresses",
+                    "client" to hashMapOf("clientAddress" to clientAddr,
+                            "nodeAddress" to clientList.joinToString(","))
+            )
+            clientEventSink.success(data)
         }
     }
 
@@ -176,14 +220,22 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         val _id = call.argument<String>("_id")!!
         val identifier = call.argument<String>("identifier")
         val seedBytes = call.argument<ByteArray>("seedBytes")!!
-        val clientUrl = call.argument<String>("clientUrl")
+        val clientUrl = call.argument<String>("rpcNodeList")
+
+        if (clientUrl != null){
+            var nodeList:List<String> = clientUrl.split(",")
+            for (node in nodeList){
+                clientList.add(node)
+            }
+        }
+
         result.success(null)
 
         msgSendHandler.post {
             try {
                 val account = Nkn.newAccount(seedBytes)
-                accountPubkeyHex = ensureSameAccount(account)
-                val client = genClientIfNotExists(account, identifier, clientUrl)
+                accountPubkeyHex = account.pubKey().toHex()
+                val client = genClientIfNotExists(account, identifier)
                 val resp = hashMapOf(
                         "_id" to _id,
                         "event" to "createClient",
@@ -232,6 +284,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 if (node == null) {
                     return@post
                 }
+                mNode = node
                 isConnected = true
                 val data = hashMapOf(
                         "event" to "onConnect",
@@ -240,6 +293,10 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 App.runOnMainThread {
                     Log.e("connectNKN", "Connect NKN End")
                     clientEventSink.success(data)
+
+                    Timer().schedule(10000){
+                        onSaveSeedRpc(null,null);
+                    }
                 }
 
             }
@@ -309,7 +366,9 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         val _id = call.argument<String>("_id")!!
         val dests = call.argument<ArrayList<String>>("dests")!!
         val data = call.argument<String>("data")!!
+        val msgId = call.argument<String>("msgId")!!
         val maxHoldingSeconds = call.argument<Int>("maxHoldingSeconds")!!
+
         result.success(null)
 
         val dataObj = JSONObject(data)
@@ -333,7 +392,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         }
         if (nknDests == null) {
             App.runOnMainThread {
-                clientEventSink.error(_id, "dests null", null)
+                clientEventSink.error(_id, "sendText", "dests null")
             }
             return
         }
@@ -347,8 +406,9 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 multiClient!!.sendText(nknDests, data, config)
                 val resp = hashMapOf(
                         "_id" to _id,
-                        "event" to "send",
-                        "pid" to config.messageID
+                        "event" to "sendText",
+                        "pid" to config.messageID,
+                        "msgId" to msgId
                 )
                 App.runOnMainThread {
                     clientEventSink.success(resp)
@@ -356,7 +416,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             } catch (e: Exception) {
                 Log.e("sendTextE", "sendText | e:", e)
                 App.runOnMainThread {
-                    clientEventSink.error(_id, e.message, null)
+                    clientEventSink.error(_id, "sendText", e.message)
                 }
             }
         }
@@ -378,7 +438,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 multiClient!!.publishText(topicHash, data, config)
                 val resp = hashMapOf(
                         "_id" to _id,
-                        "event" to "send",
+                        "event" to "publishText",
                         "pid" to config.messageID
                 )
                 App.runOnMainThread {
@@ -387,7 +447,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             } catch (e: Exception) {
                 Log.e("publishTextE", "publishText | e:", e)
                 App.runOnMainThread {
-                    clientEventSink.error(_id, e.message, null)
+                    clientEventSink.error(_id, "publishText", e.message)
                 }
             }
         }
@@ -410,7 +470,8 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 val hash = multiClient!!.subscribe(identifier, topicHash, duration.toLong(), meta, transactionConfig)
                 val resp = hashMapOf(
                         "_id" to _id,
-                        "result" to hash
+                        "event" to "subscribe",
+                        "data" to hash
                 )
                 App.runOnMainThread {
                     clientEventSink.success(resp)
@@ -418,7 +479,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             } catch (e: Exception) {
                 Log.e("subscribeE", "subscribe | e:", e)
                 App.runOnMainThread {
-                    clientEventSink.error(_id, e.message, null)
+                    clientEventSink.error(_id, "subscribe", e.message)
                 }
             }
         }
@@ -439,7 +500,8 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 val hash = multiClient!!.unsubscribe(identifier, topicHash, transactionConfig)
                 val resp = hashMapOf(
                         "_id" to _id,
-                        "result" to hash
+                        "event" to "unsubscribe",
+                        "data" to hash
                 )
                 App.runOnMainThread {
                     clientEventSink.success(resp)
@@ -447,7 +509,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             } catch (e: Exception) {
                 Log.e("unsubscribe", "unsubscribe | e:", e)
                 App.runOnMainThread {
-                    clientEventSink.error(_id, e.message, null)
+                    clientEventSink.error(_id, "unsubscribe", e.message)
                 }
             }
         }
@@ -466,26 +528,30 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             try {
                 val subscribers = multiClient!!.getSubscribers(topicHash, offset.toLong(), limit.toLong(), meta, txPool)
 
-                val map = HashMap<String, String>()
-                map.put("_id", _id!!)
-
+                var dataMap = HashMap<String, String>()
                 subscribers.subscribersInTxPool.range { chatId, value ->
                     val meta = value?.trim() ?: ""
-                    map[chatId] = meta
+                    dataMap[chatId] = meta
                     true
                 }
                 subscribers.subscribers.range { chatId, value ->
                     val meta = value?.trim() ?: ""
-                    map.put(chatId, meta)
+                    dataMap[chatId] = meta
                     true
                 }
+                val resp = hashMapOf(
+                        "_id" to _id,
+                        "event" to "getSubscribers",
+                        "data" to dataMap
+                )
+
                 App.runOnMainThread {
-                    clientEventSink.success(map)
+                    clientEventSink.success(resp)
                 }
             } catch (e: Exception) {
                 Log.e("getSubscribers", "getSubscribers | e:", e)
                 App.runOnMainThread {
-                    clientEventSink.error(_id, e.message, null)
+                    clientEventSink.error(_id, "getSubscribers", e.message)
                 }
             }
         }
@@ -502,6 +568,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 val subscription = multiClient!!.getSubscription(topicHash, subscriber)
                 val resp = hashMapOf(
                         "_id" to _id,
+                        "event" to "getSubscription",
                         "meta" to subscription.meta,
                         "expiresAt" to subscription.expiresAt
                 )
@@ -511,7 +578,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             } catch (e: Exception) {
                 Log.e("getSubscriptionE", "getSubscription | e:", e)
                 App.runOnMainThread {
-                    clientEventSink.error(_id, e.message, null)
+                    clientEventSink.error(_id, "getSubscription", e.message)
                 }
             }
         }
@@ -526,6 +593,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 val height = multiClient!!.height;
                 val resp = hashMapOf(
                         "_id" to _id,
+                        "event" to "getBlockHeight",
                         "height" to height
                 )
                 App.runOnMainThread {
@@ -534,14 +602,13 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             } catch (e: Exception) {
                 Log.e("getBlockHeightE", "getSubscription | e:", e)
                 App.runOnMainThread {
-                    clientEventSink.error(_id, e.message, null)
+                    clientEventSink.error(_id, "getBlockHeight", e.message)
                 }
             }
         }
     }
 
     private fun fetchDebugInfo(call: MethodCall, result: MethodChannel.Result){
-        Log.e("222:","HereHere")
         val ks: KeyStore = KeyStore.getInstance("AndroidKeyStore")
         ks.load(null)
         val aliases: Enumeration<String> = ks.aliases()
@@ -551,7 +618,6 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             val alias:String = aliases.nextElement();
             keyStoreAliases = keyStoreAliases+alias;
         }
-        Log.e("111:"+keyStoreAliases,"keyStoreAliases:"+keyStoreAliases)
 
         val _id = call.argument<String>("_id")!!
         result.success(null)
@@ -561,7 +627,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                 val _id = call.argument<String>("_id")!!
                 val resp = hashMapOf(
                         "_id" to _id,
-                        "event" to "fetch_debug_info",
+                        "event" to "fetchDebugInfo",
                         "debugInfo" to keyStoreAliases
                 )
                 App.runOnMainThread {
@@ -570,7 +636,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             } catch (e: Exception) {
                 Log.e("fetchDebugInfoE", "fetchDebugInfoE | e:", e)
                 App.runOnMainThread {
-                    clientEventSink.error(_id, e.message, null)
+                    clientEventSink.error(_id, "fetchDebugInfo", e.message)
                 }
             }
         }
@@ -585,8 +651,9 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             try {
                 val count = multiClient!!.getSubscribersCount(topicHash)
                 val resp = hashMapOf(
+                        "event" to "getSubscribersCount",
                         "_id" to _id,
-                        "result" to count
+                        "data" to count
                 )
                 App.runOnMainThread {
                     clientEventSink.success(resp)
@@ -594,26 +661,9 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             } catch (e: Exception) {
                 Log.e("getSubscribersCount", "getSubscribersCount | e:", e)
                 App.runOnMainThread {
-                    clientEventSink.error(_id, e.message, null)
+                    clientEventSink.error(_id, "getSubscribersCount", e.message)
                 }
             }
-        }
-    }
-
-    private fun ensureSameAccount(account: Account?): String? {
-        if (account == null){
-            closeClientIfExists();
-            return null
-        }
-        else{
-            val pubkey = account.pubKey().toHex() ?: return null
-            if (accountPubkeyHex == null){
-                return pubkey
-            }
-            if (accountPubkeyHex != pubkey){
-                closeClientIfExists()
-            }
-            return pubkey;
         }
     }
 
@@ -626,17 +676,28 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
     @Volatile
     private var multiClient: MultiClient? = null
 
-    private fun genClientIfNotExists(account: Account, identifier: String?, customClientUrl: String?): MultiClient? {
+    private fun genClientIfNotExists(account: Account, identifier: String?): MultiClient? {
         return multiClient ?: synchronized(this) {
             try {
                 val conf = ClientConfig()
-                customClientUrl?.let {
-                    conf.seedRPCServerAddr = Nkn.newStringArrayFromString(it)
-                    // Nkn.newStringArrayFromString("https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
+                if (clientList.count() > 0 && clientList[0].isNotEmpty()){
+                    for (index in clientList.indices) {
+                        var rpcNodeAddress:String = clientList[index]
+
+                        if (index == 0){
+                            conf.seedRPCServerAddr = Nkn.newStringArrayFromString(rpcNodeAddress)
+                        }
+                        else{
+                            conf.seedRPCServerAddr.append(rpcNodeAddress)
+                        }
+                    }
+                    conf.seedRPCServerAddr = Nkn.newStringArrayFromString("")
                 }
+
                 multiClient = Nkn.newMultiClient(account, identifier, 3, true, conf)
                 multiClient!!
             } catch (e: Exception) {
+                Log.w("g111111",e.toString());
                 closeClientIfExists()
                 null
             }
@@ -648,6 +709,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         try {
             multiClient?.close()
         } catch (ex: Exception) {
+            Log.w("closeClientIfExistsE", ex.toString())
         }
         multiClient = null
         isConnected = false

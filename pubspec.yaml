@@ -11,7 +11,7 @@ description: nMobile
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.1.0+200
+version: 1.1.0+203
 
 environment:
   sdk: ">=2.6.0 <3.0.0"
@@ -84,6 +84,8 @@ dependencies:
 
   permission_handler: ^5.0.1+1
 
+  # used to cut Message body into pieces
+#  dart_reed_solomon: ^0.1.0+2
   # Logger
   logger: ^0.9.1
   sentry: ^3.0.1

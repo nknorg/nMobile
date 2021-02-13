@@ -37,6 +37,7 @@ import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/log_tag.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class MessageListPage extends StatefulWidget {
@@ -76,8 +77,6 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
     _chatBloc = BlocProvider.of<ChatBloc>(context);
     _contactBloc = BlocProvider.of<ContactBloc>(context);
 
-
-    _addMessageOnListening();
     _scrollController.addListener(() {
       double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
       if (offsetFromBottom < 50 && !loading) {
@@ -89,12 +88,6 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
     });
 
     _fetchData();
-  }
-
-  _addMessageOnListening(){
-    DataLinker.instance.onListeningEvent(RequestTag.listenOnMessages, (backInfo){
-      print('backInfo is'+backInfo.toString());
-    });
   }
 
   @override
@@ -400,14 +393,13 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
             Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
           } else {
             if (e.toString().contains('duplicate subscription exist in block')){
-              print('duplicate subscription exist in block');
+              NLog.w('duplicate subscription exist in block');
               final topic = await TopicRepo().getTopicByName(popular.topic);
               assert(topic.nonNull);
               Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
             }
             else{
               showToast(e.toString());
-              // showToast(NL10ns.of(context).something_went_wrong);
             }
           }
         });
@@ -476,7 +468,7 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
       return Container();
     }
     Widget contentWidget;
-    String draft = LocalStorage.getChatUnSendContentFromId(NKNClientCaller.pubKey, item.targetId);
+    String draft = LocalStorage.getChatUnSendContentFromId(NKNClientCaller.currentChatId, item.targetId);
     if (draft != null && draft.length > 0) {
       contentWidget = Row(
         children: <Widget>[
@@ -495,7 +487,8 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
         ],
       );
     }
-    else if (item.contentType == ContentType.nknImage) {
+    else if (item.contentType == ContentType.nknImage ||
+        item.contentType == ContentType.media) {
       contentWidget = Padding(
         padding: const EdgeInsets.only(top: 0),
         child: Row(
@@ -511,7 +504,7 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
         ),
       );
     }
-    else if (item.contentType == ContentType.ChannelInvitation) {
+    else if (item.contentType == ContentType.channelInvitation) {
       contentWidget = Label(
         contact.name + ': ' + NL10ns.of(context).channel_invitation,
         type: LabelType.bodySmall,
@@ -651,7 +644,7 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
     if (contact == null) return Container();
 
     Widget contentWidget;
-    String draft = LocalStorage.getChatUnSendContentFromId(NKNClientCaller.pubKey, item.targetId);
+    String draft = LocalStorage.getChatUnSendContentFromId(NKNClientCaller.currentChatId, item.targetId);
     if (draft != null && draft.length > 0) {
       contentWidget = Row(
         children: <Widget>[
@@ -669,7 +662,8 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
           ),
         ],
       );
-    } else if (item.contentType == ContentType.nknImage) {
+    } else if (item.contentType == ContentType.nknImage ||
+               item.contentType == ContentType.media) {
       contentWidget = Padding(
         padding: const EdgeInsets.only(top: 0),
         child: Row(
@@ -678,7 +672,7 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
           ],
         ),
       );
-    } else if (item.contentType == ContentType.ChannelInvitation) {
+    } else if (item.contentType == ContentType.channelInvitation) {
       contentWidget = Label(
         NL10ns.of(context).channel_invitation,
         maxLines: 1,
@@ -701,7 +695,6 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
     }
     return InkWell(
       onTap: () {
-        print('Tapppeeddd');
         Navigator.of(context).pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
       },
       child: Container(

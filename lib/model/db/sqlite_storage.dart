@@ -8,6 +8,7 @@ import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -54,7 +55,8 @@ class SqliteStorage {
         await MessageSchema.create(db, version);
         await ContactSchema.create(db, version);
         var now = DateTime.now();
-        print('Database name is'+name.toString());
+
+        NLog.w('Database name is'+name.toString());
         var publicKey = name.replaceFirst(_CHAT_DATABASE_NAME + '_', '');
         var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(publicKey);
         await db.insert(

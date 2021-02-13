@@ -23,6 +23,8 @@ class NKNCreateClientEvent extends NKNClientEvent {
   const NKNCreateClientEvent(this.wallet, this.password);
 }
 
+class NKNRecreateClientEvent extends NKNClientEvent{}
+
 class NKNDisConnectClientEvent extends NKNClientEvent {}
 
 class NKNConnectedClientEvent extends NKNClientEvent {}

@@ -12,7 +12,6 @@ import 'package:nmobile/blocs/chat/auth_bloc.dart';
 import 'package:nmobile/blocs/chat/auth_event.dart';
 import 'package:nmobile/blocs/chat/auth_state.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
-import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/blocs/client/client_state.dart';
 import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
@@ -44,6 +43,7 @@ import 'package:nmobile/screens/chat/message.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/log_tag.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class MessagesTab extends StatefulWidget {
@@ -106,10 +106,12 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
 
   _refreshMessage() async{
     _updateTopicBlock();
-    Global.debugLog('_refreshMessage begin');
     var res = await MessageItem.getLastMessageList(limit: _limit);
+
+    print('Res is___'+res.length.toString());
+
     if (res == null) return;
-    Global.debugLog('Refresh got message count is'+res.length.toString());
+
     _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
     _skip = 20;
     _messagesList = (res);
@@ -126,41 +128,51 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
 
   _updateTopicBlock() async{
     if (Global.upgradedGroupBlockHeight == true){
-      Global.debugLog('_updateTopicBlock begin');
       Global.upgradedGroupBlockHeight = false;
       NKNClientCaller.fetchBlockHeight().then((blockHeight) {
-        Global.debugLog('_updateTopicBlock end___'+blockHeight.toString());
         if (blockHeight == null || blockHeight == 0){
           return;
         }
         TopicRepo().getAllTopics().then((topicList){
           for(Topic topic in topicList){
-            Global.debugLog('检索Topic:__'+topic.topic+'__'+topic.blockHeightExpireAt.toString());
+            if (topic.blockHeightExpireAt != null){
+              NLog.w('检索Topic:__'+topic.topic+'__'+topic.blockHeightExpireAt.toString());
+            }
+            else{
+              NLog.w('Wrong!!! topic.blockHeightExpireAt is null');
+            }
             if (topic.blockHeightExpireAt == -1 || topic.blockHeightExpireAt == null){
+              NLog.w('blockHeightExpireAt null or wrong!!!');
               final String topicHash = genTopicHash(topic.name);
-              NKNClientCaller.getSubscription(topicHash: topicHash, subscriber: NKNClientCaller.pubKey).then((subscription){
+              NKNClientCaller.getSubscription(topicHash: topicHash, subscriber: NKNClientCaller.currentChatId).then((subscription){
                 if (subscription['expiresAt'] != null){
                   TopicRepo().updateOwnerExpireBlockHeight(topic.name, int.parse(subscription['expiresAt'].toString()));
-                  Global.debugLog('升级'+topic.topic+'成功'+'__'+subscription.toString());
+                  NLog.w('升级'+topic.topic+'成功'+'__'+subscription.toString());
                 }
               });
             }
             else if ((topic.blockHeightExpireAt - blockHeight) < (400000-300000)){
               String topicName = topic.topic;
               if (topic.isPrivate == false){
-                Global.debugLog('更新Topic:' +topic.topic+'__Topic块高度:'+topic.blockHeightExpireAt.toString());
+                NLog.w('更新Topic:' +topic.topic+'__Topic块高度:'+topic.blockHeightExpireAt.toString());
                 GroupChatHelper.subscribeTopic(
                     topicName: topicName,
                     chatBloc: _chatBloc,
                     callback: (success, e) {
-                      Global.debugLog('_updateTopicBlock success');
+                      NLog.w('update topic blockHeight success');
                     });
 
                 final String topicHash = genTopicHash(topic.name);
-                NKNClientCaller.getSubscription(topicHash: topicHash, subscriber: NKNClientCaller.pubKey).then((subscription) {
+                NKNClientCaller.getSubscription(topicHash: topicHash, subscriber: NKNClientCaller.currentChatId).then((subscription) {
+                  NLog.w('getSubscription_____'+subscription.toString());
                   if (subscription['expiresAt'] != null){
                     TopicRepo().updateOwnerExpireBlockHeight(topic.name, int.parse(subscription['expiresAt'].toString()));
-                    Global.debugLog('更新'+topic.topic+'成功'+'__'+subscription.toString());
+                    if (topic.topic != null && subscription != null){
+                      NLog.w('更新'+topic.topic+'成功'+'__'+subscription.toString());
+                    }
+                    else{
+                      NLog.w('Wrong!!! topic.topic or subscription is null');
+                    }
                   }
                 });
               }
@@ -170,8 +182,10 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
               }
             }
             else{
-              Global.debugLog('topic订阅未过期:__'+topic.topic);
-              Global.debugLog('Topic themeID +'+topic.themeId.toString());
+              if (topic.topic != null){
+                NLog.w('topic is inTime__'+topic.topic);
+              }
+
               // final String topicHash = genTopicHash(topic.name);
               // final Map<String, dynamic> subscription = await account.client.getSubscription(topicHash: topicHash, subscriber: account.client.myChatId);
               // if (subscription['expiresAt'] != null){
@@ -207,8 +221,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         if (authState is AuthToUserState){
           _messagesList.clear();
           _refreshMessage();
-
-          _authBloc.add(AuthSuccessEvent());
+          _authBloc.add(AuthToFrontEvent());
         }
         return BlocBuilder<NKNClientBloc, NKNClientState>(
           builder: (context, clientState){
@@ -233,16 +246,8 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                       return _noMessageWidget();
                     },
                   );
-                  if (_messagesList != null && _messagesList.length > 0) {
-                    _messagesList.sort((a, b) => a.isTop ? (b.isTop ? -1 /*hold position original*/ : -1) : (b.isTop ? 1 : b.lastReceiveTime.compareTo(a.lastReceiveTime)));
-                    return _messageListWidget();
-                  } else {
-                    return _noMessageWidget();
-                  }
                 },
               );
-
-
             }
             return _noMessageWidget();
           },
@@ -403,42 +408,44 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
   }
 
   Widget _messageListWidget(){
-    return Flex(
-      direction: Axis.vertical,
-      children: [
-        getTipView(),
-        Expanded(
-          flex: 1,
-          child: ListView.builder(
-            padding: EdgeInsets.only(bottom: 72),
-            controller: _scrollController,
-            itemCount: _messagesList.length,
-            itemBuilder: (BuildContext context, int index) {
-              var item = _messagesList[index];
-              return BlocBuilder<ContactBloc, ContactState>(
-                builder: (context, state) {
-                  if (state is ContactLoaded) {
-                    Widget widget;
-                    if (item.topic != null) {
-                      widget = getTopicItemView(item, state);
-                    } else {
-                      widget = getSingleChatItemView(item, state);
-                    }
-                    return InkWell(
-                      onLongPress: () {
-                        showMenu(item, index);
-                      },
-                      child: widget,
-                    );
-                  } else {
-                    return Container();
-                  }
+    return SafeArea(
+        child:Flex(
+          direction: Axis.vertical,
+          children: [
+            getTipView(),
+            Expanded(
+              flex: 1,
+              child: ListView.builder(
+                padding: EdgeInsets.only(bottom: 72),
+                controller: _scrollController,
+                itemCount: _messagesList.length,
+                itemBuilder: (BuildContext context, int index) {
+                  var item = _messagesList[index];
+                  return BlocBuilder<ContactBloc, ContactState>(
+                    builder: (context, state) {
+                      if (state is ContactLoaded) {
+                        Widget widget;
+                        if (item.topic != null) {
+                          widget = getTopicItemView(item, state);
+                        } else {
+                          widget = getSingleChatItemView(item, state);
+                        }
+                        return InkWell(
+                          onLongPress: () {
+                            showMenu(item, index);
+                          },
+                          child: widget,
+                        );
+                      } else {
+                        return Container();
+                      }
+                    },
+                  );
                 },
-              );
-            },
-          ),
+              ),
+            ),
+          ],
         ),
-      ],
     );
   }
 
@@ -585,17 +592,23 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     }
   }
 
+  Widget _topLabelWidget(String topicName){
+    return Label(topicName,
+      type: LabelType.h3,
+      fontWeight: FontWeight.w500,
+    );
+  }
+
   Widget getTopicItemView(MessageItem item, ContactLoaded state) {
     var contact = state.getContactByAddress(item.sender);
     if (contact == null) {
       return Container();
     }
     Widget contentWidget;
-    // double topFontSize = 16;
-    double bottomFontSize = 14;
+    LabelType bottomType = LabelType.bodySmall;
     String draft = '';
-    if (NKNClientCaller.pubKey != null){
-      LocalStorage.getChatUnSendContentFromId(NKNClientCaller.pubKey, item.targetId);
+    if (NKNClientCaller.currentChatId != null){
+      LocalStorage.getChatUnSendContentFromId(NKNClientCaller.currentChatId, item.targetId);
     }
     if (draft != null && draft.length > 0) {
       contentWidget = Row(
@@ -609,14 +622,14 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
           SizedBox(width: 5),
           Label(
             draft,
-            type: LabelType.bodySmall,
+            type: bottomType,
             overflow: TextOverflow.ellipsis,
-            fontSize: bottomFontSize,
           ),
         ],
       );
     }
-    else if (item.contentType == ContentType.nknImage) {
+    else if (item.contentType == ContentType.nknImage ||
+             item.contentType == ContentType.media) {
       contentWidget = Padding(
         padding: const EdgeInsets.only(top: 0),
         child: Row(
@@ -632,38 +645,32 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         ),
       );
     }
-    else if (item.contentType == ContentType.ChannelInvitation) {
+    else if (item.contentType == ContentType.channelInvitation) {
       contentWidget = Label(
         contact.name + ': ' + NL10ns.of(context).channel_invitation,
-        type: LabelType.bodySmall,
+        type: bottomType,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        fontSize: bottomFontSize,
       );
     }
     else if (item.contentType == ContentType.eventSubscribe) {
       contentWidget = Label(
         NL10ns.of(context).joined_channel,
         maxLines: 1,
-        type: LabelType.bodySmall,
+        type: bottomType,
         overflow: TextOverflow.ellipsis,
-        fontSize: bottomFontSize,
       );
     }
     else {
       contentWidget = Label(
         contact.name + ': ' + item.content,
         maxLines: 1,
-        type: LabelType.bodySmall,
+        type: bottomType,
         overflow: TextOverflow.ellipsis,
-        fontSize: bottomFontSize,
       );
     }
     List<Widget> topicWidget = [
-      Label(item.topic.shortName,
-          fontSize: 18,
-          type: LabelType.h4
-      ),
+      _topLabelWidget(item.topic.shortName),
     ];
     if (item.topic.type == TopicType.private) {
       topicWidget.insert(0, loadAssetIconsImage('lock', width: 18, color: DefaultTheme.primaryColor));
@@ -775,10 +782,14 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
 
   Widget getSingleChatItemView(MessageItem item, ContactLoaded state) {
     var contact = state.getContactByAddress(item.targetId);
+
     if (contact == null) return Container();
 
+    LabelType topType = LabelType.h3;
+    LabelType bottomType = LabelType.bodySmall;
+
     Widget contentWidget;
-    String draft = LocalStorage.getChatUnSendContentFromId(NKNClientCaller.pubKey, item.targetId);
+    String draft = LocalStorage.getChatUnSendContentFromId(NKNClientCaller.currentChatId, item.targetId);
     if (draft != null && draft.length > 0) {
       contentWidget = Row(
         children: <Widget>[
@@ -796,7 +807,9 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
           ),
         ],
       );
-    } else if (item.contentType == ContentType.nknImage) {
+    }
+    else if (item.contentType == ContentType.nknImage ||
+               item.contentType == ContentType.media) {
       contentWidget = Padding(
         padding: const EdgeInsets.only(top: 0),
         child: Row(
@@ -805,24 +818,35 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
           ],
         ),
       );
-    } else if (item.contentType == ContentType.ChannelInvitation) {
+    }
+    else if (item.contentType == ContentType.nknAudio) {
+      contentWidget = Padding(
+        padding: const EdgeInsets.only(top: 0),
+        child: Row(
+          children: <Widget>[
+            loadAssetIconsImage('microphone', width: 16.w, color: DefaultTheme.fontColor2),
+          ],
+        ),
+      );
+    }
+    else if (item.contentType == ContentType.channelInvitation) {
       contentWidget = Label(
         NL10ns.of(context).channel_invitation,
         maxLines: 1,
-        type: LabelType.bodySmall,
+        type: bottomType,
         overflow: TextOverflow.ellipsis,
       );
     } else if (item.contentType == ContentType.eventSubscribe) {
       contentWidget = Label(
         NL10ns.of(context).joined_channel,
         maxLines: 1,
-        type: LabelType.bodySmall,
+        type: bottomType,
         overflow: TextOverflow.ellipsis,
       );
     } else {
       contentWidget = Label(
         item.content,
-        type: LabelType.bodySmall,
+        type: bottomType,
         overflow: TextOverflow.ellipsis,
       );
     }
@@ -853,7 +877,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Label(contact.name, type: LabelType.h4),
+                          _topLabelWidget(contact.name),
                           contentWidget.pad(t: 6),
                         ],
                       ),

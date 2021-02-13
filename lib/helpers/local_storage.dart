@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flustars/flustars.dart';
-import 'package:flutter_aes_ecb_pkcs5/flutter_aes_ecb_pkcs5.dart';
-import 'package:nmobile/components/CommonUI.dart';
+import 'package:nmobile/utils/nlog_util.dart';
+import 'package:oktoast/oktoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorage {
@@ -34,6 +34,10 @@ class LocalStorage {
 
   static const String WALLET_KEYSTORE_AES_FILENAME = '/keystore.aes';
 
+  static const String NKN_RPC_NODE_LIST = 'NKN_RPC_NODE_LIST';
+
+  static const String NKN_MESSAGE_NOTIFICATION_ALERT = 'NKN_MESSAGE_NOTIFICATION_ALERT';
+
   set(String key, val) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (val == null) {
@@ -52,16 +56,21 @@ class LocalStorage {
   saveKeyStoreInFile(String address,String keyStore) async{
     String addressKey = '$WALLET_KEYSTORE_ENCRYPT_VALUE'+'_'+address;
     set(addressKey, keyStore);
-    print('save Keystore to Local__'+addressKey+'___'+keyStore);
+
+    if (keyStore != null && addressKey != null){
+      NLog.w('save Keystore to Local__'+addressKey+'___'+keyStore);
+    }
+    else{
+      showToast('keyStore is null');
+    }
   }
 
   Future<String> getKeyStoreValue(String address) async{
-    print('getKeyStoreValue begin');
     String decryptKey = await get(WALLET_KEYSTORE_ENCRYPT_SKEY);
     if (decryptKey != null && decryptKey.length > 0){
       set(WALLET_KEYSTORE_ENCRYPT_SKEY, '');
       set(WALLET_KEYSTORE_ENCRYPT_VALUE, '');
-      print('Clear 1.0.3 logic');
+      NLog.w('Clear 1.0.3 logic');
     }
 
     String addressKey = '$WALLET_KEYSTORE_ENCRYPT_VALUE'+'_'+address;
@@ -69,7 +78,6 @@ class LocalStorage {
     if (keyStore == null && keyStore.length == 0){
       return '';
     }
-    print('getKeyStoreValue end +'+keyStore);
     return keyStore;
   }
 

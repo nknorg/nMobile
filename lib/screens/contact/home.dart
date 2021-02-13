@@ -60,7 +60,7 @@ class _ContactHomeState extends State<ContactHome> {
 
   initAsync() async {
     var topic = widget.arguments ? <Topic>[] : await TopicRepo().getAllTopics();
-    print('______topic count is'+topic.length.toString());
+
     var friends = await ContactSchema.getContacts(limit: _limit);
     var stranger = await ContactSchema.getStrangerContacts(limit: 10);
     setState(() {
