@@ -6,6 +6,9 @@ import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter_aes_ecb_pkcs5/flutter_aes_ecb_pkcs5.dart';
+
+
 class LocalStorage {
   static const String NKN_WALLET_KEY = 'WALLETS';
   static const String SETTINGS_KEY = 'SETTINGS';
@@ -65,18 +68,61 @@ class LocalStorage {
     }
   }
 
-  Future<String> getKeyStoreValue(String address) async{
-    String decryptKey = await get(WALLET_KEYSTORE_ENCRYPT_SKEY);
-    if (decryptKey != null && decryptKey.length > 0){
-      set(WALLET_KEYSTORE_ENCRYPT_SKEY, '');
-      set(WALLET_KEYSTORE_ENCRYPT_VALUE, '');
-      NLog.w('Clear 1.0.3 logic');
-    }
+  // saveValueEncryptByKey(String encodeValue,String key) async {
+  //   if (encodeValue == null || encodeValue.length == 0){
+  //     return;
+  //   }
+  //   var randomKey = await FlutterAesEcbPkcs5.generateDesKey(128);
+  //   print('randomKey is'+randomKey);
+  //   set(WALLET_KEYSTORE_ENCRYPT_SKEY, randomKey);
+  //   if (key.length > 0 || key.length < 32){
+  //     randomKey = randomKey.substring(key.length)+key;
+  //   }
+  //   print('save Encrypt Value'+randomKey);
+  //   var encryptString = await FlutterAesEcbPkcs5.encryptString(encodeValue, randomKey);
+  //   print('save Encrypt Value'+encryptString);
+  //   set(WALLET_KEYSTORE_ENCRYPT_VALUE, encryptString);
+  // }
 
+  Future<String> getValueDecryptByKey(String key,String address) async{
+    String decryptKey = await get(WALLET_KEYSTORE_ENCRYPT_SKEY);
+    if (decryptKey == null || decryptKey.length == 0){
+      return '';
+    }
+    if (key.length > 0 || key.length < 32 && decryptKey.length == 32){
+      decryptKey = decryptKey.substring(key.length)+key;
+    }
+    String decodedValue = await get(WALLET_KEYSTORE_ENCRYPT_VALUE);
+    if (decodedValue == null || decodedValue.length == 0){
+      String addressKey = '$WALLET_KEYSTORE_ENCRYPT_VALUE'+'_'+address;
+      decodedValue = await get(addressKey);
+      if (decodedValue == null || decodedValue.length == 0){
+
+        return '';
+      }
+    }
+    print('解密中'+decodedValue);
+    print('解密中'+decryptKey);
+    String decryptValue = await FlutterAesEcbPkcs5.decryptString(decodedValue, decryptKey);
+    if (decryptValue == null || decryptValue.length == 0){
+      return '';
+    }
+    print('解密成功'+decryptValue);
+    return decryptValue;
+  }
+
+  Future<String> getKeyStoreValue(String address) async{
     String addressKey = '$WALLET_KEYSTORE_ENCRYPT_VALUE'+'_'+address;
     String keyStore = await get(addressKey);
-    if (keyStore == null && keyStore.length == 0){
-      return '';
+    if (keyStore == null){
+
+      // keyStore = await get(WALLET_KEYSTORE_ENCRYPT_VALUE);
+      if (keyStore == null){
+        NLog.w('getKeyStoreValue is null');
+      }
+    }
+    else{
+      NLog.w('getKeyStoreValue is not null');
     }
     return keyStore;
   }

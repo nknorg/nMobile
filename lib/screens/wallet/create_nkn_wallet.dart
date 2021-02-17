@@ -59,7 +59,6 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
       String address = json['Address'];
       _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
 
-
       await SecureStorage().set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
       var wallet = WalletSchema(name: _name, address: address);
 

@@ -143,6 +143,7 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
       showToast('Please input password');
     }
     else{
+      NLog.w('Password is___'+password.toString());
       _onGetPassword(password);
     }
   }

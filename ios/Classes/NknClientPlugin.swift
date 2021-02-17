@@ -717,7 +717,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
     @objc func becomeDeath(noti:Notification){
         print("NKNClient进入后台")
 //        closeNKNClient()
-        NKNPushService.shared().disConnectAPNS()
+//        NKNPushService.shared().disConnectAPNS()
         
 //        sendMessageWorkItem?.cancel()
 //        receiveMessageWorkItem?.cancel()
