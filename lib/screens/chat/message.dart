@@ -119,12 +119,8 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     super.initState();
 
     chatContact = widget.arguments.contact;
-    if (chatContact.notificationOpen == null){
-      chatContact.setNotificationOpen(false);
-      chatContact.notificationOpen = false;
-    }
-
     targetId = chatContact.clientAddress;
+
     if (chatContact.notificationOpen == null){
       chatContact.setNotificationOpen(false);
       _acceptNotification = false;
@@ -147,12 +143,13 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
 
     _deleteTickHandle();
 
-
     _chatSubscription = _chatBloc.listen((state) {
       if (state is UpdateChatMessageState){
-        setState(() {
-          _messages = state.messageList;
-        });
+        if (state.messageList.isNotEmpty){
+          setState(() {
+            _messages = state.messageList;
+          });
+        }
       }
       if (state is MessageUpdateState) {
         MessageSchema updateMessage = state.message;

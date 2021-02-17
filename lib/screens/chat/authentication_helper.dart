@@ -11,13 +11,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/chat/auth_bloc.dart';
 import 'package:nmobile/blocs/chat/auth_event.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
-import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/wallet.dart';
-import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
@@ -138,19 +135,28 @@ class TimerAuth {
     }
     else{
       bool auth = await LocalAuthenticationService.instance.authenticate();
-
+      NLog.w('onCheckAuthGetPassword auth:'+auth.toString());
       if (auth) {
         TimerAuth.instance.enableAuth();
+        NLog.w('onCheckAuthGetPassword E1:'+password.toString());
         WalletSchema wallet = await loadCurrentWallet();
+        if (wallet == null){
+          NLog.w('Wrong!!! wallet is null');
+        }
+        NLog.w('onCheckAuthGetPassword E2:'+wallet.address.toString());
         String address = wallet.address;
+        password = await SecureStorage().get('${SecureStorage.PASSWORDS_KEY}:$address');
+        NLog.w('onCheckAuthGetPassword pE3:'+password.toString());
+        if (password == null){
+          password = await _checkUserInput(context);
+        }
         try  {
-          password = await SecureStorage().get('${SecureStorage.PASSWORDS_KEY}:$address');
           await wallet.exportWallet(password);
         }
         catch (e){
-          NLog.w('onCheckAuthGetPassword E:'+e.toString());
           showToast(NL10ns.of(context).tip_password_error);
         }
+        NLog.w('onCheckAuthGetPassword E:'+password.toString());
         return password;
       }
       else{
@@ -165,20 +171,20 @@ class TimerAuth {
     var walletAddress = await LocalStorage().get(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS);
     List wallets = await LocalStorage().getArray(LocalStorage.NKN_WALLET_KEY);
 
-    if (walletAddress == null && wallets.length > 0){
-      Map resultWallet = wallets[0];
-      walletModel = WalletSchema(address: resultWallet['address'], type: resultWallet['type'], name: resultWallet['name']);
-      return walletModel;
-    }
-
-    for (Map wallet in wallets){
-      var walletModel = WalletSchema(address: wallet['address'], type: wallet['type'], name: wallet['name']);
-      if (walletModel.address == walletAddress){
+    if (walletAddress == null){
+      if (wallets.isNotEmpty) {
+        Map resultWallet = wallets[0];
+        walletModel = WalletSchema(address: resultWallet['address'], type: resultWallet['type'], name: resultWallet['name']);
         return walletModel;
       }
     }
-    if (wallets.length > 0){
-      return wallets[0];
+    else{
+      for (Map wallet in wallets){
+        var walletModel = WalletSchema(address: wallet['address'], type: wallet['type'], name: wallet['name']);
+        if (walletModel.address == walletAddress){
+          return walletModel;
+        }
+      }
     }
     return null;
   }

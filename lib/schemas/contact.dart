@@ -875,7 +875,8 @@ class ContactSchema {
         type = ContactType.stranger;
       }
       data['type'] = type;
-    } else {
+    }
+    else {
       profileVersion = uuid.v4();
       data['profile_version'] = profileVersion;
     }

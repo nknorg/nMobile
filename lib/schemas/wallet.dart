@@ -12,6 +12,7 @@ import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/log_tag.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web3dart/credentials.dart';
@@ -69,11 +70,17 @@ class WalletSchema extends Equatable with Tag {
     }
   }
 
+  Future<String> getKeystoreByPassword(String password) async{
+    String keystore = await LocalStorage().getValueDecryptByKey(password,address);
+    if (keystore.isNotEmpty && keystore.length > 0){
+      return keystore;
+    }
+    return '';
+  }
+
   Future<String> getKeystore() async {
     if (Platform.isAndroid){
       LocalStorage storage = LocalStorage();
-      /// Clear 1.0.3 Storage to ASE(Keystore) it is not secureStrong
-
       String keyStore = await storage.getKeyStoreValue(address);
       if (keyStore == null || keyStore.length == 0){
         /// if not new Comer
@@ -94,11 +101,23 @@ class WalletSchema extends Equatable with Tag {
   }
 
   Future<Map> exportWallet(password) async {
+    NLog.w('onCheckAuthGetPassword 2:');
     String exportKeystore = await getKeystore();
-
+    NLog.w('exportKeystore for key__'+exportKeystore.toString());
+    NLog.w('exportKeystore for pkey__'+password.toString());
     if (exportKeystore == null || exportKeystore.length == 0){
-      return null;
+      exportKeystore = await LocalStorage().getValueDecryptByKey(password,address);
+      // showToast('exportKeystore 111for key__'+exportKeystore.toString());
+      if (exportKeystore != null && exportKeystore.length > 0){
+        /// 1.0.3 bug pass
+        LocalStorage().saveKeyStoreInFile(address,exportKeystore);
+      }
+      else{
+        // showToast('exportKeystore 13333311for key__'+exportKeystore.toString());
+        return null;
+      }
     }
+
     var wallet = await NknWalletPlugin.openWallet(exportKeystore, password);
 
     await _secureStorage.set('${SecureStorage.PASSWORDS_KEY}:$address', password);
