@@ -203,8 +203,9 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                   updateMessage.contentType == ContentType.nknImage ||
                   updateMessage.contentType == ContentType.media ||
                   updateMessage.contentType == ContentType.nknAudio){
-                if (state.message.options != null && state.message.options['deleteAfterSeconds'] != null) {
-                  state.message.deleteTime = DateTime.now().add(Duration(seconds: state.message.options['deleteAfterSeconds'] + 1));
+                if (updateMessage.options != null && updateMessage.options['deleteAfterSeconds'] != null) {
+                  updateMessage.deleteTime = DateTime.now().add(Duration(seconds: updateMessage.options['deleteAfterSeconds']));
+                  updateMessage.updateDeleteTime();
                 }
               }
 

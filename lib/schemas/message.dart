@@ -999,6 +999,19 @@ class MessageSchema extends Equatable {
     return result;
   }
 
+  Future<int> updateDeleteTime() async{
+    Database cdb = await NKNDataManager().currentDatabase();
+    var count = await cdb.update(
+      MessageSchema.tableName,
+      {
+        'delete_time': deleteTime?.millisecondsSinceEpoch,
+      },
+      where: 'msg_id = ?',
+      whereArgs: [msgId],
+    );
+    return count;
+  }
+
   int get deleteAfterSeconds {
     if (options != null && options.containsKey('deleteAfterSeconds')) {
       return options['deleteAfterSeconds'];

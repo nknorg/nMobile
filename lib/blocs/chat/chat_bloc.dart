@@ -203,6 +203,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           message.contentType == ContentType.nknImage) {
         if (message.options != null && message.options['deleteAfterSeconds'] != null) {
           message.deleteTime = DateTime.now().add(Duration(seconds: message.options['deleteAfterSeconds']));
+          await message.updateDeleteTime();
         }
         if (useOnePiece && (message.contentType == ContentType.nknAudio ||
                 message.contentType == ContentType.media ||
@@ -647,29 +648,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         /// Receive Contact Request
         if (data['requestType'] != null) {
           contact.responseProfile(data);
-          // if (data['version'] != null) {
-          //   if (data['requestType'] == RequestType.header) {
-          //     contact.responseProfile(RequestType.header);
-          //   }
-          //   else if (data['requestType'] == RequestType.full) {
-          //     contact.responseProfile(RequestType.full);
-          //   }
-          // }
-          // else {
-          //   /// 1.1.0 Version fit 1.0.3 before
-          //   if (data['requestType'] == RequestType.header) {
-          //     NLog.w('1.1.0 Version fit 1.0.3 before response a header');
-          //
-          //     contact.responseProfile(RequestType.header);
-          //   }
-          //   else if (data['requestType'] == RequestType.full) {
-          //     NLog.w('RequestType.full to null Version');
-          //     contact.profileExpiresAt = DateTime.now();
-          //     contact.updateExpiresAtTime();
-          //     contact.responseProfile(RequestType.full);
-          //   }
-          //   NLog.w('Wrong!!! data[version] is null');
-          // }
         }
         /// Receive Contact Response
         else {
