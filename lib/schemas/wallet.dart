@@ -101,10 +101,7 @@ class WalletSchema extends Equatable with Tag {
   }
 
   Future<Map> exportWallet(password) async {
-    NLog.w('onCheckAuthGetPassword 2:');
     String exportKeystore = await getKeystore();
-    NLog.w('exportKeystore for key__'+exportKeystore.toString());
-    NLog.w('exportKeystore for pkey__'+password.toString());
     if (exportKeystore == null || exportKeystore.length == 0){
       exportKeystore = await LocalStorage().getValueDecryptByKey(password,address);
       // showToast('exportKeystore 111for key__'+exportKeystore.toString());

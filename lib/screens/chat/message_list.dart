@@ -494,7 +494,7 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
         child: Row(
           children: <Widget>[
             Label(
-              contact.name + ': ',
+              contact.getShowName + ': ',
               maxLines: 1,
               type: LabelType.bodySmall,
               overflow: TextOverflow.ellipsis,
@@ -506,7 +506,7 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
     }
     else if (item.contentType == ContentType.channelInvitation) {
       contentWidget = Label(
-        contact.name + ': ' + NL10ns.of(context).channel_invitation,
+        contact.getShowName + ': ' + NL10ns.of(context).channel_invitation,
         type: LabelType.bodySmall,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -522,7 +522,7 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
     }
     else {
       contentWidget = Label(
-        contact.name + ': ' + item.content,
+        contact.getShowName + ': ' + item.content,
         maxLines: 1,
         type: LabelType.bodySmall,
         overflow: TextOverflow.ellipsis,
@@ -720,7 +720,7 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Label(contact.name, type: LabelType.h4),
+                          Label(contact.getShowName, type: LabelType.h4),
                           contentWidget.pad(t: 6),
                         ],
                       ),

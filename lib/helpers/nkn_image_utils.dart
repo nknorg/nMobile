@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 Future<File> getCameraFile(String accountPubkey, {@required ImageSource source}) async {
@@ -53,9 +54,9 @@ Future<File> getHeaderImage(String accountPubkey) async {
   File croppedFile = await ImageCropper.cropImage(
     sourcePath: image.path,
     cropStyle: CropStyle.circle,
-    maxWidth: 600,
-    maxHeight: 600,
-    compressQuality: 40,
+    maxWidth: 300,
+    maxHeight: 300,
+    compressQuality: 50,
     iosUiSettings: IOSUiSettings(
       minimumAspectRatio: 1.0,
     ),
@@ -65,6 +66,9 @@ Future<File> getHeaderImage(String accountPubkey) async {
   var path = createContactFilePath(accountPubkey, croppedFile);
 
   var savedImg = croppedFile.copySync(path);
+
+  int length = await savedImg.length();
+  NLog.w('savedImg length is_____'+length.toString());
 
   return savedImg;
 }

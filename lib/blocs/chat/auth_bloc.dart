@@ -16,7 +16,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
     else if (event is AuthToFrontEvent){
       ContactSchema currentUser = await ContactSchema.fetchCurrentUser();
-      NLog.w('!!!!!!AuthToFrontEvent called'+currentUser.name);
       yield AuthToFrontState(currentUser);
     }
     else if (event is AuthToBackgroundEvent){
@@ -39,8 +38,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         await currentUser.insertContact();
         NLog.w('AuthBloc insert User___'+currentUser.clientAddress);
       }
-
-      NLog.w('!!!!!!AuthToUserState called'+currentUser.name);
 
       yield AuthToUserState(currentUser);
     }

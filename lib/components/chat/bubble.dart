@@ -471,7 +471,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                       children: <Widget>[
                         SizedBox(height: 8.h),
                         Label(
-                          widget.contact.name,
+                          widget.contact.getShowName,
                           height: 1,
                           type: LabelType.bodyRegular,
                           color: DefaultTheme.primaryColor,
@@ -511,7 +511,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                 },
                 onLongPress: () {
                   if (!widget.hideHeader) {
-                    widget.onChanged(widget.contact.name);
+                    widget.onChanged(widget.contact.getShowName);
                   }
                 },
                 child: Opacity(

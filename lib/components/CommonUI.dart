@@ -111,8 +111,8 @@ class CommonUI{
           }
         }
       }
-      if (contact.name != null){
-        name = contact.name;
+      if (contact.getShowName != null){
+        name = contact.getShowName;
       }
       if (contact.options != null && contact.options.color != null && contact.options.backgroundColor != null){
         if (contact.options.backgroundColor != null){

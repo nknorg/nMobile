@@ -39,7 +39,7 @@ class ChannelBloc extends Bloc<ChannelMembersEvent, ChannelState> {
       ContactSchema cta = await ContactSchema.fetchContactByAddress(sub.chatId) ?? ContactSchema(clientAddress: sub.chatId, type: contactType);
 
       MemberVo member = MemberVo(
-        name: cta.name,
+        name: cta.getShowName,
         chatId: sub.chatId,
         indexPermiPage: sub.indexPermiPage,
         uploaded: sub.uploaded,
@@ -54,7 +54,7 @@ class ChannelBloc extends Bloc<ChannelMembersEvent, ChannelState> {
       final contactType = (sub.chatIdOrPubkey == NKNClientCaller.currentChatId || sub.chatIdOrPubkey == NKNClientCaller.currentChatId) ? ContactType.me : ContactType.stranger;
       final cta = await ContactSchema.fetchContactByAddress(sub.chatIdOrPubkey) ?? ContactSchema(clientAddress: sub.chatIdOrPubkey, type: contactType);
       list.add(MemberVo(
-        name: cta.name,
+        name: cta.getShowName,
         chatId: sub.chatIdOrPubkey,
         indexPermiPage: sub.indexPermiPage,
         uploaded: sub.uploaded,

@@ -196,7 +196,6 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     }
     var res = await MessageItem.getLastMessageList(0, messageCount);
 
-    NLog.w('_startRefreshMessage got Message___'+res.length.toString());
     if (res == null) return;
 
     _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
@@ -240,7 +239,6 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                 builder: (context, chatState) {
                   if (chatState is MessageUpdateState){
                     _startRefreshMessage();
-                    NLog.w('Refresh Called this2');
                   }
                   return BlocBuilder<ContactBloc, ContactState>(
                     builder: (context, contactState) {
@@ -642,7 +640,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         child: Row(
           children: <Widget>[
             Label(
-              contact.name + ': ',
+              contact.getShowName + ': ',
               maxLines: 1,
               type: LabelType.bodySmall,
               overflow: TextOverflow.ellipsis,
@@ -654,7 +652,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     }
     else if (item.contentType == ContentType.channelInvitation) {
       contentWidget = Label(
-        contact.name + ': ' + NL10ns.of(context).channel_invitation,
+        contact.getShowName + ': ' + NL10ns.of(context).channel_invitation,
         type: bottomType,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -670,7 +668,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     }
     else {
       contentWidget = Label(
-        contact.name + ': ' + item.content,
+        contact.getShowName + ': ' + item.content,
         maxLines: 1,
         type: bottomType,
         overflow: TextOverflow.ellipsis,
@@ -888,7 +886,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _topLabelWidget(contact.name),
+                          _topLabelWidget(contact.getShowName),
                           contentWidget.pad(t: 6),
                         ],
                       ),
