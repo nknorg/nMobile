@@ -198,6 +198,8 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
 
     if (res == null) return;
 
+    NLog.w('_startRefreshMessage got Message___'+res.length.toString());
+
     _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
     _messagesList = (res);
   }
