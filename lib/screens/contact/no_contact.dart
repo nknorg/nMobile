@@ -64,7 +64,7 @@ class _NoContactScreenState extends State<NoContactScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Label(currentUser.name, type: LabelType.h3, dark: true),
+                        Label(currentUser.getShowName, type: LabelType.h3, dark: true),
                         Label(NL10ns.of(context).click_to_settings, type: LabelType.bodyRegular, color: DefaultTheme.fontLightColor.withAlpha(200))
                       ],
                     ),

@@ -61,8 +61,6 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMixin, RouteAware, Tag{
-  // final DChatAuthenticationHelper authHelper = DChatAuthenticationHelper();
-
   WalletsBloc _walletBloc;
   NKNClientBloc _clientBloc;
   AuthBloc _authBloc;
@@ -519,7 +517,7 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                         currentUser = contactState.userInfo;
                       }
                       if (currentUser != null){
-                        return Label(currentUser.name, type: LabelType.h3, dark: true);
+                        return Label(currentUser.getShowName, type: LabelType.h3, dark: true);
                       }
                       return BlocBuilder<AuthBloc, AuthState>(builder: (context, authState){
                         if (currentUser == null){
@@ -531,7 +529,7 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                           }
                         }
                         if (currentUser != null){
-                          return Label(currentUser.name, type: LabelType.h3, dark: true);
+                          return Label(currentUser.getShowName, type: LabelType.h3, dark: true);
                         }
                         return Container();
                       });

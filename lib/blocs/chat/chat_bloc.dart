@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:dart_reed_solomon/dart_reed_solomon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -55,6 +56,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
 
   bool useOnePiece = true;
   int perPieceLength = 1024*4;
+
+  // ReedSolomon reedSolomon = ReedSolomon(
+  //   symbolSizeInBits: 6,
+  //   numberOfCorrectableSymbols: 6,
+  //   primitivePolynomial: 4096,
+  //   initialRoot: 1,
+  // );
 
   @override
   Stream<ChatState> mapEventToState(ChatEvent event) async* {
@@ -170,9 +178,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     String contentData = '';
     await message.insertSendMessage();
 
-    Timer(Duration(seconds: 11), () {
-      _watchSendMessage(message);
-    });
+    // Timer(Duration(seconds: 11), () {
+    //   _watchSendMessage(message);
+    // });
     /// Handle GroupMessage Sending
     if (message.topic != null){
       try {
@@ -404,6 +412,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         mimeType.indexOf('audio') > -1) {
       List fileBytesList = file.readAsBytesSync();
 
+
       int filePieces = fileBytesList.length~/(perPieceLength);
       int leftPiece = fileBytesList.length%(perPieceLength);
       if (leftPiece > 0){
@@ -532,7 +541,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       if (contact.profileExpiresAt == null ||
           DateTime.now().isAfter(contact.profileExpiresAt)) {
         Global.saveLoadProfile(contact.publicKey);
-        contact.requestProfile(RequestType.header, contact.profileVersion);
+        contact.requestProfile(RequestType.header);
       }
     }
 
@@ -637,43 +646,42 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
 
         /// Receive Contact Request
         if (data['requestType'] != null) {
-          if (data['version'] != null) {
-            print('requestType version is___' + data['version'].toString());
-            if (data['requestType'] == RequestType.header) {
-              contact.responseProfile(RequestType.header, data['version']);
-            }
-            else if (data['requestType'] == RequestType.full) {
-              contact.responseProfile(RequestType.full, data['version']);
-            }
-          }
-          else {
-            /// 1.1.0 Version fit 1.0.3 before
-            if (data['requestType'] == RequestType.header) {
-              NLog.w('1.1.0 Version fit 1.0.3 before response a header');
-
-              contact.responseProfile(RequestType.header, data['version']);
-            }
-            else if (data['requestType'] == RequestType.full) {
-              NLog.w('RequestType.full to null Version');
-              contact.profileExpiresAt = DateTime.now();
-              contact.updateExpiresAtTime();
-              contact.responseProfile(RequestType.full, data['version']);
-            }
-            NLog.w('Wrong!!! data[version] is null');
-          }
+          contact.responseProfile(data);
+          // if (data['version'] != null) {
+          //   if (data['requestType'] == RequestType.header) {
+          //     contact.responseProfile(RequestType.header);
+          //   }
+          //   else if (data['requestType'] == RequestType.full) {
+          //     contact.responseProfile(RequestType.full);
+          //   }
+          // }
+          // else {
+          //   /// 1.1.0 Version fit 1.0.3 before
+          //   if (data['requestType'] == RequestType.header) {
+          //     NLog.w('1.1.0 Version fit 1.0.3 before response a header');
+          //
+          //     contact.responseProfile(RequestType.header);
+          //   }
+          //   else if (data['requestType'] == RequestType.full) {
+          //     NLog.w('RequestType.full to null Version');
+          //     contact.profileExpiresAt = DateTime.now();
+          //     contact.updateExpiresAtTime();
+          //     contact.responseProfile(RequestType.full);
+          //   }
+          //   NLog.w('Wrong!!! data[version] is null');
+          // }
         }
         /// Receive Contact Response
         else {
           if (data['version'] != contact.profileVersion) {
             if (data['responseType'] == RequestType.header) {
-              await contact.setOrUpdateBasicProfile(data);
+              await contact.setOrUpdateProfileVersion(data);
             }
             else if (data['responseType'] == RequestType.full) {
               await contact.setOrUpdateExtraProfile(data);
             }
             if (data['content'] == null) {
-              print('Received old Content__' + data.toString());
-              contact.requestProfile(RequestType.full, contact.profileVersion);
+              contact.requestProfile(RequestType.full);
             }
             else {
               await contact.setOrUpdateExtraProfile(data);
@@ -732,13 +740,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       /// Receipt sendMessage do not need InsertToDataBase
       else if (message.contentType == ContentType.receipt) {
         int count = await message.receiptMessage();
+        message.setMessageStatus(MessageStatus.MessageSendReceipt);
 
         if (count == 0) {
           print('Duplicate insert');
           message.insertReceivedMessage();
         }
-        NLog.w('Received ReceiptMessage'+message.content.toString());
-
         _startWatchDog(message);
       }
       else {

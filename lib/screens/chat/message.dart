@@ -119,6 +119,9 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     super.initState();
 
     chatContact = widget.arguments.contact;
+    chatContact.requestProfile(RequestType.header);
+
+
     targetId = chatContact.clientAddress;
 
     if (chatContact.notificationOpen == null){
@@ -159,7 +162,6 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
 
         if (updateMessage.contentType == ContentType.receipt){
           if (_messages != null && _messages.length > 0) {
-            NLog.w('ReceiveReceipt____'+updateMessage.content.toString());
             var msg = _messages.firstWhere((x) => x.msgId == updateMessage.content.toString() && x.isSendMessage(), orElse: () => null);
             if (msg != null) {
               setState(() {
@@ -541,7 +543,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                 flex: 1,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[Label(chatContact.name, type: LabelType.h3, dark: true), getBurnTimeView()],
+                  children: <Widget>[Label(chatContact.getShowName, type: LabelType.h3, dark: true), getBurnTimeView()],
                 ),
               ),
               // Spacer(),
@@ -1156,7 +1158,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Label(
-                        message.isSendMessage() ? NL10ns.of(context).you : chatContact.name,
+                        message.isSendMessage() ? NL10ns.of(context).you : chatContact.getShowName,
                         fontWeight: FontWeight.bold,
                       ),
                       Label(' ${NL10ns.of(context).update_burn_after_reading}', softWrap: true),
@@ -1198,7 +1200,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Label(
-                        message.isSendMessage() ? NL10ns.of(context).you : chatContact.name,
+                        message.isSendMessage() ? NL10ns.of(context).you : chatContact.getShowName,
                         fontWeight: FontWeight.bold,
                       ),
                       Label('$deviceDesc'),
@@ -1237,7 +1239,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Label(
-                        message.isSendMessage() ? NL10ns.of(context).you : chatContact.name,
+                        message.isSendMessage() ? NL10ns.of(context).you : chatContact.getShowName,
                         fontWeight: FontWeight.bold,
                       ),
                       Label(' ${NL10ns.of(context).close_burn_after_reading}'),

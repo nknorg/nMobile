@@ -152,7 +152,7 @@ class _ContactHomeState extends State<ContactHome> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Label(currentUser.name, type: LabelType.h3, dark: true),
+                          Label(currentUser.getShowName, type: LabelType.h3, dark: true),
                           Label(NL10ns.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor),
                         ],
                       ),
@@ -336,7 +336,7 @@ class _ContactHomeState extends State<ContactHome> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: <Widget>[
                                         Label(
-                                          item.name,
+                                          item.getShowName,
                                           type: LabelType.h3,
                                         ),
                                         Row(
@@ -478,7 +478,7 @@ class _ContactHomeState extends State<ContactHome> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
                                 Label(
-                                  item.name,
+                                  item.getShowName,
                                   type: LabelType.h3,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -591,7 +591,7 @@ class _ContactHomeState extends State<ContactHome> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               Label(
-                                item.name,
+                                item.getShowName,
                                 type: LabelType.h3,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -749,8 +749,8 @@ class _ContactHomeState extends State<ContactHome> {
       });
     } else {
       setState(() {
-        _strangerContacts = _allStrangerContacts.where((ContactSchema e) => e.name.toLowerCase().contains(val.toLowerCase())).toList();
-        _friends = _allFriends.where((ContactSchema e) => e.name.contains(val)).toList();
+        _strangerContacts = _allStrangerContacts.where((ContactSchema e) => e.getShowName.toLowerCase().contains(val.toLowerCase())).toList();
+        _friends = _allFriends.where((ContactSchema e) => e.getShowName.contains(val)).toList();
         _topic = _allTopic.where((Topic e) => e.topic.contains(val)).toList();
       });
     }

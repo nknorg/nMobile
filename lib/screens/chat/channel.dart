@@ -477,7 +477,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                       alignment: WrapAlignment.center,
                                       crossAxisAlignment: WrapCrossAlignment.center,
                                       children: <Widget>[
-                                        Label('${message.isSendMessage() ? currentUser.name : contact?.name} ${NL10ns.of(context).joined_channel}'),
+                                        Label('${message.isSendMessage() ? currentUser.getShowName : contact?.getShowName} ${NL10ns.of(context).joined_channel}'),
                                       ],
                                     ),
                                   );

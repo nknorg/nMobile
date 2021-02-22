@@ -135,18 +135,14 @@ class TimerAuth {
     }
     else{
       bool auth = await LocalAuthenticationService.instance.authenticate();
-      NLog.w('onCheckAuthGetPassword auth:'+auth.toString());
       if (auth) {
         TimerAuth.instance.enableAuth();
-        NLog.w('onCheckAuthGetPassword E1:'+password.toString());
         WalletSchema wallet = await loadCurrentWallet();
         if (wallet == null){
           NLog.w('Wrong!!! wallet is null');
         }
-        NLog.w('onCheckAuthGetPassword E2:'+wallet.address.toString());
         String address = wallet.address;
         password = await SecureStorage().get('${SecureStorage.PASSWORDS_KEY}:$address');
-        NLog.w('onCheckAuthGetPassword pE3:'+password.toString());
         if (password == null){
           password = await _checkUserInput(context);
         }
@@ -156,7 +152,6 @@ class TimerAuth {
         catch (e){
           showToast(NL10ns.of(context).tip_password_error);
         }
-        NLog.w('onCheckAuthGetPassword E:'+password.toString());
         return password;
       }
       else{

@@ -132,7 +132,7 @@ class _ContactScreenState extends State<ContactScreen> {
     _initBurnSelected = _burnSelected;
     _initBurnIndex = _burnIndex;
 
-    this.nickName = currentUser.name;
+    this.nickName = currentUser.getShowName;
 
     this.chatAddress = currentUser.clientAddress;
     this.walletAddress = currentUser.nknWalletAddress;
@@ -319,11 +319,11 @@ class _ContactScreenState extends State<ContactScreen> {
             if (_nameFormValid) {
               currentUser.firstName = _firstNameController.text.trim();
               setState(() {
-                nickName = currentUser.name;
+                nickName = currentUser.getShowName;
               });
               _chatBloc.add(RefreshMessageListEvent());
 
-              _updateUserInfo(currentUser.name, null);
+              _updateUserInfo(currentUser.getShowName, null);
               _popWithInformation();
             }
           },
@@ -395,7 +395,7 @@ class _ContactScreenState extends State<ContactScreen> {
             if (_nameFormValid) {
               currentUser.firstName = _firstNameController.text.trim();
               setState(() {
-                nickName = currentUser.name;
+                nickName = currentUser.getShowName;
               });
               _updateUserInfo(currentUser.firstName, null);
               _popWithInformation();
@@ -416,19 +416,19 @@ class _ContactScreenState extends State<ContactScreen> {
     _chatBloc.add(RefreshMessageListEvent());
 
     _contactBloc.add(UpdateUserInfoEvent(currentUser));
-    print("Current user name is___"+currentUser.name);
+    print("Current user name is___"+currentUser.getShowName);
   }
 
   showQRDialog() {
     String qrContent;
-    if (currentUser.name.length == 6 && currentUser.clientAddress.startsWith(currentUser.name)) {
+    if (currentUser.getShowName.length == 6 && currentUser.clientAddress.startsWith(currentUser.getShowName)) {
       qrContent = currentUser.clientAddress;
     } else {
-      qrContent = currentUser.name + "@" + currentUser.clientAddress;
+      qrContent = currentUser.getShowName + "@" + currentUser.clientAddress;
     }
 
     BottomDialog.of(context).showBottomDialog(
-      title: currentUser.name,
+      title: currentUser.getShowName,
       height: 480,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -575,7 +575,7 @@ class _ContactScreenState extends State<ContactScreen> {
     }
 
     setState(() {
-      this.nickName = currentUser.name;
+      this.nickName = currentUser.getShowName;
       this.chatAddress = currentUser.clientAddress;
       this.walletAddress = currentUser.nknWalletAddress;
     });
@@ -883,7 +883,7 @@ class _ContactScreenState extends State<ContactScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Label(
-                        currentUser.name,
+                        currentUser.getShowName,
                         type: LabelType.bodyLarge,
                         color: Colors.white,
                         overflow: TextOverflow.fade,
@@ -907,7 +907,7 @@ class _ContactScreenState extends State<ContactScreen> {
                     padding: EdgeInsets.only(left: 16, right: 16, top: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
                     onPressed: () {
-                      _firstNameController.text = currentUser.name;
+                      _firstNameController.text = currentUser.getShowName;
                       _detailChangeName(context);
                     },
                     child: Row(
@@ -923,7 +923,7 @@ class _ContactScreenState extends State<ContactScreen> {
                         SizedBox(width: 20),
                         Expanded(
                           child: Label(
-                            currentUser.name,
+                            currentUser.getShowName,
                             type: LabelType.bodyRegular,
                             color: DefaultTheme.fontColor2,
                             overflow: TextOverflow.fade,

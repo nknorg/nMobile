@@ -577,7 +577,7 @@ class MessageSchema extends Equatable {
         message.messageStatus = MessageStatus.MessageSendReceipt;
       }
       if (isSendError){
-        message.messageStatus =  MessageStatus.MessageSendFail;
+        message.messageStatus = MessageStatus.MessageSendFail;
       }
       if (isRead){
         message.messageStatus = MessageStatus.MessageSendReceipt;
@@ -795,8 +795,8 @@ class MessageSchema extends Equatable {
 
   Future<int> receiptMessage() async {
     Database cdb = await NKNDataManager().currentDatabase();
-
     if (contentType == null) {
+      NLog.w('Wrong!!!contentType == nul');
       return -1;
     }
     String queryID = '';
@@ -805,17 +805,17 @@ class MessageSchema extends Equatable {
         queryID = content;
       }
     }
-    else {
-      if (msgId != null){
-        queryID = msgId;
-      }
-    }
     if (queryID.length == 0){
+      NLog.w('Wrong!!!queryID.length == 0');
       return -1;
     }
 
+    NLog.w('queryID is____'+queryID.toString());
+    NLog.w('content is____'+content.toString());
+
     Map<String, dynamic> data = {
       'is_success': 1,
+      'is_send_error': 0,
     };
 
     try{
