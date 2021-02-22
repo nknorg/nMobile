@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,6 +30,7 @@ import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:nmobile/utils/nlog_util.dart';
+import 'package:path/path.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
   @override
@@ -51,8 +53,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
 
   Uint8List messageIn, messageOut;
 
-  bool useOnePiece = false;
-  int perPieceLength = 1024;
+  bool useOnePiece = true;
+  int perPieceLength = 1024*4;
 
   @override
   Stream<ChatState> mapEventToState(ChatEvent event) async* {
@@ -69,6 +71,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       var unReadCount = await MessageSchema.unReadMessages();
       FlutterAppBadger.updateBadgeCount(unReadCount);
       yield MessageUpdateState(target: event.target);
+    }
+    else if (event is RefreshMessageChatEvent){
+      yield MessageUpdateState(target: event.message.to, message: event.message);
     }
     else if (event is UpdateChatEvent){
       String targetId = event.targetId;
@@ -89,8 +94,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       MessageSchema.tableName,
       columns: ['*'],
       orderBy: 'send_time desc',
-      where: 'sender = ? AND receiver = ? AND is_success = 0 AND NOT type = ? AND NOT type = ? AND NOT type = ? AND NOT type = ? AND NOT type = ?',
-      whereArgs: [message.to,message.from, ContentType.nknOnePiece, ContentType.eventContactOptions,ContentType.eventSubscribe,ContentType.eventUnsubscribe,ContentType.channelInvitation],
+      where: 'sender = ? AND receiver = ? '
+          'AND is_success = 0 AND NOT type = ? '
+          'AND NOT type = ? AND NOT type = ? '
+          'AND NOT type = ?',
+      whereArgs: [message.to,message.from,
+        ContentType.nknOnePiece, ContentType.eventContactOptions,
+        ContentType.eventSubscribe,ContentType.eventUnsubscribe],
       limit: 20,
       offset: 0,
     );
@@ -103,8 +113,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     if (res.isNotEmpty){
       NLog.w('ResendMessage___'+res.length.toString());
       for (MessageSchema message in messages){
-        NLog.w('ResendMessage___xxxx'+message.content.toString());
-        NLog.w('ResendMessage___xxxx'+message.timestamp.toString());
         if (message.isSuccess == false && message.isSendMessage()){
           this.add(SendMessageEvent(message));
         }
@@ -185,9 +193,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           message.contentType == ContentType.nknAudio ||
           message.contentType == ContentType.media ||
           message.contentType == ContentType.nknImage) {
-        // if (message.options != null && message.options['deleteAfterSeconds'] != null) {
-        //   message.deleteTime = DateTime.now().add(Duration(seconds: message.options['deleteAfterSeconds']));
-        // }
+        if (message.options != null && message.options['deleteAfterSeconds'] != null) {
+          message.deleteTime = DateTime.now().add(Duration(seconds: message.options['deleteAfterSeconds']));
+        }
         if (useOnePiece && (message.contentType == ContentType.nknAudio ||
                 message.contentType == ContentType.media ||
                 message.contentType == ContentType.nknImage)) {
@@ -232,52 +240,157 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
 
   _combineOnePieceMessage(MessageSchema onePieceMessage) async{
     bool exist = await onePieceMessage.existOnePieceIndex();
-    if (exist == false){
-      await onePieceMessage.insertOnePieceMessage();
+    if (exist){
+      return;
     }
+    var bytes = base64Decode(onePieceMessage.content);
+    if (bytes.length > perPieceLength){
+      perPieceLength = bytes.length;
+    }
+    String name = hexEncode(md5
+        .convert(bytes)
+        .bytes);
+
+    String path = getCachePath(NKNClientCaller.currentChatId);
+
+    String filePath = join(path, name+'.'+onePieceMessage.parentType.toString());
+    File file = File(filePath);
+
+    file.writeAsBytesSync(bytes,flush: true);
+
+    onePieceMessage.content = file;
+    NLog.w('Saved before onePiece option is___'+onePieceMessage.options.toString());
+    NLog.w('Saved before onePiece option is___'+onePieceMessage.audioFileDuration.toString());
+    onePieceMessage.options = {
+      'index': onePieceMessage.index,
+      'total': onePieceMessage.total,
+      'parentType': onePieceMessage.parentType,
+      'deleteAfterSeconds': onePieceMessage.deleteAfterSeconds,
+      'audioDuration': onePieceMessage.audioFileDuration,
+    };
+    await onePieceMessage.insertOnePieceMessage();
 
     int total = onePieceMessage.total;
     int receivedOnePieces = await onePieceMessage.onePieceCount();
 
-    print('Check onePieceCount!!!__'+receivedOnePieces.toString());
-    if (total == receivedOnePieces){
-      print('OnePiece Find');
-      Uint8List fileBytes;
-
-      List allPieces = await onePieceMessage.allPieces();
-
-      print('All Piecei is )__'+allPieces.length.toString());
-      for (int i = 0; i < allPieces.length; i++){
-        MessageSchema onePiece = allPieces[i];
-        print('Content is____'+ onePiece.content.runtimeType.toString());
-        Uint8List pieceList = new Uint8List.fromList(onePiece.content.codeUnits);
-        print('pieceList is____'+ pieceList.toString());
-
-        print('FileBytes length is)___'+fileBytes.length.toString());
-      }
+    bool existFull = await onePieceMessage.existFullPiece();
+    if (existFull){
+      NLog.w('_combineOnePieceMessage existOnePiece___'+onePieceMessage.msgId);
+      return;
     }
-    else{
-      /// not enough to Combine the Message
+    if (total == receivedOnePieces){
+      List allPieces = await onePieceMessage.allPieces();
+      print('allPieces length is__'+allPieces.length.toString());
+
+      for (MessageSchema schema in allPieces){
+        if (schema.index == 0){
+          MessageSchema onePiece = schema;
+          File file = onePiece.content as File;
+          Uint8List fBytes = file.readAsBytesSync();
+          perPieceLength = fBytes.length;
+        }
+      }
+
+      Uint8List fullBytes = Uint8List(allPieces.length*perPieceLength);
+
+      String extension = '';
+      if (onePieceMessage.parentType == ContentType.nknImage ||
+          onePieceMessage.parentType == ContentType.media){
+        extension = 'jpeg';
+      }
+      else if (onePieceMessage.parentType == ContentType.nknAudio){
+        extension = 'aac';
+      }
+
+      for (int i = 0; i < allPieces.length; i++){
+        MessageSchema onePiece;
+
+        for (MessageSchema schema in allPieces){
+          if (schema.index == i){
+            onePiece = schema;
+          }
+        }
+
+        File file = onePiece.content as File;
+
+        Uint8List fBytes = file.readAsBytesSync();
+
+        int startIndex = i*perPieceLength;
+        int endIndex = startIndex+fBytes.length;
+        fullBytes.setRange(startIndex, endIndex, fBytes);
+      }
+      /// Write full content Message to file
+      NLog.w('fullSize is__'+fullBytes.length.toString());
+      String name = hexEncode(md5
+          .convert(fullBytes)
+          .bytes);
+      String fullPath = getCachePath(NKNClientCaller.currentChatId);
+      File fullFile = File(join(fullPath, name + '.$extension'));
+      NLog.w('FullFile is___'+fullFile.path);
+
+      NLog.w('delete seconds is___'+onePieceMessage.deleteAfterSeconds.toString());
+
+      fullFile.writeAsBytes(fullBytes, flush: true);
+
+      Duration deleteAfterSeconds;
+      if (onePieceMessage.deleteAfterSeconds != null){
+        deleteAfterSeconds = Duration(seconds: onePieceMessage.deleteAfterSeconds);
+      }
+
+      MessageSchema nReceived =  MessageSchema.formReceivedMessage(
+        msgId: onePieceMessage.msgId,
+        from: onePieceMessage.from,
+        to: onePieceMessage.to,
+        pid: onePieceMessage.pid,
+        contentType: onePieceMessage.parentType,
+        content: fullFile,
+        audioFileDuration: onePieceMessage.audioFileDuration,
+      );
+
+      nReceived.options = onePieceMessage.options;
+      if (onePieceMessage.options != null && onePieceMessage.options['deleteAfterSeconds'] != null) {
+        nReceived.deleteTime = DateTime.now().add(Duration(seconds: onePieceMessage.options['deleteAfterSeconds']));
+      }
+
+      await nReceived.insertReceivedMessage();
+      nReceived.setMessageStatus(MessageStatus.MessageReceived);
+      nReceived.sendReceiptMessage();
+
+      this.add(RefreshMessageListEvent());
+      this.add(RefreshMessageChatEvent(nReceived));
     }
   }
 
-  _sendOnePiece(List mpList,MessageSchema parentMessage){
+  _sendOnePiece(List mpList,MessageSchema parentMessage) async{
     for (int index = 0; index < mpList.length; index++){
-      List fileP = mpList[index];
+      Uint8List fileP = mpList[index];
 
-      String content = fileP.toString();
-      var nknOnePieceMessage = MessageSchema.fromSendData(
-        msgId: parentMessage.msgId,
-        from: parentMessage.from,
-        to: parentMessage.to,
-        parentType: parentMessage.contentType,
+      Duration deleteAfterSeconds;
+      ContactSchema contact = await _checkContactIfExists(parentMessage.to);
+      if (contact?.options != null) {
+        if (contact?.options?.deleteAfterSeconds != null) {
+          deleteAfterSeconds = Duration(seconds: contact.options.deleteAfterSeconds);
+        }
+      }
+      String content = base64Encode(fileP);
 
-        content: content,
-        contentType: ContentType.nknOnePiece,
-        index: index,
-        total: mpList.length,
-      );
-      this.add(SendMessageEvent(nknOnePieceMessage));
+      Duration duration = Duration(milliseconds: index*100);
+      Timer(duration, () async {
+        var nknOnePieceMessage = MessageSchema.fromSendData(
+          msgId: parentMessage.msgId,
+          from: parentMessage.from,
+          to: parentMessage.to,
+          parentType: parentMessage.contentType,
+          content: content,
+          contentType: ContentType.nknOnePiece,
+          index: index,
+          total: mpList.length,
+          deleteAfterSeconds: deleteAfterSeconds,
+          audioFileDuration: parentMessage.audioFileDuration,
+        );
+        NLog.w('Send OnePiece with index__'+index.toString()+'__');
+        this.add(SendMessageEvent(nknOnePieceMessage));
+      });
     }
   }
 
@@ -286,9 +399,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     var mimeType = mime(file.path);
     String content;
 
-    if (mimeType.indexOf('image') > -1) {
+    NLog.w('mime Type is____'+mimeType.toString());
+    if (mimeType.indexOf('image') > -1 ||
+        mimeType.indexOf('audio') > -1) {
       List fileBytesList = file.readAsBytesSync();
-      print('File length is____'+fileBytesList.length.toString());
 
       int filePieces = fileBytesList.length~/(perPieceLength);
       int leftPiece = fileBytesList.length%(perPieceLength);
@@ -303,18 +417,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           endIndex = fileBytesList.length;
         }
 
-        List fileP = fileBytesList.sublist(startIndex,endIndex);
-
-        print('File PLength is___'+fileP.length.toString());
-        if (fileP.length > 10){
-          print('File Piece is___'+i.toString()+'\n'+fileP.sublist(0,10).toString());
-        }
-        else{
-          print('File Final Piece is___'+i.toString()+'\n'+fileP.toString());
-        }
+        Uint8List fileP = fileBytesList.sublist(startIndex,endIndex);
         filePieceList.add(fileP);
       }
 
+      NLog.w('_sendOnePieceMessage__'+filePieceList.length.toString());
       _sendOnePiece(filePieceList, message);
     }
   }
@@ -394,6 +501,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     if (insertReceiveSuccess){
       message.setMessageStatus(MessageStatus.MessageReceived);
       message.sendReceiptMessage();
+      NLog.w('Received_______!!!!!!!!!0');
 
       var unReadCount = await MessageSchema.unReadMessages();
       FlutterAppBadger.updateBadgeCount(unReadCount);
@@ -408,7 +516,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
 
     bool messageExist = await message.isReceivedMessageExist();
     if (messageExist == true) {
-
       /// should retry here!!!
       if (message.isSuccess == false &&
           message.contentType != ContentType.nknOnePiece) {
@@ -442,8 +549,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       if (message.from == NKNClientCaller.currentChatId) {
         message.receiptTopic();
 
-        NLog.w('Message.tiocdakjsdka is____'+message.topic.toString());
-        NLog.w('Message.tiocdakjsdka is____'+message.topic.toString());
         message.content = message.msgId;
         message.contentType = ContentType.receipt;
         message.topic = null;
@@ -453,14 +558,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       }
       else{
         message.setMessageStatus(MessageStatus.MessageReceived);
+        NLog.w('Received_______!!!!!!!!!1');
         _insertMessage(message);
       }
     }
-    else {
-      /// todo Other Unsupported Message
-      NLog.w('Wrong!!!!___'+message.contentType.toString());
-      NLog.w('Wrong!!!!___'+message.content.toString());
-    }
+
     /// Media Message
     if (message.contentType == ContentType.nknAudio ||
         message.contentType == ContentType.nknImage ||
@@ -516,17 +618,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           message.contentType == ContentType.media ||
           message.contentType == ContentType.nknImage ||
           message.contentType == ContentType.nknAudio) {
-        message.sendReceiptMessage();
+        // message.sendReceiptMessage();
         _checkBurnOptions(message, contact);
       }
       else if (message.contentType == ContentType.nknOnePiece) {
-        // print('Received One Piece___'+message.content.toString());
-        print('Received One Piece Index___' + message.index.toString());
-        print('Received One Piece Total___' + message.total.toString());
-        print('Message.content is___' + message.content.toString());
         _combineOnePieceMessage(message);
+        return;
       }
-
       /// Operation Message
       else if (message.contentType == ContentType.contact) {
         Map<String, dynamic> data;
@@ -690,9 +788,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           clientAddress: clientAddress,
           nknWalletAddress: walletAddress);
       await contact.insertContact();
-      NLog.w('Contact is___'+contact.clientAddress.toString());
-      NLog.w('Contact is____'+contact.name.toString());
-      NLog.w('Contact is___'+contact.profileVersion.toString());
     }
     return contact;
   }

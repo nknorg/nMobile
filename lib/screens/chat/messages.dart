@@ -30,6 +30,7 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/db/message_data_center.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/model/popular_channel.dart';
 import 'package:nmobile/schemas/chat.dart';
@@ -64,8 +65,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
 
   StreamSubscription _chatSubscription;
   ScrollController _scrollController = ScrollController();
-  int _limit = 20;
-  int _skip = 20;
+
   bool loading = false;
   List<PopularChannel> populars;
   bool isHideTip = false;
@@ -85,10 +85,11 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     _chatBloc = BlocProvider.of<ChatBloc>(context);
     _contactBloc = BlocProvider.of<ContactBloc>(context);
 
-    _refreshMessage();
+    _startRefreshMessage();
 
     _scrollController.addListener(() {
       double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
+      NLog.w('offsetFromBottom is____'+offsetFromBottom.toString());
       if (offsetFromBottom < 50 && !loading) {
         loading = true;
         _loadMore().then((v) {
@@ -104,24 +105,11 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     super.dispose();
   }
 
-  _refreshMessage() async{
-    _updateTopicBlock();
-    var res = await MessageItem.getLastMessageList(limit: _limit);
-
-    print('Res is___'+res.length.toString());
-
-    if (res == null) return;
-
-    _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
-    _skip = 20;
-    _messagesList = (res);
-  }
-
   _routeToGroupChatPage(topicName) async{
     final topic = await GroupChatHelper.fetchTopicInfoByName(topicName);
     Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic)).then((value){
       if (value == true){
-        _refreshMessage();
+        _startRefreshMessage();
       }
     });
   }
@@ -199,14 +187,31 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
     }
   }
 
+  _startRefreshMessage() async{
+    _updateTopicBlock();
+
+    int messageCount = 20;
+    if (_messagesList.isNotEmpty){
+      messageCount = _messagesList.length;
+    }
+    var res = await MessageItem.getLastMessageList(0, messageCount);
+
+    NLog.w('_startRefreshMessage got Message___'+res.length.toString());
+    if (res == null) return;
+
+    _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
+    _messagesList = (res);
+  }
+
   Future _loadMore() async {
     if (Global.clientCreated == false){
       return;
     }
-    var res = await MessageItem.getLastMessageList(limit: _limit, offset: _skip);
+    int startIndex = _messagesList.length;
+    var res = await MessageItem.getLastMessageList(startIndex, 20);
     if (res != null) {
-      _skip += res.length;
       _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
+      NLog.w('_loadMore got Message___'+res.length.toString());
       setState(() {
         _messagesList.addAll(res);
       });
@@ -220,8 +225,9 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
       builder: (context, authState){
         if (authState is AuthToUserState){
           _messagesList.clear();
-          _refreshMessage();
+          _startRefreshMessage();
           _authBloc.add(AuthToFrontEvent());
+          NLog.w('Refresh Called this1');
         }
         return BlocBuilder<NKNClientBloc, NKNClientState>(
           builder: (context, clientState){
@@ -233,7 +239,8 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
               return BlocBuilder<ChatBloc, ChatState>(
                 builder: (context, chatState) {
                   if (chatState is MessageUpdateState){
-                    _refreshMessage();
+                    _startRefreshMessage();
+                    NLog.w('Refresh Called this2');
                   }
                   return BlocBuilder<ContactBloc, ContactState>(
                     builder: (context, contactState) {
@@ -731,8 +738,8 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
 
   Widget _unReadWidget(MessageItem item){
     String countStr = item.notReadCount.toString();
-    if (item.notReadCount > 99){
-      countStr = '99+';
+    if (item.notReadCount > 999){
+      countStr = '999+';
       return Container(
         margin: EdgeInsets.only(right: 15),
         child: ClipRRect(
@@ -755,6 +762,10 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
         ),
       );
     }
+    double numWidth = 25;
+    if (item.notReadCount > 99){
+      numWidth = 50;
+    }
     if (item.notReadCount > 0){
       return Container(
         margin: EdgeInsets.only(right: 15),
@@ -763,7 +774,7 @@ class _MessagesTabState extends State<MessagesTab> with SingleTickerProviderStat
           child: Container(
               color: Colours.purple_57,
               height: 25,
-              width: 25,
+              width: numWidth,
               child: Center(
                 child: Text(countStr,
                   style: TextStyle(

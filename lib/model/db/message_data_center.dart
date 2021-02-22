@@ -28,6 +28,23 @@ class MessageDataCenter{
     }
   }
 
+  Future<int> testMessage() async{
+    // b5dbb01b-0385-4545-806e-7515ee263a40
+
+    Database cdb = await NKNDataManager().currentDatabase();
+
+    var res = await cdb.query(
+      MessageSchema.tableName,
+      where: 'msg_id = ? AND type = ?',
+      whereArgs: ['b5dbb01b-0385-4545-806e-7515ee263a40', ContentType.nknOnePiece],
+    );
+
+    if (res.length > 0){
+      return res.length;
+    }
+    return 0;
+  }
+
   static Future<bool> judgeMessagePid(String msgId) async{
     Database cdb = await NKNDataManager().currentDatabase();
 

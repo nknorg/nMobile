@@ -594,6 +594,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
 
     func genNKNClient(_ account: NknAccount, _ identifier: String?) -> NknMultiClient? {
         let clientConfig:NknClientConfig = NknGetDefaultClientConfig() ?? NknClientConfig()
+        clientConfig.wsWriteTimeout = 20000
         
         for index in 0..<clientList.count {
             let rpcAddress:String = clientList[index]
@@ -717,7 +718,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
     @objc func becomeDeath(noti:Notification){
         print("NKNClient进入后台")
 //        closeNKNClient()
-//        NKNPushService.shared().disConnectAPNS()
+        NKNPushService.shared().disConnectAPNS()
         
 //        sendMessageWorkItem?.cancel()
 //        receiveMessageWorkItem?.cancel()

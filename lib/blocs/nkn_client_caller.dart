@@ -350,8 +350,7 @@ class NKNClientCaller{
     _eventChannel.receiveBroadcastStream().listen((res) async{
       final String event = res['event'].toString();
       String eventKey = res['_id'];
-      NLog.w('NativeStream __'+event.toString());
-      NLog.w('NativeStream res__'+res.toString());
+
       switch (event) {
         case 'createClient':
           String key = res['_id'];
