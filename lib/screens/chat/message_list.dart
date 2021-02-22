@@ -96,30 +96,30 @@ class _MessagesTabState extends State<MessageListPage> with SingleTickerProvider
   }
 
   _fetchData() async{
-    var res = await MessageItem.getLastMessageList(limit: _limit);
-    if (res == null) return;
-    _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
-    if (mounted) {
-      setState(() {
-        try {
-          _skip = 20;
-          _messagesList = (res);
-        } catch (e) {
-          _LOG.e('initAsync', e);
-        }
-      });
-    }
+    // var res = await MessageItem.getLastMessageList(limit: _limit);
+    // if (res == null) return;
+    // _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
+    // if (mounted) {
+    //   setState(() {
+    //     try {
+    //       _skip = 20;
+    //       _messagesList = (res);
+    //     } catch (e) {
+    //       _LOG.e('initAsync', e);
+    //     }
+    //   });
+    // }
   }
 
   Future _loadMore() async {
-    var res = await MessageItem.getLastMessageList(limit: _limit, offset: _skip);
-    if (res != null) {
-      _skip += res.length;
-      _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
-      setState(() {
-        _messagesList.addAll(res);
-      });
-    }
+    // var res = await MessageItem.getLastMessageList(limit: _limit, offset: _skip);
+    // if (res != null) {
+    //   _skip += res.length;
+    //   _contactBloc.add(LoadContact(address: res.map((x) => x.topic != null ? x.sender : x.targetId).toList()));
+    //   setState(() {
+    //     _messagesList.addAll(res);
+    //   });
+    // }
   }
 
   @override

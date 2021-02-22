@@ -159,6 +159,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
 
         if (updateMessage.contentType == ContentType.receipt){
           if (_messages != null && _messages.length > 0) {
+            NLog.w('ReceiveReceipt____'+updateMessage.content.toString());
             var msg = _messages.firstWhere((x) => x.msgId == updateMessage.content.toString() && x.isSendMessage(), orElse: () => null);
             if (msg != null) {
               setState(() {
@@ -253,6 +254,53 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     super.dispose();
   }
 
+  _sendTestMessage() async{
+    int contentIndex = 1;
+    Timer _testMessageTimer;
+
+    String sendTestString = DateTime.now().day.toString()+'日'+DateTime.now().hour.toString()+'时'+ DateTime.now().minute.toString()+'分';
+    _testMessageTimer = Timer.periodic(Duration(milliseconds: 10), (timer) {
+      String dest = targetId;
+
+      String contentType = ContentType.text;
+      String content = 'QeqNYLoTghIQMBAiPNMJxNhshogb+qCNJDhebIELnzXIONky2J0pmc29kE8pMoESSck9UiSDAx3VXUBsi4goL0WLhiVIsDsmCQ7S47bHKRB1QI9EAZJDpIBymR5YEHsiCIEWR8pgiBFpQAEyDhBAAgEBMmBfGbKcGTaee6AaZic/ZXA0wLyoN3Qm2Rk27IKIgHmk2AJuOXVJ7hGUjdkfiFkDgEGW3CIcLkyMSEgAWxBComwm5QAbAgBM87TG15UgjJgJNBG1kFGDzvmEQBYQI3CDi1rpTJIj1KBNnVsbxCpw5m3JONPIpDEhA5jcxupIBH2Q4kTMgd0gYMxndA48wvfmqNh07KSQM2hVaTMHoggWTbPO/M7ptbM23QLHERhABsi5N0T5yMyl5g6RcbCJlOzrxPYIFcc77IcJCBm4Ko2EFApgY1IIM2G8dU4seaNUtzG3ZAOvBGxQL3Gd4wk7NpmENMG6B6p3Q0eWd+iJtMme6U+WTidigMHmnB/ooEEdrJGZIBt0QFsafRGTv3RJmJQSS0NvbqgR8v4jJygibkek4T1QOSQIgOBMHmgMgEG6fzG+QkBeYQfmkCPogV7ggeyYMHa+QUcrFMgEyJzlAC9jYoJBvuU87pFsGUCERc3TJm4vZKby76p5IDYsUC3gyCeSBZ0nsqAAFxnnulECdQjqgekRq5HZTOMeqATvztdPN+l4QABJvYI0wbHKG90SgLz02VDS6ZxsYwl1Ewn6IEYlw3G6C05It0RY4EfomXWxI7oADkm44O+FMmMEz1SAMzM/ogcCcBB6EgjYboLouSkec9oQAnYXQZPRPrKLeqBAQZBujbCBY2zvCDAiUDygnmgHyiUi0EYQMXtsg2KaUkm3ugPe6cQRGeaO1kIMoHy789lWCERe5iUHNkDBvhBsMeygu5J6Tk7oG2CJTiJIsTzSkz6JkgmOiBEkWaJKQbubuj2TEiAg90CGLjCcnMJ5yEiWnyoCZMY3wlBD5CrrEJOHIWyEARBuUhMhNpDhcKgY5+iCXEGLEIGZhBgi155Kc33GZQaGdMqSbxFt0AgwZ+qTvOcWQVBxMckNnefRGRAQIjr1QKZ7eyJm4MoIOkkAGED5RE/ZASAOSNzyKV7JwCL2CADDMki32TGZJxYJQQ7IiNzdORbN0CJIFp7pCS9zcEXlGq/lF07NHmNycIEDM6XXbugA7xjmgHsEybg+iADb7lAI6d0snVqg7pztsgl4IE3AVN0gjzWOEyBAkkKIDTf7wgtwi4Mg4ISDZHmAneENZOBBVRBMjvBQIXBHvZHltghPJF+cIExIA90CwbzHRFgM/uiJ5iMIDrxcGbIE4kgBMYAkd+aLzzQRIjZAtiIsbg==';
+      content = content+sendTestString+'\n(_test_)'+contentIndex.toString();
+      // content = content+content;
+      // content = content+content;
+      // content = content+content;
+      contentIndex++;
+      if (contentIndex == 501){
+        _testMessageTimer.cancel();
+      }
+      Duration deleteAfterSeconds;
+      if (chatContact?.options != null) {
+        if (chatContact?.options?.deleteAfterSeconds != null) {
+          contentType = ContentType.textExtension;
+          deleteAfterSeconds = Duration(seconds: chatContact.options.deleteAfterSeconds);
+        }
+      }
+
+      NLog.w('Test_send_message_length__'+content.length.toString());
+      var sendMsg = MessageSchema.fromSendData(
+        from: NKNClientCaller.currentChatId,
+        to: dest,
+        content: content,
+        contentType: contentType,
+        deleteAfterSeconds: deleteAfterSeconds,
+      );
+      try {
+        _chatBloc.add(SendMessageEvent(sendMsg));
+        if (mounted){
+          setState(() {
+            _messages.insert(0, sendMsg);
+          });
+        }
+      } catch (e) {
+        print('send message error: $e');
+      }
+    });
+  }
+
   _sendAction() async {
     if (_sendFocusNode.hasFocus){
       /// do nothing
@@ -273,6 +321,11 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
 
     if (widget.arguments.type == ChatType.PrivateChat) {
       String dest = targetId;
+
+      if (text == '测试消息'){
+        _sendTestMessage();
+        return;
+      }
 
       String contentType = ContentType.text;
       Duration deleteAfterSeconds;
