@@ -13,6 +13,11 @@ class LoadContact extends ContactEvent {
   const LoadContact({this.address});
 }
 
+class LoadContactInfoEvent extends ContactEvent{
+  final String address;
+  const LoadContactInfoEvent(this.address);
+}
+
 class RefreshContact extends ContactEvent {
   final int id;
   const RefreshContact({this.id}); 
