@@ -77,6 +77,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   bool showJoin = true;
   bool isInBlackList = false;
 
+  ContactSchema currentUser;
+
   initAsync() async {
     var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit);
     if (res != null) {
@@ -86,6 +88,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     }
 
     _contactBloc.add(LoadContact(address: res.where((x) => !x.isSendMessage()).map((x) => x.from).toList()));
+    _contactBloc.add(LoadContactInfoEvent(NKNClientCaller.currentChatId));
     _chatBloc.add(RefreshMessageListEvent(target: targetId));
     final topic = widget.arguments.topic;
     if (topic == null){
@@ -468,23 +471,24 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                             if (state is ContactLoaded) {
                               contact = state.getContactByAddress(message.from);
                             }
+                            else if (state is LoadContactInfoState){
+                              currentUser = state.userInfo;
+                            }
                             if (message.contentType == ContentType.eventSubscribe) {
-                              return BlocBuilder<AuthBloc, AuthState>(builder: (context, state){
-                                if (state is AuthToUserState){
-                                  ContactSchema currentUser = state.currentUser;
-                                  return ChatSystem(
-                                    child: Wrap(
-                                      alignment: WrapAlignment.center,
-                                      crossAxisAlignment: WrapCrossAlignment.center,
-                                      children: <Widget>[
-                                        Label('${message.isSendMessage() ? currentUser.getShowName : contact?.getShowName} ${NL10ns.of(context).joined_channel}'),
-                                      ],
-                                    ),
-                                  );
-                                }
-                                return Container();
-                              });
-                            } else {
+                              return ChatSystem(
+                                child: Wrap(
+                                  alignment: WrapAlignment.center,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: <Widget>[
+                                    Label('${message.isSendMessage() ? currentUser?.getShowName : contact?.getShowName} ${NL10ns.of(context).joined_channel}'),
+                                  ],
+                                ),
+                              );
+                            }
+                            else if (message.contentType == ContentType.eventUnsubscribe){
+                              return Container();
+                            }
+                            else {
                               if (message.isSendMessage()) {
                                 return ChatBubble(
                                   message: message,

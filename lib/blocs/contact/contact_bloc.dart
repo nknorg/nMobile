@@ -18,6 +18,9 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
     else if (event is UpdateUserInfoEvent){
       yield* _mapUpdateUserInfoState(event);
     }
+    else if (event is LoadContactInfoEvent){
+      yield* _mapLoadContactInfoState(event);
+    }
   }
 
   Stream<ContactState> _mapLoadContactToState(LoadContact event) async* {
@@ -29,6 +32,12 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
     ContactSchema contactSchema = event.userInfo;
     yield UpdateUserInfoState(contactSchema);
   }
+
+  Stream<ContactState> _mapLoadContactInfoState(LoadContactInfoEvent event) async* {
+    ContactSchema contactSchema = await ContactSchema.fetchContactByAddress(event.address);
+    yield LoadContactInfoState(contactSchema);
+  }
+
 
   Future<List<ContactSchema>> _queryContactsByAddress(List<String> address) async {
     List<ContactSchema> list = <ContactSchema>[];
