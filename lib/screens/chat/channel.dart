@@ -95,6 +95,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     final topic = widget.arguments.topic;
     if (topic == null) {
       Navigator.pop(context);
+      EasyLoading.dismiss();
     }
     refreshTop(topic.topic);
   }
@@ -485,6 +486,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 .then((v) {
               if (v == true) {
                 Navigator.of(context).pop(true);
+                EasyLoading.dismiss();
               }
             });
           },
@@ -801,8 +803,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                   if (success) {
                     NLog.w('getBottomView joinChannel success');
                   }
-                  refreshTop(widget.arguments.topic.topic);
                   EasyLoading.dismiss();
+                  refreshTop(widget.arguments.topic.topic);
                   if (!success && e != null) {
                     showToast('channel subscribe failed');
                   }
