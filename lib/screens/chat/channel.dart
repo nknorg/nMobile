@@ -287,6 +287,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
               }
             }
           }
+          else{
+            return;
+          }
 
           var receivedMessage = _messages.firstWhere(
               (x) =>
