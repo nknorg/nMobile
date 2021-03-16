@@ -529,7 +529,6 @@ class ContactSchema {
     );
     if (count > 0) {
       NLog.w('UpdateInfo Success__' + profileInfo.toString());
-      NLog.w('UpdateInfo Success__' + clientAddress.toString());
       return true;
     }
     NLog.w('UpdateInfo Failed___' + profileInfo.toString());

@@ -102,23 +102,8 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
   }
 
   _refreshMemberList() {
-    // _channelBloc.add(ChannelMemberCountEvent(widget.topic.topic));
     _channelBloc.add(FetchChannelMembersEvent(widget.topic.topic));
   }
-
-  // refreshMembers() async {
-  //
-  //   // _cha
-  //   //
-  //   // NLog.w('Got _members is____'+_members.length.toString());
-  //   //
-  //   // if (mounted) {
-  //   //   setState(() {
-  //   //     _members = list;
-  //   //     NLog.w('Got _members is____'+_members.length.toString());
-  //   //   });
-  //   // }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -341,9 +326,6 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                     fontSize: DefaultTheme.bodySmallFontSize,
                     color: Colours.pink_f8,
                     fontWeight: FontWeight.w600,
-//                    decoration: TextDecoration.lineThrough,
-//                    decorationStyle: TextDecorationStyle.solid,
-//                    decorationThickness: 1.5,
                   )).pad(l: 4)
               : (option.contains(NL10ns.of(context).invitation_sent)
                   ? Text(option,
@@ -402,8 +384,6 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
         toolBtns.add(InkWell(
             child: rejectIcon.pad(l: 6, r: 16).center.sized(h: double.infinity),
             onTap: rejectAction));
-//        toolBtns.add(InkWell(child: acceptIcon.pad(l: 6, r: 8).center.sized(h: double.infinity), onTap: acceptAction));
-//        toolBtns.add(InkWell(child: rejectIcon.pad(l: 8, r: 16).center.sized(h: double.infinity), onTap: rejectAction));
       } else if (!member.isBlack) {
         toolBtns.add(InkWell(
             child: rejectIcon.pad(l: 6, r: 16).center.sized(h: double.infinity),
