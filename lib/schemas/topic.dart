@@ -8,7 +8,6 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/schemas/options.dart';
 
 class TopicSchema {
-
   static Widget xd({
     File avatar,
     @required String topicName,
@@ -63,8 +62,8 @@ class TopicSchema {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(6.0),
           child: Container(
-            decoration: BoxDecoration(
-                image: DecorationImage(image: FileImage(avatar))),
+            decoration:
+                BoxDecoration(image: DecorationImage(image: FileImage(avatar))),
           ),
         ),
       );

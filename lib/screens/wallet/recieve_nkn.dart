@@ -57,11 +57,14 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
             color: DefaultTheme.backgroundLightColor,
           ),
           onPressed: () async {
-            RenderRepaintBoundary boundary = globalKey.currentContext.findRenderObject();
+            RenderRepaintBoundary boundary =
+                globalKey.currentContext.findRenderObject();
             var image = await boundary.toImage();
-            ByteData byteData = await image.toByteData(format: ImageByteFormat.png);
+            ByteData byteData =
+                await image.toByteData(format: ImageByteFormat.png);
             Uint8List pngBytes = byteData.buffer.asUint8List();
-            await Share.file('Recieve NKN', 'qrcode.png', pngBytes, 'image/png', text: wallet.address);
+            await Share.file('Recieve NKN', 'qrcode.png', pngBytes, 'image/png',
+                text: wallet.address);
           },
         ),
       ),
@@ -85,13 +88,15 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
                             Expanded(
                               flex: 0,
                               child: Padding(
-                                padding: const EdgeInsets.only(top: 24, left: 20, right: 20),
+                                padding: const EdgeInsets.only(
+                                    top: 24, left: 20, right: 20),
                                 child: Column(
                                   children: <Widget>[
                                     Expanded(
                                       flex: 0,
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
                                         children: <Widget>[
 //                                          Row(
 //                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -104,7 +109,8 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
 //                                            ],
 //                                          ),
                                           WalletDropdown(
-                                            title: NL10ns.of(context).select_asset_to_receive,
+                                            title: NL10ns.of(context)
+                                                .select_asset_to_receive,
                                             schema: widget.arguments ?? wallet,
                                           ),
                                         ],
@@ -121,23 +127,28 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
                                 child: Column(
                                   children: <Widget>[
                                     Padding(
-                                      padding: const EdgeInsets.only(top: 24, left: 20, right: 20),
+                                      padding: const EdgeInsets.only(
+                                          top: 24, left: 20, right: 20),
                                       child: Container(
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(8)),
                                           color: DefaultTheme.backgroundColor2,
                                         ),
                                         child: Padding(
-                                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 16, horizontal: 24),
                                           child: Column(
                                             children: <Widget>[
                                               Label(
-                                                NL10ns.of(context).wallet_address,
+                                                NL10ns.of(context)
+                                                    .wallet_address,
                                                 type: LabelType.h4,
                                                 textAlign: TextAlign.start,
                                               ),
                                               Padding(
-                                                padding: const EdgeInsets.only(top: 8, bottom: 8),
+                                                padding: const EdgeInsets.only(
+                                                    top: 8, bottom: 8),
                                                 child: Label(
                                                   wallet.address,
                                                   type: LabelType.bodyRegular,
@@ -146,25 +157,33 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
                                               ),
                                               InkWell(
                                                 child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
                                                   children: <Widget>[
                                                     Padding(
-                                                      padding: const EdgeInsets.only(right: 8.0),
-                                                      child: loadAssetIconsImage(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              right: 8.0),
+                                                      child:
+                                                          loadAssetIconsImage(
                                                         'copy',
                                                         width: 24,
-                                                        color: DefaultTheme.primaryColor,
+                                                        color: DefaultTheme
+                                                            .primaryColor,
                                                       ),
                                                     ),
                                                     Label(
-                                                      NL10ns.of(context).copy_to_clipboard,
-                                                      color: DefaultTheme.primaryColor,
+                                                      NL10ns.of(context)
+                                                          .copy_to_clipboard,
+                                                      color: DefaultTheme
+                                                          .primaryColor,
                                                       type: LabelType.h4,
                                                     ),
                                                   ],
                                                 ),
                                                 onTap: () {
-                                                  CopyUtils.copyAction(context, wallet.address);
+                                                  CopyUtils.copyAction(
+                                                      context, wallet.address);
                                                 },
                                               ),
                                             ],
@@ -177,7 +196,8 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
                                       alignment: Alignment.center,
                                       child: QrImage(
                                         data: wallet.address,
-                                        backgroundColor: DefaultTheme.backgroundLightColor,
+                                        backgroundColor:
+                                            DefaultTheme.backgroundLightColor,
                                         version: QrVersions.auto,
                                         size: 240.0,
                                       ),
@@ -199,11 +219,13 @@ class _ReceiveNknScreenState extends State<ReceiveNknScreen> {
                 flex: 0,
                 child: SafeArea(
                   child: Padding(
-                    padding: EdgeInsets.only(bottom: 8, top: 8, left: 20, right: 20),
+                    padding:
+                        EdgeInsets.only(bottom: 8, top: 8, left: 20, right: 20),
                     child: Column(
                       children: <Widget>[
                         Button(
-                          child: Label(NL10ns.of(context).done, type: LabelType.h3),
+                          child: Label(NL10ns.of(context).done,
+                              type: LabelType.h3),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },

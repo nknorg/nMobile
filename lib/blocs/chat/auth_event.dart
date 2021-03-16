@@ -6,20 +6,20 @@ abstract class AuthEvent {
 //   const AuthSuccessEvent();
 // }
 
-class AuthToFrontEvent extends AuthEvent{
+class AuthToFrontEvent extends AuthEvent {
   const AuthToFrontEvent();
 }
 
-class AuthToBackgroundEvent extends AuthEvent{
+class AuthToBackgroundEvent extends AuthEvent {
   const AuthToBackgroundEvent();
 }
 
-class AuthFailEvent extends AuthEvent{
+class AuthFailEvent extends AuthEvent {
   const AuthFailEvent();
 }
 
-class AuthToUserEvent extends AuthEvent{
+class AuthToUserEvent extends AuthEvent {
   final String publicKey;
   final String walletAddress;
-  const AuthToUserEvent(this.publicKey,this.walletAddress);
+  const AuthToUserEvent(this.publicKey, this.walletAddress);
 }

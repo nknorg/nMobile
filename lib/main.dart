@@ -28,19 +28,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'blocs/wallet/wallets_bloc.dart';
 
-
 void main() async {
   SentryClient sentry;
 
-  if (Platform.isAndroid){
+  if (Platform.isAndroid) {
     runZonedGuarded(() {
       Global.init(() {
         sentry = SentryClient(
-          // log
-            dsn: 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
+            // log
+            dsn:
+                'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
             environmentAttributes: const Event(
-              release: '203',
-              environment: 'Android203',
+              release: '209',
+              environment: 'Android209',
             ));
         runApp(App());
       });
@@ -60,7 +60,8 @@ void main() async {
     runZonedGuarded(() {
       Global.init(() {
         sentry = SentryClient(
-            dsn: 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
+            dsn:
+                'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
             environmentAttributes: const Event(
               release: '195',
               environment: 'Android195',
@@ -68,7 +69,7 @@ void main() async {
         runApp(App());
       });
     }, (error, stackTrace) async {
-      print('Error Occured'+error.toString());
+      print('Error Occured' + error.toString());
       await sentry.captureException(
         exception: error,
         stackTrace: stackTrace,
@@ -80,15 +81,15 @@ void main() async {
         stackTrace: details.stack,
       );
     };
-  }
-  else{
+  } else {
     runZonedGuarded(() {
       Global.init(() {
         sentry = SentryClient(
-            dsn: 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
+            dsn:
+                'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
             environmentAttributes: const Event(
-              release: '203',
-              environment: 'iOS203',
+              release: '209',
+              environment: 'iOS209',
             ));
         runApp(App());
       });
@@ -168,7 +169,10 @@ class AppState extends State<App> with WidgetsBindingObserver, Tag {
               builder: (context, child) {
                 return FlutterEasyLoading(child: child);
               },
-              navigatorObservers: [BotToastNavigatorObserver(), RouteUtils.routeObserver],
+              navigatorObservers: [
+                BotToastNavigatorObserver(),
+                RouteUtils.routeObserver
+              ],
               onGenerateTitle: (context) {
                 return NL10ns.of(context).title;
               },
@@ -185,7 +189,9 @@ class AppState extends State<App> with WidgetsBindingObserver, Tag {
                 ),
               ),
               home: AppScreen(0),
-              locale: Global.locale != null && Global.locale != 'auto' ? Locale.fromSubtags(languageCode: Global.locale) : null,
+              locale: Global.locale != null && Global.locale != 'auto'
+                  ? Locale.fromSubtags(languageCode: Global.locale)
+                  : null,
               localizationsDelegates: [
                 GlobalMaterialLocalizations.delegate,
                 GlobalWidgetsLocalizations.delegate,

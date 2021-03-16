@@ -92,9 +92,12 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                         alignment: Alignment.center,
                                         decoration: BoxDecoration(
                                           color: Colours.light_ff,
-                                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(8)),
                                         ),
-                                        child: SvgPicture.asset('assets/logo.svg', color: Colours.purple_2e),
+                                        child: SvgPicture.asset(
+                                            'assets/logo.svg',
+                                            color: Colours.purple_2e),
                                       ).symm(h: 16, v: 20),
                                       address.contains('NKN')
                                           ? Space.empty
@@ -105,17 +108,22 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                 width: 20,
                                                 height: 20,
                                                 alignment: Alignment.center,
-                                                decoration: BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
-                                                child: SvgPicture.asset('assets/ethereum-logo.svg'),
+                                                decoration: BoxDecoration(
+                                                    color: Colours.purple_53,
+                                                    shape: BoxShape.circle),
+                                                child: SvgPicture.asset(
+                                                    'assets/ethereum-logo.svg'),
                                               ),
                                             )
                                     ],
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.only(top: 16, bottom: 40),
+                                  padding: const EdgeInsets.only(
+                                      top: 16, bottom: 40),
                                   child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: <Widget>[
                                       Label(
@@ -131,15 +139,18 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                     children: <Widget>[
                                       Flex(
                                         direction: Axis.horizontal,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: <Widget>[
                                           Expanded(
                                             flex: 0,
                                             child: Padding(
-                                              padding: const EdgeInsets.only(left: 0, right: 20),
+                                              padding: const EdgeInsets.only(
+                                                  left: 0, right: 20),
                                               child: loadAssetIconsImage(
                                                 'wallet',
-                                                color: DefaultTheme.primaryColor,
+                                                color:
+                                                    DefaultTheme.primaryColor,
                                                 width: 24,
                                               ),
                                             ),
@@ -147,39 +158,51 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                           Expanded(
                                             flex: 1,
                                             child: Padding(
-                                              padding: const EdgeInsets.only(top: 4),
+                                              padding:
+                                                  const EdgeInsets.only(top: 4),
                                               child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: <Widget>[
                                                   Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
                                                     children: <Widget>[
                                                       Label(
-                                                        NL10ns.of(context).wallet_address,
+                                                        NL10ns.of(context)
+                                                            .wallet_address,
                                                         type: LabelType.h4,
-                                                        textAlign: TextAlign.start,
+                                                        textAlign:
+                                                            TextAlign.start,
                                                       ),
                                                       InkWell(
                                                         child: Label(
-                                                          NL10ns.of(context).copy,
-                                                          color: DefaultTheme.primaryColor,
-                                                          type: LabelType.bodyRegular,
+                                                          NL10ns.of(context)
+                                                              .copy,
+                                                          color: DefaultTheme
+                                                              .primaryColor,
+                                                          type: LabelType
+                                                              .bodyRegular,
                                                         ),
                                                         onTap: () {
-                                                          CopyUtils.copyAction(context, address);
+                                                          CopyUtils.copyAction(
+                                                              context, address);
                                                         },
                                                       ),
                                                     ],
                                                   ),
                                                   InkWell(
                                                     onTap: () {
-                                                      CopyUtils.copyAction(context, address);
+                                                      CopyUtils.copyAction(
+                                                          context, address);
                                                     },
                                                     child: Textbox(
                                                       value: address,
                                                       readOnly: true,
                                                       enabled: false,
-                                                      textInputAction: TextInputAction.next,
+                                                      textInputAction:
+                                                          TextInputAction.next,
                                                     ),
                                                   ),
                                                 ],
@@ -192,15 +215,19 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                           ? Space.empty
                                           : Flex(
                                               direction: Axis.horizontal,
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: <Widget>[
                                                 Expanded(
                                                   flex: 0,
                                                   child: Padding(
-                                                    padding: const EdgeInsets.only(left: 0, right: 20),
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            left: 0, right: 20),
                                                     child: loadAssetIconsImage(
                                                       'key',
-                                                      color: DefaultTheme.primaryColor,
+                                                      color: DefaultTheme
+                                                          .primaryColor,
                                                       width: 24,
                                                     ),
                                                   ),
@@ -208,40 +235,62 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                 Expanded(
                                                   flex: 1,
                                                   child: Padding(
-                                                    padding: const EdgeInsets.only(top: 4),
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            top: 4),
                                                     child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
                                                       children: <Widget>[
                                                         Row(
-                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .spaceBetween,
                                                           children: <Widget>[
                                                             Label(
-                                                              NL10ns.of(context).public_key,
-                                                              type: LabelType.h4,
-                                                              textAlign: TextAlign.start,
+                                                              NL10ns.of(context)
+                                                                  .public_key,
+                                                              type:
+                                                                  LabelType.h4,
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .start,
                                                             ),
                                                             InkWell(
                                                               child: Label(
-                                                                NL10ns.of(context).copy,
-                                                                color: DefaultTheme.primaryColor,
-                                                                type: LabelType.bodyRegular,
+                                                                NL10ns.of(
+                                                                        context)
+                                                                    .copy,
+                                                                color: DefaultTheme
+                                                                    .primaryColor,
+                                                                type: LabelType
+                                                                    .bodyRegular,
                                                               ),
                                                               onTap: () {
-                                                                CopyUtils.copyAction(context, publicKey);
+                                                                CopyUtils
+                                                                    .copyAction(
+                                                                        context,
+                                                                        publicKey);
                                                               },
                                                             ),
                                                           ],
                                                         ),
                                                         InkWell(
                                                           onTap: () {
-                                                            CopyUtils.copyAction(context, publicKey);
+                                                            CopyUtils
+                                                                .copyAction(
+                                                                    context,
+                                                                    publicKey);
                                                           },
                                                           child: Textbox(
                                                             multi: true,
                                                             enabled: false,
                                                             value: publicKey,
                                                             readOnly: true,
-                                                            textInputAction: TextInputAction.next,
+                                                            textInputAction:
+                                                                TextInputAction
+                                                                    .next,
                                                           ),
                                                         ),
                                                       ],
@@ -254,15 +303,19 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                           ? Space.empty
                                           : Flex(
                                               direction: Axis.horizontal,
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: <Widget>[
                                                 Expanded(
                                                   flex: 0,
                                                   child: Padding(
-                                                    padding: const EdgeInsets.only(left: 0, right: 20),
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            left: 0, right: 20),
                                                     child: loadAssetIconsImage(
                                                       'key',
-                                                      color: DefaultTheme.primaryColor,
+                                                      color: DefaultTheme
+                                                          .primaryColor,
                                                       width: 24,
                                                     ),
                                                   ),
@@ -270,26 +323,43 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                 Expanded(
                                                   flex: 1,
                                                   child: Padding(
-                                                    padding: const EdgeInsets.only(top: 4),
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            top: 4),
                                                     child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
                                                       children: <Widget>[
                                                         Row(
-                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .spaceBetween,
                                                           children: <Widget>[
                                                             Label(
-                                                              NL10ns.of(context).seed,
-                                                              type: LabelType.h4,
-                                                              textAlign: TextAlign.start,
+                                                              NL10ns.of(context)
+                                                                  .seed,
+                                                              type:
+                                                                  LabelType.h4,
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .start,
                                                             ),
                                                             InkWell(
                                                               child: Label(
-                                                                NL10ns.of(context).copy,
-                                                                color: DefaultTheme.primaryColor,
-                                                                type: LabelType.bodyRegular,
+                                                                NL10ns.of(
+                                                                        context)
+                                                                    .copy,
+                                                                color: DefaultTheme
+                                                                    .primaryColor,
+                                                                type: LabelType
+                                                                    .bodyRegular,
                                                               ),
                                                               onTap: () {
-                                                                CopyUtils.copyAction(context, seed);
+                                                                CopyUtils
+                                                                    .copyAction(
+                                                                        context,
+                                                                        seed);
                                                                 _setBackupFlag();
                                                               },
                                                             ),
@@ -297,7 +367,10 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                         ),
                                                         InkWell(
                                                           onTap: () {
-                                                            CopyUtils.copyAction(context, seed);
+                                                            CopyUtils
+                                                                .copyAction(
+                                                                    context,
+                                                                    seed);
                                                             _setBackupFlag();
                                                           },
                                                           child: Textbox(
@@ -305,7 +378,9 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                             value: seed,
                                                             readOnly: true,
                                                             enabled: false,
-                                                            textInputAction: TextInputAction.next,
+                                                            textInputAction:
+                                                                TextInputAction
+                                                                    .next,
                                                           ),
                                                         ),
                                                       ],
@@ -316,15 +391,18 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                             ),
                                       Flex(
                                         direction: Axis.horizontal,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: <Widget>[
                                           Expanded(
                                             flex: 0,
                                             child: Padding(
-                                              padding: const EdgeInsets.only(left: 0, right: 20),
+                                              padding: const EdgeInsets.only(
+                                                  left: 0, right: 20),
                                               child: loadAssetIconsImage(
                                                 'key',
-                                                color: DefaultTheme.primaryColor,
+                                                color:
+                                                    DefaultTheme.primaryColor,
                                                 width: 24,
                                               ),
                                             ),
@@ -332,26 +410,37 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                           Expanded(
                                             flex: 1,
                                             child: Padding(
-                                              padding: const EdgeInsets.only(top: 4),
+                                              padding:
+                                                  const EdgeInsets.only(top: 4),
                                               child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: <Widget>[
                                                   Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
                                                     children: <Widget>[
                                                       Label(
-                                                        NL10ns.of(context).keystore,
+                                                        NL10ns.of(context)
+                                                            .keystore,
                                                         type: LabelType.h4,
-                                                        textAlign: TextAlign.start,
+                                                        textAlign:
+                                                            TextAlign.start,
                                                       ),
                                                       InkWell(
                                                         child: Label(
-                                                          NL10ns.of(context).copy,
-                                                          color: DefaultTheme.primaryColor,
-                                                          type: LabelType.bodyRegular,
+                                                          NL10ns.of(context)
+                                                              .copy,
+                                                          color: DefaultTheme
+                                                              .primaryColor,
+                                                          type: LabelType
+                                                              .bodyRegular,
                                                         ),
                                                         onTap: () {
-                                                          CopyUtils.copyAction(context, keystore);
+                                                          CopyUtils.copyAction(
+                                                              context,
+                                                              keystore);
                                                           _setBackupFlag();
                                                         },
                                                       ),
@@ -359,7 +448,8 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                   ),
                                                   InkWell(
                                                     onTap: () {
-                                                      CopyUtils.copyAction(context, keystore);
+                                                      CopyUtils.copyAction(
+                                                          context, keystore);
                                                       _setBackupFlag();
                                                     },
                                                     child: Textbox(
@@ -368,7 +458,8 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                                                       enabled: false,
                                                       value: keystore,
                                                       readOnly: true,
-                                                      textInputAction: TextInputAction.next,
+                                                      textInputAction:
+                                                          TextInputAction.next,
                                                     ),
                                                   ),
                                                 ],
@@ -389,34 +480,38 @@ class _NknWalletExportScreenState extends State<NknWalletExportScreen> {
                   ),
                 ),
               ),
-              seed == null ? Space.empty : Expanded(
-                flex: 0,
-                child: SafeArea(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 8, top: 8),
-                    child: Column(
-                      children: <Widget>[
-                        Button(
-                          child: Label(
-                            NL10ns.of(context).view_qrcode,
-                            type: LabelType.h3,
-                            color: DefaultTheme.primaryColor,
+              seed == null
+                  ? Space.empty
+                  : Expanded(
+                      flex: 0,
+                      child: SafeArea(
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 8, top: 8),
+                          child: Column(
+                            children: <Widget>[
+                              Button(
+                                child: Label(
+                                  NL10ns.of(context).view_qrcode,
+                                  type: LabelType.h3,
+                                  color: DefaultTheme.primaryColor,
+                                ),
+                                backgroundColor:
+                                    DefaultTheme.primaryColor.withAlpha(20),
+                                fontColor: DefaultTheme.primaryColor,
+                                onPressed: () {
+                                  BottomDialog.of(context).showQrcodeDialog(
+                                    title: NL10ns.of(context).seed +
+                                        NL10ns.of(context).qrcode,
+                                    data: seed,
+                                  );
+                                  _setBackupFlag();
+                                },
+                              ),
+                            ],
                           ),
-                          backgroundColor: DefaultTheme.primaryColor.withAlpha(20),
-                          fontColor: DefaultTheme.primaryColor,
-                          onPressed: () {
-                            BottomDialog.of(context).showQrcodeDialog(
-                              title: NL10ns.of(context).seed + NL10ns.of(context).qrcode,
-                              data: seed,
-                            );
-                            _setBackupFlag();
-                          },
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
             ],
           ),
         ),

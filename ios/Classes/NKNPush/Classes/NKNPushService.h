@@ -34,6 +34,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)disConnectAPNS;
 
+- (NSString *)combinePieces:(NSArray *)dataPieces dataShard:(NSInteger)dataPiece parityShards:(NSInteger)parityPiece bytesLength:(NSInteger)bytesLength;
+
+- (NSArray<NSData *> *)intoPieces:(NSString *)dataBytesString dataShard:(NSInteger)dataPiece parityShards:(NSInteger)parityPiece;
+
 @end
 
 NS_ASSUME_NONNULL_END

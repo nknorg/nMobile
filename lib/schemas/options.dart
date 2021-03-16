@@ -8,23 +8,28 @@ class OptionsSchema {
   int deleteAfterSeconds;
   int backgroundColor;
   int color;
+  int updateBurnAfterTime;
 
   OptionsSchema({
     this.deleteAfterSeconds,
     this.backgroundColor,
     this.color,
+    this.updateBurnAfterTime,
   });
 
   String toJson() {
     Map<String, dynamic> map = {};
-    if (deleteAfterSeconds != null) map['deleteAfterSeconds'] = deleteAfterSeconds;
+    if (deleteAfterSeconds != null)
+      map['deleteAfterSeconds'] = deleteAfterSeconds;
     if (backgroundColor != null) map['backgroundColor'] = backgroundColor;
     if (color != null) map['color'] = color;
+    if (updateBurnAfterTime != null) map['updateTime'] = updateBurnAfterTime;
     return jsonEncode(map);
   }
 
   static OptionsSchema random({int themeId}) {
-    final random = themeId ?? Random().nextInt(DefaultTheme.headerBackgroundColor.length);
+    final random =
+        themeId ?? Random().nextInt(DefaultTheme.headerBackgroundColor.length);
     return OptionsSchema(
       backgroundColor: DefaultTheme.headerBackgroundColor[random],
       color: DefaultTheme.headerColor[random],
@@ -36,6 +41,7 @@ class OptionsSchema {
       deleteAfterSeconds: map['deleteAfterSeconds'],
       backgroundColor: map['backgroundColor'],
       color: map['color'],
+      updateBurnAfterTime: map['updateTime'],
     );
   }
 }

@@ -22,7 +22,8 @@ import 'package:web3dart/web3dart.dart';
 /// @author Chenai
 /// @version 1.0, 20/07/2020
 class Erc20Nkn {
-  static const SMART_CONTRACT_ADDRESS = '0x5cf04716ba20127f1e2297addcf4b5035000c9eb';
+  static const SMART_CONTRACT_ADDRESS =
+      '0x5cf04716ba20127f1e2297addcf4b5035000c9eb';
   static const SMART_CONTRACT_NAME = 'NKNToken';
   static const ABI_CODE =
       '[{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"transferable","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_transferable","type":"bool"}],"name":"setTransferable","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"totalSupplyCap","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_owner","type":"address"}],"name":"transferOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[{"name":"_issuer","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"payable":true,"stateMutability":"payable","type":"fallback"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_from","type":"address"},{"indexed":true,"name":"_to","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":true,"name":"to","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"owner","type":"address"},{"indexed":true,"name":"spender","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Approval","type":"event"}]';
@@ -74,8 +75,10 @@ class EthErc20Client with Tag {
   // of 5 calls per sec/IP.
   //
   // https://infura.io/dashboard/ethereum/3fc946dd60524031a13ab94738cfa6ce/settings
-  static const RPC_SERVER_URL = 'https://mainnet.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
-  static const RPC_SERVER_URL_test = 'https://ropsten.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
+  static const RPC_SERVER_URL =
+      'https://mainnet.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
+  static const RPC_SERVER_URL_test =
+      'https://ropsten.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
 
   // ignore: non_constant_identifier_names
   LOG _LOG;
@@ -120,14 +123,17 @@ class EthErc20Client with Tag {
     @required int gasLimit,
     int gasPriceInGwei,
   }) {
-    _LOG.d('sendEthereum(credt:$credt, address:$address, amountEth:$amountEth, gasLimit:$gasLimit, gasPriceInGwei:$gasPriceInGwei)');
+    _LOG.d(
+        'sendEthereum(credt:$credt, address:$address, amountEth:$amountEth, gasLimit:$gasLimit, gasPriceInGwei:$gasPriceInGwei)');
     try {
       return _web3client.sendTransaction(
           credt,
           Transaction(
             to: EthereumAddress.fromHex(address),
             maxGas: gasLimit,
-            gasPrice: gasPriceInGwei == null ? null : EtherAmount.fromUnitAndValue(EtherUnit.gwei, gasPriceInGwei),
+            gasPrice: gasPriceInGwei == null
+                ? null
+                : EtherAmount.fromUnitAndValue(EtherUnit.gwei, gasPriceInGwei),
             value: amountEth.ETH,
           ),
           fetchChainIdFromNetworkId: true);
@@ -144,7 +150,8 @@ class EthErc20Client with Tag {
     @required int gasLimit,
     int gasPriceInGwei,
   }) async {
-    _LOG.d('sendNknToken(credt:$credt, address:$address, amountNkn:$amountNkn, gasLimit:$gasLimit, gasPriceInGwei:$gasPriceInGwei)');
+    _LOG.d(
+        'sendNknToken(credt:$credt, address:$address, amountNkn:$amountNkn, gasLimit:$gasLimit, gasPriceInGwei:$gasPriceInGwei)');
     try {
       return _web3client.sendTransaction(
           credt,
@@ -157,7 +164,9 @@ class EthErc20Client with Tag {
               amountNkn.NKN.getInWei // _value: BigInt.
             ],
             maxGas: gasLimit,
-            gasPrice: gasPriceInGwei == null ? null : EtherAmount.fromUnitAndValue(EtherUnit.gwei, gasPriceInGwei),
+            gasPrice: gasPriceInGwei == null
+                ? null
+                : EtherAmount.fromUnitAndValue(EtherUnit.gwei, gasPriceInGwei),
           ),
           fetchChainIdFromNetworkId: true);
     } catch (e) {
@@ -166,20 +175,24 @@ class EthErc20Client with Tag {
     }
   }
 
-  void listenTokenEvent(void callback(EthereumAddress from, EthereumAddress to, EtherAmount balance)) {
+  void listenTokenEvent(
+      void callback(
+          EthereumAddress from, EthereumAddress to, EtherAmount balance)) {
     _subscription ??= _web3client
         .events(FilterOptions.events(
       contract: Erc20Nkn.contract,
       event: Erc20Nkn.transferEvent,
     ))
         .listen((event) {
-      final decoded = Erc20Nkn.transferEvent.decodeResults(event.topics, event.data);
+      final decoded =
+          Erc20Nkn.transferEvent.decodeResults(event.topics, event.data);
 
       final from = decoded[0] as EthereumAddress;
       final to = decoded[1] as EthereumAddress;
       final value = decoded[2] as BigInt;
       final balance = EtherAmount.inWei(value);
-      _LOG.i('onTokenEvent: $from sent ${balance.getValueInUnit(EtherUnit.ether)} NKN to $to');
+      _LOG.i(
+          'onTokenEvent: $from sent ${balance.getValueInUnit(EtherUnit.ether)} NKN to $to');
 
       callback(from, to, balance);
     });
@@ -195,36 +208,54 @@ class Ethereum {
   // ignore: non_constant_identifier_names
   static LOG _LOG = LOG('Ethereum');
 
-  static EthWallet createWallet({@required String name, @required String password}) {
+  static EthWallet createWallet(
+      {@required String name, @required String password}) {
     final credentials = EthPrivateKey.createRandom(Random.secure());
     final raw = Wallet.createNew(credentials, password, Random.secure());
     return EthWallet(name, raw);
   }
 
-  static EthWallet restoreWallet({@required String name, @required String keystore, @required String password}) {
+  static EthWallet restoreWallet(
+      {@required String name,
+      @required String keystore,
+      @required String password}) {
     try {
-      return EthWallet(name, verifyPassword(keystore: keystore, password: password));
+      return EthWallet(
+          name, verifyPassword(keystore: keystore, password: password));
     } catch (e) {
       throw e;
     }
   }
 
-  static EthWallet restoreWalletFromPrivateKey({@required String name, @required String privateKey, @required String password}) {
+  static EthWallet restoreWalletFromPrivateKey(
+      {@required String name,
+      @required String privateKey,
+      @required String password}) {
     final credentials = walletFromPrivateKey(privateKey: privateKey);
     final raw = Wallet.createNew(credentials, password, Random.secure());
     return EthWallet(name, raw);
   }
 
-  static Future<EthWallet> restoreWalletSaved({@required WalletSchema schema, @required String password}) async {
-    return restoreWallet(name: schema.name, keystore: await schema.getKeystore(), password: password);
+  static Future<EthWallet> restoreWalletSaved(
+      {@required WalletSchema schema, @required String password}) async {
+    return restoreWallet(
+        name: schema.name,
+        keystore: await schema.getKeystore(),
+        password: password);
   }
 
-  static void saveWallet({@required EthWallet ethWallet, @required WalletsBloc walletsBloc}) async {
-    final schema = WalletSchema(address: (await ethWallet.address).hex, name: ethWallet.name, type: WalletSchema.ETH_WALLET);
+  static void saveWallet(
+      {@required EthWallet ethWallet,
+      @required WalletsBloc walletsBloc}) async {
+    final schema = WalletSchema(
+        address: (await ethWallet.address).hex,
+        name: ethWallet.name,
+        type: WalletSchema.ETH_WALLET);
     walletsBloc.add(AddWallet(schema, ethWallet.keystore));
   }
 
-  static Wallet verifyPassword({@required String keystore, @required String password}) {
+  static Wallet verifyPassword(
+      {@required String keystore, @required String password}) {
     try {
       return Wallet.fromJson(keystore, password);
     } catch (e) {
@@ -242,7 +273,8 @@ class Ethereum {
     }
     final crypto = data['crypto'] ?? data['Crypto'];
     final kdf = crypto['kdf'] as String;
-    return (kdf == 'pbkdf2' && crypto['kdfparams'] is Map) || (kdf == 'scrypt' && crypto['kdfparams'] is Map);
+    return (kdf == 'pbkdf2' && crypto['kdfparams'] is Map) ||
+        (kdf == 'scrypt' && crypto['kdfparams'] is Map);
   }
 
   static Credentials walletFromPrivateKey({@required String privateKey}) {
@@ -253,7 +285,8 @@ class Ethereum {
     return deriveAddressByCredt(ethWallet.credt);
   }
 
-  static Future<EthereumAddress> deriveAddressByCredt(Credentials credentials) async {
+  static Future<EthereumAddress> deriveAddressByCredt(
+      Credentials credentials) async {
     final address = await credentials.extractAddress();
     _LOG.i(address.hex);
     return address;
@@ -266,10 +299,12 @@ class Ethereum {
       return EtherAmount.fromUnitAndValue(EtherUnit.ether, amount as int);
     } else {
       final int len = amoStr.length - dot - 1;
-      final intPart = dot == 0 ? BigInt.from(0) : BigInt.parse(amoStr.substring(0, dot));
+      final intPart =
+          dot == 0 ? BigInt.from(0) : BigInt.parse(amoStr.substring(0, dot));
       final floatPart = BigInt.parse(amoStr.substring(dot + 1));
 //      _LOG.w('intPart:$intPart, floatPart:$floatPart');
-      return EtherAmount.inWei((BigInt.from(10).pow(18) * intPart) + ((BigInt.from(10).pow(18) * floatPart) ~/ BigInt.from(10).pow(len)));
+      return EtherAmount.inWei((BigInt.from(10).pow(18) * intPart) +
+          ((BigInt.from(10).pow(18) * floatPart) ~/ BigInt.from(10).pow(len)));
     }
   }
 }

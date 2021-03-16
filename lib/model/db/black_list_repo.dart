@@ -39,7 +39,8 @@ class BlackListRepo {
     return parseEntities(result);
   }
 
-  Future<BlackList> getByTopicAndChatId(String topicName, String chatIdOrPubkey) async {
+  Future<BlackList> getByTopicAndChatId(
+      String topicName, String chatIdOrPubkey) async {
     Database cdb = await NKNDataManager().currentDatabase();
     List<Map<String, dynamic>> result = await cdb.query(
       tableName,
@@ -59,10 +60,12 @@ class BlackListRepo {
 
   Future<void> insertOrIgnore(BlackList bl) async {
     Database cdb = await NKNDataManager().currentDatabase();
-    await cdb.insert(tableName, toEntity(bl), conflictAlgorithm: ConflictAlgorithm.ignore);
+    await cdb.insert(tableName, toEntity(bl),
+        conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
-  Future<void> update(String topicName, String chatIdOrPubkey, int pageIndex, bool uploaded_) async {
+  Future<void> update(String topicName, String chatIdOrPubkey, int pageIndex,
+      bool uploaded_) async {
     Database cdb = await NKNDataManager().currentDatabase();
     await cdb.update(
       tableName,
@@ -72,7 +75,8 @@ class BlackListRepo {
     );
   }
 
-  Future<void> updatePermiPageIndex(String topicName, String chatIdOrPubkey, int pageIndex) async {
+  Future<void> updatePermiPageIndex(
+      String topicName, String chatIdOrPubkey, int pageIndex) async {
     Database cdb = await NKNDataManager().currentDatabase();
     await cdb.update(
       tableName,
@@ -94,7 +98,9 @@ class BlackListRepo {
 
   Future<void> delete(String topicName, String chatIdOrPubkey) async {
     Database cdb = await NKNDataManager().currentDatabase();
-    await cdb.delete(tableName, where: '$topic = ? AND $cid_r_pk = ?', whereArgs: [topicName, chatIdOrPubkey]);
+    await cdb.delete(tableName,
+        where: '$topic = ? AND $cid_r_pk = ?',
+        whereArgs: [topicName, chatIdOrPubkey]);
   }
 
   Future<void> deleteAll(String topicName) async {
@@ -110,12 +116,14 @@ class BlackListRepo {
         ' ON $tableName ($topic, $cid_r_pk);');
   }
 
-  static Future<void> upgradeFromV5(Database db, int oldVersion, int newVersion) async {
+  static Future<void> upgradeFromV5(
+      Database db, int oldVersion, int newVersion) async {
     // assert(newVersion >= SqliteStorage.currentVersion);
     if (newVersion == SqliteStorage.currentVersion) {
       await create(db, newVersion);
     } else {
-      throw UnsupportedError('unsupported upgrade from $oldVersion to $newVersion.');
+      throw UnsupportedError(
+          'unsupported upgrade from $oldVersion to $newVersion.');
     }
   }
 
@@ -165,4 +173,3 @@ Map<String, dynamic> toEntity(BlackList bl) {
     subscribed: bl.subscribed ? 1 : 0,
   };
 }
-

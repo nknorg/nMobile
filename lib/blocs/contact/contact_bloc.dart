@@ -14,11 +14,9 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
   Stream<ContactState> mapEventToState(ContactEvent event) async* {
     if (event is LoadContact) {
       yield* _mapLoadContactToState(event);
-    }
-    else if (event is UpdateUserInfoEvent){
+    } else if (event is UpdateUserInfoEvent) {
       yield* _mapUpdateUserInfoState(event);
-    }
-    else if (event is LoadContactInfoEvent){
+    } else if (event is LoadContactInfoEvent) {
       yield* _mapLoadContactInfoState(event);
     }
   }
@@ -28,28 +26,34 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
     yield ContactLoaded(contacts);
   }
 
-  Stream<ContactState> _mapUpdateUserInfoState(UpdateUserInfoEvent event) async* {
+  Stream<ContactState> _mapUpdateUserInfoState(
+      UpdateUserInfoEvent event) async* {
     ContactSchema contactSchema = event.userInfo;
     yield UpdateUserInfoState(contactSchema);
   }
 
-  Stream<ContactState> _mapLoadContactInfoState(LoadContactInfoEvent event) async* {
-    ContactSchema contactSchema = await ContactSchema.fetchContactByAddress(event.address);
+  Stream<ContactState> _mapLoadContactInfoState(
+      LoadContactInfoEvent event) async* {
+    ContactSchema contactSchema =
+        await ContactSchema.fetchContactByAddress(event.address);
     yield LoadContactInfoState(contactSchema);
   }
 
-
-  Future<List<ContactSchema>> _queryContactsByAddress(List<String> address) async {
+  Future<List<ContactSchema>> _queryContactsByAddress(
+      List<String> address) async {
     List<ContactSchema> list = <ContactSchema>[];
     if (state is ContactLoaded) {
       list = List.from((state as ContactLoaded).contacts);
     }
     Database cdb = await NKNDataManager().currentDatabase();
-    var contactsRes = await cdb.rawQuery('SELECT * FROM ${ContactSchema.tableName} WHERE address IN (${address.map((x) => '\'$x\'').join(',')})');
-    List<ContactSchema> contacts = contactsRes.map((x) => ContactSchema.parseEntity(x)).toList();
+    var contactsRes = await cdb.rawQuery(
+        'SELECT * FROM ${ContactSchema.tableName} WHERE address IN (${address.map((x) => '\'$x\'').join(',')})');
+    List<ContactSchema> contacts =
+        contactsRes.map((x) => ContactSchema.parseEntity(x)).toList();
     for (var i = 0, length = contactsRes.length; i < length; i++) {
       var item = contacts[i];
-      var findIndex = list.indexWhere((x) => x.clientAddress == item.clientAddress);
+      var findIndex =
+          list.indexWhere((x) => x.clientAddress == item.clientAddress);
       if (findIndex > -1) {
         list[findIndex].firstName = item.firstName;
         list[findIndex].lastName = item.lastName;

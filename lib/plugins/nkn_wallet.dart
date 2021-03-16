@@ -5,8 +5,10 @@ import 'package:nmobile/utils/nlog_util.dart';
 
 class NknWalletPlugin {
   static const String TAG = 'NknWalletPlugin';
-  static const MethodChannel _methodChannel = MethodChannel('org.nkn.sdk/wallet');
-  static const EventChannel _eventChannel = EventChannel('org.nkn.sdk/wallet/event');
+  static const MethodChannel _methodChannel =
+      MethodChannel('org.nkn.sdk/wallet');
+  static const EventChannel _eventChannel =
+      EventChannel('org.nkn.sdk/wallet/event');
   static Map<String, Completer> _walletEventQueue = Map<String, Completer>();
 
   static init() {
@@ -59,9 +61,11 @@ class NknWalletPlugin {
     }
   }
 
-  static Future<Map<dynamic, dynamic>> openWallet(String keystore, String password) async {
+  static Future<Map<dynamic, dynamic>> openWallet(
+      String keystore, String password) async {
     try {
-      final Map<dynamic, dynamic> wallet = await _methodChannel.invokeMethod('openWallet', {
+      final Map<dynamic, dynamic> wallet =
+          await _methodChannel.invokeMethod('openWallet', {
         'keystore': keystore,
         'password': password,
       });
@@ -97,7 +101,8 @@ class NknWalletPlugin {
     });
   }
 
-  static Future<String> transferAsync(String keystore, String password, String address, String amount, String fee) async {
+  static Future<String> transferAsync(String keystore, String password,
+      String address, String amount, String fee) async {
     Completer<String> completer = Completer<String>();
     String id = completer.hashCode.toString();
     _walletEventQueue[id] = completer;
@@ -114,7 +119,8 @@ class NknWalletPlugin {
     });
   }
 
-  static Future<String> transfer(String keystore, String password, String address, String amount, String fee) async {
+  static Future<String> transfer(String keystore, String password,
+      String address, String amount, String fee) async {
     try {
       final String hash = await _methodChannel.invokeMethod('transfer', {
         'keystore': keystore,
@@ -131,7 +137,8 @@ class NknWalletPlugin {
 
   static Future<String> pubKeyToWalletAddr(String publicKey) async {
     try {
-      final String address = await _methodChannel.invokeMethod('pubKeyToWalletAddr', {
+      final String address =
+          await _methodChannel.invokeMethod('pubKeyToWalletAddr', {
         'publicKey': publicKey,
       });
       return address;
@@ -140,9 +147,10 @@ class NknWalletPlugin {
     }
   }
 
-  static Future<String> fetchDebugInfo() async{
+  static Future<String> fetchDebugInfo() async {
     try {
-      final String debugInfo = await _methodChannel.invokeMethod('fetchDebugInfo');
+      final String debugInfo =
+          await _methodChannel.invokeMethod('fetchDebugInfo');
       return debugInfo;
     } catch (e) {
       return null;

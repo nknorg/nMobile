@@ -1,6 +1,6 @@
-
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/model/data/contact_data_center.dart';
 import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
@@ -12,7 +12,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../../schemas/contact.dart';
 
-class NKNDataManager{
+class NKNDataManager {
   factory NKNDataManager() => _getInstance();
 
   static NKNDataManager get instance => _getInstance();
@@ -68,13 +68,13 @@ class NKNDataManager{
           await NKNDataManager.upgradeTopicTable2V3(db, currentVersion);
           await NKNDataManager.upgradeContactSchema2V3(db, currentVersion);
         }
-        if (newVersion >= currentVersion){
+        if (newVersion >= currentVersion) {
           await SubscriberRepo.create(db, currentVersion);
           await BlackListRepo.create(db, currentVersion);
         }
       },
     );
-    if (currentVersion < 3){
+    if (currentVersion < 3) {
       await NKNDataManager.upgradeTopicTable2V3(db, currentVersion);
       await NKNDataManager.upgradeContactSchema2V3(db, currentVersion);
       await SubscriberRepo.create(db, currentVersion);
@@ -83,57 +83,56 @@ class NKNDataManager{
     return db;
   }
 
-  initDataBase(String pubKey,String password) async{
-    if (_currentDatabase == null){
+  initDataBase(String pubKey, String password) async {
+    if (_currentDatabase == null) {
       _publicKey = publicKey2DbName(pubKey);
       _password = password;
       _currentDatabase = await NKNDataManager.instance.open();
     }
   }
 
-  changeDatabase(String pubKey,String password) async{
-    if (_currentDatabase != null){
+  changeDatabase(String pubKey, String password) async {
+    if (_currentDatabase != null) {
       await _currentDatabase.close();
     }
+
     /// changeDataBase
     _publicKey = publicKey2DbName(pubKey);
     _password = password;
 
-    if (_publicKey != null && _password != null){
-      NLog.w('Change database__'+_publicKey);
+    if (_publicKey != null && _password != null) {
+      NLog.w('Change database__' + _publicKey);
       _currentDatabase = await NKNDataManager.instance.open();
-    }
-    else{
+    } else {
       NLog.w('Wrong!!! change database no _publicKey');
     }
   }
 
-  Future<Database> currentDatabase() async{
-    if (_publicKey == null || _password == null){
+  Future<Database> currentDatabase() async {
+    if (_publicKey == null || _password == null) {
       return null;
     }
-    if (_publicKey.isEmpty || _password.isEmpty){
+    if (_publicKey.isEmpty || _password.isEmpty) {
       return null;
     }
-    if (_currentDatabase == null){
+    if (_currentDatabase == null) {
       _currentDatabase = await NKNDataManager.instance.open();
     }
     return _currentDatabase;
   }
 
-  close() async{
+  close() async {
     await _currentDatabase.close();
     _currentDatabase = null;
   }
 
-  delete() async{
+  delete() async {
     var databasesPath = await getDatabasesPath();
     String path = join(databasesPath, '$_publicKey.db');
-    try{
+    try {
       await deleteDatabase(path);
-    }
-    catch(e){
-      NLog.w('Close database E:'+e.toString());
+    } catch (e) {
+      NLog.w('Close database E:' + e.toString());
     }
   }
 
@@ -157,38 +156,47 @@ class NKNDataManager{
 
   static upgradeTopicTable2V3(Database db, int dbVersion) async {
     String topicTable = 'topic';
-    var sql = "SELECT * FROM sqlite_master WHERE TYPE = 'table' AND NAME = '$topicTable'";
+    var sql =
+        "SELECT * FROM sqlite_master WHERE TYPE = 'table' AND NAME = '$topicTable'";
     var res = await db.rawQuery(sql);
-    if (res == null){
+    if (res == null) {
       await db.execute(createTopicSql);
-    }
-    else{
-      bool isTopExists = await NKNDataManager.checkColumnExists(db, topicTable, 'is_top');
-      bool themeIdExists = await NKNDataManager.checkColumnExists(db, topicTable, 'theme_id');
-      bool timeUpdateExists =  await NKNDataManager.checkColumnExists(db, topicTable, 'time_update');
-      bool isExpireAtExists = await NKNDataManager.checkColumnExists(db, topicTable, 'expire_at');
-      if (isTopExists == false){
-        await db.execute('ALTER TABLE $topicTable ADD COLUMN is_top BOOLEAN DEFAULT 0');
+    } else {
+      bool isTopExists =
+          await NKNDataManager.checkColumnExists(db, topicTable, 'is_top');
+      bool themeIdExists =
+          await NKNDataManager.checkColumnExists(db, topicTable, 'theme_id');
+      bool timeUpdateExists =
+          await NKNDataManager.checkColumnExists(db, topicTable, 'time_update');
+      bool isExpireAtExists =
+          await NKNDataManager.checkColumnExists(db, topicTable, 'expire_at');
+      if (isTopExists == false) {
+        await db.execute(
+            'ALTER TABLE $topicTable ADD COLUMN is_top BOOLEAN DEFAULT 0');
       }
-      if (themeIdExists == false){
-        await db.execute('ALTER TABLE $topicTable ADD COLUMN theme_id INTEGER DEFAULT 0');
+      if (themeIdExists == false) {
+        await db.execute(
+            'ALTER TABLE $topicTable ADD COLUMN theme_id INTEGER DEFAULT 0');
       }
-      if (timeUpdateExists == false){
-        await db.execute('ALTER TABLE $topicTable ADD COLUMN time_update INTEGER DEFAULT 0');
+      if (timeUpdateExists == false) {
+        await db.execute(
+            'ALTER TABLE $topicTable ADD COLUMN time_update INTEGER DEFAULT 0');
       }
-      if (isExpireAtExists == false){
-        await db.execute('ALTER TABLE $topicTable ADD COLUMN expire_at INTEGER DEFAULT 0');
+      if (isExpireAtExists == false) {
+        await db.execute(
+            'ALTER TABLE $topicTable ADD COLUMN expire_at INTEGER DEFAULT 0');
       }
     }
   }
 
   static upgradeContactSchema2V3(Database db, int dbVersion) async {
     String tableName = ContactSchema.tableName;
-    var sql = "SELECT * FROM sqlite_master WHERE TYPE = 'table' AND NAME = '$tableName'";
+    var sql =
+        "SELECT * FROM sqlite_master WHERE TYPE = 'table' AND NAME = '$tableName'";
     var res = await db.rawQuery(sql);
-    var returnRes = res!=null && res.length > 0;
+    var returnRes = res != null && res.length > 0;
 
-    if (returnRes == false){
+    if (returnRes == false) {
       /// 需要创建表
       final createSqlV3 = '''
       CREATE TABLE $tableName (
@@ -210,31 +218,37 @@ class NKNDataManager{
       )''';
       // index
       await db.execute(createSqlV3);
-    }
-    else{
+    } else {
       var batch = db.batch();
-      bool deviceTokenExists = await NKNDataManager.checkColumnExists(db, tableName, 'device_token');
-      bool notificationOpenExists = await NKNDataManager.checkColumnExists(db, tableName, 'notification_open');
-      bool isTopExists =  await NKNDataManager.checkColumnExists(db, tableName, 'is_top');
-      if (deviceTokenExists == false){
-        batch.execute('ALTER TABLE $tableName ADD COLUMN device_token TEXT DEFAULT "0"');
+      bool deviceTokenExists =
+          await NKNDataManager.checkColumnExists(db, tableName, 'device_token');
+      bool notificationOpenExists = await NKNDataManager.checkColumnExists(
+          db, tableName, 'notification_open');
+      bool isTopExists =
+          await NKNDataManager.checkColumnExists(db, tableName, 'is_top');
+      if (deviceTokenExists == false) {
+        batch.execute(
+            'ALTER TABLE $tableName ADD COLUMN device_token TEXT DEFAULT "0"');
       }
-      if (notificationOpenExists == false){
-        batch.execute('ALTER TABLE $tableName ADD COLUMN notification_open TEXT DEFAULT "0"');
+      if (notificationOpenExists == false) {
+        batch.execute(
+            'ALTER TABLE $tableName ADD COLUMN notification_open TEXT DEFAULT "0"');
       }
-      if (isTopExists == false){
-        batch.execute('ALTER TABLE $tableName ADD COLUMN is_top BOOLEAN DEFAULT 0');
+      if (isTopExists == false) {
+        batch.execute(
+            'ALTER TABLE $tableName ADD COLUMN is_top BOOLEAN DEFAULT 0');
       }
       await batch.commit();
     }
   }
 
-  static Future <bool> checkColumnExists(Database db, String tableName, String columnName) async{
+  static Future<bool> checkColumnExists(
+      Database db, String tableName, String columnName) async {
     bool result = false;
     List resultList = await db.rawQuery("PRAGMA table_info($tableName)");
-    for (Map columnMap in resultList){
+    for (Map columnMap in resultList) {
       String name = columnMap['name'];
-      if (name == columnName){
+      if (name == columnName) {
         return true;
       }
     }

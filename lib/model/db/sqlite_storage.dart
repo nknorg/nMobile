@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/model/data/contact_data_center.dart';
 import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
@@ -56,7 +57,7 @@ class SqliteStorage {
         await ContactSchema.create(db, version);
         var now = DateTime.now();
 
-        NLog.w('Database name is'+name.toString());
+        NLog.w('Database name is' + name.toString());
         var publicKey = name.replaceFirst(_CHAT_DATABASE_NAME + '_', '');
         var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(publicKey);
         await db.insert(
@@ -78,13 +79,13 @@ class SqliteStorage {
           await NKNDataManager.upgradeTopicTable2V3(db, currentVersion);
           await NKNDataManager.upgradeContactSchema2V3(db, currentVersion);
         }
-        if (newVersion >= currentVersion){
+        if (newVersion >= currentVersion) {
           await SubscriberRepo.create(db, currentVersion);
           await BlackListRepo.create(db, currentVersion);
         }
       },
     );
-    if (currentVersion < 3){
+    if (currentVersion < 3) {
       await NKNDataManager.upgradeTopicTable2V3(db, currentVersion);
       await NKNDataManager.upgradeContactSchema2V3(db, currentVersion);
       await SubscriberRepo.create(db, currentVersion);

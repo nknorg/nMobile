@@ -75,14 +75,27 @@ class _SelectScreenState extends State<SelectScreen> {
                       return Container(
                         decoration: BoxDecoration(
                           color: DefaultTheme.backgroundLightColor,
-                          borderRadius: BorderRadius.vertical(top: index == 0 ? Radius.circular(12) : Radius.zero, bottom: index == list.length - 1 ? Radius.circular(12) : Radius.zero),
+                          borderRadius: BorderRadius.vertical(
+                              top: index == 0
+                                  ? Radius.circular(12)
+                                  : Radius.zero,
+                              bottom: index == list.length - 1
+                                  ? Radius.circular(12)
+                                  : Radius.zero),
                         ),
                         child: FlatButton(
                           onPressed: () {
                             Navigator.of(context).pop(item.value);
                           },
                           padding: const EdgeInsets.only(left: 16, right: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: index == 0 ? Radius.circular(12) : Radius.zero, bottom: index == list.length - 1 ? Radius.circular(12) : Radius.zero)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                  top: index == 0
+                                      ? Radius.circular(12)
+                                      : Radius.zero,
+                                  bottom: index == list.length - 1
+                                      ? Radius.circular(12)
+                                      : Radius.zero)),
                           child: SizedBox(
                             height: 56,
                             child: Row(

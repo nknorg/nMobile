@@ -21,4 +21,3 @@ class WalletsLoaded extends WalletsState {
   @override
   String toString() => 'WalletsLoaded { wallets: $wallets }';
 }
-

@@ -22,7 +22,14 @@ class Api {
     var data = res.data['topic_list']['topics'];
     List<NewsSchema> list = new List<NewsSchema>();
     for (var item in data) {
-      list.add(NewsSchema(title: item['title'], image: item['image_url'] ?? '', time: item['created_at'], desc: item['fancy_title'], author: item['last_poster_username'], newsId: item['id'], readedCount: item['views']));
+      list.add(NewsSchema(
+          title: item['title'],
+          image: item['image_url'] ?? '',
+          time: item['created_at'],
+          desc: item['fancy_title'],
+          author: item['last_poster_username'],
+          newsId: item['id'],
+          readedCount: item['views']));
     }
 
     return list;
@@ -35,7 +42,14 @@ class Api {
     var data = res.data['topic_list']['topics'];
     List<NewsSchema> list = new List<NewsSchema>();
     for (var item in data) {
-      list.add(NewsSchema(title: item['title'], image: item['image_url'] ?? '', time: item['created_at'], desc: item['fancy_title'], author: item['last_poster_username'], newsId: item['id'], readedCount: item['views']));
+      list.add(NewsSchema(
+          title: item['title'],
+          image: item['image_url'] ?? '',
+          time: item['created_at'],
+          desc: item['fancy_title'],
+          author: item['last_poster_username'],
+          newsId: item['id'],
+          readedCount: item['views']));
     }
     return list;
   }

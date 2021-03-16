@@ -35,7 +35,8 @@ class ShowMyChatAddressState extends State<ShowMyChatAddress> {
           children: <Widget>[
             SizedBox(height: 20),
             Container(
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(16)),
               child: FlatButton(
                 padding: EdgeInsets.all(16),
                 onPressed: () {
@@ -79,7 +80,8 @@ class ShowMyChatAddressState extends State<ShowMyChatAddress> {
             ),
             SizedBox(height: 40),
             Container(
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(10)),
               padding: EdgeInsets.all(10.w),
               child: Column(
                 children: <Widget>[

@@ -31,7 +31,7 @@ class ContactDao {
   ContactDao(this._db);
 
 //  @Query("SELECT * from contact WHERE chat_id = :chatId")
-  List<Contact> getContactByChatId(String chatId){
+  List<Contact> getContactByChatId(String chatId) {
     return null; // TODO
   }
 }

@@ -15,7 +15,7 @@ class RefreshMessageListEvent extends ChatEvent {
   const RefreshMessageListEvent({this.target});
 }
 
-class RefreshMessageChatEvent extends ChatEvent{
+class RefreshMessageChatEvent extends ChatEvent {
   final MessageSchema message;
   const RefreshMessageChatEvent(this.message);
 }

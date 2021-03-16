@@ -9,7 +9,8 @@ import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-Future<File> getCameraFile(String accountPubkey, {@required ImageSource source}) async {
+Future<File> getCameraFile(String accountPubkey,
+    {@required ImageSource source}) async {
   File image = await ImagePicker.pickImage(source: source);
   if (image != null) {
     File savedImg;
@@ -21,8 +22,8 @@ Future<File> getCameraFile(String accountPubkey, {@required ImageSource source})
     }
 
     int fileLength = await savedImg.length();
-    print('File Size is_____'+fileLength.toString());
-    print('Image.path is___'+image.path);
+    print('File Size is_____' + fileLength.toString());
+    print('Image.path is___' + image.path);
     return savedImg;
   } else {
     return null;
@@ -40,14 +41,14 @@ Future<File> getHeaderImage(String accountPubkey) async {
   // }
 
   Permission mediaPermission = Permission.mediaLibrary;
-  if (image == null){
+  if (image == null) {
     var mediaStatus = await mediaPermission.request();
-    if (mediaStatus == PermissionStatus.granted){
+    if (mediaStatus == PermissionStatus.granted) {
       image = await ImagePicker.pickImage(source: ImageSource.gallery);
     }
   }
 
-  if (image == null){
+  if (image == null) {
     return null;
   }
 
@@ -60,7 +61,12 @@ Future<File> getHeaderImage(String accountPubkey) async {
     iosUiSettings: IOSUiSettings(
       minimumAspectRatio: 1.0,
     ),
-    androidUiSettings: AndroidUiSettings(toolbarTitle: 'Cropper', toolbarColor: Colors.deepOrange, toolbarWidgetColor: Colors.white, initAspectRatio: CropAspectRatioPreset.original, lockAspectRatio: false),
+    androidUiSettings: AndroidUiSettings(
+        toolbarTitle: 'Cropper',
+        toolbarColor: Colors.deepOrange,
+        toolbarWidgetColor: Colors.white,
+        initAspectRatio: CropAspectRatioPreset.original,
+        lockAspectRatio: false),
   );
 
   var path = createContactFilePath(accountPubkey, croppedFile);
@@ -68,7 +74,8 @@ Future<File> getHeaderImage(String accountPubkey) async {
   var savedImg = croppedFile.copySync(path);
 
   int length = await savedImg.length();
-  NLog.w('savedImg length is_____'+length.toString());
+  NLog.w('savedImg length is_____' + length.toString());
+  NLog.w('savedImg Path is_____' + savedImg.path.toString());
 
   return savedImg;
 }

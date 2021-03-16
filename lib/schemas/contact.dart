@@ -8,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/model/data/contact_data_center.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/schemas/message.dart';
@@ -17,17 +17,6 @@ import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-
-class ContactType {
-  static const String stranger = 'stranger';
-  static const String friend = 'friend';
-  static const String me = 'me';
-}
-
-class RequestType {
-  static const String header = 'header';
-  static const String full = 'full';
-}
 
 class SourceProfile {
   String firstName;
@@ -57,6 +46,7 @@ class ContactSchema {
   String firstName;
   String lastName;
   String notes;
+  Map extraInfo;
 
   File avatar;
   OptionsSchema options;
@@ -69,9 +59,6 @@ class ContactSchema {
   // deviceToken
   String deviceToken;
   bool notificationOpen;
-
-  Duration contactRequestFullGap = Duration(minutes: 10);
-  Duration contactResponseFullGap = Duration(seconds: 6);
 
   ContactSchema({
     this.id,
@@ -100,23 +87,41 @@ class ContactSchema {
   }
 
   String get getShowName {
-    var firstName;
-    if (this.firstName == null || this.firstName.isEmpty) {
-      if (sourceProfile?.firstName == null || sourceProfile.firstName.isEmpty) {
-        var index = clientAddress.lastIndexOf('.');
-        if (index < 0) {
-          firstName = clientAddress.substring(0, 6);
-        } else {
-          firstName = clientAddress.substring(0, index + 7);
-        }
-      } else {
-        firstName = sourceProfile.firstName;
-        lastName = sourceProfile.lastName;
+    String showName = '';
+    if (firstName != null && firstName.length > 0) {
+      showName = firstName;
+      if (showName.length > 0) {
+        return showName;
       }
-      return '${firstName ?? ''} '.trim();
-    } else {
-      return '${this.firstName ?? ''}'.trim();
     }
+    if (sourceProfile != null) {
+      if (sourceProfile.firstName != null &&
+          sourceProfile.firstName.length > 0) {
+        showName = sourceProfile.firstName;
+        return showName;
+      }
+    }
+    var index = clientAddress.lastIndexOf('.');
+    if (index < 0) {
+      showName = clientAddress.substring(0, 6);
+    } else {
+      showName = clientAddress.substring(0, index + 7);
+    }
+    return showName;
+  }
+
+  String get getShowAvatarPath {
+    String avatarPath = '';
+    if (avatar?.path != null) {
+      avatarPath = avatar.path;
+    }
+    if (sourceProfile != null) {
+      if (sourceProfile.avatar != null &&
+          sourceProfile.avatar.path.length > 0) {
+        avatarPath = sourceProfile.avatar.path;
+      }
+    }
+    return avatarPath;
   }
 
   Future<SourceProfile> getSourceProfile(Future<Database> db) async {
@@ -126,18 +131,6 @@ class ContactSchema {
       return res.sourceProfile;
     }
     return null;
-  }
-
-  String get avatarFilePath {
-    if (avatar?.path != null) {
-      return avatar.path;
-    } else {
-      if (sourceProfile?.avatar != null) {
-        return sourceProfile.avatar.path;
-      } else {
-        return null;
-      }
-    }
   }
 
   static String get tableName => 'Contact';
@@ -199,47 +192,55 @@ class ContactSchema {
       await db.execute(createSqlV4);
     } else if (version == 5) {
       await db.execute(createSqlV3);
-    }
-    else if (version == 6){
+    } else if (version == 6) {
       await db.execute(createSqlV4);
-    }
-    else {
+    } else {
       throw UnsupportedError('unsupported create operation version $version.');
     }
     // index
     await db.execute('CREATE INDEX index_type ON $tableName (type)');
     await db.execute('CREATE INDEX index_address ON $tableName (address)');
-    await db.execute('CREATE INDEX index_first_name ON $tableName (first_name)');
+    await db
+        .execute('CREATE INDEX index_first_name ON $tableName (first_name)');
     await db.execute('CREATE INDEX index_last_name ON $tableName (last_name)');
-    await db.execute('CREATE INDEX index_created_time ON $tableName (created_time)');
-    await db.execute('CREATE INDEX index_updated_time ON $tableName (updated_time)');
+    await db.execute(
+        'CREATE INDEX index_created_time ON $tableName (created_time)');
+    await db.execute(
+        'CREATE INDEX index_updated_time ON $tableName (updated_time)');
   }
 
   static Future<int> setTop(String chatIdOther, bool top) async {
     Database cdb = await NKNDataManager().currentDatabase();
 
-    return await cdb.update(tableName, {'is_top': top ? 1 : 0}, where: 'address = ?', whereArgs: [chatIdOther]);
+    return await cdb.update(tableName, {'is_top': top ? 1 : 0},
+        where: 'address = ?', whereArgs: [chatIdOther]);
   }
 
   static Future<bool> getIsTop(String chatIdOther) async {
     Database cdb = await NKNDataManager().currentDatabase();
-    var res = await cdb.query(tableName, columns: ['is_top'], where: 'address = ?', whereArgs: [chatIdOther]);
+    var res = await cdb.query(tableName,
+        columns: ['is_top'], where: 'address = ?', whereArgs: [chatIdOther]);
     return res.length > 0 && res[0]['is_top'] as int == 1;
   }
 
   toEntity(String accountPubkey) {
-    Map<String, dynamic> data = {};
-    if (nknWalletAddress != null) data['nknWalletAddress'] = nknWalletAddress;
-    if (notes != null) data['notes'] = notes;
-    if (data.keys.length == 0) data = null;
+    if (extraInfo == null) {
+      extraInfo = new Map<String, dynamic>();
+    }
+    if (nknWalletAddress != null)
+      extraInfo['nknWalletAddress'] = nknWalletAddress;
+    if (notes != null) extraInfo['notes'] = notes;
+    if (extraInfo.keys.length == 0) extraInfo = null;
     Map<String, dynamic> map = {
       'type': type,
       'address': clientAddress,
       'first_name': firstName,
       'last_name': lastName,
-      'data': data != null ? jsonEncode(data) : '{}',
+      'data': extraInfo != null ? jsonEncode(extraInfo) : '{}',
       'options': options?.toJson(),
-      'avatar': avatar != null ? getLocalContactPath(accountPubkey, avatar.path) : null,
+      'avatar': avatar != null
+          ? getLocalContactPath(accountPubkey, avatar.path)
+          : null,
       'created_time': createdTime?.millisecondsSinceEpoch,
       'updated_time': updatedTime?.millisecondsSinceEpoch,
       'profile_version': profileVersion,
@@ -258,27 +259,55 @@ class ContactSchema {
       clientAddress: e['address'],
       firstName: e['first_name'],
       lastName: e['last_name'],
-      avatar: e['avatar'] != null ? File(join(Global.applicationRootDirectory.path, e['avatar'])) : null,
+      avatar: e['avatar'] != null
+          ? File(join(Global.applicationRootDirectory.path, e['avatar']))
+          : null,
       createdTime: DateTime.fromMillisecondsSinceEpoch(e['created_time']),
       updatedTime: DateTime.fromMillisecondsSinceEpoch(e['updated_time']),
       profileVersion: e['profile_version'],
-      profileExpiresAt: e['profile_expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['profile_expires_at']) : DateTime.now(),
+      profileExpiresAt: e['profile_expires_at'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(e['profile_expires_at'])
+          : DateTime.now(),
       deviceToken: e['device_token'],
     );
-    if (e['notification_open'] == '1' || e['notification_open'].toString() == 'true' || e['notification_open'] == 1){
+    if (e['notification_open'] != null && e['notification_open'] == 1) {
       contact.notificationOpen = true;
     }
+
+    NLog.w('contact.firstName is_____' + e['avatar'].toString());
 
     if (e['data'] != null) {
       try {
         Map<String, dynamic> data = jsonDecode(e['data']);
+
+        if (contact.extraInfo == null) {
+          contact.extraInfo = new Map<String, dynamic>();
+        }
+        contact.extraInfo.addAll(data);
+
+        NLog.w('contact.extraInfo is_____' + contact.extraInfo.toString());
+
         contact.nknWalletAddress = data['nknWalletAddress'];
-        contact.notes = data['notes'];
-        contact.sourceProfile = SourceProfile(
-          firstName: data['firstName'],
-          lastName: data['lastName'],
-          avatar: data['avatar'] != null ? File(join(Global.applicationRootDirectory.path, data['avatar'])) : null,
-        );
+        var notes = data['notes'].toString();
+        if (data['notes'] != null && notes.length > 0) {
+          contact.firstName = data['notes'];
+        } else if (data['remark_name'] != null) {
+          contact.firstName = data['remark_name'];
+        } else if (data['firstName'] != null) {
+          contact.firstName = data['firstName'];
+        }
+        if (data['remark_avatar'] != null) {
+          contact.avatar = File(join(
+              Global.applicationRootDirectory.path, data['remark_avatar']));
+        } else if (data['avatar'] != null) {
+          contact.avatar =
+              File(join(Global.applicationRootDirectory.path, data['avatar']));
+        }
+        // contact.sourceProfile = SourceProfile(
+        //   firstName: data['firstName'],
+        //   lastName: data['lastName'],
+        //   avatar: data['avatar'] != null ? File(join(Global.applicationRootDirectory.path, data['avatar'])) : null,
+        // );
       } on FormatException catch (e) {
         debugPrint(e.message);
         debugPrintStack();
@@ -287,7 +316,10 @@ class ContactSchema {
     if (e['options'] != null) {
       try {
         Map<String, dynamic> map = jsonDecode(e['options']);
-        contact.options = OptionsSchema(deleteAfterSeconds: map['deleteAfterSeconds'], backgroundColor: map['backgroundColor'], color: map['color']);
+        contact.options = OptionsSchema(
+            deleteAfterSeconds: map['deleteAfterSeconds'],
+            backgroundColor: map['backgroundColor'],
+            color: map['color']);
       } on FormatException catch (e) {
         debugPrint(e.message);
         debugPrintStack();
@@ -297,8 +329,7 @@ class ContactSchema {
     return contact;
   }
 
-
-  Future <int> insertContact() async{
+  Future<int> insertContact() async {
     Database cdb = await NKNDataManager().currentDatabase();
     DateTime now = DateTime.now();
     createdTime = now;
@@ -315,202 +346,20 @@ class ContactSchema {
         return 0;
       } else {
         if (nknWalletAddress == null || nknWalletAddress.isEmpty) {
-          nknWalletAddress = await NknWalletPlugin.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+          nknWalletAddress = await NknWalletPlugin.pubKeyToWalletAddr(
+              getPublicKeyByClientAddr(clientAddress));
         }
-        return await cdb.insert(ContactSchema.tableName, toEntity(clientAddress));
+        return await cdb.insert(
+            ContactSchema.tableName, toEntity(clientAddress));
       }
     } catch (e) {
+      NLog.w('Wrong!!! InsertContact E:'+e.toString());
       return 0;
     }
   }
 
-  Future requestProfile(String requestType) async {
-    /// If requestTime permits
-
-    bool canRequest = false;
-    if (profileVersion == null || profileVersion.length == 0){
-      /// First request
-      canRequest = true;
-    }
-    else {
-      if (profileExpiresAt == null){
-        canRequest = true;
-      }
-      else{
-        canRequest = false;
-        if (profileExpiresAt.isBefore(DateTime.now().subtract(contactRequestFullGap))){
-          canRequest = true;
-        }
-      }
-    }
-
-    String msgId = uuid.v4();
-    Map data = {
-      'id': msgId,
-      'contentType': ContentType.contact,
-      'requestType': requestType,
-      'version': profileVersion,
-      'expiresAt': 0,
-    };
-
-    /// not request profile judge
-    if (canRequest){
-      try{
-        NKNClientCaller.sendText([clientAddress], jsonEncode(data), msgId);
-        profileExpiresAt = DateTime.now();
-      }
-      catch(e){
-        NLog.w('Wrong!!!'+e.toString());
-      }
-      /// todo
-      /// should update to database
-    }
-  }
-
-  setOrUpdateProfileVersion(Map<String, dynamic> updateInfo) async{
-    Database cdb = await NKNDataManager().currentDatabase();
-
-    var res = await cdb.query(
-      ContactSchema.tableName,
-      columns: ['*'],
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-
-    var record = res?.first;
-
-    String receivedVersion = '';
-    if (record != null) {
-      var content = updateInfo['content'];
-      /// only when received contact.header and profileVersion is not match
-      receivedVersion = updateInfo['version'];
-      if (receivedVersion != null && receivedVersion.length > 0){
-        if (profileVersion != null && profileVersion.length > 0){
-          if (receivedVersion != profileVersion){
-            requestProfile(RequestType.full);
-            NLog.w('Right!!! requestProfile full profileVersion is__'+receivedVersion);
-          }
-          else{
-            /// same version can return
-            NLog.w('Right!!! receivedVersion == profileVersion');
-            return;
-          }
-        }
-        else{
-          if (profileVersion == null){
-            requestProfile(RequestType.full);
-          }
-        }
-      }
-      else{
-        NLog.w('Wrong!!! receivedVersion is null');
-      }
-    }
-  }
-
-  Future responseProfile(Map requestInfo) async {
-    bool canResponse = false;
-
-    String myChatId = NKNClientCaller.currentChatId;
-    final me = await fetchContactByAddress(myChatId);
-
-    String responseType = RequestType.header;
-
-    if (me.profileVersion == null){
-      /// First request
-      NLog.w('Wrong!!!! me.profileVersion is null');
-      canResponse = true;
-      me.profileVersion = "";
-    }
-    else {
-      if (requestInfo['version'] != null){
-        /// Version is equal, no need response
-        if (me.profileVersion == requestInfo['version']){
-          canResponse = false;
-          return;
-        }
-      }
-      int timeKey = await LocalStorage().get(me.profileVersion);
-      if (timeKey != null && timeKey > 0){
-        profileExpiresAt = DateTime.fromMillisecondsSinceEpoch(timeKey);
-
-        DateTime beforeTime = DateTime.now().subtract(contactResponseFullGap);
-        if (profileExpiresAt.isBefore(beforeTime)){
-          NLog.w('Response Full now1__'+me.profileVersion.toString());
-          canResponse = true;
-          responseType = RequestType.full;
-        }
-      }
-      else{
-        if (requestInfo['version'] != null){
-          /// Version is equal, no need response
-          if (me.profileVersion == requestInfo['version']){
-            canResponse = false;
-          }
-          else{
-            canResponse = true;
-            responseType = RequestType.full;
-          }
-        }
-        else{
-          canResponse = true;
-        }
-      }
-    }
-
-    String msgId = uuid.v4();
-    Map data = {
-      'id': msgId,
-      'contentType': ContentType.contact,
-      'version': me.profileVersion,
-      'responseType': responseType,
-      'expiresAt': 0,
-    };
-
-    if (responseType == RequestType.full) {
-      try {
-        Map<String, dynamic> content = {
-          'name': me.firstName,
-        };
-        if (me?.avatar != null) {
-          bool exitsAvatar = me.avatar.existsSync();
-          if (exitsAvatar == false){
-            NLog.w('Wrong!!!!__avatar is not exist');
-            canResponse = false;
-            return;
-          }
-          content['avatar'] = {
-            'type': 'base64',
-            'data': base64Encode(me.avatar.readAsBytesSync()),
-          };
-          NLog.w('Full Length is)____'+base64Encode(me.avatar.readAsBytesSync()).length.toString());
-        }
-        data['content'] = content;
-      } catch (e) {
-        NLog.w('Wrong!!! toResponseData__'+e.toString());
-        updateExpiresAtTime();
-      }
-    }
-
-    NLog.w('responseProfile is____'+data.toString());
-    if (canResponse){
-      try{
-        NKNClientCaller.sendText([clientAddress], jsonEncode(data), msgId);
-        profileExpiresAt = DateTime.now();
-        updateExpiresAtTime();
-
-
-        int timeKey = DateTime.now().millisecondsSinceEpoch;
-        LocalStorage().set(me.profileVersion, timeKey);
-        NLog.w('Save Version for key'+me.profileVersion+'____'+timeKey.toString());
-      }
-      catch(e){
-        NLog.w("Wrong!!!"+e.toString());
-      }
-    }
-  }
-
-  static Future<List<ContactSchema>> getContacts({int limit = 20, int skip = 0}) async {
+  static Future<List<ContactSchema>> getContacts(
+      {int limit = 20, int skip = 0}) async {
     Database cdb = await NKNDataManager().currentDatabase();
     var res = await cdb.query(
       ContactSchema.tableName,
@@ -527,7 +376,8 @@ class ContactSchema {
     return res.map((x) => parseEntity(x)).toList();
   }
 
-  static Future<List<ContactSchema>> getStrangerContacts({int limit = 20, int skip = 0}) async {
+  static Future<List<ContactSchema>> getStrangerContacts(
+      {int limit = 20, int skip = 0}) async {
     try {
       Database cdb = await NKNDataManager().currentDatabase();
       var res = await cdb.query(
@@ -549,7 +399,8 @@ class ContactSchema {
     }
   }
 
-  static Future<ContactSchema> fetchContactByAddress(String clientAddress) async{
+  static Future<ContactSchema> fetchContactByAddress(
+      String clientAddress) async {
     Database cdb = await NKNDataManager().currentDatabase();
     var res = await cdb.query(
       ContactSchema.tableName,
@@ -557,15 +408,15 @@ class ContactSchema {
       where: 'address = ?',
       whereArgs: [clientAddress],
     );
-    if (res.length > 0){
+    if (res.length > 0) {
       return ContactSchema.parseEntity(res.first);
     }
     return null;
   }
 
-  static Future<ContactSchema> fetchCurrentUser() async{
+  static Future<ContactSchema> fetchCurrentUser() async {
     Database cdb = await NKNDataManager().currentDatabase();
-    if (cdb == null){
+    if (cdb == null) {
       return null;
     }
     var res = await cdb.query(
@@ -574,13 +425,13 @@ class ContactSchema {
       where: 'address = ?',
       whereArgs: [NKNClientCaller.currentChatId],
     );
-    if (res.length > 0){
+    if (res.length > 0) {
       return ContactSchema.parseEntity(res.first);
     }
     return null;
   }
 
-  Future setOrUpdateExtraProfile(Map<String, dynamic> updateInfo) async{
+  Future setOrUpdateExtraProfile(Map<String, dynamic> updateInfo) async {
     try {
       Database cdb = await NKNDataManager().currentDatabase();
       String pubKey = NKNClientCaller.currentChatId;
@@ -595,8 +446,9 @@ class ContactSchema {
         var content = updateInfo['content'];
         if (content != null) {
           Map<String, dynamic> data = jsonDecode(record['data']);
-          data['firstName'] = content['name'];
-          NLog.w('setOrUpdateExtraProfile___'+data.toString());
+          if (content['name'] != null) {
+            data['firstName'] = content['name'];
+          }
           if (content['avatar'] != null) {
             var type = content['avatar']['type'];
             if (type == 'base64') {
@@ -614,175 +466,126 @@ class ContactSchema {
               avatar.writeAsBytesSync(bytes);
               data['avatar'] = getLocalContactPath(pubKey, avatar.path);
             }
-          }
-          else {
+          } else {
             /// do not remove
             // data.remove('avatar');
             NLog.w('Receive batch request full-response message');
           }
-
+          if (extraInfo == null) {
+            extraInfo = new Map<String, dynamic>();
+          }
+          extraInfo.addAll(data);
           var count = await cdb.update(
             ContactSchema.tableName,
             {
-              'data': jsonEncode(data),
+              'data': jsonEncode(extraInfo),
               'profile_version': updateInfo['version'],
               'profile_expires_at': DateTime.now().millisecondsSinceEpoch,
             },
             where: 'id = ?',
             whereArgs: [id],
           );
-          NLog.w('Update profile toVersion_____'+updateInfo['version'].toString());
+          NLog.w('Update profile Success____' + count.toString());
+          NLog.w('Update profile toVersion_____' +
+              updateInfo['version'].toString());
         }
       }
     } catch (e) {
-      NLog.w('SetProfile___e'+e.toString());
+      NLog.w('SetProfile___e' + e.toString());
     }
   }
 
-  Future<bool> setAvatar(String accountPubkey, File image) async {
-    Database cdb = await NKNDataManager().currentDatabase();
-    avatar = image;
-    Map<String, dynamic> data = {
-      'avatar': getLocalContactPath(accountPubkey, image.path),
-      'type': type,
-      'updated_time': DateTime.now().millisecondsSinceEpoch,
+  Future<bool> setAvatar(File image) async {
+    Map<String, dynamic> profileInfo = {
+      'avatar': image.path,
     };
-
-    if (type != ContactType.me) {
-      if (type == ContactType.friend){
-        type = ContactType.friend;
-      }
-      else{
-        type = ContactType.stranger;
-      }
-      data['type'] = type;
-    }
-    else {
-      profileVersion = uuid.v4();
-      data['profile_version'] = profileVersion;
-    }
-    try {
-      var count = await cdb.update(
-        ContactSchema.tableName,
-        data,
-        where: 'id = ?',
-        whereArgs: [id],
-      );
-      return count > 0;
-    } catch (e) {
-      NLog.w('Wrong!!!! setAvatar fail___'+e.toString());
-      return false;
-    }
+    return await ContactDataCenter.saveProfile(this, profileInfo);
   }
 
   Future<bool> setName(String firstName) async {
-    Map<String, dynamic> data = {
+    Map<String, dynamic> profileInfo = {
       'first_name': firstName,
-      'last_name': "",
-      'type': type,
-      'updated_time': DateTime.now().millisecondsSinceEpoch,
     };
-    firstName = firstName;
-    if (type != ContactType.me) {
-      if (type == ContactType.friend){
-        type = ContactType.friend;
-      }
-      else{
-        type = ContactType.stranger;
-      }
-      data['type'] = type;
-    } else {
-      profileVersion = uuid.v4();
-      data['profile_version'] = profileVersion;
-    }
-
-    Database cdb = await NKNDataManager().currentDatabase();
-    var count = await cdb.update(
-      ContactSchema.tableName,
-      data,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    return count > 0;
+    return await ContactDataCenter.saveProfile(this, profileInfo);
   }
 
   Future<bool> updateExpiresAtTime() async {
-
-    Map<String, dynamic> data = {
+    Map<String, dynamic> profileInfo = {
       'profile_expires_at': profileExpiresAt?.millisecondsSinceEpoch,
-      'type': type,
-      'updated_time': DateTime.now().microsecondsSinceEpoch,
     };
-
-    return updateContactDataById(data);
+    return await ContactDataCenter.saveProfile(this, profileInfo);
   }
 
-  Future<bool> setDeviceToken(String deviceToken) async {
-    Map<String, dynamic> data = {
-      'device_token': deviceToken,
-      'type': type,
-      'updated_time': DateTime.now().millisecondsSinceEpoch,
+  Future<bool> setProfileVersion(String profileVersion) async {
+    Map<String, dynamic> profileInfo = {
+      'profile_version': profileVersion,
     };
-    this.deviceToken = deviceToken;
-    if (type != ContactType.me) {
-      if (type == ContactType.friend){
-        type = ContactType.friend;
-      }
-      else{
-        type = ContactType.stranger;
-      }
-      data['type'] = type;
-    } else {
-      profileVersion = uuid.v4();
-      data['profile_version'] = profileVersion;
+    Database cdb = await NKNDataManager().currentDatabase();
+    var count = await cdb.update(
+      ContactSchema.tableName,
+      profileInfo,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (count > 0) {
+      NLog.w('UpdateInfo Success__' + profileInfo.toString());
+      NLog.w('UpdateInfo Success__' + clientAddress.toString());
+      return true;
     }
-    return updateContactDataById(data);
+    NLog.w('UpdateInfo Failed___' + profileInfo.toString());
+    return false;
   }
 
   Future<bool> setNotificationOpen(bool notificationOpen) async {
-    Map<String, dynamic> data = {
-      'notification_open': notificationOpen?1:0,
-      'type': type,
+    int notificationSaveValue = 0;
+    if (notificationOpen == true) {
+      notificationSaveValue = 1;
+    }
+    this.notificationOpen = notificationOpen;
+    Map<String, dynamic> profileInfo = {
+      'notification_open': notificationSaveValue,
       'updated_time': DateTime.now().millisecondsSinceEpoch,
     };
-    if (type != ContactType.me) {
-      if (type == ContactType.friend){
-        type = ContactType.friend;
-      }
-      else{
-        type = ContactType.stranger;
-      }
-      data['type'] = type;
+    Database cdb = await NKNDataManager().currentDatabase();
+    var count = await cdb.update(
+      ContactSchema.tableName,
+      profileInfo,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (count > 0) {
+      NLog.w('setNotificationOpen Success___' + profileInfo.toString());
+      return true;
     }
-    else {
-      profileVersion = uuid.v4();
-      data['profile_version'] = profileVersion;
-    }
-    return updateContactDataById(data);
+    NLog.w('setNotificationOpen Failed___' + profileInfo.toString());
+    return false;
   }
 
-  Future <bool> updateContactDataById(Map data) async{
-    try {
-      Database cdb = await NKNDataManager().currentDatabase();
-      var count = await cdb.update(
-        ContactSchema.tableName,
-        data,
-        where: 'id = ?',
-        whereArgs: [id],
-      );
-      return count > 0;
-    } catch (e) {
-      NLog.w('updateContactDataById E:'+e.toString());
-      return false;
+  Future<bool> setDeviceToken(String deviceToken) async {
+    Map<String, dynamic> profileInfo = {
+      'device_token': deviceToken,
+      'updated_time': DateTime.now().millisecondsSinceEpoch,
+    };
+    Database cdb = await NKNDataManager().currentDatabase();
+    var count = await cdb.update(
+      ContactSchema.tableName,
+      profileInfo,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (count > 0) {
+      NLog.w('setDeviceToken Success___' + count.toString());
+      return true;
     }
+    NLog.w('setDeviceToken Failed___' + profileInfo.toString());
+    return false;
   }
 
   Future<bool> setNotes(String notes) async {
     if (type != ContactType.me) {
-      if (type == ContactType.friend){
+      if (type == ContactType.friend) {
         type = ContactType.friend;
-      }
-      else{
+      } else {
         type = ContactType.stranger;
       }
     }
@@ -829,11 +632,10 @@ class ContactSchema {
       'content': {'deleteAfterSeconds': options?.deleteAfterSeconds},
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
-    try{
+    try {
       NKNClientCaller.sendText([clientAddress], jsonEncode(data), msgId);
-    }
-    catch (e){
-      NLog.w('Wrong!!! sendActionContactOptions'+e.toString());
+    } catch (e) {
+      NLog.w('Wrong!!! sendActionContactOptions' + e.toString());
     }
   }
 
@@ -843,15 +645,8 @@ class ContactSchema {
     int color = DefaultTheme.headerColor[random];
     Database cdb = await NKNDataManager().currentDatabase();
 
-    if (clientAddress != null){
-      NLog.w('Update Contact optionColor__'+clientAddress.toString());
-    }
-    else{
-      NLog.w('Update Contact optionColor Wrong!!! clientAddress is null');
-    }
-
-    if (options == null){
-      options = OptionsSchema(backgroundColor: backgroundColor,color: color);
+    if (options == null) {
+      options = OptionsSchema(backgroundColor: backgroundColor, color: color);
     }
     options.backgroundColor = backgroundColor;
     options.color = color;
@@ -869,15 +664,7 @@ class ContactSchema {
 
   Future<bool> setBurnOptions(int seconds) async {
     Database cdb = await NKNDataManager().currentDatabase();
-    if (type != ContactType.me) {
-      if (type == ContactType.friend){
-        type = ContactType.friend;
-      }
-      else{
-        type = ContactType.stranger;
-      }
-    }
-    int currentTimeStamp = DateTime.now().millisecondsSinceEpoch-5*1000;
+    int currentTimeStamp = DateTime.now().millisecondsSinceEpoch;
     try {
       if (options == null) options = OptionsSchema();
       if (seconds != null && seconds > 0) {
@@ -885,12 +672,12 @@ class ContactSchema {
       } else {
         options.deleteAfterSeconds = null;
       }
+      options.updateBurnAfterTime = currentTimeStamp;
 
       var count = await cdb.update(
         ContactSchema.tableName,
         {
           'options': options.toJson(),
-          'type': type,
           'updated_time': currentTimeStamp,
         },
         where: 'id = ?',
@@ -898,27 +685,25 @@ class ContactSchema {
       );
       return count > 0;
     } catch (e) {
-      debugPrint(e);
-      debugPrintStack();
-      return false;
+      NLog.w('setBurnOptions E:' + e.toString());
     }
+    return false;
   }
 
   Future<bool> setFriend(bool isFriend) async {
-    if (clientAddress == NKNClientCaller.currentChatId){
+    if (clientAddress == NKNClientCaller.currentChatId) {
       type = ContactType.me;
       NLog.w('QrCode to self__');
       return true;
     }
 
     Database cdb = await NKNDataManager().currentDatabase();
-    if (type != ContactType.me) {
+    if (type == null || type != ContactType.me) {
       if (isFriend) {
         type = ContactType.friend;
       } else {
         type = ContactType.stranger;
       }
-
       try {
         var count = await cdb.update(
           ContactSchema.tableName,
@@ -932,7 +717,7 @@ class ContactSchema {
 
         return count > 0;
       } catch (e) {
-        NLog.w('setFriend E:'+e.toString());
+        NLog.w('setFriend E:' + e.toString());
         return false;
       }
     }
@@ -941,7 +726,8 @@ class ContactSchema {
 
   Future<int> deleteContact() async {
     Database cdb = await NKNDataManager().currentDatabase();
-    var count = await cdb.delete(ContactSchema.tableName, where: 'id = ?', whereArgs: [id]);
+    var count = await cdb
+        .delete(ContactSchema.tableName, where: 'id = ?', whereArgs: [id]);
 
     return count;
   }
@@ -954,19 +740,4 @@ class ContactSchema {
       return clientAddress.substring(n + 1);
     }
   }
-
-  // String get nickName {
-  //   String name;
-  //   if (sourceProfile?.firstName == null || sourceProfile.firstName.isEmpty) {
-  //     var index = clientAddress.lastIndexOf('.');
-  //     if (index < 0) {
-  //       name = clientAddress.substring(0, 6);
-  //     } else {
-  //       name = clientAddress.substring(0, index + 7);
-  //     }
-  //   } else {
-  //     name = sourceProfile.firstName;
-  //   }
-  //   return '${name ?? ''} '.trim();
-  // }
 }

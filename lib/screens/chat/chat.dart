@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:convert';
 
@@ -32,6 +31,7 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/data/contact_data_center.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/router/route_observer.dart';
 import 'package:nmobile/schemas/chat.dart';
@@ -46,7 +46,6 @@ import 'package:nmobile/screens/wallet/import_nkn_eth_wallet.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/log_tag.dart';
 
-
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/nlog_util.dart';
@@ -55,12 +54,12 @@ import 'package:oktoast/oktoast.dart';
 class ChatScreen extends StatefulWidget {
   static const String routeName = '/chat';
 
-
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMixin, RouteAware, Tag{
+class _ChatScreenState extends State<ChatScreen>
+    with AutomaticKeepAliveClientMixin, RouteAware, Tag {
   WalletsBloc _walletBloc;
   NKNClientBloc _clientBloc;
   AuthBloc _authBloc;
@@ -107,47 +106,43 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
     super.dispose();
   }
 
-  void _onGetPassword(String password) async{
+  void _onGetPassword(String password) async {
     WalletSchema wallet = await TimerAuth.loadCurrentWallet();
     TimerAuth.instance.enableAuth();
 
     print('chat.dart _onGetPassword');
-    try{
+
+    try {
       var eWallet = await wallet.exportWallet(password);
       var walletAddress = eWallet['address'];
       var publicKey = eWallet['publicKey'];
 
-      if (walletAddress != null && publicKey != null){
+      if (walletAddress != null && publicKey != null) {
         _authBloc.add(AuthToUserEvent(publicKey, walletAddress));
       }
-      else{
-        NLog.w('Wrong!!!!! walletAddress or publicKey is null');
-      }
-      if (_clientBloc.state is NKNNoConnectState){
-        NLog.w('chat.dart onCreateClient__'+password.toString());
+
+      if (_clientBloc.state is NKNNoConnectState) {
         _clientBloc.add(NKNCreateClientEvent(wallet, password));
       }
-    }
-    catch(e){
-      NLog.w('chat.dart Export wallet E'+e.toString());
+    } catch (e) {
+      NLog.w('chat.dart Export wallet E' + e.toString());
       showToast(NL10ns.of(context).password_wrong);
       _authBloc.add(AuthFailEvent());
     }
   }
 
-  void _clickConnect() async{
+  void _clickConnect() async {
     String password = await TimerAuth().onCheckAuthGetPassword(context);
-    if (password == null || password.length == 0){
+    if (password == null || password.length == 0) {
       showToast('Please input password');
-    }
-    else{
-      NLog.w('Password is___'+password.toString());
+    } else {
+      NLog.w('Password is___' + password.toString());
       _onGetPassword(password);
     }
   }
 
   _firstAutoShowAuth() {
-    if (TimerAuth.authed == false && firstShowAuth == false){
+    if (TimerAuth.authed == false && firstShowAuth == false) {
       firstShowAuth = true;
       Timer(Duration(milliseconds: 200), () async {
         _clickConnect();
@@ -162,47 +157,46 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
     return BlocBuilder<WalletsBloc, WalletsState>(
       builder: (context, walletState) {
         if (walletState is WalletsLoaded) {
-          NLog.w('walletState is___'+walletState.toString());
-
           if (walletState.wallets.length > 0) {
             _firstAutoShowAuth();
             return BlocBuilder<AuthBloc, AuthState>(
               builder: (context, authState) {
-                NLog.w('authState is___'+authState.toString());
+                NLog.w('!!!AuthState is___' + authState.toString());
+                // if (authState is AuthToFrontState){
+                //   return BlocBuilder<NKNClientBloc, NKNClientState>(
+                //     builder: (context, clientState) {
+                //       NLog.w('xxxx__clientState is___'+clientState.toString());
+                //       if (clientState is NKNNoConnectState){
+                //         return _noConnectScreen();
+                //       }
+                //       return _chatHomeScreen();
+                //     },
+                //   );
+                // }
 
-                if (authState is AuthToFrontState){
-                  return BlocBuilder<NKNClientBloc, NKNClientState>(
-                    builder: (context, clientState) {
-                      NLog.w('clientState is___'+clientState.toString());
-
-                      if (clientState is NKNNoConnectState){
-                        return _noConnectScreen();
-                      }
-                      return _chatHomeScreen();
-                    },
-                  );
-                }
-                if (authState is AuthToBackgroundState){
+                if (authState is AuthToBackgroundState) {
                   return _noConnectScreen();
                 }
-                if (authState is AuthToUserState){
-                  return BlocBuilder<NKNClientBloc, NKNClientState>(
-                    builder: (context, clientState) {
-                      NLog.w('clientState is___'+clientState.toString());
-
-                      if (clientState is NKNNoConnectState){
-                        return _noConnectScreen();
-                      }
-                      return _chatHomeScreen();
-                    },
-                  );
+                if (authState is AuthFailState) {
+                  return _noConnectScreen();
                 }
+                return BlocBuilder<NKNClientBloc, NKNClientState>(
+                  builder: (context, clientState) {
+                    if (clientState is NKNNoConnectState) {
+                      NLog.w('!!!_noConnectScree' + authState.toString());
+                      return _noConnectScreen();
+                    }
+                    NLog.w('!!!clientState is___' + clientState.toString());
+                    return _chatHomeScreen();
+                  },
+                );
+
+                NLog.w('AuthState is___' + authState.toString());
                 return _noConnectScreen();
               },
             );
-          }
-          else{
-            NLog.w('Wallet Length is '+walletState.wallets.length.toString());
+          } else {
+            NLog.w('Wallet Length is ' + walletState.wallets.length.toString());
           }
           return _noAccountScreen();
         }
@@ -211,7 +205,6 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
     );
   }
 
-
   /// NoAccountScreen
   ///
   ///
@@ -219,7 +212,9 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
     return Scaffold(
         backgroundColor: DefaultTheme.primaryColor,
         appBar: Header(
-          titleChild: Label(NL10ns.of(context).menu_chat.toUpperCase(), type: LabelType.h2).pad(l: 20),
+          titleChild: Label(NL10ns.of(context).menu_chat.toUpperCase(),
+                  type: LabelType.h2)
+              .pad(l: 20),
           hasBack: false,
           backgroundColor: DefaultTheme.primaryColor,
           leading: null,
@@ -230,8 +225,12 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                 color: DefaultTheme.backgroundColor1,
                 child: Center(
                     child: SingleChildScrollView(
-                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-                        loadAssetChatPng('messages', width: 198.w, height: 144.h).pad(t: 0),
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        loadAssetChatPng('messages',
+                                width: 198.w, height: 144.h)
+                            .pad(t: 0),
                         Expanded(
                           flex: 0,
                           child: Column(
@@ -249,21 +248,25 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                             padding: 16.pad(t: 24, b: 24),
                             decoration: BoxDecoration(
                               color: DefaultTheme.backgroundColor2,
-                              borderRadius: BorderRadius.all(Radius.circular(32)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(32)),
                             ),
                             child: Form(
                                 key: _formKey,
                                 autovalidate: true,
                                 onChanged: () {
                                   setState(() {
-                                    _formValid = (_formKey.currentState as FormState).validate();
+                                    _formValid =
+                                        (_formKey.currentState as FormState)
+                                            .validate();
                                   });
                                 },
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: <Widget>[
                                         Label(
                                           NL10ns.of(context).nickname,
@@ -271,27 +274,33 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                                           textAlign: TextAlign.start,
                                         ),
                                         TextSelector(
-                                          NL10ns.of(context).import_wallet_as_account,
+                                          NL10ns.of(context)
+                                              .import_wallet_as_account,
                                           DefaultTheme.bodySmallFontSize,
                                           Colours.blue_0f,
                                           Colours.gray_81,
                                           fontStyle: FontStyle.italic,
                                           decoration: TextDecoration.underline,
                                           onTap: () {
-                                            Navigator.pushNamed(context, ImportWalletScreen.routeName, arguments: WalletType.nkn);
+                                            Navigator.pushNamed(context,
+                                                ImportWalletScreen.routeName,
+                                                arguments: WalletType.nkn);
                                           },
                                         ),
                                       ],
                                     ),
                                     Textbox(
-                                      hintText: NL10ns.of(context).input_nickname,
+                                      hintText:
+                                          NL10ns.of(context).input_nickname,
                                       focusNode: _nameFocusNode,
                                       onSaved: (v) => _name = v,
                                       onFieldSubmitted: (_) {
-                                        FocusScope.of(context).requestFocus(_passwordFocusNode);
+                                        FocusScope.of(context)
+                                            .requestFocus(_passwordFocusNode);
                                       },
                                       textInputAction: TextInputAction.next,
-                                      validator: Validator.of(context).walletName(),
+                                      validator:
+                                          Validator.of(context).walletName(),
                                       borderColor: Colours.blue_0f,
                                     ),
                                     Label(
@@ -302,20 +311,26 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                                     Textbox(
                                       focusNode: _passwordFocusNode,
                                       controller: _passwordController,
-                                      hintText: NL10ns.of(context).input_password,
+                                      hintText:
+                                          NL10ns.of(context).input_password,
                                       onSaved: (v) => _password = v,
                                       onFieldSubmitted: (_) {
-                                        FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
+                                        FocusScope.of(context).requestFocus(
+                                            _confirmPasswordFocusNode);
                                       },
                                       textInputAction: TextInputAction.next,
-                                      validator: Validator.of(context).password(),
+                                      validator:
+                                          Validator.of(context).password(),
                                       password: true,
                                       padding: 0.pad(b: 8),
                                       borderColor: Colours.blue_0f,
                                     ),
                                     Text(
                                       NL10ns.of(context).wallet_password_mach,
-                                      style: TextStyle(color: Color(0xFF8F92A1), fontSize: DefaultTheme.bodySmallFontSize),
+                                      style: TextStyle(
+                                          color: Color(0xFF8F92A1),
+                                          fontSize:
+                                              DefaultTheme.bodySmallFontSize),
                                     ),
                                     Label(
                                       NL10ns.of(context).confirm_password,
@@ -324,8 +339,11 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                                     ).pad(t: 12),
                                     Textbox(
                                       focusNode: _confirmPasswordFocusNode,
-                                      hintText: NL10ns.of(context).input_password_again,
-                                      validator: Validator.of(context).confrimPassword(_passwordController.text),
+                                      hintText: NL10ns.of(context)
+                                          .input_password_again,
+                                      validator: Validator.of(context)
+                                          .confrimPassword(
+                                              _passwordController.text),
                                       password: true,
                                       padding: 0.pad(b: 24),
                                       borderColor: Colours.blue_0f,
@@ -334,30 +352,33 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                                         flex: 0,
                                         child: SafeArea(
                                             child: SizedBox(
-                                              width: double.infinity,
-                                              height: 48,
-                                              child: FlatButton(
-                                                padding: const EdgeInsets.all(0),
-                                                disabledColor: Colours.light_e5,
-                                                disabledTextColor: DefaultTheme.fontColor2,
-                                                color: Colours.blue_0f,
-                                                colorBrightness: Brightness.dark,
-                                                child: Text(
-                                                  NL10ns.of(context).create_account,
-                                                  style: TextStyle(fontSize: DefaultTheme.h3FontSize, fontWeight: FontWeight.bold, color: null),
-                                                ),
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                                                onPressed: _createAccount,
-                                              ),
-                                            )))
+                                          width: double.infinity,
+                                          height: 48,
+                                          child: FlatButton(
+                                            padding: const EdgeInsets.all(0),
+                                            disabledColor: Colours.light_e5,
+                                            disabledTextColor:
+                                                DefaultTheme.fontColor2,
+                                            color: Colours.blue_0f,
+                                            colorBrightness: Brightness.dark,
+                                            child: Text(
+                                              NL10ns.of(context).create_account,
+                                              style: TextStyle(
+                                                  fontSize:
+                                                      DefaultTheme.h3FontSize,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: null),
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(24)),
+                                            onPressed: _createAccount,
+                                          ),
+                                        )))
                                   ],
                                 ))),
                       ]).pad(b: 68),
-                    )
-                )
-            )
-        )
-    );
+                )))));
   }
 
   /// NoConnectScreen
@@ -375,7 +396,9 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
     return Scaffold(
       backgroundColor: DefaultTheme.primaryColor,
       appBar: Header(
-        titleChild: Label(NL10ns.of(context).menu_chat.toUpperCase(), type: LabelType.h2).pad(l: 20.w.d),
+        titleChild: Label(NL10ns.of(context).menu_chat.toUpperCase(),
+                type: LabelType.h2)
+            .pad(l: 20.w.d),
         hasBack: false,
         backgroundColor: DefaultTheme.primaryColor,
         leading: null,
@@ -390,7 +413,11 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
               children: [
                 Expanded(
                   flex: 0,
-                  child: Image(image: AssetImage("assets/chat/messages.png"), width: 198.w, height: 144.h).pad(t: 80.h.d),
+                  child: Image(
+                          image: AssetImage("assets/chat/messages.png"),
+                          width: 198.w,
+                          height: 144.h)
+                      .pad(t: 80.h.d),
                 ),
                 Expanded(
                   flex: 0,
@@ -415,12 +442,13 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                     children: <Widget>[
                       Padding(
                         padding: EdgeInsets.only(top: 80.h),
-                        child: BlocBuilder<WalletsBloc, WalletsState>(builder: (context, state) {
+                        child: BlocBuilder<WalletsBloc, WalletsState>(
+                            builder: (context, state) {
                           if (state is WalletsLoaded) {
                             return Button(
                               width: double.infinity,
                               text: NL10ns.of(context).connect,
-                              onPressed:_clickConnect,
+                              onPressed: _clickConnect,
                             );
                           }
                           return null;
@@ -438,7 +466,7 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
   }
 
   _createAccount() async {
-    if (_formValid == false){
+    if (_formValid == false) {
       return;
     }
     if ((_formKey.currentState as FormState).validate()) {
@@ -450,8 +478,12 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
 
       String address = json['Address'];
 
-      await SecureStorage().set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
-      _walletBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
+      await SecureStorage()
+          .set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
+      _walletBloc.add(AddWallet(
+          WalletSchema(
+              address: address, type: WalletSchema.NKN_WALLET, name: _name),
+          keystore));
 
       EasyLoading.dismiss();
     }
@@ -460,16 +492,16 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
   /// ChatHomeScreen
   ///
   ///
-  Widget _blocHeader(){
+  Widget _blocHeader() {
     return Header(
       titleChild: GestureDetector(
         onTap: () async {
           if (TimerAuth.authed) {
             currentUser = await ContactSchema.fetchCurrentUser();
-            if(currentUser != null){
-              Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: currentUser);
-            }
-            else{
+            if (currentUser != null) {
+              Navigator.of(context)
+                  .pushNamed(ContactScreen.routeName, arguments: currentUser);
+            } else {
               showToast('database error, can not find contact');
             }
           } else {
@@ -483,53 +515,58 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               Container(
-                margin: EdgeInsets.only(right: 12),
-                child: BlocBuilder<ContactBloc, ContactState>(builder: (context, contactState){
-                  if (contactState is UpdateUserInfoState){
-                    currentUser = contactState.userInfo;
-                  }
-                  if (currentUser != null){
-                    return CommonUI.avatarWidget(
-                      radiusSize: 24,
-                      contact: currentUser,
-                    );
-                  }
-                  return BlocBuilder<AuthBloc, AuthState>(builder: (context, authState){
-                    if (currentUser == null){
-                      if (authState is AuthToUserState){
-                        currentUser = authState.currentUser;
-                      }
-                      if (authState is AuthToFrontState){
-                        currentUser = authState.currentUser;
-                      }
+                  margin: EdgeInsets.only(right: 12),
+                  child: BlocBuilder<ContactBloc, ContactState>(
+                      builder: (context, contactState) {
+                    if (contactState is UpdateUserInfoState) {
+                      currentUser = contactState.userInfo;
                     }
-                    return Container();
-                  });
-                })
-              ),
+                    return BlocBuilder<AuthBloc, AuthState>(
+                        builder: (context, authState) {
+                      if (authState is AuthToUserState) {
+                        currentUser = authState.currentUser;
+                      }
+                      if (authState is AuthToFrontState) {
+                        if (currentUser == null) {
+                          currentUser = authState.currentUser;
+                        }
+                      }
+                      if (currentUser != null) {
+                        return CommonUI.avatarWidget(
+                          radiusSize: 24,
+                          contact: currentUser,
+                        );
+                      }
+                      return Container();
+                    });
+                  })),
               Expanded(
                 flex: 1,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    BlocBuilder<ContactBloc, ContactState>(builder: (context, contactState){
-                      if (contactState is UpdateUserInfoState){
+                    BlocBuilder<ContactBloc, ContactState>(
+                        builder: (context, contactState) {
+                      if (contactState is UpdateUserInfoState) {
                         currentUser = contactState.userInfo;
                       }
-                      if (currentUser != null){
-                        return Label(currentUser.getShowName, type: LabelType.h3, dark: true);
+                      if (currentUser != null) {
+                        return Label(currentUser.getShowName,
+                            type: LabelType.h3, dark: true);
                       }
-                      return BlocBuilder<AuthBloc, AuthState>(builder: (context, authState){
-                        if (currentUser == null){
-                          if (authState is AuthToUserState){
+                      return BlocBuilder<AuthBloc, AuthState>(
+                          builder: (context, authState) {
+                        if (currentUser == null) {
+                          if (authState is AuthToUserState) {
                             currentUser = authState.currentUser;
                           }
-                          if (authState is AuthToFrontState){
+                          if (authState is AuthToFrontState) {
                             currentUser = authState.currentUser;
                           }
                         }
-                        if (currentUser != null){
-                          return Label(currentUser.getShowName, type: LabelType.h3, dark: true);
+                        if (currentUser != null) {
+                          return Label(currentUser.getShowName,
+                              type: LabelType.h3, dark: true);
                         }
                         return Container();
                       });
@@ -537,14 +574,20 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                     BlocBuilder<NKNClientBloc, NKNClientState>(
                       builder: (context, clientState) {
                         if (clientState is NKNConnectedState) {
-                          return Label(NL10ns.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor);
+                          return Label(NL10ns.of(context).connected,
+                              type: LabelType.bodySmall,
+                              color: DefaultTheme.riseColor);
                         } else {
                           return Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: <Widget>[
-                              Label(NL10ns.of(context).connecting, type: LabelType.bodySmall, color: DefaultTheme.fontLightColor.withAlpha(200)),
+                              Label(NL10ns.of(context).connecting,
+                                  type: LabelType.bodySmall,
+                                  color: DefaultTheme.fontLightColor
+                                      .withAlpha(200)),
                               Padding(
-                                padding: const EdgeInsets.only(bottom: 2, left: 4),
+                                padding:
+                                    const EdgeInsets.only(bottom: 2, left: 4),
                                 child: SpinKitThreeBounce(
                                   color: DefaultTheme.loadingColor,
                                   size: 10,
@@ -598,7 +641,8 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                       Expanded(
                         flex: 1,
                         child: Container(
-                          padding: EdgeInsets.only(bottom: 12, top: 12, right: 8),
+                          padding:
+                              EdgeInsets.only(bottom: 12, top: 12, right: 8),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.end,
@@ -608,9 +652,11 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                                 child: Align(
                                   alignment: Alignment.centerRight,
                                   child: Container(
-                                    padding: EdgeInsets.only(top: 4, bottom: 4, left: 8, right: 8),
+                                    padding: EdgeInsets.only(
+                                        top: 4, bottom: 4, left: 8, right: 8),
                                     decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(12)),
                                       color: Colours.dark_0f_a3p,
                                     ),
                                     child: Label(
@@ -627,9 +673,11 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                                 child: Align(
                                   alignment: Alignment.centerRight,
                                   child: Container(
-                                    padding: EdgeInsets.only(top: 4, bottom: 4, left: 8, right: 8),
+                                    padding: EdgeInsets.only(
+                                        top: 4, bottom: 4, left: 8, right: 8),
                                     decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(12)),
                                       color: Colours.dark_0f_a3p,
                                     ),
                                     child: Label(
@@ -658,9 +706,13 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Button(
-                                child: loadAssetChatPng('group', width: 22, color: DefaultTheme.fontLightColor),
+                                child: loadAssetChatPng('group',
+                                    width: 22,
+                                    color: DefaultTheme.fontLightColor),
                                 fontColor: DefaultTheme.fontLightColor,
-                                backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(77),
+                                backgroundColor: DefaultTheme
+                                    .backgroundLightColor
+                                    .withAlpha(77),
                                 width: 48,
                                 height: 48,
                                 onPressed: () async {
@@ -668,33 +720,52 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
                                   showModalBottomSheet(
                                       context: context,
                                       isScrollControlled: true,
-                                      shape:
-                                      RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12))),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.only(
+                                              topLeft: Radius.circular(12),
+                                              topRight: Radius.circular(12))),
                                       builder: (context) {
                                         return CreateGroupDialog();
                                       });
-//                                  await BottomDialog.of(context).showInputChannelDialog(title: NMobileLocalizations.of(context).create_channel);
                                 },
                               ),
                               Button(
-                                child: loadAssetIconsImage('user', width: 24, color: DefaultTheme.fontLightColor),
+                                child: loadAssetIconsImage('user',
+                                    width: 24,
+                                    color: DefaultTheme.fontLightColor),
                                 fontColor: DefaultTheme.fontLightColor,
-                                backgroundColor: DefaultTheme.backgroundLightColor.withAlpha(77),
+                                backgroundColor: DefaultTheme
+                                    .backgroundLightColor
+                                    .withAlpha(77),
                                 width: 48,
                                 height: 48,
                                 onPressed: () async {
                                   var address = await BottomDialog.of(context)
-                                      .showInputAddressDialog(title: NL10ns.of(context).new_whisper, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
+                                      .showInputAddressDialog(
+                                          title: NL10ns.of(context).new_whisper,
+                                          hint: NL10ns.of(context)
+                                              .enter_or_select_a_user_pubkey);
                                   if (address != null) {
-                                    ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
+                                    ContactSchema contact = ContactSchema(
+                                        type: ContactType.stranger,
+                                        clientAddress: address);
                                     await contact.insertContact();
-                                    var c = await ContactSchema.fetchContactByAddress(address);
+                                    var c = await ContactSchema
+                                        .fetchContactByAddress(address);
                                     if (c != null) {
                                       Navigator.of(context)
-                                          .pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: c));
+                                          .pushReplacementNamed(
+                                              ChatSinglePage.routeName,
+                                              arguments: ChatSchema(
+                                                  type: ChatType.PrivateChat,
+                                                  contact: c));
                                     } else {
                                       Navigator.of(context)
-                                          .pushReplacementNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: contact));
+                                          .pushReplacementNamed(
+                                              ChatSinglePage.routeName,
+                                              arguments: ChatSchema(
+                                                  type: ChatType.PrivateChat,
+                                                  contact: contact));
                                     }
                                   } else {
                                     Navigator.of(context).pop();
@@ -745,7 +816,8 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
               alignment: Alignment.bottomCenter,
               children: <Widget>[
                 ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height),
+                  constraints: BoxConstraints(
+                      minHeight: MediaQuery.of(context).size.height),
                   child: Container(
                     constraints: BoxConstraints.expand(),
                     color: DefaultTheme.primaryColor,
@@ -788,4 +860,3 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
   @override
   bool get wantKeepAlive => true;
 }
-

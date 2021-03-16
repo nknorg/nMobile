@@ -29,7 +29,8 @@ class MenuItem extends MenuItemProvider {
   String get menuTitle => title;
 
   @override
-  TextStyle get menuTextStyle => textStyle ?? TextStyle(color: Color(0xffc5c5c5), fontSize: 10.0);
+  TextStyle get menuTextStyle =>
+      textStyle ?? TextStyle(color: Color(0xffc5c5c5), fontSize: 10.0);
 }
 
 enum MenuType { big, oneLine }
@@ -131,7 +132,8 @@ class PopupMenu {
   static Rect getWidgetGlobalRect(GlobalKey key) {
     RenderBox renderBox = key.currentContext.findRenderObject();
     var offset = renderBox.localToGlobal(Offset.zero);
-    return Rect.fromLTWH(offset.dx, offset.dy, renderBox.size.width, renderBox.size.height);
+    return Rect.fromLTWH(
+        offset.dx, offset.dy, renderBox.size.width, renderBox.size.height);
   }
 
   void _calculatePosition(BuildContext context) {
@@ -180,7 +182,6 @@ class PopupMenu {
         onTap: () {
           dismiss();
         },
-
         onVerticalDragStart: (DragStartDetails details) {
           dismiss();
         },
@@ -193,10 +194,13 @@ class PopupMenu {
               // triangle arrow
               Positioned(
                 left: _showRect.left + _showRect.width / 2.0 - 7.5,
-                top: _isDown ? offset.dy + menuHeight() : offset.dy - arrowHeight,
+                top: _isDown
+                    ? offset.dy + menuHeight()
+                    : offset.dy - arrowHeight,
                 child: CustomPaint(
                   size: Size(15.0, arrowHeight),
-                  painter: TrianglePainter(isDown: _isDown, color: _backgroundColor),
+                  painter:
+                      TrianglePainter(isDown: _isDown, color: _backgroundColor),
                 ),
               ), // menu content
               Positioned(
@@ -212,7 +216,9 @@ class PopupMenu {
                         child: Container(
                           width: menuWidth(),
                           height: menuHeight(),
-                          decoration: BoxDecoration(color: _backgroundColor, borderRadius: BorderRadius.circular(10.0)),
+                          decoration: BoxDecoration(
+                              color: _backgroundColor,
+                              borderRadius: BorderRadius.circular(10.0)),
                           child: Column(
                             children: _createRows(),
                           ),
@@ -232,9 +238,11 @@ class PopupMenu {
   List<Widget> _createRows() {
     List<Widget> rows = [];
     for (int i = 0; i < _row; i++) {
-      Color color = (i < _row - 1 && _row != 1) ? _lineColor : Colors.transparent;
+      Color color =
+          (i < _row - 1 && _row != 1) ? _lineColor : Colors.transparent;
       Widget rowWidget = Container(
-        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: color))),
+        decoration:
+            BoxDecoration(border: Border(bottom: BorderSide(color: color))),
         height: itemHeight,
         child: Row(
           children: _createRowItems(i),
@@ -248,7 +256,8 @@ class PopupMenu {
   }
 
   List<Widget> _createRowItems(int row) {
-    List<MenuItemProvider> subItems = items.sublist(row * _col, min(row * _col + _col, items.length));
+    List<MenuItemProvider> subItems =
+        items.sublist(row * _col, min(row * _col + _col, items.length));
     List<Widget> itemWidgets = [];
     int i = 0;
     for (var item in subItems) {
@@ -364,7 +373,13 @@ class _MenuItemWidget extends StatefulWidget {
 
   final Function(MenuItemProvider item) clickCallback;
 
-  _MenuItemWidget({this.item, this.showLine = false, this.clickCallback, this.lineColor, this.backgroundColor, this.highlightColor});
+  _MenuItemWidget(
+      {this.item,
+      this.showLine = false,
+      this.clickCallback,
+      this.lineColor,
+      this.backgroundColor,
+      this.highlightColor});
 
   @override
   State<StatefulWidget> createState() {
@@ -406,7 +421,13 @@ class _MenuItemWidgetState extends State<_MenuItemWidget> {
       child: Container(
           width: PopupMenu.itemWidth,
           height: PopupMenu.itemHeight,
-          decoration: BoxDecoration(color: color, border: Border(right: BorderSide(color: widget.showLine ? widget.lineColor : Colors.transparent))),
+          decoration: BoxDecoration(
+              color: color,
+              border: Border(
+                  right: BorderSide(
+                      color: widget.showLine
+                          ? widget.lineColor
+                          : Colors.transparent))),
           child: _createContent()),
     );
   }

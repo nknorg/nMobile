@@ -23,7 +23,8 @@ class Format {
     var localizations = Localizations.localeOf(Global.appContext).toString();
     if (now.difference(time).inDays == 0 && time.day == now.day) {
       return DateFormat.Hm(localizations).format(time);
-    } else if (now.difference(time).inDays <= 7 && time.weekday <= now.weekday) {
+    } else if (now.difference(time).inDays <= 7 &&
+        time.weekday <= now.weekday) {
       return DateFormat.E(localizations).format(time);
     } else if (now.difference(time).inDays <= 31 && time.month == time.month) {
       return DateFormat.Md(localizations).format(time);
@@ -51,7 +52,9 @@ class Format {
     } else if (diff.inDays < 7) {
       return diff.inDays.toString() + ' ' + NL10ns.of(Global.appContext).days;
     } else {
-      return (diff.inDays / 7).toStringAsFixed(0) + ' ' + NL10ns.of(Global.appContext).weeks;
+      return (diff.inDays / 7).toStringAsFixed(0) +
+          ' ' +
+          NL10ns.of(Global.appContext).weeks;
     }
   }
 

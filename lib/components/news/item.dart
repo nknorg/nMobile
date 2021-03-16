@@ -15,7 +15,8 @@ class NewsListItem extends StatelessWidget {
         width: 100,
       ),
       title: Text(_newsSchema.title),
-      subtitle: Text(DateFormat('yyyy-MM-dd').format(DateTime.parse(_newsSchema.time))),
+      subtitle: Text(
+          DateFormat('yyyy-MM-dd').format(DateTime.parse(_newsSchema.time))),
       onTap: () => {},
     );
   }

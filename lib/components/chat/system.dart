@@ -12,7 +12,6 @@ class ChatSystem extends StatefulWidget {
 class _ChatSystemState extends State<ChatSystem> {
   @override
   Widget build(BuildContext context) {
-
     return Padding(
       padding: const EdgeInsets.only(top: 4),
       child: Align(

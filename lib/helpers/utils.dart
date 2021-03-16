@@ -35,7 +35,8 @@ String getPublicKeyByClientAddr(String addr) {
 
 String addressStringToProgramHash(String address) {
   var addressBytes = base58.decode(address);
-  var programHashBytes = addressBytes.sublist(ADDRESS_GEN_PREFIX_LEN, addressBytes.length - CHECKSUM_LEN);
+  var programHashBytes = addressBytes.sublist(
+      ADDRESS_GEN_PREFIX_LEN, addressBytes.length - CHECKSUM_LEN);
   return hexEncode(programHashBytes);
 }
 
@@ -70,7 +71,8 @@ bool verifyAddress(String address) {
     }
     var programHash = addressStringToProgramHash(address);
     var addressVerifyCode = getAddressStringVerifyCode(address);
-    var programHashVerifyCode = genAddressVerifyCodeFromProgramHash(programHash);
+    var programHashVerifyCode =
+        genAddressVerifyCodeFromProgramHash(programHash);
     return addressVerifyCode == programHashVerifyCode;
   } catch (e) {
     return false;
@@ -81,7 +83,7 @@ bool isValidEthAddress(String address) {
   try {
     EthereumAddress.fromHex(address);
     return true;
-  }catch (e) {
+  } catch (e) {
     return false;
   }
 }
@@ -93,7 +95,9 @@ Future<File> compressAndGetFile(String accountPubkey, File file) async {
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
-  var result = await FlutterImageCompress.compressAndGetFile(file.absolute.path, targetPath, quality: 30, minWidth: 640, minHeight: 1024, format: CompressFormat.jpeg);
+  var result = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path, targetPath,
+      quality: 30, minWidth: 640, minHeight: 1024, format: CompressFormat.jpeg);
   return result;
 }
 

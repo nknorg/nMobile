@@ -14,7 +14,14 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
   final Widget notBackedUpTip;
   bool hasBack;
 
-  Header({this.title, this.titleChild, this.backgroundColor, this.action, this.leading, this.notBackedUpTip, this.hasBack = true});
+  Header(
+      {this.title,
+      this.titleChild,
+      this.backgroundColor,
+      this.action,
+      this.leading,
+      this.notBackedUpTip,
+      this.hasBack = true});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +49,9 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
                     ))
                 .pad(l: 4),
           ),
-          Expanded(flex: 0, child: notBackedUpTip != null ? notBackedUpTip : Space.empty)
+          Expanded(
+              flex: 0,
+              child: notBackedUpTip != null ? notBackedUpTip : Space.empty)
         ],
       ),
       actions: action.padd(5.symm()).toList,
