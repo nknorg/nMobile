@@ -539,6 +539,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
     }
     await chatContact.setNotificationOpen(_acceptNotification);
 
+    NLog.w('deviceToken is____'+deviceToken.toString());
     var sendMsg = MessageSchema.fromSendData(
       from: NKNClientCaller.currentChatId,
       to: chatContact.clientAddress,
@@ -1213,17 +1214,15 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
         .pushNamed(ContactScreen.routeName, arguments: chatContact)
         .then((v) async {
       _chatBloc.add(UpdateChatEvent(targetId));
-      if (v != null) {
-        chatContact = await ContactSchema.fetchContactByAddress(
-            chatContact.clientAddress);
-        NLog.w('ChatContact is_____' + chatContact.notificationOpen.toString());
-        setState(() {
-          _acceptNotification = false;
-          if (chatContact.notificationOpen != null) {
-            _acceptNotification = chatContact.notificationOpen;
-          }
-        });
-      }
+      chatContact = await ContactSchema.fetchContactByAddress(
+          chatContact.clientAddress);
+      NLog.w('chatContact.notificationOpen is____'+chatContact.notificationOpen.toString());
+      setState(() {
+        _acceptNotification = false;
+        if (chatContact.notificationOpen != null) {
+          _acceptNotification = chatContact.notificationOpen;
+        }
+      });
     });
   }
 
