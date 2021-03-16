@@ -179,6 +179,7 @@ class GroupChatHelper {
   static insertSelfSubscriber(String topicName) async {
     Subscriber selfSub = await _subscriberRepo.getByTopicAndChatId(
         topicName, NKNClientCaller.currentChatId);
+
     if (selfSub == null) {
       selfSub = Subscriber(
           id: 0,
@@ -190,6 +191,10 @@ class GroupChatHelper {
           uploaded: true,
           subscribed: true,
           uploadDone: true);
+    }
+    else{
+      NLog.w('selfSub is____'+selfSub.topic.toString());
+      NLog.w('selfSub is____'+selfSub.chatId.toString());
     }
     await _subscriberRepo.insertSubscriber(selfSub);
   }
@@ -638,6 +643,9 @@ class GroupChatPrivateChannel {
       {String topicName,
       ChannelBloc membersBloc,
       void needUploadMetaCallback(String topicName)}) async {
+
+    return 0;
+
     if (_topicIsLoading.containsKey(topicName) && _topicIsLoading[topicName])
       return -1;
     _topicIsLoading[topicName] = true;

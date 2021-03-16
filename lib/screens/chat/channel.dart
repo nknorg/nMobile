@@ -26,8 +26,10 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/nkn_image_utils.dart';
+import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
@@ -119,6 +121,14 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     }
   }
 
+  String genTopicHash(String topic) {
+    if (topic == null || topic.isEmpty) {
+      return null;
+    }
+    var t = unleadingHashIt(topic);
+    return 'dchat' + hexEncode(sha1(t));
+  }
+  
   refreshTop(String topicName) async {
     if (topicName != null) {
       NLog.w('refreshTop topic Name__' + topicName);
@@ -128,17 +138,92 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     if (showJoin != null) {
       NLog.w('is in group +' + topicName + '__' + showJoin.toString());
     }
-    if (showJoin) {
-      _refreshSubscribers();
-    } else {
-      ///work todo
-      showToast('No longer in This Group');
 
-      /// 删除本地Topic
-      // GroupChatHelper.removeTopicAndSubscriber(topicName);
-      Timer(Duration(milliseconds: 1200), () {
-        Navigator.pop(context, true);
-      });
+    if (showJoin == null || showJoin == false) {
+      await GroupChatHelper.insertTopicIfNotExists(topicName);
+
+      final topicHashed = genTopicHash(topicName);
+      final Map<String, dynamic> subscribersMap =
+      await NKNClientCaller.getSubscribers(
+          topicHash: topicHashed,
+          offset: 0,
+          limit: 10000,
+          meta: false,
+          txPool: true);
+
+      NLog.w('subscribersMap is____'+subscribersMap.toString());
+      if (subscribersMap.keys.contains(NKNClientCaller.currentChatId)){
+        NLog.w('Insert Topic and Subsribers');
+        /// Inert topic
+        for (String chatId in subscribersMap.keys) {
+          if (chatId == NKNClientCaller.currentChatId){
+            GroupChatHelper.insertSelfSubscriber(topicName);
+          }
+          else{
+            Subscriber sub = Subscriber(
+                id: 0,
+                topic: topicName,
+                chatId: chatId,
+                indexPermiPage: -1,
+                timeCreate: DateTime.now().millisecondsSinceEpoch,
+                blockHeightExpireAt: -1,
+                uploaded: true,
+                subscribed: true,
+                uploadDone: true);
+            GroupChatHelper.insertSubscriber(sub);
+
+            NLog.w('chatId String is____'+chatId.toString());
+          }
+        }
+      }
+      else{
+        showToast('Contact the group Creator');
+      }
+    } else {
+      Topic topic = await GroupChatHelper.fetchTopicInfoByName(topicName);
+      if (topic != null){
+        if (isPrivateTopic(topicName)){
+          final topicHashed = genTopicHash(topicName);
+          final Map<String, dynamic> subscribersMap =
+          await NKNClientCaller.getSubscribers(
+              topicHash: topicHashed,
+              offset: 0,
+              limit: 10000,
+              meta: false,
+              txPool: true);
+
+          NLog.w('subscribersMap is____'+subscribersMap.toString());
+          if (subscribersMap.keys.contains(NKNClientCaller.currentChatId)) {
+            NLog.w('Insert Topic and Subsribers');
+
+            /// Inert topic
+            for (String chatId in subscribersMap.keys) {
+              if (chatId == NKNClientCaller.currentChatId) {
+                GroupChatHelper.insertSelfSubscriber(topicName);
+              }
+              else {
+                Subscriber sub = Subscriber(
+                    id: 0,
+                    topic: topicName,
+                    chatId: chatId,
+                    indexPermiPage: -1,
+                    timeCreate: DateTime
+                        .now()
+                        .millisecondsSinceEpoch,
+                    blockHeightExpireAt: -1,
+                    uploaded: true,
+                    subscribed: true,
+                    uploadDone: true);
+                GroupChatHelper.insertSubscriber(sub);
+
+                NLog.w('chatId String is____' + chatId.toString());
+              }
+            }
+          }
+        }
+      }
+      _refreshSubscribers();
+      NLog.w('_refreshSubscribers called');
     }
   }
 

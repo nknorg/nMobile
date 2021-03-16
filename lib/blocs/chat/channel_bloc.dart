@@ -36,6 +36,11 @@ class ChannelBloc extends Bloc<ChannelMembersEvent, ChannelState> {
         NLog.w('chatID is_____' + sub.chatId.toString());
         break;
       }
+      else if (sub.chatId.length > 64){
+        NLog.w('chatID isWrong!!!_____' + sub.chatId.toString());
+        break;
+      }
+
       final contactType = sub.chatId == NKNClientCaller.currentChatId
           ? ContactType.me
           : ContactType.stranger;

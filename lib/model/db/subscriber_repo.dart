@@ -59,11 +59,16 @@ class SubscriberRepo with Tag {
 
   Future<List<String>> getAllSubscriberByTopic(String topicName) async {
     Database cdb = await NKNDataManager().currentDatabase();
-    String sql = '$tableName WHERE topic="$topicName"';
-    List result = await cdb.query(sql);
+    List<Map<String, dynamic>> result = await cdb.query(tableName,
+        where: '$topic = ?',
+        whereArgs: [topicName],
+        orderBy: '$time_create ASC');
+
     List<String> members = List();
+    NLog.w('Result Length is_____'+result.length.toString());
     for (Map subInfo in result) {
       members.add(subInfo['chat_id']);
+      NLog.w('Result Length is_____'+subInfo.toString());
     }
     return members;
   }
@@ -122,8 +127,16 @@ class SubscriberRepo with Tag {
         where: '$topic = ? AND $chat_id = ?',
         whereArgs: [topicName, chatId],
         orderBy: '$time_create ASC');
+
+    NLog.w('Result is_____'+result.toString());
+    NLog.w('Result is_____'+topicName.toString());
+    NLog.w('Result is_____'+chatId.toString());
+
     final list = parseEntities(result);
-    return list.isEmpty ? null : list[0];
+    if (list.length > 0){
+      return list[0];
+    }
+    return null;
   }
 
   Future<bool> insertSubscriber(Subscriber subscriber) async {

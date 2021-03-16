@@ -534,11 +534,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       List<String> dests =
           await GroupChatHelper.fetchGroupMembers(message.topic);
       if (dests != null && dests.length > 0) {
-        if (_judgeShowReconnect() == false) {
-          Uint8List pid = await NKNClientCaller.sendText(
-              dests, encodeSendJsonData, message.msgId);
-          MessageDataCenter.updateMessagePid(pid, message.msgId);
-        }
+        Uint8List pid = await NKNClientCaller.sendText(
+            dests, encodeSendJsonData, message.msgId);
+        MessageDataCenter.updateMessagePid(pid, message.msgId);
       } else {
         if (message.topic != null) {
           NLog.w('Wrong !!!Topic got no Member' + message.topic);
