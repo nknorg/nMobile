@@ -99,6 +99,7 @@ class _ContactScreenState extends State<ContactScreen> {
 
   @override
   void dispose() {
+    _saveAndSendBurnMessage();
     super.dispose();
   }
 
@@ -119,9 +120,8 @@ class _ContactScreenState extends State<ContactScreen> {
 
     if (currentUser.isMe == false) {
       _acceptNotification = false;
-      if (currentUser.notificationOpen != null &&
-          currentUser.notificationOpen == true) {
-        _acceptNotification = true;
+      if (currentUser.notificationOpen != null) {
+        _acceptNotification = currentUser.notificationOpen;
       }
     }
 
@@ -226,10 +226,8 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   _popWithInformation() {
-    _saveAndSendBurnMessage();
-    Timer(Duration(milliseconds: 350), () async {
-      Navigator.of(context).pop('yes');
-    });
+    // _saveAndSendBurnMessage();
+    Navigator.of(context).pop('yes');
   }
 
   _detailChangeName(BuildContext context) {

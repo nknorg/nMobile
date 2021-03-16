@@ -162,6 +162,9 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
         }
 
         if (updateMessage.deleteAfterSeconds != null) {
+          if (updateMessage.from != targetId){
+            return;
+          }
           if (chatContact.options != null) {
             if (chatContact.options.updateBurnAfterTime == null ||
                 updateMessage.timestamp.millisecondsSinceEpoch >
@@ -530,6 +533,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
           _acceptNotification = false;
           chatContact.notificationOpen = false;
           chatContact.setNotificationOpen(_acceptNotification);
+          widget.arguments.contact.notificationOpen = _acceptNotification;
         });
         return;
       }
@@ -538,6 +542,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
       showToast(NL10ns.of(context).close);
     }
     await chatContact.setNotificationOpen(_acceptNotification);
+    widget.arguments.contact.notificationOpen = _acceptNotification;
 
     NLog.w('deviceToken is____'+deviceToken.toString());
     var sendMsg = MessageSchema.fromSendData(
@@ -1209,20 +1214,26 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
     );
   }
 
-  _pushToContactSettingPage() {
+  _pushToContactSettingPage() async{
+    chatContact = await ContactSchema.fetchContactByAddress(
+        chatContact.clientAddress);
     Navigator.of(context)
         .pushNamed(ContactScreen.routeName, arguments: chatContact)
         .then((v) async {
-      _chatBloc.add(UpdateChatEvent(targetId));
-      chatContact = await ContactSchema.fetchContactByAddress(
-          chatContact.clientAddress);
-      NLog.w('chatContact.notificationOpen is____'+chatContact.notificationOpen.toString());
-      setState(() {
-        _acceptNotification = false;
-        if (chatContact.notificationOpen != null) {
-          _acceptNotification = chatContact.notificationOpen;
-        }
-      });
+          Duration duration = Duration(milliseconds: 10);
+          if (v == null){
+            duration = Duration(milliseconds: 350);
+          }
+          Timer(duration, () async{
+            _chatBloc.add(UpdateChatEvent(targetId));
+            setState(() {
+              _acceptNotification = false;
+              if (chatContact.notificationOpen != null) {
+                _acceptNotification = chatContact.notificationOpen;
+              }
+              widget.arguments.contact.notificationOpen = _acceptNotification;
+            });
+          });
     });
   }
 
