@@ -48,7 +48,7 @@ unleadingHashIt(String str) {
 }
 
 String genTopicHash(String topic) {
-  if(topic == null || topic.isEmpty){
+  if (topic == null || topic.isEmpty) {
     return null;
   }
   var t = unleadingHashIt(topic);

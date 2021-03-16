@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -29,9 +29,12 @@ import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
+import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/nkn_image_utils.dart';
+import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/data/contact_data_center.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/router/custom_router.dart';
 import 'package:nmobile/schemas/chat.dart';
@@ -56,7 +59,6 @@ import 'package:qr_flutter/qr_flutter.dart';
 class ContactScreen extends StatefulWidget {
   static const String routeName = '/contact';
 
-
   final ContactSchema contactInfo;
 
   ContactScreen({this.contactInfo});
@@ -66,7 +68,6 @@ class ContactScreen extends StatefulWidget {
 }
 
 class _ContactScreenState extends State<ContactScreen> {
-
   TextEditingController _firstNameController = TextEditingController();
   TextEditingController _notesController = TextEditingController();
   FocusNode _firstNameFocusNode = FocusNode();
@@ -98,7 +99,6 @@ class _ContactScreenState extends State<ContactScreen> {
 
   @override
   void dispose() {
-    _saveAndSendBurnMessage();
     super.dispose();
   }
 
@@ -117,13 +117,18 @@ class _ContactScreenState extends State<ContactScreen> {
 
     int burnAfterSeconds = currentUser?.options?.deleteAfterSeconds;
 
-    if (currentUser.notificationOpen != null && currentUser.notificationOpen == true){
-      // _acceptNotification = true;
+    if (currentUser.isMe == false) {
+      _acceptNotification = false;
+      if (currentUser.notificationOpen != null &&
+          currentUser.notificationOpen == true) {
+        _acceptNotification = true;
+      }
     }
 
     _burnSelected = burnAfterSeconds != null;
     if (_burnSelected) {
-      _burnIndex = BurnViewUtil.burnValueArray.indexWhere((x) => x.inSeconds == burnAfterSeconds);
+      _burnIndex = BurnViewUtil.burnValueArray
+          .indexWhere((x) => x.inSeconds == burnAfterSeconds);
       if (burnAfterSeconds > BurnViewUtil.burnValueArray.last.inSeconds) {
         _burnIndex = BurnViewUtil.burnValueArray.length - 1;
       }
@@ -140,10 +145,10 @@ class _ContactScreenState extends State<ContactScreen> {
     _notesController.text = currentUser.notes;
   }
 
-  String _chatAddress(){
-    if (currentUser != null){
-      if (currentUser.clientAddress != null){
-        if (currentUser.clientAddress.length > 8){
+  String _chatAddress() {
+    if (currentUser != null) {
+      if (currentUser.clientAddress != null) {
+        if (currentUser.clientAddress.length > 8) {
           return currentUser.clientAddress.substring(0, 8) + '...';
         }
         return currentUser.clientAddress;
@@ -153,12 +158,14 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   _saveAndSendBurnMessage() async {
-    if (_burnSelected == _initBurnSelected && _burnIndex == _initBurnIndex) return;
+    if (_burnSelected == _initBurnSelected && _burnIndex == _initBurnIndex)
+      return;
     var _burnValue;
     if (!_burnSelected || _burnIndex < 0) {
       await currentUser.setBurnOptions(null);
     } else {
       _burnValue = BurnViewUtil.burnValueArray[_burnIndex].inSeconds;
+      NLog.w('_saveAndSendBurnMessage_____!!!!' + _burnValue.toString());
       await currentUser.setBurnOptions(_burnValue);
     }
     var sendMsg = MessageSchema.fromSendData(
@@ -172,25 +179,29 @@ class _ContactScreenState extends State<ContactScreen> {
     _chatBloc.add(SendMessageEvent(sendMsg));
   }
 
-  _saveAndSendDeviceToken() async{
+  _saveAndSendDeviceToken() async {
     String deviceToken = '';
-    print('DeviceToken is11__'+deviceToken.toString());
-    if (_acceptNotification == true){
+    widget.contactInfo.notificationOpen = _acceptNotification;
+    if (_acceptNotification == true) {
       deviceToken = await NKNClientCaller.fetchDeviceToken();
-      print('DeviceToken is__'+deviceToken.toString());
-      if (Platform.isIOS){
+      if (Platform.isIOS) {
         String fcmToken = await NKNClientCaller.fetchFcmToken();
-        if (fcmToken != null && fcmToken.length > 0){
-          deviceToken = deviceToken+"$fcmGapString$fcmToken";
+        if (fcmToken != null && fcmToken.length > 0) {
+          deviceToken = deviceToken + "$fcmGapString$fcmToken";
         }
       }
-      if (Platform.isAndroid && deviceToken.length == 0){
-        showToast('暂不支持没有Google服务的机型');
+      if (Platform.isAndroid && deviceToken.length == 0) {
+        showToast(NL10ns.of(context).unavailable_device);
+        setState(() {
+          widget.contactInfo.notificationOpen = false;
+          _acceptNotification = false;
+          currentUser.setNotificationOpen(_acceptNotification);
+        });
+        return;
       }
-    }
-    else{
+    } else {
       deviceToken = '';
-      showToast('关闭');
+      showToast(NL10ns.of(context).close);
     }
     currentUser.setNotificationOpen(_acceptNotification);
 
@@ -214,68 +225,11 @@ class _ContactScreenState extends State<ContactScreen> {
     }
   }
 
-  changeNotes() {
-    BottomDialog.of(context).showBottomDialog(
-      height: 320,
-      title: NL10ns.of(context).edit_notes,
-      child: Form(
-        key: _notesFormKey,
-        autovalidate: true,
-        onChanged: () {
-          _notesFormValid = (_notesFormKey.currentState as FormState).validate();
-        },
-        child: Flex(
-          direction: Axis.horizontal,
-          children: <Widget>[
-            Expanded(
-              flex: 1,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Label(
-                      NL10ns.of(context).notes,
-                      type: LabelType.h4,
-                      textAlign: TextAlign.start,
-                    ),
-                    Textbox(
-                      multi: true,
-                      minLines: 1,
-                      maxLines: 3,
-                      controller: _notesController,
-                      textInputAction: TextInputAction.newline,
-                      maxLength: 200,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      action: Padding(
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
-        child: Button(
-          text: NL10ns.of(context).save,
-          width: double.infinity,
-          onPressed: () async {
-            _notesFormValid = (_notesFormKey.currentState as FormState).validate();
-            if (_notesFormValid) {
-              currentUser.notes = _notesController.text.trim();
-
-              await currentUser.setNotes(currentUser.notes);
-              _chatBloc.add(RefreshMessageListEvent());
-              _popWithInformation();
-            }
-          },
-        ),
-      ),
-    );
-  }
-
-  _popWithInformation(){
-    Navigator.of(context).pop('yes');
+  _popWithInformation() {
+    _saveAndSendBurnMessage();
+    Timer(Duration(milliseconds: 350), () async {
+      Navigator.of(context).pop('yes');
+    });
   }
 
   _detailChangeName(BuildContext context) {
@@ -315,15 +269,16 @@ class _ContactScreenState extends State<ContactScreen> {
           text: NL10ns.of(context).save,
           width: double.infinity,
           onPressed: () async {
-            _nameFormValid = (_nameFormKey.currentState as FormState).validate();
+            _nameFormValid =
+                (_nameFormKey.currentState as FormState).validate();
             if (_nameFormValid) {
-              currentUser.firstName = _firstNameController.text.trim();
+              String nName = _firstNameController.text.trim();
               setState(() {
-                nickName = currentUser.getShowName;
+                nickName = nName;
               });
-              _chatBloc.add(RefreshMessageListEvent());
+              _updateUserInfo(nName, null);
 
-              _updateUserInfo(currentUser.getShowName, null);
+              _chatBloc.add(RefreshMessageListEvent());
               _popWithInformation();
             }
           },
@@ -337,12 +292,19 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   updatePic() async {
-    File savedImg = await getHeaderImage(NKNClientCaller.currentChatId);
-    if (savedImg == null) {
-      showToast('Open camera or MediaLibrary for nMobile to update your profile');
+    String saveImagePath = '';
+    if (currentUser.isMe) {
+      saveImagePath = NKNClientCaller.currentChatId;
+    } else {
+      saveImagePath = 'remark_' + currentUser.clientAddress;
     }
-    else{
-      if (mounted){
+    NLog.w('!!!!!! saveImagePath is_____' + saveImagePath.toString());
+    File savedImg = await getHeaderImage(saveImagePath);
+    if (savedImg == null) {
+      showToast(
+          'Open camera or MediaLibrary for nMobile to update your profile');
+    } else {
+      if (mounted) {
         setState(() {
           currentUser.avatar = savedImg;
         });
@@ -391,7 +353,8 @@ class _ContactScreenState extends State<ContactScreen> {
           text: NL10ns.of(context).save,
           width: double.infinity,
           onPressed: () async {
-            _nameFormValid = (_nameFormKey.currentState as FormState).validate();
+            _nameFormValid =
+                (_nameFormKey.currentState as FormState).validate();
             if (_nameFormValid) {
               currentUser.firstName = _firstNameController.text.trim();
               setState(() {
@@ -406,22 +369,35 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
-  _updateUserInfo(String nickName,File avatarImage) async{
-    if (nickName != null && nickName.length > 0){
-      await currentUser.setName(currentUser.firstName);
-    }
-    else if (avatarImage != null){
-      await currentUser.setAvatar(NKNClientCaller.currentChatId, avatarImage);
+  _updateUserInfo(String nickName, File avatarImage) async {
+    if (currentUser.isMe) {
+      if (nickName != null && nickName.length > 0) {
+        await currentUser.setName(currentUser.firstName);
+      } else if (avatarImage != null) {
+        await currentUser.setAvatar(avatarImage);
+      }
+      _contactBloc.add(UpdateUserInfoEvent(currentUser));
+    } else {
+      Map dataInfo = Map<String, dynamic>();
+      if (nickName != null && nickName.length > 0) {
+        dataInfo['first_name'] = nickName;
+      } else if (avatarImage != null) {
+        dataInfo['avatar'] = avatarImage.path;
+      }
+      await ContactDataCenter.saveRemarkProfile(currentUser, dataInfo);
+      currentUser =
+          await ContactSchema.fetchContactByAddress(currentUser.clientAddress);
+      setState(() {
+        nickName = currentUser.getShowName;
+      });
     }
     _chatBloc.add(RefreshMessageListEvent());
-
-    _contactBloc.add(UpdateUserInfoEvent(currentUser));
-    print("Current user name is___"+currentUser.getShowName);
   }
 
   showQRDialog() {
     String qrContent;
-    if (currentUser.getShowName.length == 6 && currentUser.clientAddress.startsWith(currentUser.getShowName)) {
+    if (currentUser.getShowName.length == 6 &&
+        currentUser.clientAddress.startsWith(currentUser.getShowName)) {
       qrContent = currentUser.clientAddress;
     } else {
       qrContent = currentUser.getShowName + "@" + currentUser.clientAddress;
@@ -491,10 +467,13 @@ class _ContactScreenState extends State<ContactScreen> {
   getStatusView() {
     if (currentUser.type == ContactType.stranger) {
       return Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(12)),
         margin: EdgeInsets.only(left: 16, right: 16, top: 10),
         child: FlatButton(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(12), bottom: Radius.circular(12))),
           child: Container(
             width: double.infinity,
             child: Row(
@@ -504,7 +483,9 @@ class _ContactScreenState extends State<ContactScreen> {
                   color: DefaultTheme.primaryColor,
                 ),
                 SizedBox(width: 10),
-                Label(NL10ns.of(context).add_contact, type: LabelType.bodyRegular, color: DefaultTheme.primaryColor),
+                Label(NL10ns.of(context).add_contact,
+                    type: LabelType.bodyRegular,
+                    color: DefaultTheme.primaryColor),
                 Spacer(),
               ],
             ),
@@ -516,10 +497,13 @@ class _ContactScreenState extends State<ContactScreen> {
       );
     } else {
       return Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(12)),
         margin: EdgeInsets.only(left: 16, right: 16, top: 10),
         child: FlatButton(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(12), bottom: Radius.circular(12))),
           child: Container(
             width: double.infinity,
             child: Row(
@@ -529,7 +513,8 @@ class _ContactScreenState extends State<ContactScreen> {
                   color: Colors.red,
                 ),
                 SizedBox(width: 10),
-                Label(NL10ns.of(context).delete, type: LabelType.bodyRegular, color: Colors.red),
+                Label(NL10ns.of(context).delete,
+                    type: LabelType.bodyRegular, color: Colors.red),
                 Spacer(),
               ],
             ),
@@ -554,14 +539,15 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
-  void onGetPassword(WalletSchema wallet, String password) async{
-    _clientBloc.add(NKNDisConnectClientEvent());
-
-    var eWallet = await wallet.exportWallet(password);
+  void onGetPassword(WalletSchema wallet, String password) async {
     EasyLoading.show();
 
-    currentUser = await ContactSchema.fetchContactByAddress(eWallet['publicKey']);
+    var eWallet = await wallet.exportWallet(password);
+    // currentUser = await ContactSchema.fetchCurrentUser();
+
+    _clientBloc.add(NKNDisConnectClientEvent());
     if (currentUser == null) {
+      NLog.w('Current User is____null');
       DateTime now = DateTime.now();
       currentUser = ContactSchema(
         type: ContactType.me,
@@ -574,50 +560,60 @@ class _ContactScreenState extends State<ContactScreen> {
       await currentUser.insertContact();
     }
 
+    TimerAuth.instance.enableAuth();
+    await LocalStorage()
+        .set(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS, eWallet['address']);
+
+    var walletAddress = eWallet['address'];
+    var publicKey = eWallet['publicKey'];
+    Uint8List seedList = Uint8List.fromList(hexDecode(eWallet['seed']));
+    if (seedList != null && seedList.isEmpty) {
+      NLog.w('Wrong!!! seedList.isEmpty');
+    }
+    String _seedKey =
+        hexEncode(sha256(hexEncode(seedList.toList(growable: false))));
+
+    if (NKNClientCaller.currentChatId == null ||
+        publicKey == NKNClientCaller.currentChatId ||
+        NKNClientCaller.currentChatId.length == 0) {
+      await NKNDataManager.instance.initDataBase(publicKey, _seedKey);
+    } else {
+      await NKNDataManager.instance.changeDatabase(publicKey, _seedKey);
+    }
+    NKNClientCaller.instance.setChatId(publicKey);
+
+    currentUser = await ContactSchema.fetchCurrentUser();
     setState(() {
-      this.nickName = currentUser.getShowName;
-      this.chatAddress = currentUser.clientAddress;
-      this.walletAddress = currentUser.nknWalletAddress;
+      nickName = currentUser.getShowName;
+      chatAddress = currentUser.clientAddress;
+      walletAddress = currentUser.nknWalletAddress;
     });
 
-    TimerAuth.instance.enableAuth();
-    _authBloc.add(AuthToUserEvent(currentUser.publicKey,currentUser.clientAddress));
-
-    final localStorage = LocalStorage();
-    await localStorage.set(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS, eWallet['address']);
-
-    NKNDataManager.instance.close();
+    _authBloc.add(AuthToUserEvent(publicKey, walletAddress));
+    NKNClientCaller.instance.createClient(seedList, null, publicKey);
 
     Timer(Duration(milliseconds: 200), () async {
-      NLog.w('contact.dart onCreateClient__'+password.toString());
-      _clientBloc.add(NKNCreateClientEvent(wallet, password));
       EasyLoading.dismiss();
-      showToast('切换成功');
+      showToast('Switch Success');
     });
   }
 
   _changeAccount(WalletSchema wallet) async {
     if (wallet.address == currentUser.nknWalletAddress) return;
     var password = await BottomDialog.of(Global.appContext)
-        .showInputPasswordDialog(title: NL10ns
-        .of(Global.appContext)
-        .verify_wallet_password);
+        .showInputPasswordDialog(
+            title: NL10ns.of(Global.appContext).verify_wallet_password);
     if (password != null) {
       try {
-
         var w = await wallet.exportWallet(password);
         if (w['address'] == wallet.address) {
           onGetPassword(wallet, password);
         } else {
-          showToast(NL10ns
-              .of(context)
-              .tip_password_error);
+          showToast(NL10ns.of(context).tip_password_error);
         }
       } catch (e) {
         if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-          showToast(NL10ns
-              .of(context)
-              .tip_password_error);
+          showToast(NL10ns.of(context).tip_password_error);
         }
       }
     }
@@ -639,13 +635,13 @@ class _ContactScreenState extends State<ContactScreen> {
                     children: <Widget>[
                       Container(
                         child: GestureDetector(
-                          onTap: (){
+                          onTap: () {
                             updatePic();
                           },
                           child: Container(
                             child: CommonUI.avatarWidget(
                               radiusSize: 48,
-                              contact:currentUser,
+                              contact: currentUser,
                             ),
                           ),
                         ),
@@ -658,7 +654,8 @@ class _ContactScreenState extends State<ContactScreen> {
                           width: 24,
                           height: 24,
                           backgroundColor: DefaultTheme.primaryColor,
-                          child: SvgPicture.asset('assets/icons/camera.svg', width: 16),
+                          child: SvgPicture.asset('assets/icons/camera.svg',
+                              width: 16),
                           onPressed: () async {
                             updatePic();
                           },
@@ -690,19 +687,26 @@ class _ContactScreenState extends State<ContactScreen> {
                           ),
                         ),
                         Container(
-                          decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
+                          decoration: BoxDecoration(
+                              color: DefaultTheme.backgroundLightColor,
+                              borderRadius: BorderRadius.circular(12)),
                           margin: EdgeInsets.symmetric(horizontal: 12),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               FlatButton(
-                                padding: const EdgeInsets.only(left: 16, right: 16, top: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                                padding: const EdgeInsets.only(
+                                    left: 16, right: 16, top: 10),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(12))),
                                 onPressed: showChangeSelfNameDialog,
                                 child: Row(
                                   children: <Widget>[
-                                    loadAssetIconsImage('user', color: DefaultTheme.primaryColor, width: 24),
+                                    loadAssetIconsImage('user',
+                                        color: DefaultTheme.primaryColor,
+                                        width: 24),
                                     SizedBox(width: 10),
                                     Label(
                                       NL10ns.of(context).nickname,
@@ -721,20 +725,27 @@ class _ContactScreenState extends State<ContactScreen> {
                                         height: 1,
                                       ),
                                     ),
-                                    SvgPicture.asset('assets/icons/right.svg', width: 24, color: DefaultTheme.fontColor2)
+                                    SvgPicture.asset('assets/icons/right.svg',
+                                        width: 24,
+                                        color: DefaultTheme.fontColor2)
                                   ],
                                 ),
                               ).sized(h: 48),
                               FlatButton(
-                                padding: const EdgeInsets.only(left: 16, right: 16),
+                                padding:
+                                    const EdgeInsets.only(left: 16, right: 16),
                                 onPressed: () {
-                                  Navigator.pushNamed(context, ShowMyChatID.routeName);
+                                  Navigator.pushNamed(
+                                      context, ShowMyChatID.routeName);
                                 },
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: <Widget>[
-                                    loadAssetChatPng('chat_id', color: DefaultTheme.primaryColor, width: 22),
+                                    loadAssetChatPng('chat_id',
+                                        color: DefaultTheme.primaryColor,
+                                        width: 22),
                                     SizedBox(width: 10),
                                     Label(
                                       NL10ns.of(context).d_chat_address,
@@ -761,19 +772,29 @@ class _ContactScreenState extends State<ContactScreen> {
                                 ),
                               ).sized(h: 48),
                               FlatButton(
-                                padding: const EdgeInsets.only(left: 16, right: 16),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
+                                padding:
+                                    const EdgeInsets.only(left: 16, right: 16),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.vertical(
+                                        bottom: Radius.circular(12))),
                                 onPressed: _selectWallets,
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    loadAssetIconsImage('wallet', color: DefaultTheme.primaryColor, width: 24),
+                                    loadAssetIconsImage('wallet',
+                                        color: DefaultTheme.primaryColor,
+                                        width: 24),
                                     _walletDefault == null
-                                        ? BlocBuilder<WalletsBloc, WalletsState>(
+                                        ? BlocBuilder<WalletsBloc,
+                                            WalletsState>(
                                             builder: (ctx, state) {
                                               if (state is WalletsLoaded) {
-                                                final wallet = state.wallets.firstWhere((w) {
-                                                  return w.address == currentUser.nknWalletAddress;
+                                                final wallet = state.wallets
+                                                    .firstWhere((w) {
+                                                  return w.address ==
+                                                      currentUser
+                                                          .nknWalletAddress;
                                                 }, orElse: null);
                                                 if (wallet != null) {
                                                   _walletDefault = wallet;
@@ -795,7 +816,8 @@ class _ContactScreenState extends State<ContactScreen> {
                                           ).pad(l: 10),
                                     Expanded(
                                       child: Label(
-                                        NL10ns.of(context).change_default_chat_wallet,
+                                        NL10ns.of(context)
+                                            .change_default_chat_wallet,
                                         type: LabelType.bodyRegular,
                                         color: Colours.blue_0f,
                                         textAlign: TextAlign.right,
@@ -820,11 +842,13 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
-  Widget _personListView(){
+  Widget _personListView() {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.only(topLeft: const Radius.circular(12),
-          topRight: const Radius.circular(12),),
+        borderRadius: BorderRadius.only(
+          topLeft: const Radius.circular(12),
+          topRight: const Radius.circular(12),
+        ),
         color: DefaultTheme.backgroundColor6,
       ),
       height: MediaQuery.of(context).size.height,
@@ -832,7 +856,7 @@ class _ContactScreenState extends State<ContactScreen> {
         padding: EdgeInsets.only(top: 4, bottom: 32),
         itemCount: 9,
         itemBuilder: (BuildContext context, int index) {
-          if (index == 0){
+          if (index == 0) {
             return Container(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -840,10 +864,20 @@ class _ContactScreenState extends State<ContactScreen> {
                   Stack(
                     children: <Widget>[
                       GestureDetector(
-                        onTap: (){
-                          print('currentUser.avatarFilePath is__'+currentUser.avatarFilePath.toString());
-                          if (currentUser.avatarFilePath != null) {
-                            Navigator.push(context, CustomRoute(PhotoPage(arguments:currentUser.avatarFilePath)));
+                        onTap: () {
+                          if (currentUser.getShowAvatarPath != null &&
+                              currentUser.getShowAvatarPath.length > 0) {
+                            print('currentUser.avatarFilePath is__' +
+                                currentUser.getShowAvatarPath.toString());
+                            if (currentUser.getShowAvatarPath != null) {
+                              Navigator.push(
+                                  context,
+                                  CustomRoute(PhotoPage(
+                                      arguments:
+                                          currentUser.getShowAvatarPath)));
+                            }
+                          } else {
+                            updatePic();
                           }
                         },
                         child: Container(
@@ -866,13 +900,7 @@ class _ContactScreenState extends State<ContactScreen> {
                             width: 16,
                           ),
                           onPressed: () async {
-                            File savedImg = await getHeaderImage(NKNClientCaller.currentChatId);
-                            if (savedImg != null){
-                              setState(() {
-                                currentUser.avatar = savedImg;
-                              });
-                              _updateUserInfo(null, savedImg);
-                            }
+                            updatePic();
                           },
                         ),
                       ),
@@ -894,25 +922,29 @@ class _ContactScreenState extends State<ContactScreen> {
                 ],
               ),
             );
-          }
-          else if (index == 1){
+          } else if (index == 1) {
             return Container(
-              decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
-              margin: EdgeInsets.symmetric(horizontal: 12,vertical: 12),
+              decoration: BoxDecoration(
+                  color: DefaultTheme.backgroundLightColor,
+                  borderRadius: BorderRadius.circular(12)),
+              margin: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   FlatButton(
                     padding: EdgeInsets.only(left: 16, right: 16, top: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                    shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(12))),
                     onPressed: () {
                       _firstNameController.text = currentUser.getShowName;
                       _detailChangeName(context);
                     },
                     child: Row(
                       children: <Widget>[
-                        loadAssetIconsImage('user', color: DefaultTheme.primaryColor, width: 24),
+                        loadAssetIconsImage('user',
+                            color: DefaultTheme.primaryColor, width: 24),
                         SizedBox(width: 10),
                         Label(
                           NL10ns.of(context).nickname,
@@ -940,10 +972,14 @@ class _ContactScreenState extends State<ContactScreen> {
                     ),
                   ).sized(h: 48),
                   FlatButton(
-                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
+                    padding:
+                        const EdgeInsets.only(left: 16, right: 16, bottom: 0),
+                    shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.vertical(bottom: Radius.circular(12))),
                     onPressed: () {
-                      Navigator.pushNamed(context, ChatProfile.routeName, arguments: currentUser);
+                      Navigator.pushNamed(context, ChatProfile.routeName,
+                          arguments: currentUser);
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -983,13 +1019,13 @@ class _ContactScreenState extends State<ContactScreen> {
                 ],
               ),
             );
-          }
-          else if (index == 2){
+          } else if (index == 2) {
             return SizedBox(height: 10);
-          }
-          else if (index == 3){
+          } else if (index == 3) {
             return Container(
-              decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                  color: DefaultTheme.backgroundLightColor,
+                  borderRadius: BorderRadius.circular(12)),
               margin: EdgeInsets.only(left: 16, right: 16, top: 10),
               child: FlatButton(
                 onPressed: () async {
@@ -997,16 +1033,21 @@ class _ContactScreenState extends State<ContactScreen> {
                     _burnSelected = !_burnSelected;
                   });
                 },
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(12), bottom: Radius.circular(12))),
                 child: Container(
                   width: double.infinity,
                   padding: _burnSelected ? 0.symm(v: 5.5) : 0.pad(),
                   child: Column(
-                    mainAxisAlignment: _burnSelected ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
+                    mainAxisAlignment: _burnSelected
+                        ? MainAxisAlignment.spaceBetween
+                        : MainAxisAlignment.center,
                     children: <Widget>[
                       Row(
                         children: [
-                          loadAssetWalletImage('xiaohui', color: DefaultTheme.primaryColor, width: 24),
+                          loadAssetWalletImage('xiaohui',
+                              color: DefaultTheme.primaryColor, width: 24),
                           SizedBox(width: 10),
                           Label(
                             NL10ns.of(context).burn_after_reading,
@@ -1028,78 +1069,99 @@ class _ContactScreenState extends State<ContactScreen> {
                       ),
                       _burnSelected
                           ? Row(
-                        mainAxisSize: MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.alarm_on, size: 24, color: Colours.blue_0f).pad(r: 10),
-                          Expanded(
-                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Label(
-                                  (!_burnSelected || _burnIndex < 0)
-                                      ? NL10ns.of(context).off
-                                      : BurnViewUtil.getStringFromSeconds(context, BurnViewUtil.burnValueArray[_burnIndex].inSeconds),
-                                  type: LabelType.bodyRegular,
-                                  color: Colours.gray_81,
-                                  fontWeight: FontWeight.w700,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                Icon(Icons.alarm_on,
+                                        size: 24, color: Colours.blue_0f)
+                                    .pad(r: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Label(
+                                        (!_burnSelected || _burnIndex < 0)
+                                            ? NL10ns.of(context).off
+                                            : BurnViewUtil.getStringFromSeconds(
+                                                context,
+                                                BurnViewUtil
+                                                    .burnValueArray[_burnIndex]
+                                                    .inSeconds),
+                                        type: LabelType.bodyRegular,
+                                        color: Colours.gray_81,
+                                        fontWeight: FontWeight.w700,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Slider(
+                                        value: _burnIndex.d,
+                                        min: 0,
+                                        max: (BurnViewUtil
+                                                    .burnValueArray.length -
+                                                1)
+                                            .d,
+                                        activeColor: Colours.blue_0f,
+                                        inactiveColor: Colours.gray_81,
+                                        divisions:
+                                            BurnViewUtil.burnValueArray.length -
+                                                1,
+                                        label: BurnViewUtil.burnTextArray(
+                                            context)[_burnIndex],
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _burnIndex = value.round();
+                                            if (_burnIndex >
+                                                BurnViewUtil
+                                                        .burnValueArray.length -
+                                                    1) {
+                                              _burnIndex = BurnViewUtil
+                                                      .burnValueArray.length -
+                                                  1;
+                                            }
+                                          });
+                                        },
+                                      )
+                                    ],
+                                  ),
                                 ),
-                                Slider(
-                                  value: _burnIndex.d,
-                                  min: 0,
-                                  max: (BurnViewUtil.burnValueArray.length - 1).d,
-                                  activeColor: Colours.blue_0f,
-                                  inactiveColor: Colours.gray_81,
-                                  divisions: BurnViewUtil.burnValueArray.length - 1,
-                                  label: BurnViewUtil.burnTextArray(context)[_burnIndex],
-                                  onChanged:(value){
-                                    setState(() {
-                                      _burnIndex = value.round();
-                                      if (_burnIndex > BurnViewUtil.burnValueArray.length - 1) {
-                                        _burnIndex = BurnViewUtil.burnValueArray.length - 1;
-                                      }
-                                    });
-                                  },
-                                )
                               ],
-                            ),
-                          ),
-                        ],
-                      )
+                            )
                           : Space.empty,
                     ],
                   ),
                 ),
               ).sized(h: _burnSelected ? 112 : 50, w: double.infinity),
             );
-          }
-          else if (index == 4){
+          } else if (index == 4) {
             return Label(
               (!_burnSelected || _burnIndex < 0)
                   ? NL10ns.of(context).burn_after_reading_desc
                   : NL10ns.of(context).burn_after_reading_desc_disappear(
-                BurnViewUtil.burnTextArray(context)[_burnIndex],
-              ),
+                      BurnViewUtil.burnTextArray(context)[_burnIndex],
+                    ),
               type: LabelType.bodySmall,
               color: Colours.gray_81,
               fontWeight: FontWeight.w600,
               softWrap: true,
             ).pad(t: 6, b: 8, l: 20, r: 20);
-          }
-          else if (index == 5){
+          } else if (index == 5) {
             return Container(
-              decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                  color: DefaultTheme.backgroundLightColor,
+                  borderRadius: BorderRadius.circular(12)),
               margin: EdgeInsets.only(left: 16, right: 16, top: 10),
               child: FlatButton(
-                onPressed: () async {
-                  setState(() {
-                    _acceptNotification = !_acceptNotification;
-                    _saveAndSendDeviceToken();
-                  });
-                },
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                // onPressed: () async {
+                //   setState(() {
+                //     _acceptNotification = !_acceptNotification;
+                //     NLog.w('oNChanged 11111111'+_acceptNotification.toString());
+                //     _saveAndSendDeviceToken();
+                //   });
+                // },
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(12), bottom: Radius.circular(12))),
                 child: Container(
                   width: double.infinity,
                   padding: _acceptNotification ? 0.symm(v: 5.5) : 0.pad(),
@@ -1108,7 +1170,8 @@ class _ContactScreenState extends State<ContactScreen> {
                     children: <Widget>[
                       Row(
                         children: [
-                          loadAssetIconsImage('notification_bell', color: DefaultTheme.primaryColor, width: 24),
+                          loadAssetIconsImage('notification_bell',
+                              color: DefaultTheme.primaryColor, width: 24),
                           SizedBox(width: 10),
                           Label(
                             NL10ns.of(context).remote_notification,
@@ -1134,9 +1197,8 @@ class _ContactScreenState extends State<ContactScreen> {
                 ),
               ).sized(h: 50, w: double.infinity),
             );
-          }
-          else if (index == 6){
-            if (Platform.isAndroid){
+          } else if (index == 6) {
+            if (Platform.isAndroid) {
               return Container(
                 height: 1,
               );
@@ -1151,34 +1213,40 @@ class _ContactScreenState extends State<ContactScreen> {
               fontWeight: FontWeight.w600,
               softWrap: true,
             ).pad(t: 6, b: 8, l: 20, r: 20);
-          }
-          else if (index == 7){
+          } else if (index == 7) {
             return Container(
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(12)),
               margin: EdgeInsets.only(left: 16, right: 16, top: 10),
               child: FlatButton(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(12), bottom: Radius.circular(12))),
                 child: Container(
                   width: double.infinity,
                   child: Row(
                     children: <Widget>[
-                      SvgPicture.asset('assets/icons/chat.svg', width: 24, color: DefaultTheme.primaryColor),
+                      SvgPicture.asset('assets/icons/chat.svg',
+                          width: 24, color: DefaultTheme.primaryColor),
 //                                      loadAssetChatPng('send_message', width: 22),
                       SizedBox(width: 10),
-                      Label(NL10ns.of(context).send_message, type: LabelType.bodyRegular, color: DefaultTheme.fontColor1),
+                      Label(NL10ns.of(context).send_message,
+                          type: LabelType.bodyRegular,
+                          color: DefaultTheme.fontColor1),
                       Spacer(),
-                      SvgPicture.asset('assets/icons/right.svg', width: 24, color: DefaultTheme.fontColor2)
+                      SvgPicture.asset('assets/icons/right.svg',
+                          width: 24, color: DefaultTheme.fontColor2)
                     ],
                   ),
                 ),
                 onPressed: () {
-                  Navigator.of(context)
-                      .pushNamed(ChatSinglePage.routeName, arguments: ChatSchema(type: ChatType.PrivateChat, contact: currentUser));
+                  Navigator.of(context).pushNamed(ChatSinglePage.routeName,
+                      arguments: ChatSchema(
+                          type: ChatType.PrivateChat, contact: currentUser));
                 },
               ).sized(h: 50, w: double.infinity),
             );
-          }
-          else if (index == 8){
+          } else if (index == 8) {
             return getStatusView();
           }
           return Container();
@@ -1189,16 +1257,15 @@ class _ContactScreenState extends State<ContactScreen> {
 
   getPersonView() {
     return Scaffold(
-      backgroundColor: DefaultTheme.backgroundColor4,
-      appBar: Header(
-        leading: BackButton(
-          onPressed: () {
-            _popWithInformation();
-          },
-        ),
         backgroundColor: DefaultTheme.backgroundColor4,
-      ),
-      body: _personListView()
-    );
+        appBar: Header(
+          leading: BackButton(
+            onPressed: () {
+              _popWithInformation();
+            },
+          ),
+          backgroundColor: DefaultTheme.backgroundColor4,
+        ),
+        body: _personListView());
   }
 }

@@ -3,7 +3,6 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:nmobile/consts/theme.dart';
 
 class LoadingDialog extends StatefulWidget {
-
   @override
   _LoadingDialogState createState() => _LoadingDialogState();
 
@@ -25,7 +24,7 @@ class LoadingDialog extends StatefulWidget {
     );
   }
 
-  close(){
+  close() {
     Navigator.of(context).pop();
   }
 }

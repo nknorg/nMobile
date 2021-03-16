@@ -12,7 +12,8 @@ import 'package:nmobile/utils/log_tag.dart';
 
 import 'global.dart';
 
-Future _onDidReceiveLocalNotification(int id, String title, String body, String payload) async {
+Future _onDidReceiveLocalNotification(
+    int id, String title, String body, String payload) async {
 // display a dialog with the notification details, tap ok to go to another page
   showDialog(
     context: Global.appContext,
@@ -39,13 +40,15 @@ Future _onDidReceiveLocalNotification(int id, String title, String body, String 
 }
 
 class LocalNotification {
-  static FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  static FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   static int _notificationId = 0;
   static int _notificationIdDebug = 1000;
   static final _log = LOG('LocalNotification'.tag());
 
   static init() async {
-    var initializationSettingsAndroid = new AndroidInitializationSettings('@drawable/icon_logo');
+    var initializationSettingsAndroid =
+        new AndroidInitializationSettings('@drawable/icon_logo');
 
     var initializationSettingsIOS = IOSInitializationSettings(
       requestSoundPermission: true,
@@ -53,13 +56,16 @@ class LocalNotification {
       requestAlertPermission: true,
       onDidReceiveLocalNotification: _onDidReceiveLocalNotification,
     );
-    var initializationSettings = InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);
-    await _flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: (payload) async {
+    var initializationSettings = InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
+    await _flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onSelectNotification: (payload) async {
       _flutterLocalNotificationsPlugin.cancelAll();
     });
   }
 
-  static messageNotification(String title, String content, {int badgeNumber, MessageSchema message}) async {
+  static messageNotification(String title, String content,
+      {int badgeNumber, MessageSchema message}) async {
     if (message != null && Global.state == AppLifecycleState.resumed) {
       if (message.topic != null) {
         if (Global.currentOtherChatId == message.topic) {
@@ -70,23 +76,35 @@ class LocalNotification {
       }
     }
 
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(badgeNumber: badgeNumber);
-    var androidNotificationDetails = AndroidNotificationDetails('d_chat_notify_sound_vibration', 'Sound Vibration', 'channel description',
+    var iOSPlatformChannelSpecifics =
+        IOSNotificationDetails(badgeNumber: badgeNumber);
+    var androidNotificationDetails = AndroidNotificationDetails(
+        'd_chat_notify_sound_vibration',
+        'Sound Vibration',
+        'channel description',
         vibrationPattern: Int64List.fromList([0, 30, 100, 30]));
-    var platformChannelSpecifics = NotificationDetails(androidNotificationDetails, iOSPlatformChannelSpecifics);
+    var platformChannelSpecifics = NotificationDetails(
+        androidNotificationDetails, iOSPlatformChannelSpecifics);
     try {
-      _log.d('messageNotification | Global.appContext: ${Global.appContext == null ? null : 'instance'}');
-      final nl10ns = Global.appContext != null ? NL10ns.of(Global.appContext) : null;
+      _log.d(
+          'messageNotification | Global.appContext: ${Global.appContext == null ? null : 'instance'}');
+      final nl10ns =
+          Global.appContext != null ? NL10ns.of(Global.appContext) : null;
       switch (Settings.localNotificationType) {
         case LocalNotificationType.only_name:
-          await _flutterLocalNotificationsPlugin.show(_genNotificationId, title, nl10ns?.you_have_new_message ?? ' ', platformChannelSpecifics);
+          await _flutterLocalNotificationsPlugin.show(_genNotificationId, title,
+              nl10ns?.you_have_new_message ?? ' ', platformChannelSpecifics);
           break;
         case LocalNotificationType.name_and_message:
-          await _flutterLocalNotificationsPlugin.show(_genNotificationId, title, content, platformChannelSpecifics);
+          await _flutterLocalNotificationsPlugin.show(
+              _genNotificationId, title, content, platformChannelSpecifics);
           break;
         case LocalNotificationType.none:
           await _flutterLocalNotificationsPlugin.show(
-              _genNotificationId, nl10ns?.new_message ?? ' ', nl10ns?.you_have_new_message ?? ' ', platformChannelSpecifics);
+              _genNotificationId,
+              nl10ns?.new_message ?? ' ',
+              nl10ns?.you_have_new_message ?? ' ',
+              platformChannelSpecifics);
           break;
       }
     } catch (e) {

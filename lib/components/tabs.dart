@@ -10,18 +10,19 @@ class Tabs extends StatefulWidget {
 }
 
 class _TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
-
   @override
   void initState() {
     super.initState();
-    widget.controller = widget.controller ?? TabController(length: widget.tabs.length, vsync: this);
+    widget.controller = widget.controller ??
+        TabController(length: widget.tabs.length, vsync: this);
   }
-
 
   @override
   Widget build(BuildContext context) {
-    return  DecoratedBox(
-      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: DefaultTheme.backgroundColor2))),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+          border:
+              Border(bottom: BorderSide(color: DefaultTheme.backgroundColor2))),
       child: TabBar(
           labelStyle: TextStyle(fontWeight: FontWeight.bold),
           unselectedLabelStyle: TextStyle(fontWeight: FontWeight.bold),

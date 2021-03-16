@@ -52,7 +52,10 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
   bool isUnSubscribed = false;
 
   initAsync() async {
-    SubscriberRepo().getByTopicAndChatId(widget.arguments.topic, NKNClientCaller.currentChatId).then((subs) {
+    SubscriberRepo()
+        .getByTopicAndChatId(
+            widget.arguments.topic, NKNClientCaller.currentChatId)
+        .then((subs) {
       bool unSubs = subs == null;
       if (isUnSubscribed != unSubs) {
         if (mounted)
@@ -115,12 +118,15 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                           width: 16,
                         ),
                         onPressed: () async {
-                          File savedImg = await getHeaderImage(NKNClientCaller.currentChatId);
+                          File savedImg = await getHeaderImage(
+                              NKNClientCaller.currentChatId);
                           if (savedImg == null) return;
                           final topicRepo = TopicRepo();
-                          await topicRepo.updateAvatar(widget.arguments.topic, savedImg.path);
+                          await topicRepo.updateAvatar(
+                              widget.arguments.topic, savedImg.path);
                           setState(() {
-                            widget.arguments = widget.arguments.copyWith(avatarUri: savedImg.path);
+                            widget.arguments = widget.arguments
+                                .copyWith(avatarUri: savedImg.path);
                           });
                           _chatBloc.add(RefreshMessageListEvent());
                         },
@@ -138,17 +144,23 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                         Column(
                           children: <Widget>[
                             Container(
-                              decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
+                              decoration: BoxDecoration(
+                                  color: DefaultTheme.backgroundLightColor,
+                                  borderRadius: BorderRadius.circular(12)),
                               margin: EdgeInsets.symmetric(horizontal: 12),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: <Widget>[
                                   FlatButton(
-                                    padding: EdgeInsets.only(left: 16, right: 16, top: 10),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                                    padding: EdgeInsets.only(
+                                        left: 16, right: 16, top: 10),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.vertical(
+                                            top: Radius.circular(12))),
                                     onPressed: () {
-                                      CopyUtils.copyAction(context, widget.arguments.topic);
+                                      CopyUtils.copyAction(
+                                          context, widget.arguments.topic);
                                     },
                                     child: Row(
                                       children: <Widget>[
@@ -184,40 +196,50 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                                     ),
                                   ).sized(h: 48),
                                   FlatButton(
-                                    padding: const EdgeInsets.only(left: 16, right: 16),
+                                    padding: const EdgeInsets.only(
+                                        left: 16, right: 16),
                                     onPressed: () {
-                                      Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: widget.arguments);
+                                      Navigator.of(context).pushNamed(
+                                          ChannelMembersScreen.routeName,
+                                          arguments: widget.arguments);
                                     },
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
                                       children: <Widget>[
-                                        loadAssetChatPng('group_blue', width: 22.w),
+                                        loadAssetChatPng('group_blue',
+                                            width: 22.w),
                                         SizedBox(width: 10),
                                         Label(
-                                          NL10ns.of(context).view_channel_members,
+                                          NL10ns.of(context)
+                                              .view_channel_members,
                                           type: LabelType.bodyRegular,
                                           color: DefaultTheme.fontColor1,
                                           height: 1,
                                         ),
                                         SizedBox(width: 20),
-                                        Expanded(
-                                          child: BlocBuilder<ChannelBloc, ChannelState>(builder: (context, state) {
-                                            int memberCount = 0;
-                                            if (state is ChannelMembersState){
-                                              if (state.memberCount != null && state.topicName == widget.arguments.topic){
-                                                memberCount = state.memberCount;
-                                              }
+                                        Expanded(child: BlocBuilder<ChannelBloc,
+                                                ChannelState>(
+                                            builder: (context, state) {
+                                          int memberCount = 0;
+                                          if (state is ChannelMembersState) {
+                                            if (state.memberCount != null &&
+                                                state.topicName ==
+                                                    widget.arguments.topic) {
+                                              memberCount = state.memberCount;
                                             }
-                                            return Label(
-                                              '$memberCount' + NL10ns.of(context).members,
-                                              type: LabelType.bodyRegular,
-                                              textAlign: TextAlign.right,
-                                              color: DefaultTheme.fontColor2,
-                                              maxLines: 1,
-                                            );
-                                          })
-                                        ),
+                                          }
+                                          return Label(
+                                            '$memberCount' +
+                                                NL10ns.of(context).members,
+                                            type: LabelType.bodyRegular,
+                                            textAlign: TextAlign.right,
+                                            color: DefaultTheme.fontColor2,
+                                            maxLines: 1,
+                                          );
+                                        })),
                                         SvgPicture.asset(
                                           'assets/icons/right.svg',
                                           width: 24,
@@ -231,18 +253,27 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                                       left: 16,
                                       right: 16,
                                     ),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.vertical(
+                                            bottom: Radius.circular(12))),
                                     onPressed: () async {
-                                      var address = await BottomDialog.of(context).showInputAddressDialog(
-                                          title: NL10ns.of(context).invite_members, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
+                                      var address = await BottomDialog.of(
+                                              context)
+                                          .showInputAddressDialog(
+                                              title: NL10ns.of(context)
+                                                  .invite_members,
+                                              hint: NL10ns.of(context)
+                                                  .enter_or_select_a_user_pubkey);
                                       if (address != null) {
                                         acceptPrivateAction(address);
                                       }
                                     },
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: <Widget>[
-                                        loadAssetChatPng('invisit_blue', width: 20.w),
+                                        loadAssetChatPng('invisit_blue',
+                                            width: 20.w),
                                         SizedBox(width: 10),
                                         Label(
                                           NL10ns.of(context).invite_members,
@@ -282,10 +313,13 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
   getTopicStatusView() {
     if (!isUnSubscribed) {
       return Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(12)),
         margin: EdgeInsets.only(left: 12, right: 12, top: 10),
         child: FlatButton(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(12), bottom: Radius.circular(12))),
           child: Container(
             width: double.infinity,
             child: Row(
@@ -298,7 +332,9 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                 Text(
                   NL10ns.of(context).unsubscribe,
                   textAlign: TextAlign.left,
-                  style: TextStyle(color: Colors.red, fontSize: DefaultTheme.bodyRegularFontSize),
+                  style: TextStyle(
+                      color: Colors.red,
+                      fontSize: DefaultTheme.bodyRegularFontSize),
                 ),
                 Spacer(),
               ],
@@ -311,10 +347,13 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
       );
     } else {
       return Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(12)),
         margin: EdgeInsets.only(left: 16, right: 16, top: 10),
         child: FlatButton(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(12), bottom: Radius.circular(12))),
           child: Container(
             width: double.infinity,
             child: Row(
@@ -327,7 +366,9 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                 Text(
                   NL10ns.of(context).subscribe,
                   textAlign: TextAlign.left,
-                  style: TextStyle(color: DefaultTheme.primaryColor, fontSize: DefaultTheme.bodyRegularFontSize),
+                  style: TextStyle(
+                      color: DefaultTheme.primaryColor,
+                      fontSize: DefaultTheme.bodyRegularFontSize),
                 ),
                 Spacer(),
               ],
@@ -341,7 +382,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
     }
   }
 
-  _unSubscriberGoesSuccess(){
+  _unSubscriberGoesSuccess() {
     showToast(NL10ns.of(context).unsubscribed);
     Timer(Duration(seconds: 1), () {
       Navigator.of(context).pop(true);
@@ -364,10 +405,9 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                 if (success) {
                   _unSubscriberGoesSuccess();
                 } else {
-                  if (e.toString().contains('can not append tx to txpool')){
+                  if (e.toString().contains('can not append tx to txpool')) {
                     _unSubscriberGoesSuccess();
-                  }
-                  else{
+                  } else {
                     showToast(NL10ns.of(context).something_went_wrong);
                   }
                 }
@@ -396,16 +436,16 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
 
   acceptPrivateAction(address) async {
     final topic = widget.arguments;
-    var sendMsg = MessageSchema.fromSendData(from: NKNClientCaller.currentChatId,
+    var sendMsg = MessageSchema.fromSendData(
+        from: NKNClientCaller.currentChatId,
         content: topic.topic,
         to: address,
         contentType: ContentType.channelInvitation);
     _chatBloc.add(SendMessageEvent(sendMsg));
-    showToast(NL10ns
-        .of(context)
-        .invitation_sent);
+    showToast(NL10ns.of(context).invitation_sent);
 
-    if (topic.isPrivate && topic.isOwner(NKNClientCaller.currentChatId) &&
+    if (topic.isPrivate &&
+        topic.isOwner(NKNClientCaller.currentChatId) &&
         address != NKNClientCaller.currentChatId) {
       await GroupChatHelper.moveSubscriberToWhiteList(
           topic: topic,

@@ -79,30 +79,42 @@ class _AdvancedPageState extends State<AdvancePage> {
                       height: 48,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(12))),
                         onPressed: () async {
                           SimpleConfirm(
                               context: context,
-                              content: NL10ns.of(context).delete_cache_confirm_title,
+                              content:
+                                  NL10ns.of(context).delete_cache_confirm_title,
                               buttonText: NL10ns.of(context).delete,
                               buttonColor: Colors.red,
                               callback: (v) {
                                 if (v) {
                                   Timer(Duration(milliseconds: 200), () async {
-                                    var walletData = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
-                                    var wallet = WalletSchema(name: walletData['name'], address: walletData['address']);
+                                    var walletData =
+                                        await _localStorage.getItem(
+                                            LocalStorage.NKN_WALLET_KEY, 0);
+                                    var wallet = WalletSchema(
+                                        name: walletData['name'],
+                                        address: walletData['address']);
 
                                     var password = await wallet.getPassword();
                                     if (password != null) {
                                       try {
-                                        var w = await wallet.exportWallet(password);
-                                        await clearCacheFile(Global.applicationRootDirectory);
-                                        var size = await getTotalSizeOfCacheFile(Global.applicationRootDirectory);
+                                        var w =
+                                            await wallet.exportWallet(password);
+                                        await clearCacheFile(
+                                            Global.applicationRootDirectory);
+                                        var size =
+                                            await getTotalSizeOfCacheFile(Global
+                                                .applicationRootDirectory);
                                         setState(() {
                                           _cacheSize = Format.formatSize(size);
                                         });
                                       } catch (e) {
-                                        if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+                                        if (e.message ==
+                                            ConstUtils.WALLET_PASSWORD_ERROR) {
                                           ModalDialog.of(context).show(
                                             height: 240,
                                             content: Label(
@@ -153,26 +165,35 @@ class _AdvancedPageState extends State<AdvancePage> {
                         onPressed: () async {
                           SimpleConfirm(
                               context: context,
-                              content: NL10ns.of(context).delete_db_confirm_title,
+                              content:
+                                  NL10ns.of(context).delete_db_confirm_title,
                               buttonText: NL10ns.of(context).delete,
                               buttonColor: Colors.red,
                               callback: (v) {
                                 if (v) {
                                   Timer(Duration(milliseconds: 200), () async {
-                                    var walletData = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
-                                    var wallet = WalletSchema(name: walletData['name'], address: walletData['address']);
+                                    var walletData =
+                                        await _localStorage.getItem(
+                                            LocalStorage.NKN_WALLET_KEY, 0);
+                                    var wallet = WalletSchema(
+                                        name: walletData['name'],
+                                        address: walletData['address']);
 
                                     var password = await wallet.getPassword();
                                     if (password != null) {
                                       try {
-                                        var w = await wallet.exportWallet(password);
-                                        await clearDbFile(Global.applicationRootDirectory);
-                                        var size = await getTotalSizeOfDbFile(Global.applicationRootDirectory);
+                                        var w =
+                                            await wallet.exportWallet(password);
+                                        await clearDbFile(
+                                            Global.applicationRootDirectory);
+                                        var size = await getTotalSizeOfDbFile(
+                                            Global.applicationRootDirectory);
                                         setState(() {
                                           _dbSize = Format.formatSize(size);
                                         });
                                       } catch (e) {
-                                        if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+                                        if (e.message ==
+                                            ConstUtils.WALLET_PASSWORD_ERROR) {
                                           ModalDialog.of(context).show(
                                             height: 240,
                                             content: Label(
@@ -220,7 +241,9 @@ class _AdvancedPageState extends State<AdvancePage> {
                       height: 48,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                                bottom: Radius.circular(12))),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
@@ -236,7 +259,9 @@ class _AdvancedPageState extends State<AdvancePage> {
                                   value: _debugSelected,
                                   activeColor: DefaultTheme.primaryColor,
                                   onChanged: (value) async {
-                                    _localStorage.set('${LocalStorage.SETTINGS_KEY}:${LocalStorage.DEBUG_KEY}', value);
+                                    _localStorage.set(
+                                        '${LocalStorage.SETTINGS_KEY}:${LocalStorage.DEBUG_KEY}',
+                                        value);
                                     Settings.debug = value;
                                     setState(() {
                                       _debugSelected = value;

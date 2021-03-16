@@ -1760,5 +1760,15 @@
   "@something_went_wrong": {
     "type": "text",
     "placeholders": {}
-  }
+  },
+  "unavailable_device": "暂不支持没有Google服务的机型",
+    "@unavailable_device": {
+      "type": "text",
+      "placeholders": {}
+   },
+   "slide_to_cancel": "< 左滑取消 <",
+     "@slide_to_cancel": {
+       "type": "text",
+       "placeholders": {}
+     }
 }

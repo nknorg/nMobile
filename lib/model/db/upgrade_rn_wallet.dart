@@ -57,7 +57,8 @@ class UpgradeRnWallet {
             data.name = walletDataMap['name'];
             data.balance = walletDataMap['balance'];
             data.tokenBalance = walletDataMap['tokenBalance'];
-            print("rnWalletList | jsonDecode RnWalletData.keystore: ${data.keystore}");
+            print(
+                "rnWalletList | jsonDecode RnWalletData.keystore: ${data.keystore}");
 
             result.add(data);
           } on Exception catch (e) {

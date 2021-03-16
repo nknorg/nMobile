@@ -27,7 +27,8 @@ class ImportSeedWallet extends StatefulWidget {
   _ImportSeedWalletState createState() => _ImportSeedWalletState();
 }
 
-class _ImportSeedWalletState extends State<ImportSeedWallet> with SingleTickerProviderStateMixin {
+class _ImportSeedWalletState extends State<ImportSeedWallet>
+    with SingleTickerProviderStateMixin {
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
   TextEditingController _seedController = TextEditingController();
@@ -65,12 +66,17 @@ class _ImportSeedWalletState extends State<ImportSeedWallet> with SingleTickerPr
       EasyLoading.show();
       try {
         if (widget.type == WalletType.nkn) {
-          String keystore = await NknWalletPlugin.createWallet(_seed, _password);
+          String keystore =
+              await NknWalletPlugin.createWallet(_seed, _password);
           var json = jsonDecode(keystore);
           String address = json['Address'];
-          _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
+          _walletsBloc.add(AddWallet(
+              WalletSchema(
+                  address: address, type: WalletSchema.NKN_WALLET, name: _name),
+              keystore));
         } else {
-          final ethWallet = Ethereum.restoreWalletFromPrivateKey(name: _name, privateKey: _seed, password: _password);
+          final ethWallet = Ethereum.restoreWalletFromPrivateKey(
+              name: _name, privateKey: _seed, password: _password);
           Ethereum.saveWallet(ethWallet: ethWallet, walletsBloc: _walletsBloc);
         }
         EasyLoading.dismiss();
@@ -117,7 +123,8 @@ class _ImportSeedWalletState extends State<ImportSeedWallet> with SingleTickerPr
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
                                 Padding(
-                                  padding: const EdgeInsets.only(top: 8, bottom: 8),
+                                  padding:
+                                      const EdgeInsets.only(top: 8, bottom: 8),
                                   child: Label(
                                     NL10ns.of(context).import_with_seed_title,
                                     type: LabelType.h2,
@@ -144,7 +151,8 @@ class _ImportSeedWalletState extends State<ImportSeedWallet> with SingleTickerPr
                                   hintText: NL10ns.of(context).input_seed,
                                   onSaved: (v) => _seed = v,
                                   onFieldSubmitted: (_) {
-                                    FocusScope.of(context).requestFocus(_nameFocusNode);
+                                    FocusScope.of(context)
+                                        .requestFocus(_nameFocusNode);
                                   },
                                   validator: Validator.of(context).seed(),
                                 ),
@@ -155,10 +163,12 @@ class _ImportSeedWalletState extends State<ImportSeedWallet> with SingleTickerPr
                                 ),
                                 Textbox(
                                   focusNode: _nameFocusNode,
-                                  hintText: NL10ns.of(context).hint_enter_wallet_name,
+                                  hintText:
+                                      NL10ns.of(context).hint_enter_wallet_name,
                                   onSaved: (v) => _name = v,
                                   onFieldSubmitted: (_) {
-                                    FocusScope.of(context).requestFocus(_passwordFocusNode);
+                                    FocusScope.of(context)
+                                        .requestFocus(_passwordFocusNode);
                                   },
                                   textInputAction: TextInputAction.next,
                                   validator: Validator.of(context).walletName(),
@@ -174,7 +184,8 @@ class _ImportSeedWalletState extends State<ImportSeedWallet> with SingleTickerPr
                                   hintText: NL10ns.of(context).input_password,
                                   onSaved: (v) => _password = v,
                                   onFieldSubmitted: (_) {
-                                    FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
+                                    FocusScope.of(context).requestFocus(
+                                        _confirmPasswordFocusNode);
                                   },
                                   validator: Validator.of(context).password(),
                                   password: true,
@@ -200,7 +211,9 @@ class _ImportSeedWalletState extends State<ImportSeedWallet> with SingleTickerPr
                     Padding(
                       padding: EdgeInsets.only(left: 30, right: 30),
                       child: Button(
-                        text: widget.type == WalletType.nkn ? NL10ns.of(context).import_nkn_wallet : NL10ns.of(context).import_ethereum_wallet,
+                        text: widget.type == WalletType.nkn
+                            ? NL10ns.of(context).import_nkn_wallet
+                            : NL10ns.of(context).import_ethereum_wallet,
                         disabled: !_formValid,
                         onPressed: next,
                       ),

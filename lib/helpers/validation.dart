@@ -26,7 +26,11 @@ class Validator {
         jsonFormat = false;
       }
 
-      return value.trim().length == 0 ? _localizations.error_required : !jsonFormat ? _localizations.error_keystore_format : null;
+      return value.trim().length == 0
+          ? _localizations.error_required
+          : !jsonFormat
+              ? _localizations.error_keystore_format
+              : null;
     };
   }
 
@@ -35,14 +39,23 @@ class Validator {
       bool isValid = false;
       try {
         isValid = Ethereum.isKeystoreValid(value.trim());
-      } catch (e) {
-      }
-      return value.trim().length == 0 ? _localizations.error_required : !isValid ? _localizations.error_keystore_format : null;
+      } catch (e) {}
+      return value.trim().length == 0
+          ? _localizations.error_required
+          : !isValid
+              ? _localizations.error_keystore_format
+              : null;
     };
   }
+
   seed() {
     return (value) {
-      return value.trim().length == 0 ? _localizations.error_required : value.trim().length != 64 || !RegExp(r'^[0-9a-f]{64}$').hasMatch(value) ? _localizations.error_seed_format : null;
+      return value.trim().length == 0
+          ? _localizations.error_required
+          : value.trim().length != 64 ||
+                  !RegExp(r'^[0-9a-f]{64}$').hasMatch(value)
+              ? _localizations.error_seed_format
+              : null;
     };
   }
 
@@ -84,7 +97,11 @@ class Validator {
       } catch (e) {
         debugPrintStack(label: e?.toString());
       }
-      return value.trim().length == 0 ? _localizations.error_required : !addressFormat ? _localizations.error_nkn_address_format : null;
+      return value.trim().length == 0
+          ? _localizations.error_required
+          : !addressFormat
+              ? _localizations.error_nkn_address_format
+              : null;
     };
   }
 
@@ -97,13 +114,21 @@ class Validator {
       } catch (e) {
         //debugPrintStack(label: e?.toString());
       }
-      return value.trim().length == 0 ? _localizations.error_required : !addressFormat ? _localizations.error_nkn_address_format : null;
+      return value.trim().length == 0
+          ? _localizations.error_required
+          : !addressFormat
+              ? _localizations.error_nkn_address_format
+              : null;
     };
   }
 
   nknIdentifier() {
     return (value) {
-      return value.trim().length == 0 ? _localizations.error_required : !RegExp(r'^[^.]*.?[0-9a-f]{64}$').hasMatch(value) ? _localizations.error_client_address_format : null;
+      return value.trim().length == 0
+          ? _localizations.error_required
+          : !RegExp(r'^[^.]*.?[0-9a-f]{64}$').hasMatch(value)
+              ? _localizations.error_client_address_format
+              : null;
     };
   }
 
@@ -115,7 +140,11 @@ class Validator {
 
   confrimPassword(password) {
     return (value) {
-      return value.trim().length == 0 ? _localizations.error_required : value != password ? _localizations.error_confirm_password : null;
+      return value.trim().length == 0
+          ? _localizations.error_required
+          : value != password
+              ? _localizations.error_confirm_password
+              : null;
     };
   }
 }

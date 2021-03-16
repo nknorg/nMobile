@@ -7,7 +7,14 @@ class NewsSchema {
   num newsId;
   num readedCount;
 
-  NewsSchema({this.title, this.image, this.time, this.desc, this.author, this.newsId, this.readedCount});
+  NewsSchema(
+      {this.title,
+      this.image,
+      this.time,
+      this.desc,
+      this.author,
+      this.newsId,
+      this.readedCount});
 
   NewsSchema.fromJson(Map v) {
     title = v['title'];

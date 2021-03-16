@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
@@ -63,8 +62,10 @@ class BurnViewUtil {
 
   static showBurnViewDialog(context, contact, chatBloc) async {
     int currentIndex = -1;
-    var _sourceOptions = OptionsSchema(deleteAfterSeconds: contact?.options?.deleteAfterSeconds);
-    if (_sourceOptions.deleteAfterSeconds != null && _sourceOptions.deleteAfterSeconds != -1) {
+    var _sourceOptions =
+        OptionsSchema(deleteAfterSeconds: contact?.options?.deleteAfterSeconds);
+    if (_sourceOptions.deleteAfterSeconds != null &&
+        _sourceOptions.deleteAfterSeconds != -1) {
       for (int index = 0; index < burnValueArray.length; index++) {
         Duration duration = burnValueArray[index];
         if (_sourceOptions.deleteAfterSeconds == duration.inSeconds) {
@@ -92,7 +93,8 @@ class BurnViewPage extends StatefulWidget {
   final ContactSchema contact;
   final ChatBloc chatBloc;
 
-  BurnViewPage({Key key, this.currentIndex, this.contact, this.chatBloc}) : super(key: key);
+  BurnViewPage({Key key, this.currentIndex, this.contact, this.chatBloc})
+      : super(key: key);
 
   @override
   BurnViewPageState createState() => new BurnViewPageState();
@@ -131,9 +133,12 @@ class BurnViewPageState extends State<BurnViewPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(NL10ns.of(context).off, style: TextStyle(fontWeight: FontWeight.w500)),
+            Text(NL10ns.of(context).off,
+                style: TextStyle(fontWeight: FontWeight.w500)),
             Spacer(),
-            currentIndex == -1 ? Icon(Icons.check, color: Colors.red, size: 16) : Space.empty
+            currentIndex == -1
+                ? Icon(Icons.check, color: Colors.red, size: 16)
+                : Space.empty
           ],
         ),
       ),
@@ -149,7 +154,13 @@ class BurnViewPageState extends State<BurnViewPage> {
         child: Container(
           height: 20,
           child: Row(
-            children: [Text(content), Spacer(), i == currentIndex ? Icon(Icons.check, color: Colors.red, size: 16) : Space.empty],
+            children: [
+              Text(content),
+              Spacer(),
+              i == currentIndex
+                  ? Icon(Icons.check, color: Colors.red, size: 16)
+                  : Space.empty
+            ],
           ),
         ),
         onPressed: () {

@@ -5,7 +5,9 @@ import 'messages_all.dart';
 
 class NL10ns {
   static Future<NL10ns> load(Locale locale) {
-    final String name = locale.countryCode?.isNotEmpty ?? false ? locale.toString() : locale.languageCode;
+    final String name = locale.countryCode?.isNotEmpty ?? false
+        ? locale.toString()
+        : locale.languageCode;
     final String localeName = Intl.canonicalizedLocale(name);
     return initializeMessages(localeName).then((_) {
       Intl.defaultLocale = localeName;
@@ -50,7 +52,8 @@ class NL10ns {
   }
 
   String get click_connect {
-    return Intl.message('Click this button for connect', name: 'click_connect', desc: '');
+    return Intl.message('Click this button for connect',
+        name: 'click_connect', desc: '');
   }
 
   String get connect {
@@ -94,11 +97,13 @@ class NL10ns {
   }
 
   String get accept_invitation {
-    return Intl.message('Accept Invitation', name: 'accept_invitation', desc: '');
+    return Intl.message('Accept Invitation',
+        name: 'accept_invitation', desc: '');
   }
 
   String get channel_invitation {
-    return Intl.message('group invitation', name: 'channel_invitation', desc: '');
+    return Intl.message('group invitation',
+        name: 'channel_invitation', desc: '');
   }
 
   String get save {
@@ -150,7 +155,8 @@ class NL10ns {
   }
 
   String get copy_to_clipboard {
-    return Intl.message('Copy to Clipboard', name: 'copy_to_clipboard', desc: '');
+    return Intl.message('Copy to Clipboard',
+        name: 'copy_to_clipboard', desc: '');
   }
 
   String get rename {
@@ -170,11 +176,13 @@ class NL10ns {
   }
 
   String get input_nickname {
-    return Intl.message('Please input Nickname', name: 'input_nickname', desc: '');
+    return Intl.message('Please input Nickname',
+        name: 'input_nickname', desc: '');
   }
 
   String get input_pubKey {
-    return Intl.message('Please input Public Key', name: 'input_pubKey', desc: '');
+    return Intl.message('Please input Public Key',
+        name: 'input_pubKey', desc: '');
   }
 
   String get input_name {
@@ -182,7 +190,8 @@ class NL10ns {
   }
 
   String get input_wallet_address {
-    return Intl.message('Please input Account Address', name: 'input_wallet_address', desc: '');
+    return Intl.message('Please input Account Address',
+        name: 'input_wallet_address', desc: '');
   }
 
   String get input_notes {
@@ -198,7 +207,8 @@ class NL10ns {
   }
 
   String get latest_transactions {
-    return Intl.message('Latest Transactions', name: 'latest_transactions', desc: '');
+    return Intl.message('Latest Transactions',
+        name: 'latest_transactions', desc: '');
   }
 
   String get today {
@@ -294,22 +304,29 @@ class NL10ns {
   }
 
   String get wallet_password_mach {
-    return Intl.message('Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
-        name: 'wallet_password_mach', desc: '');
+    return Intl.message(
+        'Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
+        name: 'wallet_password_mach',
+        desc: '');
   }
 
   String get wallet_password_helper_text {
-    return Intl.message('Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
-        name: 'wallet_password_helper_text', desc: '');
+    return Intl.message(
+        'Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
+        name: 'wallet_password_helper_text',
+        desc: '');
   }
 
   String get wallet_password_error {
-    return Intl.message('Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
-        name: 'wallet_password_error', desc: '');
+    return Intl.message(
+        'Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
+        name: 'wallet_password_error',
+        desc: '');
   }
 
   String get password_wrong {
-    return Intl.message('Account password or keystore file is wrong.', name: 'password_wrong', desc: '');
+    return Intl.message('Account password or keystore file is wrong.',
+        name: 'password_wrong', desc: '');
   }
 
   String get confirm_password {
@@ -333,40 +350,50 @@ class NL10ns {
   }
 
   String get delete_wallet_confirm_title {
-    return Intl.message('Are you sure you want to delete this wallet?', name: 'delete_wallet_confirm_title', desc: '');
+    return Intl.message('Are you sure you want to delete this wallet?',
+        name: 'delete_wallet_confirm_title', desc: '');
   }
 
   String get delete_wallet_confirm_text {
-    return Intl.message('This will remove the wallet off your local device. Please make sure your wallet is fully backed up or you will lose your funds.',
-        name: 'delete_wallet_confirm_text', desc: '');
+    return Intl.message(
+        'This will remove the wallet off your local device. Please make sure your wallet is fully backed up or you will lose your funds.',
+        name: 'delete_wallet_confirm_text',
+        desc: '');
   }
 
   String get delete_message_confirm_title {
-    return Intl.message('Are you sure you want to delete this message?', name: 'delete_message_confirm_title', desc: '');
+    return Intl.message('Are you sure you want to delete this message?',
+        name: 'delete_message_confirm_title', desc: '');
   }
 
   String get delete_contact_confirm_title {
-    return Intl.message('Are you sure you want to delete this contact?', name: 'delete_contact_confirm_title', desc: '');
+    return Intl.message('Are you sure you want to delete this contact?',
+        name: 'delete_contact_confirm_title', desc: '');
   }
 
   String get delete_friend_confirm_title {
-    return Intl.message('Are you sure you want to delete this friend?', name: 'delete_friend_confirm_title', desc: '');
+    return Intl.message('Are you sure you want to delete this friend?',
+        name: 'delete_friend_confirm_title', desc: '');
   }
 
   String get leave_group_confirm_title {
-    return Intl.message('Are you sure you want to leave this group?', name: 'leave_group_confirm_title', desc: '');
+    return Intl.message('Are you sure you want to leave this group?',
+        name: 'leave_group_confirm_title', desc: '');
   }
 
   String get delete_cache_confirm_title {
-    return Intl.message('Are you sure you want to delete cache?', name: 'delete_cache_confirm_title', desc: '');
+    return Intl.message('Are you sure you want to delete cache?',
+        name: 'delete_cache_confirm_title', desc: '');
   }
 
   String get delete_db_confirm_title {
-    return Intl.message('Are you sure you want to clear the database?', name: 'delete_db_confirm_title', desc: '');
+    return Intl.message('Are you sure you want to clear the database?',
+        name: 'delete_db_confirm_title', desc: '');
   }
 
   String get click_to_settings {
-    return Intl.message('Click to settings', name: 'click_to_settings', desc: '');
+    return Intl.message('Click to settings',
+        name: 'click_to_settings', desc: '');
   }
 
   String get export_wallet {
@@ -402,12 +429,15 @@ class NL10ns {
   }
 
   String get verify_wallet_password {
-    return Intl.message('Verify Account Password', name: 'verify_wallet_password', desc: '');
+    return Intl.message('Verify Account Password',
+        name: 'verify_wallet_password', desc: '');
   }
 
   String get seed_qrcode_dec {
-    return Intl.message('Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.',
-        name: 'seed_qrcode_dec', desc: '');
+    return Intl.message(
+        'Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.',
+        name: 'seed_qrcode_dec',
+        desc: '');
   }
 
   String get to {
@@ -447,11 +477,13 @@ class NL10ns {
   }
 
   String get enter_users_address {
-    return Intl.message('Enter users address', name: 'enter_users_address', desc: '');
+    return Intl.message('Enter users address',
+        name: 'enter_users_address', desc: '');
   }
 
   String get enter_receive_address {
-    return Intl.message('Enter receive address', name: 'enter_receive_address', desc: '');
+    return Intl.message('Enter receive address',
+        name: 'enter_receive_address', desc: '');
   }
 
   String get enter_topic {
@@ -459,19 +491,23 @@ class NL10ns {
   }
 
   String get select_asset_to_send {
-    return Intl.message('Select Asset to Send', name: 'select_asset_to_send', desc: '');
+    return Intl.message('Select Asset to Send',
+        name: 'select_asset_to_send', desc: '');
   }
 
   String get select_asset_to_receive {
-    return Intl.message('Select Asset to Receive', name: 'select_asset_to_receive', desc: '');
+    return Intl.message('Select Asset to Receive',
+        name: 'select_asset_to_receive', desc: '');
   }
 
   String get select_another_wallet {
-    return Intl.message('Select Another Account', name: 'select_another_wallet', desc: '');
+    return Intl.message('Select Another Account',
+        name: 'select_another_wallet', desc: '');
   }
 
   String get select_wallet_type {
-    return Intl.message('Select Account Type', name: 'select_wallet_type', desc: '');
+    return Intl.message('Select Account Type',
+        name: 'select_wallet_type', desc: '');
   }
 
   String get select_wallet_type_desc {
@@ -487,7 +523,8 @@ class NL10ns {
   }
 
   String get you_have_new_message {
-    return Intl.message('You have a new message', name: 'you_have_new_message', desc: '');
+    return Intl.message('You have a new message',
+        name: 'you_have_new_message', desc: '');
   }
 
   String get new_whisper {
@@ -499,7 +536,8 @@ class NL10ns {
   }
 
   String get create_channel {
-    return Intl.message('Create/Join to group', name: 'create_channel', desc: '');
+    return Intl.message('Create/Join to group',
+        name: 'create_channel', desc: '');
   }
 
   String get private_channel {
@@ -579,27 +617,35 @@ class NL10ns {
   }
 
   String get burn_after_reading {
-    return Intl.message('Burn After Reading', name: 'burn_after_reading', desc: '');
+    return Intl.message('Burn After Reading',
+        name: 'burn_after_reading', desc: '');
   }
 
   String get accept_notification {
-    return Intl.message('When turned on, you will receive immediate notification when this person sends you messages.', name: 'accept_notification', desc: '');
+    return Intl.message(
+        'When turned on, you will receive immediate notification when this person sends you messages.',
+        name: 'accept_notification',
+        desc: '');
   }
 
   String get setting_deny_notification {
-    return Intl.message('Have Deny Remote Notification', name: 'setting_deny_notification', desc: '');
+    return Intl.message('Have Deny Remote Notification',
+        name: 'setting_deny_notification', desc: '');
   }
 
   String get setting_accept_notification {
-    return Intl.message('Have Accept Remote Notification', name: 'setting_accept_notification', desc: '');
+    return Intl.message('Have Accept Remote Notification',
+        name: 'setting_accept_notification', desc: '');
   }
 
   String get notification_push_content {
-    return Intl.message('New Message!', name: 'notification_push_content', desc: '');
+    return Intl.message('New Message!',
+        name: 'notification_push_content', desc: '');
   }
 
   String get remote_notification {
-    return Intl.message('Message Notification', name: 'remote_notification', desc: '');
+    return Intl.message('Message Notification',
+        name: 'remote_notification', desc: '');
   }
 
   String get pictures {
@@ -651,23 +697,28 @@ class NL10ns {
   }
 
   String get local_notification {
-    return Intl.message('Local Notification', name: 'local_notification', desc: '');
+    return Intl.message('Local Notification',
+        name: 'local_notification', desc: '');
   }
 
   String get local_notification_only_name {
-    return Intl.message('Only display name', name: 'local_notification_only_name', desc: '');
+    return Intl.message('Only display name',
+        name: 'local_notification_only_name', desc: '');
   }
 
   String get local_notification_both_name_message {
-    return Intl.message('Display name and message', name: 'local_notification_both_name_message', desc: '');
+    return Intl.message('Display name and message',
+        name: 'local_notification_both_name_message', desc: '');
   }
 
   String get local_notification_none_display {
-    return Intl.message('None display', name: 'local_notification_none_display', desc: '');
+    return Intl.message('None display',
+        name: 'local_notification_none_display', desc: '');
   }
 
   String get notification_sound {
-    return Intl.message('Notification Sound', name: 'notification_sound', desc: '');
+    return Intl.message('Notification Sound',
+        name: 'notification_sound', desc: '');
   }
 
   String get advanced {
@@ -743,11 +794,13 @@ class NL10ns {
   }
 
   String invites_desc_me(String other) {
-    return Intl.message('$other invites You to join group', name: 'invites_desc_me', desc: '', args: [other]);
+    return Intl.message('$other invites You to join group',
+        name: 'invites_desc_me', desc: '', args: [other]);
   }
 
   String invites_desc_other(String other) {
-    return Intl.message('You invites $other to join group', name: 'invites_desc_other', desc: '', args: [other]);
+    return Intl.message('You invites $other to join group',
+        name: 'invites_desc_other', desc: '', args: [other]);
   }
 
   String get accept {
@@ -756,7 +809,8 @@ class NL10ns {
 
   String get accepted => Intl.message('accepted', name: 'accepted', desc: '');
 
-  String get accepted_already => Intl.message('You have already accepted', name: 'accepted_already', desc: '');
+  String get accepted_already => Intl.message('You have already accepted',
+      name: 'accepted_already', desc: '');
 
   String get rejected => Intl.message('rejected', name: 'rejected', desc: '');
 
@@ -764,15 +818,20 @@ class NL10ns {
 
   String get debug => Intl.message('Debug', name: 'debug', desc: '');
 
-  String get subscribe => Intl.message('Subscribe', name: 'subscribe', desc: '');
+  String get subscribe =>
+      Intl.message('Subscribe', name: 'subscribe', desc: '');
 
-  String get subscribe_or_waiting => Intl.message('Subscribe or Waiting...', name: 'subscribe_or_waiting', desc: '');
+  String get subscribe_or_waiting => Intl.message('Subscribe or Waiting...',
+      name: 'subscribe_or_waiting', desc: '');
 
-  String get subscribed => Intl.message('Subscribed', name: 'subscribed', desc: '');
+  String get subscribed =>
+      Intl.message('Subscribed', name: 'subscribed', desc: '');
 
-  String get unsubscribe => Intl.message('Leave', name: 'unsubscribe', desc: '');
+  String get unsubscribe =>
+      Intl.message('Leave', name: 'unsubscribe', desc: '');
 
-  String get unsubscribed => Intl.message('Leaved', name: 'unsubscribed', desc: '');
+  String get unsubscribed =>
+      Intl.message('Leaved', name: 'unsubscribed', desc: '');
 
   String get menu_wallet {
     return Intl.message('Account', name: 'menu_wallet', desc: '');
@@ -803,19 +862,25 @@ class NL10ns {
   }
 
   String get no_wallet_title {
-    return Intl.message('Keep your NKN organised', name: 'no_wallet_title', desc: '');
+    return Intl.message('Keep your NKN organised',
+        name: 'no_wallet_title', desc: '');
   }
 
   String get no_wallet_desc {
-    return Intl.message('Manage both your Mainnet NKN\n tokens with our smart wallet manager.', name: 'no_wallet_desc', desc: '');
+    return Intl.message(
+        'Manage both your Mainnet NKN\n tokens with our smart wallet manager.',
+        name: 'no_wallet_desc',
+        desc: '');
   }
 
   String get no_wallet_create {
-    return Intl.message('Create New Account', name: 'no_wallet_create', desc: '');
+    return Intl.message('Create New Account',
+        name: 'no_wallet_create', desc: '');
   }
 
   String get no_wallet_import {
-    return Intl.message('Import Existing Account', name: 'no_wallet_import', desc: '');
+    return Intl.message('Import Existing Account',
+        name: 'no_wallet_import', desc: '');
   }
 
   String get import_wallet {
@@ -823,23 +888,28 @@ class NL10ns {
   }
 
   String get create_nkn_wallet {
-    return Intl.message('Create Mainnet Account', name: 'create_nkn_wallet', desc: '');
+    return Intl.message('Create Mainnet Account',
+        name: 'create_nkn_wallet', desc: '');
   }
 
   String get create_ethereum_wallet {
-    return Intl.message('Create Ethereum Account', name: 'create_ethereum_wallet', desc: '');
+    return Intl.message('Create Ethereum Account',
+        name: 'create_ethereum_wallet', desc: '');
   }
 
   String get import_nkn_wallet {
-    return Intl.message('Import Mainnet Account', name: 'import_nkn_wallet', desc: '');
+    return Intl.message('Import Mainnet Account',
+        name: 'import_nkn_wallet', desc: '');
   }
 
   String get import_ethereum_wallet {
-    return Intl.message('Import Ethereum Account', name: 'import_ethereum_wallet', desc: '');
+    return Intl.message('Import Ethereum Account',
+        name: 'import_ethereum_wallet', desc: '');
   }
 
   String get import_with_keystore_title {
-    return Intl.message('Import with Keystore', name: 'import_with_keystore_title', desc: '');
+    return Intl.message('Import with Keystore',
+        name: 'import_with_keystore_title', desc: '');
   }
 
   String get import_with_keystore_desc {
@@ -850,7 +920,8 @@ class NL10ns {
   }
 
   String get import_with_seed_title {
-    return Intl.message('Import with Seed', name: 'import_with_seed_title', desc: '');
+    return Intl.message('Import with Seed',
+        name: 'import_with_seed_title', desc: '');
   }
 
   String get import_with_seed_desc {
@@ -861,43 +932,55 @@ class NL10ns {
   }
 
   String get error_required {
-    return Intl.message('This field is required.', name: 'error_required', desc: '');
+    return Intl.message('This field is required.',
+        name: 'error_required', desc: '');
   }
 
   String error_field_required(String field) {
-    return Intl.message('$field is required.', name: 'error_field_required', desc: '', args: [field]);
+    return Intl.message('$field is required.',
+        name: 'error_field_required', desc: '', args: [field]);
   }
 
   String get error_confirm_password {
-    return Intl.message('Password does not match.', name: 'error_confirm_password', desc: '');
+    return Intl.message('Password does not match.',
+        name: 'error_confirm_password', desc: '');
   }
 
   String get error_keystore_format {
-    return Intl.message('Keystore format does not match.', name: 'error_keystore_format', desc: '');
+    return Intl.message('Keystore format does not match.',
+        name: 'error_keystore_format', desc: '');
   }
 
   String get error_seed_format {
-    return Intl.message('Seed format does not match.', name: 'error_seed_format', desc: '');
+    return Intl.message('Seed format does not match.',
+        name: 'error_seed_format', desc: '');
   }
 
   String get error_client_address_format {
-    return Intl.message('Client address format does not match.', name: 'error_client_address_format', desc: '');
+    return Intl.message('Client address format does not match.',
+        name: 'error_client_address_format', desc: '');
   }
 
   String get error_nkn_address_format {
-    return Intl.message('Invalid wallet address.', name: 'error_nkn_address_format', desc: '');
+    return Intl.message('Invalid wallet address.',
+        name: 'error_nkn_address_format', desc: '');
   }
 
   String get error_unknown_nkn_qrcode {
-    return Intl.message('Unknown NKN qr code.', name: 'error_unknown_nkn_qrcode', desc: '');
+    return Intl.message('Unknown NKN qr code.',
+        name: 'error_unknown_nkn_qrcode', desc: '');
   }
 
   String get chat_no_wallet_title {
-    return Intl.message('Private and Secure\n Messaging', name: 'chat_no_wallet_title', desc: '');
+    return Intl.message('Private and Secure\n Messaging',
+        name: 'chat_no_wallet_title', desc: '');
   }
 
   String get chat_no_wallet_desc {
-    return Intl.message('You need a Mainnet compatible wallet before you can use D-Chat.', name: 'chat_no_wallet_desc', desc: '');
+    return Intl.message(
+        'You need a Mainnet compatible wallet before you can use D-Chat.',
+        name: 'chat_no_wallet_desc',
+        desc: '');
   }
 
   String get chat_tab_messages {
@@ -913,27 +996,37 @@ class NL10ns {
   }
 
   String get chat_no_messages_title {
-    return Intl.message('Private and Secure\nMessaging', name: 'chat_no_messages_title', desc: '');
+    return Intl.message('Private and Secure\nMessaging',
+        name: 'chat_no_messages_title', desc: '');
   }
 
   String get chat_no_messages_desc {
-    return Intl.message('Start a new direct message or group chat, or join\nexisting ones..', name: 'chat_no_messages_desc', desc: '');
+    return Intl.message(
+        'Start a new direct message or group chat, or join\nexisting ones..',
+        name: 'chat_no_messages_desc',
+        desc: '');
   }
 
   String get contact_no_contact_title {
-    return Intl.message('You haven’t got any\n contacts yet', name: 'contact_no_contact_title', desc: '');
+    return Intl.message('You haven’t got any\n contacts yet',
+        name: 'contact_no_contact_title', desc: '');
   }
 
   String get contact_no_contact_desc {
-    return Intl.message('Use your contact list to quickly message and\n send funds to your friends.', name: 'contact_no_contact_desc', desc: '');
+    return Intl.message(
+        'Use your contact list to quickly message and\n send funds to your friends.',
+        name: 'contact_no_contact_desc',
+        desc: '');
   }
 
   String get update_burn_after_reading {
-    return Intl.message('set the disappearing message timer', name: 'update_burn_after_reading', desc: '');
+    return Intl.message('set the disappearing message timer',
+        name: 'update_burn_after_reading', desc: '');
   }
 
   String get close_burn_after_reading {
-    return Intl.message('disabled disappearing messages', name: 'close_burn_after_reading', desc: '');
+    return Intl.message('disabled disappearing messages',
+        name: 'close_burn_after_reading', desc: '');
   }
 
   String get joined_channel {
@@ -989,19 +1082,23 @@ class NL10ns {
   }
 
   String get hint_enter_wallet_name {
-    return Intl.message('Enter wallet name', name: 'hint_enter_wallet_name', desc: '');
+    return Intl.message('Enter wallet name',
+        name: 'hint_enter_wallet_name', desc: '');
   }
 
   String get input_password {
-    return Intl.message('Enter your local password', name: 'input_password', desc: '');
+    return Intl.message('Enter your local password',
+        name: 'input_password', desc: '');
   }
 
   String get input_password_again {
-    return Intl.message('Enter your password again', name: 'input_password_again', desc: '');
+    return Intl.message('Enter your password again',
+        name: 'input_password_again', desc: '');
   }
 
   String get input_keystore {
-    return Intl.message('Please paste keystore', name: 'input_keystore', desc: '');
+    return Intl.message('Please paste keystore',
+        name: 'input_keystore', desc: '');
   }
 
   String get input_seed {
@@ -1021,7 +1118,10 @@ class NL10ns {
   }
 
   String get private_messages_desc {
-    return Intl.message('All direct messages are completely private and secure.', name: 'private_messages_desc', desc: '');
+    return Intl.message(
+        'All direct messages are completely private and secure.',
+        name: 'private_messages_desc',
+        desc: '');
   }
 
   String get learn_more {
@@ -1029,11 +1129,15 @@ class NL10ns {
   }
 
   String get enter_or_select_a_user_pubkey {
-    return Intl.message('Enter/Select a user D-Chat ID', name: 'enter_or_select_a_user_pubkey', desc: '');
+    return Intl.message('Enter/Select a user D-Chat ID',
+        name: 'enter_or_select_a_user_pubkey', desc: '');
   }
 
   String get scan_show_me_desc {
-    return Intl.message('Scan the QR code pattern to add friends to your contacts.', name: 'scan_show_me_desc', desc: '');
+    return Intl.message(
+        'Scan the QR code pattern to add friends to your contacts.',
+        name: 'scan_show_me_desc',
+        desc: '');
   }
 
   String get nickname {
@@ -1045,7 +1149,8 @@ class NL10ns {
   }
 
   String get input_d_chat_address {
-    return Intl.message('Please input D-Chat ID', name: 'input_d_chat_address', desc: '');
+    return Intl.message('Please input D-Chat ID',
+        name: 'input_d_chat_address', desc: '');
   }
 
   String get tip_password_error {
@@ -1077,7 +1182,8 @@ class NL10ns {
   }
 
   String get d_not_backed_up_title {
-    return Intl.message('Important: Please Back Up\n Your Accounts!', name: 'd_not_backed_up_title', desc: '');
+    return Intl.message('Important: Please Back Up\n Your Accounts!',
+        name: 'd_not_backed_up_title', desc: '');
   }
 
   String get d_not_backed_up_desc {
@@ -1089,22 +1195,30 @@ class NL10ns {
 
   String get go_backup => Intl.message('Go Backup', name: 'go_backup');
 
-  String get select_asset_to_backup => Intl.message('Select Asset to Backup', name: 'select_asset_to_backup');
+  String get select_asset_to_backup =>
+      Intl.message('Select Asset to Backup', name: 'select_asset_to_backup');
 
-  String get create_account => Intl.message('Create Account', name: 'create_account');
+  String get create_account =>
+      Intl.message('Create Account', name: 'create_account');
 
-  String get import_wallet_as_account => Intl.message('Import Account', name: 'import_wallet_as_account');
+  String get import_wallet_as_account =>
+      Intl.message('Import Account', name: 'import_wallet_as_account');
 
-  String get transfer_initiated => Intl.message('Transfer Initiated', name: 'transfer_initiated');
+  String get transfer_initiated =>
+      Intl.message('Transfer Initiated', name: 'transfer_initiated');
 
-  String get transfer_initiated_desc =>
-      Intl.message('Your transfer is in progress. It could take a few seconds to appear on the blockchain.', name: 'transfer_initiated_desc');
+  String get transfer_initiated_desc => Intl.message(
+      'Your transfer is in progress. It could take a few seconds to appear on the blockchain.',
+      name: 'transfer_initiated_desc');
 
   String get tip => Intl.message('Tips', name: 'tip');
 
-  String get my_details_desc => Intl.message('All subscriptions and tipping will come from your selected wallet.', name: 'my_details_desc');
+  String get my_details_desc => Intl.message(
+      'All subscriptions and tipping will come from your selected wallet.',
+      name: 'my_details_desc');
 
-  String get change_default_chat_wallet => Intl.message('Change', name: 'change_default_chat_wallet');
+  String get change_default_chat_wallet =>
+      Intl.message('Change', name: 'change_default_chat_wallet');
 
   String get coming_soon => Intl.message('Coming Soon...', name: 'coming_soon');
 
@@ -1114,17 +1228,21 @@ class NL10ns {
 
   String get send_message => Intl.message('Send Message', name: 'send_message');
 
-  String get show_wallet_address_desc => Intl.message('Scan the QR code, you can transfer it to me', name: 'show_wallet_address_desc');
+  String get show_wallet_address_desc =>
+      Intl.message('Scan the QR code, you can transfer it to me',
+          name: 'show_wallet_address_desc');
 
-  String get account_switching_completed => Intl.message('Account switching Completed', name: 'account_switching_completed');
+  String get account_switching_completed =>
+      Intl.message('Account switching Completed',
+          name: 'account_switching_completed');
 
   String get storage_text => Intl.message('Storage', name: 'storage_text');
 
   String get export => Intl.message('Export', name: 'export');
 
-  String get eth_keystore_export_desc =>
-      Intl.message('The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.',
-          name: 'eth_keystore_export_desc');
+  String get eth_keystore_export_desc => Intl.message(
+      'The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.',
+      name: 'eth_keystore_export_desc');
 
   String get you => Intl.message('You', name: 'you');
 
@@ -1142,22 +1260,39 @@ class NL10ns {
 
   String get select => Intl.message('Select', name: 'select');
 
-  String get click_to_change => Intl.message('Click to change', name: 'click_to_change');
+  String get click_to_change =>
+      Intl.message('Click to change', name: 'click_to_change');
 
   String get top => Intl.message('Top', name: 'top');
 
   String get top_cancel => Intl.message('Cancel Top', name: 'top_cancel');
 
   String burn_after_reading_desc_disappear(String time) {
-    return Intl.message('Messages sent and received in this conversation will disappear $time after they have been seen.',
-        name: 'burn_after_reading_desc_disappear', desc: '', args: [time]);
+    return Intl.message(
+        'Messages sent and received in this conversation will disappear $time after they have been seen.',
+        name: 'burn_after_reading_desc_disappear',
+        desc: '',
+        args: [time]);
   }
 
-  String get burn_after_reading_desc => Intl.message('Your messages will not expire.', name: 'burn_after_reading_desc');
+  String get burn_after_reading_desc =>
+      Intl.message('Your messages will not expire.',
+          name: 'burn_after_reading_desc');
 
-  String get authenticate_to_access => Intl.message('authenticate to access', name: 'authenticate_to_access');
+  String get authenticate_to_access =>
+      Intl.message('authenticate to access', name: 'authenticate_to_access');
 
-  String get something_went_wrong => Intl.message('Oops, something went wrong! Please try again later.', name: 'something_went_wrong');
+  String get something_went_wrong =>
+      Intl.message('Oops, something went wrong! Please try again later.',
+          name: 'something_went_wrong');
+
+  String get unavailable_device => Intl.message(
+      'Not available for Android device without Google Service Currently',
+      name: 'unavailable_device');
+
+  String get slide_to_cancel => Intl.message(
+      '< Slide Cancel <',
+      name: 'slide_to_cancel');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NL10ns> {

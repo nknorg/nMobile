@@ -11,7 +11,14 @@ class ButtonIcon extends StatefulWidget {
   final double height;
   final VoidCallback onPressed;
 
-  ButtonIcon({this.text, this.icon, this.fontColor, this.padding, this.width, this.height, this.onPressed});
+  ButtonIcon(
+      {this.text,
+      this.icon,
+      this.fontColor,
+      this.padding,
+      this.width,
+      this.height,
+      this.onPressed});
 
   @override
   _ButtonIconState createState() => _ButtonIconState();
@@ -31,7 +38,9 @@ class _ButtonIconState extends State<ButtonIcon> {
                 Text(
                   widget.text,
                   softWrap: false,
-                  style: TextStyle(fontSize: DefaultTheme.iconTextFontSize, color: widget.fontColor),
+                  style: TextStyle(
+                      fontSize: DefaultTheme.iconTextFontSize,
+                      color: widget.fontColor),
                 )
               ],
       ),

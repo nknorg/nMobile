@@ -41,7 +41,8 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
       ),
       body: Builder(
         builder: (BuildContext context) => BodyBox(
-          padding: EdgeInsets.only(top: 0, left: 20.w, right: 20.w, bottom: 100.h),
+          padding:
+              EdgeInsets.only(top: 0, left: 20.w, right: 20.w, bottom: 100.h),
           color: DefaultTheme.backgroundColor1,
           child: Container(
             width: double.infinity,
@@ -51,7 +52,8 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
               children: <Widget>[
                 Padding(
                   padding: EdgeInsets.only(),
-                  child: loadAssetChatPng('messages', width: 198.w, height: 144.h),
+                  child:
+                      loadAssetChatPng('messages', width: 198.w, height: 144.h),
                 ),
                 Expanded(
                   flex: 0,
@@ -87,7 +89,8 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                         child: Button(
                           text: NL10ns.of(context).no_wallet_create,
                           onPressed: () {
-                            Navigator.pushNamed(context, CreateNknWalletScreen.routeName);
+                            Navigator.pushNamed(
+                                context, CreateNknWalletScreen.routeName);
                           },
                         ),
                       ),
@@ -95,10 +98,13 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                         padding: EdgeInsets.only(top: 16),
                         child: Button(
                           text: NL10ns.of(context).no_wallet_import,
-                          backgroundColor: DefaultTheme.primaryColor.withAlpha(20),
+                          backgroundColor:
+                              DefaultTheme.primaryColor.withAlpha(20),
                           fontColor: DefaultTheme.primaryColor,
                           onPressed: () {
-                            Navigator.pushNamed(context, ImportWalletScreen.routeName, arguments: WalletType.nkn);
+                            Navigator.pushNamed(
+                                context, ImportWalletScreen.routeName,
+                                arguments: WalletType.nkn);
                           },
                         ),
                       ),

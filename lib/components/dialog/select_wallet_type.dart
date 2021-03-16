@@ -17,7 +17,8 @@ class SelectWalletTypeDialog extends StatefulWidget {
     return showModalBottomSheet<WalletType>(
       context: _context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
       backgroundColor: DefaultTheme.backgroundLightColor,
       builder: (BuildContext context) {
         return AnimatedPadding(
@@ -56,11 +57,15 @@ class _SelectWalletTypeDialogState extends State<SelectWalletTypeDialog> {
             children: [
               Text(
                 NL10ns.of(context).select_wallet_type,
-                style: TextStyle(fontSize: DefaultTheme.h2FontSize, color: Colours.dark_2d, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: DefaultTheme.h2FontSize,
+                    color: Colours.dark_2d,
+                    fontWeight: FontWeight.bold),
               ),
               Text(
                 NL10ns.of(context).select_wallet_type_desc,
-                style: TextStyle(fontSize: DefaultTheme.h4FontSize, color: Colours.gray_81),
+                style: TextStyle(
+                    fontSize: DefaultTheme.h4FontSize, color: Colours.gray_81),
               ).pad(t: 8),
               _getItemNkn(context),
               Container(height: 1, color: Colours.light_e9).pad(l: 64, t: 16),
@@ -89,16 +94,24 @@ class _SelectWalletTypeDialogState extends State<SelectWalletTypeDialog> {
         ),
         Text(
           NL10ns.of(context).nkn_mainnet,
-          style: TextStyle(fontSize: DefaultTheme.h3FontSize, color: Colours.dark_2d, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              fontSize: DefaultTheme.h3FontSize,
+              color: Colours.dark_2d,
+              fontWeight: FontWeight.bold),
         ).pad(l: 16),
         Spacer(),
         Container(
           alignment: Alignment.center,
           padding: 2.pad(l: 8, r: 8),
-          decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.green_06_a1p),
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(9)),
+              color: Colours.green_06_a1p),
           child: Text(
             NL10ns.of(context).mainnet,
-            style: TextStyle(color: Colours.green_06, fontSize: 10, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: Colours.green_06,
+                fontSize: 10,
+                fontWeight: FontWeight.bold),
           ),
         )
       ],
@@ -119,20 +132,29 @@ class _SelectWalletTypeDialogState extends State<SelectWalletTypeDialog> {
             borderRadius: BorderRadius.all(Radius.circular(8)),
             color: Colours.light_ff,
           ),
-          child: SvgPicture.asset('assets/icon_eth_15_24.svg', color: Colours.purple_53),
+          child: SvgPicture.asset('assets/icon_eth_15_24.svg',
+              color: Colours.purple_53),
         ),
         Text(
           NL10ns.of(context).ethereum,
-          style: TextStyle(fontSize: DefaultTheme.h3FontSize, color: Colours.dark_2d, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              fontSize: DefaultTheme.h3FontSize,
+              color: Colours.dark_2d,
+              fontWeight: FontWeight.bold),
         ).pad(l: 16),
         Spacer(),
         Container(
           alignment: Alignment.center,
           padding: 2.pad(l: 8, r: 8),
-          decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.purple_53_a1p),
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(9)),
+              color: Colours.purple_53_a1p),
           child: Text(
             NL10ns.of(context).ERC_20,
-            style: TextStyle(color: Colours.purple_53, fontSize: 10, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: Colours.purple_53,
+                fontSize: 10,
+                fontWeight: FontWeight.bold),
           ),
         )
       ],

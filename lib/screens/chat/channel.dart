@@ -6,8 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:nmobile/blocs/chat/auth_bloc.dart';
-import 'package:nmobile/blocs/chat/auth_state.dart';
 import 'package:nmobile/blocs/chat/channel_bloc.dart';
 import 'package:nmobile/blocs/chat/channel_state.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
@@ -77,21 +75,23 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   bool showJoin = true;
   bool isInBlackList = false;
 
-  ContactSchema currentUser;
-
   initAsync() async {
-    var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit);
+    var res =
+        await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit);
     if (res != null) {
       setState(() {
         _messages = res;
       });
     }
 
-    _contactBloc.add(LoadContact(address: res.where((x) => !x.isSendMessage()).map((x) => x.from).toList()));
-    _contactBloc.add(LoadContactInfoEvent(NKNClientCaller.currentChatId));
+    _contactBloc.add(LoadContact(
+        address:
+            res.where((x) => !x.isSendMessage()).map((x) => x.from).toList()));
+
     _chatBloc.add(RefreshMessageListEvent(target: targetId));
+
     final topic = widget.arguments.topic;
-    if (topic == null){
+    if (topic == null) {
       Navigator.pop(context);
     }
     refreshTop(topic.topic);
@@ -119,35 +119,39 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     }
   }
 
-  refreshTop(String topicName) async{
-    if (topicName != null){
-      NLog.w('refreshTop topic Name__'+topicName);
+  refreshTop(String topicName) async {
+    if (topicName != null) {
+      NLog.w('refreshTop topic Name__' + topicName);
     }
-    showJoin = await GroupChatHelper.checkMemberIsInGroup(NKNClientCaller.currentChatId, topicName);
-    if (showJoin != null){
-      NLog.w('is in group +'+topicName+'__'+showJoin.toString());
+    showJoin = await GroupChatHelper.checkMemberIsInGroup(
+        NKNClientCaller.currentChatId, topicName);
+    if (showJoin != null) {
+      NLog.w('is in group +' + topicName + '__' + showJoin.toString());
     }
-    if (showJoin){
+    if (showJoin) {
       _refreshSubscribers();
-    }
-    else{
+    } else {
       ///work todo
       showToast('No longer in This Group');
+
       /// 删除本地Topic
       // GroupChatHelper.removeTopicAndSubscriber(topicName);
       Timer(Duration(milliseconds: 1200), () {
-        Navigator.pop(context,true);
+        Navigator.pop(context, true);
       });
     }
   }
 
   Future _loadMore() async {
-    var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit, skip: _skip);
+    var res = await MessageSchema.getAndReadTargetMessages(targetId,
+        limit: _limit, skip: _skip);
 
-    if (res == null){
+    if (res == null) {
       return;
     }
-    _contactBloc.add(LoadContact(address: res.where((x) => !x.isSendMessage()).map((x) => x.from).toList()));
+    _contactBloc.add(LoadContact(
+        address:
+            res.where((x) => !x.isSendMessage()).map((x) => x.from).toList()));
     _chatBloc.add(RefreshMessageListEvent(target: targetId));
     if (res != null) {
       _skip += res.length;
@@ -180,24 +184,27 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
         if (state is MessageUpdateState && mounted) {
           MessageSchema updateMessage = state.message;
 
-          if (updateMessage == null || updateMessage.topic == null) {
+          if (updateMessage != null) {
             if (_messages != null && _messages.length > 0) {
               if (updateMessage.contentType == ContentType.receipt) {
-                var receiptMessage = _messages.firstWhere((x) =>
-                x.msgId == updateMessage.content && x.isSendMessage(),
+                var receiptMessage = _messages.firstWhere(
+                    (x) =>
+                        x.msgId == updateMessage.content && x.isSendMessage(),
                     orElse: () => null);
                 if (receiptMessage != null) {
                   setState(() {
-                    receiptMessage.setMessageStatus(MessageStatus.MessageSendReceipt);
+                    receiptMessage
+                        .setMessageStatus(MessageStatus.MessageSendReceipt);
                   });
                 }
+                return;
               }
             }
-            return;
           }
 
-          var receivedMessage = _messages.firstWhere((x) =>
-          x.msgId == updateMessage.msgId && x.isSendMessage() == false,
+          var receivedMessage = _messages.firstWhere(
+              (x) =>
+                  x.msgId == updateMessage.msgId && x.isSendMessage() == false,
               orElse: () => null);
           if (receivedMessage != null) {
             setState(() {
@@ -207,7 +214,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             return;
           }
 
-          if (updateMessage.isSendMessage() == false && updateMessage.topic == targetId) {
+          if (updateMessage.isSendMessage() == false &&
+              updateMessage.topic == targetId) {
             _contactBloc.add(LoadContact(address: [updateMessage.from]));
 
             if (updateMessage.contentType == ContentType.text ||
@@ -215,7 +223,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 updateMessage.contentType == ContentType.nknImage ||
                 updateMessage.contentType == ContentType.media ||
                 updateMessage.contentType == ContentType.nknAudio) {
-
               updateMessage.messageStatus = MessageStatus.MessageReceived;
               updateMessage.markMessageRead().then((n) {
                 updateMessage.messageStatus = MessageStatus.MessageReceivedRead;
@@ -235,7 +242,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       });
 
       _scrollController.addListener(() {
-        double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
+        double offsetFromBottom = _scrollController.position.maxScrollExtent -
+            _scrollController.position.pixels;
         if (offsetFromBottom < 50 && !loading) {
           loading = true;
           _loadMore().then((v) {
@@ -244,7 +252,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
         }
       });
 
-      String content = LocalStorage.getChatUnSendContentFromId(NKNClientCaller.currentChatId, targetId) ?? '';
+      String content = LocalStorage.getChatUnSendContentFromId(
+              NKNClientCaller.currentChatId, targetId) ??
+          '';
       if (mounted)
         setState(() {
           _sendController.text = content;
@@ -256,7 +266,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   @override
   void dispose() {
     Global.currentOtherChatId = null;
-    LocalStorage.saveChatUnSendContentWithId(NKNClientCaller.currentChatId, targetId, content: _sendController.text);
+    LocalStorage.saveChatUnSendContentWithId(
+        NKNClientCaller.currentChatId, targetId,
+        content: _sendController.text);
     _chatBloc.add(RefreshMessageListEvent());
     _chatSubscription?.cancel();
     _scrollController?.dispose();
@@ -268,7 +280,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   }
 
   _sendText() async {
-    LocalStorage.saveChatUnSendContentWithId(NKNClientCaller.currentChatId, targetId);
+    LocalStorage.saveChatUnSendContentWithId(
+        NKNClientCaller.currentChatId, targetId);
     String text = _sendController.text;
     if (text == null || text.length == 0) return;
     _sendController.clear();
@@ -279,20 +292,25 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     String contentType = ContentType.text;
     Duration deleteAfterSeconds;
 
-    var sendMsg = MessageSchema.fromSendData(from: NKNClientCaller.currentChatId, topic: dest, content: text, contentType: contentType, deleteAfterSeconds: deleteAfterSeconds);
+    var sendMsg = MessageSchema.fromSendData(
+        from: NKNClientCaller.currentChatId,
+        topic: dest,
+        content: text,
+        contentType: contentType,
+        deleteAfterSeconds: deleteAfterSeconds);
     try {
       _chatBloc.add(SendMessageEvent(sendMsg));
       setState(() {
         _messages.insert(0, sendMsg);
       });
     } catch (e) {
-      if (e != null){
-        NLog.w('_sendText E'+e.toString());
+      if (e != null) {
+        NLog.w('_sendText E' + e.toString());
       }
     }
   }
 
-  _sendAudio(File audioFile,double audioDuration) async{
+  _sendAudio(File audioFile, double audioDuration) async {
     String dest = targetId;
     var sendMsg = MessageSchema.fromSendData(
       from: NKNClientCaller.currentChatId,
@@ -307,8 +325,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       });
       _chatBloc.add(SendMessageEvent(sendMsg));
     } catch (e) {
-      if (e != null){
-        NLog.w('_sendAudio E:'+e.toString());
+      if (e != null) {
+        NLog.w('_sendAudio E:' + e.toString());
       }
     }
   }
@@ -328,14 +346,15 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
         _messages.insert(0, sendMsg);
       });
     } catch (e) {
-      NLog.w('Send Image Message E:'+e.toString());
+      NLog.w('Send Image Message E:' + e.toString());
     }
   }
 
   getImageFile({@required ImageSource source}) async {
     FocusScope.of(context).requestFocus(FocusNode());
     try {
-      File image = await getCameraFile(NKNClientCaller.currentChatId, source: source);
+      File image =
+          await getCameraFile(NKNClientCaller.currentChatId, source: source);
       if (image != null) {
         _sendImage(image);
       }
@@ -360,65 +379,84 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> topicWidget = [Label(widget.arguments.topic.shortName, type: LabelType.h3, dark: true)];
+    List<Widget> topicWidget = [
+      Label(widget.arguments.topic.shortName, type: LabelType.h3, dark: true)
+    ];
     if (widget.arguments.topic.isPrivate) {
-      topicWidget.insert(0, loadAssetIconsImage('lock', width: 18, color: DefaultTheme.fontLightColor).pad(r: 2));
+      topicWidget.insert(
+          0,
+          loadAssetIconsImage('lock',
+                  width: 18, color: DefaultTheme.fontLightColor)
+              .pad(r: 2));
     }
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
         titleChild: GestureDetector(
           onTap: () async {
-            Navigator.of(context).pushNamed(ChannelSettingsScreen.routeName, arguments: widget.arguments.topic).then((v) {
-              if (v == true){
+            Navigator.of(context)
+                .pushNamed(ChannelSettingsScreen.routeName,
+                    arguments: widget.arguments.topic)
+                .then((v) {
+              if (v == true) {
                 Navigator.of(context).pop(true);
               }
             });
           },
-          child: Flex(direction: Axis.horizontal, mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
-            Expanded(
-              flex: 0,
-              child: Container(
-                padding: EdgeInsets.only(right: 10.w),
-                alignment: Alignment.center,
-                child: Hero(
-                  tag: 'avatar:${targetId}',
+          child: Flex(
+              direction: Axis.horizontal,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                Expanded(
+                  flex: 0,
                   child: Container(
-                    child: CommonUI.avatarWidget(
-                      radiusSize: 24,
-                      topic: widget.arguments.topic,
+                    padding: EdgeInsets.only(right: 10.w),
+                    alignment: Alignment.center,
+                    child: Hero(
+                      tag: 'avatar:${targetId}',
+                      child: Container(
+                        child: CommonUI.avatarWidget(
+                          radiusSize: 24,
+                          topic: widget.arguments.topic,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-            Expanded(
-              flex: 1,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(children: topicWidget),
-                  BlocBuilder<ChannelBloc, ChannelState>(builder: (context, state) {
-                    if (state is ChannelMembersState){
-                      if (state.memberCount != null && state.topicName == targetId) {
-                        _topicCount = state.memberCount;
-                      }
-                    }
-                    return Label(
-                      '${(_topicCount == null || _topicCount < 0) ? '--' : _topicCount} ' + NL10ns.of(context).members,
-                      type: LabelType.bodySmall,
-                      color: DefaultTheme.riseColor,
-                    ).pad(l: widget.arguments.topic.type == TopicType.private ? 20 : 0);
-                  })
-                ],
-              ),
-            )
-          ]),
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: topicWidget),
+                      BlocBuilder<ChannelBloc, ChannelState>(
+                          builder: (context, state) {
+                        if (state is ChannelMembersState) {
+                          if (state.memberCount != null &&
+                              state.topicName == targetId) {
+                            _topicCount = state.memberCount;
+                          }
+                        }
+                        return Label(
+                          '${(_topicCount == null || _topicCount < 0) ? '--' : _topicCount} ' +
+                              NL10ns.of(context).members,
+                          type: LabelType.bodySmall,
+                          color: DefaultTheme.riseColor,
+                        ).pad(
+                            l: widget.arguments.topic.type == TopicType.private
+                                ? 20
+                                : 0);
+                      })
+                    ],
+                  ),
+                )
+              ]),
         ),
         backgroundColor: DefaultTheme.backgroundColor4,
         action: FlatButton(
           onPressed: () {
-            Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: widget.arguments.topic);
+            Navigator.of(context).pushNamed(ChannelMembersScreen.routeName,
+                arguments: widget.arguments.topic);
           },
           child: loadAssetChatPng('group', width: 22),
         ).sized(w: 72),
@@ -437,7 +475,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                   Expanded(
                     flex: 1,
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 12, right: 16, top: 4),
+                      padding:
+                          const EdgeInsets.only(left: 12, right: 16, top: 4),
                       child: ListView.builder(
                         reverse: true,
                         padding: const EdgeInsets.only(bottom: 8),
@@ -446,49 +485,85 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                         physics: const AlwaysScrollableScrollPhysics(),
                         itemBuilder: (BuildContext context, int index) {
                           var message = _messages[index];
+
+                          String fromShow = '';
+
                           bool showTime;
                           bool hideHeader = false;
                           if (index + 1 >= _messages.length) {
                             showTime = true;
                           } else {
-                            var preMessage = index == _messages.length ? message : _messages[index + 1];
+                            var preMessage = index == _messages.length
+                                ? message
+                                : _messages[index + 1];
                             if (preMessage.contentType == ContentType.text ||
-                                preMessage.contentType == ContentType.nknImage ||
+                                preMessage.contentType ==
+                                    ContentType.nknImage ||
                                 preMessage.contentType == ContentType.media ||
-                                preMessage.contentType == ContentType.nknAudio) {
-                              showTime = (message.timestamp.isAfter(preMessage.timestamp.add(Duration(minutes: 3))));
+                                preMessage.contentType ==
+                                    ContentType.nknAudio) {
+                              showTime = (message.timestamp.isAfter(preMessage
+                                  .timestamp
+                                  .add(Duration(minutes: 3))));
                             } else {
                               showTime = true;
                             }
                           }
 
                           if (!showTime) {
-                            var preMessage = index == _messages.length ? message : _messages[index + 1];
-                            hideHeader = message.from == preMessage.from;
+                            if (index == _messages.length) {
+                              hideHeader = false;
+                            } else {
+                              var preMessage = _messages[index + 1];
+                              if (preMessage.contentType == ContentType.text ||
+                                  preMessage.contentType == ContentType.media ||
+                                  preMessage.contentType ==
+                                      ContentType.nknAudio ||
+                                  preMessage.contentType ==
+                                      ContentType.nknImage) {
+                                if (message.from == preMessage.from) {
+                                  hideHeader = true;
+                                }
+                              }
+                            }
                           }
-                          return BlocBuilder<ContactBloc, ContactState>(builder: (context, state) {
+                          return BlocBuilder<ContactBloc, ContactState>(
+                              builder: (context, state) {
+                            // if (state is LoadContactInfoState){
+                            //   ContactSchema contact;
+                            //   if (contact == null){
+                            //     contact = state.userInfo;
+                            //   }
+                            // }
                             ContactSchema contact;
                             if (state is ContactLoaded) {
-                              contact = state.getContactByAddress(message.from);
+                              if (contact == null) {
+                                contact =
+                                    state.getContactByAddress(message.from);
+                                if (message.from != null &&
+                                    message.from.length > 6) {
+                                  fromShow = message.from.substring(0, 6);
+                                }
+                              } else {
+                                fromShow = contact.getShowName;
+                              }
                             }
-                            else if (state is LoadContactInfoState){
-                              currentUser = state.userInfo;
-                            }
-                            if (message.contentType == ContentType.eventSubscribe) {
+                            if (message.contentType ==
+                                ContentType.eventSubscribe) {
                               return ChatSystem(
                                 child: Wrap(
                                   alignment: WrapAlignment.center,
                                   crossAxisAlignment: WrapCrossAlignment.center,
                                   children: <Widget>[
-                                    Label('${message.isSendMessage() ? currentUser?.getShowName : contact?.getShowName} ${NL10ns.of(context).joined_channel}'),
+                                    Label(
+                                        '${message.isSendMessage() ? NL10ns.of(context).you : fromShow} ${NL10ns.of(context).joined_channel}'),
                                   ],
                                 ),
                               );
-                            }
-                            else if (message.contentType == ContentType.eventUnsubscribe){
+                            } else if (message.contentType ==
+                                ContentType.eventUnsubscribe) {
                               return Container();
-                            }
-                            else {
+                            } else {
                               if (message.isSendMessage()) {
                                 return ChatBubble(
                                   message: message,
@@ -503,20 +578,23 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                   hideHeader: hideHeader,
                                   onChanged: (String v) {
                                     setState(() {
-                                      _sendController.text = _sendController.text + ' @$v ';
+                                      _sendController.text =
+                                          _sendController.text + ' @$v ';
                                       _canSend = true;
                                     });
                                   },
                                 );
                               }
                             }
+                            return Container();
                           });
                         },
                       ),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.only(left: 0, right: 0, top: 15, bottom: 15),
+                    padding: const EdgeInsets.only(
+                        left: 0, right: 0, top: 15, bottom: 15),
                     constraints: BoxConstraints(minHeight: 70, maxHeight: 160),
                     child: getBottomView(),
                   ),
@@ -553,7 +631,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                     height: 71,
                     child: FlatButton(
                       color: DefaultTheme.backgroundColor1,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8))),
                       child: loadAssetIconsImage(
                         'image',
                         width: 32,
@@ -584,7 +663,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                     height: 71,
                     child: FlatButton(
                       color: DefaultTheme.backgroundColor1,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8))),
                       child: loadAssetIconsImage(
                         'camera',
                         width: 32,
@@ -617,7 +697,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       return Button(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[Label(NL10ns.of(context).subscribe_or_waiting, type: LabelType.h3)],
+          children: <Widget>[
+            Label(NL10ns.of(context).subscribe_or_waiting, type: LabelType.h3)
+          ],
         ),
         backgroundColor: DefaultTheme.primaryColor,
         width: double.infinity,
@@ -631,7 +713,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 topicName: widget.arguments.topic.topic,
                 chatBloc: _chatBloc,
                 callback: (success, e) {
-                  if (success){
+                  if (success) {
                     NLog.w('getBottomView joinChannel success');
                   }
                   refreshTop(widget.arguments.topic.topic);
@@ -655,7 +737,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             child: ButtonIcon(
               width: 50,
               height: 50,
-              icon: loadAssetIconsImage('grid', width: 24, color: DefaultTheme.primaryColor),
+              icon: loadAssetIconsImage('grid',
+                  width: 24, color: DefaultTheme.primaryColor),
               onPressed: () {
                 _toggleBottomMenu();
               },
@@ -688,11 +771,13 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                     },
                     style: TextStyle(fontSize: 14, height: 1.4),
                     decoration: InputDecoration(
-                      contentPadding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
                       hintText: NL10ns.of(context).type_a_message,
                       border: UnderlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(20.w)),
-                        borderSide: const BorderSide(width: 0, style: BorderStyle.none),
+                        borderSide:
+                            const BorderSide(width: 0, style: BorderStyle.none),
                       ),
                     ),
                   ),
@@ -711,7 +796,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
               icon: loadAssetIconsImage(
                 'send',
                 width: 24,
-                color: _canSend ? DefaultTheme.primaryColor : DefaultTheme.fontColor2,
+                color: _canSend
+                    ? DefaultTheme.primaryColor
+                    : DefaultTheme.fontColor2,
               ),
               //disabled: !_canSend,
               onPressed: () {

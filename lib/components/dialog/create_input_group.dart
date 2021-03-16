@@ -71,7 +71,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 14),
+                padding: const EdgeInsets.only(
+                    left: 20, right: 20, top: 24, bottom: 14),
                 child: Label(
                   NL10ns.of(context).create_channel,
                   type: LabelType.h3,
@@ -168,7 +169,9 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                                   ),
                                   RotatedBox(
                                     quarterTurns: _showFeeLayout ? 2 : 0,
-                                    child: loadAssetIconsImage('down', color: DefaultTheme.primaryColor, width: 20),
+                                    child: loadAssetIconsImage('down',
+                                        color: DefaultTheme.primaryColor,
+                                        width: 20),
                                   ),
                                 ],
                               ),
@@ -185,7 +188,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                       child: Column(
                         children: <Widget>[
                           Padding(
-                            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 8),
+                            padding: const EdgeInsets.only(
+                                left: 20, right: 20, bottom: 8),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.center,
@@ -210,7 +214,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                                     onSaved: (v) => _fee = double.parse(v ?? 0),
                                     onChanged: (v) {
                                       setState(() {
-                                        double fee = v.isNotEmpty ? double.parse(v) : 0;
+                                        double fee =
+                                            v.isNotEmpty ? double.parse(v) : 0;
                                         if (fee > _sliderFeeMax) {
                                           fee = _sliderFeeMax;
                                         } else if (fee < _sliderFeeMin) {
@@ -230,18 +235,23 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                                         ),
                                       ),
                                     ),
-                                    keyboardType: TextInputType.numberWithOptions(
+                                    keyboardType:
+                                        TextInputType.numberWithOptions(
                                       decimal: true,
                                     ),
                                     textInputAction: TextInputAction.done,
-                                    inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
+                                    inputFormatters: [
+                                      WhitelistingTextInputFormatter(
+                                          RegExp(r'^[0-9]+\.?[0-9]{0,8}'))
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(left: 16, right: 8, top: 0),
+                            padding: const EdgeInsets.only(
+                                left: 16, right: 8, top: 0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
@@ -264,7 +274,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(left: 8, right: 6, top: 0),
+                            padding: const EdgeInsets.only(
+                                left: 8, right: 6, top: 0),
                             child: Slider(
                               value: _sliderFee,
                               onChanged: (v) {
@@ -294,7 +305,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
               SizedBox(height: 10),
               getPopularView(),
               Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 10),
+                padding: const EdgeInsets.only(
+                    left: 20, right: 20, top: 8, bottom: 10),
                 child: Button(
                   text: NL10ns.of(context).continue_text,
                   width: double.infinity,
@@ -330,7 +342,9 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
               Container(
                 height: 40.h,
                 width: 40.w,
-                decoration: BoxDecoration(color: item.titleBgColor, borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(
+                    color: item.titleBgColor,
+                    borderRadius: BorderRadius.circular(8)),
                 child: Center(
                   child: Label(
                     item.title,
@@ -388,7 +402,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
     );
   }
 
-  _createOrJoinGroupSuccess(String topicName) async{
+  _createOrJoinGroupSuccess(String topicName) async {
     await GroupChatHelper.insertTopicIfNotExists(topicName);
     var group = await GroupChatHelper.fetchTopicInfoByName(topicName);
     Navigator.of(context).pushReplacementNamed(
@@ -411,10 +425,9 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
       }
     }
     var group = await GroupChatHelper.fetchTopicInfoByName(topicName);
-    if (group != null){
+    if (group != null) {
       _createOrJoinGroupSuccess(topicName);
-    }
-    else {
+    } else {
       setState(() {
         _loading = true;
       });
@@ -429,7 +442,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                 // TODO: delay pull action at least 3 minutes.
                 GroupChatPrivateChannel.pullSubscribersPrivateChannel(
                     topicName: topicName,
-                    membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
+                    membersBloc:
+                        BlocProvider.of<ChannelBloc>(Global.appContext),
                     needUploadMetaCallback: (topicName) {
                       GroupChatPrivateChannel.uploadPermissionMeta(
                         topicName: topicName,
@@ -444,10 +458,9 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                 );
               }
               _createOrJoinGroupSuccess(topicName);
-            }
-            else {
-              if (e != null){
-                NLog.w('Create Or join Group E:'+e.toString());
+            } else {
+              if (e != null) {
+                NLog.w('Create Or join Group E:' + e.toString());
               }
               showToast('create_input_group topic failed');
             }

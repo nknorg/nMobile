@@ -25,6 +25,7 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/nkn_image_utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/data/contact_data_center.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';
@@ -49,11 +50,12 @@ class ChatSinglePage extends StatefulWidget {
   _ChatSinglePageState createState() => _ChatSinglePageState();
 }
 
-class _ChatSinglePageState extends State<ChatSinglePage>{
+class _ChatSinglePageState extends State<ChatSinglePage> {
   /// block provider
   ChatBloc _chatBloc;
   String targetId;
   StreamSubscription _chatSubscription;
+
   ScrollController _scrollController = ScrollController();
   FocusNode _sendFocusNode = FocusNode();
   TextEditingController _sendController = TextEditingController();
@@ -84,7 +86,8 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
 
   Future _loadMore() async {
     NLog.w('ChatMessage _loadMore called');
-    var res = await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit, skip: _skip);
+    var res = await MessageSchema.getAndReadTargetMessages(targetId,
+        limit: _limit, skip: _skip);
     _chatBloc.add(RefreshMessageListEvent(target: targetId));
     if (res != null) {
       _skip += res.length;
@@ -98,7 +101,8 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     _deleteTick = Timer.periodic(Duration(seconds: 1), (timer) {
       _messages.removeWhere((item) {
         if (item.deleteTime != null) {
-          int afterSeconds = item.deleteTime.difference(DateTime.now()).inSeconds;
+          int afterSeconds =
+              item.deleteTime.difference(DateTime.now()).inSeconds;
           item.burnAfterSeconds = afterSeconds;
           if (item.burnAfterSeconds < 0) {
             item.deleteMessage();
@@ -119,18 +123,15 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     super.initState();
 
     chatContact = widget.arguments.contact;
-    chatContact.requestProfile(RequestType.header);
-
+    ContactDataCenter.requestProfile(chatContact, RequestType.header);
 
     targetId = chatContact.clientAddress;
 
-    if (chatContact.notificationOpen == null){
-      chatContact.setNotificationOpen(false);
-      _acceptNotification = false;
-    }
-    else{
+    _acceptNotification = false;
+    if (chatContact.notificationOpen != null) {
       _acceptNotification = chatContact.notificationOpen;
     }
+
     Global.currentOtherChatId = targetId;
 
     _sendFocusNode.addListener(() {
@@ -147,8 +148,8 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     _deleteTickHandle();
 
     _chatSubscription = _chatBloc.listen((state) {
-      if (state is UpdateChatMessageState){
-        if (state.messageList.isNotEmpty){
+      if (state is UpdateChatMessageState) {
+        if (state.messageList.isNotEmpty) {
           setState(() {
             _messages = state.messageList;
           });
@@ -160,9 +161,26 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
           return;
         }
 
-        if (updateMessage.contentType == ContentType.receipt){
+        if (updateMessage.deleteAfterSeconds != null) {
+          if (chatContact.options != null) {
+            if (chatContact.options.updateBurnAfterTime == null ||
+                updateMessage.timestamp.millisecondsSinceEpoch >
+                    chatContact.options.updateBurnAfterTime) {
+              NLog.w('!!!!contact.setBurnOption ___' +
+                  updateMessage.deleteAfterSeconds.toString());
+              chatContact.setBurnOptions(updateMessage.deleteAfterSeconds);
+              setState(() {});
+            }
+          }
+        }
+
+        if (updateMessage.contentType == ContentType.receipt) {
           if (_messages != null && _messages.length > 0) {
-            var msg = _messages.firstWhere((x) => x.msgId == updateMessage.content.toString() && x.isSendMessage(), orElse: () => null);
+            var msg = _messages.firstWhere(
+                (x) =>
+                    x.msgId == updateMessage.content.toString() &&
+                    x.isSendMessage(),
+                orElse: () => null);
             if (msg != null) {
               setState(() {
                 msg.messageStatus = MessageStatus.MessageSendReceipt;
@@ -173,38 +191,36 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
             }
           }
         }
-        if (updateMessage.isSendMessage()){
+        if (updateMessage.isSendMessage()) {
           if (updateMessage.contentType == ContentType.eventContactOptions) {
-            var receivedMessage = _messages.firstWhere((x) =>
-            x.msgId == updateMessage.msgId,
+            var receivedMessage = _messages.firstWhere(
+                (x) => x.msgId == updateMessage.msgId,
                 orElse: () => null);
             if (receivedMessage == null) {
               setState(() {
                 NLog.w('SingleChat MessageUpdateState duplicate');
-              });
-              setState(() {
                 _messages.insert(0, updateMessage);
               });
               return;
             }
           }
-        }
-        else {
-          if (updateMessage.from == targetId){
+        } else {
+          if (updateMessage.from == targetId) {
             if (updateMessage.contentType == ContentType.text ||
                 updateMessage.contentType == ContentType.textExtension ||
                 updateMessage.contentType == ContentType.nknImage ||
                 updateMessage.contentType == ContentType.media ||
                 updateMessage.contentType == ContentType.nknAudio ||
                 updateMessage.contentType == ContentType.channelInvitation ||
-                updateMessage.contentType == ContentType.eventContactOptions){
-
+                updateMessage.contentType == ContentType.eventContactOptions) {
               if (updateMessage.contentType == ContentType.textExtension ||
                   updateMessage.contentType == ContentType.nknImage ||
                   updateMessage.contentType == ContentType.media ||
-                  updateMessage.contentType == ContentType.nknAudio){
-                if (updateMessage.options != null && updateMessage.options['deleteAfterSeconds'] != null) {
-                  updateMessage.deleteTime = DateTime.now().add(Duration(seconds: updateMessage.options['deleteAfterSeconds']));
+                  updateMessage.contentType == ContentType.nknAudio) {
+                if (updateMessage.options != null &&
+                    updateMessage.options['deleteAfterSeconds'] != null) {
+                  updateMessage.deleteTime = DateTime.now().add(Duration(
+                      seconds: updateMessage.options['deleteAfterSeconds']));
                   updateMessage.updateDeleteTime();
                 }
               }
@@ -216,7 +232,8 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
               updateMessage.setMessageStatus(MessageStatus.MessageReceived);
               updateMessage.markMessageRead().then((value) {
                 _chatBloc.add(RefreshMessageListEvent());
-                updateMessage.setMessageStatus(MessageStatus.MessageReceivedRead);
+                updateMessage
+                    .setMessageStatus(MessageStatus.MessageReceivedRead);
               });
             }
           }
@@ -225,7 +242,8 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     });
 
     _scrollController.addListener(() {
-      double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
+      double offsetFromBottom = _scrollController.position.maxScrollExtent -
+          _scrollController.position.pixels;
       if (offsetFromBottom < 50 && !loading) {
         loading = true;
         _loadMore().then((v) {
@@ -235,7 +253,9 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     });
 
     Future.delayed(Duration(milliseconds: 100), () {
-      String content = LocalStorage.getChatUnSendContentFromId(NKNClientCaller.currentChatId, targetId) ?? '';
+      String content = LocalStorage.getChatUnSendContentFromId(
+              NKNClientCaller.currentChatId, targetId) ??
+          '';
       setState(() {
         _sendController.text = content;
         _canSend = content.length > 0;
@@ -246,7 +266,9 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
   @override
   void dispose() {
     Global.currentOtherChatId = null;
-    LocalStorage.saveChatUnSendContentWithId(NKNClientCaller.currentChatId, targetId, content: _sendController.text);
+    LocalStorage.saveChatUnSendContentWithId(
+        NKNClientCaller.currentChatId, targetId,
+        content: _sendController.text);
     _chatBloc.add(RefreshMessageListEvent());
     _chatSubscription?.cancel();
     _scrollController?.dispose();
@@ -257,33 +279,41 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     super.dispose();
   }
 
-  _sendTestMessage() async{
+  _sendTestMessage() async {
     int contentIndex = 1;
     Timer _testMessageTimer;
 
-    String sendTestString = DateTime.now().day.toString()+'日'+DateTime.now().hour.toString()+'时'+ DateTime.now().minute.toString()+'分';
+    String sendTestString = DateTime.now().day.toString() +
+        '日' +
+        DateTime.now().hour.toString() +
+        '时' +
+        DateTime.now().minute.toString() +
+        '分';
     _testMessageTimer = Timer.periodic(Duration(milliseconds: 10), (timer) {
       String dest = targetId;
 
       String contentType = ContentType.text;
-      String content = 'QeqNYLoTghIQMBAiPNMJxNhshogb+qCNJDhebIELnzXIONky2J0pmc29kE8pMoESSck9UiSDAx3VXUBsi4goL0WLhiVIsDsmCQ7S47bHKRB1QI9EAZJDpIBymR5YEHsiCIEWR8pgiBFpQAEyDhBAAgEBMmBfGbKcGTaee6AaZic/ZXA0wLyoN3Qm2Rk27IKIgHmk2AJuOXVJ7hGUjdkfiFkDgEGW3CIcLkyMSEgAWxBComwm5QAbAgBM87TG15UgjJgJNBG1kFGDzvmEQBYQI3CDi1rpTJIj1KBNnVsbxCpw5m3JONPIpDEhA5jcxupIBH2Q4kTMgd0gYMxndA48wvfmqNh07KSQM2hVaTMHoggWTbPO/M7ptbM23QLHERhABsi5N0T5yMyl5g6RcbCJlOzrxPYIFcc77IcJCBm4Ko2EFApgY1IIM2G8dU4seaNUtzG3ZAOvBGxQL3Gd4wk7NpmENMG6B6p3Q0eWd+iJtMme6U+WTidigMHmnB/ooEEdrJGZIBt0QFsafRGTv3RJmJQSS0NvbqgR8v4jJygibkek4T1QOSQIgOBMHmgMgEG6fzG+QkBeYQfmkCPogV7ggeyYMHa+QUcrFMgEyJzlAC9jYoJBvuU87pFsGUCERc3TJm4vZKby76p5IDYsUC3gyCeSBZ0nsqAAFxnnulECdQjqgekRq5HZTOMeqATvztdPN+l4QABJvYI0wbHKG90SgLz02VDS6ZxsYwl1Ewn6IEYlw3G6C05It0RY4EfomXWxI7oADkm44O+FMmMEz1SAMzM/ogcCcBB6EgjYboLouSkec9oQAnYXQZPRPrKLeqBAQZBujbCBY2zvCDAiUDygnmgHyiUi0EYQMXtsg2KaUkm3ugPe6cQRGeaO1kIMoHy789lWCERe5iUHNkDBvhBsMeygu5J6Tk7oG2CJTiJIsTzSkz6JkgmOiBEkWaJKQbubuj2TEiAg90CGLjCcnMJ5yEiWnyoCZMY3wlBD5CrrEJOHIWyEARBuUhMhNpDhcKgY5+iCXEGLEIGZhBgi155Kc33GZQaGdMqSbxFt0AgwZ+qTvOcWQVBxMckNnefRGRAQIjr1QKZ7eyJm4MoIOkkAGED5RE/ZASAOSNzyKV7JwCL2CADDMki32TGZJxYJQQ7IiNzdORbN0CJIFp7pCS9zcEXlGq/lF07NHmNycIEDM6XXbugA7xjmgHsEybg+iADb7lAI6d0snVqg7pztsgl4IE3AVN0gjzWOEyBAkkKIDTf7wgtwi4Mg4ISDZHmAneENZOBBVRBMjvBQIXBHvZHltghPJF+cIExIA90CwbzHRFgM/uiJ5iMIDrxcGbIE4kgBMYAkd+aLzzQRIjZAtiIsbg==';
-      content = content+sendTestString+'\n(_test_)'+contentIndex.toString();
+      String content =
+          'QeqNYLoTghIQMBAiPNMJxNhshogb+qCNJDhebIELnzXIONky2J0pmc29kE8pMoESSck9UiSDAx3VXUBsi4goL0WLhiVIsDsmCQ7S47bHKRB1QI9EAZJDpIBymR5YEHsiCIEWR8pgiBFpQAEyDhBAAgEBMmBfGbKcGTaee6AaZic/ZXA0wLyoN3Qm2Rk27IKIgHmk2AJuOXVJ7hGUjdkfiFkDgEGW3CIcLkyMSEgAWxBComwm5QAbAgBM87TG15UgjJgJNBG1kFGDzvmEQBYQI3CDi1rpTJIj1KBNnVsbxCpw5m3JONPIpDEhA5jcxupIBH2Q4kTMgd0gYMxndA48wvfmqNh07KSQM2hVaTMHoggWTbPO/M7ptbM23QLHERhABsi5N0T5yMyl5g6RcbCJlOzrxPYIFcc77IcJCBm4Ko2EFApgY1IIM2G8dU4seaNUtzG3ZAOvBGxQL3Gd4wk7NpmENMG6B6p3Q0eWd+iJtMme6U+WTidigMHmnB/ooEEdrJGZIBt0QFsafRGTv3RJmJQSS0NvbqgR8v4jJygibkek4T1QOSQIgOBMHmgMgEG6fzG+QkBeYQfmkCPogV7ggeyYMHa+QUcrFMgEyJzlAC9jYoJBvuU87pFsGUCERc3TJm4vZKby76p5IDYsUC3gyCeSBZ0nsqAAFxnnulECdQjqgekRq5HZTOMeqATvztdPN+l4QABJvYI0wbHKG90SgLz02VDS6ZxsYwl1Ewn6IEYlw3G6C05It0RY4EfomXWxI7oADkm44O+FMmMEz1SAMzM/ogcCcBB6EgjYboLouSkec9oQAnYXQZPRPrKLeqBAQZBujbCBY2zvCDAiUDygnmgHyiUi0EYQMXtsg2KaUkm3ugPe6cQRGeaO1kIMoHy789lWCERe5iUHNkDBvhBsMeygu5J6Tk7oG2CJTiJIsTzSkz6JkgmOiBEkWaJKQbubuj2TEiAg90CGLjCcnMJ5yEiWnyoCZMY3wlBD5CrrEJOHIWyEARBuUhMhNpDhcKgY5+iCXEGLEIGZhBgi155Kc33GZQaGdMqSbxFt0AgwZ+qTvOcWQVBxMckNnefRGRAQIjr1QKZ7eyJm4MoIOkkAGED5RE/ZASAOSNzyKV7JwCL2CADDMki32TGZJxYJQQ7IiNzdORbN0CJIFp7pCS9zcEXlGq/lF07NHmNycIEDM6XXbugA7xjmgHsEybg+iADb7lAI6d0snVqg7pztsgl4IE3AVN0gjzWOEyBAkkKIDTf7wgtwi4Mg4ISDZHmAneENZOBBVRBMjvBQIXBHvZHltghPJF+cIExIA90CwbzHRFgM/uiJ5iMIDrxcGbIE4kgBMYAkd+aLzzQRIjZAtiIsbg==';
+      content =
+          content + sendTestString + '\n(_test_)' + contentIndex.toString();
       // content = content+content;
       // content = content+content;
       // content = content+content;
       contentIndex++;
-      if (contentIndex == 501){
+      if (contentIndex == 501) {
         _testMessageTimer.cancel();
       }
       Duration deleteAfterSeconds;
       if (chatContact?.options != null) {
         if (chatContact?.options?.deleteAfterSeconds != null) {
           contentType = ContentType.textExtension;
-          deleteAfterSeconds = Duration(seconds: chatContact.options.deleteAfterSeconds);
+          deleteAfterSeconds =
+              Duration(seconds: chatContact.options.deleteAfterSeconds);
         }
       }
 
-      NLog.w('Test_send_message_length__'+content.length.toString());
+      NLog.w('Test_send_message_length__' + content.length.toString());
       var sendMsg = MessageSchema.fromSendData(
         from: NKNClientCaller.currentChatId,
         to: dest,
@@ -293,7 +323,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
       );
       try {
         _chatBloc.add(SendMessageEvent(sendMsg));
-        if (mounted){
+        if (mounted) {
           setState(() {
             _messages.insert(0, sendMsg);
           });
@@ -305,10 +335,9 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
   }
 
   _sendAction() async {
-    if (_sendFocusNode.hasFocus){
+    if (_sendFocusNode.hasFocus) {
       /// do nothing
-    }
-    else{
+    } else {
       setState(() {
         // _showInputText = true;
         Timer(Duration(milliseconds: 200), () async {
@@ -316,7 +345,8 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
         });
       });
     }
-    LocalStorage.saveChatUnSendContentWithId(NKNClientCaller.currentChatId, targetId);
+    LocalStorage.saveChatUnSendContentWithId(
+        NKNClientCaller.currentChatId, targetId);
     String text = _sendController.text;
     if (text == null || text.length == 0) return;
     _sendController.clear();
@@ -325,7 +355,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     if (widget.arguments.type == ChatType.PrivateChat) {
       String dest = targetId;
 
-      if (text == '测试消息'){
+      if (text == '测试消息') {
         _sendTestMessage();
         return;
       }
@@ -335,7 +365,8 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
       if (chatContact?.options != null) {
         if (chatContact?.options?.deleteAfterSeconds != null) {
           contentType = ContentType.textExtension;
-          deleteAfterSeconds = Duration(seconds: chatContact.options.deleteAfterSeconds);
+          deleteAfterSeconds =
+              Duration(seconds: chatContact.options.deleteAfterSeconds);
         }
       }
       var sendMsg = MessageSchema.fromSendData(
@@ -348,18 +379,19 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
       try {
         _addMessageToList(sendMsg);
       } catch (e) {
-        showToast('Wrong!!! sendMsg E:'+e.toString());
-        NLog.w('Send Message E:'+e.toString());
+        showToast('Wrong!!! sendMsg E:' + e.toString());
+        NLog.w('Send Message E:' + e.toString());
       }
     }
   }
 
-  _sendAudio(File audioFile,double audioDuration) async{
+  _sendAudio(File audioFile, double audioDuration) async {
     String dest = targetId;
     Duration deleteAfterSeconds;
     if (chatContact?.options != null) {
       if (chatContact?.options?.deleteAfterSeconds != null)
-        deleteAfterSeconds = Duration(seconds: chatContact.options.deleteAfterSeconds);
+        deleteAfterSeconds =
+            Duration(seconds: chatContact.options.deleteAfterSeconds);
     }
     var sendMsg = MessageSchema.fromSendData(
       from: NKNClientCaller.currentChatId,
@@ -372,53 +404,57 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     try {
       _addMessageToList(sendMsg);
     } catch (e) {
-      NLog.w('Send AudioMessage E:'+e.toString());
+      NLog.w('Send AudioMessage E:' + e.toString());
     }
   }
 
-  _addMessageToList(MessageSchema sendMsg) async{
-    if (mounted){
+  _addMessageToList(MessageSchema sendMsg) async {
+    if (mounted) {
       setState(() {
         _messages.insert(0, sendMsg);
       });
     }
     _chatBloc.add(SendMessageEvent(sendMsg));
 
-    String savedKey = LocalStorage.NKN_MESSAGE_NOTIFICATION_ALERT+':'+targetId.toString();
-    /// No Alert of Notification2Open before
-    print('LocalKey is___'+savedKey);
+    String savedKey =
+        LocalStorage.NKN_MESSAGE_NOTIFICATION_ALERT + ':' + targetId.toString();
 
-    if (_messages.length > 0){
+    /// No Alert of Notification2Open before
+    print('LocalKey is___' + savedKey);
+
+    if (_messages.length > 0) {
       String isNotificationOpenAlert = await LocalStorage().get(savedKey);
-      if (isNotificationOpenAlert == null && _acceptNotification == false){
+      if (isNotificationOpenAlert == null && _acceptNotification == false) {
         _judgeIfAlertOpenNotification();
       }
     }
   }
 
-  _judgeIfAlertOpenNotification(){
+  _judgeIfAlertOpenNotification() {
     int sendCount = 0;
     int receiveCount = 0;
-    for (MessageSchema message in _messages){
-      if (message.isSendMessage()){
+    for (MessageSchema message in _messages) {
+      if (message.isSendMessage()) {
         sendCount++;
-      }
-      else{
+      } else {
         receiveCount++;
       }
     }
 
-    if (sendCount >= 3 && receiveCount >= 3){
+    if (sendCount >= 3 && receiveCount >= 3) {
       SimpleConfirm(
         context: context,
         buttonColor: DefaultTheme.primaryColor,
-        content: 'Send your device token to him?\nThen he can send you remote notification!',
+        content:
+            'Send your device token to him?\nThen he can send you remote notification!',
         callback: (b) {
           if (b) {
             _acceptNotification = true;
             _saveAndSendDeviceToken();
           }
-          String savedKey = LocalStorage.NKN_MESSAGE_NOTIFICATION_ALERT+':'+targetId.toString();
+          String savedKey = LocalStorage.NKN_MESSAGE_NOTIFICATION_ALERT +
+              ':' +
+              targetId.toString();
           LocalStorage().set(savedKey, 'YES');
         },
         buttonText: NL10ns.of(context).ok,
@@ -431,7 +467,8 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     Duration deleteAfterSeconds;
     if (chatContact?.options != null) {
       if (chatContact?.options?.deleteAfterSeconds != null)
-        deleteAfterSeconds = Duration(seconds: chatContact.options.deleteAfterSeconds);
+        deleteAfterSeconds =
+            Duration(seconds: chatContact.options.deleteAfterSeconds);
     }
     var sendMsg = MessageSchema.fromSendData(
       from: NKNClientCaller.currentChatId,
@@ -443,24 +480,24 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     try {
       _addMessageToList(sendMsg);
     } catch (e) {
-      NLog.w('Send Image Message E:'+e.toString());
+      NLog.w('Send Image Message E:' + e.toString());
     }
   }
 
   getImageFile({@required ImageSource source}) async {
-    FocusScope.of(context).requestFocus(FocusNode());
     try {
-      File image = await getCameraFile(NKNClientCaller.currentChatId, source: source);
+      File image =
+          await getCameraFile(NKNClientCaller.currentChatId, source: source);
       if (image != null) {
         _sendImage(image);
       }
     } catch (e) {
-      NLog.w('message.dart getImageFile E:'+e.toString());
+      NLog.w('message.dart getImageFile E:' + e.toString());
     }
   }
 
   _toggleBottomMenu() async {
-    if (mounted){
+    if (mounted) {
       setState(() {
         _showBottomMenu = !_showBottomMenu;
       });
@@ -469,33 +506,38 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
 
   _hideAll() {
     FocusScope.of(context).requestFocus(FocusNode());
-    if (mounted){
+    if (mounted) {
       setState(() {
         _showBottomMenu = false;
       });
     }
   }
 
-  _saveAndSendDeviceToken() async{
+  _saveAndSendDeviceToken() async {
     String deviceToken = '';
     deviceToken = await NKNClientCaller.fetchDeviceToken();
-    if (_acceptNotification == true){
-      deviceToken = await NKNClientCaller.fetchDeviceToken();
-      if (Platform.isIOS){
+    chatContact.notificationOpen = _acceptNotification;
+    if (_acceptNotification == true) {
+      if (Platform.isIOS) {
         String fcmToken = await NKNClientCaller.fetchFcmToken();
-        if (fcmToken != null && fcmToken.length > 0){
-          deviceToken = deviceToken+"$fcmGapString$fcmToken";
+        if (fcmToken != null && fcmToken.length > 0) {
+          deviceToken = deviceToken + "$fcmGapString$fcmToken";
         }
       }
-      if (Platform.isAndroid && deviceToken.length == 0){
-        showToast('暂不支持没有Google服务的机型');
+      if (Platform.isAndroid && deviceToken.length == 0) {
+        showToast(NL10ns.of(context).unavailable_device);
+        setState(() {
+          _acceptNotification = false;
+          chatContact.notificationOpen = false;
+          chatContact.setNotificationOpen(_acceptNotification);
+        });
+        return;
       }
-    }
-    else{
+    } else {
       deviceToken = '';
-      showToast(NL10ns().off);
+      showToast(NL10ns.of(context).close);
     }
-    chatContact.setNotificationOpen(_acceptNotification);
+    await chatContact.setNotificationOpen(_acceptNotification);
 
     var sendMsg = MessageSchema.fromSendData(
       from: NKNClientCaller.currentChatId,
@@ -512,67 +554,71 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
   @override
   Widget build(BuildContext context) {
     notiBellColor = DefaultTheme.primaryColor;
-    if (_acceptNotification == false){
+    if (_acceptNotification == false) {
       notiBellColor = Colors.white38;
     }
     double wWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        titleChild: GestureDetector(
-          onTap: () async {
-            _pushToContactSettingPage();
-          },
-          child: Flex(
-            direction: Axis.horizontal,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              Expanded(
-                flex: 0,
-                child: Container(
-                  padding: EdgeInsets.only(right: 14.w),
-                  alignment: Alignment.center,
+          titleChild: GestureDetector(
+            onTap: () async {
+              _pushToContactSettingPage();
+            },
+            child: Flex(
+              direction: Axis.horizontal,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                Expanded(
+                  flex: 0,
                   child: Container(
-                    child: CommonUI.avatarWidget(
+                    padding: EdgeInsets.only(right: 14.w),
+                    alignment: Alignment.center,
+                    child: Container(
+                      child: CommonUI.avatarWidget(
                         radiusSize: 24,
                         contact: chatContact,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[Label(chatContact.getShowName, type: LabelType.h3, dark: true), getBurnTimeView()],
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Label(chatContact.getShowName,
+                          type: LabelType.h3, dark: true),
+                      getBurnTimeView()
+                    ],
+                  ),
                 ),
-              ),
-              // Spacer(),
-              FlatButton(
-                child: loadAssetIconsImage('notification_bell', color: notiBellColor, width: 24),
-                onPressed: () {
-                  if (mounted){
-                    setState(() {
-                      _acceptNotification = !_acceptNotification;
-                      _saveAndSendDeviceToken();
-                    });
-                  }
-                },
-              ),
-            ],
+                // Spacer(),
+                FlatButton(
+                  child: loadAssetIconsImage('notification_bell',
+                      color: notiBellColor, width: 24),
+                  onPressed: () {
+                    if (mounted) {
+                      setState(() {
+                        _acceptNotification = !_acceptNotification;
+                        _saveAndSendDeviceToken();
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
-        ),
-        backgroundColor: DefaultTheme.backgroundColor4,
-        action: Container(
-          margin: EdgeInsets.only(left: 8, right: 8),
-          child: GestureDetector(
-            child: loadAssetIconsImage('more', width: 24),
-            onTap: ()=> {
-              _pushToContactSettingPage(),
-            },
-          ),
-        )
-      ),
+          backgroundColor: DefaultTheme.backgroundColor4,
+          action: Container(
+            margin: EdgeInsets.only(left: 8, right: 8),
+            child: GestureDetector(
+              child: loadAssetIconsImage('more', width: 24),
+              onTap: () => {
+                _pushToContactSettingPage(),
+              },
+            ),
+          )),
       body: GestureDetector(
         onTap: () {
           _hideAll();
@@ -582,146 +628,160 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
           color: DefaultTheme.backgroundLightColor,
           child: Container(
             child: SafeArea(
-              child: Stack(
-                children: [
-                  Flex(
-                    direction: Axis.vertical,
-                    children: <Widget>[
-                      _messageList(),
-                      Container(
-                        height: 90,
-                        margin: EdgeInsets.only(bottom: 0),
-                        child: GestureDetector(
-                          child: _menuWidget(),
-                          onTapUp: (details) {
-                            int afterSeconds = DateTime.now().difference(cTime).inSeconds;
-                            setState(() {
-                              _showAudioLock = false;
-                              if (afterSeconds > 1){
-                                /// send AudioMessage Here
-                                NLog.w('Audio record less than 1s'+afterSeconds.toString());
-                              }
-                              else{
-                                /// add viberation Here
-                                _showAudioInput = false;
-                              }
-                              // _recordAudio.showLongPressState = false;
-                            });
-                          },
-                          onLongPressStart: (details) {
-                            cTime = DateTime.now();
+                child: Stack(
+              children: [
+                Flex(
+                  direction: Axis.vertical,
+                  children: <Widget>[
+                    _messageList(),
+                    Container(
+                      height: 90,
+                      margin: EdgeInsets.only(bottom: 0),
+                      child: GestureDetector(
+                        child: _menuWidget(),
+                        onTapUp: (details) {
+                          int afterSeconds =
+                              DateTime.now().difference(cTime).inSeconds;
+                          setState(() {
                             _showAudioLock = false;
-                            Vibration.vibrate();
-                            _setAudioInputOn(true);
-                          },
-                          onLongPressEnd: (details) {
-                            int afterSeconds = DateTime.now().difference(cTime).inSeconds;
-                            setState(() {
-                              if (afterSeconds > 0.2 && _recordAudio.cOpacity > 0){
-                                if (_recordAudio.showLongPressState == false){
-
-                                }
-                                else{
-                                  _recordAudio.stopAndSendAudioMessage();
-                                }
-                              }
-                              else{
-                                _showAudioInput = false;
-                              }
-                              if (_showAudioLock){
-                                _showAudioLock = false;
-                              }
-                            });
-                          },
-                          onLongPressMoveUpdate: (details) {
-                            int afterSeconds = DateTime.now().difference(cTime).inSeconds;
-                            if (afterSeconds > 0.2){
-                              setState(() {
-                                _showAudioLock = true;
-                              });
+                            if (afterSeconds > 1) {
+                              /// send AudioMessage Here
+                              NLog.w('Audio record less than 1s' +
+                                  afterSeconds.toString());
+                            } else {
+                              /// add viberation Here
+                              _showAudioInput = false;
                             }
-                            if (details.globalPosition.dx < (wWidth)/3*2 && details.globalPosition.dx > 0){
-                              if (_recordAudio != null){
+                          });
+                        },
+                        onLongPressStart: (details) {
+                          cTime = DateTime.now();
+                          _showAudioLock = false;
+                          Vibration.vibrate();
+                          _setAudioInputOn(true);
+                        },
+                        onLongPressEnd: (details) {
+                          int afterSeconds =
+                              DateTime.now().difference(cTime).inSeconds;
+                          setState(() {
+                            if (details.globalPosition.dx < (wWidth - 80)){
+                              if (_recordAudio != null) {
                                 _recordAudio.cancelCurrentRecord();
                                 _recordAudio.cOpacity = 1;
                               }
                             }
-                            else if (details.globalPosition.dx > (wWidth)/3*2 && details.globalPosition.dx < wWidth-80){
-                              double cX = details.globalPosition.dx;
-                              double tW = wWidth-80;
-                              double mL = (wWidth)/3*2;
-                              double tL = tW-mL;
-                              double opacity = (cX-mL)/tL;
-                              if (opacity < 0){
-                                opacity = 0;
-                              }
-                              if (opacity > 1){
-                                opacity = 1;
-                              }
+                            else{
+                              if (_recordAudio.showLongPressState == false) {
 
-                              setState(() {
-                                _recordAudio.cOpacity = opacity;
-                              });
+                              } else {
+                                _recordAudio.stopAndSendAudioMessage();
+                              }
                             }
-                            else if (details.globalPosition.dx > wWidth-80){
-                              setState(() {
-                                _recordAudio.cOpacity = 1;
-                              });
+                            if (afterSeconds > 0.2 &&
+                                _recordAudio.cOpacity > 0) {
+                            } else {
+                              _showAudioInput = false;
+                            }
+                            if (_showAudioLock) {
+                              _showAudioLock = false;
+                            }
+                          });
+                        },
+                        onLongPressMoveUpdate: (details) {
+                          int afterSeconds =
+                              DateTime.now().difference(cTime).inSeconds;
+                          if (afterSeconds > 0.2) {
+                            setState(() {
+                              _showAudioLock = true;
+                            });
+                          }
+                            if (details.globalPosition.dx >
+                                  (wWidth) / 3 * 2 &&
+                              details.globalPosition.dx < wWidth - 80) {
+                            double cX = details.globalPosition.dx;
+                            double tW = wWidth - 80;
+                            double mL = (wWidth) / 3 * 2;
+                            double tL = tW - mL;
+                            double opacity = (cX - mL) / tL;
+                            if (opacity < 0) {
+                              opacity = 0;
+                            }
+                            if (opacity > 1) {
+                              opacity = 1;
                             }
 
-                            double gapHeight = 90;
-                            double tL = 50;
-                            double mL = 60;
-                            if (details.globalPosition.dy > MediaQuery.of(context).size.height-(gapHeight+tL) && details.globalPosition.dy < MediaQuery.of(context).size.height-gapHeight){
-                              setState(() {
-                                double currentL = (tL-(MediaQuery.of(context).size.height-details.globalPosition.dy-gapHeight));
-                                _audioLockHeight = mL+currentL-10;
-                                if (_audioLockHeight < mL) {
-                                  _audioLockHeight = mL;
-                                }
-                              });
-                            }
-                            if (details.globalPosition.dy < MediaQuery.of(context).size.height-(gapHeight+tL)) {
-                              setState(() {
+                            setState(() {
+                              _recordAudio.cOpacity = opacity;
+                            });
+                          } else if (details.globalPosition.dx > wWidth - 80) {
+                            setState(() {
+                              _recordAudio.cOpacity = 1;
+                            });
+                          }
+                          double gapHeight = 90;
+                          double tL = 50;
+                          double mL = 60;
+                          if (details.globalPosition.dy >
+                                  MediaQuery.of(context).size.height -
+                                      (gapHeight + tL) &&
+                              details.globalPosition.dy <
+                                  MediaQuery.of(context).size.height -
+                                      gapHeight) {
+                            setState(() {
+                              double currentL = (tL -
+                                  (MediaQuery.of(context).size.height -
+                                      details.globalPosition.dy -
+                                      gapHeight));
+                              _audioLockHeight = mL + currentL - 10;
+                              if (_audioLockHeight < mL) {
                                 _audioLockHeight = mL;
-                                _recordAudio.showLongPressState = false;
-                                _audioLongPressEndStatus = true;
-                              });
-                            }
-                            if (details.globalPosition.dy > MediaQuery.of(context).size.height-(gapHeight)){
-                              _audioLockHeight = 90;
-                            }
-                          },
-                          onHorizontalDragEnd: (details) {
-                            _cancelAudioRecord();
-                          },
-                          onHorizontalDragCancel: (){
-                            _cancelAudioRecord();
-                          },
-                          onVerticalDragCancel: (){
-                            _cancelAudioRecord();
-                          },
-                          onVerticalDragEnd: (details) {
-                            _cancelAudioRecord();
-                          },
-                        ),
+                              }
+                            });
+                          }
+                          if (details.globalPosition.dy <
+                              MediaQuery.of(context).size.height -
+                                  (gapHeight + tL)) {
+                            setState(() {
+                              _audioLockHeight = mL;
+                              _recordAudio.showLongPressState = false;
+                              _audioLongPressEndStatus = true;
+                            });
+                          }
+                          if (details.globalPosition.dy >
+                              MediaQuery.of(context).size.height -
+                                  (gapHeight)) {
+                            _audioLockHeight = 90;
+                          }
+                        },
+                        onHorizontalDragEnd: (details) {
+                          _cancelAudioRecord();
+                        },
+                        onHorizontalDragCancel: () {
+                          _cancelAudioRecord();
+                        },
+                        onVerticalDragCancel: () {
+                          _cancelAudioRecord();
+                        },
+                        onVerticalDragEnd: (details) {
+                          _cancelAudioRecord();
+                        },
                       ),
-                      _bottomMenuWidget(),
-                    ],
-                  ),
-                  _audioLockWidget(),
-                ],
-              )
-            ),
+                    ),
+                    _bottomMenuWidget(),
+                  ],
+                ),
+                _audioLockWidget(),
+              ],
+            )),
           ),
         ),
       ),
     );
   }
 
-  _cancelAudioRecord(){
-    if (_audioLongPressEndStatus == false){
-      if (_recordAudio != null){
+  _cancelAudioRecord() {
+    if (_audioLongPressEndStatus == false) {
+      if (_recordAudio != null) {
         _recordAudio.cancelCurrentRecord();
       }
     }
@@ -733,68 +793,78 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
   Widget _audioLockWidget() {
     double wWidth = MediaQuery.of(context).size.width;
     double wHeight = MediaQuery.of(context).size.height;
-    if (_showAudioLock){
+    if (_showAudioLock) {
       return Container(
-        color: Colors.transparent,
-        width: wWidth,
-        height: wHeight,
-        child: Column(
-          children: [
-            Container(
-              height: wHeight-(kToolbarHeight+90+100+10+MediaQuery.of(context).padding.top),
-            ),
-            Container(
-              height: _audioLockHeight,
-              child: Row(
-                children: [
-                  Container(
-                    height: _audioLockHeight,
-                    width: wWidth-45,
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.white,
-                    ),
-                    height: _audioLockHeight,
-                    // margin: EdgeInsets.only(right: 5,bottom: 160-_autoLockHeight),
-                    width: 40,
-                    child: Column(
-                      children: [
-                        Container(
-                          margin:EdgeInsets.only(top: 5),
-                          child: loadAssetIconsImage('lock', color: Colors.red, width: 20,),
-                        ),
-                        Spacer(),
-                        Container(
-                          margin: EdgeInsets.only(bottom: 5,),
-                          child: Label(
-                            '^',
-                            type: LabelType.bodyLarge,
-                            fontWeight: FontWeight.normal,
-                            color: Colors.red,
-                            textAlign: TextAlign.right,
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ],
+          color: Colors.transparent,
+          width: wWidth,
+          height: wHeight,
+          child: Column(
+            children: [
+              Container(
+                height: wHeight -
+                    (kToolbarHeight +
+                        90 +
+                        100 +
+                        10 +
+                        MediaQuery.of(context).padding.top),
               ),
-            ),
-            Spacer(),
-            Container(
-              height: 88,
-            )
-          ],
-        )
-      );
+              Container(
+                height: _audioLockHeight,
+                child: Row(
+                  children: [
+                    Container(
+                      height: _audioLockHeight,
+                      width: wWidth - 45,
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white,
+                      ),
+                      height: _audioLockHeight,
+                      // margin: EdgeInsets.only(right: 5,bottom: 160-_autoLockHeight),
+                      width: 40,
+                      child: Column(
+                        children: [
+                          Container(
+                            margin: EdgeInsets.only(top: 5),
+                            child: loadAssetIconsImage(
+                              'lock',
+                              color: Colors.red,
+                              width: 20,
+                            ),
+                          ),
+                          Spacer(),
+                          Container(
+                            margin: EdgeInsets.only(
+                              bottom: 5,
+                            ),
+                            child: Label(
+                              '^',
+                              type: LabelType.bodyLarge,
+                              fontWeight: FontWeight.normal,
+                              color: Colors.red,
+                              textAlign: TextAlign.right,
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Spacer(),
+              Container(
+                height: 88,
+              )
+            ],
+          ));
     }
     return Container(
       color: Colors.transparent,
       width: 0,
       height: 1,
-      margin: EdgeInsets.only(top: MediaQuery.of(context).size.height-1),
+      margin: EdgeInsets.only(top: MediaQuery.of(context).size.height - 1),
     );
   }
 
@@ -821,10 +891,10 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                   message.contentType == ContentType.nknImage ||
                   message.contentType == ContentType.media ||
                   message.contentType == ContentType.nknAudio) {
-
-                preMessage = index == _messages.length ? message : _messages[index + 1];
-                showTime = (message.timestamp.isAfter(preMessage.timestamp.add(Duration(minutes: 3))));
-
+                preMessage =
+                    index == _messages.length ? message : _messages[index + 1];
+                showTime = (message.timestamp
+                    .isAfter(preMessage.timestamp.add(Duration(minutes: 3))));
               } else {
                 showTime = true;
               }
@@ -832,8 +902,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
 
             if (message.contentType == ContentType.eventContactOptions) {
               return _contactOptionWidget(index);
-            }
-            else {
+            } else {
               return ChatBubble(
                 message: message,
                 showTime: showTime,
@@ -847,19 +916,19 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
 
   Widget _menuWidget() {
     double audioHeight = 65;
-    if (_showAudioInput == true){
-      if (_recordAudio == null){
+    if (_showAudioInput == true) {
+      if (_recordAudio == null) {
         _recordAudio = RecordAudio(
           height: audioHeight,
-          margin: EdgeInsets.only(top: 15, bottom:15, right: 0),
-          startRecord:  startRecord,
-          stopRecord:  stopRecord,
+          margin: EdgeInsets.only(top: 15, bottom: 15, right: 0),
+          startRecord: startRecord,
+          stopRecord: stopRecord,
           cancelRecord: _cancelRecord,
         );
       }
       return Container(
         height: audioHeight,
-        margin: EdgeInsets.only(top: 15,right: 0),
+        margin: EdgeInsets.only(top: 15, right: 0),
         child: _recordAudio,
       );
     }
@@ -872,7 +941,8 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
           Expanded(
             flex: 0,
             child: Container(
-              margin: const EdgeInsets.only(left: 0, right: 0, top: 15, bottom: 15),
+              margin:
+                  const EdgeInsets.only(left: 0, right: 0, top: 15, bottom: 15),
               padding: const EdgeInsets.only(left: 8, right: 8),
               child: ButtonIcon(
                 width: 50,
@@ -897,20 +967,20 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
 
   Widget _bottomMenuWidget() {
     return Expanded(
-      flex: 0,
-      child: ExpansionLayout(
-        isExpanded: _showBottomMenu,
-        child: Container(
-          padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(color: DefaultTheme.backgroundColor2),
+        flex: 0,
+        child: ExpansionLayout(
+          isExpanded: _showBottomMenu,
+          child: Container(
+            padding:
+                const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: DefaultTheme.backgroundColor2),
+              ),
             ),
+            child: _pictureWidget(),
           ),
-          child:_pictureWidget(),
-        ),
-      )
-    );
+        ));
   }
 
   Widget _sendWidget() {
@@ -935,7 +1005,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                 focusNode: _sendFocusNode,
                 textInputAction: TextInputAction.newline,
                 onChanged: (val) {
-                  if (mounted){
+                  if (mounted) {
                     setState(() {
                       _canSend = val.isNotEmpty;
                     });
@@ -944,10 +1014,12 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                 style: TextStyle(fontSize: 14, height: 1.4),
                 decoration: InputDecoration(
                   hintText: NL10ns.of(context).type_a_message,
-                  contentPadding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
+                  contentPadding:
+                      EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
                   border: UnderlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(20.w)),
-                    borderSide: const BorderSide(width: 0, style: BorderStyle.none),
+                    borderSide:
+                        const BorderSide(width: 0, style: BorderStyle.none),
                   ),
                 ),
               ),
@@ -958,8 +1030,8 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     );
   }
 
-  Widget _voiceAndSendWidget(){
-    if (_canSend){
+  Widget _voiceAndSendWidget() {
+    if (_canSend) {
       return Expanded(
         flex: 0,
         child: Container(
@@ -992,10 +1064,9 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
 
   _setAudioInputOn(bool audioInputOn) {
     setState(() {
-      if (audioInputOn){
+      if (audioInputOn) {
         _showAudioInput = true;
-      }
-      else{
+      } else {
         _showAudioInput = false;
       }
     });
@@ -1009,8 +1080,11 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
       child: ButtonIcon(
         width: 50,
         height: 50,
-        icon:
-        loadAssetIconsImage('microphone', color: DefaultTheme.primaryColor, width: 24,),
+        icon: loadAssetIconsImage(
+          'microphone',
+          color: DefaultTheme.primaryColor,
+          width: 24,
+        ),
         onPressed: () {
           _voiceAction();
         },
@@ -1018,7 +1092,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     );
   }
 
-  _voiceAction(){
+  _voiceAction() {
     _setAudioInputOn(true);
     Vibration.vibrate();
     Timer(Duration(milliseconds: 350), () async {
@@ -1035,27 +1109,33 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
     NLog.w('startRecord called');
   }
 
-  stopRecord(String path, double audioTimeLength) async{
+  stopRecord(String path, double audioTimeLength) async {
     NLog.w('stopRecord called');
     _setAudioInputOn(false);
 
     File audioFile = File(path);
-    if(!audioFile.existsSync()){
+    if (!audioFile.existsSync()) {
       audioFile.createSync();
       audioFile = File(path);
     }
     int fileLength = await audioFile.length();
 
-    if (fileLength != null && audioTimeLength != null){
-      NLog.w('Record finished with fileLength__'+fileLength.toString()+'audioTimeLength is__'+audioTimeLength.toString());
+    if (fileLength != null && audioTimeLength != null) {
+      NLog.w('Record finished with fileLength__' +
+          fileLength.toString() +
+          'audioTimeLength is__' +
+          audioTimeLength.toString());
     }
-
-    if (audioTimeLength > 1.0){
-      _sendAudio(audioFile,audioTimeLength);
+    if (fileLength == 0) {
+      showToast('Record file wrong.Please record again.');
+      return;
+    }
+    if (audioTimeLength > 1.0) {
+      _sendAudio(audioFile, audioTimeLength);
     }
   }
 
-  Widget _pictureWidget(){
+  Widget _pictureWidget() {
     return Flex(
       direction: Axis.horizontal,
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1069,7 +1149,8 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                 height: 71,
                 child: FlatButton(
                   color: DefaultTheme.backgroundColor1,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8))),
                   child: loadAssetIconsImage(
                     'image',
                     width: 32,
@@ -1100,7 +1181,8 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                 height: 71,
                 child: FlatButton(
                   color: DefaultTheme.backgroundColor1,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8))),
                   child: loadAssetIconsImage(
                     'camera',
                     width: 32,
@@ -1127,12 +1209,25 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
   }
 
   _pushToContactSettingPage() {
-    Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: chatContact).then((v) {
+    Navigator.of(context)
+        .pushNamed(ContactScreen.routeName, arguments: chatContact)
+        .then((v) async {
       _chatBloc.add(UpdateChatEvent(targetId));
+      if (v != null) {
+        chatContact = await ContactSchema.fetchContactByAddress(
+            chatContact.clientAddress);
+        NLog.w('ChatContact is_____' + chatContact.notificationOpen.toString());
+        setState(() {
+          _acceptNotification = false;
+          if (chatContact.notificationOpen != null) {
+            _acceptNotification = chatContact.notificationOpen;
+          }
+        });
+      }
     });
   }
 
-  Widget _contactOptionWidget(int index){
+  Widget _contactOptionWidget(int index) {
     var message = _messages[index];
     Map optionData = jsonDecode(message.content);
     if (optionData['content'] != null) {
@@ -1150,8 +1245,13 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.alarm_on, size: 16, color: DefaultTheme.fontColor2).pad(b: 1, r: 4),
-                      Label(Format.durationFormat(Duration(seconds: optionData['content']['deleteAfterSeconds'])),
+                      Icon(Icons.alarm_on,
+                              size: 16, color: DefaultTheme.fontColor2)
+                          .pad(b: 1, r: 4),
+                      Label(
+                          Format.durationFormat(Duration(
+                              seconds: optionData['content']
+                                  ['deleteAfterSeconds'])),
                           type: LabelType.bodySmall),
                     ],
                   ).pad(b: 4),
@@ -1159,14 +1259,19 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Label(
-                        message.isSendMessage() ? NL10ns.of(context).you : chatContact.getShowName,
+                        message.isSendMessage()
+                            ? NL10ns.of(context).you
+                            : chatContact.getShowName,
                         fontWeight: FontWeight.bold,
                       ),
-                      Label(' ${NL10ns.of(context).update_burn_after_reading}', softWrap: true),
+                      Label(' ${NL10ns.of(context).update_burn_after_reading}',
+                          softWrap: true),
                     ],
                   ).pad(b: 4),
                   InkWell(
-                    child: Label(NL10ns.of(context).click_to_change, color: DefaultTheme.primaryColor, type: LabelType.bodyRegular),
+                    child: Label(NL10ns.of(context).click_to_change,
+                        color: DefaultTheme.primaryColor,
+                        type: LabelType.bodyRegular),
                     onTap: () {
                       _pushToContactSettingPage();
                     },
@@ -1176,16 +1281,13 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
             ],
           ),
         );
-
-      }
-      else if (optionData['content']['deviceToken'] != null){
+      } else if (optionData['content']['deviceToken'] != null) {
         String deviceToken = optionData['content']['deviceToken'];
 
         String deviceDesc = "";
-        if (deviceToken.length == 0){
+        if (deviceToken.length == 0) {
           deviceDesc = ' ${NL10ns.of(context).setting_deny_notification}';
-        }
-        else{
+        } else {
           deviceDesc = ' ${NL10ns.of(context).setting_accept_notification}';
         }
         return ChatSystem(
@@ -1201,14 +1303,18 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Label(
-                        message.isSendMessage() ? NL10ns.of(context).you : chatContact.getShowName,
+                        message.isSendMessage()
+                            ? NL10ns.of(context).you
+                            : chatContact.getShowName,
                         fontWeight: FontWeight.bold,
                       ),
                       Label('$deviceDesc'),
                     ],
                   ).pad(b: 4),
                   InkWell(
-                    child: Label(NL10ns.of(context).click_to_change, color: DefaultTheme.primaryColor, type: LabelType.bodyRegular),
+                    child: Label(NL10ns.of(context).click_to_change,
+                        color: DefaultTheme.primaryColor,
+                        type: LabelType.bodyRegular),
                     onTap: () {
                       _pushToContactSettingPage();
                     },
@@ -1218,8 +1324,7 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
             ],
           ),
         );
-      }
-      else {
+      } else {
         return ChatSystem(
           child: Wrap(
             alignment: WrapAlignment.center,
@@ -1232,22 +1337,30 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.alarm_off, size: 16, color: DefaultTheme.fontColor2).pad(b: 1, r: 4),
-                      Label(NL10ns.of(context).off, type: LabelType.bodySmall, fontWeight: FontWeight.bold),
+                      Icon(Icons.alarm_off,
+                              size: 16, color: DefaultTheme.fontColor2)
+                          .pad(b: 1, r: 4),
+                      Label(NL10ns.of(context).off,
+                          type: LabelType.bodySmall,
+                          fontWeight: FontWeight.bold),
                     ],
                   ).pad(b: 4),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Label(
-                        message.isSendMessage() ? NL10ns.of(context).you : chatContact.getShowName,
+                        message.isSendMessage()
+                            ? NL10ns.of(context).you
+                            : chatContact.getShowName,
                         fontWeight: FontWeight.bold,
                       ),
                       Label(' ${NL10ns.of(context).close_burn_after_reading}'),
                     ],
                   ).pad(b: 4),
                   InkWell(
-                    child: Label(NL10ns.of(context).click_to_change, color: DefaultTheme.primaryColor, type: LabelType.bodyRegular),
+                    child: Label(NL10ns.of(context).click_to_change,
+                        color: DefaultTheme.primaryColor,
+                        type: LabelType.bodyRegular),
                     onTap: () {
                       _pushToContactSettingPage();
                     },
@@ -1264,12 +1377,16 @@ class _ChatSinglePageState extends State<ChatSinglePage>{
   }
 
   getBurnTimeView() {
-    if (chatContact?.options != null && chatContact?.options?.deleteAfterSeconds != null) {
+    if (chatContact?.options != null &&
+        chatContact?.options?.deleteAfterSeconds != null) {
       return Row(
         children: [
-          Icon(Icons.alarm_on, size: 16, color: DefaultTheme.backgroundLightColor).pad(r: 4),
+          Icon(Icons.alarm_on,
+                  size: 16, color: DefaultTheme.backgroundLightColor)
+              .pad(r: 4),
           Label(
-            Format.durationFormat(Duration(seconds: chatContact?.options?.deleteAfterSeconds)),
+            Format.durationFormat(
+                Duration(seconds: chatContact?.options?.deleteAfterSeconds)),
             type: LabelType.bodySmall,
             color: DefaultTheme.backgroundLightColor,
           ),

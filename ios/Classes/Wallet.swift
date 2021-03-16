@@ -43,7 +43,14 @@ func getBalance(_ call: FlutterMethodCall, result: FlutterResult) {
     let address = args["address"] as? String
     let account = NknAccount.init(nil)
     let config = NknWalletConfig.init()
-    config.seedRPCServerAddr = NknStringArray.init(from: "https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
+    
+    let measuredRpc = UserDefaults.standard.object(forKey:"nkn_measured_rpcNode")
+    if (measuredRpc != nil){
+        config.seedRPCServerAddr = NknStringArray.init(from: measuredRpc as? String)
+    }
+    else{
+        config.seedRPCServerAddr = NknStringArray.init(from: "https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
+    }
     let wallet = NknWallet.init(account, config: config)
     do {
         let balance: NknAmount? = try wallet?.balance(byAddress: address)
@@ -86,17 +93,23 @@ func transferAsync(_ call: FlutterMethodCall, result: FlutterResult) {
         }
 
         let args = call.arguments as! [String: Any]
-           let keystore = args["keystore"] as? String
-           let password = args["password"] as? String
+            let keystore = args["keystore"] as? String
+            let password = args["password"] as? String
             let _id = args["_id"] as? String
-           let address = args["address"] as? String
-           let amount = args["amount"] as? String
-           let fee = args["fee"] as! String
-           let config = NknWalletConfig.init()
+            let address = args["address"] as? String
+            let amount = args["amount"] as? String
+            let fee = args["fee"] as! String
+            let config = NknWalletConfig.init()
         walletQueue.async {
             do {
                 config.password = password ?? ""
-                config.seedRPCServerAddr = NknStringArray.init(from: "https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
+                let measuredRpc = UserDefaults.standard.object(forKey:"nkn_measured_rpcNode")
+                if (measuredRpc != nil){
+                    config.seedRPCServerAddr = NknStringArray.init(from: measuredRpc as? String)
+                }
+                else{
+                    config.seedRPCServerAddr = NknStringArray.init(from: "https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
+                }
                 var error: NSError?
                 let wallet = NknWalletFromJSON(keystore, config, &error)
                 if (error != nil) {
@@ -130,7 +143,13 @@ func transfer(_ call: FlutterMethodCall, result: FlutterResult) {
     let fee = args["fee"] as! String
     let config = NknWalletConfig.init()
     config.password = password ?? ""
-    config.seedRPCServerAddr = NknStringArray.init(from: "https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
+    let measuredRpc = UserDefaults.standard.object(forKey:"nkn_measured_rpcNode")
+    if (measuredRpc != nil){
+        config.seedRPCServerAddr = NknStringArray.init(from: measuredRpc as? String)
+    }
+    else{
+        config.seedRPCServerAddr = NknStringArray.init(from: "https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
+    }
     var error: NSError?
     let wallet = NknWalletFromJSON(keystore, config, &error)
     if (error != nil) {

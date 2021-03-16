@@ -27,15 +27,32 @@ class Label extends StatelessWidget {
   final int maxLines;
   final double fontSize;
 
-  Label(this.text, {this.fontSize, this.type = LabelType.label, this.maxLines, this.color, this.dark = false,
-    this.textAlign, this.fontWeight, this.height, this.overflow, this.softWrap = false}){
+  Label(this.text,
+      {this.fontSize,
+      this.type = LabelType.label,
+      this.maxLines,
+      this.color,
+      this.dark = false,
+      this.textAlign,
+      this.fontWeight,
+      this.height,
+      this.overflow,
+      this.softWrap = false}) {
     overflow ??= softWrap ? null : TextOverflow.ellipsis;
   }
 
-  buildTextStyle({double fontSize, Color color, double letterSpacing, FontWeight fontWeight}) {
+  buildTextStyle(
+      {double fontSize,
+      Color color,
+      double letterSpacing,
+      FontWeight fontWeight}) {
     if (dark) color = DefaultTheme.fontLightColor;
-    return TextStyle(fontSize: fontSize, height: this.height ?? 1.2, color: this.color ?? color,
-        letterSpacing: letterSpacing, fontWeight: this.fontWeight ?? fontWeight);
+    return TextStyle(
+        fontSize: fontSize,
+        height: this.height ?? 1.2,
+        color: this.color ?? color,
+        letterSpacing: letterSpacing,
+        fontWeight: this.fontWeight ?? fontWeight);
   }
 
   @override
@@ -46,7 +63,8 @@ class Label extends StatelessWidget {
         return Text(
           text,
           textScaleFactor: 1.0,
-          style: buildTextStyle(fontSize: DefaultTheme.h1FontSize, fontWeight: FontWeight.bold),
+          style: buildTextStyle(
+              fontSize: DefaultTheme.h1FontSize, fontWeight: FontWeight.bold),
           textAlign: this.textAlign,
           overflow: this.overflow,
           softWrap: softWrap,
@@ -56,7 +74,8 @@ class Label extends StatelessWidget {
         return Text(
           text,
           textScaleFactor: 1.0,
-          style: buildTextStyle(fontSize: DefaultTheme.h2FontSize, fontWeight: FontWeight.bold),
+          style: buildTextStyle(
+              fontSize: DefaultTheme.h2FontSize, fontWeight: FontWeight.bold),
           textAlign: this.textAlign,
           overflow: this.overflow,
           softWrap: softWrap,
@@ -66,7 +85,8 @@ class Label extends StatelessWidget {
         return Text(
           text,
           textScaleFactor: 1.0,
-          style: buildTextStyle(fontSize: DefaultTheme.h3FontSize, fontWeight: FontWeight.bold),
+          style: buildTextStyle(
+              fontSize: DefaultTheme.h3FontSize, fontWeight: FontWeight.bold),
           textAlign: this.textAlign,
           overflow: this.overflow,
           softWrap: softWrap,
@@ -76,7 +96,9 @@ class Label extends StatelessWidget {
         return Text(
           text,
           textScaleFactor: 1.0,
-          style: buildTextStyle(fontSize: fontSize ?? DefaultTheme.h4FontSize, fontWeight: FontWeight.bold),
+          style: buildTextStyle(
+              fontSize: fontSize ?? DefaultTheme.h4FontSize,
+              fontWeight: FontWeight.bold),
           textAlign: this.textAlign,
           overflow: this.overflow,
           softWrap: softWrap,
@@ -86,7 +108,8 @@ class Label extends StatelessWidget {
         return Text(
           text,
           textScaleFactor: 1.0,
-          style: buildTextStyle(fontSize: fontSize ?? DefaultTheme.displayFontSize),
+          style: buildTextStyle(
+              fontSize: fontSize ?? DefaultTheme.displayFontSize),
           textAlign: this.textAlign,
           overflow: this.overflow,
           softWrap: softWrap,
@@ -96,7 +119,9 @@ class Label extends StatelessWidget {
         return Text(
           text,
           textScaleFactor: 1.0,
-          style: buildTextStyle(fontSize: fontSize ?? DefaultTheme.bodyLargeFontSize, color: DefaultTheme.fontColor2),
+          style: buildTextStyle(
+              fontSize: fontSize ?? DefaultTheme.bodyLargeFontSize,
+              color: DefaultTheme.fontColor2),
           textAlign: this.textAlign,
           overflow: this.overflow,
           softWrap: softWrap,
@@ -106,7 +131,9 @@ class Label extends StatelessWidget {
         return Text(
           text,
           textScaleFactor: 1.0,
-          style: buildTextStyle(fontSize: fontSize ?? DefaultTheme.bodyRegularFontSize, color: DefaultTheme.fontColor2),
+          style: buildTextStyle(
+              fontSize: fontSize ?? DefaultTheme.bodyRegularFontSize,
+              color: DefaultTheme.fontColor2),
           textAlign: this.textAlign,
           overflow: this.overflow,
           softWrap: softWrap,
@@ -116,7 +143,9 @@ class Label extends StatelessWidget {
         return Text(
           text,
           textScaleFactor: 1.0,
-          style: buildTextStyle(fontSize: fontSize ?? DefaultTheme.bodySmallFontSize, color: DefaultTheme.fontColor2),
+          style: buildTextStyle(
+              fontSize: fontSize ?? DefaultTheme.bodySmallFontSize,
+              color: DefaultTheme.fontColor2),
           textAlign: this.textAlign,
           overflow: this.overflow,
           softWrap: softWrap,
@@ -126,7 +155,9 @@ class Label extends StatelessWidget {
         return Text(
           text,
           textScaleFactor: 1.0,
-          style: buildTextStyle(fontSize: fontSize ?? DefaultTheme.labelFontSize, color: DefaultTheme.fontColor2),
+          style: buildTextStyle(
+              fontSize: fontSize ?? DefaultTheme.labelFontSize,
+              color: DefaultTheme.fontColor2),
           textAlign: this.textAlign,
           overflow: this.overflow,
           softWrap: softWrap,

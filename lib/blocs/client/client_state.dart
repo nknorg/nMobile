@@ -14,9 +14,8 @@ class NKNNoConnectState extends NKNClientState {}
 class NKNConnectingState extends NKNClientState {}
 
 class NKNConnectedState extends NKNClientState {
-  // NKNConnectedState();
   final ClientSchema client;
-  MessageSchema message;
+  final MessageSchema message;
 
   NKNConnectedState({this.client, this.message});
 }

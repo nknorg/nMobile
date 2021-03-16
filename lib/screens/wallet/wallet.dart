@@ -6,7 +6,6 @@ import 'package:nmobile/screens/wallet/home.dart';
 import 'package:nmobile/screens/wallet/no_wallet.dart';
 import 'package:nmobile/screens/welcome.dart';
 
-
 class WalletScreen extends StatefulWidget {
   static const String routeName = '/wallet';
   @override
@@ -21,13 +20,12 @@ class _WalletScreenState extends State<WalletScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return BlocBuilder<WalletsBloc, WalletsState>(
       builder: (context, state) {
         if (state is WalletsLoaded) {
-          if(state.wallets.length > 0){
+          if (state.wallets.length > 0) {
             return WalletHome();
-          }else{
+          } else {
             return NoWalletScreen();
           }
         }

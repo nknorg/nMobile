@@ -17,20 +17,20 @@ class ContactLoaded extends ContactState {
       return null;
     }
     try {
-      return contacts.firstWhere((x) => x.clientAddress == address, orElse: () => null);
+      return contacts.firstWhere((x) => x.clientAddress == address,
+          orElse: () => null);
     } catch (e) {
       return null;
     }
   }
 }
 
-class UpdateUserInfoState extends ContactState{
+class UpdateUserInfoState extends ContactState {
   final ContactSchema userInfo;
   const UpdateUserInfoState(this.userInfo);
 }
 
-class LoadContactInfoState extends ContactState{
+class LoadContactInfoState extends ContactState {
   final ContactSchema userInfo;
   const LoadContactInfoState(this.userInfo);
 }
-

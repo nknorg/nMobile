@@ -10,7 +10,7 @@ GetIt instanceOf = GetIt.instance;
 
 void setupSingleton() {
   instanceOf
-   ..registerSingleton<NavigateService>(NavigateService())
+    ..registerSingleton<NavigateService>(NavigateService())
     // ..registerSingleton(BackgroundFetchService())
     ..registerSingleton(TaskService())
     ..registerLazySingleton<Logger>(() => Logger(printer: PrettyPrinter()));

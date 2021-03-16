@@ -13,7 +13,10 @@ class TextSelector extends StatefulWidget {
   final VoidCallback onTap;
 
   const TextSelector(this.text, this.fontSize, this.color, this.colorPressed,
-      {this.fontStyle: FontStyle.normal, this.fontWeight: FontWeight.normal, this.decoration: TextDecoration.none, this.onTap});
+      {this.fontStyle: FontStyle.normal,
+      this.fontWeight: FontWeight.normal,
+      this.decoration: TextDecoration.none,
+      this.onTap});
 
   @override
   _SelectorState createState() => _SelectorState();

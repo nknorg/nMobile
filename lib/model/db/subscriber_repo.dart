@@ -39,26 +39,30 @@ class Subscriber {
 }
 
 class SubscriberRepo with Tag {
-
   Future<List<Subscriber>> getByTopic(String topicName) async {
     Database cdb = await NKNDataManager().currentDatabase();
-    List<Map<String, dynamic>> result =
-        await cdb.query(tableName, where: '$topic = ? AND $subscribed = ?', whereArgs: [topicName, 1], orderBy: '$time_create ASC');
+    List<Map<String, dynamic>> result = await cdb.query(tableName,
+        where: '$topic = ? AND $subscribed = ?',
+        whereArgs: [topicName, 1],
+        orderBy: '$time_create ASC');
     return parseEntities(result);
   }
 
   Future<List<Subscriber>> getByTopicExceptNone(String topicName) async {
     Database cdb = await NKNDataManager().currentDatabase();
-    List<Map<String, dynamic>> result = await cdb.query(tableName, where: '$topic = ?', whereArgs: [topicName], orderBy: '$time_create ASC');
+    List<Map<String, dynamic>> result = await cdb.query(tableName,
+        where: '$topic = ?',
+        whereArgs: [topicName],
+        orderBy: '$time_create ASC');
     return parseEntities(result);
   }
 
-  Future <List<String>> getAllSubscriberByTopic(String topicName) async{
+  Future<List<String>> getAllSubscriberByTopic(String topicName) async {
     Database cdb = await NKNDataManager().currentDatabase();
     String sql = '$tableName WHERE topic="$topicName"';
     List result = await cdb.query(sql);
-    List <String> members = List();
-    for (Map subInfo in result){
+    List<String> members = List();
+    for (Map subInfo in result) {
       members.add(subInfo['chat_id']);
     }
     return members;
@@ -111,45 +115,56 @@ class SubscriberRepo with Tag {
   //   return resultList.length;
   // }
 
-
-  Future<Subscriber> getByTopicAndChatId(String topicName, String chatId) async {
+  Future<Subscriber> getByTopicAndChatId(
+      String topicName, String chatId) async {
     Database cdb = await NKNDataManager().currentDatabase();
-    List<Map<String, dynamic>> result =
-        await cdb.query(tableName, where: '$topic = ? AND $chat_id = ?', whereArgs: [topicName, chatId], orderBy: '$time_create ASC');
+    List<Map<String, dynamic>> result = await cdb.query(tableName,
+        where: '$topic = ? AND $chat_id = ?',
+        whereArgs: [topicName, chatId],
+        orderBy: '$time_create ASC');
     final list = parseEntities(result);
     return list.isEmpty ? null : list[0];
   }
 
-
-  Future<bool> insertSubscriber(Subscriber subscriber) async{
+  Future<bool> insertSubscriber(Subscriber subscriber) async {
     Database cdb = await NKNDataManager().currentDatabase();
-    Subscriber querySubscriber = await getByTopicAndChatId(subscriber.topic, subscriber.chatId);
+    Subscriber querySubscriber =
+        await getByTopicAndChatId(subscriber.topic, subscriber.chatId);
 
-    if (subscriber.chatId.length < 64){
+    if (subscriber.chatId.length < 64) {
       return false;
     }
+
     /// insert Logic
-    if (querySubscriber == null){
-      int insertResult = await cdb.insert(tableName, toEntity(subscriber), conflictAlgorithm: ConflictAlgorithm.ignore);
-      NLog.w('Insert Subscriber finished__'+insertResult.toString());
-      if (insertResult > 0){
+    if (querySubscriber == null) {
+      int insertResult = await cdb.insert(tableName, toEntity(subscriber),
+          conflictAlgorithm: ConflictAlgorithm.ignore);
+      if (insertResult > 0) {
         return true;
       }
       return false;
     }
+
     /// update Logic
-    else{
-      if (subscriber.chatId == NKNClientCaller.currentChatId){
-        await updateOwnerIsMe(subscriber.topic, subscriber.chatId, subscriber.subscribed, subscriber.uploadDone);
-      }
-      else{
-        await update(subscriber.topic, subscriber.chatId, subscriber.indexPermiPage, subscriber.uploaded, subscriber.subscribed, subscriber.uploadDone);
+    else {
+      if (subscriber.chatId == NKNClientCaller.currentChatId) {
+        await updateOwnerIsMe(subscriber.topic, subscriber.chatId,
+            subscriber.subscribed, subscriber.uploadDone);
+      } else {
+        await update(
+            subscriber.topic,
+            subscriber.chatId,
+            subscriber.indexPermiPage,
+            subscriber.uploaded,
+            subscriber.subscribed,
+            subscriber.uploadDone);
       }
     }
     return true;
   }
 
-  Future<void> update(String topicName, String chatId, int pageIndex, bool uploaded_, bool subscribed_, bool uploadDone) async {
+  Future<void> update(String topicName, String chatId, int pageIndex,
+      bool uploaded_, bool subscribed_, bool uploadDone) async {
     Database cdb = await NKNDataManager().currentDatabase();
     await cdb.update(
       tableName,
@@ -164,7 +179,8 @@ class SubscriberRepo with Tag {
     );
   }
 
-  Future<void> updateOwnerIsMe(String topicName, String chatId, bool subscribed_, bool uploadDone) async {
+  Future<void> updateOwnerIsMe(String topicName, String chatId,
+      bool subscribed_, bool uploadDone) async {
     Database cdb = await NKNDataManager().currentDatabase();
     await cdb.update(
       tableName,
@@ -177,7 +193,8 @@ class SubscriberRepo with Tag {
     );
   }
 
-  Future<void> updatePermiPageIndex(String topicName, String chatId, int pageIndex) async {
+  Future<void> updatePermiPageIndex(
+      String topicName, String chatId, int pageIndex) async {
     Database cdb = await NKNDataManager().currentDatabase();
     await cdb.update(
       tableName,
@@ -197,28 +214,30 @@ class SubscriberRepo with Tag {
     );
   }
 
-  Future<void> delete(String topicName, String chatId) async {
+  Future<bool> delete(String topicName, String chatId) async {
     Database cdb = await NKNDataManager().currentDatabase();
-    if (topicName != null && chatId != null){
-      int result = await cdb.delete(tableName, where: '$topic = ? AND $chat_id = ?', whereArgs: [topicName, chatId]);
-      if (result != null && result > 0 && chatId != null){
-        NLog.w('Delete subscriber__'+chatId);
+    if (topicName != null && chatId != null) {
+      int result = await cdb.delete(tableName,
+          where: '$topic = ? AND $chat_id = ?', whereArgs: [topicName, chatId]);
+      if (result != null && result > 0 && chatId != null) {
+        NLog.w('Delete subscriber__' + chatId);
+        return true;
       }
-    }
-    else{
+    } else {
       NLog.w('Wrong!!! topicName or chatId is null');
     }
+    return false;
   }
 
   Future<void> deleteAll(String topicName) async {
     Database cdb = await NKNDataManager().currentDatabase();
-    if (topicName != null){
-      int result = await cdb.delete(tableName, where: '$topic = ?', whereArgs: [topicName]);
-      if (result > 0){
-        NLog.w('deleteAll by topicName__'+result.toString());
+    if (topicName != null) {
+      int result = await cdb
+          .delete(tableName, where: '$topic = ?', whereArgs: [topicName]);
+      if (result > 0) {
+        NLog.w('deleteAll by topicName__' + result.toString());
       }
-    }
-    else{
+    } else {
       NLog.w('Wrong topicName is null');
     }
   }
@@ -227,16 +246,20 @@ class SubscriberRepo with Tag {
     assert(version >= SqliteStorage.currentVersion);
 
     await db.execute(createSqlV5);
-    await db.execute('CREATE UNIQUE INDEX IF NOT EXISTS index_${tableName}_${topic}_$chat_id ON $tableName ($topic, $chat_id);');
-    await db.execute('CREATE        INDEX IF NOT EXISTS index_${tableName}_$time_create      ON $tableName ($time_create);');
+    await db.execute(
+        'CREATE UNIQUE INDEX IF NOT EXISTS index_${tableName}_${topic}_$chat_id ON $tableName ($topic, $chat_id);');
+    await db.execute(
+        'CREATE        INDEX IF NOT EXISTS index_${tableName}_$time_create      ON $tableName ($time_create);');
     NLog.w('CREATE UNIQUE INDEX');
   }
 
-  static Future<void> upgradeFromV5(Database db, int oldVersion, int newVersion) async {
+  static Future<void> upgradeFromV5(
+      Database db, int oldVersion, int newVersion) async {
     if (newVersion == SqliteStorage.currentVersion) {
       await create(db, newVersion);
     } else {
-      throw UnsupportedError('unsupported upgrade from $oldVersion to $newVersion.');
+      throw UnsupportedError(
+          'unsupported upgrade from $oldVersion to $newVersion.');
     }
   }
 

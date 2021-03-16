@@ -28,7 +28,17 @@ class Markdown extends StatelessWidget {
       onTapLink: (href) {
         launchURL(href);
       },
-      styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(code: textStyle, p: textStyle.copyWith(fontSize: DefaultTheme.bodyRegularFontSize), a: linkStyle, h1: textStyle.copyWith(fontSize: 32.sp), h2: textStyle.copyWith(fontSize: 24.sp), h3: textStyle.copyWith(fontSize: 18.sp), h4: textStyle.copyWith(fontSize: DefaultTheme.h3FontSize), h5: textStyle.copyWith(fontSize: DefaultTheme.h3FontSize), em: textStyle, listBullet: TextStyle(height: 1.25)),
+      styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+          code: textStyle,
+          p: textStyle.copyWith(fontSize: DefaultTheme.bodyRegularFontSize),
+          a: linkStyle,
+          h1: textStyle.copyWith(fontSize: 32.sp),
+          h2: textStyle.copyWith(fontSize: 24.sp),
+          h3: textStyle.copyWith(fontSize: 18.sp),
+          h4: textStyle.copyWith(fontSize: DefaultTheme.h3FontSize),
+          h5: textStyle.copyWith(fontSize: DefaultTheme.h3FontSize),
+          em: textStyle,
+          listBullet: TextStyle(height: 1.25)),
     );
   }
 }

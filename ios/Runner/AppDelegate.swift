@@ -112,8 +112,7 @@ import Nkn
     
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String) {
         print("Firebase registration token: \(String(describing: fcmToken))")
-//        let dataDict:[String: String] = ["token": fcmToken ?? ""]
-        // 存储FCMToken到本地
+        // Save fcm Token to local
         UserDefaults.standard.setValue(fcmToken, forKey: "nkn_fcm_token")
     }
     
@@ -124,17 +123,15 @@ import Nkn
         completionHandler([.alert, .badge, .sound])
     }
     
-    ///请求完成后会调用把获取的deviceToken返回给我们
+    // Request for deviceToken
     override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         //deviceToken = 32 bytes
-        print("deviceToken = \(deviceToken)")
-        //FIXME:打印推送64位token
         let formatDeviceToken = deviceToken.map { String(format: "%02.2hhx", arguments: [$0]) }.joined()
-        print("获取DeviceToken", formatDeviceToken)
-        // 存储DeviceToken到本地
+        print("Get DeviceToken", formatDeviceToken)
+        // Save Device Token to local
         UserDefaults.standard.setValue(formatDeviceToken, forKey: "nkn_device_token")
         
-        // 发送DeviceToken给谷歌
+        // Send DeviceToken to Google FCM
         Messaging.messaging().apnsToken = deviceToken
         
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {

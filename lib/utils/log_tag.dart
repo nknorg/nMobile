@@ -17,7 +17,9 @@ mixin Tag {
   String get unique => _tagInner(32, 5);
 
   String _tagInner(int length, int lenHashCode) {
-    final String name = this.runtimeType.toString() + '@' + hashCode.toString().substring(0, lenHashCode);
+    final String name = this.runtimeType.toString() +
+        '@' +
+        hashCode.toString().substring(0, lenHashCode);
     if (name.length > length) {
       return name.substring(name.length - length);
     } else
@@ -68,7 +70,8 @@ class LOG {
 
   void e(dynamic message, dynamic error) {
     /*if (!Global.isRelease)*/
-    final msg = '$tag |<E>| ${message?.toString()} |###| error: ${error?.toString()}';
+    final msg =
+        '$tag |<E>| ${message?.toString()} |###| error: ${error?.toString()}';
     /*if (usePrint)
       print(msg);
     else*/

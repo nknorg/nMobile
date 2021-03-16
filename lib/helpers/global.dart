@@ -31,7 +31,8 @@ class Global {
 
   static bool isLocaleZh() => locale != null && locale.startsWith('zh');
 
-  static String get versionFull => '${Global.version} + (Build ${Global.buildVersion})';
+  static String get versionFull =>
+      '${Global.version} + (Build ${Global.buildVersion})';
 
   static String get showVersion => '${Global.buildVersion}';
 
@@ -45,26 +46,18 @@ class Global {
   static Global get instance => _getInstance();
   static Global _instance;
 
-  /// 创建Map来记录发送的信息
-  static Map<String, dynamic> postNameMap = Map<String, dynamic>();
-  static Map<String, Map> sendDataMap = Map<String,Map>();
-  /// 这个是常驻listening的
-  static Map<String, dynamic> postEventListening = Map<String, dynamic>();
-
   Global._internal() {
-    // 初始化
+    // init
   }
 
   static Global _getInstance() {
     if (_instance == null) {
       _instance = new Global._internal();
-
     }
     return _instance;
   }
 
   static Future init(VoidCallback callback) async {
-
     WidgetsFlutterBinding.ensureInitialized();
     // Do not set value here. Will be set in `AppState.didChangeAppLifecycleState()`.
     // state = AppLifecycleState.resumed;
@@ -73,7 +66,8 @@ class Global {
     await initData();
     callback();
     if (Platform.isAndroid) {
-      SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(statusBarColor: Colors.transparent);
+      SystemUiOverlayStyle systemUiOverlayStyle =
+          SystemUiOverlayStyle(statusBarColor: Colors.transparent);
       SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
 //      BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
       AndroidMessagingService.registerNativeCallback();
@@ -89,10 +83,16 @@ class Global {
     Global.buildVersion = packageInfo.buildNumber.replaceAll('.', '');
     LocalStorage localStorage = LocalStorage();
     // load language
-    Global.locale = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.LOCALE_KEY}')) ?? 'auto';
+    Global.locale = (await localStorage
+            .get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.LOCALE_KEY}')) ??
+        'auto';
     // load settings
-    Settings.localNotificationType = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.LOCAL_NOTIFICATION_TYPE_KEY}')) ?? 0;
-    Settings.debug = (await localStorage.get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.DEBUG_KEY}')) ?? false;
+    Settings.localNotificationType = (await localStorage.get(
+            '${LocalStorage.SETTINGS_KEY}:${LocalStorage.LOCAL_NOTIFICATION_TYPE_KEY}')) ??
+        0;
+    Settings.debug = (await localStorage
+            .get('${LocalStorage.SETTINGS_KEY}:${LocalStorage.DEBUG_KEY}')) ??
+        false;
   }
 
   static bool isLoadTopic(String topic) {
@@ -110,13 +110,30 @@ class Global {
     }
   }
 
-  // static removeTopicCache(String topic) {
-  //   loadTopicDataTime.remove(topic);
-  //   loadLoadSubscribers.remove(topic);
-  // }
+  static String extension(String mimeType) {
+    var extension;
+    if (mimeType.indexOf('image/jpg') > -1 ||
+        mimeType.indexOf('image/jpeg') > -1) {
+      extension = 'jpg';
+    } else if (mimeType.indexOf('image/png') > -1) {
+      extension = 'png';
+    } else if (mimeType.indexOf('image/gif') > -1) {
+      extension = 'gif';
+    } else if (mimeType.indexOf('image/webp') > -1) {
+      extension = 'webp';
+    } else if (mimeType.indexOf('image/') > -1) {
+      extension = mimeType.split('/').last;
+    } else if (mimeType.indexOf('aac') > -1) {
+      extension = 'aac';
+    } else {
+      if (extension != null) {}
+    }
+    return extension;
+  }
 
   static bool isLoadSubscribers(String topic) {
-    num currentTime = num.parse(DateUtil.formatDate(DateTime.now(), format: "yyyyMMddHHmm"));
+    num currentTime =
+        num.parse(DateUtil.formatDate(DateTime.now(), format: "yyyyMMddHHmm"));
     if (loadLoadSubscribers.containsKey(topic)) {
       if ((currentTime - loadLoadSubscribers[topic]) >= 10) {
         loadLoadSubscribers[topic] = currentTime;

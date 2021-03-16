@@ -28,7 +28,8 @@ class _WalletItemState extends State<WalletItem> {
       return InkWell(
         onTap: widget.onTap ??
             () {
-              Navigator.of(context).pushNamed(NknWalletDetailScreen.routeName, arguments: {
+              Navigator.of(context)
+                  .pushNamed(NknWalletDetailScreen.routeName, arguments: {
                 'wallet': widget.schema,
                 'index': widget.index,
               });
@@ -55,7 +56,8 @@ class _WalletItemState extends State<WalletItem> {
                         color: Color(0xFFF1F4FF),
                         borderRadius: BorderRadius.all(Radius.circular(8)),
                       ),
-                      child: SvgPicture.asset('assets/logo.svg', color: Color(0xFF253A7E)),
+                      child: SvgPicture.asset('assets/logo.svg',
+                          color: Color(0xFF253A7E)),
                     ),
                   ),
                 ),
@@ -75,7 +77,8 @@ class _WalletItemState extends State<WalletItem> {
                             type: LabelType.h3,
                           ),
                           Label(
-                            Format.nknFormat(widget.schema.balance, decimalDigits: 4, symbol: 'NKN'),
+                            Format.nknFormat(widget.schema.balance,
+                                decimalDigits: 4, symbol: 'NKN'),
                             type: LabelType.bodySmall,
                           ),
                         ],
@@ -98,8 +101,15 @@ class _WalletItemState extends State<WalletItem> {
                             height: 18,
                             alignment: Alignment.center,
                             padding: const EdgeInsets.only(left: 8, right: 8),
-                            decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(8)), color: Color(0x1500CC96)),
-                            child: Text(NL10ns.of(context).mainnet, style: TextStyle(color: Color(0xFF00CC96), fontSize: 10, fontWeight: FontWeight.bold)),
+                            decoration: BoxDecoration(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(8)),
+                                color: Color(0x1500CC96)),
+                            child: Text(NL10ns.of(context).mainnet,
+                                style: TextStyle(
+                                    color: Color(0xFF00CC96),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -116,7 +126,8 @@ class _WalletItemState extends State<WalletItem> {
       return InkWell(
         onTap: widget.onTap ??
             () {
-              Navigator.of(context).pushNamed(NknWalletDetailScreen.routeName, arguments: {
+              Navigator.of(context)
+                  .pushNamed(NknWalletDetailScreen.routeName, arguments: {
                 'wallet': widget.schema,
                 'index': widget.index,
               });
@@ -140,7 +151,8 @@ class _WalletItemState extends State<WalletItem> {
                         color: Colours.light_ff,
                         borderRadius: BorderRadius.all(Radius.circular(8)),
                       ),
-                      child: SvgPicture.asset('assets/logo.svg', color: Colours.purple_2e),
+                      child: SvgPicture.asset('assets/logo.svg',
+                          color: Colours.purple_2e),
                     ).symm(h: 16, v: 20),
                     Positioned(
                       top: 16,
@@ -149,7 +161,8 @@ class _WalletItemState extends State<WalletItem> {
                         width: 20,
                         height: 20,
                         alignment: Alignment.center,
-                        decoration: BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
+                        decoration: BoxDecoration(
+                            color: Colours.purple_53, shape: BoxShape.circle),
                         child: SvgPicture.asset('assets/ethereum-logo.svg'),
                       ),
                     )
@@ -187,14 +200,20 @@ class _WalletItemState extends State<WalletItem> {
                       Container(
                         alignment: Alignment.center,
                         padding: 2.pad(l: 8, r: 8),
-                        decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.purple_53_a1p),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(9)),
+                            color: Colours.purple_53_a1p),
                         child: Text(
                           NL10ns.of(context).ERC_20,
-                          style: TextStyle(color: Colours.purple_53, fontSize: 10, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              color: Colours.purple_53,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                       Label(
-                        Format.nknFormat(widget.schema.balanceEth, symbol: 'ETH'),
+                        Format.nknFormat(widget.schema.balanceEth,
+                            symbol: 'ETH'),
                         type: LabelType.bodySmall,
                       ),
                     ],

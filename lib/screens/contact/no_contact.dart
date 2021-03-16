@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/chat/auth_bloc.dart';
 import 'package:nmobile/blocs/chat/auth_state.dart';
-import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/screens/contact/add_contact.dart';
@@ -37,12 +34,13 @@ class _NoContactScreenState extends State<NoContactScreen> {
         titleChild: GestureDetector(
           onTap: () async {
             ContactSchema currentUser = await ContactSchema.fetchCurrentUser();
-            Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: currentUser);
+            Navigator.of(context)
+                .pushNamed(ContactScreen.routeName, arguments: currentUser);
           },
-          child: BlocBuilder<AuthBloc, AuthState>(builder: (context, state){
-            if (state is AuthToUserState){
+          child: BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
+            if (state is AuthToUserState) {
               ContactSchema currentUser = state.currentUser;
-              return  Flex(
+              return Flex(
                 direction: Axis.horizontal,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
@@ -53,8 +51,8 @@ class _NoContactScreenState extends State<NoContactScreen> {
                       alignment: Alignment.center,
                       child: Container(
                         child: CommonUI.avatarWidget(
-                            radiusSize: 28,
-                            contact: currentUser,
+                          radiusSize: 28,
+                          contact: currentUser,
                         ),
                       ),
                     ),
@@ -64,8 +62,11 @@ class _NoContactScreenState extends State<NoContactScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Label(currentUser.getShowName, type: LabelType.h3, dark: true),
-                        Label(NL10ns.of(context).click_to_settings, type: LabelType.bodyRegular, color: DefaultTheme.fontLightColor.withAlpha(200))
+                        Label(currentUser.getShowName,
+                            type: LabelType.h3, dark: true),
+                        Label(NL10ns.of(context).click_to_settings,
+                            type: LabelType.bodyRegular,
+                            color: DefaultTheme.fontLightColor.withAlpha(200))
                       ],
                     ),
                   )
@@ -93,21 +94,24 @@ class _NoContactScreenState extends State<NoContactScreen> {
           color: DefaultTheme.backgroundLightColor,
           child: SingleChildScrollView(
             child: Container(
-              height: MediaQuery.of(context).size.height-MediaQuery.of(context).padding.top,
+              height: MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).padding.top,
               child: Flex(
                 direction: Axis.vertical,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Expanded(
                     flex: 0,
-                    child: Image(image: AssetImage("assets/contact/no-contact.png"), width: 198),
+                    child: Image(
+                        image: AssetImage("assets/contact/no-contact.png"),
+                        width: 198),
                   ),
                   Expanded(
                     flex: 0,
                     child: Column(
                       children: <Widget>[
                         Padding(
-                          padding: EdgeInsets.only(top: 32,bottom: 50),
+                          padding: EdgeInsets.only(top: 32, bottom: 50),
                           child: Label(
                             NL10ns.of(context).contact_no_contact_title,
                             type: LabelType.h2,
@@ -137,7 +141,10 @@ class _NoContactScreenState extends State<NoContactScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
-                              SvgPicture.asset('assets/icons/user-plus.svg', color: DefaultTheme.backgroundLightColor, width: 24).pad(r: 12),
+                              SvgPicture.asset('assets/icons/user-plus.svg',
+                                      color: DefaultTheme.backgroundLightColor,
+                                      width: 24)
+                                  .pad(r: 12),
                               Label(
                                 NL10ns.of(context).add_contact,
                                 type: LabelType.h3,

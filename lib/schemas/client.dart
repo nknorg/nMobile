@@ -3,7 +3,7 @@ class ClientSchema {
   final String address;
   final String publicKey;
 
-  ClientSchema({/*this.nodeInfo, */this.address, this.publicKey});
+  ClientSchema({/*this.nodeInfo, */ this.address, this.publicKey});
 }
 
 /*
