@@ -249,6 +249,8 @@ class MessageSchema extends Equatable {
 
       File file = File(join(path, name + '.$extension'));
 
+      NLog.w('loadMedia __File Length is____'+file.length().toString());
+
       file.writeAsBytesSync(bytes, flush: true);
       this.content = file;
     }
@@ -260,7 +262,9 @@ class MessageSchema extends Equatable {
         options['audioDuration'] = msg['options']['audioDuration'].toString();
       }
     }
-    cBloc.add(RefreshMessageChatEvent(this));
+    if (topic != null){
+      cBloc.add(RefreshMessageChatEvent(this));
+    }
   }
 
   String toTextData(Map pushInfo) {

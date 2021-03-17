@@ -274,8 +274,6 @@ class ContactSchema {
       contact.notificationOpen = true;
     }
 
-    NLog.w('contact.firstName is_____' + e['avatar'].toString());
-
     if (e['data'] != null) {
       try {
         Map<String, dynamic> data = jsonDecode(e['data']);
@@ -284,8 +282,6 @@ class ContactSchema {
           contact.extraInfo = new Map<String, dynamic>();
         }
         contact.extraInfo.addAll(data);
-
-        NLog.w('contact.extraInfo is_____' + contact.extraInfo.toString());
 
         contact.nknWalletAddress = data['nknWalletAddress'];
         var notes = data['notes'].toString();
