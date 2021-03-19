@@ -90,7 +90,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
   }
 
   uploadPermissionMeta() {
-    if (widget.topic.isPrivate &&
+    if (widget.topic.isPrivateTopic() &&
         widget.topic.isOwner(NKNClientCaller.currentChatId)) {
       GroupChatPrivateChannel.uploadPermissionMeta(
         topicName: widget.topic.topic,
@@ -108,7 +108,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
   @override
   Widget build(BuildContext context) {
     List<Widget> topicWidget = [
-      Label(widget.topic.shortName, type: LabelType.h3, dark: true)
+      Label(widget.topic.topicShort, type: LabelType.h3, dark: true)
     ];
 
     return Scaffold(
@@ -163,7 +163,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                             NL10ns.of(context).members,
                         type: LabelType.bodyRegular,
                         color: DefaultTheme.successColor,
-                      ).pad(l: widget.topic.isPrivate ? 20 : 0);
+                      ).pad(l: widget.topic.isPrivateTopic() ? 20 : 0);
                     })
                   ],
                 ),
@@ -194,7 +194,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
 
   Widget _memberListWidget() {
     List<Widget> topicWidget = [
-      Label(widget.topic.shortName, type: LabelType.h3, dark: true)
+      Label(widget.topic.topicShort, type: LabelType.h3, dark: true)
     ];
 
     return BlocBuilder<ChannelBloc, ChannelState>(
@@ -205,7 +205,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
         _topicCount = _members.length;
 
         if (_members.length > 0) {
-          MemberVo owner = !widget.topic.isPrivate
+          MemberVo owner = !widget.topic.isPrivateTopic()
               ? null
               : _members.firstWhere((c) => widget.topic.isOwner(c.chatId),
                   orElse: () => null);
@@ -221,7 +221,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
           if (me != null) _members.insert(0, me);
           if (owner != null && owner != me) _members.insert(0, owner);
         }
-        if (widget.topic.type == TopicType.private) {
+        if (widget.topic.isPrivateTopic()) {
           topicWidget.insert(
               0,
               loadAssetIconsImage('lock',
@@ -297,7 +297,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
   List<Widget> getNameLabels(MemberVo member) {
     String name = member.name;
     String option;
-    if (widget.topic.type == TopicType.private) {
+    if (widget.topic.isPrivateTopic()) {
       if (widget.topic.isOwner(member.chatId /*.toPubkey*/)) {
         if (member.chatId == NKNClientCaller.currentChatId) {
           option = '(${NL10ns.of(context).you}, ${NL10ns.of(context).owner})';
@@ -344,7 +344,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
 
   List<Widget> getToolBtns(MemberVo member) {
     List<Widget> toolBtns = <Widget>[];
-    if (widget.topic.isPrivate &&
+    if (widget.topic.isPrivateTopic() &&
         widget.topic.isOwner(NKNClientCaller.currentChatId) &&
         member.chatId != NKNClientCaller.currentChatId) {
       acceptAction() async {
@@ -407,7 +407,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
     _chatBloc.add(SendMessageEvent(sendMsg));
     showToast(NL10ns.of(context).invitation_sent);
 
-    if (topic.isPrivate &&
+    if (topic.isPrivateTopic() &&
         topic.isOwner(NKNClientCaller.currentChatId) &&
         address != NKNClientCaller.currentChatId) {
       await GroupChatHelper.moveSubscriberToWhiteList(

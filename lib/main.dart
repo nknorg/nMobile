@@ -24,7 +24,6 @@ import 'package:nmobile/router/routes.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:sentry/sentry.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'blocs/wallet/wallets_bloc.dart';
 
@@ -39,8 +38,8 @@ void main() async {
             dsn:
                 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
             environmentAttributes: const Event(
-              release: '209',
-              environment: 'Android209',
+              release: '212',
+              environment: 'Android212',
             ));
         runApp(App());
       });
@@ -88,8 +87,8 @@ void main() async {
             dsn:
                 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
             environmentAttributes: const Event(
-              release: '209',
-              environment: 'iOS209',
+              release: '212',
+              environment: 'iOS212',
             ));
         runApp(App());
       });

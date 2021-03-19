@@ -367,7 +367,7 @@ class GroupChatHelper {
     double minerFee = 0,
     void callback(),
   }) async {
-    if (topic.isPrivate && topic.isOwner(NKNClientCaller.currentChatId)) {
+    if (topic.isPrivateTopic() && topic.isOwner(NKNClientCaller.currentChatId)) {
       _timer4UploadAction?.cancel();
       _timer4UploadAction = null;
       final repoSub = SubscriberRepo();
@@ -407,7 +407,7 @@ class GroupChatHelper {
     double minerFee = 0,
     void callback(),
   }) async {
-    if (topic.isPrivate && topic.isOwner(NKNClientCaller.currentChatId)) {
+    if (topic.isPrivateTopic() && topic.isOwner(NKNClientCaller.currentChatId)) {
       _timer4UploadAction?.cancel();
       _timer4UploadAction = null;
       final repoSub = SubscriberRepo();

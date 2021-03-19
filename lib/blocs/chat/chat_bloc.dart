@@ -19,6 +19,7 @@ import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/model/data/contact_data_center.dart';
+import 'package:nmobile/model/data/group_data_center.dart';
 import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/data/message_data_center.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
@@ -201,6 +202,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         NLog.w('onePieceReady is____' + onePieceReady.toString());
         if (onePieceReady != null && onePieceReady.length > 0) {
           useOnePiece = true;
+          NLog.w('useOnePiece Send!!!!!!');
         }
         if (useOnePiece &&
             (message.contentType == ContentType.nknAudio ||
@@ -209,6 +211,21 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           _sendOnePieceMessage(message);
           return;
         } else {
+          if (message.contentType == ContentType.media ||
+              message.contentType == ContentType.nknImage){
+            String extraSendForAndroidSuit = message.toSuitVersionImageData(ContentType.nknImage);
+            try {
+              Uint8List pid = await NKNClientCaller.sendText(
+                  [message.to], extraSendForAndroidSuit, message.msgId);
+              if(pid != null){
+                MessageDataCenter.updateMessagePid(pid, message.msgId);
+              }
+              // NLog.w('Sending extraSendForAndroidSuit contentData to____'+extraSendForAndroidSuit.toString());
+            } catch (e) {
+              NLog.w('Wrong___' + e.toString());
+              message.setMessageStatus(MessageStatus.MessageSendFail);
+            }
+          }
           contentData = await _checkIfSendNotification(message);
         }
       } else if (message.contentType == ContentType.nknOnePiece) {
@@ -219,26 +236,26 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         contentData = await _checkIfSendNotification(message);
       }
 
-      if (_judgeShowReconnect() == false) {
-        try {
-          Uint8List pid = await NKNClientCaller.sendText(
-              [message.to], contentData, message.msgId);
-
-          NLog.w('Pid is-__' + pid.toString());
+      try {
+        Uint8List pid = await NKNClientCaller.sendText(
+            [message.to], contentData, message.msgId);
+        if(pid != null){
           MessageDataCenter.updateMessagePid(pid, message.msgId);
-        } catch (e) {
-          NLog.w('Wrong___' + e.toString());
-          message.setMessageStatus(MessageStatus.MessageSendFail);
+          NLog.w('Pid is_____'+pid.toString());
         }
+        else{
+          NLog.w('Wrong___PID is null');
+        }
+        NLog.w('Sending Message to____'+message.to.toString());
+        NLog.w('Sending Message contentData to____'+contentData.toString());
+      } catch (e) {
+        NLog.w('Wrong___' + e.toString());
+        message.setMessageStatus(MessageStatus.MessageSendFail);
       }
     }
 
     this.add(RefreshMessageListEvent());
     yield MessageUpdateState(target: message.to, message: message);
-  }
-
-  bool _judgeShowReconnect() {
-    return false;
   }
 
   _combineOnePieceMessage(MessageSchema onePieceMessage) async {
@@ -480,40 +497,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     _sendOnePiece(dataList, message);
 
     return;
-    // NLog.w('mime Type is____'+mimeType.toString());
-    // if (mimeType.indexOf('image') > -1 ||
-    //     mimeType.indexOf('audio') > -1) {
-    //   List fileBytesList = file.readAsBytesSync();
-    //
-    //   try {
-    //     NLog.w('fBytes Out is____'+fileBytesList.length.toString());
-    //     List<int> bytes = fileBytesList.sublist(0,1023);
-    //     // bytes = [8, 32, 22, 28, 24, 57, 33, 50, 46, 46, 38, 8, 32];
-    //     NLog.w('fBytes Out is____'+bytes.toList().toString());
-    //     NLog.w('fBytes Out 111is____'+reedSolomon.encode(bytes).toString());
-    //     List<int> outList = reedSolomon.encode(bytes);
-    //     NLog.w('message Out is____'+outList.toString());
-    //   } on ReedSolomonException catch(e) {
-    //     NLog.w('ReedSolomonException E:'+e.toString());
-    //   }
-    //
-    //   int filePieces = fileBytesList.length~/(perPieceLength);
-    //   int leftPiece = fileBytesList.length%(perPieceLength);
-    //   if (leftPiece > 0){
-    //     filePieces += 1;
-    //   }
-    //   List filePieceList = new List();
-    //   for (int i = 0; i < filePieces; i++){
-    //     int startIndex = i*perPieceLength;
-    //     int endIndex = (i+1)*perPieceLength;
-    //     if (endIndex > fileBytesList.length){
-    //       endIndex = fileBytesList.length;
-    //     }
-    //
-    //     Uint8List fileP = fileBytesList.sublist(startIndex,endIndex);
-    //     filePieceList.add(fileP);
-    //   }
-    // }
   }
 
   _sendGroupMessage(MessageSchema message) async {
@@ -522,7 +505,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       encodeSendJsonData = message.toTextData(null);
     } else if (message.contentType == ContentType.nknImage ||
         message.contentType == ContentType.media) {
-      encodeSendJsonData = message.toImageData(null);
+      /// 1 D-chat suit
+      encodeSendJsonData = message.toSuitVersionImageData(ContentType.media);
+      /// 1 nMobile suit
     } else if (message.contentType == ContentType.nknAudio) {
       encodeSendJsonData = message.toAudioData(null);
     } else if (message.contentType == ContentType.eventSubscribe) {
@@ -530,12 +515,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     } else if (message.contentType == ContentType.eventUnsubscribe) {
       encodeSendJsonData = message.toEventUnSubscribeData();
     }
-    if (isPrivateTopic(message.topic)) {
+
+    _sendGroupMessageWithJsonEncode(message, encodeSendJsonData);
+  }
+
+  _sendGroupMessageWithJsonEncode(MessageSchema message,String encodeJson) async{
+    if (isPrivateTopicReg(message.topic)){
       List<String> dests =
-          await GroupChatHelper.fetchGroupMembers(message.topic);
+      await GroupChatHelper.fetchGroupMembers(message.topic);
       if (dests != null && dests.length > 0) {
         Uint8List pid = await NKNClientCaller.sendText(
-            dests, encodeSendJsonData, message.msgId);
+            dests, encodeJson, message.msgId);
         MessageDataCenter.updateMessagePid(pid, message.msgId);
       } else {
         if (message.topic != null) {
@@ -543,40 +533,19 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         }
       }
     } else {
-      if (_judgeShowReconnect() == false) {
-        Uint8List pid;
-        try {
-          pid = await NKNClientCaller.publishText(
-              genTopicHash(message.topic), encodeSendJsonData);
-          message.setMessageStatus(MessageStatus.MessageSendSuccess);
-        } catch (e) {
-          message.setMessageStatus(MessageStatus.MessageSendFail);
-        }
-        if (pid != null) {
-          MessageDataCenter.updateMessagePid(pid, message.msgId);
-        }
+      Uint8List pid;
+      try {
+        pid = await NKNClientCaller.publishText(
+            genTopicHash(message.topic), encodeJson);
+        message.setMessageStatus(MessageStatus.MessageSendSuccess);
+      } catch (e) {
+        message.setMessageStatus(MessageStatus.MessageSendFail);
+      }
+      if (pid != null) {
+        MessageDataCenter.updateMessagePid(pid, message.msgId);
       }
     }
   }
-
-  // _judgeIfCanSendLocalMessageNotification(String title, MessageSchema message) async{
-  //
-  //   // final String title = (topic?.isPrivate ?? false) ? topic.shortName : contact.name;
-  //   if (Platform.isAndroid){
-  //     if (googleServiceOnInit == false){
-  //       if (Platform.isAndroid){
-  //         googleServiceOn = await NKNClientCaller.googleServiceOn();
-  //       }
-  //       /// Android when have ability to use FCM, no longer need Local push
-  //       if (googleServiceOn == false){
-  //         LocalNotification.messageNotification(title, message.content, message: message);
-  //       }
-  //     }
-  //   }
-  //   else{
-  //     LocalNotification.messageNotification(title, message.content, message: message);
-  //   }
-  // }
 
   _insertMessage(MessageSchema message) async {
     bool insertReceiveSuccess = await message.insertReceivedMessage();
@@ -648,7 +617,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
             message.contentType == ContentType.eventUnsubscribe) {
           if (message.from == NKNClientCaller.currentChatId) {} else {
             if (message.topic != null) {
-              if (isPrivateTopic(message.topic)) {
+              if (isPrivateTopicReg(message.topic)) {
                 await GroupChatPrivateChannel.pullSubscribersPrivateChannel(
                     topicName: message.topic,
                     membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),

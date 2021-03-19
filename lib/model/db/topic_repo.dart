@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/model/data/group_data_center.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:nmobile/model/group_chat_helper.dart';
@@ -33,45 +34,64 @@ final expire_at = 'expire_at';
 final is_top = 'is_top';
 final options = 'options'; // json
 
+class TopicType {
+  static int publicTopic = 1;
+  static int privateTopic = 2;
+}
+
 class Topic with Tag {
   final int id;
   final String topic;
-  // final int numSubscribers;
   final String avatarUri;
   final int themeId;
   final int timeUpdate;
   final int blockHeightExpireAt;
   final bool isTop;
   final String _options; // json for OptionsSchema.
-  TopicType _type;
-  String _name;
-  String _owner;
+
+  String topicName;
+  String owner;
+  String topicShort;
   OptionsSchema _optionsSchema;
+
+  bool acceptAll = false;
+  int topicType;
 
   Topic(
       {this.id,
       this.topic,
-      // this.numSubscribers,
       this.avatarUri = '',
       this.themeId,
       this.timeUpdate,
       this.blockHeightExpireAt,
       this.isTop = false,
+
       options = ''})
       : _options = options,
         assert(topic != null && topic.isNotEmpty) {
-    _type = isPrivateTopic(topic) ? TopicType.private : TopicType.public;
+    topicType = isPrivateTopicReg(topic)?TopicType.privateTopic:TopicType.publicTopic;
 
-    if (_type == TopicType.private) {
+    if (topicType == TopicType.privateTopic) {
       int index = topic.lastIndexOf('.');
-      _name = topic.substring(0, index);
-      _owner = topic.substring(index + 1);
-      assert(_name.isNotEmpty);
-      assert(isValidPubkey(_owner));
+      topicName = topic.substring(0, index);
+      owner = topic.substring(index + 1);
+      assert(topicName.isNotEmpty);
+      assert(isValidPubkey(owner));
+
+      topicShort = owner.substring(0,8);
     } else {
-      _name = topic;
-      _owner = null;
+      topicName = topic;
+      owner = null;
+
+      topicShort = topicName;
     }
+  }
+
+  bool isPrivateTopic(){
+    if (this.topicType == TopicType.privateTopic){
+      return true;
+    }
+    return false;
   }
 
   static spotName({@required String name}) => Topic(topic: name);
@@ -90,16 +110,6 @@ class Topic with Tag {
         options: _options);
   }
 
-  String get name => _name;
-
-  String get owner => _owner;
-
-  TopicType get type => _type;
-
-  bool get isPrivate => type == TopicType.private;
-
-  String get shortName => isPrivate ? name + '.' + owner.substring(0, 8) : name;
-
   OptionsSchema get options {
     return _options == null
         ? null
@@ -107,12 +117,6 @@ class Topic with Tag {
   }
 
   bool isOwner(String accountPubkey) => accountPubkey == owner;
-}
-
-enum TopicType { private, public }
-
-extension TopicTypeString on TopicType {
-  String get toStr => this == TopicType.private ? 'private' : 'public';
 }
 
 class TopicRepo with Tag {
@@ -205,16 +209,6 @@ class TopicRepo with Tag {
     );
   }
 
-  // Future<void> updateSubscribersCount(String topicName, int numSubscribers) async {
-  //   Database currentDataBase = await NKNDataManager().currentDatabase();
-  //   await currentDataBase.update(
-  //     tableName,
-  //     {count: numSubscribers},
-  //     where: '$topic = ?',
-  //     whereArgs: [topicName],
-  //   );
-  // }
-
   Future<void> delete(String topicName) async {
     Database currentDataBase = await NKNDataManager().currentDatabase();
     await currentDataBase
@@ -230,16 +224,25 @@ class TopicRepo with Tag {
         'CREATE UNIQUE INDEX index_${tableName}_$topic ON $tableName ($topic);');
   }
 
-  static Future<void> upgradeFromV5(
-      Database db, int oldVersion, int newVersion) async {
-    assert(newVersion >= SqliteStorage.currentVersion);
-    if (newVersion == SqliteStorage.currentVersion) {
-      await create(db, newVersion);
-    } else {
-      throw UnsupportedError(
-          'unsupported upgrade from $oldVersion to $newVersion.');
-    }
+  static Future<void> updateTopicTableToV4(Database db) async{
+    await db.execute(
+        'ALTER TABLE $topic ADD COLUMN type INTEGER DEFAULT 0');
+
+    await db.execute(
+        'ALTER TABLE $topic ADD COLUMN accept_all BOOLEAN DEFAULT 0');
   }
+
+  /// todo check upgradeFromV5
+  // static Future<void> upgradeFromV5(
+  //     Database db, int oldVersion, int newVersion) async {
+  //   assert(newVersion >= SqliteStorage.currentVersion);
+  //   if (newVersion == SqliteStorage.currentVersion) {
+  //     await create(db, newVersion);
+  //   } else {
+  //     throw UnsupportedError(
+  //         'unsupported upgrade from $oldVersion to $newVersion.');
+  //   }
+  // }
 
   static final deleteSql = '''DROP TABLE IF EXISTS Topic;''';
   static final createSqlV5 = '''
@@ -252,7 +255,9 @@ class TopicRepo with Tag {
         $time_update INTEGER,
         $expire_at INTEGER,
         $is_top BOOLEAN DEFAULT 0,
-        $options TEXT
+        $options TEXT,
+        type INTEGER DEFAULT 0,
+        accept_all BOOLEAN DEFAULT 0,
       )''';
 }
 
@@ -295,9 +300,6 @@ Map<String, dynamic> toEntity(Topic subs) {
   if (subs.topic != null) {
     insertTopic = subs.topic;
   }
-  // if (subs.numSubscribers > 0){
-  //   numSubscribers = subs.numSubscribers;
-  // }
   if (subs.avatarUri != null) {
     avatarUri = subs.avatarUri;
   }

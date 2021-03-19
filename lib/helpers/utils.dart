@@ -275,7 +275,7 @@ Duration blockToExpiresTime(int blockCount) {
 }
 
 final privateTopicRegExp = RegExp(r'\.[0-9a-f]{64}$');
-bool isPrivateTopic(String topic) {
+bool isPrivateTopicReg(String topic) {
   return privateTopicRegExp.hasMatch(topic);
 }
 

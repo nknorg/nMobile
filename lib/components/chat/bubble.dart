@@ -665,7 +665,7 @@ class _ChatBubbleState extends State<ChatBubble> {
             children: [
               Label(inviteDesc,
                   type: LabelType.bodyRegular, color: Colours.dark_2d),
-              Label(topicSpotName.shortName,
+              Label(topicSpotName.topicShort,
                   type: LabelType.bodyRegular, color: Colours.blue_0f)
             ],
           ),

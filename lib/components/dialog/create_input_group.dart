@@ -17,6 +17,7 @@ import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/data/group_data_center.dart';
 import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
@@ -408,7 +409,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
     Navigator.of(context).pushReplacementNamed(
       ChatGroupPage.routeName,
       arguments: ChatSchema(
-        type: group.isPrivate ? ChatType.PrivateChannel : ChatType.Channel,
+        type: group.isPrivateTopic() ? ChatType.PrivateChannel : ChatType.Channel,
         topic: group,
       ),
     );
@@ -418,8 +419,9 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
     if (isEmpty(topicName)) {
       return;
     }
+    GroupDataCenter groupDataCenter = new GroupDataCenter();
     if (_privateSelected) {
-      if (!isPrivateTopic(topicName)) {
+      if (!isPrivateTopicReg(topicName)) {
         String pubKey = NKNClientCaller.currentChatId;
         topicName = '$topicName.$pubKey';
       }

@@ -144,8 +144,8 @@ class CommonUI {
       if (topic.avatarUri != null) {
         avatarFile = File(topic.avatarUri);
       }
-      if (topic.name != null) {
-        name = topic.name;
+      if (topic.topicName != null) {
+        name = topic.topicName;
       }
       if (topic.options != null) {
         if (topic.options.backgroundColor != null &&

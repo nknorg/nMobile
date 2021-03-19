@@ -31,6 +31,7 @@ import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/nkn_image_utils.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/data/group_data_center.dart';
 import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
@@ -102,7 +103,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   _refreshSubscribers() async {
     final topic = widget.arguments.topic;
-    if (topic.isPrivate) {
+    if (topic.isPrivateTopic()) {
       GroupChatPrivateChannel.pullSubscribersPrivateChannel(
           topicName: topic.topic,
           membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
@@ -134,6 +135,15 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     if (topicName != null) {
       NLog.w('refreshTop topic Name__' + topicName);
     }
+    Topic topic = await GroupChatHelper.fetchTopicInfoByName(topicName);
+    if (topic != null){
+      if (topic.topicType == TopicType.privateTopic) {
+        NLog.w('Enter Private Topic___'+topicName);
+        GroupDataCenter.pullPrivateSubscribers(topicName);
+      }
+    }
+    return;
+
     showJoin = await GroupChatHelper.checkMemberIsInGroup(
         NKNClientCaller.currentChatId, topicName);
     if (showJoin != null) {
@@ -181,48 +191,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
         showToast('Contact the group Creator');
       }
     } else {
-      Topic topic = await GroupChatHelper.fetchTopicInfoByName(topicName);
-      if (topic != null){
-        if (isPrivateTopic(topicName)){
-          final topicHashed = genTopicHash(topicName);
-          final Map<String, dynamic> subscribersMap =
-          await NKNClientCaller.getSubscribers(
-              topicHash: topicHashed,
-              offset: 0,
-              limit: 10000,
-              meta: false,
-              txPool: true);
-
-          NLog.w('subscribersMap is____'+subscribersMap.toString());
-          if (subscribersMap.keys.contains(NKNClientCaller.currentChatId)) {
-            NLog.w('Insert Topic and Subsribers');
-
-            /// Inert topic
-            for (String chatId in subscribersMap.keys) {
-              if (chatId == NKNClientCaller.currentChatId) {
-                GroupChatHelper.insertSelfSubscriber(topicName);
-              }
-              else {
-                Subscriber sub = Subscriber(
-                    id: 0,
-                    topic: topicName,
-                    chatId: chatId,
-                    indexPermiPage: -1,
-                    timeCreate: DateTime
-                        .now()
-                        .millisecondsSinceEpoch,
-                    blockHeightExpireAt: -1,
-                    uploaded: true,
-                    subscribed: true,
-                    uploadDone: true);
-                GroupChatHelper.insertSubscriber(sub);
-
-                NLog.w('chatId String is____' + chatId.toString());
-              }
-            }
-          }
-        }
-      }
       _refreshSubscribers();
       NLog.w('_refreshSubscribers called');
     }
@@ -469,9 +437,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   @override
   Widget build(BuildContext context) {
     List<Widget> topicWidget = [
-      Label(widget.arguments.topic.shortName, type: LabelType.h3, dark: true)
+      Label(widget.arguments.topic.topicShort, type: LabelType.h3, dark: true)
     ];
-    if (widget.arguments.topic.isPrivate) {
+    if (widget.arguments.topic.isPrivateTopic()) {
       topicWidget.insert(
           0,
           loadAssetIconsImage('lock',
@@ -533,7 +501,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                           type: LabelType.bodySmall,
                           color: DefaultTheme.riseColor,
                         ).pad(
-                            l: widget.arguments.topic.type == TopicType.private
+                            l: widget.arguments.topic.isPrivateTopic()
                                 ? 20
                                 : 0);
                       })
