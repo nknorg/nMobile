@@ -26,8 +26,8 @@ class NLog {
       return;
     }
     try {
-      if (Global.isRelease == false) {}
       print('Logger__' + object.toString());
+      if (Global.isRelease == false) {}
       // if (!Global.isRelease) {}instanceOf.get<Logger>().w(object.toString());
     } catch (e) {}
   }

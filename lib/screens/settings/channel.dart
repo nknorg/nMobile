@@ -444,7 +444,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
     _chatBloc.add(SendMessageEvent(sendMsg));
     showToast(NL10ns.of(context).invitation_sent);
 
-    if (topic.isPrivate &&
+    if (topic.isPrivateTopic() &&
         topic.isOwner(NKNClientCaller.currentChatId) &&
         address != NKNClientCaller.currentChatId) {
       await GroupChatHelper.moveSubscriberToWhiteList(

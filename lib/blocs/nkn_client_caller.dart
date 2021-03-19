@@ -43,7 +43,7 @@ class NKNClientCaller {
   static NKNClientBloc clientBloc;
   static Map<String, Completer> _clientEventQueue = Map<String, Completer>();
 
-  static Map<String, Map> _clientEventData = Map<String, Map>();
+  // static Map<String, Map> _clientEventData = Map<String, Map>();
 
   createClient(Uint8List seed, String identifier, String clientAddress) {
     Completer<String> completer = Completer<String>();
@@ -112,7 +112,7 @@ class NKNClientCaller {
       'maxHoldingSeconds': -1,
       'msgId': messageId,
     };
-    _clientEventData[eventId] = sendData;
+    // _clientEventData[eventId] = sendData;
 
     try {
       _methodChannel.invokeMethod('sendText', sendData);
@@ -136,7 +136,7 @@ class NKNClientCaller {
       'dataShards': dataShards,
       'parityShards': parityShards,
     };
-    _clientEventData[eventId] = sendData;
+    // _clientEventData[eventId] = sendData;
 
     try {
       _methodChannel.invokeMethod('intoPieces', sendData);
@@ -160,7 +160,7 @@ class NKNClientCaller {
       'parityShards': parityShards,
       'bytesLength': bytesLength,
     };
-    _clientEventData[eventId] = sendData;
+    // _clientEventData[eventId] = sendData;
 
     try {
       _methodChannel.invokeMethod('combinePieces', sendData);
@@ -183,7 +183,7 @@ class NKNClientCaller {
       'data': data,
       'maxHoldingSeconds': -1,
     };
-    _clientEventData[eventId] = publishData;
+    // _clientEventData[eventId] = publishData;
     try {
       _methodChannel.invokeMethod('publishText', publishData);
     } catch (e) {
@@ -260,10 +260,10 @@ class NKNClientCaller {
     return completer.future;
   }
 
-  static Future<Map<String, dynamic>> getSubscription(
+  static Future<Map> getSubscription(
       {String topicHash, String subscriber}) async {
-    Completer<Map<String, dynamic>> completer =
-        Completer<Map<String, dynamic>>();
+    Completer<Map> completer =
+        Completer<Map>();
     String id = completer.hashCode.toString();
     _clientEventQueue[id] = completer;
 
@@ -516,9 +516,15 @@ class NKNClientCaller {
           _clientEventQueue[eventKey].complete(count);
           break;
         case 'getSubscription':
-          Map result = Map<String, dynamic>();
-          result['expiresAt'] = res['expiresAt'];
-          _clientEventQueue[eventKey].complete(result);
+          Map dataInfo = res['data'];
+
+          // Map result = Map<String, dynamic>();
+          // // result['expiresAt'] = res['expiresAt'];
+          NLog.w('getSubscription is____'+res.toString());
+          NLog.w('GetSubscription Res is___'+dataInfo.runtimeType.toString());
+          NLog.w('GetSubscription dataInfo is___'+dataInfo.toString());
+
+          _clientEventQueue[eventKey].complete(dataInfo);
           break;
 
         case 'getSubscribers':
@@ -577,31 +583,30 @@ class NKNClientCaller {
       String errDetail = err.details.toString();
       String errCode = err.code.toString();
       if (errMsg.length > 0) {
-        /// update Message to Fail
-        if (errMsg == 'sendText' || errMsg == 'publishText') {
-          NLog.w('Wrong!!! sendE:' + errDetail.toString());
-          Map info = _clientEventData[errCode];
-          if (info != null) {
-            String messageId = info['msgId'];
-            // MessageDataCenter.updateMessageToSendFail(messageId);
-            _clientEventQueue[errCode].completeError(errMsg);
-          }
-        } else if (errMsg == 'subscribe' || errMsg == 'unsubscribe') {
+        // if (errMsg == 'sendText' || errMsg == 'publishText') {
+        //   // Map info = _clientEventData[errCode];
+        //   // if (info != null) {
+        //   //   _clientEventQueue[errCode].completeError(errMsg);
+        //   // }
+        // } else
+        if (errMsg == 'subscribe' || errMsg == 'unsubscribe') {
           _clientEventQueue[errCode].completeError(errDetail);
+          _removeEventIdByKey(errCode);
+          return;
         } else {
-          NLog.w('Wrong!!!__' + err.toString());
+          NLog.w('Wrong!!! E:event__' + errMsg.toString());
+          NLog.w('Wrong!!! E:detail__' + errDetail.toString());
         }
       }
-      NLog.w('Wrong11!!!__' + err.toString());
       _clientEventQueue[errCode].completeError(errMsg);
       _removeEventIdByKey(errCode);
     });
   }
 
   _removeEventIdByKey(String key) {
-    if (_clientEventData.containsKey(key)) {
-      _clientEventData.remove(key);
-    }
+    // if (_clientEventData.containsKey(key)) {
+    //   _clientEventData.remove(key);
+    // }
     if (_clientEventQueue.containsKey(key)) {
       _clientEventQueue.remove(key);
     }

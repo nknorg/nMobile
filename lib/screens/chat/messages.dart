@@ -138,13 +138,13 @@ class _MessagesTabState extends State<MessagesTab>
             if (topic.blockHeightExpireAt == -1 ||
                 topic.blockHeightExpireAt == null) {
               NLog.w('blockHeightExpireAt null or wrong!!!');
-              final String topicHash = genTopicHash(topic.name);
+              final String topicHash = genTopicHash(topic.topicName);
               NKNClientCaller.getSubscription(
                       topicHash: topicHash,
                       subscriber: NKNClientCaller.currentChatId)
                   .then((subscription) {
                 if (subscription['expiresAt'] != null) {
-                  TopicRepo().updateOwnerExpireBlockHeight(topic.name,
+                  TopicRepo().updateOwnerExpireBlockHeight(topic.topicName,
                       int.parse(subscription['expiresAt'].toString()));
                   NLog.w('UpgradeTopic__' +
                       topic.topic +
@@ -156,7 +156,7 @@ class _MessagesTabState extends State<MessagesTab>
             } else if ((topic.blockHeightExpireAt - blockHeight) <
                 (400000 - 300000)) {
               String topicName = topic.topic;
-              if (topic.isPrivate == false) {
+              if (topic.isPrivateTopic() == false) {
                 NLog.w('UpdateTopic__:' +
                     topic.topic +
                     '__TopicBlockHeight:' +
@@ -173,14 +173,14 @@ class _MessagesTabState extends State<MessagesTab>
                       }
                     });
 
-                final String topicHash = genTopicHash(topic.name);
+                final String topicHash = genTopicHash(topic.topicName);
                 NKNClientCaller.getSubscription(
                         topicHash: topicHash,
                         subscriber: NKNClientCaller.currentChatId)
                     .then((subscription) {
                   NLog.w('getSubscription_____' + subscription.toString());
                   if (subscription['expiresAt'] != null) {
-                    TopicRepo().updateOwnerExpireBlockHeight(topic.name,
+                    TopicRepo().updateOwnerExpireBlockHeight(topic.topicName,
                         int.parse(subscription['expiresAt'].toString()));
                     if (topic.topic != null && subscription != null) {
                       NLog.w('UpdateTopic__' +
@@ -744,9 +744,9 @@ class _MessagesTabState extends State<MessagesTab>
       );
     }
     List<Widget> topicWidget = [
-      _topLabelWidget(item.topic.shortName),
+      _topLabelWidget(item.topic.topicShort),
     ];
-    if (item.topic.type == TopicType.private) {
+    if (item.topic.isPrivateTopic()) {
       topicWidget.insert(
           0,
           loadAssetIconsImage('lock',
@@ -869,10 +869,6 @@ class _MessagesTabState extends State<MessagesTab>
 
   Widget getSingleChatItemView(MessageItem item, ContactLoaded state) {
     var contact = state.getContactByAddress(item.targetId);
-
-    if (contact == null) {
-      NLog.w('getSingleChatItemView contact is null');
-    }
 
     if (contact == null) return Container();
 

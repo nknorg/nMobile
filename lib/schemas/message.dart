@@ -33,7 +33,7 @@ class MessageStatus {
 class ContentType {
   static const String text = 'text';
   static const String textExtension = 'textExtension';
-  static const String nknImage = 'image';
+  static const String nknImage = 'nknImage';
 
   /// in order to suit old version
   static const String media = 'media';
@@ -345,6 +345,33 @@ class MessageSchema extends Equatable {
     return jsonEncode(data);
   }
 
+  String toSuitVersionImageData(String contentType) {
+    File file = this.content as File;
+    var mimeType = mime(file.path);
+
+    String content;
+    if (mimeType.indexOf('image') > -1) {
+      content =
+      '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
+    }
+
+    Map data = {
+      'id': msgId,
+      'contentType': contentType,
+      'content': content,
+      'timestamp': timestamp?.millisecondsSinceEpoch ??
+          DateTime.now().millisecondsSinceEpoch,
+    };
+    if (options != null && options.keys.length > 0) {
+      data['options'] = options;
+    }
+    if (topic != null) {
+      data['topic'] = topic;
+    }
+    NLog.w('toSuitVersionImageData is___'+data.toString());
+    return jsonEncode(data);
+  }
+
   String toImageData(Map pushInfo) {
     File file = this.content as File;
     var mimeType = mime(file.path);
@@ -357,7 +384,7 @@ class MessageSchema extends Equatable {
 
     Map data = {
       'id': msgId,
-      'contentType': contentType ?? ContentType.text,
+      'contentType': ContentType.nknImage,
       'content': content,
       'timestamp': timestamp?.millisecondsSinceEpoch ??
           DateTime.now().millisecondsSinceEpoch,
@@ -371,6 +398,7 @@ class MessageSchema extends Equatable {
     if (pushInfo != null) {
       data.addAll(pushInfo);
     }
+    NLog.w('toImageData is___'+data.toString());
     return jsonEncode(data);
   }
 

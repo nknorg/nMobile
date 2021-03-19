@@ -722,7 +722,7 @@ class _ContactHomeState extends State<ContactHome> {
                             children: <Widget>[
                               Row(
                                 children: <Widget>[
-                                  item.type == TopicType.private
+                                  item.isPrivateTopic()
                                       ? loadAssetIconsImage(
                                           'lock',
                                           width: 18,
@@ -730,7 +730,7 @@ class _ContactHomeState extends State<ContactHome> {
                                         )
                                       : Container(),
                                   Label(
-                                    item.shortName,
+                                    item.topicShort,
                                     type: LabelType.h3,
                                     overflow: TextOverflow.ellipsis,
                                   ),

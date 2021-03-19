@@ -1150,13 +1150,13 @@ class _ContactScreenState extends State<ContactScreen> {
                   borderRadius: BorderRadius.circular(12)),
               margin: EdgeInsets.only(left: 16, right: 16, top: 10),
               child: FlatButton(
-                // onPressed: () async {
-                //   setState(() {
-                //     _acceptNotification = !_acceptNotification;
-                //     NLog.w('oNChanged 11111111'+_acceptNotification.toString());
-                //     _saveAndSendDeviceToken();
-                //   });
-                // },
+                onPressed: () async {
+                  // setState(() {
+                  //   _acceptNotification = !_acceptNotification;
+                  //   NLog.w('oNChanged 11111111'+_acceptNotification.toString());
+                  //   _saveAndSendDeviceToken();
+                  // });
+                },
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.vertical(
                         top: Radius.circular(12), bottom: Radius.circular(12))),

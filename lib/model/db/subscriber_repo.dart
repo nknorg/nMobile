@@ -5,7 +5,6 @@
  */
 
 import 'package:nmobile/blocs/nkn_client_caller.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:nmobile/utils/log_tag.dart';
@@ -150,9 +149,9 @@ class SubscriberRepo with Tag {
 
     /// insert Logic
     if (querySubscriber == null) {
-      int insertResult = await cdb.insert(tableName, toEntity(subscriber),
+      var insertResult = await cdb.insert(tableName, toEntity(subscriber),
           conflictAlgorithm: ConflictAlgorithm.ignore);
-      if (insertResult > 0) {
+      if (insertResult != null && insertResult > 0){
         return true;
       }
       return false;

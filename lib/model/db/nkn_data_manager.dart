@@ -32,7 +32,9 @@ class NKNDataManager {
   static String _publicKey;
   static String _password;
 
-  static int currentVersion = 3;
+  static int dataBaseVersionV3 = 3;
+
+  static int dataBaseVersionV4 = 4;
 
   static Database _currentDatabase;
 
@@ -42,7 +44,7 @@ class NKNDataManager {
     var db = await openDatabase(
       path,
       password: _password,
-      version: currentVersion,
+      version: dataBaseVersionV4,
       onCreate: (Database db, int version) async {
         await MessageSchema.create(db, version);
         await ContactSchema.create(db, version);
@@ -64,22 +66,25 @@ class NKNDataManager {
         await BlackListRepo.create(db, version);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
-        if (newVersion <= currentVersion) {
-          await NKNDataManager.upgradeTopicTable2V3(db, currentVersion);
-          await NKNDataManager.upgradeContactSchema2V3(db, currentVersion);
+        if (newVersion <= dataBaseVersionV3) {
+          await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
+          await NKNDataManager.upgradeContactSchema2V3(db, dataBaseVersionV3);
         }
-        if (newVersion >= currentVersion) {
-          await SubscriberRepo.create(db, currentVersion);
-          await BlackListRepo.create(db, currentVersion);
+        if (newVersion >= dataBaseVersionV3) {
+          await SubscriberRepo.create(db, dataBaseVersionV3);
+          await BlackListRepo.create(db, dataBaseVersionV3);
+        }
+        if (newVersion == dataBaseVersionV4){
+          await TopicRepo.updateTopicTableToV4(db);
         }
       },
     );
-    if (currentVersion < 3) {
-      await NKNDataManager.upgradeTopicTable2V3(db, currentVersion);
-      await NKNDataManager.upgradeContactSchema2V3(db, currentVersion);
-      await SubscriberRepo.create(db, currentVersion);
-      await BlackListRepo.create(db, currentVersion);
-    }
+    // if (currentVersion < 3) {
+    //   await NKNDataManager.upgradeTopicTable2V3(db, currentVersion);
+    //   await NKNDataManager.upgradeContactSchema2V3(db, currentVersion);
+    //   await SubscriberRepo.create(db, currentVersion);
+    //   await BlackListRepo.create(db, currentVersion);
+    // }
     return db;
   }
 
