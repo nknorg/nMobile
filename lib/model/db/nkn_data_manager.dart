@@ -1,5 +1,4 @@
-import 'package:nmobile/blocs/nkn_client_caller.dart';
-import 'package:nmobile/helpers/global.dart';
+
 import 'package:nmobile/model/data/contact_data_center.dart';
 import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
@@ -32,9 +31,11 @@ class NKNDataManager {
   static String _publicKey;
   static String _password;
 
+  static int dataBaseVersionV2 = 2;
   static int dataBaseVersionV3 = 3;
-
   static int dataBaseVersionV4 = 4;
+
+  static int currentDatabaseVersion = dataBaseVersionV3;
 
   static Database _currentDatabase;
 
@@ -44,10 +45,15 @@ class NKNDataManager {
     var db = await openDatabase(
       path,
       password: _password,
-      version: dataBaseVersionV4,
+      version: currentDatabaseVersion,
       onCreate: (Database db, int version) async {
         await MessageSchema.create(db, version);
         await ContactSchema.create(db, version);
+
+        await TopicRepo.create(db, version);
+        await SubscriberRepo.create(db, version);
+        await BlackListRepo.create(db, version);
+
         var now = DateTime.now();
         var publicKey = _publicKey.replaceFirst(_CHAT_DATABASE_NAME + '_', '');
         var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(publicKey);
@@ -61,29 +67,31 @@ class NKNDataManager {
               updatedTime: now,
               profileVersion: uuid.v4(),
             ).toEntity(publicKey));
-        await TopicRepo.create(db, version);
-        await SubscriberRepo.create(db, version);
-        await BlackListRepo.create(db, version);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
-        if (newVersion <= dataBaseVersionV3) {
+        NLog.w('OldVersion is___'+oldVersion.toString());
+        NLog.w('NewVersion is___'+newVersion.toString());
+        if (newVersion >= dataBaseVersionV2) {
           await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
           await NKNDataManager.upgradeContactSchema2V3(db, dataBaseVersionV3);
         }
-        if (newVersion >= dataBaseVersionV3) {
-          await SubscriberRepo.create(db, dataBaseVersionV3);
-          await BlackListRepo.create(db, dataBaseVersionV3);
-        }
-        if (newVersion == dataBaseVersionV4){
+        // if (newVersion >= dataBaseVersionV3) {
+        //   await SubscriberRepo.create(db, dataBaseVersionV3);
+        //   await BlackListRepo.create(db, dataBaseVersionV3);
+        // }
+        if (newVersion >= dataBaseVersionV4){
           await TopicRepo.updateTopicTableToV4(db);
+          await SubscriberRepo.updateTopicTableToV4(db);
         }
       },
     );
-    // if (currentVersion < 3) {
-    //   await NKNDataManager.upgradeTopicTable2V3(db, currentVersion);
-    //   await NKNDataManager.upgradeContactSchema2V3(db, currentVersion);
-    //   await SubscriberRepo.create(db, currentVersion);
-    //   await BlackListRepo.create(db, currentVersion);
+    // await TopicRepo.updateTopicTableToV4(db);
+    // await SubscriberRepo.updateTopicTableToV4(db);
+    // if (o < 3) {
+    //   await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
+    //   await NKNDataManager.upgradeContactSchema2V3(db, dataBaseVersionV3);
+    //   await SubscriberRepo.create(db, dataBaseVersionV3);
+    //   await BlackListRepo.create(db, dataBaseVersionV3);
     // }
     return db;
   }

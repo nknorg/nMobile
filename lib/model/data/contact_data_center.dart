@@ -239,8 +239,6 @@ class ContactDataCenter {
       NLog.w("Wrong!!! responseFullProfile__" + e.toString());
     }
     int responseTimeValue = DateTime.now().millisecondsSinceEpoch;
-    NLog.w('ResponseType__Full__ExpireTime__' +
-        DateTime.fromMillisecondsSinceEpoch(responseTimeValue).toString());
     String responseTimeKey =
         LocalStorage.NKN_USER_PROFILE_VERSION_RESPONSE_TIME +
             otherContact.clientAddress;

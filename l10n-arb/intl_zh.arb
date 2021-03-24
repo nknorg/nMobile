@@ -1770,5 +1770,35 @@
      "@slide_to_cancel": {
        "type": "text",
        "placeholders": {}
-     }
+  },
+  "invite_and_send_success": "邀请发送成功",
+    "@invite_and_send_success": {
+      "type": "text",
+      "placeholders": {}
+    },
+  "join_but_not_invite": "未邀请",
+    "@join_but_not_invite": {
+      "type": "text",
+      "placeholders": {}
+  },
+  "invited_already": "你已经邀请过该成员，继续邀请?",
+    "@invited_already": {
+      "type": "text",
+      "placeholders": {}
+  },
+  "group_member_already": "该成员已经加入本群",
+    "@group_member_already": {
+      "type": "text",
+      "placeholders": {}
+  },
+  "invite_yourself_error": "不能邀请你自己!",
+    "@invite_yourself_error": {
+      "type": "text",
+      "placeholders": {}
+    },
+    "member_no_auth_invite": "私有群聊群成员暂不能支持邀请他人，联系群主邀请他人",
+    "@member_no_auth_invite": {
+      "type": "text",
+      "placeholders": {}
+    }
 }

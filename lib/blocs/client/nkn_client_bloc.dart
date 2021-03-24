@@ -2,8 +2,8 @@ import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:nmobile/blocs/chat/auth_bloc.dart';
-import 'package:nmobile/blocs/chat/auth_event.dart';
+import 'package:nmobile/blocs/auth/auth_bloc.dart';
+import 'package:nmobile/blocs/auth/auth_event.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/client/client_state.dart';

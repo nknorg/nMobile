@@ -5,7 +5,6 @@
  */
 
 import 'package:nmobile/model/db/nkn_data_manager.dart';
-import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 /// @author Chenai
@@ -118,8 +117,7 @@ class BlackListRepo {
 
   static Future<void> upgradeFromV5(
       Database db, int oldVersion, int newVersion) async {
-    // assert(newVersion >= SqliteStorage.currentVersion);
-    if (newVersion == SqliteStorage.currentVersion) {
+    if (newVersion == NKNDataManager.dataBaseVersionV3) {
       await create(db, newVersion);
     } else {
       throw UnsupportedError(

@@ -8,8 +8,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nmobile/blocs/chat/auth_bloc.dart';
-import 'package:nmobile/blocs/chat/auth_event.dart';
+import 'package:nmobile/blocs/auth/auth_bloc.dart';
+import 'package:nmobile/blocs/auth/auth_event.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';

@@ -342,7 +342,6 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         }
     }
 
-    
     func onAsyncMessageReceive(){
         onConnectWorkItem = DispatchWorkItem {
             self.onMessageListening()
@@ -600,9 +599,12 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             do{
                 let res: NknSubscription? = try client.getSubscription(topicHash, subscriber: subscriber)
                 var resp: [String: Any] = [String: Any]()
+                var data: [String: Any] = [String: Any]()
+                data["meta"] = res?.meta
+                data["expiresAt"] = res?.expiresAt
+                
                 resp["_id"] = _id
-                resp["meta"] = res?.meta
-                resp["expiresAt"] = res?.expiresAt
+                resp["data"] = data
                 resp["event"] = self.NKN_METHOD_GET_SUBSCRIPTION
                 self.clientEventSink!(resp)
             } catch let error {
@@ -668,6 +670,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
             clientConfig = NknGetDefaultClientConfig()!
         }
         clientConfig.wsWriteTimeout = 20000
+        clientConfig.rpcConcurrency = 1
         var error: NSError?
         var client = NknNewMultiClient(account, identifier, 3, true, clientConfig, &error)
         if (error != nil){

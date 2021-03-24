@@ -1,6 +1,6 @@
 import 'package:bloc/bloc.dart';
-import 'package:nmobile/blocs/chat/auth_event.dart';
-import 'package:nmobile/blocs/chat/auth_state.dart';
+import 'package:nmobile/blocs/auth/auth_event.dart';
+import 'package:nmobile/blocs/auth/auth_state.dart';
 import 'package:nmobile/model/data/contact_data_center.dart';
 import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/schemas/message.dart';

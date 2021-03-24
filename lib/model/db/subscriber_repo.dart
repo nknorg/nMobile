@@ -4,9 +4,7 @@
  * Proprietary and confidential
  */
 
-import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
-import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -20,9 +18,7 @@ class Subscriber {
   final int indexPermiPage;
   final int timeCreate;
   final int blockHeightExpireAt;
-  final bool uploaded;
-  final bool subscribed;
-  final bool uploadDone;
+  final int memberStatus;
 
   const Subscriber({
     this.id,
@@ -31,10 +27,17 @@ class Subscriber {
     this.indexPermiPage,
     this.timeCreate,
     this.blockHeightExpireAt,
-    this.uploaded,
-    this.subscribed,
-    this.uploadDone,
+    this.memberStatus,
   });
+}
+
+class MemberStatus {
+  static const int DefaultNotMember = 0;
+  static const int MemberInvited = 1;
+  static const int MemberPublished = 2;
+  static const int MemberSubscribed = 3;
+  static const int MemberPublishRejected = 4;
+  static const int MemberJoinedButNotInvited = 5;
 }
 
 class SubscriberRepo with Tag {
@@ -52,6 +55,15 @@ class SubscriberRepo with Tag {
     List<Map<String, dynamic>> result = await cdb.query(tableName,
         where: '$topic = ?',
         whereArgs: [topicName],
+        orderBy: '$time_create ASC');
+    return parseEntities(result);
+  }
+
+  Future<List<Subscriber>> getAllMemberByTopic(String topicName) async {
+    Database cdb = await NKNDataManager().currentDatabase();
+    List<Map<String, dynamic>> result = await cdb.query(tableName,
+        where: '$topic = ? AND $subscribed = ?',
+        whereArgs: [topicName, '1'],
         orderBy: '$time_create ASC');
     return parseEntities(result);
   }
@@ -82,43 +94,6 @@ class SubscriberRepo with Tag {
     ));
   }
 
-  // Future<int> batchUpdateSubscriberList(List <Subscriber> subs) async{
-  //   Database cdb = await NKNDataManager.instance.currentDatabase();
-  //   Batch dbBatch = cdb.batch();
-  //   for(Subscriber sub in subs){
-  //     String topicV = sub.topic;
-  //     String chatIDV = sub.chatId;
-  //     int prm_p_iV = sub.indexPermiPage;
-  //     int time_createV = sub.timeCreate;
-  //     int expire_atV = sub.blockHeightExpireAt;
-  //     bool uploadedV = sub.uploaded?true:false;
-  //     bool subscribedV = sub.subscribed?true:false;
-  //     bool upload_doneV = sub.uploadDone?true:false;
-  //
-  //     List<Map<String, dynamic>> result =
-  //     await cdb.query(tableName, where: '$topic = ? AND $chat_id = ?', whereArgs: [topicV, chatIDV], orderBy: '$time_create ASC');
-  //     final list = parseEntities(result);
-  //
-  //     if (list.length == 0){
-  //       String insertSql = 'INSERT INTO $tableName($topic,$chat_id,$prm_p_i,$time_create,$expire_at,$uploaded,$subscribed,$upload_done)'+
-  //           ' VALUES ("$topicV","$chatIDV","$prm_p_iV","$time_createV","$expire_atV","$uploadedV","$subscribedV","$upload_doneV")';
-  //       dbBatch.execute(insertSql);
-  //     }
-  //     else{
-  //       await cdb.query(tableName, where: '$topic = ?', whereArgs: [topicV], orderBy: '$time_create ASC');
-  //       // final list = parseEntities(result);
-  //       // for (Subscriber sub in list){
-  //       //   Global.debugLog('database exsits topic:'+sub.topic+'__chatID:'+sub.chatId);
-  //       // }
-  //     }
-  //   }
-  //   List resultList = await dbBatch.commit();
-  //   for (dynamic result in resultList){
-  //     NLog.w('batchUpdateSubscriberList result is__'+result.toString());
-  //   }
-  //   return resultList.length;
-  // }
-
   Future<Subscriber> getByTopicAndChatId(
       String topicName, String chatId) async {
     Database cdb = await NKNDataManager().currentDatabase();
@@ -126,10 +101,6 @@ class SubscriberRepo with Tag {
         where: '$topic = ? AND $chat_id = ?',
         whereArgs: [topicName, chatId],
         orderBy: '$time_create ASC');
-
-    NLog.w('Result is_____'+result.toString());
-    NLog.w('Result is_____'+topicName.toString());
-    NLog.w('Result is_____'+chatId.toString());
 
     final list = parseEntities(result);
     if (list.length > 0){
@@ -149,6 +120,7 @@ class SubscriberRepo with Tag {
 
     /// insert Logic
     if (querySubscriber == null) {
+      NLog.w('Insert thing is____'+toEntity(subscriber).toString());
       var insertResult = await cdb.insert(tableName, toEntity(subscriber),
           conflictAlgorithm: ConflictAlgorithm.ignore);
       if (insertResult != null && insertResult > 0){
@@ -159,61 +131,131 @@ class SubscriberRepo with Tag {
 
     /// update Logic
     else {
-      if (subscriber.chatId == NKNClientCaller.currentChatId) {
-        await updateOwnerIsMe(subscriber.topic, subscriber.chatId,
-            subscriber.subscribed, subscriber.uploadDone);
-      } else {
-        await update(
-            subscriber.topic,
-            subscriber.chatId,
-            subscriber.indexPermiPage,
-            subscriber.uploaded,
-            subscriber.subscribed,
-            subscriber.uploadDone);
-      }
+      NLog.w('Update Subscriber is____'+subscriber.memberStatus.toString());
+      await updateMemberStatus(subscriber, subscriber.memberStatus);
     }
     return true;
   }
 
-  Future<void> update(String topicName, String chatId, int pageIndex,
-      bool uploaded_, bool subscribed_, bool uploadDone) async {
+  // Future<void> update(String topicName, String chatId, int pageIndex,
+  //     bool uploaded_, bool subscribed_, bool uploadDone) async {
+  //   Database cdb = await NKNDataManager().currentDatabase();
+  //   await cdb.update(
+  //     tableName,
+  //     {
+  //       prm_p_i: pageIndex,
+  //       uploaded: uploaded_ ? 1 : 0,
+  //       subscribed: subscribed_ ? 1 : 0,
+  //       upload_done: uploadDone ? 1 : 0,
+  //     },
+  //     where: '$topic = ? AND $chat_id = ?',
+  //     whereArgs: [topicName, chatId],
+  //   );
+  // }
+
+  // Future<void> updateOwnerIsMe(String topicName, String chatId,
+  //     bool subscribed_, bool uploadDone) async {
+  //   Database cdb = await NKNDataManager().currentDatabase();
+  //   await cdb.update(
+  //     tableName,
+  //     {
+  //       subscribed: subscribed_ ? 1 : 0,
+  //       upload_done: uploadDone ? 1 : 0,
+  //     },
+  //     where: '$topic = ? AND $chat_id = ?',
+  //     whereArgs: [topicName, chatId],
+  //   );
+  // }
+
+  // Future<bool> updateIsSubscribed(
+  //     Subscriber updateSub, bool subscribed) async {
+  //   Database cdb = await NKNDataManager().currentDatabase();
+  //   int result = await cdb.update(
+  //     tableName,
+  //     {'subscribed': subscribed?1:0},
+  //     where: '$topic = ? AND $chat_id = ?',
+  //     whereArgs: [updateSub.topic, updateSub.chatId],
+  //   );
+  //   return result>0;
+  // }
+  //
+  // Future<bool> updateIsInvited(
+  //     Subscriber updateSub, bool invited) async {
+  //   Database cdb = await NKNDataManager().currentDatabase();
+  //   int result = await cdb.update(
+  //     tableName,
+  //     {'invited': invited?1:0},
+  //     where: '$topic = ? AND $chat_id = ?',
+  //     whereArgs: [updateSub.topic, updateSub.chatId],
+  //   );
+  //   return result>0;
+  // }
+  //
+  // Future<bool> updateIsPublished(
+  //     Subscriber updateSub, bool published) async {
+  //   Database cdb = await NKNDataManager().currentDatabase();
+  //   int result = await cdb.update(
+  //     tableName,
+  //     {'published': published?1:0},
+  //     where: '$topic = ? AND $chat_id = ?',
+  //     whereArgs: [updateSub.topic, updateSub.chatId],
+  //   );
+  //   return result>0;
+  // }
+
+  Future <bool> updateMemberStatus(Subscriber updateSub,int memberStatus) async{
     Database cdb = await NKNDataManager().currentDatabase();
-    await cdb.update(
+    int result = await cdb.update(
       tableName,
-      {
-        prm_p_i: pageIndex,
-        uploaded: uploaded_ ? 1 : 0,
-        subscribed: subscribed_ ? 1 : 0,
-        upload_done: uploadDone ? 1 : 0,
-      },
+      {'member_status': memberStatus},
       where: '$topic = ? AND $chat_id = ?',
-      whereArgs: [topicName, chatId],
+      whereArgs: [updateSub.topic, updateSub.chatId],
     );
+    return result>0;
   }
 
-  Future<void> updateOwnerIsMe(String topicName, String chatId,
-      bool subscribed_, bool uploadDone) async {
+  Future<List<Subscriber>> findAllSubscribersWithPermitIndex(String topicName,int permitIndex) async{
     Database cdb = await NKNDataManager().currentDatabase();
-    await cdb.update(
+    var res = await cdb.query(
       tableName,
-      {
-        subscribed: subscribed_ ? 1 : 0,
-        upload_done: uploadDone ? 1 : 0,
-      },
-      where: '$topic = ? AND $chat_id = ?',
-      whereArgs: [topicName, chatId],
+      where: '$topic = ? AND $prm_p_i = ?',
+      whereArgs: [topicName,permitIndex],
     );
+    NLog.w('findAllSubscribersWithPermitIndex__'+res.length.toString());
+    List<Subscriber> members = parseEntities(res);
+
+    return members;
   }
 
-  Future<void> updatePermiPageIndex(
-      String topicName, String chatId, int pageIndex) async {
+  Future<void> updatePermitIndex(Subscriber sub, int pageIndex) async {
     Database cdb = await NKNDataManager().currentDatabase();
-    await cdb.update(
+    var res = await cdb.update(
       tableName,
       {prm_p_i: pageIndex},
       where: '$topic = ? AND $chat_id = ?',
-      whereArgs: [topicName, chatId],
+      whereArgs: [sub.topic, sub.chatId],
     );
+    if (res > 0){
+      NLog.w('updatePermitIndex __'+pageIndex.toString()+'Success');
+    }
+    else{
+      NLog.w('updatePermitIndex __'+pageIndex.toString()+'Failed');
+    }
+  }
+
+  Future<int> findMaxPermitIndex(String topicName) async {
+    Database cdb = await NKNDataManager().currentDatabase();
+    var result = await cdb.query(
+        tableName,
+        where: '$topic = ?',
+        whereArgs: [topicName],
+        orderBy: '$prm_p_i  ASC');
+
+    if (result != null){
+      Subscriber sub = parseEntity(result[0]);
+      return sub.indexPermiPage;
+    }
+    return 0;
   }
 
   Future<void> updatePageUploaded(String topicName, int pageIndex) async {
@@ -255,7 +297,7 @@ class SubscriberRepo with Tag {
   }
 
   static Future<void> create(Database db, int version) async {
-    assert(version >= SqliteStorage.currentVersion);
+    assert(version >= NKNDataManager.dataBaseVersionV3);
 
     await db.execute(createSqlV5);
     await db.execute(
@@ -265,14 +307,13 @@ class SubscriberRepo with Tag {
     NLog.w('CREATE UNIQUE INDEX');
   }
 
-  static Future<void> upgradeFromV5(
-      Database db, int oldVersion, int newVersion) async {
-    if (newVersion == SqliteStorage.currentVersion) {
-      await create(db, newVersion);
-    } else {
-      throw UnsupportedError(
-          'unsupported upgrade from $oldVersion to $newVersion.');
-    }
+  static Future<void> updateTopicTableToV4(Database db) async{
+    await db.execute(
+        'ALTER TABLE subscriber ADD COLUMN member_status INTEGER DEFAULT 0');
+    await db.execute(
+        'ALTER TABLE subscriber DROP COLUMN uploaded');
+    await db.execute(
+        'ALTER TABLE subscriber DROP COLUMN upload_done');
   }
 
   static final deleteSql = '''DROP TABLE IF EXISTS Subscribers;''';
@@ -286,7 +327,8 @@ class SubscriberRepo with Tag {
         $expire_at INTEGER,
         $uploaded BOOLEAN,
         $subscribed BOOLEAN,
-        $upload_done BOOLEAN
+        $upload_done BOOLEAN,
+        $member_status BOOLEAN
       )''';
 }
 
@@ -300,6 +342,8 @@ final expire_at = 'expire_at';
 final uploaded = 'uploaded';
 final subscribed = 'subscribed';
 final upload_done = 'upload_done';
+final member_status = 'member_status';
+
 
 List<Subscriber> parseEntities(List<Map<String, dynamic>> rows) {
   List<Subscriber> list = [];
@@ -317,9 +361,7 @@ Subscriber parseEntity(Map<String, dynamic> row) {
     indexPermiPage: row[prm_p_i],
     timeCreate: row[time_create],
     blockHeightExpireAt: row[expire_at],
-    uploaded: row[uploaded] == 1,
-    subscribed: row[subscribed] == 1,
-    uploadDone: row[upload_done] == 1,
+    memberStatus: row['member_status'],
   );
 }
 
@@ -330,8 +372,6 @@ Map<String, dynamic> toEntity(Subscriber subs) {
     prm_p_i: subs.indexPermiPage,
     time_create: subs.timeCreate,
     expire_at: subs.blockHeightExpireAt,
-    uploaded: subs.uploaded ? 1 : 0,
-    subscribed: subs.subscribed ? 1 : 0,
-    upload_done: subs.uploadDone ? 1 : 0,
+    member_status: subs.memberStatus,
   };
 }

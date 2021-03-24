@@ -8,9 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:nmobile/blocs/chat/auth_bloc.dart';
-import 'package:nmobile/blocs/chat/auth_event.dart';
-import 'package:nmobile/blocs/chat/auth_state.dart';
+import 'package:nmobile/blocs/auth/auth_bloc.dart';
+import 'package:nmobile/blocs/auth/auth_event.dart';
+import 'package:nmobile/blocs/auth/auth_state.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
 

@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nmobile/blocs/chat/channel_bloc.dart';
+import 'package:nmobile/blocs/channel/channel_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/button.dart';
@@ -419,7 +419,6 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
     if (isEmpty(topicName)) {
       return;
     }
-    GroupDataCenter groupDataCenter = new GroupDataCenter();
     if (_privateSelected) {
       if (!isPrivateTopicReg(topicName)) {
         String pubKey = NKNClientCaller.currentChatId;
@@ -454,10 +453,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                       );
                     });
               } else {
-                GroupChatPublicChannel.pullSubscribersPublicChannel(
-                  topicName: topicName,
-                  membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
-                );
+                GroupDataCenter.pullSubscribersPublicChannel(topicName);
               }
               _createOrJoinGroupSuccess(topicName);
             } else {
