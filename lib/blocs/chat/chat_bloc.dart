@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mime_type/mime_type.dart';
-import 'package:nmobile/blocs/chat/channel_bloc.dart';
+import 'package:nmobile/blocs/channel/channel_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
@@ -209,6 +209,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
                 message.contentType == ContentType.media ||
                 message.contentType == ContentType.nknImage)) {
           _sendOnePieceMessage(message);
+          _checkIfSendNotification(message);
           return;
         } else {
           if (message.contentType == ContentType.media ||
@@ -639,30 +640,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
                       indexPermiPage: -1,
                       timeCreate: DateTime.now().millisecondsSinceEpoch,
                       blockHeightExpireAt: -1,
-                      uploaded: true,
-                      subscribed: true,
-                      uploadDone: true);
-                  GroupChatHelper.insertSubscriber(sub);
+                      memberStatus: MemberStatus.MemberSubscribed);
+
+                  SubscriberRepo().insertSubscriber(sub);
                 }
                 else if (message.contentType == ContentType.eventUnsubscribe){
                   // delete Member
-                  Subscriber sub = Subscriber(
-                      id: 0,
-                      topic: message.topic,
-                      chatId: message.from,
-                      indexPermiPage: -1,
-                      timeCreate: DateTime.now().millisecondsSinceEpoch,
-                      blockHeightExpireAt: -1,
-                      uploaded: true,
-                      subscribed: true,
-                      uploadDone: true);
                   GroupChatHelper.deleteSubscriberOfTopic(message.topic, message.from);
                 }
-                GroupChatPublicChannel.pullSubscribersPublicChannel(
-                  topicName: message.topic,
-                  myChatId: NKNClientCaller.currentChatId,
-                  membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
-                );
+                GroupDataCenter.pullSubscribersPublicChannel(message.topic);
               }
             }
           }
@@ -690,11 +676,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           return;
         } else {
           await GroupChatHelper.insertTopicIfNotExists(message.topic);
-
-          GroupChatPublicChannel.pullSubscribersPublicChannel(
-            topicName: message.topic,
-            membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
-          );
+          GroupDataCenter.pullSubscribersPublicChannel(message.topic);
         }
       } else {
         bool existMember = await GroupChatHelper.checkMemberIsInGroup(
@@ -703,22 +685,23 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         NLog.w('Exist no Member___' + message.from.toString());
         if (existMember == false) {
           /// insertMember
-          Subscriber sub = Subscriber(
-              id: 0,
-              topic: message.topic.toString(),
-              chatId: message.from.toString(),
-              indexPermiPage: -1,
-              timeCreate: DateTime.now().millisecondsSinceEpoch,
-              blockHeightExpireAt: -1,
-              uploaded: true,
-              subscribed: true,
-              uploadDone: true);
+          /// do private logic
+          if (topic.isPrivateTopic()){
 
-          await GroupChatHelper.insertSubscriber(sub);
-          GroupChatPublicChannel.pullSubscribersPublicChannel(
-            topicName: message.topic,
-            membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
-          );
+          }
+          else{
+            Subscriber sub = Subscriber(
+                id: 0,
+                topic: message.topic.toString(),
+                chatId: message.from.toString(),
+                indexPermiPage: -1,
+                timeCreate: DateTime.now().millisecondsSinceEpoch,
+                blockHeightExpireAt: -1,
+                memberStatus: MemberStatus.MemberSubscribed);
+
+            SubscriberRepo().insertSubscriber(sub);
+            await GroupDataCenter.pullSubscribersPublicChannel(message.topic);
+          }
         }
       }
     } else {

@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2021-03-15T15:00:38.669342",
+  "@@last_modified": "2021-03-24T16:55:59.770001",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1790,6 +1790,36 @@
   },
   "slide_to_cancel": "< Slide Cancel <",
   "@slide_to_cancel": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "invite_and_send_success": "invite and send success",
+  "@invite_and_send_success": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "join_but_not_invite": "not invited",
+  "@join_but_not_invite": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "invited_already": "You have already invited this member,still invite?",
+  "@invited_already": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "group_member_already": "The member is in group already",
+  "@group_member_already": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "invite_yourself_error": "Can not invite yourself!",
+  "@invite_yourself_error": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "member_no_auth_invite": "Private group member can not invite others currently,ask group owner to invite others",
+  "@member_no_auth_invite": {
     "type": "text",
     "placeholders": {}
   }

@@ -301,6 +301,7 @@ class NKNClientCaller {
       'meta': meta,
       'txPool': txPool,
     };
+    NLog.w('getSubscribers__'+dataInfo.toString());
     try {
       _methodChannel.invokeMethod('getSubscribers', dataInfo);
     } catch (e) {
@@ -517,17 +518,12 @@ class NKNClientCaller {
           break;
         case 'getSubscription':
           Map dataInfo = res['data'];
-
-          // Map result = Map<String, dynamic>();
-          // // result['expiresAt'] = res['expiresAt'];
-          NLog.w('getSubscription is____'+res.toString());
-          NLog.w('GetSubscription Res is___'+dataInfo.runtimeType.toString());
-          NLog.w('GetSubscription dataInfo is___'+dataInfo.toString());
-
           _clientEventQueue[eventKey].complete(dataInfo);
           break;
 
         case 'getSubscribers':
+          NLog.w('getSubscribers res is____'+res.toString());
+
           Map dataMap = res['data'];
           Map subscriberMap = new Map<String, dynamic>();
           for (String key in dataMap.keys) {

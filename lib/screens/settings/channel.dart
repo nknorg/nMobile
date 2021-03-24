@@ -7,9 +7,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nmobile/blocs/chat/channel_bloc.dart';
-import 'package:nmobile/blocs/chat/channel_event.dart';
-import 'package:nmobile/blocs/chat/channel_state.dart';
+import 'package:nmobile/blocs/channel/channel_bloc.dart';
+import 'package:nmobile/blocs/channel/channel_event.dart';
+import 'package:nmobile/blocs/channel/channel_state.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
@@ -20,9 +20,9 @@ import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/nkn_image_utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/data/group_data_center.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/model/group_chat_helper.dart';
@@ -51,6 +51,8 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
 
   bool isUnSubscribed = false;
 
+  int currentMemberCount = 0;
+
   initAsync() async {
     SubscriberRepo()
         .getByTopicAndChatId(
@@ -69,11 +71,11 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
   @override
   void initState() {
     super.initState();
-
-    initAsync();
     _chatBloc = BlocProvider.of<ChatBloc>(context);
     _channelBloc = BlocProvider.of<ChannelBloc>(context);
     _channelBloc.add(ChannelMemberCountEvent(widget.arguments.topic));
+
+    initAsync();
   }
 
   @override
@@ -223,16 +225,15 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
                                         Expanded(child: BlocBuilder<ChannelBloc,
                                                 ChannelState>(
                                             builder: (context, state) {
-                                          int memberCount = 0;
                                           if (state is ChannelMembersState) {
                                             if (state.memberCount != null &&
                                                 state.topicName ==
                                                     widget.arguments.topic) {
-                                              memberCount = state.memberCount;
+                                              currentMemberCount = state.memberCount;
                                             }
                                           }
                                           return Label(
-                                            '$memberCount' +
+                                            '$currentMemberCount' +
                                                 NL10ns.of(context).members,
                                             type: LabelType.bodyRegular,
                                             textAlign: TextAlign.right,
@@ -447,12 +448,13 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
     if (topic.isPrivateTopic() &&
         topic.isOwner(NKNClientCaller.currentChatId) &&
         address != NKNClientCaller.currentChatId) {
-      await GroupChatHelper.moveSubscriberToWhiteList(
-          topic: topic,
-          chatId: address,
-          callback: () {
-            // refreshMembers();
-          });
+      await GroupDataCenter.addPrivatePermissionList(topic.topic, address);
+      // await GroupChatHelper.moveSubscriberToWhiteList(
+      //     topic: topic,
+      //     chatId: address,
+      //     callback: () {
+      //       // refreshMembers();
+      //     });
     }
   }
 }

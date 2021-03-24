@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:nmobile/blocs/chat/channel_bloc.dart';
-import 'package:nmobile/blocs/chat/channel_event.dart';
-import 'package:nmobile/blocs/chat/channel_state.dart';
+import 'package:nmobile/blocs/channel/channel_bloc.dart';
+import 'package:nmobile/blocs/channel/channel_event.dart';
+import 'package:nmobile/blocs/channel/channel_state.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
@@ -19,13 +19,14 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/data/group_data_center.dart';
 import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/schemas/contact.dart';
-import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/screens/contact/contact.dart';
+import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/nlog_util.dart';
@@ -46,19 +47,15 @@ class MemberVo {
   final String name;
   final String chatId;
   final int indexPermiPage;
-  final bool uploaded;
-  final bool subscribed;
-  final bool isBlack;
   final ContactSchema contact;
+  final int memberStatus;
 
   const MemberVo({
     this.name,
     this.chatId,
     this.indexPermiPage,
-    this.uploaded,
-    this.subscribed,
-    this.isBlack,
     this.contact,
+    this.memberStatus,
   });
 }
 
@@ -73,6 +70,12 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
   ChatBloc _chatBloc;
   ChannelBloc _channelBloc;
 
+  GroupDataCenter groupDataCenter;
+
+  String inviteContent = '--';
+  String joinedContent = '--';
+  String rejectContent = '--';
+
   @override
   void initState() {
     super.initState();
@@ -81,28 +84,22 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
 
     repoSub = SubscriberRepo();
     repoBla = BlackListRepo();
-    // _topicCount = widget.topic.numSubscribers;
 
     _refreshMemberList();
     NLog.w('MemberList called!!!!!');
 
-    uploadPermissionMeta();
-  }
-
-  uploadPermissionMeta() {
-    if (widget.topic.isPrivateTopic() &&
-        widget.topic.isOwner(NKNClientCaller.currentChatId)) {
-      GroupChatPrivateChannel.uploadPermissionMeta(
-        topicName: widget.topic.topic,
-        accountPubkey: NKNClientCaller.currentChatId,
-        repoSub: repoSub,
-        repoBlackL: repoBla,
-      );
-    }
+    groupDataCenter = GroupDataCenter();
   }
 
   _refreshMemberList() {
-    _channelBloc.add(FetchChannelMembersEvent(widget.topic.topic));
+    if (widget.topic.isPrivateTopic() && widget.topic.isOwner(NKNClientCaller.currentChatId)){
+      _channelBloc.add(ChannelOwnMemberCountEvent(widget.topic.topic));
+      _channelBloc.add(FetchOwnChannelMembersEvent(widget.topic.topic));
+      NLog.w('_refreshMemberList called!!!');
+    }
+    else{
+      _channelBloc.add(FetchChannelMembersEvent(widget.topic.topic));
+    }
   }
 
   @override
@@ -157,6 +154,35 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                             state.topicName == widget.topic.topic) {
                           _topicCount = state.memberCount;
                         }
+                      }
+                      else if (state is ChannelOwnMembersState){
+                        int invitedCount = state.inviteMemberCount;
+                        int joinedCount = state.joinedMemberCount;
+                        int rejectCount = state.rejectMemberCount;
+                        inviteContent = '$invitedCount'+NL10ns.of(context).members+':'+NL10ns.of(context).invitation_sent;
+                        joinedContent = '$joinedCount'+NL10ns.of(context).members+':'+NL10ns.of(context).joined_channel;
+                        rejectContent = '$rejectCount'+NL10ns.of(context).members+':'+NL10ns.of(context).rejected;
+                      }
+                      if (widget.topic.isPrivateTopic() && widget.topic.isOwner(NKNClientCaller.currentChatId)){
+                        return Column(
+                          children: [
+                            Label(
+                              inviteContent,
+                              type: LabelType.bodyRegular,
+                              color: DefaultTheme.successColor,
+                            ).pad(l: widget.topic.isPrivateTopic() ? 20 : 0),
+                            Label(
+                              joinedContent,
+                              type: LabelType.bodyRegular,
+                              color: DefaultTheme.successColor,
+                            ).pad(l: widget.topic.isPrivateTopic() ? 20 : 0),
+                            Label(
+                              rejectContent,
+                              type: LabelType.bodyRegular,
+                              color: Colours.pink_f8,
+                            ).pad(l: widget.topic.isPrivateTopic() ? 20 : 0)
+                          ],
+                        );
                       }
                       return Label(
                         '${(_topicCount == null || _topicCount < 0) ? '--' : _topicCount} ' +
@@ -214,10 +240,11 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
               (c) => c.chatId == NKNClientCaller.currentChatId,
               orElse: () => null);
           if (me != null) _members.remove(me);
-          _members.sort((a, b) =>
-              (a.isBlack && b.isBlack || !a.isBlack && !b.isBlack)
-                  ? a.name.compareTo(b.name)
-                  : (!a.isBlack ? -1 : 1));
+          /// todo Member List sort
+          // _members.sort((a, b) =>
+          //     (a.isBlack && b.isBlack || !a.isBlack && !b.isBlack)
+          //         ? a.name.compareTo(b.name)
+          //         : (!a.isBlack ? -1 : 1));
           if (me != null) _members.insert(0, me);
           if (owner != null && owner != me) _members.insert(0, owner);
         }
@@ -226,6 +253,36 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
               0,
               loadAssetIconsImage('lock',
                       width: 18, color: DefaultTheme.fontLightColor)
+                  .pad(r: 2));
+        }
+      }
+      else if (channelState is FetchOwnChannelMembersState){
+        _members = channelState.memberList;
+        _topicCount = _members.length;
+
+        if (_members.length > 0) {
+          MemberVo owner = !widget.topic.isPrivateTopic()
+              ? null
+              : _members.firstWhere((c) => widget.topic.isOwner(c.chatId),
+              orElse: () => null);
+          if (owner != null) _members.remove(owner);
+          MemberVo me = _members.firstWhere(
+                  (c) => c.chatId == NKNClientCaller.currentChatId,
+              orElse: () => null);
+          if (me != null) _members.remove(me);
+          /// todo Member List sort
+          // _members.sort((a, b) =>
+          //     (a.isBlack && b.isBlack || !a.isBlack && !b.isBlack)
+          //         ? a.name.compareTo(b.name)
+          //         : (!a.isBlack ? -1 : 1));
+          if (me != null) _members.insert(0, me);
+          if (owner != null && owner != me) _members.insert(0, owner);
+        }
+        if (widget.topic.isPrivateTopic()) {
+          topicWidget.insert(
+              0,
+              loadAssetIconsImage('lock',
+                  width: 18, color: DefaultTheme.fontLightColor)
                   .pad(r: 2));
         }
       }
@@ -298,7 +355,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
     String name = member.name;
     String option;
     if (widget.topic.isPrivateTopic()) {
-      if (widget.topic.isOwner(member.chatId /*.toPubkey*/)) {
+      if (widget.topic.isOwner(member.chatId)) {
         if (member.chatId == NKNClientCaller.currentChatId) {
           option = '(${NL10ns.of(context).you}, ${NL10ns.of(context).owner})';
         } else {
@@ -308,38 +365,61 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
         option = '(${NL10ns.of(context).you})';
       } else if (widget.topic.isOwner(NKNClientCaller.currentChatId)) {
         // Me is owner, but current user is not me.
-        option = member.isBlack
-            ? '(${NL10ns.of(context).rejected})'
-            : (member.subscribed
-                ? null /*'(${NL10ns.of(context).accepted})'*/ : '(${NL10ns.of(context).invitation_sent})');
+        if (member.memberStatus == MemberStatus.MemberSubscribed){
+          option = '(${NL10ns.of(context).accepted})';
+        }
+        else if (member.memberStatus == MemberStatus.MemberInvited){
+          option = '(${NL10ns.of(context).invitation_sent})';
+        }
+        else if (member.memberStatus == MemberStatus.MemberPublished){
+          option = '(${NL10ns.of(context).invite_and_send_success})';
+        }
+        else if (member.memberStatus == MemberStatus.MemberPublishRejected){
+          option = '(${NL10ns.of(context).rejected})';
+        }
+        else if (member.memberStatus == MemberStatus.MemberJoinedButNotInvited){
+          option = '(${NL10ns.of(context).join_but_not_invite})';
+        }
       }
     } else if (member.chatId == NKNClientCaller.currentChatId) {
       option = '(${NL10ns.of(context).you})';
     }
     return [
       Label(name, type: LabelType.h4, overflow: TextOverflow.ellipsis),
-      option == null
-          ? Space.empty
-          : member.isBlack
-              ? Text(option,
-                  style: TextStyle(
-                    fontSize: DefaultTheme.bodySmallFontSize,
-                    color: Colours.pink_f8,
-                    fontWeight: FontWeight.w600,
-                  )).pad(l: 4)
-              : (option.contains(NL10ns.of(context).invitation_sent)
-                  ? Text(option,
-                      style: TextStyle(
-                        fontSize: DefaultTheme.bodySmallFontSize,
-                        color: Colours.green_06,
-                        fontWeight: FontWeight.w600,
-                      )).pad(l: 4)
-                  : Label(option,
-                          type: LabelType.bodySmall,
-                          color: Colours.gray_81,
-                          fontWeight: FontWeight.w600)
-                      .pad(l: 4)),
+      _memberStatusWidget(member, option),
     ];
+  }
+
+  Widget _memberStatusWidget(MemberVo member, String option){
+    if (option == null){
+      return Space.empty;
+    }
+    if (member.chatId == NKNClientCaller.currentChatId){
+      NLog.w('member ______'+member.memberStatus.toString());
+    }
+    if (member.memberStatus == MemberStatus.MemberSubscribed ||
+        member.memberStatus == MemberStatus.MemberInvited ||
+        member.memberStatus == MemberStatus.MemberPublished) {
+      return Text(option,
+          style: TextStyle(
+            fontSize: DefaultTheme.bodySmallFontSize,
+            color: Colours.green_06,
+            fontWeight: FontWeight.w600,
+          )).pad(l: 4);
+    }
+    if (member.memberStatus == MemberStatus.MemberPublishRejected){
+      return Text(option,
+          style: TextStyle(
+            fontSize: DefaultTheme.bodySmallFontSize,
+            color: Colours.pink_f8,
+            fontWeight: FontWeight.w600,
+          )).pad(l: 4);
+    }
+    return Label(option,
+        type: LabelType.bodySmall,
+        color: Colours.gray_81,
+        fontWeight: FontWeight.w600)
+        .pad(l: 4);
   }
 
   List<Widget> getToolBtns(MemberVo member) {
@@ -348,74 +428,88 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
         widget.topic.isOwner(NKNClientCaller.currentChatId) &&
         member.chatId != NKNClientCaller.currentChatId) {
       acceptAction() async {
-        if (member.isBlack) {
-          await GroupChatHelper.moveSubscriberToWhiteList(
-              topic: widget.topic,
-              chatId: member.chatId,
-              callback: () {
-                _refreshMemberList();
-              });
+        if (member.memberStatus != MemberStatus.MemberSubscribed) {
+          await GroupDataCenter.updatePrivatePermissionList(widget.topic.topic, member.chatId, true);
         }
-        showToast(NL10ns.of(context).accepted);
+        showToast(NL10ns.of(context).invitation_sent);
+        _refreshMemberList();
       }
 
       rejectAction() async {
-        if (!member.isBlack) {
-          await GroupChatHelper.moveSubscriberToBlackList(
-              topic: widget.topic,
-              chatId: member.chatId,
-              callback: () {
-                _refreshMemberList();
-              });
+        if (member.memberStatus != MemberStatus.MemberPublishRejected) {
+          await GroupDataCenter.updatePrivatePermissionList(widget.topic.topic, member.chatId, false);
         }
         showToast(NL10ns.of(context).rejected);
+        _refreshMemberList();
       }
 
       Widget acceptIcon = loadAssetIconsImage('check',
           width: 20, color: DefaultTheme.successColor);
       Widget rejectIcon = Icon(Icons.block, size: 20, color: Colours.red);
 
-      if (member.isBlack) {
+
+      if (member.memberStatus != MemberStatus.MemberPublishRejected){
+        toolBtns.add(InkWell(
+            child: rejectIcon.pad(l: 6, r: 16).center.sized(h: double.infinity),
+            onTap: rejectAction));
+      }
+      else{
         toolBtns.add(InkWell(
             child: acceptIcon.pad(l: 6, r: 16).center.sized(h: double.infinity),
             onTap: acceptAction));
-      } else if (!member.subscribed) {
-        // pending...
-        toolBtns.add(InkWell(
-            child: rejectIcon.pad(l: 6, r: 16).center.sized(h: double.infinity),
-            onTap: rejectAction));
-      } else if (!member.isBlack) {
-        toolBtns.add(InkWell(
-            child: rejectIcon.pad(l: 6, r: 16).center.sized(h: double.infinity),
-            onTap: rejectAction));
       }
     }
     return toolBtns;
   }
 
-  inviteAndAcceptAction(address) async {
-    // TODO: check address is a valid chatId.
-    //if (!isValidChatId(address)) return;
-
-    final topic = widget.topic;
+  _inviteMessage(String address) async{
     // Anyone can invite anyone.
     var sendMsg = MessageSchema.fromSendData(
         from: NKNClientCaller.currentChatId,
-        content: topic.topic,
+        content: widget.topic.topic,
         to: address,
         contentType: ContentType.channelInvitation);
     _chatBloc.add(SendMessageEvent(sendMsg));
     showToast(NL10ns.of(context).invitation_sent);
+  }
 
-    if (topic.isPrivateTopic() &&
-        topic.isOwner(NKNClientCaller.currentChatId) &&
-        address != NKNClientCaller.currentChatId) {
-      await GroupChatHelper.moveSubscriberToWhiteList(
-          topic: topic,
-          chatId: address,
-          callback: () {
-            _refreshMemberList();
-          });
+  inviteAndAcceptAction(address) async {
+    final topic = widget.topic;
+    if (topic.isPrivateTopic()) {
+      if (topic.isOwner(NKNClientCaller.currentChatId)) {
+        if (address == NKNClientCaller.currentChatId) {
+          showToast(NL10ns.of(context).invite_yourself_error);
+        }
+        else {
+          int memberStatus = await GroupDataCenter.addPrivatePermissionList(topic.topic, address);
+          String alertText = NL10ns.of(context).invited_already;
+          if (memberStatus == MemberStatus.MemberSubscribed){
+            showToast(NL10ns.of(context).group_member_already);
+            return;
+          }
+          else if (memberStatus >= MemberStatus.MemberInvited){
+            SimpleConfirm(
+                context: context,
+                content: alertText,
+                buttonText: NL10ns
+                    .of(context)
+                    .ok,
+                buttonColor: Colors.red,
+                callback: (v) {
+                  if (v) {
+                    _inviteMessage(address);
+                    setState(() {});
+                  }
+                }).show();
+          }
+        }
+      }
+      else{
+        showToast(NL10ns.of(context).member_no_auth_invite);
+      }
+    }
+    else{
+      _inviteMessage(address);
     }
   }
 }

@@ -49,6 +49,8 @@ class LocalStorage {
   static const String NKN_USER_PROFILE_VERSION_RESPONSE_TIME =
       'NKN_USER_PROFILE_VERSION_KEY';
 
+  static const String NKN_SUBSRIBE_GAP_TIME = 'NKN_USER_PROFILE_VERSION_KEY';
+
   set(String key, val) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (val == null) {

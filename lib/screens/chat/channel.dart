@@ -6,8 +6,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:nmobile/blocs/chat/channel_bloc.dart';
-import 'package:nmobile/blocs/chat/channel_state.dart';
+import 'package:nmobile/blocs/channel/channel_bloc.dart';
+import 'package:nmobile/blocs/channel/channel_event.dart';
+import 'package:nmobile/blocs/channel/channel_state.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
@@ -60,6 +61,8 @@ class ChatGroupPage extends StatefulWidget {
 class _ChatGroupPageState extends State<ChatGroupPage> {
   ChatBloc _chatBloc;
   ContactBloc _contactBloc;
+  ChannelBloc _channelBloc;
+
   String targetId;
   StreamSubscription _chatSubscription;
   ScrollController _scrollController = ScrollController();
@@ -78,6 +81,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   bool showJoin = true;
   bool isInBlackList = false;
 
+  Topic currentTopic;
+
   initAsync() async {
     var res =
         await MessageSchema.getAndReadTargetMessages(targetId, limit: _limit);
@@ -89,20 +94,18 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
     _contactBloc.add(LoadContact(
         address:
-            res.where((x) => !x.isSendMessage()).map((x) => x.from).toList()));
+        res.where((x) => !x.isSendMessage()).map((x) => x.from).toList()));
 
-    _chatBloc.add(RefreshMessageListEvent(target: targetId));
-
-    final topic = widget.arguments.topic;
-    if (topic == null) {
+    if (currentTopic == null) {
       Navigator.pop(context);
       EasyLoading.dismiss();
     }
-    refreshTop(topic.topic);
+    refreshTop(currentTopic.topic);
   }
 
   _refreshSubscribers() async {
     final topic = widget.arguments.topic;
+    NLog.w('_refreshSubscribers topic is___'+topic.topic);
     if (topic.isPrivateTopic()) {
       GroupChatPrivateChannel.pullSubscribersPrivateChannel(
           topicName: topic.topic,
@@ -115,11 +118,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             );
           });
     } else {
-      GroupChatPublicChannel.pullSubscribersPublicChannel(
-        topicName: topic.topic,
-        myChatId: NKNClientCaller.currentChatId,
-        membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
-      );
+      NLog.w('11_refreshSubscribers topic is___'+topic.topic);
+      GroupDataCenter.pullSubscribersPublicChannel(topic.topic);
     }
   }
 
@@ -137,63 +137,67 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     }
     Topic topic = await GroupChatHelper.fetchTopicInfoByName(topicName);
     if (topic != null){
-      if (topic.topicType == TopicType.privateTopic) {
+      if (topic.isPrivateTopic()) {
         NLog.w('Enter Private Topic___'+topicName);
-        GroupDataCenter.pullPrivateSubscribers(topicName);
+        GroupDataCenter.pullPrivateSubscribers(topic);
+      }
+      else{
+        NLog.w('11_refreshSubscribers topic is___'+topic.topic);
+        GroupDataCenter.pullSubscribersPublicChannel(topic.topic);
       }
     }
     return;
 
-    showJoin = await GroupChatHelper.checkMemberIsInGroup(
-        NKNClientCaller.currentChatId, topicName);
-    if (showJoin != null) {
-      NLog.w('is in group +' + topicName + '__' + showJoin.toString());
-    }
-
-    if (showJoin == null || showJoin == false) {
-      await GroupChatHelper.insertTopicIfNotExists(topicName);
-
-      final topicHashed = genTopicHash(topicName);
-      final Map<String, dynamic> subscribersMap =
-      await NKNClientCaller.getSubscribers(
-          topicHash: topicHashed,
-          offset: 0,
-          limit: 10000,
-          meta: false,
-          txPool: true);
-
-      NLog.w('subscribersMap is____'+subscribersMap.toString());
-      if (subscribersMap.keys.contains(NKNClientCaller.currentChatId)){
-        NLog.w('Insert Topic and Subsribers');
-        /// Inert topic
-        for (String chatId in subscribersMap.keys) {
-          if (chatId == NKNClientCaller.currentChatId){
-            GroupChatHelper.insertSelfSubscriber(topicName);
-          }
-          else{
-            Subscriber sub = Subscriber(
-                id: 0,
-                topic: topicName,
-                chatId: chatId,
-                indexPermiPage: -1,
-                timeCreate: DateTime.now().millisecondsSinceEpoch,
-                blockHeightExpireAt: -1,
-                uploaded: true,
-                subscribed: true,
-                uploadDone: true);
-            GroupChatHelper.insertSubscriber(sub);
-
-            NLog.w('chatId String is____'+chatId.toString());
-          }
-        }
-      }
-      else{
-        showToast('Contact the group Creator');
-      }
-    } else {
-      _refreshSubscribers();
-      NLog.w('_refreshSubscribers called');
-    }
+    // showJoin = await GroupChatHelper.checkMemberIsInGroup(
+    //     NKNClientCaller.currentChatId, topicName);
+    // if (showJoin != null) {
+    //   NLog.w('is in group +' + topicName + '__' + showJoin.toString());
+    // }
+    //
+    // if (showJoin == null || showJoin == false) {
+    //   await GroupChatHelper.insertTopicIfNotExists(topicName);
+    //
+    //   final topicHashed = genTopicHash(topicName);
+    //   final Map<String, dynamic> subscribersMap =
+    //   await NKNClientCaller.getSubscribers(
+    //       topicHash: topicHashed,
+    //       offset: 0,
+    //       limit: 10000,
+    //       meta: false,
+    //       txPool: true);
+    //
+    //   NLog.w('subscribersMap is____'+subscribersMap.toString());
+    //   if (subscribersMap.keys.contains(NKNClientCaller.currentChatId)){
+    //     NLog.w('Insert Topic and Subsribers');
+    //     /// Inert topic
+    //     for (String chatId in subscribersMap.keys) {
+    //       if (chatId == NKNClientCaller.currentChatId){
+    //         GroupChatHelper.insertSelfSubscriber(topicName);
+    //       }
+    //       else{
+    //         Subscriber sub = Subscriber(
+    //             id: 0,
+    //             topic: topicName,
+    //             chatId: chatId,
+    //             indexPermiPage: -1,
+    //             timeCreate: DateTime.now().millisecondsSinceEpoch,
+    //             blockHeightExpireAt: -1,
+    //             uploaded: true,
+    //             subscribed: true,
+    //             uploadDone: true);
+    //         GroupChatHelper.insertSubscriber(sub);
+    //
+    //         NLog.w('chatId String is____'+chatId.toString());
+    //       }
+    //     }
+    //   }
+    //   else{
+    //     showToast('Contact the group Creator');
+    //   }
+    // } else {
+    //   _refreshSubscribers();
+    //   NLog.w('_refreshSubscribers called');
+    // }
   }
 
   Future _loadMore() async {
@@ -221,7 +225,15 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     targetId = widget.arguments.topic.topic;
     Global.currentOtherChatId = targetId;
 
+    currentTopic = widget.arguments.topic;
+
     _contactBloc = BlocProvider.of<ContactBloc>(context);
+    _chatBloc = BlocProvider.of<ChatBloc>(context);
+    _channelBloc = BlocProvider.of<ChannelBloc>(context);
+
+    _chatBloc.add(RefreshMessageListEvent(target: targetId));
+    _channelBloc.add(ChannelMemberCountEvent(currentTopic.topic));
+
     Future.delayed(Duration(milliseconds: 200), () {
       initAsync();
       _sendFocusNode.addListener(() {
@@ -231,8 +243,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
           });
         }
       });
-
-      _chatBloc = BlocProvider.of<ChatBloc>(context);
 
       _chatSubscription = _chatBloc.listen((state) {
         if (state is MessageUpdateState && mounted) {

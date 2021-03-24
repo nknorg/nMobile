@@ -9,11 +9,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
-import 'package:nmobile/model/data/group_data_center.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
-import 'package:nmobile/model/db/sqlite_storage.dart';
 import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/schemas/options.dart';
 import 'package:nmobile/utils/log_tag.dart';
@@ -69,16 +66,19 @@ class Topic with Tag {
       options = ''})
       : _options = options,
         assert(topic != null && topic.isNotEmpty) {
+
+    NLog.w('TopicName is____'+topic);
     topicType = isPrivateTopicReg(topic)?TopicType.privateTopic:TopicType.publicTopic;
 
     if (topicType == TopicType.privateTopic) {
+
       int index = topic.lastIndexOf('.');
       topicName = topic.substring(0, index);
       owner = topic.substring(index + 1);
       assert(topicName.isNotEmpty);
       assert(isValidPubkey(owner));
 
-      topicShort = owner.substring(0,8);
+      topicShort = topicName + '.' + owner.substring(0, 8);
     } else {
       topicName = topic;
       owner = null;
@@ -117,6 +117,18 @@ class Topic with Tag {
   }
 
   bool isOwner(String accountPubkey) => accountPubkey == owner;
+
+
+
+  Future<int> updateTopicToAcceptAll(bool accept) async {
+    Database currentDataBase = await NKNDataManager().currentDatabase();
+    return await currentDataBase.update(
+      tableName,
+      {'accept_all': accept ? 1 : 0},
+      where: '$id = ?',
+      whereArgs: [id],
+    );
+  }
 }
 
 class TopicRepo with Tag {
@@ -216,7 +228,7 @@ class TopicRepo with Tag {
   }
 
   static Future<void> create(Database db, int version) async {
-    assert(version >= SqliteStorage.currentVersion);
+    assert(version >= NKNDataManager.dataBaseVersionV3);
 
     NLog.w('topic_repo__CREATE UNIQUE INDEX index_');
     await db.execute(createSqlV5);
@@ -230,6 +242,9 @@ class TopicRepo with Tag {
 
     await db.execute(
         'ALTER TABLE $topic ADD COLUMN accept_all BOOLEAN DEFAULT 0');
+
+    await db.execute(
+        'ALTER TABLE $topic ADD COLUMN joined BOOLEAN DEFAULT 0');
   }
 
   /// todo check upgradeFromV5
@@ -258,6 +273,7 @@ class TopicRepo with Tag {
         $options TEXT,
         type INTEGER DEFAULT 0,
         accept_all BOOLEAN DEFAULT 0,
+        joined BOOLEAN DEFAULT 0
       )''';
 }
 

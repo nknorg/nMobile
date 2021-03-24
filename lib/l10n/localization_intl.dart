@@ -1293,6 +1293,30 @@ class NL10ns {
   String get slide_to_cancel => Intl.message(
       '< Slide Cancel <',
       name: 'slide_to_cancel');
+
+  String get invite_and_send_success => Intl.message(
+      'invite and send success',
+      name: 'invite_and_send_success');
+
+  String get join_but_not_invite => Intl.message(
+      'not invited',
+      name: 'join_but_not_invite');
+
+  String get invited_already => Intl.message(
+      'You have already invited this member,still invite?',
+      name: 'invited_already');
+
+  String get group_member_already => Intl.message(
+      'The member is in group already',
+      name: 'group_member_already');
+
+  String get invite_yourself_error => Intl.message(
+      'Can not invite yourself!',
+      name: 'invite_yourself_error');
+
+  String get member_no_auth_invite => Intl.message(
+      'Private group member can not invite others currently,ask group owner to invite others',
+      name: 'member_no_auth_invite');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NL10ns> {

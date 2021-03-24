@@ -579,11 +579,14 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         subscribersHandler.post {
             try {
                 val subscription = multiClient!!.getSubscription(topicHash, subscriber)
+                val data = hashMapOf(
+                        "meta" to subscription.meta,
+                        "expiresAt" to subscription.expiresAt
+                )
                 val resp = hashMapOf(
                         "_id" to _id,
                         "event" to "getSubscription",
-                        "meta" to subscription.meta,
-                        "expiresAt" to subscription.expiresAt
+                        "data" to data
                 )
                 App.runOnMainThread {
                     clientEventSink.success(resp)
