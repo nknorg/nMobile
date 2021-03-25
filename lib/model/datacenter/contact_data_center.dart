@@ -5,8 +5,8 @@ import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
-import 'package:nmobile/schemas/contact.dart';
-import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/model/entity/contact.dart';
+import 'package:nmobile/model/entity/message.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 

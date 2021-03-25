@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/model/entity/message.dart';
 
 abstract class ChatEvent extends Equatable {
   const ChatEvent();

@@ -15,7 +15,7 @@ import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:oktoast/oktoast.dart';
 
 class ImportSeedWallet extends StatefulWidget {

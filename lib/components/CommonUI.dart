@@ -7,8 +7,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/model/db/topic_repo.dart';
-import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/model/entity/topic_repo.dart';
+import 'package:nmobile/model/entity/contact.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
 class ColorValue {

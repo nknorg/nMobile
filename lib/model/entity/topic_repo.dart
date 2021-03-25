@@ -12,7 +12,7 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/model/group_chat_helper.dart';
-import 'package:nmobile/schemas/options.dart';
+import 'package:nmobile/model/entity/options.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';

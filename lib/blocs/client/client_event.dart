@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
-import 'package:nmobile/schemas/message.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/message.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 
 typedef OnConnectFunc = void Function();
 typedef OnMessageFunc = void Function(String src, String data, Uint8List pid);

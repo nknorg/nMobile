@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/model/entity/contact.dart';
 
 abstract class ContactEvent extends Equatable {
   const ContactEvent();

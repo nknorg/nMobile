@@ -12,7 +12,7 @@ import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 

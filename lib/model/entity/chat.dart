@@ -1,5 +1,5 @@
-import 'package:nmobile/model/db/topic_repo.dart';
-import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/model/entity/topic_repo.dart';
+import 'package:nmobile/model/entity/contact.dart';
 
 enum ChatType { PrivateChat, Channel, PrivateChannel }
 

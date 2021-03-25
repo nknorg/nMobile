@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:nmobile/schemas/news.dart';
+import 'package:nmobile/model/entity/news.dart';
 
 class NewsListItem extends StatelessWidget {
   final NewsSchema _newsSchema;

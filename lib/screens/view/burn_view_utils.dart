@@ -6,9 +6,9 @@ import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/schemas/contact.dart';
-import 'package:nmobile/schemas/message.dart';
-import 'package:nmobile/schemas/options.dart';
+import 'package:nmobile/model/entity/contact.dart';
+import 'package:nmobile/model/entity/message.dart';
+import 'package:nmobile/model/entity/options.dart';
 import 'package:nmobile/utils/extensions.dart';
 
 class BurnViewUtil {

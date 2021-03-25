@@ -13,7 +13,7 @@ import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/local_storage.dart';
-import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/model/entity/message.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
 class NKNClientCaller {

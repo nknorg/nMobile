@@ -16,7 +16,7 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/wallet/dropdown.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/copy_utils.dart';
 import 'package:nmobile/utils/image_utils.dart';

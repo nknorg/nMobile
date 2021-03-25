@@ -8,7 +8,7 @@ import 'package:nmobile/blocs/wallet/wallets_state.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 

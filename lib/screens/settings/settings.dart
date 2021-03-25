@@ -22,7 +22,7 @@ import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/screens/advice_page.dart';
 import 'package:nmobile/screens/select.dart';
 import 'package:nmobile/services/local_authentication_service.dart';

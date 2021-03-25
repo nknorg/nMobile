@@ -10,7 +10,7 @@ import 'package:nmobile/components/header/header.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/model/entity/contact.dart';
 import 'package:nmobile/screens/contact/add_contact.dart';
 import 'package:nmobile/screens/contact/contact.dart';
 import 'package:nmobile/utils/extensions.dart';

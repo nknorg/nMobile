@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/schemas/news.dart';
+import 'package:nmobile/model/entity/news.dart';
 
 class Api {
   Dio dio;

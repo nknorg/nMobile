@@ -1,14 +1,14 @@
 
-import 'package:nmobile/model/data/contact_data_center.dart';
-import 'package:nmobile/model/db/subscriber_repo.dart';
-import 'package:nmobile/model/db/topic_repo.dart';
+import 'package:nmobile/model/datacenter/contact_data_center.dart';
+import 'package:nmobile/model/entity/subscriber_repo.dart';
+import 'package:nmobile/model/entity/topic_repo.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/model/entity/message.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
-import '../../schemas/contact.dart';
+import '../entity/contact.dart';
 
 class NKNDataManager {
   factory NKNDataManager() => _getInstance();
@@ -192,7 +192,7 @@ class NKNDataManager {
   }
 
   static updateSubsriberV3ToV4(Database db) async{
-    String subsriberTable = 'subsriber';
+    String subsriberTable = 'subscriber';
     var sql =
         "SELECT * FROM sqlite_master WHERE TYPE = 'table' AND NAME = '$subsriberTable'";
     var res = await db.rawQuery(sql);

@@ -24,7 +24,7 @@ import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';

@@ -23,7 +23,7 @@ import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/eth_erc20_token.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/extensions.dart';

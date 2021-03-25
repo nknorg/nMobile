@@ -1,4 +1,4 @@
-import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/model/entity/message.dart';
 
 abstract class ChatState {
   const ChatState();
