@@ -650,11 +650,12 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   getChannelInviteView() {
     Topic topicSpotName = Topic.spotName(name: widget.message.content);
-    // TODO: get other name from contact.
-    final inviteDesc = widget.style != BubbleStyle.Me
-        ? NL10ns.of(context).invites_desc_me(widget.message.to.substring(0, 6))
-        : NL10ns.of(context)
-            .invites_desc_other(widget.message.to.substring(0, 6));
+
+    String inviteDesc = NL10ns.of(context).invites_desc_me(widget.message.from.substring(0, 6));
+    if (widget.style == BubbleStyle.Me){
+      inviteDesc = NL10ns.of(context)
+          .invites_desc_other(widget.message.to.substring(0, 6));
+    }
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20),
