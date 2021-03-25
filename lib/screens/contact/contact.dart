@@ -497,7 +497,7 @@ class _ContactScreenState extends State<ContactScreen> {
       return Container(
         decoration: BoxDecoration(
             color: Colors.white, borderRadius: BorderRadius.circular(12)),
-        margin: EdgeInsets.only(left: 16, right: 16, top: 10),
+        margin: EdgeInsets.only(left: 16, right: 16, top: 30),
         child: FlatButton(
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(
@@ -1244,7 +1244,7 @@ class _ContactScreenState extends State<ContactScreen> {
                 },
               ).sized(h: 50, w: double.infinity),
             );
-          } else if (index == 8) {
+          } else if (index == 8){
             return getStatusView();
           }
           return Container();

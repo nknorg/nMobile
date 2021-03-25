@@ -815,6 +815,7 @@ class MessageSchema extends Equatable {
     for (var i = 0; i < res.length; i++) {
       var messageItem = MessageSchema.parseEntity(res[i]);
       if (!messageItem.isSendMessage() && messageItem.options != null) {
+        NLog.w('messageItem.options is__'+messageItem.options.toString());
         if (messageItem.deleteTime == null &&
             messageItem.options['deleteAfterSeconds'] != null) {
           messageItem.deleteTime = DateTime.now().add(
@@ -843,8 +844,8 @@ class MessageSchema extends Equatable {
     var res = await cdb.query(
       MessageSchema.tableName,
       columns: ['COUNT(id) as count'],
-      where: 'sender != ? AND is_read = 0 AND NOT type = ?',
-      whereArgs: [myChatId, ContentType.nknOnePiece],
+      where: 'sender != ? AND is_read = 0 AND NOT type = ? AND NOT type = ? AND NOT type = ? AND NOT type = ? AND NOT type = ?',
+      whereArgs: [myChatId, ContentType.nknOnePiece, ContentType.eventSubscribe, ContentType.eventUnsubscribe, ContentType.eventContactOptions, ContentType.channelInvitation],
     );
     return Sqflite.firstIntValue(res);
   }

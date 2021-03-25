@@ -161,8 +161,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
 
   Stream<ChatState> _mapSendMessageToState(SendMessageEvent event) async* {
     var message = event.message;
-
-    // Uint8List pid;
     String contentData = '';
     await message.insertSendMessage();
 
@@ -491,10 +489,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
             index.toString() +
             '__' +
             parentMessage.bytesLength.toString());
-        NLog.w('Send OnePiece with index__' +
-            index.toString() +
-            '__' +
-            parentMessage.topic.toString());
         this.add(SendMessageEvent(nknOnePieceMessage));
       });
     }
