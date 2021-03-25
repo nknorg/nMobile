@@ -19,7 +19,6 @@ import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/model/data/contact_data_center.dart';
 import 'package:nmobile/model/data/group_data_center.dart';
-import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/data/message_data_center.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
@@ -706,17 +705,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           if (message.from == NKNClientCaller.currentChatId) {} else {
             if (message.topic != null) {
               if (isPrivateTopicReg(message.topic)) {
-                await GroupChatPrivateChannel.pullSubscribersPrivateChannel(
-                    topicName: message.topic,
-                    membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
-                    needUploadMetaCallback: (topicName) {
-                      GroupChatPrivateChannel.uploadPermissionMeta(
-                        topicName: topicName,
-                        accountPubkey: NKNClientCaller.currentChatId,
-                        repoSub: SubscriberRepo(),
-                        repoBlackL: BlackListRepo(),
-                      );
-                    });
+                // todo Update Private Group Member Later.
+                // GroupDataCenter.pullPrivateSubscribers(message.topic);
               } else {
                 if (message.contentType == ContentType.eventSubscribe){
                   // add Member

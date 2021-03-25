@@ -1,6 +1,5 @@
 
 import 'package:nmobile/model/data/contact_data_center.dart';
-import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
@@ -52,7 +51,6 @@ class NKNDataManager {
 
         await TopicRepo.create(db, version);
         await SubscriberRepo.create(db, version);
-        await BlackListRepo.create(db, version);
 
         var now = DateTime.now();
         var publicKey = _publicKey.replaceFirst(_CHAT_DATABASE_NAME + '_', '');

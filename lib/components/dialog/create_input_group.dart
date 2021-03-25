@@ -18,7 +18,6 @@ import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/data/group_data_center.dart';
-import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/model/popular_channel.dart';
@@ -440,18 +439,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
             if (success) {
               final topicSpotName = Topic.spotName(name: topicName);
               if (topicSpotName.isPrivate) {
-                // TODO: delay pull action at least 3 minutes.
-                GroupChatPrivateChannel.pullSubscribersPrivateChannel(
-                    topicName: topicName,
-                    membersBloc:
-                        BlocProvider.of<ChannelBloc>(Global.appContext),
-                    needUploadMetaCallback: (topicName) {
-                      GroupChatPrivateChannel.uploadPermissionMeta(
-                        topicName: topicName,
-                        repoSub: SubscriberRepo(),
-                        repoBlackL: BlackListRepo(),
-                      );
-                    });
+                GroupDataCenter.pullPrivateSubscribers(topicName);
               } else {
                 GroupDataCenter.pullSubscribersPublicChannel(topicName);
               }

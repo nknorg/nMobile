@@ -20,7 +20,6 @@ import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/data/group_data_center.dart';
-import 'package:nmobile/model/db/black_list_repo.dart';
 import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/schemas/contact.dart';
@@ -65,7 +64,6 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
 
   int _topicCount;
   SubscriberRepo repoSub;
-  BlackListRepo repoBla;
 
   ChatBloc _chatBloc;
   ChannelBloc _channelBloc;
@@ -83,7 +81,6 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
     _channelBloc = BlocProvider.of<ChannelBloc>(context);
 
     repoSub = SubscriberRepo();
-    repoBla = BlackListRepo();
 
     _refreshMemberList();
     NLog.w('MemberList called!!!!!');
