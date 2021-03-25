@@ -1,9 +1,9 @@
 import 'package:bloc/bloc.dart';
 import 'package:nmobile/blocs/auth/auth_event.dart';
 import 'package:nmobile/blocs/auth/auth_state.dart';
-import 'package:nmobile/model/data/contact_data_center.dart';
-import 'package:nmobile/schemas/contact.dart';
-import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/model/datacenter/contact_data_center.dart';
+import 'package:nmobile/model/entity/contact.dart';
+import 'package:nmobile/model/entity/message.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {

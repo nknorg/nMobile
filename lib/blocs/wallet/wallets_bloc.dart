@@ -5,8 +5,8 @@ import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/blocs/wallet/wallets_state.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
-import 'package:nmobile/model/db/upgrade_rn_wallet.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/upgrade_rn_wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
 class WalletsBloc extends Bloc<WalletsEvent, WalletsState> {

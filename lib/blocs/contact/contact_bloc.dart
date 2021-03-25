@@ -3,7 +3,7 @@ import 'package:bloc/bloc.dart';
 import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
-import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/model/entity/contact.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class ContactBloc extends Bloc<ContactEvent, ContactState> {

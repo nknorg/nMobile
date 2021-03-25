@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 
 abstract class WalletsEvent extends Equatable {
   const WalletsEvent();

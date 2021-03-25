@@ -14,7 +14,7 @@ import 'package:http/http.dart'; //You can also import the browser version
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/helpers/utils.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:web3dart/crypto.dart';
 import 'package:web3dart/web3dart.dart';

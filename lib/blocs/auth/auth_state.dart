@@ -1,4 +1,4 @@
-import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/model/entity/contact.dart';
 
 abstract class AuthState {
   const AuthState();

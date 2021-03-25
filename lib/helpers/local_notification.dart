@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/model/entity/message.dart';
 import 'package:nmobile/screens/news.dart';
 import 'package:nmobile/utils/log_tag.dart';
 

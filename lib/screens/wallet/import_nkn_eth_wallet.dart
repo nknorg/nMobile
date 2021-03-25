@@ -4,7 +4,7 @@ import 'package:nmobile/components/tabs.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/event/eventbus.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/screens/wallet/import_keystore_nkn_eth_wallet.dart';
 import 'package:nmobile/screens/wallet/import_seed_nkn_eth_wallet.dart';

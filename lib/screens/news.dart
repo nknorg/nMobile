@@ -11,7 +11,7 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/api.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/schemas/news.dart';
+import 'package:nmobile/model/entity/news.dart';
 import 'package:nmobile/screens/view/news_header_view.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/nkn_date_util.dart';

@@ -2,10 +2,10 @@ import 'package:bloc/bloc.dart';
 import 'package:nmobile/blocs/channel/channel_event.dart';
 import 'package:nmobile/blocs/channel/channel_state.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
-import 'package:nmobile/model/data/contact_data_center.dart';
-import 'package:nmobile/model/data/group_data_center.dart';
-import 'package:nmobile/model/db/subscriber_repo.dart';
-import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/model/datacenter/contact_data_center.dart';
+import 'package:nmobile/model/datacenter/group_data_center.dart';
+import 'package:nmobile/model/entity/subscriber_repo.dart';
+import 'package:nmobile/model/entity/contact.dart';
 import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
