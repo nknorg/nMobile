@@ -129,7 +129,6 @@ class NKNClientCaller {
     String eventId = completer.hashCode.toString();
     _clientEventQueue[eventId] = completer;
 
-    NLog.w('B eventId is___' + eventId.toString());
     Map sendData = {
       '_id': eventId,
       'data': dataBytesString,

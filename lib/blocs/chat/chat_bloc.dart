@@ -57,6 +57,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
   int perPieceLength = (1024 * 8);
   int maxPieceCount = 25;
 
+  bool groupUseOnePiece = true;
+
   @override
   Stream<ChatState> mapEventToState(ChatEvent event) async* {
     if (event is NKNChatOnMessageEvent) {
@@ -174,9 +176,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     if (message.topic != null) {
       try {
         _sendGroupMessage(message);
-        // message.setMessageStatus(MessageStatus.MessageSending);
+        message.setMessageStatus(MessageStatus.MessageSending);
       } catch (e) {
-        // message.setMessageStatus(MessageStatus.MessageSendFail);
+        NLog.w('SendMessage Failed E:_____'+e.toString());
+        message.setMessageStatus(MessageStatus.MessageSendFail);
       }
 
       yield MessageUpdateState(target: message.to, message: message);
@@ -381,6 +384,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       }
 
       MessageSchema nReceived = MessageSchema.formReceivedMessage(
+        topic: onePieceMessage.topic,
         msgId: onePieceMessage.msgId,
         from: onePieceMessage.from,
         to: onePieceMessage.to,
@@ -412,14 +416,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
   _sendOnePiece(List mpList, MessageSchema parentMessage) async {
     for (int index = 0; index < mpList.length; index++) {
       // String content = mpList[index];
+      NLog.w('FileType is___'+mpList[index].runtimeType.toString());
       Uint8List fileP = mpList[index];
+      NLog.w('fileP is___'+fileP.length.toString());
 
       Duration deleteAfterSeconds;
-      ContactSchema contact = await _checkContactIfExists(parentMessage.to);
-      if (contact?.options != null) {
-        if (contact?.options?.deleteAfterSeconds != null) {
-          deleteAfterSeconds =
-              Duration(seconds: contact.options.deleteAfterSeconds);
+      if (parentMessage.topic == null){
+        ContactSchema contact = await _checkContactIfExists(parentMessage.to);
+        if (contact?.options != null) {
+          if (contact?.options?.deleteAfterSeconds != null) {
+            deleteAfterSeconds =
+                Duration(seconds: contact.options.deleteAfterSeconds);
+          }
         }
       }
       String content = base64Encode(fileP);
@@ -432,6 +440,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       Duration duration = Duration(milliseconds: index * 100);
       Timer(duration, () async {
         var nknOnePieceMessage = MessageSchema.fromSendData(
+          topic: parentMessage.topic,
           msgId: parentMessage.msgId,
           from: parentMessage.from,
           to: parentMessage.to,
@@ -445,10 +454,30 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           deleteAfterSeconds: deleteAfterSeconds,
           audioFileDuration: parentMessage.audioFileDuration,
         );
+        if (parentMessage.topic != null){
+          nknOnePieceMessage = MessageSchema.fromSendData(
+            topic: parentMessage.topic,
+            msgId: parentMessage.msgId,
+            from: parentMessage.from,
+            parentType: parentMessage.contentType,
+            content: content,
+            contentType: ContentType.nknOnePiece,
+            parity: parentMessage.parity,
+            total: parentMessage.total,
+            index: index,
+            bytesLength: parentMessage.bytesLength,
+            deleteAfterSeconds: deleteAfterSeconds,
+            audioFileDuration: parentMessage.audioFileDuration,
+          );
+        }
         NLog.w('Send OnePiece with index__' +
             index.toString() +
             '__' +
             parentMessage.bytesLength.toString());
+        NLog.w('Send OnePiece with index__' +
+            index.toString() +
+            '__' +
+            parentMessage.topic.toString());
         this.add(SendMessageEvent(nknOnePieceMessage));
       });
     }
@@ -456,8 +485,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
 
   _sendOnePieceMessage(MessageSchema message) async {
     File file = message.content as File;
-    var mimeType = mime(file.path);
-    String content;
 
     Uint8List fileBytes = file.readAsBytesSync();
     String base64Content = base64.encode(fileBytes);
@@ -482,15 +509,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       parity = 1;
     }
 
-    // total = 10;
-    // parity = 3;
-
     message.total = total;
     message.parity = parity;
     message.bytesLength = base64Content.length;
 
     NLog.w('fileBytes.length is__' + fileBytes.length.toString());
     NLog.w('base64Content Length is____' + base64Content.length.toString());
+    NLog.w('SendOnePieceTopic is______'+message.topic.toString());
 
     var dataList =
         await NKNClientCaller.intoPieces(base64Content, total, parity);
@@ -506,9 +531,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       encodeSendJsonData = message.toTextData(null);
     } else if (message.contentType == ContentType.nknImage ||
         message.contentType == ContentType.media) {
-      /// 1 D-chat suit
       encodeSendJsonData = message.toSuitVersionImageData(ContentType.media);
-      /// 1 nMobile suit
     } else if (message.contentType == ContentType.nknAudio) {
       encodeSendJsonData = message.toAudioData(null);
     } else if (message.contentType == ContentType.eventSubscribe) {
@@ -516,8 +539,34 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     } else if (message.contentType == ContentType.eventUnsubscribe) {
       encodeSendJsonData = message.toEventUnSubscribeData();
     }
-
-    _sendGroupMessageWithJsonEncode(message, encodeSendJsonData);
+    if (groupUseOnePiece){
+      if (message.contentType == ContentType.text ||
+          message.contentType == ContentType.eventSubscribe ||
+          message.contentType == ContentType.eventUnsubscribe){
+        _sendGroupMessageWithJsonEncode(message, encodeSendJsonData);
+      }
+      else if (message.contentType == ContentType.nknOnePiece){
+        List<String> dests =
+        await GroupChatHelper.fetchGroupMembers(message.topic);
+        String onePieceEncodeData = message.toNknPieceMessageData();
+        if (dests != null && dests.length > 0) {
+          Uint8List pid = await NKNClientCaller.sendText(
+              dests, onePieceEncodeData, message.msgId);
+          MessageDataCenter.updateMessagePid(pid, message.msgId);
+        } else {
+          if (message.topic != null) {
+            NLog.w('Wrong !!!Topic got no Member' + message.topic);
+          }
+        }
+      }
+      else{
+        NLog.w('Route to SendGroup Onepiece');
+        _sendOnePieceMessage(message);
+      }
+    }
+    else{
+      _sendGroupMessageWithJsonEncode(message, encodeSendJsonData);
+    }
   }
 
   _sendGroupMessageWithJsonEncode(MessageSchema message,String encodeJson) async{
@@ -667,6 +716,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
 
     if (message.topic != null) {
       /// Group Message
+      if (message.contentType == ContentType.nknOnePiece) {
+        NLog.w('Received nknOnePiece topic__'+message.topic.toString());
+        _combineOnePieceMessage(message);
+        return;
+      }
       Topic topic = await GroupChatHelper.fetchTopicInfoByName(message.topic);
       if (topic == null) {
         bool meInChannel = await GroupChatPublicChannel.checkMeInChannel(
