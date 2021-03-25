@@ -189,7 +189,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           message.contentType == ContentType.textExtension ||
           message.contentType == ContentType.nknAudio ||
           message.contentType == ContentType.media ||
-          message.contentType == ContentType.nknImage) {
+          message.contentType == ContentType.nknImage ||
+          message.contentType == ContentType.channelInvitation) {
         if (message.options != null &&
             message.options['deleteAfterSeconds'] != null) {
           message.deleteTime = DateTime.now()

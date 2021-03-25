@@ -668,6 +668,7 @@ class _MessagesTabState extends State<MessagesTab>
     if (contact == null) {
       return Container();
     }
+
     Widget contentWidget;
     LabelType bottomType = LabelType.bodySmall;
     String draft = '';
@@ -718,7 +719,7 @@ class _MessagesTabState extends State<MessagesTab>
       );
     } else if (item.contentType == ContentType.eventSubscribe) {
       contentWidget = Label(
-        NL10ns.of(context).joined_channel,
+        contact.getShowName + NL10ns.of(context).joined_channel,
         maxLines: 1,
         type: bottomType,
         overflow: TextOverflow.ellipsis,
