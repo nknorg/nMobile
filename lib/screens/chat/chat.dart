@@ -162,18 +162,6 @@ class _ChatScreenState extends State<ChatScreen>
             return BlocBuilder<AuthBloc, AuthState>(
               builder: (context, authState) {
                 NLog.w('!!!AuthState is___' + authState.toString());
-                // if (authState is AuthToFrontState){
-                //   return BlocBuilder<NKNClientBloc, NKNClientState>(
-                //     builder: (context, clientState) {
-                //       NLog.w('xxxx__clientState is___'+clientState.toString());
-                //       if (clientState is NKNNoConnectState){
-                //         return _noConnectScreen();
-                //       }
-                //       return _chatHomeScreen();
-                //     },
-                //   );
-                // }
-
                 if (authState is AuthToBackgroundState) {
                   return _noConnectScreen();
                 }
@@ -190,9 +178,6 @@ class _ChatScreenState extends State<ChatScreen>
                     return _chatHomeScreen();
                   },
                 );
-
-                NLog.w('AuthState is___' + authState.toString());
-                return _noConnectScreen();
               },
             );
           } else {

@@ -192,10 +192,6 @@ class GroupChatHelper {
     await _subscriberRepo.insertSubscriber(selfSub);
   }
 
-  // static insertSubscriber(Subscriber sub) async {
-  //   await _subscriberRepo.insertSubscriber(sub);
-  // }
-
   static Future<bool> checkMemberIsInGroup(
       String memberId, String topicName) async {
     Subscriber subscriber =
