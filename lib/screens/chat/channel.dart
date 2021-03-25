@@ -112,26 +112,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     refreshTop(currentTopic.topic);
   }
 
-  _refreshSubscribers() async {
-    final topic = widget.arguments.topic;
-    NLog.w('_refreshSubscribers topic is___'+topic.topic);
-    if (topic.isPrivateTopic()) {
-      GroupChatPrivateChannel.pullSubscribersPrivateChannel(
-          topicName: topic.topic,
-          membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
-          needUploadMetaCallback: (topicName) {
-            GroupChatPrivateChannel.uploadPermissionMeta(
-              topicName: topicName,
-              repoSub: SubscriberRepo(),
-              repoBlackL: BlackListRepo(),
-            );
-          });
-    } else {
-      NLog.w('11_refreshSubscribers topic is___'+topic.topic);
-      GroupDataCenter.pullSubscribersPublicChannel(topic.topic);
-    }
-  }
-
   String genTopicHash(String topic) {
     if (topic == null || topic.isEmpty) {
       return null;
@@ -610,7 +590,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                     ),
                   ),
                   _audioInputWidget(),
-                  _pictureWidget(),
+                  _bottomMenuWidget(),
                 ],
               ),
             ),

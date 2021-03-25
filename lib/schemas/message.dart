@@ -290,6 +290,7 @@ class MessageSchema extends Equatable {
   String toNknPieceMessageData() {
     Map data = {
       'id': msgId,
+      'topic': topic,
       'contentType': ContentType.nknOnePiece,
       'parentType': parentType,
       'content': content,
