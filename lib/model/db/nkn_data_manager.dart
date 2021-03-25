@@ -79,6 +79,9 @@ class NKNDataManager {
         }
       },
     );
+    await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
+    await NKNDataManager.upgradeContactSchema2V3(db, dataBaseVersionV3);
+    await NKNDataManager.updateSubsriberV3ToV4(db);
     return db;
   }
 
@@ -184,6 +187,23 @@ class NKNDataManager {
       if (isExpireAtExists == false) {
         await db.execute(
             'ALTER TABLE $topicTable ADD COLUMN expire_at INTEGER DEFAULT 0');
+      }
+    }
+  }
+
+  static updateSubsriberV3ToV4(Database db) async{
+    String subsriberTable = 'subsriber';
+    var sql =
+        "SELECT * FROM sqlite_master WHERE TYPE = 'table' AND NAME = '$subsriberTable'";
+    var res = await db.rawQuery(sql);
+    if (res == null) {
+      await db.execute(SubscriberRepo.createSqlV5);
+    } else {
+      bool memberStatusReady =
+      await NKNDataManager.checkColumnExists(db, subsriberTable, 'member_status');
+      if (memberStatusReady == false) {
+        await db.execute(
+            'ALTER TABLE $subsriberTable ADD COLUMN member_status BOOLEAN DEFAULT 0');
       }
     }
   }
