@@ -118,6 +118,9 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             "combinePieces" -> {
                 combinePieces(call, result)
             }
+            "nknPush" -> {
+                pushContent(call, result)
+            }
             else -> {
                 result.notImplemented()
             }
@@ -369,6 +372,21 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             } catch (e: Exception) {
                 Log.e("receiveMessagesRun", "receiveMessages | e:", e)
                 msgReceiveHandler.postDelayed({ receiveMessages() }, 5000)
+            }
+        }
+    }
+
+    private fun pushContent(call: MethodCall, result: MethodChannel.Result){
+        var deviceToken = call.argument<String>("deviceToken")!!
+        var pushContent = call.argument<String>("pushContent")!!
+
+        if (deviceToken.isNotEmpty()){
+            val code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(acty)
+            if (code == ConnectionResult.SUCCESS && pushContent?.length > 0){
+                if (deviceToken?.length >= 32){
+                    val service = GooglePushService()
+                    service.sendMessageToFireBase(deviceToken, pushContent)
+                }
             }
         }
     }

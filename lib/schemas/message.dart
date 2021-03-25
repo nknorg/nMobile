@@ -267,7 +267,7 @@ class MessageSchema extends Equatable {
     }
   }
 
-  String toTextData(Map pushInfo) {
+  String toTextData() {
     Map data = {
       'id': msgId,
       'contentType': contentType ?? ContentType.text,
@@ -280,9 +280,6 @@ class MessageSchema extends Equatable {
     }
     if (topic != null) {
       data['topic'] = topic;
-    }
-    if (pushInfo != null) {
-      data.addAll(pushInfo);
     }
     return jsonEncode(data);
   }
@@ -310,10 +307,8 @@ class MessageSchema extends Equatable {
     return jsonEncode(data);
   }
 
-  String toAudioData(Map pushInfo) {
+  String toAudioData() {
     File file = this.content as File;
-    NLog.w('File Lengthxxx is___' + file.runtimeType.toString());
-    NLog.w('File Length is___' + file.lengthSync().toString());
 
     var mimeType = mime(file.path);
 
@@ -339,9 +334,6 @@ class MessageSchema extends Equatable {
     }
     if (topic != null) {
       data['topic'] = topic;
-    }
-    if (pushInfo != null) {
-      data.addAll(pushInfo);
     }
     return jsonEncode(data);
   }
@@ -373,7 +365,7 @@ class MessageSchema extends Equatable {
     return jsonEncode(data);
   }
 
-  String toImageData(Map pushInfo) {
+  String toImageData() {
     File file = this.content as File;
     var mimeType = mime(file.path);
 
@@ -395,9 +387,6 @@ class MessageSchema extends Equatable {
     }
     if (topic != null) {
       data['topic'] = topic;
-    }
-    if (pushInfo != null) {
-      data.addAll(pushInfo);
     }
     NLog.w('toImageData is___'+data.toString());
     return jsonEncode(data);

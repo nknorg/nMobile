@@ -7,7 +7,6 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/blocs/channel/channel_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
@@ -199,46 +198,65 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
               .add(Duration(seconds: message.options['deleteAfterSeconds']));
           await message.updateDeleteTime();
         }
-        bool useOnePiece = false;
-        String key = LocalStorage.NKN_ONE_PIECE_READY_JUDGE + message.to;
-        String onePieceReady = await LocalStorage().get(key);
-        NLog.w('onePieceReady is____' + onePieceReady.toString());
-        if (onePieceReady != null && onePieceReady.length > 0) {
-          useOnePiece = true;
-          NLog.w('useOnePiece Send!!!!!!');
+        _checkIfSendNotification(message.to, '');
+
+        if (message.contentType == ContentType.text ||
+            message.contentType == ContentType.textExtension ||
+            message.contentType == ContentType.channelInvitation) {
+          contentData = message.toTextData();
         }
-        if (useOnePiece &&
-            (message.contentType == ContentType.nknAudio ||
-                message.contentType == ContentType.media ||
-                message.contentType == ContentType.nknImage)) {
-          _sendOnePieceMessage(message);
-          _checkIfSendNotification(message);
-          return;
-        } else {
-          if (message.contentType == ContentType.media ||
-              message.contentType == ContentType.nknImage){
-            String extraSendForAndroidSuit = message.toSuitVersionImageData(ContentType.nknImage);
-            try {
-              Uint8List pid = await NKNClientCaller.sendText(
-                  [message.to], extraSendForAndroidSuit, message.msgId);
-              if(pid != null){
-                MessageDataCenter.updateMessagePid(pid, message.msgId);
+        else{
+          bool useOnePiece = false;
+          String key = LocalStorage.NKN_ONE_PIECE_READY_JUDGE + message.to;
+          String onePieceReady = await LocalStorage().get(key);
+          NLog.w('onePieceReady is____' + onePieceReady.toString());
+          if (onePieceReady != null && onePieceReady.length > 0) {
+            useOnePiece = true;
+            NLog.w('useOnePiece Send!!!!!!');
+          }
+          if (useOnePiece &&
+              (message.contentType == ContentType.nknAudio ||
+                  message.contentType == ContentType.media ||
+                  message.contentType == ContentType.nknImage)) {
+            _sendOnePieceMessage(message);
+            return;
+          } else {
+            if (message.contentType == ContentType.media ||
+                message.contentType == ContentType.nknImage){
+              String extraSendForAndroidSuit = message.toSuitVersionImageData(ContentType.nknImage);
+              try {
+                Uint8List pid = await NKNClientCaller.sendText(
+                    [message.to], extraSendForAndroidSuit, message.msgId);
+                if(pid != null){
+                  MessageDataCenter.updateMessagePid(pid, message.msgId);
+                }
+                NLog.w('extraSendForAndroidSuit___'+pid.toString());
+              } catch (e) {
+                NLog.w('Wrong___' + e.toString());
+                message.setMessageStatus(MessageStatus.MessageSendFail);
               }
-              // NLog.w('Sending extraSendForAndroidSuit contentData to____'+extraSendForAndroidSuit.toString());
-            } catch (e) {
-              NLog.w('Wrong___' + e.toString());
-              message.setMessageStatus(MessageStatus.MessageSendFail);
+              String extraSendForiOSSuit = message.toSuitVersionImageData('image');
+              try {
+                Uint8List pid = await NKNClientCaller.sendText(
+                    [message.to], extraSendForiOSSuit, message.msgId);
+                if(pid != null){
+                  MessageDataCenter.updateMessagePid(pid, message.msgId);
+                }
+                NLog.w('extraSendForiOSSuit___'+pid.toString());
+              } catch (e) {
+                NLog.w('Wrong___' + e.toString());
+                message.setMessageStatus(MessageStatus.MessageSendFail);
+              }
             }
           }
-          contentData = await _checkIfSendNotification(message);
         }
       } else if (message.contentType == ContentType.nknOnePiece) {
         contentData = message.toNknPieceMessageData();
       } else if (message.contentType == ContentType.eventContactOptions) {
         contentData = message.content;
-      } else if (message.contentType == ContentType.channelInvitation) {
-        contentData = await _checkIfSendNotification(message);
       }
+
+      NLog.w('ContentData is_____'+contentData.toString());
 
       try {
         Uint8List pid = await NKNClientCaller.sendText(
@@ -526,14 +544,34 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
   }
 
   _sendGroupMessage(MessageSchema message) async {
+    if (message.contentType == ContentType.text ||
+        message.contentType == ContentType.textExtension ||
+        message.contentType == ContentType.nknAudio ||
+        message.contentType == ContentType.media ||
+        message.contentType == ContentType.nknImage ||
+        message.contentType == ContentType.channelInvitation) {
+      if (message.options != null &&
+          message.options['deleteAfterSeconds'] != null) {
+        message.deleteTime = DateTime.now()
+            .add(Duration(seconds: message.options['deleteAfterSeconds']));
+        await message.updateDeleteTime();
+      }
+
+      List<String> groupMembers =
+      await GroupChatHelper.fetchGroupMembers(message.topic);
+      for (String address in groupMembers){
+        _checkIfSendNotification(address, '');
+      }
+    }
+
     String encodeSendJsonData;
     if (message.contentType == ContentType.text) {
-      encodeSendJsonData = message.toTextData(null);
+      encodeSendJsonData = message.toTextData();
     } else if (message.contentType == ContentType.nknImage ||
         message.contentType == ContentType.media) {
       encodeSendJsonData = message.toSuitVersionImageData(ContentType.media);
     } else if (message.contentType == ContentType.nknAudio) {
-      encodeSendJsonData = message.toAudioData(null);
+      encodeSendJsonData = message.toAudioData();
     } else if (message.contentType == ContentType.eventSubscribe) {
       encodeSendJsonData = message.toEventSubscribeData();
     } else if (message.contentType == ContentType.eventUnsubscribe) {
@@ -909,10 +947,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
   }
 
   /// check need send Notification
-  Future<String> _checkIfSendNotification(MessageSchema message) async {
-    Map dataInfo;
-    ContactSchema contact = await _checkContactIfExists(message.to);
+  Future<void> _checkIfSendNotification(String messageTo,String content) async {
+    ContactSchema contact = await _checkContactIfExists(messageTo);
 
+    String deviceToken = '';
     if (contact.deviceToken != null && contact.deviceToken.length > 0) {
       // String pushContent = NL10ns.of(Global.appContext).notification_push_content;
       String pushContent = 'New Message!';
@@ -920,31 +958,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       // pushContent = 'You have New Message!';
       /// if no deviceToken means unable googleServiceOn is False
       /// GoogleServiceOn channel method can not be the judgement Because Huawei Device GoogleService is on true but not work!!!
-      NLog.w('Send Push notification content11__' +
-          contact.deviceToken.toString());
-      String deviceToken = await NKNClientCaller.fetchDeviceToken();
-      NLog.w('Send Push notification content22__' + deviceToken.toString());
+      deviceToken = contact.deviceToken;
       if (deviceToken != null && deviceToken.length > 0) {
-        dataInfo = new Map();
-        dataInfo['deviceToken'] = contact.deviceToken;
-        dataInfo['pushContent'] = pushContent;
-      }
-      if (dataInfo != null && dataInfo.length > 0) {
-        NLog.w('Send Push notification content__' + dataInfo.toString());
+        NLog.w('Send Push notification content__' + deviceToken.toString());
+        NKNClientCaller.nknPush(deviceToken,pushContent);
       }
     }
-
-    String sendContent = '';
-    if (message.contentType == ContentType.text ||
-        message.contentType == ContentType.textExtension ||
-        message.contentType == ContentType.channelInvitation) {
-      sendContent = message.toTextData(dataInfo);
-    } else if (message.contentType == ContentType.nknImage ||
-        message.contentType == ContentType.media) {
-      sendContent = message.toImageData(dataInfo);
-    } else if (message.contentType == ContentType.nknAudio) {
-      sendContent = message.toAudioData(dataInfo);
-    }
-    return sendContent;
   }
 }

@@ -99,6 +99,26 @@ class NKNClientCaller {
     _methodChannel.invokeMethod('disConnect');
   }
 
+  static Future<bool> nknPush(
+      String deviceToken,String pushContent) async {
+    Completer<bool> completer = Completer<bool>();
+    String eventId = completer.hashCode.toString();
+    _clientEventQueue[eventId] = completer;
+
+    Map sendData = {
+      '_id': eventId,
+      'deviceToken': deviceToken,
+      'pushContent': pushContent,
+    };
+    try {
+      _methodChannel.invokeMethod('nknPush', sendData);
+    } catch (e) {
+      NLog.w('nknPush completeE:' + e.toString());
+      completer.completeError(e);
+    }
+    return completer.future;
+  }
+
   static Future<Uint8List> sendText(
       List<String> dests, String data, String messageId) async {
     Completer<Uint8List> completer = Completer<Uint8List>();
@@ -112,8 +132,6 @@ class NKNClientCaller {
       'maxHoldingSeconds': -1,
       'msgId': messageId,
     };
-    // _clientEventData[eventId] = sendData;
-
     try {
       _methodChannel.invokeMethod('sendText', sendData);
     } catch (e) {
@@ -564,6 +582,10 @@ class NKNClientCaller {
 
           _clientEventQueue[eventKey].complete(recoverString);
           break;
+        case 'nknPush':
+          NLog.w('nknPush is____'+res.toString());
+          break;
+
         case 'fetchDebugInfo':
           NLog.w('debugInfo is__' + res.toString());
           break;
