@@ -33,8 +33,6 @@ import 'package:nmobile/helpers/nkn_image_utils.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/data/group_data_center.dart';
-import 'package:nmobile/model/db/black_list_repo.dart';
-import 'package:nmobile/model/db/subscriber_repo.dart';
 import 'package:nmobile/model/db/topic_repo.dart';
 import 'package:nmobile/schemas/chat.dart';
 import 'package:nmobile/schemas/contact.dart';
@@ -1041,90 +1039,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       ],
     );
   }
-
-  // getBottomMenuView() {
-  //   return ExpansionLayout(
-  //     isExpanded: _showBottomMenu,
-  //     child: Container(
-  //       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
-  //       decoration: BoxDecoration(
-  //         border: Border(
-  //           top: BorderSide(color: DefaultTheme.backgroundColor2),
-  //         ),
-  //       ),
-  //       child: Flex(
-  //         direction: Axis.horizontal,
-  //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  //         children: <Widget>[
-  //           Expanded(
-  //             flex: 0,
-  //             child: Column(
-  //               children: <Widget>[
-  //                 SizedBox(
-  //                   width: 71,
-  //                   height: 71,
-  //                   child: FlatButton(
-  //                     color: DefaultTheme.backgroundColor1,
-  //                     shape: RoundedRectangleBorder(
-  //                         borderRadius: BorderRadius.all(Radius.circular(8))),
-  //                     child: loadAssetIconsImage(
-  //                       'image',
-  //                       width: 32,
-  //                       color: DefaultTheme.fontColor2,
-  //                     ),
-  //                     onPressed: () {
-  //                       getImageFile(source: ImageSource.gallery);
-  //                     },
-  //                   ),
-  //                 ),
-  //                 Padding(
-  //                   padding: const EdgeInsets.only(top: 8),
-  //                   child: Label(
-  //                     NL10ns.of(context).pictures,
-  //                     type: LabelType.bodySmall,
-  //                     color: DefaultTheme.fontColor2,
-  //                   ),
-  //                 )
-  //               ],
-  //             ),
-  //           ),
-  //           Expanded(
-  //             flex: 0,
-  //             child: Column(
-  //               children: <Widget>[
-  //                 SizedBox(
-  //                   width: 71,
-  //                   height: 71,
-  //                   child: FlatButton(
-  //                     color: DefaultTheme.backgroundColor1,
-  //                     shape: RoundedRectangleBorder(
-  //                         borderRadius: BorderRadius.all(Radius.circular(8))),
-  //                     child: loadAssetIconsImage(
-  //                       'camera',
-  //                       width: 32,
-  //                       color: DefaultTheme.fontColor2,
-  //                     ),
-  //                     onPressed: () {
-  //                       getImageFile(source: ImageSource.camera);
-  //                     },
-  //                   ),
-  //                 ),
-  //                 Padding(
-  //                   padding: const EdgeInsets.only(top: 8),
-  //                   child: Label(
-  //                     NL10ns.of(context).camera,
-  //                     type: LabelType.bodySmall,
-  //                     color: DefaultTheme.fontColor2,
-  //                   ),
-  //                 )
-  //               ],
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 
   getBottomView() {
     if (showJoin == false) {

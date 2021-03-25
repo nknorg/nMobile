@@ -247,18 +247,6 @@ class TopicRepo with Tag {
         'ALTER TABLE $topic ADD COLUMN joined BOOLEAN DEFAULT 0');
   }
 
-  /// todo check upgradeFromV5
-  // static Future<void> upgradeFromV5(
-  //     Database db, int oldVersion, int newVersion) async {
-  //   assert(newVersion >= SqliteStorage.currentVersion);
-  //   if (newVersion == SqliteStorage.currentVersion) {
-  //     await create(db, newVersion);
-  //   } else {
-  //     throw UnsupportedError(
-  //         'unsupported upgrade from $oldVersion to $newVersion.');
-  //   }
-  // }
-
   static final deleteSql = '''DROP TABLE IF EXISTS Topic;''';
   static final createSqlV5 = '''
       CREATE TABLE $tableName (

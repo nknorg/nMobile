@@ -75,24 +75,12 @@ class NKNDataManager {
           await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
           await NKNDataManager.upgradeContactSchema2V3(db, dataBaseVersionV3);
         }
-        // if (newVersion >= dataBaseVersionV3) {
-        //   await SubscriberRepo.create(db, dataBaseVersionV3);
-        //   await BlackListRepo.create(db, dataBaseVersionV3);
-        // }
         if (newVersion >= dataBaseVersionV4){
           await TopicRepo.updateTopicTableToV4(db);
           await SubscriberRepo.updateTopicTableToV4(db);
         }
       },
     );
-    // await TopicRepo.updateTopicTableToV4(db);
-    // await SubscriberRepo.updateTopicTableToV4(db);
-    // if (o < 3) {
-    //   await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
-    //   await NKNDataManager.upgradeContactSchema2V3(db, dataBaseVersionV3);
-    //   await SubscriberRepo.create(db, dataBaseVersionV3);
-    //   await BlackListRepo.create(db, dataBaseVersionV3);
-    // }
     return db;
   }
 

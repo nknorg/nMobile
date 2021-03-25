@@ -544,32 +544,35 @@ class GroupDataCenter{
     try {
       final topicHashed = genTopicHash(topicName);
 
-      NKNClientCaller.getSubscribers(
+      Map<String,dynamic> subscribers = await NKNClientCaller.getSubscribers(
           topicHash: topicHashed,
           offset: 0,
           limit: 10000,
           meta: false,
-          txPool: true)
-          .then((subscribersMap) async {
-        for (String chatId in subscribersMap.keys) {
-          Subscriber sub = Subscriber(
-              id: 0,
-              topic: topicName,
-              chatId: chatId,
-              timeCreate: DateTime.now().millisecondsSinceEpoch,
-              blockHeightExpireAt: -1,
-              memberStatus: MemberStatus.MemberSubscribed);
-          await subRepo.insertSubscriber(sub);
-        }
-        Subscriber selfSub = Subscriber(
+          txPool: true);
+
+      NLog.w('pullSubscribersPublicChannel sub ixxs___'+subscribers.toString());
+
+      for (String chatId in subscribers.keys) {
+        NLog.w('pullSubscribersPublicChannel sub is___'+chatId.toString());
+        Subscriber sub = Subscriber(
             id: 0,
             topic: topicName,
-            chatId: NKNClientCaller.currentChatId,
+            chatId: chatId,
             timeCreate: DateTime.now().millisecondsSinceEpoch,
             blockHeightExpireAt: -1,
             memberStatus: MemberStatus.MemberSubscribed);
-        await subRepo.insertSubscriber(selfSub);
-      });
+        await subRepo.insertSubscriber(sub);
+      }
+      Subscriber selfSub = Subscriber(
+          id: 0,
+          topic: topicName,
+          chatId: NKNClientCaller.currentChatId,
+          timeCreate: DateTime.now().millisecondsSinceEpoch,
+          blockHeightExpireAt: -1,
+          memberStatus: MemberStatus.MemberSubscribed);
+      await subRepo.insertSubscriber(selfSub);
+
       List<Subscriber> dataList = await subRepo.getAllMemberByTopic(topicName);
       NLog.w('Find Members Count___'+dataList.length.toString()+'__forTopic__'+topicName);
       return dataList;
