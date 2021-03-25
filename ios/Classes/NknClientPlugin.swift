@@ -59,10 +59,8 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
     let NKN_METHOD_INTO_PIECES = "intoPieces"
     let NKN_METHOD_COMBINE_PIECES = "combinePieces"
     
-//    var inputPieceString:String = ""
-//    var splitsData = [FlutterStandardTypedData]()
-    
-//    var recoverList = [Data]()
+    let NKN_METHOD_PUSH_CONTENT = "nknPush"
+
     var combinedData:Data = Data.init()
 
     init(controller : FlutterViewController) {
@@ -117,6 +115,8 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
                 intoPiece(call, result)
             case NKN_METHOD_COMBINE_PIECES:
                 combinePieces(call, result)
+            case NKN_METHOD_PUSH_CONTENT:
+                pushContent(call, result)
             default:
                 result(FlutterMethodNotImplemented)
         }
@@ -384,6 +384,37 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
         
         self.onAsyncMessageReceive()
     }
+    
+    func pushContent(_ call: FlutterMethodCall, _ result: FlutterResult){
+        let args = call.arguments as! [String: Any]
+        let deviceToken = args["deviceToken"] as! String
+        let pushContent = args["pushContent"] as! String
+        
+        if (deviceToken != nil){
+            if (deviceToken.count > 0){
+                let content = pushContent as! String;
+                if (content.count > 0){
+                    let pushService:NKNPushService = NKNPushService.shared();
+                    // 需要发送给Android设备通知 通过FCM
+                    if (deviceToken.count == 64){
+                        pushService.pushContent(content, token: deviceToken);
+                    }
+                    else if (deviceToken.count > 64){
+                        if (deviceToken.count == 163){
+                            pushService.pushContent(toFCM: content, byToken: deviceToken)
+                        }
+                        else if (deviceToken.count > 163){
+                            let fcmGapString = "__FCMToken__:"
+                            let sList = deviceToken.components(separatedBy: fcmGapString)
+                            let dropFcmToken = sList[0]
+                            NSLog("after drop Fcm token is",dropFcmToken);
+                            pushService.pushContent(content, token: dropFcmToken);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     func sendText(_ call: FlutterMethodCall, _ result: FlutterResult) {
         let args = call.arguments as! [String: Any]
@@ -421,33 +452,6 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
                 self.clientEventSink!(resp)
             } catch let error {
                 self.clientEventSink!(FlutterError(code: _id, message: self.NKN_METHOD_SEND_TEXT, details: error.localizedDescription))
-            }
-            
-            let dataInfo = self.getDictionaryFromJSONString(jsonString: data)
-            if (dataInfo["deviceToken"] != nil){
-                let deviceToken = dataInfo["deviceToken"] as! String;
-                if (deviceToken.count > 0){
-                    let content = dataInfo["pushContent"] as! String;
-                    if (content.count > 0){
-                        let pushService:NKNPushService = NKNPushService.shared();
-                        // 需要发送给Android设备通知 通过FCM
-                        if (deviceToken.count == 64){
-                            pushService.pushContent(content, token: deviceToken);
-                        }
-                        else if (deviceToken.count > 64){
-                            if (deviceToken.count == 163){
-                                pushService.pushContent(toFCM: content, byToken: deviceToken)
-                            }
-                            else if (deviceToken.count > 163){
-                                let fcmGapString = "__FCMToken__:"
-                                let sList = deviceToken.components(separatedBy: fcmGapString)
-                                let dropFcmToken = sList[0]
-                                NSLog("after drop Fcm token is",dropFcmToken);
-                                pushService.pushContent(content, token: dropFcmToken);
-                            }
-                        }
-                    }
-                }
             }
         }
         sendMessageQueue.async(execute: sendMessageWorkItem!)
