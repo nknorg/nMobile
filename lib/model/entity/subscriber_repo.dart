@@ -41,14 +41,6 @@ class MemberStatus {
 }
 
 class SubscriberRepo with Tag {
-  Future<List<Subscriber>> getByTopic(String topicName) async {
-    Database cdb = await NKNDataManager().currentDatabase();
-    List<Map<String, dynamic>> result = await cdb.query(tableName,
-        where: '$topic = ? AND $subscribed = ?',
-        whereArgs: [topicName, 1],
-        orderBy: '$time_create ASC');
-    return parseEntities(result);
-  }
 
   Future<List<Subscriber>> getByTopicExceptNone(String topicName) async {
     Database cdb = await NKNDataManager().currentDatabase();
@@ -62,8 +54,8 @@ class SubscriberRepo with Tag {
   Future<List<Subscriber>> getAllMemberByTopic(String topicName) async {
     Database cdb = await NKNDataManager().currentDatabase();
     List<Map<String, dynamic>> result = await cdb.query(tableName,
-        where: '$topic = ? AND $subscribed = ?',
-        whereArgs: [topicName, '1'],
+        where: '$topic = ? AND $member_status = ?',
+        whereArgs: [topicName, MemberStatus.MemberSubscribed],
         orderBy: '$time_create ASC');
     return parseEntities(result);
   }
@@ -120,7 +112,6 @@ class SubscriberRepo with Tag {
 
     /// insert Logic
     if (querySubscriber == null) {
-      NLog.w('Insert thing is____'+toEntity(subscriber).toString());
       var insertResult = await cdb.insert(tableName, toEntity(subscriber),
           conflictAlgorithm: ConflictAlgorithm.ignore);
       if (insertResult != null && insertResult > 0){
@@ -131,7 +122,6 @@ class SubscriberRepo with Tag {
 
     /// update Logic
     else {
-      NLog.w('Update Subscriber is____'+subscriber.memberStatus.toString());
       await updateMemberStatus(subscriber, subscriber.memberStatus);
     }
     return true;
