@@ -9,13 +9,9 @@ import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/log_tag.dart';
-import 'package:nmobile/utils/nlog_util.dart';
-import 'package:oktoast/oktoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:web3dart/credentials.dart';
 
 enum WalletType { nkn, eth }
 
