@@ -247,19 +247,7 @@ class _MessagesTabState extends State<MessagesTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
-    // return BlocBuilder<NKNClientBloc, NKNClientState>(
-    //   builder: (context, clientState){
-    //     if (clientState is NKNConnectedState){
-    //       _updateTopicBlock();
-    //     }
-    //     if (clientState is NKNConnectedState ||
-    //         clientState is NKNConnectingState) {
-    //
-    //     }
-    //     return _noMessageWidget();
-    //   },
-    // );
+    
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
         if (authState is AuthToUserState) {

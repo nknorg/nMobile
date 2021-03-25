@@ -41,11 +41,13 @@ import 'package:nmobile/schemas/contact.dart';
 import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/schemas/message.dart';
 import 'package:nmobile/screens/chat/channel_members.dart';
+import 'package:nmobile/screens/chat/record_audio.dart';
 import 'package:nmobile/screens/settings/channel.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
+import 'package:vibration/vibration.dart';
 
 class ChatGroupPage extends StatefulWidget {
   static const String routeName = '/chat/channel';
@@ -80,6 +82,13 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   bool showJoin = true;
   bool isInBlackList = false;
+
+  bool _showAudioInput = false;
+  RecordAudio _recordAudio;
+  DateTime cTime;
+  bool _showAudioLock = false;
+  double _audioLockHeight = 90;
+  bool _audioLongPressEndStatus = false;
 
   Topic currentTopic;
 
@@ -142,62 +151,11 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
         GroupDataCenter.pullPrivateSubscribers(topic);
       }
       else{
-        NLog.w('11_refreshSubscribers topic is___'+topic.topic);
+        NLog.w('Enter Public Topic___'+topicName);
         GroupDataCenter.pullSubscribersPublicChannel(topic.topic);
       }
     }
     return;
-
-    // showJoin = await GroupChatHelper.checkMemberIsInGroup(
-    //     NKNClientCaller.currentChatId, topicName);
-    // if (showJoin != null) {
-    //   NLog.w('is in group +' + topicName + '__' + showJoin.toString());
-    // }
-    //
-    // if (showJoin == null || showJoin == false) {
-    //   await GroupChatHelper.insertTopicIfNotExists(topicName);
-    //
-    //   final topicHashed = genTopicHash(topicName);
-    //   final Map<String, dynamic> subscribersMap =
-    //   await NKNClientCaller.getSubscribers(
-    //       topicHash: topicHashed,
-    //       offset: 0,
-    //       limit: 10000,
-    //       meta: false,
-    //       txPool: true);
-    //
-    //   NLog.w('subscribersMap is____'+subscribersMap.toString());
-    //   if (subscribersMap.keys.contains(NKNClientCaller.currentChatId)){
-    //     NLog.w('Insert Topic and Subsribers');
-    //     /// Inert topic
-    //     for (String chatId in subscribersMap.keys) {
-    //       if (chatId == NKNClientCaller.currentChatId){
-    //         GroupChatHelper.insertSelfSubscriber(topicName);
-    //       }
-    //       else{
-    //         Subscriber sub = Subscriber(
-    //             id: 0,
-    //             topic: topicName,
-    //             chatId: chatId,
-    //             indexPermiPage: -1,
-    //             timeCreate: DateTime.now().millisecondsSinceEpoch,
-    //             blockHeightExpireAt: -1,
-    //             uploaded: true,
-    //             subscribed: true,
-    //             uploadDone: true);
-    //         GroupChatHelper.insertSubscriber(sub);
-    //
-    //         NLog.w('chatId String is____'+chatId.toString());
-    //       }
-    //     }
-    //   }
-    //   else{
-    //     showToast('Contact the group Creator');
-    //   }
-    // } else {
-    //   _refreshSubscribers();
-    //   NLog.w('_refreshSubscribers called');
-    // }
   }
 
   Future _loadMore() async {
@@ -274,10 +232,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                   x.msgId == updateMessage.msgId && x.isSendMessage() == false,
               orElse: () => null);
           if (receivedMessage != null) {
-            setState(() {
-              NLog.w('GroupChat MessageUpdateState duplicate');
-              receivedMessage.setMessageStatus(MessageStatus.MessageReceived);
-            });
+            receivedMessage.setMessageStatus(MessageStatus.MessageReceived);
             return;
           }
 
@@ -379,9 +334,10 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   _sendAudio(File audioFile, double audioDuration) async {
     String dest = targetId;
+
     var sendMsg = MessageSchema.fromSendData(
       from: NKNClientCaller.currentChatId,
-      to: dest,
+      topic: dest,
       content: audioFile,
       contentType: ContentType.nknAudio,
       audioFileDuration: audioDuration,
@@ -597,12 +553,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                           }
                           return BlocBuilder<ContactBloc, ContactState>(
                               builder: (context, state) {
-                            // if (state is LoadContactInfoState){
-                            //   ContactSchema contact;
-                            //   if (contact == null){
-                            //     contact = state.userInfo;
-                            //   }
-                            // }
                             ContactSchema contact;
                             if (state is ContactLoaded) {
                               if (contact == null) {
@@ -654,19 +604,13 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                 );
                               }
                             }
-                            return Container();
                           });
                         },
                       ),
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.only(
-                        left: 0, right: 0, top: 15, bottom: 15),
-                    constraints: BoxConstraints(minHeight: 70, maxHeight: 160),
-                    child: getBottomView(),
-                  ),
-                  getBottomMenuView(),
+                  _audioInputWidget(),
+                  _pictureWidget(),
                 ],
               ),
             ),
@@ -676,82 +620,166 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     );
   }
 
-  getBottomMenuView() {
-    return ExpansionLayout(
-      isExpanded: _showBottomMenu,
-      child: Container(
-        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(color: DefaultTheme.backgroundColor2),
+  Widget _menuWidget() {
+    double audioHeight = 65;
+    if (_showAudioInput == true) {
+      if (_recordAudio == null) {
+        _recordAudio = RecordAudio(
+          height: audioHeight,
+          margin: EdgeInsets.only(top: 15, bottom: 15, right: 0),
+          startRecord: startRecord,
+          stopRecord: stopRecord,
+          cancelRecord: _cancelRecord,
+        );
+      }
+      return Container(
+        height: audioHeight,
+        margin: EdgeInsets.only(top: 15, right: 0),
+        child: _recordAudio,
+      );
+    }
+    return Container(
+      constraints: BoxConstraints(minHeight: 70, maxHeight: 160),
+      child: Flex(
+        direction: Axis.horizontal,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: <Widget>[
+          Expanded(
+            flex: 0,
+            child: Container(
+              margin:
+              const EdgeInsets.only(left: 0, right: 0, top: 15, bottom: 15),
+              padding: const EdgeInsets.only(left: 8, right: 8),
+              child: ButtonIcon(
+                width: 50,
+                height: 50,
+                icon: loadAssetIconsImage(
+                  'grid',
+                  width: 24,
+                  color: DefaultTheme.primaryColor,
+                ),
+                onPressed: () {
+                  _toggleBottomMenu();
+                },
+              ),
+            ),
           ),
+          _sendWidget(),
+          _voiceAndSendWidget(),
+        ],
+      ),
+    );
+  }
+
+  Widget _voiceAndSendWidget() {
+    if (_canSend) {
+      return Expanded(
+        flex: 0,
+        child: Container(
+          margin: EdgeInsets.only(top: 15, bottom: 15),
+          padding: const EdgeInsets.only(left: 8, right: 8),
+          child: ButtonIcon(
+            width: 50,
+            height: 50,
+            icon: loadAssetIconsImage(
+              'send',
+              width: 24,
+              color: DefaultTheme.primaryColor,
+            ),
+            onPressed: () {
+              _sendText();
+            },
+          ),
+        ),
+      );
+    }
+    return Expanded(
+      flex: 0,
+      child: Container(
+        margin: EdgeInsets.only(top: 15, bottom: 15),
+        padding: const EdgeInsets.only(left: 8, right: 8),
+        child: _voiceWidget(),
+      ),
+    );
+  }
+
+  Widget _voiceWidget() {
+    return Container(
+      width: 50,
+      height: 50,
+      margin: EdgeInsets.only(right: 0),
+      child: ButtonIcon(
+        width: 50,
+        height: 50,
+        icon: loadAssetIconsImage(
+          'microphone',
+          color: DefaultTheme.primaryColor,
+          width: 24,
+        ),
+        onPressed: () {
+          _voiceAction();
+        },
+      ),
+    );
+  }
+
+  Widget _bottomMenuWidget() {
+    return Expanded(
+        flex: 0,
+        child: ExpansionLayout(
+          isExpanded: _showBottomMenu,
+          child: Container(
+            padding:
+            const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: DefaultTheme.backgroundColor2),
+              ),
+            ),
+            child: _pictureWidget(),
+          ),
+        ));
+  }
+
+  Widget _sendWidget() {
+    return Expanded(
+      flex: 1,
+      child: Container(
+        margin: const EdgeInsets.only(left: 0, right: 0, top: 15, bottom: 15),
+        decoration: BoxDecoration(
+          color: DefaultTheme.backgroundColor1,
+          borderRadius: BorderRadius.all(Radius.circular(20)),
         ),
         child: Flex(
           direction: Axis.horizontal,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: <Widget>[
             Expanded(
-              flex: 0,
-              child: Column(
-                children: <Widget>[
-                  SizedBox(
-                    width: 71,
-                    height: 71,
-                    child: FlatButton(
-                      color: DefaultTheme.backgroundColor1,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8))),
-                      child: loadAssetIconsImage(
-                        'image',
-                        width: 32,
-                        color: DefaultTheme.fontColor2,
-                      ),
-                      onPressed: () {
-                        getImageFile(source: ImageSource.gallery);
-                      },
-                    ),
+              flex: 1,
+              child: TextField(
+                maxLines: 5,
+                minLines: 1,
+                controller: _sendController,
+                focusNode: _sendFocusNode,
+                textInputAction: TextInputAction.newline,
+                onChanged: (val) {
+                  if (mounted) {
+                    setState(() {
+                      _canSend = val.isNotEmpty;
+                    });
+                  }
+                },
+                style: TextStyle(fontSize: 14, height: 1.4),
+                decoration: InputDecoration(
+                  hintText: NL10ns.of(context).type_a_message,
+                  contentPadding:
+                  EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(20.w)),
+                    borderSide:
+                    const BorderSide(width: 0, style: BorderStyle.none),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Label(
-                      NL10ns.of(context).pictures,
-                      type: LabelType.bodySmall,
-                      color: DefaultTheme.fontColor2,
-                    ),
-                  )
-                ],
-              ),
-            ),
-            Expanded(
-              flex: 0,
-              child: Column(
-                children: <Widget>[
-                  SizedBox(
-                    width: 71,
-                    height: 71,
-                    child: FlatButton(
-                      color: DefaultTheme.backgroundColor1,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8))),
-                      child: loadAssetIconsImage(
-                        'camera',
-                        width: 32,
-                        color: DefaultTheme.fontColor2,
-                      ),
-                      onPressed: () {
-                        getImageFile(source: ImageSource.camera);
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Label(
-                      NL10ns.of(context).camera,
-                      type: LabelType.bodySmall,
-                      color: DefaultTheme.fontColor2,
-                    ),
-                  )
-                ],
+                ),
               ),
             ),
           ],
@@ -759,6 +787,364 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       ),
     );
   }
+
+  Widget _audioInputWidget(){
+    double wWidth = MediaQuery.of(context).size.width;
+    return Container(
+      height: 90,
+      margin: EdgeInsets.only(bottom: 0),
+      child: GestureDetector(
+        child: _menuWidget(),
+        onTapUp: (details) {
+          int afterSeconds =
+              DateTime.now().difference(cTime).inSeconds;
+          setState(() {
+            _showAudioLock = false;
+            if (afterSeconds > 1) {
+              /// send AudioMessage Here
+              NLog.w('Audio record less than 1s' +
+                  afterSeconds.toString());
+            } else {
+              /// add viberation Here
+              _showAudioInput = false;
+            }
+          });
+        },
+        onLongPressStart: (details) {
+          cTime = DateTime.now();
+          _showAudioLock = false;
+          Vibration.vibrate();
+          _setAudioInputOn(true);
+        },
+        onLongPressEnd: (details) {
+          int afterSeconds =
+              DateTime.now().difference(cTime).inSeconds;
+          setState(() {
+            if (details.globalPosition.dx < (wWidth - 80)){
+              if (_recordAudio != null) {
+                _recordAudio.cancelCurrentRecord();
+                _recordAudio.cOpacity = 1;
+              }
+            }
+            else{
+              if (_recordAudio.showLongPressState == false) {
+
+              } else {
+                _recordAudio.stopAndSendAudioMessage();
+              }
+            }
+            if (afterSeconds > 0.2 &&
+                _recordAudio.cOpacity > 0) {
+            } else {
+              _showAudioInput = false;
+            }
+            if (_showAudioLock) {
+              _showAudioLock = false;
+            }
+          });
+        },
+        onLongPressMoveUpdate: (details) {
+          int afterSeconds =
+              DateTime.now().difference(cTime).inSeconds;
+          if (afterSeconds > 0.2) {
+            setState(() {
+              _showAudioLock = true;
+            });
+          }
+          if (details.globalPosition.dx >
+              (wWidth) / 3 * 2 &&
+              details.globalPosition.dx < wWidth - 80) {
+            double cX = details.globalPosition.dx;
+            double tW = wWidth - 80;
+            double mL = (wWidth) / 3 * 2;
+            double tL = tW - mL;
+            double opacity = (cX - mL) / tL;
+            if (opacity < 0) {
+              opacity = 0;
+            }
+            if (opacity > 1) {
+              opacity = 1;
+            }
+
+            setState(() {
+              _recordAudio.cOpacity = opacity;
+            });
+          } else if (details.globalPosition.dx > wWidth - 80) {
+            setState(() {
+              _recordAudio.cOpacity = 1;
+            });
+          }
+          double gapHeight = 90;
+          double tL = 50;
+          double mL = 60;
+          if (details.globalPosition.dy >
+              MediaQuery.of(context).size.height -
+                  (gapHeight + tL) &&
+              details.globalPosition.dy <
+                  MediaQuery.of(context).size.height -
+                      gapHeight) {
+            setState(() {
+              double currentL = (tL -
+                  (MediaQuery.of(context).size.height -
+                      details.globalPosition.dy -
+                      gapHeight));
+              _audioLockHeight = mL + currentL - 10;
+              if (_audioLockHeight < mL) {
+                _audioLockHeight = mL;
+              }
+            });
+          }
+          if (details.globalPosition.dy <
+              MediaQuery.of(context).size.height -
+                  (gapHeight + tL)) {
+            setState(() {
+              _audioLockHeight = mL;
+              _recordAudio.showLongPressState = false;
+              _audioLongPressEndStatus = true;
+            });
+          }
+          if (details.globalPosition.dy >
+              MediaQuery.of(context).size.height -
+                  (gapHeight)) {
+            _audioLockHeight = 90;
+          }
+        },
+        onHorizontalDragEnd: (details) {
+          _cancelAudioRecord();
+        },
+        onHorizontalDragCancel: () {
+          _cancelAudioRecord();
+        },
+        onVerticalDragCancel: () {
+          _cancelAudioRecord();
+        },
+        onVerticalDragEnd: (details) {
+          _cancelAudioRecord();
+        },
+      ),
+    );
+  }
+
+  _cancelAudioRecord() {
+    if (_audioLongPressEndStatus == false) {
+      if (_recordAudio != null) {
+        _recordAudio.cancelCurrentRecord();
+      }
+    }
+    setState(() {
+      _showAudioLock = false;
+    });
+  }
+
+  _setAudioInputOn(bool audioInputOn) {
+    setState(() {
+      if (audioInputOn) {
+        _showAudioInput = true;
+      } else {
+        _showAudioInput = false;
+      }
+    });
+  }
+
+  _voiceAction() {
+    _setAudioInputOn(true);
+    Vibration.vibrate();
+    Timer(Duration(milliseconds: 350), () async {
+      _setAudioInputOn(false);
+    });
+  }
+
+  _cancelRecord() {
+    _setAudioInputOn(false);
+    Vibration.vibrate();
+  }
+
+  startRecord() {
+    NLog.w('startRecord called');
+  }
+
+  stopRecord(String path, double audioTimeLength) async {
+    NLog.w('stopRecord called');
+    _setAudioInputOn(false);
+
+    File audioFile = File(path);
+    if (!audioFile.existsSync()) {
+      audioFile.createSync();
+      audioFile = File(path);
+    }
+    int fileLength = await audioFile.length();
+
+    if (fileLength != null && audioTimeLength != null) {
+      NLog.w('Record finished with fileLength__' +
+          fileLength.toString() +
+          'audioTimeLength is__' +
+          audioTimeLength.toString());
+    }
+    if (fileLength == 0) {
+      showToast('Record file wrong.Please record again.');
+      return;
+    }
+    if (audioTimeLength > 1.0) {
+      _sendAudio(audioFile, audioTimeLength);
+    }
+  }
+
+  Widget _pictureWidget() {
+    return Flex(
+      direction: Axis.horizontal,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: <Widget>[
+        Expanded(
+          flex: 0,
+          child: Column(
+            children: <Widget>[
+              SizedBox(
+                width: 71,
+                height: 71,
+                child: FlatButton(
+                  color: DefaultTheme.backgroundColor1,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8))),
+                  child: loadAssetIconsImage(
+                    'image',
+                    width: 32,
+                    color: DefaultTheme.fontColor2,
+                  ),
+                  onPressed: () {
+                    getImageFile(source: ImageSource.gallery);
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Label(
+                  NL10ns.of(context).pictures,
+                  type: LabelType.bodySmall,
+                  color: DefaultTheme.fontColor2,
+                ),
+              )
+            ],
+          ),
+        ),
+        Expanded(
+          flex: 0,
+          child: Column(
+            children: <Widget>[
+              SizedBox(
+                width: 71,
+                height: 71,
+                child: FlatButton(
+                  color: DefaultTheme.backgroundColor1,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8))),
+                  child: loadAssetIconsImage(
+                    'camera',
+                    width: 32,
+                    color: DefaultTheme.fontColor2,
+                  ),
+                  onPressed: () {
+                    getImageFile(source: ImageSource.camera);
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Label(
+                  NL10ns.of(context).camera,
+                  type: LabelType.bodySmall,
+                  color: DefaultTheme.fontColor2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // getBottomMenuView() {
+  //   return ExpansionLayout(
+  //     isExpanded: _showBottomMenu,
+  //     child: Container(
+  //       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
+  //       decoration: BoxDecoration(
+  //         border: Border(
+  //           top: BorderSide(color: DefaultTheme.backgroundColor2),
+  //         ),
+  //       ),
+  //       child: Flex(
+  //         direction: Axis.horizontal,
+  //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //         children: <Widget>[
+  //           Expanded(
+  //             flex: 0,
+  //             child: Column(
+  //               children: <Widget>[
+  //                 SizedBox(
+  //                   width: 71,
+  //                   height: 71,
+  //                   child: FlatButton(
+  //                     color: DefaultTheme.backgroundColor1,
+  //                     shape: RoundedRectangleBorder(
+  //                         borderRadius: BorderRadius.all(Radius.circular(8))),
+  //                     child: loadAssetIconsImage(
+  //                       'image',
+  //                       width: 32,
+  //                       color: DefaultTheme.fontColor2,
+  //                     ),
+  //                     onPressed: () {
+  //                       getImageFile(source: ImageSource.gallery);
+  //                     },
+  //                   ),
+  //                 ),
+  //                 Padding(
+  //                   padding: const EdgeInsets.only(top: 8),
+  //                   child: Label(
+  //                     NL10ns.of(context).pictures,
+  //                     type: LabelType.bodySmall,
+  //                     color: DefaultTheme.fontColor2,
+  //                   ),
+  //                 )
+  //               ],
+  //             ),
+  //           ),
+  //           Expanded(
+  //             flex: 0,
+  //             child: Column(
+  //               children: <Widget>[
+  //                 SizedBox(
+  //                   width: 71,
+  //                   height: 71,
+  //                   child: FlatButton(
+  //                     color: DefaultTheme.backgroundColor1,
+  //                     shape: RoundedRectangleBorder(
+  //                         borderRadius: BorderRadius.all(Radius.circular(8))),
+  //                     child: loadAssetIconsImage(
+  //                       'camera',
+  //                       width: 32,
+  //                       color: DefaultTheme.fontColor2,
+  //                     ),
+  //                     onPressed: () {
+  //                       getImageFile(source: ImageSource.camera);
+  //                     },
+  //                   ),
+  //                 ),
+  //                 Padding(
+  //                   padding: const EdgeInsets.only(top: 8),
+  //                   child: Label(
+  //                     NL10ns.of(context).camera,
+  //                     type: LabelType.bodySmall,
+  //                     color: DefaultTheme.fontColor2,
+  //                   ),
+  //                 )
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   getBottomView() {
     if (showJoin == false) {

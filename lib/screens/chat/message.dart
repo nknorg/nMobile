@@ -66,17 +66,16 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
   bool loading = false;
 
   bool _showBottomMenu = false;
-  bool _showAudioInput = false;
   Timer _deleteTick;
 
   bool _acceptNotification = false;
   Color notiBellColor;
   static const fcmGapString = '__FCMToken__:';
 
+  bool _showAudioInput = false;
   RecordAudio _recordAudio;
   DateTime cTime;
   bool _showAudioLock = false;
-
   double _audioLockHeight = 90;
   bool _audioLongPressEndStatus = false;
 
@@ -563,7 +562,6 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
     if (_acceptNotification == false) {
       notiBellColor = Colors.white38;
     }
-    double wWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
@@ -640,139 +638,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                   direction: Axis.vertical,
                   children: <Widget>[
                     _messageList(),
-                    Container(
-                      height: 90,
-                      margin: EdgeInsets.only(bottom: 0),
-                      child: GestureDetector(
-                        child: _menuWidget(),
-                        onTapUp: (details) {
-                          int afterSeconds =
-                              DateTime.now().difference(cTime).inSeconds;
-                          setState(() {
-                            _showAudioLock = false;
-                            if (afterSeconds > 1) {
-                              /// send AudioMessage Here
-                              NLog.w('Audio record less than 1s' +
-                                  afterSeconds.toString());
-                            } else {
-                              /// add viberation Here
-                              _showAudioInput = false;
-                            }
-                          });
-                        },
-                        onLongPressStart: (details) {
-                          cTime = DateTime.now();
-                          _showAudioLock = false;
-                          Vibration.vibrate();
-                          _setAudioInputOn(true);
-                        },
-                        onLongPressEnd: (details) {
-                          int afterSeconds =
-                              DateTime.now().difference(cTime).inSeconds;
-                          setState(() {
-                            if (details.globalPosition.dx < (wWidth - 80)){
-                              if (_recordAudio != null) {
-                                _recordAudio.cancelCurrentRecord();
-                                _recordAudio.cOpacity = 1;
-                              }
-                            }
-                            else{
-                              if (_recordAudio.showLongPressState == false) {
-
-                              } else {
-                                _recordAudio.stopAndSendAudioMessage();
-                              }
-                            }
-                            if (afterSeconds > 0.2 &&
-                                _recordAudio.cOpacity > 0) {
-                            } else {
-                              _showAudioInput = false;
-                            }
-                            if (_showAudioLock) {
-                              _showAudioLock = false;
-                            }
-                          });
-                        },
-                        onLongPressMoveUpdate: (details) {
-                          int afterSeconds =
-                              DateTime.now().difference(cTime).inSeconds;
-                          if (afterSeconds > 0.2) {
-                            setState(() {
-                              _showAudioLock = true;
-                            });
-                          }
-                            if (details.globalPosition.dx >
-                                  (wWidth) / 3 * 2 &&
-                              details.globalPosition.dx < wWidth - 80) {
-                            double cX = details.globalPosition.dx;
-                            double tW = wWidth - 80;
-                            double mL = (wWidth) / 3 * 2;
-                            double tL = tW - mL;
-                            double opacity = (cX - mL) / tL;
-                            if (opacity < 0) {
-                              opacity = 0;
-                            }
-                            if (opacity > 1) {
-                              opacity = 1;
-                            }
-
-                            setState(() {
-                              _recordAudio.cOpacity = opacity;
-                            });
-                          } else if (details.globalPosition.dx > wWidth - 80) {
-                            setState(() {
-                              _recordAudio.cOpacity = 1;
-                            });
-                          }
-                          double gapHeight = 90;
-                          double tL = 50;
-                          double mL = 60;
-                          if (details.globalPosition.dy >
-                                  MediaQuery.of(context).size.height -
-                                      (gapHeight + tL) &&
-                              details.globalPosition.dy <
-                                  MediaQuery.of(context).size.height -
-                                      gapHeight) {
-                            setState(() {
-                              double currentL = (tL -
-                                  (MediaQuery.of(context).size.height -
-                                      details.globalPosition.dy -
-                                      gapHeight));
-                              _audioLockHeight = mL + currentL - 10;
-                              if (_audioLockHeight < mL) {
-                                _audioLockHeight = mL;
-                              }
-                            });
-                          }
-                          if (details.globalPosition.dy <
-                              MediaQuery.of(context).size.height -
-                                  (gapHeight + tL)) {
-                            setState(() {
-                              _audioLockHeight = mL;
-                              _recordAudio.showLongPressState = false;
-                              _audioLongPressEndStatus = true;
-                            });
-                          }
-                          if (details.globalPosition.dy >
-                              MediaQuery.of(context).size.height -
-                                  (gapHeight)) {
-                            _audioLockHeight = 90;
-                          }
-                        },
-                        onHorizontalDragEnd: (details) {
-                          _cancelAudioRecord();
-                        },
-                        onHorizontalDragCancel: () {
-                          _cancelAudioRecord();
-                        },
-                        onVerticalDragCancel: () {
-                          _cancelAudioRecord();
-                        },
-                        onVerticalDragEnd: (details) {
-                          _cancelAudioRecord();
-                        },
-                      ),
-                    ),
+                    _audioInputWidget(),
                     _bottomMenuWidget(),
                   ],
                 ),
@@ -781,6 +647,143 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
             )),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _audioInputWidget(){
+    double wWidth = MediaQuery.of(context).size.width;
+    return Container(
+      height: 90,
+      margin: EdgeInsets.only(bottom: 0),
+      child: GestureDetector(
+        child: _menuWidget(),
+        onTapUp: (details) {
+          int afterSeconds =
+              DateTime.now().difference(cTime).inSeconds;
+          setState(() {
+            _showAudioLock = false;
+            if (afterSeconds > 1) {
+              /// send AudioMessage Here
+              NLog.w('Audio record less than 1s' +
+                  afterSeconds.toString());
+            } else {
+              /// add viberation Here
+              _showAudioInput = false;
+            }
+          });
+        },
+        onLongPressStart: (details) {
+          cTime = DateTime.now();
+          _showAudioLock = false;
+          Vibration.vibrate();
+          _setAudioInputOn(true);
+        },
+        onLongPressEnd: (details) {
+          int afterSeconds =
+              DateTime.now().difference(cTime).inSeconds;
+          setState(() {
+            if (details.globalPosition.dx < (wWidth - 80)){
+              if (_recordAudio != null) {
+                _recordAudio.cancelCurrentRecord();
+                _recordAudio.cOpacity = 1;
+              }
+            }
+            else{
+              if (_recordAudio.showLongPressState == false) {
+
+              } else {
+                _recordAudio.stopAndSendAudioMessage();
+              }
+            }
+            if (afterSeconds > 0.2 &&
+                _recordAudio.cOpacity > 0) {
+            } else {
+              _showAudioInput = false;
+            }
+            if (_showAudioLock) {
+              _showAudioLock = false;
+            }
+          });
+        },
+        onLongPressMoveUpdate: (details) {
+          int afterSeconds =
+              DateTime.now().difference(cTime).inSeconds;
+          if (afterSeconds > 0.2) {
+            setState(() {
+              _showAudioLock = true;
+            });
+          }
+          if (details.globalPosition.dx >
+              (wWidth) / 3 * 2 &&
+              details.globalPosition.dx < wWidth - 80) {
+            double cX = details.globalPosition.dx;
+            double tW = wWidth - 80;
+            double mL = (wWidth) / 3 * 2;
+            double tL = tW - mL;
+            double opacity = (cX - mL) / tL;
+            if (opacity < 0) {
+              opacity = 0;
+            }
+            if (opacity > 1) {
+              opacity = 1;
+            }
+
+            setState(() {
+              _recordAudio.cOpacity = opacity;
+            });
+          } else if (details.globalPosition.dx > wWidth - 80) {
+            setState(() {
+              _recordAudio.cOpacity = 1;
+            });
+          }
+          double gapHeight = 90;
+          double tL = 50;
+          double mL = 60;
+          if (details.globalPosition.dy >
+              MediaQuery.of(context).size.height -
+                  (gapHeight + tL) &&
+              details.globalPosition.dy <
+                  MediaQuery.of(context).size.height -
+                      gapHeight) {
+            setState(() {
+              double currentL = (tL -
+                  (MediaQuery.of(context).size.height -
+                      details.globalPosition.dy -
+                      gapHeight));
+              _audioLockHeight = mL + currentL - 10;
+              if (_audioLockHeight < mL) {
+                _audioLockHeight = mL;
+              }
+            });
+          }
+          if (details.globalPosition.dy <
+              MediaQuery.of(context).size.height -
+                  (gapHeight + tL)) {
+            setState(() {
+              _audioLockHeight = mL;
+              _recordAudio.showLongPressState = false;
+              _audioLongPressEndStatus = true;
+            });
+          }
+          if (details.globalPosition.dy >
+              MediaQuery.of(context).size.height -
+                  (gapHeight)) {
+            _audioLockHeight = 90;
+          }
+        },
+        onHorizontalDragEnd: (details) {
+          _cancelAudioRecord();
+        },
+        onHorizontalDragCancel: () {
+          _cancelAudioRecord();
+        },
+        onVerticalDragCancel: () {
+          _cancelAudioRecord();
+        },
+        onVerticalDragEnd: (details) {
+          _cancelAudioRecord();
+        },
       ),
     );
   }
