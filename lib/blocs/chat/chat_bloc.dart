@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/chat/chat_state.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
@@ -170,8 +172,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     /// Handle GroupMessage Sending
     if (message.topic != null) {
       try {
-        _sendGroupMessage(message);
         message.setMessageStatus(MessageStatus.MessageSending);
+        _sendGroupMessage(message);
       } catch (e) {
         NLog.w('SendMessage Failed E:_____'+e.toString());
         message.setMessageStatus(MessageStatus.MessageSendFail);
@@ -220,11 +222,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
           } else {
             if (message.contentType == ContentType.media ||
                 message.contentType == ContentType.nknImage){
+              /// Warning todo remove this When most user's version is above 1.1.0
               String extraSendForAndroidSuit = message.toSuitVersionImageData(ContentType.nknImage);
               try {
                 Uint8List pid = await NKNClientCaller.sendText(
                     [message.to], extraSendForAndroidSuit, message.msgId);
                 if(pid != null){
+                  message.setMessageStatus(MessageStatus.MessageSendSuccess);
                   MessageDataCenter.updateMessagePid(pid, message.msgId);
                 }
                 NLog.w('extraSendForAndroidSuit___'+pid.toString());
@@ -232,11 +236,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
                 NLog.w('Wrong___' + e.toString());
                 message.setMessageStatus(MessageStatus.MessageSendFail);
               }
+              /// Warning todo remove this When most user's version is above 1.1.0
               String extraSendForiOSSuit = message.toSuitVersionImageData('image');
               try {
                 Uint8List pid = await NKNClientCaller.sendText(
                     [message.to], extraSendForiOSSuit, message.msgId);
                 if(pid != null){
+                  message.setMessageStatus(MessageStatus.MessageSendSuccess);
                   MessageDataCenter.updateMessagePid(pid, message.msgId);
                 }
                 NLog.w('extraSendForiOSSuit___'+pid.toString());
@@ -259,14 +265,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         Uint8List pid = await NKNClientCaller.sendText(
             [message.to], contentData, message.msgId);
         if(pid != null){
+          message.setMessageStatus(MessageStatus.MessageSendSuccess);
           MessageDataCenter.updateMessagePid(pid, message.msgId);
           NLog.w('Pid is_____'+pid.toString());
         }
-        else{
-          NLog.w('Wrong___PID is null');
-        }
-        NLog.w('Sending Message to____'+message.to.toString());
-        NLog.w('Sending Message contentData to____'+contentData.toString());
       } catch (e) {
         NLog.w('Wrong___' + e.toString());
         message.setMessageStatus(MessageStatus.MessageSendFail);
@@ -578,11 +580,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       }
       else if (message.contentType == ContentType.nknOnePiece){
         List<String> targets = await GroupDataCenter.fetchGroupMembersTargets(message.topic);
-        NLog.w('SendGroupMessage Targets is__'+targets.toString());
         String onePieceEncodeData = message.toNknPieceMessageData();
         if (targets != null && targets.length > 0) {
           Uint8List pid = await NKNClientCaller.sendText(
               targets, onePieceEncodeData, message.msgId);
+          message.setMessageStatus(MessageStatus.MessageSendSuccess);
           MessageDataCenter.updateMessagePid(pid, message.msgId);
         } else {
           if (message.topic != null) {
@@ -593,6 +595,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       else{
         NLog.w('groupUseOnePiece___'+message.contentType.toString());
         _sendOnePieceMessage(message);
+        /// Warning todo remove this When most user's version is above 1.1.0
         _sendGroupMessageWithJsonEncode(message, encodeSendJsonData);
       }
     }
@@ -607,6 +610,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       if (targets != null && targets.length > 0) {
         Uint8List pid = await NKNClientCaller.sendText(
             targets, encodeJson, message.msgId);
+        message.setMessageStatus(MessageStatus.MessageSendSuccess);
         MessageDataCenter.updateMessagePid(pid, message.msgId);
       } else {
         if (message.topic != null) {
@@ -621,7 +625,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         message.setMessageStatus(MessageStatus.MessageSendSuccess);
       } catch (e) {
         message.setMessageStatus(MessageStatus.MessageSendFail);
+        NLog.w('_sendGroupMessageWithJsonEncode E:'+e.toString());
       }
+      NLog.w('_sendGroupMessageWithJsonEncode WithContent:'+jsonDecode(encodeJson).toString());
+      NLog.w('_sendGroupMessageWithJsonEncode With pid:'+pid.toString());
       if (pid != null) {
         MessageDataCenter.updateMessagePid(pid, message.msgId);
       }
@@ -645,6 +652,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       ReceiveMessageEvent event) async* {
     var message = event.message;
 
+    /// judge if ReceivedMessage duplicated
     bool messageExist = await message.isReceivedMessageExist();
     if (messageExist == true) {
       /// should retry here!!!
@@ -655,6 +663,31 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       NLog.w('ReceiveMessage from AnotherNode__');
       return;
     }
+    else{
+      /// judge ReceiveMessage if D-Chat PC groupMessage Receipt
+      MessageSchema dChatPcReceipt = await MessageSchema.findMessageWithMessageId(event.message.msgId);
+      if (dChatPcReceipt != null){
+        dChatPcReceipt.setMessageStatus(MessageStatus.MessageSendReceipt);
+
+        dChatPcReceipt.content = message.msgId;
+        dChatPcReceipt.contentType = ContentType.receipt;
+        dChatPcReceipt.topic = null;
+
+        yield MessageUpdateState(target: dChatPcReceipt.from, message: dChatPcReceipt);
+        return;
+      }
+    }
+
+    if (message.contentType == ContentType.receipt) {
+      MessageSchema oMessage = await message.receiptMessage();
+      NLog.w('ReceiptMessage OMessage content is___'+oMessage.content.toString());
+      NLog.w('ReceiptMessage OMessage msgId is___'+oMessage.msgId.toString());
+      if (oMessage != null){
+        yield MessageUpdateState(target: oMessage.from, message: oMessage);
+        return;
+      }
+    }
+
     bool existOnePiece = await message.isOnePieceExist();
     if (existOnePiece == true) {
       return;
@@ -683,14 +716,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         message.contentType == ContentType.channelInvitation) {
       /// If Received self Send
       if (message.from == NKNClientCaller.currentChatId) {
-        await message.receiptTopic();
-
-        message.setMessageStatus(MessageStatus.MessageSendReceipt);
-        message.content = message.msgId;
-        message.contentType = ContentType.receipt;
-        message.topic = null;
-
-        yield MessageUpdateState(target: message.from, message: message);
+        MessageSchema oMessage = await message.receiptMessage();
+        yield MessageUpdateState(target: oMessage.from, message: oMessage);
         return;
       } else {
         NLog.w('_insertMessage');
@@ -856,17 +883,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         }
         contactBloc.add(LoadContact(address: [contact.clientAddress]));
       }
-      /// Receipt sendMessage do not need InsertToDataBase
-      else if (message.contentType == ContentType.receipt) {
-        int count = await message.receiptMessage();
-        message.setMessageStatus(MessageStatus.MessageSendReceipt);
-
-        if (count == 0) {
-          NLog.w('Wrong!!! Insert message wrong__'+message.msgId.toString());
-          message.insertReceivedMessage();
-        }
-        _startWatchDog(message);
-      } else {
+      else {
         NLog.w('Wrong!!! MessageType unhandled___' +
             message.contentType.toString());
       }

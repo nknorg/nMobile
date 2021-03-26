@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
@@ -455,37 +456,13 @@ class MessageSchema extends Equatable {
     try {
       NKNClientCaller.sendText([from], jsonEncode(data), msgId);
       NLog.w('SendMessage Receipt Success__' + msgId.toString());
+      NLog.w('SendMessage Receipt content Success__' + content.toString());
     } catch (e) {
       NLog.w('Wrong!!!sendReceiptMessage E:' + e.toString());
       Timer(Duration(seconds: 1), () {
         sendReceiptMessage();
       });
     }
-  }
-
-  Future<bool> receiptTopic() async {
-    Database cdb = await NKNDataManager().currentDatabase();
-    Map<String, dynamic> data = {
-      'is_success': 1,
-      'is_send_error': 0,
-    };
-    try{
-      var count = await cdb.update(
-        MessageSchema.tableName,
-        data,
-        where: 'msg_id = ?',
-        whereArgs: [msgId],
-      );
-      if (count > 0){
-        NLog.w('receiptTopic success!');
-        return true;
-      }
-    }
-    catch(e){
-      NLog.w('Wrong!!!__receiptTopic');
-    }
-    NLog.w('receiptTopic failed!');
-    return false;
   }
 
   @override
@@ -761,11 +738,14 @@ class MessageSchema extends Equatable {
     Database cdb = await NKNDataManager().currentDatabase();
     var res = await cdb.query(
       MessageSchema.tableName,
-      columns: ['COUNT(id) as count'],
       where: 'msg_id = ? AND is_outbound = 0 AND NOT type = ?',
       whereArgs: [msgId, ContentType.nknOnePiece],
     );
-    return Sqflite.firstIntValue(res) > 0;
+    if (res.isNotEmpty){
+      NLog.w('isReceivedMessageExist __'+res.length.toString());
+      return true;
+    }
+    return false;
   }
 
   Future<bool> isOnePieceExist() async {
@@ -872,38 +852,42 @@ class MessageSchema extends Equatable {
     return null;
   }
 
-  Future<int> receiptMessage() async {
-    Database cdb = await NKNDataManager().currentDatabase();
-    if (contentType == null) {
-      return -1;
-    }
+  Future<MessageSchema> receiptMessage() async {
     String queryID = '';
     if (contentType == ContentType.receipt) {
-      if (content != null) {
-        queryID = content;
+      if (content == null){
+        NLog.w('receiptMessage content is null');
+        return null;
       }
+      queryID = content;
     }
-    if (queryID.length == 0) {
-      NLog.w('Wrong!!!queryID.length == 0');
-      return -1;
+    else{
+      queryID = msgId;
     }
-    Map<String, dynamic> data = {
-      'is_success': 1,
-      'is_send_error': 0,
-    };
 
-    try {
-      var count = await cdb.update(
-        MessageSchema.tableName,
-        data,
-        where: 'msg_id = ?',
-        whereArgs: [queryID],
-      );
-      return count;
-    } catch (e) {
-      NLog.w('Wrong!!!__receiptMessage');
+    MessageSchema messageModel = await findMessageWithMessageId(queryID);
+
+    if (messageModel != null){
+      NLog.w('OMessageStatus is_____'+messageModel.messageStatus.toString());
+      await messageModel.setMessageStatus(MessageStatus.MessageSendReceipt);
+      NLog.w('messageModel setMessageStatus is_____'+messageModel.messageStatus.toString());
+      return messageModel;
     }
-    return 0;
+    return null;
+  }
+
+  static Future<MessageSchema> findMessageWithMessageId(String msgId) async{
+    Database cdb = await NKNDataManager().currentDatabase();
+    var res = await cdb.query(
+      MessageSchema.tableName,
+      where: 'msg_id = ?',
+      whereArgs: [msgId],
+    );
+    if (res.isNotEmpty){
+      var messageModel = MessageSchema.parseEntity(res[0]);
+      return messageModel;
+    }
+    return null;
   }
 
   updateMessageOptions() async {
