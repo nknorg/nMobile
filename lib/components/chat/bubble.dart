@@ -426,15 +426,6 @@ class _ChatBubbleState extends State<ChatBubble> {
                   ],
                 ),
                 _progressWidget(),
-                // Container(
-                //   height: 40,
-                //   width: 100,
-                //   margin: EdgeInsets.only(left: 50,right: 90),
-                //   child: CustomPaint(
-                //       size: Size(60, 40),
-                //       painter:
-                //       LCPainter(amplitude: 100 / 2, number: 30 - 100 ~/ 20)),
-                // ),
               ],
             )),
           ),
@@ -443,7 +434,9 @@ class _ChatBubbleState extends State<ChatBubble> {
 
     if (widget.message.options != null &&
         widget.message.options['deleteAfterSeconds'] != null) {
-      contentsWidget.add(burnWidget);
+      if (widget.message.messageStatus != MessageStatus.MessageSendFail){
+        contentsWidget.add(burnWidget);
+      }
     }
 
     if (contentsWidget.isEmpty) {
