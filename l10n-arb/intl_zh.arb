@@ -1800,5 +1800,10 @@
     "@member_no_auth_invite": {
       "type": "text",
       "placeholders": {}
-    }
+    },
+    "tip_open_send_device_token": "发送你的设备token给他?\n他将可以给你发送远程推送!",
+      "@tip_open_send_device_token": {
+        "type": "text",
+        "placeholders": {}
+      }
 }

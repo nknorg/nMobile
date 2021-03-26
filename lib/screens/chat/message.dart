@@ -448,7 +448,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
         context: context,
         buttonColor: DefaultTheme.primaryColor,
         content:
-            'Send your device token to him?\nThen he can send you remote notification!',
+            NL10ns.of(context).tip_open_send_device_token,
         callback: (b) {
           if (b) {
             _acceptNotification = true;

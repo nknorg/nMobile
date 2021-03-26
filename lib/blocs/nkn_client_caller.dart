@@ -61,6 +61,12 @@ class NKNClientCaller {
         if (rpcNodeListString.substring(0, 1) == ',') {
           rpcNodeListString = rpcNodeListString.substring(1);
         }
+        List nodeList = rpcNodeListString.split(',');
+        if (nodeList.length > 1 && nodeList[0] == 'http://seed.nkn.org:30003'){
+          nodeList = nodeList.sublist(1);
+          NLog.w('rpcNodeListString before remove is_____' + rpcNodeListString.toString());
+          rpcNodeListString = nodeList.join(',');
+        }
         rpcNodeListString = rpcNodeListString + ',http://seed.nkn.org:30003';
       } else {
         rpcNodeListString = 'http://seed.nkn.org:30003';
