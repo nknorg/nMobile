@@ -67,7 +67,6 @@ class Topic with Tag {
       : _options = options,
         assert(topic != null && topic.isNotEmpty) {
 
-    NLog.w('TopicName is____'+topic);
     topicType = isPrivateTopicReg(topic)?TopicType.privateTopic:TopicType.publicTopic;
 
     if (topicType == TopicType.privateTopic) {

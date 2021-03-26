@@ -847,10 +847,6 @@ class MessageSchema extends Equatable {
       whereArgs: [myChatId, ContentType.nknOnePiece,ContentType.receipt],
     );
 
-    for (Map unread in res){
-      NLog.w('unReadMessages is ____'+unread.toString());
-    }
-    NLog.w('unReadMessages res is ____'+res.toString());
     if (res != null){
       return res.length;
     }

@@ -76,33 +76,45 @@ class ChannelBloc extends Bloc<ChannelMembersEvent, ChannelState> {
       FetchChannelMembersEvent event) async* {
     String topicName = event.topicName;
     List<MemberVo> list = [];
+
     final subscribers = await SubscriberRepo().getAllMemberByTopic(topicName);
+    NLog.w('Got subscribers subscribers is____' + subscribers.runtimeType.toString());
 
-    for (final sub in subscribers) {
-      if (sub.chatId.length < 64) {
-        NLog.w('chatID is_____' + sub.chatId.toString());
-        break;
+    for (var insider in subscribers){
+      NLog.w('Got subscribers insider is____' + insider.runtimeType.toString());
+    }
+
+    for (var insider in subscribers){
+      NLog.w('Got subscribers insider2 is____' + insider.topic.toString());
+      if (insider.chatId == null){
+        NLog.w('Got subscribers is null' + insider.memberStatus.toString());
       }
-      if (sub.chatId.contains('__permission__')){
-        NLog.w('chatID is_____' + sub.chatId.toString());
-        break;
+      NLog.w('Got subscribers insider1 is____' + insider.chatId.toString());
+    }
+
+    for (Subscriber sub in subscribers) {
+      if (sub.chatId.length < 64 || sub.chatId.contains('__permission__')){
+        NLog.w('Wrong!!!database Wrong chatID___'+sub.chatId.toString());
       }
+      else{
+        ContactSchema contact = await ContactSchema.fetchContactByAddress(sub.chatId);
+        if (contact == null && sub.chatId != NKNClientCaller.currentChatId){
+          ContactSchema contact = ContactSchema(
+              type: ContactType.stranger,
+              clientAddress: sub.chatId);
+          await contact.insertContact();
+        }
+        NLog.w('contact.sub.chatId is____'+sub.chatId.toString());
 
-      final contactType = sub.chatId == NKNClientCaller.currentChatId
-          ? ContactType.me
-          : ContactType.stranger;
-      ContactSchema cta =
-          await ContactSchema.fetchContactByAddress(sub.chatId) ??
-              ContactSchema(clientAddress: sub.chatId, type: contactType);
-
-      MemberVo member = MemberVo(
-        name: cta.getShowName,
-        chatId: sub.chatId,
-        indexPermiPage: sub.indexPermiPage,
-        contact: cta,
-        memberStatus: sub.memberStatus,
-      );
-      list.add(member);
+        MemberVo member = MemberVo(
+          name: contact.getShowName,
+          chatId: sub.chatId,
+          indexPermiPage: sub.indexPermiPage,
+          contact: contact,
+          memberStatus: sub.memberStatus,
+        );
+        list.add(member);
+      }
     }
     NLog.w('Got subscribers List is____' + list.length.toString());
     yield FetchChannelMembersState(list);
