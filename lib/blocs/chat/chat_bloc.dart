@@ -667,7 +667,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       /// judge ReceiveMessage if D-Chat PC groupMessage Receipt
       MessageSchema dChatPcReceipt = await MessageSchema.findMessageWithMessageId(event.message.msgId);
       if (dChatPcReceipt != null){
-        dChatPcReceipt.setMessageStatus(MessageStatus.MessageSendReceipt);
+        dChatPcReceipt = await dChatPcReceipt.receiptMessage();
 
         dChatPcReceipt.content = message.msgId;
         dChatPcReceipt.contentType = ContentType.receipt;
@@ -680,9 +680,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
 
     if (message.contentType == ContentType.receipt) {
       MessageSchema oMessage = await message.receiptMessage();
-      NLog.w('ReceiptMessage OMessage content is___'+oMessage.content.toString());
-      NLog.w('ReceiptMessage OMessage msgId is___'+oMessage.msgId.toString());
       if (oMessage != null){
+
+        oMessage.content = oMessage.msgId;
+        oMessage.contentType = ContentType.receipt;
+        oMessage.topic = null;
+
         yield MessageUpdateState(target: oMessage.from, message: oMessage);
         return;
       }
