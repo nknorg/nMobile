@@ -482,6 +482,7 @@ class NKNClientCaller {
           NLog.w('disConnect Native to dart___' + res.toString());
           break;
         case 'onMessage':
+          NLog.w('onMessage Data' + res.toString());
           Map data = res['data'];
           if (clientBloc != null) {
             NLog.w('ClientBloc not null__\n' + NKNClientCaller.currentChatId);
@@ -492,9 +493,6 @@ class NKNClientCaller {
                 to: NKNClientCaller.currentChatId,
                 data: data['data'],
                 pid: data['pid']);
-            if (data['data'] != null) {
-              NLog.w('onMessage Data' + data.toString());
-            }
             if (data['src'] != null && data['pid'] != null) {
               if (NKNClientCaller.currentChatId != null) {
                 NLog.w('currentChatId is__' +
