@@ -593,7 +593,7 @@ class _ContactScreenState extends State<ContactScreen> {
 
     Timer(Duration(milliseconds: 200), () async {
       EasyLoading.dismiss();
-      showToast('Switch Success');
+      showToast(NL10ns.of(context).tip_switch_success);
     });
   }
 

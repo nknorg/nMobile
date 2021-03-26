@@ -550,10 +550,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         await message.updateDeleteTime();
       }
 
-      List<String> groupMembers =
-      await GroupChatHelper.fetchGroupMembers(message.topic);
-      for (String address in groupMembers){
-        _checkIfSendNotification(address, '');
+      List<Subscriber> groupMembers =
+      await GroupDataCenter.fetchSubscribedMember(message.topic);
+      for (Subscriber sub in groupMembers){
+        _checkIfSendNotification(sub.chatId, '');
       }
     }
 
@@ -577,12 +577,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         _sendGroupMessageWithJsonEncode(message, encodeSendJsonData);
       }
       else if (message.contentType == ContentType.nknOnePiece){
-        List<String> dests =
-        await GroupChatHelper.fetchGroupMembers(message.topic);
+        List<String> targets = await GroupDataCenter.fetchGroupMembersTargets(message.topic);
+        NLog.w('SendGroupMessage Targets is__'+targets.toString());
         String onePieceEncodeData = message.toNknPieceMessageData();
-        if (dests != null && dests.length > 0) {
+        if (targets != null && targets.length > 0) {
           Uint8List pid = await NKNClientCaller.sendText(
-              dests, onePieceEncodeData, message.msgId);
+              targets, onePieceEncodeData, message.msgId);
           MessageDataCenter.updateMessagePid(pid, message.msgId);
         } else {
           if (message.topic != null) {
@@ -602,11 +602,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
 
   _sendGroupMessageWithJsonEncode(MessageSchema message,String encodeJson) async{
     if (isPrivateTopicReg(message.topic)){
-      List<String> dests =
-      await GroupChatHelper.fetchGroupMembers(message.topic);
-      if (dests != null && dests.length > 0) {
+      List<String> targets = await GroupDataCenter.fetchGroupMembersTargets(message.topic);
+      if (targets != null && targets.length > 0) {
         Uint8List pid = await NKNClientCaller.sendText(
-            dests, encodeJson, message.msgId);
+            targets, encodeJson, message.msgId);
         MessageDataCenter.updateMessagePid(pid, message.msgId);
       } else {
         if (message.topic != null) {
@@ -748,11 +747,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         bool meInChannel = await GroupChatPublicChannel.checkMeInChannel(
             message.topic, NKNClientCaller.currentChatId);
         NLog.w('Me in Channel is___'+meInChannel.toString());
+        GroupDataCenter.pullSubscribersPublicChannel(message.topic);
         if (meInChannel == false) {
           return;
         } else {
           await GroupChatHelper.insertTopicIfNotExists(message.topic);
-          GroupDataCenter.pullSubscribersPublicChannel(message.topic);
         }
       } else {
         bool existMember = await GroupChatHelper.checkMemberIsInGroup(

@@ -77,27 +77,6 @@ class GroupChatHelper {
   static final SubscriberRepo _subscriberRepo = SubscriberRepo();
   static final TopicRepo _topicRepo = TopicRepo();
 
-  static Future<List<String>> fetchGroupMembers(String topicName) async {
-    List<String> memberList =
-        await _subscriberRepo.getAllSubscriberByTopic(topicName);
-    if (memberList != null && memberList.length > 0) {
-      if (topicName != null) {
-        NLog.w('Got Topic__' +
-            topicName.toString() +
-            'count is__' +
-            memberList.length.toString());
-      }
-      return memberList;
-    } else {
-      if (topicName != null) {
-        NLog.w('Wrong get no group member__' + topicName);
-      } else {
-        NLog.w('Wrong!!! topic Name is null');
-      }
-      return null;
-    }
-  }
-
   static Future<Topic> fetchTopicInfoByName(String topicName) async {
     Topic topicInfo = await _topicRepo.getTopicByName(topicName);
     return topicInfo;

@@ -126,7 +126,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     if (topic != null){
       if (topic.isPrivateTopic()) {
         NLog.w('Enter Private Topic___'+topicName);
-        GroupDataCenter.pullPrivateSubscribers(topic);
+        GroupDataCenter.pullPrivateSubscribers(topic.topic);
       }
       else{
         NLog.w('Enter Public Topic___'+topicName);

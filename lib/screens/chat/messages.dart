@@ -28,8 +28,10 @@ import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_storage.dart';
+import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/datacenter/contact_data_center.dart';
+import 'package:nmobile/model/datacenter/group_data_center.dart';
 import 'package:nmobile/model/entity/topic_repo.dart';
 import 'package:nmobile/model/popular_channel.dart';
 import 'package:nmobile/model/entity/chat.dart';
@@ -121,6 +123,7 @@ class _MessagesTabState extends State<MessagesTab>
   _updateTopicBlock() async {
     if (Global.upgradedGroupBlockHeight == true) {
       Global.upgradedGroupBlockHeight = false;
+      _checkUnreadMessage();
       NKNClientCaller.fetchBlockHeight().then((blockHeight) {
         if (blockHeight == null || blockHeight == 0) {
           return;
@@ -205,6 +208,24 @@ class _MessagesTabState extends State<MessagesTab>
           }
         });
       });
+    }
+  }
+
+  _checkUnreadMessage() async{
+    List unreadList = await MessageSchema.findAllUnreadMessages();
+    for (MessageSchema message in unreadList){
+      if (message.topic != null){
+        bool topicExist = await GroupDataCenter.isTopicExist(message.topic);
+        if (topicExist == false){
+          if (isPrivateTopicReg(message.topic)){
+            await message.markMessageRead();
+            GroupDataCenter.pullPrivateSubscribers(message.topic);
+          }
+          else{
+            GroupDataCenter.pullSubscribersPublicChannel(message.topic);
+          }
+        }
+      }
     }
   }
 
