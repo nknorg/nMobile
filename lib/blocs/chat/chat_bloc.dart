@@ -591,8 +591,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         }
       }
       else{
-        NLog.w('Route to SendGroup Onepiece');
+        NLog.w('groupUseOnePiece___'+message.contentType.toString());
         _sendOnePieceMessage(message);
+        _sendGroupMessageWithJsonEncode(message, encodeSendJsonData);
       }
     }
     else{
