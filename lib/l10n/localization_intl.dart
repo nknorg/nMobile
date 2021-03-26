@@ -1317,6 +1317,10 @@ class NL10ns {
   String get member_no_auth_invite => Intl.message(
       'Private group member can not invite others currently,ask group owner to invite others',
       name: 'member_no_auth_invite');
+
+  String get tip_open_send_device_token => Intl.message(
+      'Send your device token to him?\nThen he can send you remote notification!',
+      name: 'tip_open_send_device_token');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NL10ns> {

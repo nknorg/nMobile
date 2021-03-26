@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2021-03-24T16:55:59.770001",
+  "@@last_modified": "2021-03-25T22:56:13.484208",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1820,6 +1820,11 @@
   },
   "member_no_auth_invite": "Private group member can not invite others currently,ask group owner to invite others",
   "@member_no_auth_invite": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "tip_open_send_device_token": "Send your device token to him?\nThen he can send you remote notification!",
+  "@tip_open_send_device_token": {
     "type": "text",
     "placeholders": {}
   }

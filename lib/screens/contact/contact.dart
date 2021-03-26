@@ -506,6 +506,7 @@ class _ContactScreenState extends State<ContactScreen> {
             width: double.infinity,
             child: Row(
               children: <Widget>[
+                Spacer(),
                 Icon(
                   Icons.delete,
                   color: Colors.red,
