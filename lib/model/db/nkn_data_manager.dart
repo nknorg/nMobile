@@ -47,8 +47,8 @@ class NKNDataManager {
       version: currentDatabaseVersion,
       onCreate: (Database db, int version) async {
         await MessageSchema.create(db, version);
-        await ContactSchema.create(db, version);
 
+        await ContactSchema.create(db);
         await TopicRepo.create(db, version);
         await SubscriberRepo.create(db, version);
 

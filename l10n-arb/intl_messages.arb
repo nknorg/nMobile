@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2021-03-26T16:12:45.698768",
+  "@@last_modified": "2021-03-26T18:08:23.312422",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -840,13 +840,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "setting_deny_notification": "Have Deny Remote Notification",
+  "setting_deny_notification": "Have Denied Remote Notification",
   "@setting_deny_notification": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "setting_accept_notification": "Have Accept Remote Notification",
+  "setting_accept_notification": "Have Accepted Remote Notification",
   "@setting_accept_notification": {
     "description": "",
     "type": "text",
