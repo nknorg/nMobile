@@ -160,27 +160,11 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
           return;
         }
 
-        if (updateMessage.deleteAfterSeconds != null) {
-          if (updateMessage.from != targetId){
-            return;
-          }
-          if (chatContact.options != null) {
-            if (chatContact.options.updateBurnAfterTime == null ||
-                updateMessage.timestamp.millisecondsSinceEpoch >
-                    chatContact.options.updateBurnAfterTime) {
-              NLog.w('!!!!contact.setBurnOption ___' +
-                  updateMessage.deleteAfterSeconds.toString());
-              chatContact.setBurnOptions(updateMessage.deleteAfterSeconds);
-              setState(() {});
-            }
-          }
-        }
-
         if (updateMessage.contentType == ContentType.receipt) {
           if (_messages != null && _messages.length > 0) {
             var msg = _messages.firstWhere(
-                (x) =>
-                    x.msgId == updateMessage.content.toString() &&
+                    (x) =>
+                x.msgId == updateMessage.msgId.toString() &&
                     x.isSendMessage(),
                 orElse: () => null);
             if (msg != null) {
@@ -193,6 +177,22 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
             }
           }
         }
+
+        if (updateMessage.deleteAfterSeconds != null) {
+          /// not update other's setting
+          if (updateMessage.from != targetId){
+            return;
+          }
+          if (chatContact.options != null) {
+            if (chatContact.options.updateBurnAfterTime == null ||
+                updateMessage.timestamp.millisecondsSinceEpoch >
+                    chatContact.options.updateBurnAfterTime) {
+              chatContact.setBurnOptions(updateMessage.deleteAfterSeconds);
+              setState(() {});
+            }
+          }
+        }
+
         if (updateMessage.isSendMessage()) {
           if (updateMessage.contentType == ContentType.eventContactOptions) {
             var receivedMessage = _messages.firstWhere(
