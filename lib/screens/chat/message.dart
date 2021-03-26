@@ -597,7 +597,6 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                     ],
                   ),
                 ),
-                // Spacer(),
                 FlatButton(
                   child: loadAssetIconsImage('notification_bell',
                       color: notiBellColor, width: 24),
@@ -1406,7 +1405,11 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
         ],
       ).pad(t: 2);
     } else {
-      return Container();
+      return Label(
+        NL10ns.of(context).click_to_settings,
+        type: LabelType.bodySmall,
+        color: DefaultTheme.backgroundLightColor,
+      );
     }
   }
 }
