@@ -166,9 +166,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     String contentData = '';
     await message.insertSendMessage();
 
-    Timer(Duration(seconds: 11), () {
-      _watchSendMessage(message);
-    });
+    // Timer(Duration(seconds: 11), () {
+    //   _watchSendMessage(message);
+    // });
     /// Handle GroupMessage Sending
     if (message.topic != null) {
       try {
