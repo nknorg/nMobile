@@ -75,7 +75,6 @@ class GroupDataCenter{
 
   static Future<bool> updatePrivatePermissionList(String topicName,String chatId, bool invite) async{
     Subscriber updateSub = await subRepo.getByTopicAndChatId(topicName, chatId);
-    NLog.w('updatePrivatePermissionList topicName is____'+topicName.toString());
     final topicHashed = genTopicHash(topicName);
 
     if (updateSub == null){
@@ -402,7 +401,6 @@ class GroupDataCenter{
         meta: true,
         txPool: true
     );
-    NLog.w('pullPrivateSubscribers getSubscribers is____'+subscribersMap.toString());
 
     if (subscribersMap != null){
       for(int i = 0; i < subscribersMap.length; i++){
@@ -412,6 +410,15 @@ class GroupDataCenter{
           if (subscriber.memberStatus < MemberStatus.MemberSubscribed){
             NLog.w('pullPrivateSubscribers is___'+address.toString());
             await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
+          }
+          else{
+            NLog.w('Subscriber subscriber.memberStatus'+subscriber.memberStatus.toString());
+          }
+          if (subscriber.chatId.contains('.__permission__.')){
+            await subRepo.delete(subscriber.topic, subscriber.chatId);
+            /// do not need to handle private Group permission List for normal member.
+            /// The List it under private group owner's control
+            NLog.w('pullPrivateSubscribers MEET__'+address.toString());
           }
         }
         else{
@@ -480,7 +487,6 @@ class GroupDataCenter{
           meta: true,
           txPool: true
       );
-      NLog.w('Subscribered List is____'+subs.toString());
 
       if (owner == NKNClientCaller.currentChatId){
         if (meta == null || meta.trim().isEmpty) {
