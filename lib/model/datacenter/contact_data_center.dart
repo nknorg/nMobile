@@ -210,9 +210,8 @@ class ContactDataCenter {
       'responseType': RequestType.full,
       'expiresAt': 0,
     };
-    if (Platform.isIOS) {
-      data['onePieceReady'] = '1';
-    }
+    data['onePieceReady'] = '1';
+
     try {
       Map<String, dynamic> content = {
         'name': meMyself.firstName,

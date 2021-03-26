@@ -629,12 +629,12 @@ class NL10ns {
   }
 
   String get setting_deny_notification {
-    return Intl.message('Have Deny Remote Notification',
+    return Intl.message('Have Denied Remote Notification',
         name: 'setting_deny_notification', desc: '');
   }
 
   String get setting_accept_notification {
-    return Intl.message('Have Accept Remote Notification',
+    return Intl.message('Have Accepted Remote Notification',
         name: 'setting_accept_notification', desc: '');
   }
 

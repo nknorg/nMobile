@@ -135,39 +135,39 @@ class ContactSchema {
 
   static String get tableName => 'Contact';
 
-  static create(Database db, int version) async {
-    final createSqlV2 = '''
-      CREATE TABLE $tableName (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT,
-        address TEXT,
-        first_name TEXT,
-        last_name TEXT,
-        data TEXT,
-        options TEXT,
-        avatar TEXT,
-        created_time INTEGER,
-        updated_time INTEGER,
-        profile_version TEXT,
-        profile_expires_at INTEGER
-      )''';
+  static create(Database db) async {
+    // final createSqlV2 = '''
+    //   CREATE TABLE $tableName (
+    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    //     type TEXT,
+    //     address TEXT,
+    //     first_name TEXT,
+    //     last_name TEXT,
+    //     data TEXT,
+    //     options TEXT,
+    //     avatar TEXT,
+    //     created_time INTEGER,
+    //     updated_time INTEGER,
+    //     profile_version TEXT,
+    //     profile_expires_at INTEGER
+    //   )''';
+    // final createSqlV3 = '''
+    //   CREATE TABLE $tableName (
+    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    //     type TEXT,
+    //     address TEXT,
+    //     first_name TEXT,
+    //     last_name TEXT,
+    //     data TEXT,
+    //     options TEXT,
+    //     avatar TEXT,
+    //     created_time INTEGER,
+    //     updated_time INTEGER,
+    //     profile_version TEXT,
+    //     profile_expires_at INTEGER,
+    //     is_top BOOLEAN DEFAULT 0
+    //   )''';
     final createSqlV3 = '''
-      CREATE TABLE $tableName (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT,
-        address TEXT,
-        first_name TEXT,
-        last_name TEXT,
-        data TEXT,
-        options TEXT,
-        avatar TEXT,
-        created_time INTEGER,
-        updated_time INTEGER,
-        profile_version TEXT,
-        profile_expires_at INTEGER,
-        is_top BOOLEAN DEFAULT 0
-      )''';
-    final createSqlV4 = '''
       CREATE TABLE $tableName (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         type TEXT,
@@ -186,17 +186,19 @@ class ContactSchema {
         notification_open BOOLEAN DEFAULT 0
       )''';
     // create table
-    if (version == 2) {
-      await db.execute(createSqlV2);
-    } else if (version == 3) {
-      await db.execute(createSqlV4);
-    } else if (version == 5) {
-      await db.execute(createSqlV3);
-    } else if (version == 6) {
-      await db.execute(createSqlV4);
-    } else {
-      throw UnsupportedError('unsupported create operation version $version.');
-    }
+    db.execute(createSqlV3);
+    // if (version )
+    // if (version == 2) {
+    //   await db.execute(createSqlV2);
+    // } else if (version == 3) {
+    //   await db.execute(createSqlV4);
+    // } else if (version == 5) {
+    //   await db.execute(createSqlV3);
+    // } else if (version == 6) {
+    //   await db.execute(createSqlV4);
+    // } else {
+    //   throw UnsupportedError('unsupported create operation version $version.');
+    // }
     // index
     await db.execute('CREATE INDEX index_type ON $tableName (type)');
     await db.execute('CREATE INDEX index_address ON $tableName (address)');
@@ -532,13 +534,9 @@ class ContactSchema {
   }
 
   Future<bool> setNotificationOpen(bool notificationOpen) async {
-    int notificationSaveValue = 0;
-    if (notificationOpen == true) {
-      notificationSaveValue = 1;
-    }
     this.notificationOpen = notificationOpen;
     Map<String, dynamic> profileInfo = {
-      'notification_open': notificationSaveValue,
+      'notification_open': notificationOpen?1:0,
       'updated_time': DateTime.now().millisecondsSinceEpoch,
     };
     Database cdb = await NKNDataManager().currentDatabase();

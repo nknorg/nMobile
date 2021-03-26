@@ -395,11 +395,11 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
                 let content = pushContent as! String;
                 if (content.count > 0){
                     let pushService:NKNPushService = NKNPushService.shared();
-                    // 需要发送给Android设备通知 通过FCM
                     if (deviceToken.count == 64){
                         pushService.pushContent(content, token: deviceToken);
                     }
                     else if (deviceToken.count > 64){
+                        // Send Notification to Android Device throw FCM
                         if (deviceToken.count == 163){
                             pushService.pushContent(toFCM: content, byToken: deviceToken)
                         }
@@ -407,7 +407,7 @@ public class NknClientPlugin : NSObject, FlutterStreamHandler {
                             let fcmGapString = "__FCMToken__:"
                             let sList = deviceToken.components(separatedBy: fcmGapString)
                             let dropFcmToken = sList[0]
-                            NSLog("after drop Fcm token is",dropFcmToken);
+                            NSLog("after drop Fcm token is %@",dropFcmToken);
                             pushService.pushContent(content, token: dropFcmToken);
                         }
                     }

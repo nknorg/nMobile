@@ -3,7 +3,6 @@ import 'package:nmobile/model/entity/topic_repo.dart';
 import 'package:nmobile/model/entity/contact.dart';
 import 'package:nmobile/model/entity/message.dart';
 import 'package:nmobile/utils/log_tag.dart';
-import 'package:nmobile/utils/nlog_util.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class MessageItem {
