@@ -843,11 +843,37 @@ class MessageSchema extends Equatable {
     String myChatId = NKNClientCaller.currentChatId;
     var res = await cdb.query(
       MessageSchema.tableName,
-      columns: ['COUNT(id) as count'],
-      where: 'sender != ? AND is_read = 0 AND NOT type = ? AND NOT type = ? AND NOT type = ? AND NOT type = ? AND NOT type = ?',
-      whereArgs: [myChatId, ContentType.nknOnePiece, ContentType.eventSubscribe, ContentType.eventUnsubscribe, ContentType.eventContactOptions, ContentType.channelInvitation],
+      where: 'sender != ? AND is_read = 0 AND NOT type = ? AND NOT type = ?',
+      whereArgs: [myChatId, ContentType.nknOnePiece,ContentType.receipt],
     );
-    return Sqflite.firstIntValue(res);
+
+    for (Map unread in res){
+      NLog.w('unReadMessages is ____'+unread.toString());
+    }
+    NLog.w('unReadMessages res is ____'+res.toString());
+    if (res != null){
+      return res.length;
+    }
+    return 0;
+  }
+
+  static Future<List> findAllUnreadMessages() async {
+    Database cdb = await NKNDataManager().currentDatabase();
+    String myChatId = NKNClientCaller.currentChatId;
+    var res = await cdb.query(
+      MessageSchema.tableName,
+      where: 'sender != ? AND is_read = 0 AND NOT type = ? AND NOT type = ? AND NOT type = ?',
+      whereArgs: [myChatId, ContentType.nknOnePiece, ContentType.eventSubscribe, ContentType.receipt],
+    );
+
+    if (res != null){
+      List unreadList = new List();
+      for (Map unreadMessage in res){
+        unreadList.add(parseEntity(unreadMessage));
+      }
+      return unreadList;
+    }
+    return null;
   }
 
   Future<int> receiptMessage() async {

@@ -60,22 +60,6 @@ class SubscriberRepo with Tag {
     return parseEntities(result);
   }
 
-  Future<List<String>> getAllSubscriberByTopic(String topicName) async {
-    Database cdb = await NKNDataManager().currentDatabase();
-    List<Map<String, dynamic>> result = await cdb.query(tableName,
-        where: '$topic = ?',
-        whereArgs: [topicName],
-        orderBy: '$time_create ASC');
-
-    List<String> members = List();
-    NLog.w('Result Length is_____'+result.length.toString());
-    for (Map subInfo in result) {
-      members.add(subInfo['chat_id']);
-      NLog.w('Result Length is_____'+subInfo.toString());
-    }
-    return members;
-  }
-
   Future<int> getCountOfTopic(topicName) async {
     Database cdb = await NKNDataManager().currentDatabase();
     return Sqflite.firstIntValue(await cdb.query(

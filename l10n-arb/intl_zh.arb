@@ -1795,15 +1795,20 @@
     "@invite_yourself_error": {
       "type": "text",
       "placeholders": {}
-    },
-    "member_no_auth_invite": "私有群聊群成员暂不能支持邀请他人，联系群主邀请他人",
+  },
+  "member_no_auth_invite": "私有群聊群成员暂不能支持邀请他人，联系群主邀请他人",
     "@member_no_auth_invite": {
       "type": "text",
       "placeholders": {}
-    },
-    "tip_open_send_device_token": "发送你的设备token给他?\n他将可以给你发送远程推送!",
+  },
+  "tip_open_send_device_token": "发送你的设备token给他?\n他将可以给你发送远程推送!",
       "@tip_open_send_device_token": {
         "type": "text",
         "placeholders": {}
-      }
+  },
+  "tip_switch_success": "切换成功!",
+    "@tip_switch_success": {
+      "type": "text",
+      "placeholders": {}
+    }
 }

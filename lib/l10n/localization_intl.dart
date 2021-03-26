@@ -1321,6 +1321,10 @@ class NL10ns {
   String get tip_open_send_device_token => Intl.message(
       'Send your device token to him?\nThen he can send you remote notification!',
       name: 'tip_open_send_device_token');
+
+  String get tip_switch_success => Intl.message(
+      'Switch Success!',
+      name: 'tip_switch_success');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NL10ns> {

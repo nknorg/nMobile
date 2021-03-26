@@ -302,6 +302,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "tip" : MessageLookupByLibrary.simpleMessage("提示"),
     "tip_open_send_device_token" : MessageLookupByLibrary.simpleMessage("发送你的设备token给他?\n他将可以给你发送远程推送!"),
     "tip_password_error" : MessageLookupByLibrary.simpleMessage("密码错误"),
+    "tip_switch_success" : MessageLookupByLibrary.simpleMessage("切换成功!"),
     "title" : MessageLookupByLibrary.simpleMessage("nMobile"),
     "to" : MessageLookupByLibrary.simpleMessage("到"),
     "today" : MessageLookupByLibrary.simpleMessage("今天"),

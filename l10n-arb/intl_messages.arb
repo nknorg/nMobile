@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2021-03-25T22:56:13.484208",
+  "@@last_modified": "2021-03-26T16:12:45.698768",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1825,6 +1825,11 @@
   },
   "tip_open_send_device_token": "Send your device token to him?\nThen he can send you remote notification!",
   "@tip_open_send_device_token": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "tip_switch_success": "Switch Success!",
+  "@tip_switch_success": {
     "type": "text",
     "placeholders": {}
   }
