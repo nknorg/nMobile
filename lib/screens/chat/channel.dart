@@ -117,6 +117,48 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     var t = unleadingHashIt(topic);
     return 'dchat' + hexEncode(sha1(t));
   }
+
+  _updatePrivateTopicBlockHeight(Topic topic) async{
+    NLog.w('_updatePrivateTopicBlockHeight  blockHeightExpireAt is___'+topic.blockHeightExpireAt.toString());
+    if (topic.blockHeightExpireAt == null || topic.blockHeightExpireAt == -1){
+      NLog.w('blockHeightExpireAt null or wrong!!!');
+      String topicHash = genTopicHash(topic.topicName);
+
+      var subscriptionInfo = await NKNClientCaller.getSubscription(
+        topicHash: topicHash,
+        subscriber: NKNClientCaller.currentChatId,
+      );
+      if (subscriptionInfo['expiresAt'] != null) {
+        TopicRepo().updateOwnerExpireBlockHeight(topic.topicName,
+            int.parse(subscriptionInfo['expiresAt'].toString()));
+        NLog.w('UpgradeTopic__' +
+            topic.topic +
+            'Success' +
+            '__' +
+            subscriptionInfo.toString());
+      }
+    }
+    else {
+      int blockHeight = await NKNClientCaller.fetchBlockHeight();
+      NLog.w('_updatePrivateTopicBlockHeight  blockHeight is___'+blockHeight.toString());
+      if ((topic.blockHeightExpireAt - blockHeight) <
+          (400000 - 300000)) {
+        GroupChatHelper.subscribeTopic(
+            topicName: topic.topic,
+            chatBloc: _chatBloc,
+            callback: (success, e) {
+              if (success) {
+                NLog.w('update topic blockHeight success');
+              } else {
+                NLog.w('update topic blockHeight Failed E:' +
+                    e.toString());
+              }
+            });
+        GroupDataCenter.groupOwnerUpdatePermissionData(topic.topic);
+      }
+    }
+  }
+
   
   refreshTop(String topicName) async {
     if (topicName != null) {
@@ -127,6 +169,10 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       if (topic.isPrivateTopic()) {
         NLog.w('Enter Private Topic___'+topicName);
         GroupDataCenter.pullPrivateSubscribers(topic.topic);
+        String owner = getPubkeyFromTopicOrChatId(topicName);
+        if (owner == NKNClientCaller.currentChatId) {
+          _updatePrivateTopicBlockHeight(topic);
+        }
       }
       else{
         NLog.w('Enter Public Topic___'+topicName);

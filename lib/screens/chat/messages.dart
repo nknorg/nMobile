@@ -160,10 +160,6 @@ class _MessagesTabState extends State<MessagesTab>
                 (400000 - 300000)) {
               String topicName = topic.topic;
               if (topic.isPrivateTopic() == false) {
-                NLog.w('UpdateTopic__:' +
-                    topic.topic +
-                    '__TopicBlockHeight:' +
-                    topic.blockHeightExpireAt.toString());
                 GroupChatHelper.subscribeTopic(
                     topicName: topicName,
                     chatBloc: _chatBloc,
