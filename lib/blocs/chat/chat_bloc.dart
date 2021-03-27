@@ -166,9 +166,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     String contentData = '';
     await message.insertSendMessage();
 
-    // Timer(Duration(seconds: 11), () {
-    //   _watchSendMessage(message);
-    // });
     /// Handle GroupMessage Sending
     if (message.topic != null) {
       try {
@@ -666,7 +663,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     else{
       /// judge ReceiveMessage if D-Chat PC groupMessage Receipt
       MessageSchema dChatPcReceipt = await MessageSchema.findMessageWithMessageId(event.message.msgId);
-      if (dChatPcReceipt != null){
+      if (dChatPcReceipt != null && dChatPcReceipt.contentType != ContentType.nknOnePiece){
         dChatPcReceipt = await dChatPcReceipt.receiptMessage();
 
         dChatPcReceipt.content = message.msgId;
