@@ -210,6 +210,17 @@ class _MessagesTabState extends State<MessagesTab>
   _checkUnreadMessage() async{
     List unreadList = await MessageSchema.findAllUnreadMessages();
     for (MessageSchema message in unreadList){
+      if (message.contentType == ContentType.text ||
+          message.contentType == ContentType.textExtension ||
+          message.contentType == ContentType.media ||
+          message.contentType == ContentType.nknImage ||
+          message.contentType == ContentType.nknAudio ||
+          message.contentType == ContentType.media){
+          /// for other types mark them as Read.
+      }
+      else{
+        await message.markMessageRead();
+      }
       if (message.topic != null){
         bool topicExist = await GroupDataCenter.isTopicExist(message.topic);
         if (topicExist == false){
