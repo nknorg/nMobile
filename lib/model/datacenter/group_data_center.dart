@@ -6,10 +6,14 @@ import 'dart:convert';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_storage.dart';
+import 'package:nmobile/helpers/utils.dart';
+import 'package:nmobile/model/datacenter/contact_data_center.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
+import 'package:nmobile/model/entity/contact.dart';
 import 'package:nmobile/model/entity/subscriber_repo.dart';
 import 'package:nmobile/model/entity/topic_repo.dart';
 import 'package:nmobile/model/group_chat_helper.dart';
+import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -405,6 +409,7 @@ class GroupDataCenter{
     if (subscribersMap != null){
       for(int i = 0; i < subscribersMap.length; i++){
         String address = subscribersMap.keys.elementAt(i);
+        await GroupDataCenter.checkContactIfExists(address);
         Subscriber subscriber = await subRepo.getByTopicAndChatId(topicName, address);
         if (subscriber != null){
           if (subscriber.memberStatus < MemberStatus.MemberSubscribed){
@@ -592,6 +597,7 @@ class GroupDataCenter{
 
       for (String chatId in subscribers.keys) {
         NLog.w('pullSubscribersPublicChannel sub is___'+chatId.toString());
+        await GroupDataCenter.checkContactIfExists(chatId);
         Subscriber sub = Subscriber(
             id: 0,
             topic: topicName,
@@ -619,5 +625,29 @@ class GroupDataCenter{
       }
       return null;
     }
+  }
+
+
+  static Future<ContactSchema> checkContactIfExists(
+      String clientAddress) async {
+    var contact = await ContactSchema.fetchContactByAddress(clientAddress);
+    if (contact == null) {
+      var walletAddress = await NknWalletPlugin.pubKeyToWalletAddr(
+          getPublicKeyByClientAddr(clientAddress));
+      if (clientAddress != null) {
+        NLog.w('Insert contact stranger__' + clientAddress.toString());
+      } else {
+        NLog.w('got clientAddress Wrong!!!');
+      }
+      if (walletAddress == null) {
+        NLog.w('got walletAddress Wrong!!!');
+      }
+      contact = ContactSchema(
+          type: ContactType.stranger,
+          clientAddress: clientAddress,
+          nknWalletAddress: walletAddress);
+      await contact.insertContact();
+    }
+    return contact;
   }
 }

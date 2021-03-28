@@ -114,6 +114,7 @@ class ContactSchema {
     String avatarPath = '';
     if (avatar?.path != null) {
       avatarPath = avatar.path;
+      NLog.w('avatarPath is____'+avatarPath.toString());
     }
     if (sourceProfile != null) {
       if (sourceProfile.avatar != null &&
@@ -151,22 +152,8 @@ class ContactSchema {
     //     profile_version TEXT,
     //     profile_expires_at INTEGER
     //   )''';
-    // final createSqlV3 = '''
-    //   CREATE TABLE $tableName (
-    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    //     type TEXT,
-    //     address TEXT,
-    //     first_name TEXT,
-    //     last_name TEXT,
-    //     data TEXT,
-    //     options TEXT,
-    //     avatar TEXT,
-    //     created_time INTEGER,
-    //     updated_time INTEGER,
-    //     profile_version TEXT,
-    //     profile_expires_at INTEGER,
-    //     is_top BOOLEAN DEFAULT 0
-    //   )''';
+    /// V3 add is_top
+    /// force Add device_token and notification_open
     final createSqlV3 = '''
       CREATE TABLE $tableName (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -187,19 +174,7 @@ class ContactSchema {
       )''';
     // create table
     db.execute(createSqlV3);
-    // if (version )
-    // if (version == 2) {
-    //   await db.execute(createSqlV2);
-    // } else if (version == 3) {
-    //   await db.execute(createSqlV4);
-    // } else if (version == 5) {
-    //   await db.execute(createSqlV3);
-    // } else if (version == 6) {
-    //   await db.execute(createSqlV4);
-    // } else {
-    //   throw UnsupportedError('unsupported create operation version $version.');
-    // }
-    // index
+
     await db.execute('CREATE INDEX index_type ON $tableName (type)');
     await db.execute('CREATE INDEX index_address ON $tableName (address)');
     await db
@@ -233,6 +208,10 @@ class ContactSchema {
       extraInfo['nknWalletAddress'] = nknWalletAddress;
     if (notes != null) extraInfo['notes'] = notes;
     if (extraInfo.keys.length == 0) extraInfo = null;
+    int insertNotificationValue = 0;
+    if (notificationOpen != null && notificationOpen == true){
+      insertNotificationValue = 1;
+    }
     Map<String, dynamic> map = {
       'type': type,
       'address': clientAddress,
@@ -247,6 +226,7 @@ class ContactSchema {
       'updated_time': updatedTime?.millisecondsSinceEpoch,
       'profile_version': profileVersion,
       'profile_expires_at': profileExpiresAt?.millisecondsSinceEpoch,
+      'notification_open': insertNotificationValue,
     };
     return map;
   }
@@ -261,9 +241,6 @@ class ContactSchema {
       clientAddress: e['address'],
       firstName: e['first_name'],
       lastName: e['last_name'],
-      avatar: e['avatar'] != null
-          ? File(join(Global.applicationRootDirectory.path, e['avatar']))
-          : null,
       createdTime: DateTime.fromMillisecondsSinceEpoch(e['created_time']),
       updatedTime: DateTime.fromMillisecondsSinceEpoch(e['updated_time']),
       profileVersion: e['profile_version'],
@@ -275,6 +252,10 @@ class ContactSchema {
     if (e['notification_open'] != null && e['notification_open'] == 1) {
       contact.notificationOpen = true;
     }
+    /// Fit force Update When set notification_open Type=Text
+    if (e['notification_open'].toString() == '1'){
+      contact.notificationOpen = true;
+    }
 
     if (e['data'] != null) {
       try {
@@ -284,7 +265,6 @@ class ContactSchema {
           contact.extraInfo = new Map<String, dynamic>();
         }
         contact.extraInfo.addAll(data);
-
         contact.nknWalletAddress = data['nknWalletAddress'];
         var notes = data['notes'].toString();
         if (data['notes'] != null && notes.length > 0) {
@@ -301,14 +281,13 @@ class ContactSchema {
           contact.avatar =
               File(join(Global.applicationRootDirectory.path, data['avatar']));
         }
-        // contact.sourceProfile = SourceProfile(
-        //   firstName: data['firstName'],
-        //   lastName: data['lastName'],
-        //   avatar: data['avatar'] != null ? File(join(Global.applicationRootDirectory.path, data['avatar'])) : null,
-        // );
+        else{
+          if (e['avatar'] != null && e['avatar'].toString().length > 0){
+            contact.avatar = File(join(Global.applicationRootDirectory.path, e['avatar']));
+          }
+        }
       } on FormatException catch (e) {
-        debugPrint(e.message);
-        debugPrintStack();
+        NLog.w('eData E:'+e.toString());
       }
     }
     if (e['options'] != null) {
@@ -319,8 +298,7 @@ class ContactSchema {
             backgroundColor: map['backgroundColor'],
             color: map['color']);
       } on FormatException catch (e) {
-        debugPrint(e.message);
-        debugPrintStack();
+        NLog.w('eOptions E:'+e.toString());
         contact.options = OptionsSchema();
       }
     }
@@ -440,10 +418,17 @@ class ContactSchema {
         whereArgs: [id],
       );
       var record = res?.first;
+
       if (record != null) {
         var content = updateInfo['content'];
         if (content != null) {
-          Map<String, dynamic> data = jsonDecode(record['data']);
+          Map<String, dynamic> data;
+          if (record['data'] == null){
+            data = new Map<String,dynamic>();
+          }
+          else{
+            data = jsonDecode(record['data']);
+          }
           if (content['name'] != null) {
             data['firstName'] = content['name'];
           }
@@ -483,9 +468,10 @@ class ContactSchema {
             where: 'id = ?',
             whereArgs: [id],
           );
-          NLog.w('Update profile Success____' + count.toString());
-          NLog.w('Update profile toVersion_____' +
-              updateInfo['version'].toString());
+          if (count != null){
+            NLog.w('Update profile toVersion_____' +
+                updateInfo['version'].toString());
+          }
         }
       }
     } catch (e) {

@@ -25,6 +25,17 @@ class ContactDataCenter {
   static Duration contactRequestGap = Duration(minutes: 3);
   static Duration contactResponseFullGap = Duration(seconds: 10);
 
+  static Future<List<ContactSchema>> findAllContactsByAddressList(List<String> addressList) async{
+    List<ContactSchema> resultList = List<ContactSchema>();
+    for (String address in addressList){
+      ContactSchema contactModel = await ContactSchema.fetchContactByAddress(address);
+      if (contactModel != null){
+        resultList.add(contactModel);
+      }
+    }
+    return resultList;
+  }
+
   static setOrUpdateProfileVersion(
       ContactSchema otherContact, Map<String, dynamic> updateInfo) async {
     Database cdb = await NKNDataManager().currentDatabase();
