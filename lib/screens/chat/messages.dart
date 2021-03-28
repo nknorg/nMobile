@@ -878,6 +878,11 @@ class _MessagesTabState extends State<MessagesTab>
 
     if (contact == null) return Container();
 
+    if (contact.avatar != null){
+      NLog.w('Contact.avatar is______'+contact.avatar.toString());
+      NLog.w('Contact.avatar path is______'+contact.avatar.path.toString());
+    }
+
     LabelType topType = LabelType.h3;
     LabelType bottomType = LabelType.bodySmall;
 

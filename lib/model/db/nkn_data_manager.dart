@@ -1,4 +1,7 @@
 
+import 'dart:convert';
+
+import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/model/datacenter/contact_data_center.dart';
 import 'package:nmobile/model/entity/subscriber_repo.dart';
 import 'package:nmobile/model/entity/topic_repo.dart';
@@ -215,9 +218,7 @@ class NKNDataManager {
     var res = await db.rawQuery(sql);
     var returnRes = res != null && res.length > 0;
 
-    if (returnRes == false) {
-      /// 需要创建表
-      final createSqlV3 = '''
+    final createSqlV3 = '''
       CREATE TABLE $tableName (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         type TEXT,
@@ -235,7 +236,8 @@ class NKNDataManager {
         device_token TEXT,
         notification_open BOOLEAN DEFAULT 0
       )''';
-      // index
+    if (returnRes == false) {
+      // create contact Table
       await db.execute(createSqlV3);
     } else {
       var batch = db.batch();
@@ -247,17 +249,126 @@ class NKNDataManager {
           await NKNDataManager.checkColumnExists(db, tableName, 'is_top');
       if (deviceTokenExists == false) {
         batch.execute(
-            'ALTER TABLE $tableName ADD COLUMN device_token TEXT DEFAULT "0"');
+            'ALTER TABLE $tableName ADD COLUMN device_token TEXT DEFAULT ""');
       }
       if (notificationOpenExists == false) {
+        NLog.w('notificationOpenExists runtTime Type ==='+notificationOpenExists.toString());
         batch.execute(
-            'ALTER TABLE $tableName ADD COLUMN notification_open TEXT DEFAULT "0"');
+            'ALTER TABLE $tableName ADD COLUMN notification_open BOOLEAN DEFAULT 0');
       }
       if (isTopExists == false) {
         batch.execute(
             'ALTER TABLE $tableName ADD COLUMN is_top BOOLEAN DEFAULT 0');
       }
       await batch.commit();
+    }
+
+    var contactResult = await db.query(
+        tableName,
+    );
+    if (contactResult.isNotEmpty){
+      Map contact0 = contactResult[0];
+      var notificationOpen = contact0['notification_open'];
+      String modifyType = 'String';
+      if (notificationOpen.runtimeType.toString() == modifyType){
+        String contactTemp = 'contact_temp';
+        final createContactTempSql = '''
+          CREATE TABLE IF NOT EXISTS $contactTemp (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          type TEXT,
+          address TEXT,
+          first_name TEXT,
+          last_name TEXT,
+          data TEXT,
+          options TEXT,
+          avatar TEXT,
+          created_time INTEGER,
+          updated_time INTEGER,
+          profile_version TEXT,
+          profile_expires_at INTEGER,
+          is_top BOOLEAN DEFAULT 0,
+          device_token TEXT,
+          notification_open BOOLEAN DEFAULT 0
+        )''';
+        await db.execute(createContactTempSql);
+
+        for (Map contact in contactResult){
+          int notificationValue = 0;
+          if (contact['notification_open'] == '1'){
+            notificationValue = 1;
+          }
+          String firstName = '';
+          if (contact['first_name'] != null){
+            firstName = contact['first_name'];
+          }
+          String avatar;
+          if (contact['avatar'] != null){
+            avatar = contact['avatar'];
+          }
+          Map<String,dynamic> insertMap = {
+            'type': contact['type'],
+            'address': contact['address'],
+            'notification_open': notificationValue,
+            'first_name': firstName,
+            'avatar': avatar,
+          };
+          if (contact['options'] != null){
+            insertMap['options'] = contact['options'];
+          }
+          if (contact['profile_version'] != null){
+            insertMap['profile_version'] = contact['profile_version'];
+          }
+          if (contact['data'] != null){
+            insertMap['data'] = contact['data'];
+          }
+
+          try{
+            await db.insert(
+                contactTemp, insertMap);
+          }
+          catch(e){
+            NLog.w('await db.insert is+____'+e.toString());
+          }
+        }
+        String dropContact = '''DROP TABLE IF EXISTS $tableName;''';
+        await db.execute(dropContact);
+        await db.execute(createSqlV3);
+
+        var contactTempResult = await db.query(
+          contactTemp,
+        );
+        for (Map contact in contactTempResult){
+          Map<String,dynamic> insertMap = {
+            'type': contact['type'],
+            'address': contact['address'],
+            'notification_open': contact['notification_open'],
+            'first_name': contact['first_name'],
+            'avatar': contact['avatar'],
+            'created_time': DateTime.now().millisecondsSinceEpoch,
+            'updated_time': DateTime.now().millisecondsSinceEpoch,
+          };
+
+          if (contact['options'] != null){
+            insertMap['options'] = contact['options'];
+          }
+          if (contact['profile_version'] != null){
+            insertMap['profile_version'] = contact['profile_version'];
+          }
+          if (contact['data'] != null){
+            insertMap['data'] = contact['data'];
+          }
+          NLog.w('insertMap is_____'+contact.toString());
+          try{
+            await db.insert(
+                tableName, insertMap);
+          }
+          catch(e){
+            NLog.w('insertMap is_____ db.insert is+____'+e.toString());
+          }
+        }
+        String deleteContactTemp = '''DROP TABLE IF EXISTS $contactTemp;''';
+        await db.execute(deleteContactTemp);
+      }
     }
   }
 
