@@ -871,7 +871,6 @@ class MessageSchema extends Equatable {
     MessageSchema messageModel = await findMessageWithMessageId(queryID);
 
     if (messageModel != null){
-      NLog.w('messageModel is_____'+messageModel.messageStatus.toString());
       if (messageModel.messageStatus != MessageStatus.MessageSendFail){
         await messageModel.setMessageStatus(MessageStatus.MessageSendReceipt);
       }

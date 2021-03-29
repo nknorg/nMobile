@@ -10,12 +10,14 @@ import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/helpers/hash.dart';
+import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/entity/subscriber_repo.dart';
 import 'package:nmobile/model/entity/topic_repo.dart';
 import 'package:nmobile/model/entity/message.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
+import 'package:path/path.dart';
 
 class GroupChatPublicChannel {
   static final SubscriberRepo _subscriberRepo = SubscriberRepo();
@@ -141,12 +143,19 @@ class GroupChatHelper {
           callback(true, null);
           showToast('success');
         } else {
-          var subscription = NKNClientCaller.getSubscription(
+          var subscription = await NKNClientCaller.getSubscription(
                   topicHash: topicHash,
                   subscriber: NKNClientCaller.currentChatId);
           NLog.w('Subscription is_____'+subscription.toString());
+          NLog.w('Subscriber topic Expire is____'+topicInfo.blockHeightExpireAt.toString());
           callback(true, null);
-          showToast('success');
+
+          // if (topicInfo.blockHeightExpireAt > 0){
+          // }
+          // else{
+          //
+          // }
+
           // if (subscription['expiresAt'] != null) {
           //   if (subscription['expiresAt'] == null ||
           //       subscription['expiresAt'] == 0) {

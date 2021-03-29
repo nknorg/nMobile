@@ -4,7 +4,6 @@ import 'package:nmobile/blocs/contact/contact_event.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
 import 'package:nmobile/model/datacenter/contact_data_center.dart';
 import 'package:nmobile/model/entity/contact.dart';
-import 'package:nmobile/utils/nlog_util.dart';
 
 class ContactBloc extends Bloc<ContactEvent, ContactState> {
   @override
@@ -60,7 +59,6 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
         cutAddressList.add(address);
       }
     }
-    NLog.w('cutAddressList is___'+cutAddressList.toString());
 
     List<ContactSchema> contacts = await ContactDataCenter.findAllContactsByAddressList(addressList);
     if (savedList.isNotEmpty){

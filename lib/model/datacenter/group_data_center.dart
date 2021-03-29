@@ -194,12 +194,12 @@ class GroupDataCenter{
           topic: topicName,
           chatId: chatId,
           timeCreate: DateTime.now().millisecondsSinceEpoch,
-          memberStatus: MemberStatus.MemberInvited);
+          memberStatus: MemberStatus.DefaultNotMember);
       subRepo.insertSubscriber(insertSub);
 
       appendOneMemberOnChain(insertSub);
       /// Insert Logic
-      return MemberStatus.MemberInvited;
+      return MemberStatus.DefaultNotMember;
     }
     return sub.memberStatus;
   }
@@ -208,6 +208,9 @@ class GroupDataCenter{
     String topicName = sub.topic;
     final topicHashed = genTopicHash(topicName);
     int maxPageIndex = await subRepo.findMaxPermitIndex(sub.topic);
+    if (maxPageIndex == null){
+      maxPageIndex = 0;
+    }
     NLog.w('maxPageIndex is____'+maxPageIndex.toString());
     List<Subscriber> appendIndexList = await subRepo.findAllSubscribersWithPermitIndex(sub.topic, maxPageIndex);
 

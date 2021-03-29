@@ -499,6 +499,9 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                   }
                 }).show();
           }
+          else if (memberStatus == MemberStatus.DefaultNotMember){
+            _inviteMessage(address);
+          }
         }
       }
       else{
