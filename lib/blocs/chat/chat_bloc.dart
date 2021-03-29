@@ -906,12 +906,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
     if (message.topic != null) return;
 
     if (message.deleteAfterSeconds != null) {
-      if (contact.options != null) {
+      if (message.contentType != ContentType.eventContactOptions){
         if (contact.options.updateBurnAfterTime == null ||
             message.timestamp.millisecondsSinceEpoch >
                 contact.options.updateBurnAfterTime) {
-          NLog.w('!!!!contact.setBurnOption ___' +
-              message.deleteAfterSeconds.toString());
+
           await contact.setBurnOptions(message.deleteAfterSeconds);
         }
       }

@@ -114,7 +114,6 @@ class ContactSchema {
     String avatarPath = '';
     if (avatar?.path != null) {
       avatarPath = avatar.path;
-      NLog.w('avatarPath is____'+avatarPath.toString());
     }
     if (sourceProfile != null) {
       if (sourceProfile.avatar != null &&
@@ -402,7 +401,29 @@ class ContactSchema {
       whereArgs: [NKNClientCaller.currentChatId],
     );
     if (res.length > 0) {
-      return ContactSchema.parseEntity(res.first);
+      Map contactRes = res.first;
+      ContactSchema contact = ContactSchema.parseEntity(contactRes);
+      if (contact.nknWalletAddress == null || contact.nknWalletAddress.isEmpty) {
+        String nknWalletAddress = await NknWalletPlugin.pubKeyToWalletAddr(
+            getPublicKeyByClientAddr(contact.clientAddress));
+        Map<String, dynamic> data;
+        if (contactRes['data'] != null) {
+          data = jsonDecode(contactRes['data']);
+        } else {
+          data = {};
+        }
+        data['nknWalletAddress'] = nknWalletAddress;
+        var count = await cdb.update(
+          ContactSchema.tableName,
+          {
+            'data': jsonEncode(data),
+            'updated_time': DateTime.now().millisecondsSinceEpoch,
+          },
+          where: 'id = ?',
+          whereArgs: [contact.id],
+        );
+      }
+      return contact;
     }
     return null;
   }

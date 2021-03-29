@@ -192,6 +192,22 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
             }
           }
         }
+        else if (updateMessage.contentType == ContentType.eventContactOptions){
+          Map<String,dynamic> eventContent = jsonDecode(updateMessage.content);
+          if (eventContent['content'] != null && updateMessage.isSendMessage() == false) {
+            Map<String,dynamic> contactContent = eventContent['content'];
+            var deleteAfterSeconds = contactContent['deleteAfterSeconds'].toString();
+
+            if(deleteAfterSeconds != null){
+              if (chatContact.options.updateBurnAfterTime == null ||
+                  updateMessage.timestamp.millisecondsSinceEpoch >
+                      chatContact.options.updateBurnAfterTime) {
+                chatContact.setBurnOptions(int.parse(deleteAfterSeconds));
+                setState(() {});
+              }
+            }
+          }
+        }
 
         if (updateMessage.isSendMessage()) {
           if (updateMessage.contentType == ContentType.eventContactOptions) {
@@ -219,6 +235,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
                   updateMessage.contentType == ContentType.nknImage ||
                   updateMessage.contentType == ContentType.media ||
                   updateMessage.contentType == ContentType.nknAudio) {
+                NLog.w('UpdateMessage options _____'+updateMessage.options.toString());
                 if (updateMessage.options != null &&
                     updateMessage.options['deleteAfterSeconds'] != null) {
                   updateMessage.deleteTime = DateTime.now().add(Duration(
