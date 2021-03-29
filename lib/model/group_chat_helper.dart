@@ -141,30 +141,31 @@ class GroupChatHelper {
           callback(true, null);
           showToast('success');
         } else {
-          NKNClientCaller.getSubscription(
+          var subscription = NKNClientCaller.getSubscription(
                   topicHash: topicHash,
-                  subscriber: NKNClientCaller.currentChatId)
-              .then((subscription) {
-            if (subscription['expiresAt'] != null) {
-              if (subscription['expiresAt'] == null ||
-                  subscription['expiresAt'] == 0) {
-                NLog.w('Wrong!!! expiresAt is 0');
-                NLog.w('Wrong!!! expiresAt is null' + subscription.toString());
-              } else {
-                TopicRepo().updateOwnerExpireBlockHeight(
-                    topicName, int.parse(subscription['expiresAt'].toString()));
-                if (topicInfo.topic != null && subscription != null) {
-                  NLog.w('UpdateTopic__' +
-                      topicInfo.topic +
-                      'Success' +
-                      '__' +
-                      subscription.toString());
-                } else {
-                  NLog.w('Wrong!!! topic.topic or subscription is null');
-                }
-              }
-            }
-          });
+                  subscriber: NKNClientCaller.currentChatId);
+          NLog.w('Subscription is_____'+subscription.toString());
+          callback(true, null);
+          showToast('success');
+          // if (subscription['expiresAt'] != null) {
+          //   if (subscription['expiresAt'] == null ||
+          //       subscription['expiresAt'] == 0) {
+          //     NLog.w('Wrong!!! expiresAt is 0');
+          //     NLog.w('Wrong!!! expiresAt is null' + subscription.toString());
+          //   } else {
+          //     TopicRepo().updateOwnerExpireBlockHeight(
+          //         topicName, int.parse(subscription['expiresAt'].toString()));
+          //     if (topicInfo.topic != null && subscription != null) {
+          //       NLog.w('UpdateTopic__' +
+          //           topicInfo.topic +
+          //           'Success' +
+          //           '__' +
+          //           subscription.toString());
+          //     } else {
+          //       NLog.w('Wrong!!! topic.topic or subscription is null');
+          //     }
+          //   }
+          // }
         }
       } else {
         NLog.w('callback callback Exception:' + topicHash.toString());

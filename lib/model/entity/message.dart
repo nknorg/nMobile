@@ -6,7 +6,6 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
@@ -108,6 +107,10 @@ class MessageSchema extends Equatable {
           case ContentType.eventSubscribe:
             content = msg['content'];
             break;
+            /// see default done.
+          // case ContentType.eventContactOptions:
+          //   content = data;
+          //   break;
           case ContentType.nknImage:
           case ContentType.media:
           case ContentType.nknAudio:
