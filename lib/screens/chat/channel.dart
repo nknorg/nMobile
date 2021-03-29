@@ -399,7 +399,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   }
 
   getImageFile({@required ImageSource source}) async {
-    FocusScope.of(context).requestFocus(FocusNode());
     try {
       File image =
           await getCameraFile(NKNClientCaller.currentChatId, source: source);

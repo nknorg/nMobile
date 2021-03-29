@@ -488,13 +488,13 @@ class GroupDataCenter{
 
       String subTopicIndex = '__${pageIndex}__.__permission__'+'.'+owner.toString();
       String subTopicHash = genTopicHash(subTopicIndex);
-      var subs = await NKNClientCaller.getSubscribers(
-          topicHash: subTopicHash,
-          offset: 0,
-          limit: 10000,
-          meta: true,
-          txPool: true
-      );
+      // var subs = await NKNClientCaller.getSubscribers(
+      //     topicHash: subTopicHash,
+      //     offset: 0,
+      //     limit: 10000,
+      //     meta: true,
+      //     txPool: true
+      // );
 
       if (owner == NKNClientCaller.currentChatId){
         if (meta == null || meta.trim().isEmpty) {
@@ -503,6 +503,7 @@ class GroupDataCenter{
         try {
           final json = jsonDecode(meta);
           NLog.w('Json is____'+json.toString());
+          NLog.w('indexWithPubKey is____'+indexWithPubKey.toString());
           final List accept = json["accept"];
           final List reject = json["reject"];
           if (accept != null) {
