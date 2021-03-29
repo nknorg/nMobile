@@ -434,9 +434,11 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
           chatBloc: _chatBloc,
           callback: (success, e) async {
             if (success) {
+              NLog.w('SubscriberTopic Success____'+topicName.toString());
               final topicSpotName = Topic.spotName(name: topicName);
               if (topicSpotName.isPrivate) {
                 GroupDataCenter.pullPrivateSubscribers(topicName);
+                GroupDataCenter.addPrivatePermissionList(topicName, NKNClientCaller.currentChatId);
               } else {
                 GroupDataCenter.pullSubscribersPublicChannel(topicName);
               }
@@ -449,6 +451,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
             }
           });
       EasyLoading.dismiss();
+      Navigator.pop(context);
       setState(() {
         _loading = false;
       });

@@ -10,6 +10,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/CommonUI.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/label.dart';
@@ -688,8 +689,15 @@ class _ChatBubbleState extends State<ChatBubble> {
     );
   }
 
-  _joinChannelByName(Topic theTopic, String topicName) {
+  _joinChannelByName(Topic theTopic, String topicName) async{
     EasyLoading.show();
+    int blockHeight = await NKNClientCaller.fetchBlockHeight();
+    NLog.w('blockHeight is+____'+blockHeight.toString());
+    NLog.w('theTopic.blockHeightExpireAt is+____'+theTopic.blockHeightExpireAt.toString());
+    if (theTopic.blockHeightExpireAt != null && theTopic.blockHeightExpireAt > 0 && theTopic.blockHeightExpireAt-blockHeight > 100000){
+      showToast(NL10ns.of(context).group_member_already);
+      return;
+    }
     GroupChatHelper.subscribeTopic(
         topicName: topicName,
         chatBloc: _chatBloc,
