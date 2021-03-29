@@ -220,7 +220,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
             if (message.contentType == ContentType.media ||
                 message.contentType == ContentType.nknImage){
               /// Warning todo remove this When most user's version is above 1.1.0
-              String extraSendForAndroidSuit = message.toSuitVersionImageData(ContentType.nknImage);
+              String extraSendForAndroidSuit = message.toSuitVersionImageData(ContentType.media);
               try {
                 Uint8List pid = await NKNClientCaller.sendText(
                     [message.to], extraSendForAndroidSuit, message.msgId);
@@ -247,6 +247,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
                 NLog.w('Wrong___' + e.toString());
                 message.setMessageStatus(MessageStatus.MessageSendFail);
               }
+              contentData = message.toImageData();
             }
           }
         }
@@ -259,6 +260,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
       NLog.w('ContentData is_____'+contentData.toString());
 
       try {
+        if (contentData == null || contentData.length == 0){
+          return;
+        }
         Uint8List pid = await NKNClientCaller.sendText(
             [message.to], contentData, message.msgId);
         if(pid != null){
