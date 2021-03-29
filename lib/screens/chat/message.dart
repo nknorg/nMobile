@@ -198,13 +198,17 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
             Map<String,dynamic> contactContent = eventContent['content'];
             var deleteAfterSeconds = contactContent['deleteAfterSeconds'].toString();
 
-            if(deleteAfterSeconds != null){
-              if (chatContact.options.updateBurnAfterTime == null ||
-                  updateMessage.timestamp.millisecondsSinceEpoch >
-                      chatContact.options.updateBurnAfterTime) {
-                chatContact.setBurnOptions(int.parse(deleteAfterSeconds));
-                setState(() {});
+            if (chatContact.options.updateBurnAfterTime == null ||
+                updateMessage.timestamp.millisecondsSinceEpoch >
+                    chatContact.options.updateBurnAfterTime) {
+              if (contactContent['deleteAfterSeconds'] == null){
+                NLog.w('deleteAfterSeconds is null');
+                chatContact.setBurnOptions(null);
               }
+              else{
+                chatContact.setBurnOptions(int.parse(deleteAfterSeconds));
+              }
+              setState(() {});
             }
           }
         }
