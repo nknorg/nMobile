@@ -96,6 +96,17 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
     }
   }
 
+  initAsync() async {
+    var res = await MessageSchema.getAndReadTargetMessages(targetId,
+        limit: _limit, skip: _skip);
+    _chatBloc.add(RefreshMessageListEvent(target: targetId));
+    if (res != null) {
+      setState(() {
+        _messages = res;
+      });
+    }
+  }
+
   _deleteTickHandle() {
     _deleteTick = Timer.periodic(Duration(seconds: 1), (timer) {
       _messages.removeWhere((item) {
@@ -121,17 +132,18 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
   void initState() {
     super.initState();
 
+    Global.currentOtherChatId = targetId;
+
     chatContact = widget.arguments.contact;
+    targetId = chatContact.clientAddress;
     ContactDataCenter.requestProfile(chatContact, RequestType.header);
 
-    targetId = chatContact.clientAddress;
+    initAsync();
 
     _acceptNotification = false;
     if (chatContact.notificationOpen != null) {
       _acceptNotification = chatContact.notificationOpen;
     }
-
-    Global.currentOtherChatId = targetId;
 
     _sendFocusNode.addListener(() {
       if (_sendFocusNode.hasFocus) {
@@ -193,6 +205,11 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
           }
         }
         else if (updateMessage.contentType == ContentType.eventContactOptions){
+          /// not update other's setting
+          if (updateMessage.from != targetId || updateMessage.from != NKNClientCaller.currentChatId){
+            return;
+          }
+          NLog.w('_______'+updateMessage.from.toString());
           Map<String,dynamic> eventContent = jsonDecode(updateMessage.content);
           if (eventContent['content'] != null && updateMessage.isSendMessage() == false) {
             Map<String,dynamic> contactContent = eventContent['content'];
