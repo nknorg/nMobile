@@ -192,43 +192,44 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
 
         if (updateMessage.deleteAfterSeconds != null) {
           /// not update other's setting
-          if (updateMessage.from != targetId && updateMessage.from != NKNClientCaller.currentChatId){
-            return;
-          }
-          if (chatContact.options != null) {
-            if (chatContact.options.updateBurnAfterTime == null ||
-                updateMessage.timestamp.millisecondsSinceEpoch >
-                    chatContact.options.updateBurnAfterTime) {
-              chatContact.setBurnOptions(updateMessage.deleteAfterSeconds);
-              setState(() {});
+          if (updateMessage.from == targetId || updateMessage.from == NKNClientCaller.currentChatId){
+            if (chatContact.options != null) {
+              if (chatContact.options.updateBurnAfterTime == null ||
+                  updateMessage.timestamp.millisecondsSinceEpoch >
+                      chatContact.options.updateBurnAfterTime) {
+                chatContact.setBurnOptions(updateMessage.deleteAfterSeconds);
+                setState(() {});
+              }
             }
+          }
+          else{
+            return;
           }
         }
         else if (updateMessage.contentType == ContentType.eventContactOptions){
           /// not update other's setting
-          if (updateMessage.from != targetId && updateMessage.from != NKNClientCaller.currentChatId){
-            return;
-          }
-          NLog.w('eventContactOptions_______'+updateMessage.from.toString());
-          Map<String,dynamic> eventContent = jsonDecode(updateMessage.content);
-          NLog.w('eventContactOptions_______'+eventContent.toString());
+          if (updateMessage.from == targetId || updateMessage.from == NKNClientCaller.currentChatId){
+            Map<String,dynamic> eventContent = jsonDecode(updateMessage.content);
+            if (eventContent['content'] != null && updateMessage.isSendMessage() == false) {
+              Map<String,dynamic> contactContent = eventContent['content'];
+              var deleteAfterSeconds = contactContent['deleteAfterSeconds'].toString();
 
-          if (eventContent['content'] != null && updateMessage.isSendMessage() == false) {
-            Map<String,dynamic> contactContent = eventContent['content'];
-            var deleteAfterSeconds = contactContent['deleteAfterSeconds'].toString();
-
-            if (chatContact.options.updateBurnAfterTime == null ||
-                updateMessage.timestamp.millisecondsSinceEpoch >
-                    chatContact.options.updateBurnAfterTime) {
-              if (contactContent['deleteAfterSeconds'] == null){
-                NLog.w('deleteAfterSeconds is null');
-                chatContact.setBurnOptions(null);
+              if (chatContact.options.updateBurnAfterTime == null ||
+                  updateMessage.timestamp.millisecondsSinceEpoch >
+                      chatContact.options.updateBurnAfterTime) {
+                if (contactContent['deleteAfterSeconds'] == null){
+                  NLog.w('deleteAfterSeconds is null');
+                  chatContact.setBurnOptions(null);
+                }
+                else{
+                  chatContact.setBurnOptions(int.parse(deleteAfterSeconds));
+                }
+                setState(() {});
               }
-              else{
-                chatContact.setBurnOptions(int.parse(deleteAfterSeconds));
-              }
-              setState(() {});
             }
+          }
+          else{
+            return;
           }
         }
 
