@@ -192,7 +192,7 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
 
         if (updateMessage.deleteAfterSeconds != null) {
           /// not update other's setting
-          if (updateMessage.from != targetId){
+          if (updateMessage.from != targetId && updateMessage.from != NKNClientCaller.currentChatId){
             return;
           }
           if (chatContact.options != null) {
@@ -206,11 +206,13 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
         }
         else if (updateMessage.contentType == ContentType.eventContactOptions){
           /// not update other's setting
-          if (updateMessage.from != targetId || updateMessage.from != NKNClientCaller.currentChatId){
+          if (updateMessage.from != targetId && updateMessage.from != NKNClientCaller.currentChatId){
             return;
           }
-          NLog.w('_______'+updateMessage.from.toString());
+          NLog.w('eventContactOptions_______'+updateMessage.from.toString());
           Map<String,dynamic> eventContent = jsonDecode(updateMessage.content);
+          NLog.w('eventContactOptions_______'+eventContent.toString());
+
           if (eventContent['content'] != null && updateMessage.isSendMessage() == false) {
             Map<String,dynamic> contactContent = eventContent['content'];
             var deleteAfterSeconds = contactContent['deleteAfterSeconds'].toString();
