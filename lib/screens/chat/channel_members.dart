@@ -484,7 +484,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
             showToast(NL10ns.of(context).group_member_already);
             return;
           }
-          else if (memberStatus >= MemberStatus.MemberInvited){
+          else if (memberStatus >= MemberStatus.MemberPublished){
             SimpleConfirm(
                 context: context,
                 content: alertText,
@@ -499,7 +499,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                   }
                 }).show();
           }
-          else if (memberStatus == MemberStatus.DefaultNotMember){
+          else {
             _inviteMessage(address);
           }
         }

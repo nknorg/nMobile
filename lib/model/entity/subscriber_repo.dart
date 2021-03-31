@@ -42,7 +42,7 @@ class MemberStatus {
 
 class SubscriberRepo with Tag {
 
-  Future<List<Subscriber>> getByTopicExceptNone(String topicName) async {
+  Future<List<Subscriber>> getAllMemberWithNoMemberStatus(String topicName) async {
     Database cdb = await NKNDataManager().currentDatabase();
     List<Map<String, dynamic>> result = await cdb.query(tableName,
         where: '$topic = ?',
@@ -135,33 +135,53 @@ class SubscriberRepo with Tag {
     return members;
   }
 
-  Future<void> updatePermitIndex(Subscriber sub, int pageIndex) async {
+  Future <bool> updatePermitIndex(Subscriber updateSub,int permitIndex) async{
     Database cdb = await NKNDataManager().currentDatabase();
-    var res = await cdb.update(
+    int result = await cdb.update(
       tableName,
-      {prm_p_i: pageIndex},
+      {'$prm_p_i': permitIndex},
       where: '$topic = ? AND $chat_id = ?',
-      whereArgs: [sub.topic, sub.chatId],
+      whereArgs: [updateSub.topic, updateSub.chatId],
     );
-    if (res > 0){
-      NLog.w('updatePermitIndex __'+pageIndex.toString()+'Success');
+    if (result > 0){
+      NLog.w('updatePermitIndex __'+permitIndex.toString()+'Success');
+      NLog.w('updatePermitIndex __'+updateSub.chatId.toString()+'Success');
     }
     else{
-      NLog.w('updatePermitIndex __'+pageIndex.toString()+'Failed');
+      NLog.w('updatePermitIndex __'+permitIndex.toString()+'Failed');
+      NLog.w('updatePermitIndex __'+updateSub.chatId.toString()+'Failed');
     }
+    return result>0;
   }
 
   Future<int> findMaxPermitIndex(String topicName) async {
     Database cdb = await NKNDataManager().currentDatabase();
-    var result = await cdb.query(
-        tableName,
-        where: '$topic = ?',
-        whereArgs: [topicName],
-        orderBy: '$prm_p_i  ASC');
-
-    if (result != null){
-      Subscriber sub = parseEntity(result[0]);
-      return sub.indexPermiPage;
+    try{
+      var result = await cdb.query(
+          tableName,
+          where: '$topic = ?',
+          whereArgs: [topicName], );
+      if (result != null){
+        int maxPage = 0;
+        for (Map subMap in result){
+          NLog.w('Result is_____'+subMap.toString());
+          Subscriber sub = parseEntity(subMap);
+          if (sub.indexPermiPage == null || sub.indexPermiPage < 0){
+            await updatePermitIndex(sub, 0);
+          }
+          else{
+            if (sub.indexPermiPage > maxPage){
+              maxPage = sub.indexPermiPage;
+            }
+          }
+        }
+        NLog.w('findMaxPermitIndex____'+maxPage.toString());
+        return maxPage;
+      }
+      return 0;
+    }
+    catch(e){
+      NLog.w('findMaxPermit E:'+e.toString());
     }
     return 0;
   }

@@ -724,7 +724,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
         yield MessageUpdateState(target: oMessage.from, message: oMessage);
         return;
       } else {
-        NLog.w('_insertMessage');
+        NLog.w('_insertMessage__'+message.from.toString()+'!!!!!!');
         if (message.contentType == ContentType.eventSubscribe ||
             message.contentType == ContentType.eventUnsubscribe) {
           if (message.from == NKNClientCaller.currentChatId) {} else {

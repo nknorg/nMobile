@@ -429,7 +429,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
         _loading = true;
       });
       EasyLoading.show();
-      await GroupChatHelper.subscribeTopic(
+      await GroupDataCenter.subscribeTopic(
           topicName: topicName,
           chatBloc: _chatBloc,
           callback: (success, e) async {

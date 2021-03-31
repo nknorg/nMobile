@@ -20,6 +20,7 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/datacenter/group_data_center.dart';
 import 'package:nmobile/model/entity/topic_repo.dart';
 import 'package:nmobile/router/custom_router.dart';
 import 'package:nmobile/model/entity/contact.dart';
@@ -692,13 +693,11 @@ class _ChatBubbleState extends State<ChatBubble> {
   _joinChannelByName(Topic theTopic, String topicName) async{
     EasyLoading.show();
     int blockHeight = await NKNClientCaller.fetchBlockHeight();
-    NLog.w('blockHeight is+____'+blockHeight.toString());
-    NLog.w('theTopic.blockHeightExpireAt is+____'+theTopic.blockHeightExpireAt.toString());
-    if (theTopic.blockHeightExpireAt != null && theTopic.blockHeightExpireAt > 0 && theTopic.blockHeightExpireAt-blockHeight > 100000){
+    if (theTopic.blockHeightExpireAt != null && theTopic.blockHeightExpireAt > 0 && blockHeight-theTopic.blockHeightExpireAt > Global.topicBlockHeightExpireWarnHeight){
       showToast(NL10ns.of(context).group_member_already);
       return;
     }
-    GroupChatHelper.subscribeTopic(
+    GroupDataCenter.subscribeTopic(
         topicName: topicName,
         chatBloc: _chatBloc,
         callback: (success, e) {

@@ -142,9 +142,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       int blockHeight = await NKNClientCaller.fetchBlockHeight();
       NLog.w('_updatePrivateTopicBlockHeight  blockHeight is___'+blockHeight.toString());
       NLog.w('topic.blockHeightExpireAt  blockHeight is___'+topic.blockHeightExpireAt.toString());
-      if ((topic.blockHeightExpireAt - blockHeight) <
-          (400000 - 300000)) {
-        GroupChatHelper.subscribeTopic(
+      if ((blockHeight-topic.blockHeightExpireAt) > Global.topicBlockHeightExpireWarnHeight) {
+        GroupDataCenter.subscribeTopic(
             topicName: topic.topic,
             chatBloc: _chatBloc,
             callback: (success, e) {
@@ -1103,7 +1102,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
           } else {
             EasyLoading.show();
             NLog.w('GroupChat getBottomView on called');
-            GroupChatHelper.subscribeTopic(
+            GroupDataCenter.subscribeTopic(
                 topicName: widget.arguments.topic.topic,
                 chatBloc: _chatBloc,
                 callback: (success, e) {
