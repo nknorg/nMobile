@@ -40,7 +40,8 @@ class Global {
   static bool clientCreated = false;
   static bool clientNoConnect = false;
 
-  // 工厂模式
+  static int topicBlockHeightExpireWarnHeight = 300000;
+  /// factory mode
   factory Global() => _getInstance();
 
   static Global get instance => _getInstance();

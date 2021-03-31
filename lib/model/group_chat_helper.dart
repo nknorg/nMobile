@@ -10,14 +10,11 @@ import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/helpers/hash.dart';
-import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/entity/subscriber_repo.dart';
 import 'package:nmobile/model/entity/topic_repo.dart';
 import 'package:nmobile/model/entity/message.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/nlog_util.dart';
-import 'package:oktoast/oktoast.dart';
-import 'package:path/path.dart';
 
 class GroupChatPublicChannel {
   static final SubscriberRepo _subscriberRepo = SubscriberRepo();
@@ -105,104 +102,6 @@ class GroupChatHelper {
     return true;
   }
 
-  static Future<void> subscribeTopic(
-      {String topicName,
-      ChatBloc chatBloc,
-      void callback(bool success, dynamic error)}) async {
-    try {
-      final topicHash =
-          await NKNClientCaller.subscribe(topicHash: genTopicHash(topicName));
-      if (nonEmpty(topicHash) && topicHash.length >= 32) {
-        Topic topicInfo = await GroupChatHelper.fetchTopicInfoByName(topicName);
-        if (topicInfo == null) {
-          await GroupChatHelper.insertTopicIfNotExists(topicName);
-
-          topicInfo = await GroupChatHelper.fetchTopicInfoByName(topicName);
-          int currentBlockHeight = await NKNClientCaller.fetchBlockHeight();
-          if (currentBlockHeight > 0) {
-            TopicRepo()
-                .updateOwnerExpireBlockHeight(topicName, currentBlockHeight);
-            if (topicInfo.topic != null) {
-              NLog.w('Insert Topic__' +
-                  topicInfo.topic +
-                  'Success' +
-                  '__' +
-                  currentBlockHeight.toString());
-            }
-          } else {
-            NLog.w('Wrong!!!fetchBlockHeight___E:' +
-                currentBlockHeight.toString());
-          }
-          var sendMsg = MessageSchema.fromSendData(
-            from: NKNClientCaller.currentChatId,
-            topic: topicName,
-            contentType: ContentType.eventSubscribe,
-          );
-          sendMsg.content = sendMsg.toEventSubscribeData();
-          chatBloc.add(SendMessageEvent(sendMsg));
-          callback(true, null);
-          showToast('success');
-        } else {
-          var subscription = await NKNClientCaller.getSubscription(
-                  topicHash: topicHash,
-                  subscriber: NKNClientCaller.currentChatId);
-          NLog.w('Subscription is_____'+subscription.toString());
-          NLog.w('Subscriber topic Expire is____'+topicInfo.blockHeightExpireAt.toString());
-          callback(true, null);
-
-          // if (topicInfo.blockHeightExpireAt > 0){
-          // }
-          // else{
-          //
-          // }
-
-          // if (subscription['expiresAt'] != null) {
-          //   if (subscription['expiresAt'] == null ||
-          //       subscription['expiresAt'] == 0) {
-          //     NLog.w('Wrong!!! expiresAt is 0');
-          //     NLog.w('Wrong!!! expiresAt is null' + subscription.toString());
-          //   } else {
-          //     TopicRepo().updateOwnerExpireBlockHeight(
-          //         topicName, int.parse(subscription['expiresAt'].toString()));
-          //     if (topicInfo.topic != null && subscription != null) {
-          //       NLog.w('UpdateTopic__' +
-          //           topicInfo.topic +
-          //           'Success' +
-          //           '__' +
-          //           subscription.toString());
-          //     } else {
-          //       NLog.w('Wrong!!! topic.topic or subscription is null');
-          //     }
-          //   }
-          // }
-        }
-      } else {
-        NLog.w('callback callback Exception:' + topicHash.toString());
-        callback(false, null);
-      }
-    } catch (e) {
-      if (e != null) {
-        NLog.w('Group_Chat_Helper__ got Exception:' + e.toString());
-      }
-      if (e.toString().contains('duplicate subscription exist in block')) {
-        Topic topicInfo = await GroupChatHelper.fetchTopicInfoByName(topicName);
-        if (topicInfo != null) {
-          var sendMsg = MessageSchema.fromSendData(
-            from: NKNClientCaller.currentChatId,
-            topic: topicName,
-            contentType: ContentType.eventSubscribe,
-          );
-          sendMsg.content = sendMsg.toEventSubscribeData();
-          chatBloc.add(SendMessageEvent(sendMsg));
-          callback(true, null);
-        }
-        await GroupChatHelper.insertTopicIfNotExists(topicName);
-      } else {
-        callback(false, e);
-      }
-    }
-  }
-
   static deleteTopicWithSubscriber(String topic) {
     if (topic != null) {
       _topicRepo.delete(topic);
@@ -234,7 +133,6 @@ class GroupChatHelper {
         );
         sendMsg.content = sendMsg.toEventSubscribeData();
         chatBloc.add(SendMessageEvent(sendMsg));
-        // chatBloc.add(RefreshMessageListEvent());
         deleteTopicWithSubscriber(topicName);
         callback(true, null);
       } else {

@@ -421,7 +421,7 @@ class _ChannelSettingsScreenState extends State<ChannelSettingsScreen> {
 
   subscriberAction() {
     EasyLoading.show();
-    GroupChatHelper.subscribeTopic(
+    GroupDataCenter.subscribeTopic(
         topicName: widget.arguments.topic,
         chatBloc: _chatBloc,
         callback: (success, e) {

@@ -156,11 +156,10 @@ class _MessagesTabState extends State<MessagesTab>
                       subscription.toString());
                 }
               });
-            } else if ((topic.blockHeightExpireAt - blockHeight) <
-                (400000 - 300000)) {
+            } else if ((blockHeight - topic.blockHeightExpireAt) > Global.topicBlockHeightExpireWarnHeight) {
               String topicName = topic.topic;
               if (topic.isPrivateTopic() == false) {
-                GroupChatHelper.subscribeTopic(
+                GroupDataCenter.subscribeTopic(
                     topicName: topicName,
                     chatBloc: _chatBloc,
                     callback: (success, e) {
@@ -594,7 +593,7 @@ class _MessagesTabState extends State<MessagesTab>
 
   _subscription(PopularChannel popular) async {
     EasyLoading.show();
-    GroupChatHelper.subscribeTopic(
+    GroupDataCenter.subscribeTopic(
         topicName: popular.topic,
         chatBloc: _chatBloc,
         callback: (success, e) async {

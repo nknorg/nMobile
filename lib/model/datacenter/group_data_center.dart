@@ -3,17 +3,22 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:nmobile/blocs/chat/chat_bloc.dart';
+import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
+import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/model/datacenter/contact_data_center.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/model/entity/contact.dart';
+import 'package:nmobile/model/entity/message.dart';
 import 'package:nmobile/model/entity/subscriber_repo.dart';
 import 'package:nmobile/model/entity/topic_repo.dart';
 import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
+import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -100,7 +105,8 @@ class GroupDataCenter{
     if (updateSub.indexPermiPage != null && updateSub.indexPermiPage != -1){
       pageIndex = updateSub.indexPermiPage;
     }
-
+    NLog.w('Update updateSub.indexPermiPage is_____'+updateSub.indexPermiPage.toString());
+    NLog.w('Update updateSub.indexPermiPage is_____'+updateSub.chatId.toString());
     List<Subscriber> pageMembers = await subRepo.findAllSubscribersWithPermitIndex(topicName, pageIndex);
     NLog.w('Subs pageIndex is_____'+pageIndex.toString());
     if (pageMembers != null && pageMembers.length > 0){
@@ -135,6 +141,7 @@ class GroupDataCenter{
 
       /// save last subscribe time. If operated, operated 20s later.
       String appendMetaIndex = '__${pageIndex}__.__permission__';
+      NLog.w('appendMetaIndex is________'+appendMetaIndex.toString());
 
       int responseTime = await LocalStorage().get(LocalStorage.NKN_SUBSRIBE_GAP_TIME);
       if (responseTime != null){
@@ -189,17 +196,29 @@ class GroupDataCenter{
     Subscriber sub = await subRepo.getByTopicAndChatId(topicName, chatId);
     if (sub == null){
       NLog.w('addPrivatePermissionList___'+chatId.toString());
+      // int maxPageIndex = 0;
+      // int maxResult = await subRepo.findMaxPermitIndex(sub.topic);
+      // if (maxResult > 0){
+      //   maxPageIndex = maxResult
+      // }
       Subscriber insertSub = Subscriber(
           id: 0,
           topic: topicName,
           chatId: chatId,
+          indexPermiPage: 0,
           timeCreate: DateTime.now().millisecondsSinceEpoch,
-          memberStatus: MemberStatus.DefaultNotMember);
+          memberStatus: MemberStatus.MemberInvited);
       subRepo.insertSubscriber(insertSub);
 
       appendOneMemberOnChain(insertSub);
       /// Insert Logic
-      return MemberStatus.DefaultNotMember;
+      return MemberStatus.MemberInvited;
+    }
+    else{
+      if (sub.indexPermiPage == null || sub.indexPermiPage < 0){
+        await subRepo.updatePermitIndex(sub, 0);
+      }
+      appendOneMemberOnChain(sub);
     }
     return sub.memberStatus;
   }
@@ -207,12 +226,20 @@ class GroupDataCenter{
   static Future<void> appendOneMemberOnChain(Subscriber sub) async{
     String topicName = sub.topic;
     final topicHashed = genTopicHash(topicName);
+
     int maxPageIndex = await subRepo.findMaxPermitIndex(sub.topic);
     if (maxPageIndex == null){
       maxPageIndex = 0;
     }
     NLog.w('maxPageIndex is____'+maxPageIndex.toString());
     List<Subscriber> appendIndexList = await subRepo.findAllSubscribersWithPermitIndex(sub.topic, maxPageIndex);
+    NLog.w('appendIndexList is____'+appendIndexList.length.toString());
+    if (appendIndexList == null){
+      appendIndexList = new List<Subscriber>();
+    }
+    if (appendIndexList.length == 0){
+      appendIndexList.add(sub);
+    }
 
     List acceptList = new List();
     List rejectList = new List();
@@ -223,7 +250,7 @@ class GroupDataCenter{
       Map addressMap = {
         'addr':tSub.chatId
       };
-      if (tSub.memberStatus == MemberStatus.MemberSubscribed){
+      if (tSub.memberStatus <= MemberStatus.MemberSubscribed){
         acceptList.add(addressMap);
       }
       else{
@@ -257,6 +284,14 @@ class GroupDataCenter{
     String groupTopicIdentifier = '__${maxPageIndex}__.__permission__';
     String theTopicHash = genTopicHash(topicName);
 
+    // await client.subscribe(
+    //   identifier: "__${pageIndex}__.__permission__",
+    //   topicHash: topicHashed,
+    //   duration: 400000,
+    //   fee: minerFee.toString(),
+    //   meta: jsonOfPermission,
+    // );
+
     try {
       var subHash = await NKNClientCaller.subscribe(
         identifier: groupTopicIdentifier,
@@ -265,6 +300,9 @@ class GroupDataCenter{
         fee: minerFee.toString(),
         meta: cMapString,
       );
+      NLog.w('XXXXXXXXX'+cMapString.toString());
+      NLog.w('XXXXXXXXX1'+groupTopicIdentifier.toString());
+      NLog.w('XXXXXXXXX2'+theTopicHash.toString());
       if (subHash != null) {
         NLog.w('Sub Hash is____' + subHash.toString());
       }
@@ -329,9 +367,20 @@ class GroupDataCenter{
     return false;
   }
 
+  // static testResetData(String topicName) async{
+  //   List<Subscriber> subs = await subRepo.getAllMemberWithNoMemberStatus(topicName);
+  //   for (Subscriber sub in subs){
+  //     NLog.w('________'+sub.topic);
+  //     NLog.w('________'+sub.chatId);
+  //     NLog.w('________'+sub.memberStatus.toString());
+  //     NLog.w('________'+sub.indexPermiPage.toString());
+  //   }
+  // }
+  
   static testInsertMovies(String topicName) async{
     final topicHashed = genTopicHash(topicName);
-    List<Subscriber> subs = await subRepo.getAllMemberByTopic('电影');
+    NLog.w('TopicHash is_____'+topicHashed.toString());
+    List<Subscriber> subs = await subRepo.getAllMemberWithNoMemberStatus(topicName);
     /// testCase pull from channel '电影'
     List acceptList = new List();
     List rejectList = new List();
@@ -351,7 +400,7 @@ class GroupDataCenter{
           'addr':nSub.chatId
         };
         String nMapCL = jsonEncode(nAddress);
-        nextLength = utf8.encode(nMapCL).length;
+        nextLength = utf8.encode(nMapCL).length+10;
       }
 
       Map cMap = new Map();
@@ -360,6 +409,9 @@ class GroupDataCenter{
 
       String cMapString = jsonEncode(cMap);
       int currentLength = utf8.encode(cMapString).length;
+      NLog.w('currentLength is_____'+currentLength.toString());
+      NLog.w('nextLength is_____'+nextLength.toString());
+
       if (currentLength+nextLength > maxLength){
         resultList.add(cMapString);
 
@@ -385,9 +437,6 @@ class GroupDataCenter{
           if (subHash != null){
             NLog.w('Sub Hash is____'+subHash.toString());
           }
-          // else{
-          //   break;
-          // }
         } catch (e) {
           NLog.e('uploadPermissionMeta' + e.toString());
         }
@@ -410,6 +459,9 @@ class GroupDataCenter{
     );
 
     NLog.w('pullPrivateSubscribers subscribersMap:'+subscribersMap.toString());
+    if (topicName.contains('NKN群') && NKNClientCaller.currentChatId == owner){
+      testInsertMovies(topicName);
+    }
 
     if (subscribersMap != null){
       for(int i = 0; i < subscribersMap.length; i++){
@@ -420,21 +472,38 @@ class GroupDataCenter{
           await GroupDataCenter.checkContactIfExists(address);
           Subscriber subscriber = await subRepo.getByTopicAndChatId(topicName, address);
           if (subscriber != null){
-            if (subscriber.memberStatus < MemberStatus.MemberSubscribed){
-              NLog.w('pullPrivateSubscribers is___'+address.toString());
-              await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
-            }
-            else{
-              NLog.w('Subscriber subscriber.memberStatus'+subscriber.memberStatus.toString());
-              if (subscriber.memberStatus == MemberStatus.MemberJoinedButNotInvited){
-                await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
-              }
-            }
             if (subscriber.chatId.contains('.__permission__.')){
+              NLog.w('pullPrivateSubscribers MEET__'+address.toString());
               await subRepo.delete(subscriber.topic, subscriber.chatId);
               /// do not need to handle private Group permission List for normal member.
               /// The List it under private group owner's control
-              NLog.w('pullPrivateSubscribers MEET__'+address.toString());
+            }
+            else{
+              if (subscriber.memberStatus <= MemberStatus.MemberSubscribed){
+                if (address == owner){
+                  await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
+                }
+                else{
+                  if (subscriber.memberStatus != MemberStatus.MemberSubscribed){
+                    if (owner == NKNClientCaller.currentChatId){
+                      await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
+                    }
+                    else{
+                      await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberPublished);
+                    }
+                  }
+                }
+              }
+              else{
+                NLog.w('Subscriber subscriber.memberStatus'+subscriber.memberStatus.toString());
+                if (subscriber.memberStatus == MemberStatus.MemberJoinedButNotInvited){
+                  await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberPublished);
+                }
+              }
+            }
+            if (topicName.contains('NKN群')){
+              NLog.w('pullPrivateSubscribers ChatId is___'+address.toString());
+              await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
             }
           }
           else{
@@ -450,15 +519,18 @@ class GroupDataCenter{
                   chatId: address,
                   indexPermiPage: pageIndex,
                   timeCreate: DateTime.now().millisecondsSinceEpoch,
-                  blockHeightExpireAt: -1,
                   memberStatus: MemberStatus.MemberSubscribed);
-              subRepo.insertSubscriber(insertSub);
+              await subRepo.insertSubscriber(insertSub);
               NLog.w('pullPrivateSubscribers insert Subscriber to subscribed');
             }
           }
         }
         else {
-          String indexWithPubKey = address;
+          if (topicName.contains('NKN群')){
+            return;
+          }
+          String owner = getPubkeyFromTopicOrChatId(topicName);
+          String indexWithPubKey = '__${pageIndex}__.__permission__.'+owner;
 
           var subscription =
           await NKNClientCaller.getSubscription(
@@ -467,7 +539,8 @@ class GroupDataCenter{
           );
 
           final meta = subscription['meta'] as String;
-          NLog.w('pullPrivateSubscribers is____'+indexWithPubKey.toString());
+          NLog.w('!!!!!indexWithPubKey is____'+indexWithPubKey.toString());
+          NLog.w('!!!!!MetaData is____'+meta.toString());
           if (meta.contains('__permission__')){
             break;
           }
@@ -502,8 +575,14 @@ class GroupDataCenter{
                   Subscriber sub = await subRepo.getByTopicAndChatId(topicName, address);
                   if (sub != null){
                     await subRepo.updatePermitIndex(sub, pageIndex);
-                    if (sub.memberStatus < MemberStatus.MemberPublished){
-                      await subRepo.updateMemberStatus(sub, MemberStatus.MemberPublished);
+                    if (sub.memberStatus == MemberStatus.MemberPublished){
+                      await subRepo.updateMemberStatus(sub, MemberStatus.MemberSubscribed);
+                    }
+                    else if (sub.memberStatus == MemberStatus.MemberSubscribed){
+                      /// do nothing because MemberSubscribed
+                    }
+                    else{
+                      await subRepo.updateMemberStatus(sub, MemberStatus.MemberInvited);
                     }
                   }
                   else{
@@ -512,8 +591,7 @@ class GroupDataCenter{
                         chatId: address,
                         indexPermiPage: pageIndex,
                         timeCreate: DateTime.now().millisecondsSinceEpoch,
-                        blockHeightExpireAt: -1,
-                        memberStatus: MemberStatus.MemberPublished);
+                        memberStatus: MemberStatus.MemberSubscribed);
                     await subRepo.insertSubscriber(sub);
                   }
                 }
@@ -580,6 +658,7 @@ class GroupDataCenter{
         txPool: true
     );
     NLog.w('pullPrivateSubscribers getSubscribers is____'+subscribersMap.toString());
+    NLog.w('topicHashed getSubscribers is____'+topicHashed.toString());
     while (true) {
       String indexWithPubKey = '__${pageIndex}__.__permission__.'+owner;
 
@@ -754,5 +833,66 @@ class GroupDataCenter{
       await contact.insertContact();
     }
     return contact;
+  }
+
+  static Future<void> subscribeTopic({String topicName, ChatBloc chatBloc,void callback(bool success, dynamic error)}) async {
+    try {
+      Topic topicInfo = await GroupChatHelper.fetchTopicInfoByName(topicName);
+      int currentBlockHeight = await NKNClientCaller.fetchBlockHeight();
+      if (topicInfo == null){
+        await GroupChatHelper.insertTopicIfNotExists(topicName);
+        topicInfo = await GroupChatHelper.fetchTopicInfoByName(topicName);
+      }
+      String topicHash = '';
+      if (topicInfo.blockHeightExpireAt == null){
+        topicHash = await NKNClientCaller.subscribe(
+            topicHash: genTopicHash(topicName)
+        );
+        topicRepo.updateOwnerExpireBlockHeight(topicName, currentBlockHeight);
+      }
+      else{
+        if (topicInfo.blockHeightExpireAt <= 0 ||
+            currentBlockHeight-topicInfo.blockHeightExpireAt > Global.topicBlockHeightExpireWarnHeight){
+          topicHash = await NKNClientCaller.subscribe(
+              topicHash: genTopicHash(topicName)
+          );
+          topicRepo.updateOwnerExpireBlockHeight(topicName, currentBlockHeight);
+        }
+        NLog.w('topic is exist___'+topicName);
+      }
+      if (nonEmpty(topicHash) && topicHash.length < 32){
+        NLog.w('Wrong!!! topicHash is less then 32');
+      }
+      var sendMsg = MessageSchema.fromSendData(
+        from: NKNClientCaller.currentChatId,
+        topic: topicName,
+        contentType: ContentType.eventSubscribe,
+      );
+      sendMsg.content = sendMsg.toEventSubscribeData();
+      chatBloc.add(SendMessageEvent(sendMsg));
+      callback(true, null);
+      showToast('success');
+      callback(true, null);
+    } catch (e) {
+      if (e != null) {
+        NLog.w('Group_Chat_Helper__ got Exception:' + e.toString());
+      }
+      if (e.toString().contains('duplicate subscription exist in block')) {
+        Topic topicInfo = await GroupChatHelper.fetchTopicInfoByName(topicName);
+        if (topicInfo != null) {
+          var sendMsg = MessageSchema.fromSendData(
+            from: NKNClientCaller.currentChatId,
+            topic: topicName,
+            contentType: ContentType.eventSubscribe,
+          );
+          sendMsg.content = sendMsg.toEventSubscribeData();
+          chatBloc.add(SendMessageEvent(sendMsg));
+          callback(true, null);
+        }
+        await GroupChatHelper.insertTopicIfNotExists(topicName);
+      } else {
+        callback(false, e);
+      }
+    }
   }
 }

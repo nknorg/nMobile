@@ -40,7 +40,7 @@ class ChannelBloc extends Bloc<ChannelMembersEvent, ChannelState> {
       FetchOwnChannelMembersEvent event) async* {
     String topicName = event.topicName;
     List<MemberVo> list = [];
-    final subscribers = await SubscriberRepo().getByTopicExceptNone(topicName) ;
+    final subscribers = await SubscriberRepo().getAllMemberWithNoMemberStatus(topicName) ;
 
     for (final sub in subscribers) {
       if (sub.chatId.length < 64) {
