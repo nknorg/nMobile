@@ -379,13 +379,21 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
     private fun pushContent(call: MethodCall, result: MethodChannel.Result){
         var deviceToken = call.argument<String>("deviceToken")!!
         var pushContent = call.argument<String>("pushContent")!!
+        result.success(null)
 
         if (deviceToken.isNotEmpty()){
             val code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(acty)
             if (code == ConnectionResult.SUCCESS && pushContent?.length > 0){
                 if (deviceToken?.length >= 32){
-                    val service = GooglePushService()
-                    service.sendMessageToFireBase(deviceToken, pushContent)
+                    msgSendHandler.post {
+                        try {
+                            val service = GooglePushService()
+                            service.sendMessageToFireBase(deviceToken, pushContent)
+                            Log.e("pushContentE", "pushContent Success")
+                        } catch (e: Exception) {
+                            Log.e("pushContentE", "pushContentE | e:", e)
+                        }
+                    }
                 }
             }
         }
@@ -400,18 +408,18 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
 
         result.success(null)
 
-        val dataObj = JSONObject(data)
-        if (dataObj.optString("deviceToken").isNotEmpty()){
-            val deviceToken = dataObj["deviceToken"].toString()
-            val pushContent = dataObj["pushContent"].toString()
-            val code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(acty)
-            if (code == ConnectionResult.SUCCESS && pushContent?.length > 0){
-                if (deviceToken?.length >= 32){
-                    val service = GooglePushService()
-                    service.sendMessageToFireBase(deviceToken, pushContent)
-                }
-            }
-        }
+//        val dataObj = JSONObject(data)
+//        if (dataObj.optString("deviceToken").isNotEmpty()){
+//            val deviceToken = dataObj["deviceToken"].toString()
+//            val pushContent = dataObj["pushContent"].toString()
+//            val code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(acty)
+//            if (code == ConnectionResult.SUCCESS && pushContent?.length > 0){
+//                if (deviceToken?.length >= 32){
+//                    val service = GooglePushService()
+//                    service.sendMessageToFireBase(deviceToken, pushContent)
+//                }
+//            }
+//        }
 
         var nknDests: StringArray? = null
         for (d in dests) {
