@@ -10,6 +10,7 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -356,6 +357,9 @@ class _RecordAudioState extends State<RecordAudio> {
 
   Future<void> startRecordFunc() async {
     await _resetMPath();
+    if (_mRecorder == null){
+      NLog.w('Wrong!!!!! startRecordFunc _mRecorder is null');
+    }
     await _mRecorder.startRecorder(
       toFile: _mPath,
       codec: Codec.aacADTS,

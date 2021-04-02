@@ -93,6 +93,7 @@ class TimerAuth {
   }
 
   Future<String> _checkUserInput(BuildContext context) async {
+    /// todo check If context is null
     /// AuthFailed
     TimerAuth.authed = false;
     _authBloc = BlocProvider.of<AuthBloc>(context);

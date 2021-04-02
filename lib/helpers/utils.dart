@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:path/path.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:web3dart/credentials.dart';
@@ -130,6 +131,9 @@ String createFileCachePath(String accountPubkey, File file) {
 }
 
 String createContactFilePath(String accountPubkey, File file) {
+  if (file == null){
+    NLog.w('Wrong!!!!! createContactFilePath file is null');
+  }
   String name = hexEncode(md5.convert(file.readAsBytesSync()).bytes);
   Directory rootDir = Global.applicationRootDirectory;
   String p = join(rootDir.path, accountPubkey, 'contact');

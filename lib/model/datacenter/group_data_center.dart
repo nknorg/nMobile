@@ -459,9 +459,9 @@ class GroupDataCenter{
     );
 
     NLog.w('pullPrivateSubscribers subscribersMap:'+subscribersMap.toString());
-    if (topicName.contains('NKN群') && NKNClientCaller.currentChatId == owner){
-      testInsertMovies(topicName);
-    }
+    // if (topicName.contains('NKN群') && NKNClientCaller.currentChatId == owner){
+    //   testInsertMovies(topicName);
+    // }
 
     if (subscribersMap != null){
       for(int i = 0; i < subscribersMap.length; i++){
@@ -501,10 +501,10 @@ class GroupDataCenter{
                 }
               }
             }
-            if (topicName.contains('NKN群')){
-              NLog.w('pullPrivateSubscribers ChatId is___'+address.toString());
-              await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
-            }
+            // if (topicName.contains('NKN群')){
+            //   NLog.w('pullPrivateSubscribers ChatId is___'+address.toString());
+            //   await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
+            // }
           }
           else{
             NLog.w('Chat Id is_____'+address.toString());
@@ -526,9 +526,9 @@ class GroupDataCenter{
           }
         }
         else {
-          if (topicName.contains('NKN群')){
-            return;
-          }
+          // if (topicName.contains('NKN群')){
+          //   return;
+          // }
           String owner = getPubkeyFromTopicOrChatId(topicName);
           String indexWithPubKey = '__${pageIndex}__.__permission__.'+owner;
 
