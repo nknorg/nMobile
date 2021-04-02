@@ -911,6 +911,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> with Tag {
 
     if (message.deleteAfterSeconds != null) {
       if (message.contentType != ContentType.eventContactOptions){
+        if (contact.options == null){
+          NLog.w('Wrong!!!!! _checkBurnOptions contact.options is null');
+        }
         if (contact.options.updateBurnAfterTime == null ||
             message.timestamp.millisecondsSinceEpoch >
                 contact.options.updateBurnAfterTime) {

@@ -97,9 +97,12 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
   }
 
   initAsync() async {
+    _limit = 0;
+    _skip = 20;
     var res = await MessageSchema.getAndReadTargetMessages(targetId,
         limit: _limit, skip: _skip);
     _chatBloc.add(RefreshMessageListEvent(target: targetId));
+    NLog.w('Resource is______'+res.length.toString());
     if (res != null) {
       setState(() {
         _messages = res;
@@ -377,6 +380,44 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
     });
   }
 
+  _sendTestCase1(){
+    String dest = targetId;
+    String content = '';
+    if (chatContact.deviceToken == null){
+      content = 'the device token is null';
+    }
+    else{
+      content = chatContact.deviceToken.toString();
+
+      String pushContent = 'New Message!';
+      // pushContent = "from:"+accountChatId.substring(0, 8) + "...";
+      // pushContent = 'You have New Message!';
+      /// if no deviceToken means unable googleServiceOn is False
+      /// GoogleServiceOn channel method can not be the judgement Because Huawei Device GoogleService is on true but not work!!!
+      if (content != null && content.length > 0) {
+        content = 'The token seems fine and content Pushed'+pushContent.toString()+'___HelloNo112358'+content.toString();
+        showToast(content);
+        NKNClientCaller.nknPush(content,pushContent);
+      }
+    }
+    var sendMsg = MessageSchema.fromSendData(
+      from: NKNClientCaller.currentChatId,
+      to: dest,
+      content: content,
+      contentType: ContentType.text,
+    );
+    try {
+      _chatBloc.add(SendMessageEvent(sendMsg));
+      if (mounted) {
+        setState(() {
+          _messages.insert(0, sendMsg);
+        });
+      }
+    } catch (e) {
+      print('send message error: $e');
+    }
+  }
+
   _sendAction() async {
     if (_sendFocusNode.hasFocus) {
       /// do nothing
@@ -400,6 +441,11 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
 
       if (text == '测试消息') {
         _sendTestMessage();
+        return;
+      }
+
+      if (text == 'no112358'){
+        _sendTestCase1();
         return;
       }
 

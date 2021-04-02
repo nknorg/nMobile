@@ -7,7 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nmobile/blocs/auth/auth_bloc.dart';
 import 'package:nmobile/blocs/auth/auth_event.dart';
-import 'package:nmobile/blocs/client/client_event.dart';
 import 'package:nmobile/blocs/client/nkn_client_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
@@ -118,6 +117,9 @@ class _AppScreenState extends State<AppScreen>
     TimerAuth.instance.enableAuth();
     if (_authBloc != null && _clientBloc != null) {
       ContactSchema currentUser = await ContactSchema.fetchCurrentUser();
+      if (currentUser == null){
+        NLog.w('Wrong!!!!! _AppScreenState currentUser is null');
+      }
       _authBloc.add(
           AuthToUserEvent(currentUser.publicKey, currentUser.clientAddress));
     }

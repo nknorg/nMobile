@@ -32,6 +32,7 @@ import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/const_utils.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:oktoast/oktoast.dart';
 
 class SendNknScreen extends StatefulWidget {
@@ -128,10 +129,9 @@ class _SendNknScreenState extends State<SendNknScreen> {
             try {
               jsonData = jsonDecode(qrData);
               jsonFormat = true;
-            } on Exception
-
-            ///work todo
+            }
             catch (e) {
+              NLog.w('SendNknScreen E:'+e.toString());
               jsonFormat = false;
             }
             if (jsonFormat) {
