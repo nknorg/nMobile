@@ -300,6 +300,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "tab_keystore" : MessageLookupByLibrary.simpleMessage("Keystore"),
     "tab_seed" : MessageLookupByLibrary.simpleMessage("Seed"),
     "tip" : MessageLookupByLibrary.simpleMessage("提示"),
+    "tip_ask_group_owner_permission" : MessageLookupByLibrary.simpleMessage("您已不在此群，联系群主邀请您"),
     "tip_open_send_device_token" : MessageLookupByLibrary.simpleMessage("发送你的设备token给他?\n他将可以给你发送远程推送!"),
     "tip_password_error" : MessageLookupByLibrary.simpleMessage("密码错误"),
     "tip_switch_success" : MessageLookupByLibrary.simpleMessage("切换成功!"),

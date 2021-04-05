@@ -284,14 +284,6 @@ class GroupDataCenter{
     String groupTopicIdentifier = '__${maxPageIndex}__.__permission__';
     String theTopicHash = genTopicHash(topicName);
 
-    // await client.subscribe(
-    //   identifier: "__${pageIndex}__.__permission__",
-    //   topicHash: topicHashed,
-    //   duration: 400000,
-    //   fee: minerFee.toString(),
-    //   meta: jsonOfPermission,
-    // );
-
     try {
       var subHash = await NKNClientCaller.subscribe(
         identifier: groupTopicIdentifier,
@@ -300,15 +292,23 @@ class GroupDataCenter{
         fee: minerFee.toString(),
         meta: cMapString,
       );
-      NLog.w('XXXXXXXXX'+cMapString.toString());
-      NLog.w('XXXXXXXXX1'+groupTopicIdentifier.toString());
-      NLog.w('XXXXXXXXX2'+theTopicHash.toString());
       if (subHash != null) {
         NLog.w('Sub Hash is____' + subHash.toString());
       }
     } catch (e) {
       NLog.e('uploadPermissionMeta' + e.toString());
     }
+  }
+
+  static Future<bool> checkMeIn(String topicName) async{
+    Subscriber sub = await subRepo.getByTopicAndChatId(topicName, NKNClientCaller.currentChatId);
+    if (sub == null){
+      return false;
+    }
+    if (sub.memberStatus == MemberStatus.MemberSubscribed){
+      return true;
+    }
+    return false;
   }
 
   // static Future<bool> checkMemberIsInGroup(Subscriber sub) async{
@@ -366,16 +366,6 @@ class GroupDataCenter{
     }
     return false;
   }
-
-  // static testResetData(String topicName) async{
-  //   List<Subscriber> subs = await subRepo.getAllMemberWithNoMemberStatus(topicName);
-  //   for (Subscriber sub in subs){
-  //     NLog.w('________'+sub.topic);
-  //     NLog.w('________'+sub.chatId);
-  //     NLog.w('________'+sub.memberStatus.toString());
-  //     NLog.w('________'+sub.indexPermiPage.toString());
-  //   }
-  // }
   
   static testInsertMovies(String topicName) async{
     final topicHashed = genTopicHash(topicName);
@@ -459,9 +449,6 @@ class GroupDataCenter{
     );
 
     NLog.w('pullPrivateSubscribers subscribersMap:'+subscribersMap.toString());
-    // if (topicName.contains('NKN群') && NKNClientCaller.currentChatId == owner){
-    //   testInsertMovies(topicName);
-    // }
 
     if (subscribersMap != null){
       for(int i = 0; i < subscribersMap.length; i++){
@@ -501,10 +488,6 @@ class GroupDataCenter{
                 }
               }
             }
-            // if (topicName.contains('NKN群')){
-            //   NLog.w('pullPrivateSubscribers ChatId is___'+address.toString());
-            //   await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
-            // }
           }
           else{
             NLog.w('Chat Id is_____'+address.toString());
@@ -526,9 +509,6 @@ class GroupDataCenter{
           }
         }
         else {
-          // if (topicName.contains('NKN群')){
-          //   return;
-          // }
           String owner = getPubkeyFromTopicOrChatId(topicName);
           String indexWithPubKey = '__${pageIndex}__.__permission__.'+owner;
 
@@ -539,11 +519,6 @@ class GroupDataCenter{
           );
 
           final meta = subscription['meta'] as String;
-          NLog.w('!!!!!indexWithPubKey is____'+indexWithPubKey.toString());
-          NLog.w('!!!!!MetaData is____'+meta.toString());
-          if (meta.contains('__permission__')){
-            break;
-          }
 
           if (meta == null || meta.trim().isEmpty) {
             break;

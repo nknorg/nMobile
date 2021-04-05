@@ -79,7 +79,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   int _topicCount;
 
   bool showJoin = true;
-  bool isInBlackList = false;
 
   bool _showAudioInput = false;
   RecordAudio _recordAudio;
@@ -159,7 +158,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     }
   }
 
-  
   refreshTop(String topicName) async {
     if (topicName != null) {
       NLog.w('refreshTop topic Name__' + topicName);
@@ -168,7 +166,14 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     if (topic != null){
       if (topic.isPrivateTopic()) {
         NLog.w('Enter Private Topic___'+topicName);
-        GroupDataCenter.pullPrivateSubscribers(topic.topic);
+        /// check if in group
+        bool isMeInGroup = await GroupDataCenter.checkMeIn(topicName);
+        NLog.w('isMeInGroup is_____'+isMeInGroup.toString());
+        setState(() {
+          showJoin = isMeInGroup;
+        });
+
+        await GroupDataCenter.pullPrivateSubscribers(topic.topic);
         String owner = getPubkeyFromTopicOrChatId(topicName);
         if (owner == NKNClientCaller.currentChatId) {
           _updatePrivateTopicBlockHeight(topic);
@@ -523,7 +528,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                     flex: 1,
                     child: Padding(
                       padding:
-                          const EdgeInsets.only(left: 12, right: 16, top: 4),
+                      const EdgeInsets.only(left: 12, right: 16, top: 4),
                       child: ListView.builder(
                         reverse: true,
                         padding: const EdgeInsets.only(bottom: 8),
@@ -576,58 +581,58 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                           }
                           return BlocBuilder<ContactBloc, ContactState>(
                               builder: (context, state) {
-                            ContactSchema contact;
-                            if (state is ContactLoaded) {
-                              if (contact == null) {
-                                contact =
-                                    state.getContactByAddress(message.from);
-                                if (message.from != null &&
-                                    message.from.length > 6) {
-                                  fromShow = message.from.substring(0, 6);
+                                ContactSchema contact;
+                                if (state is ContactLoaded) {
+                                  if (contact == null) {
+                                    contact =
+                                        state.getContactByAddress(message.from);
+                                    if (message.from != null &&
+                                        message.from.length > 6) {
+                                      fromShow = message.from.substring(0, 6);
+                                    }
+                                  } else {
+                                    fromShow = contact.getShowName;
+                                  }
                                 }
-                              } else {
-                                fromShow = contact.getShowName;
-                              }
-                            }
-                            if (message.contentType ==
-                                ContentType.eventSubscribe) {
-                              return ChatSystem(
-                                child: Wrap(
-                                  alignment: WrapAlignment.center,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  children: <Widget>[
-                                    Label(
-                                        '${message.isSendMessage() ? NL10ns.of(context).you : fromShow} ${NL10ns.of(context).joined_channel}'),
-                                  ],
-                                ),
-                              );
-                            } else if (message.contentType ==
-                                ContentType.eventUnsubscribe) {
-                              return Container();
-                            } else {
-                              if (message.isSendMessage()) {
-                                return ChatBubble(
-                                  message: message,
-                                  showTime: showTime,
-                                  hideHeader: hideHeader,
-                                );
-                              } else {
-                                return ChatBubble(
-                                  message: message,
-                                  showTime: showTime,
-                                  contact: contact,
-                                  hideHeader: hideHeader,
-                                  onChanged: (String v) {
-                                    setState(() {
-                                      _sendController.text =
-                                          _sendController.text + ' @$v ';
-                                      _canSend = true;
-                                    });
-                                  },
-                                );
-                              }
-                            }
-                          });
+                                if (message.contentType ==
+                                    ContentType.eventSubscribe) {
+                                  return ChatSystem(
+                                    child: Wrap(
+                                      alignment: WrapAlignment.center,
+                                      crossAxisAlignment: WrapCrossAlignment.center,
+                                      children: <Widget>[
+                                        Label(
+                                            '${message.isSendMessage() ? NL10ns.of(context).you : fromShow} ${NL10ns.of(context).joined_channel}'),
+                                      ],
+                                    ),
+                                  );
+                                } else if (message.contentType ==
+                                    ContentType.eventUnsubscribe) {
+                                  return Container();
+                                } else {
+                                  if (message.isSendMessage()) {
+                                    return ChatBubble(
+                                      message: message,
+                                      showTime: showTime,
+                                      hideHeader: hideHeader,
+                                    );
+                                  } else {
+                                    return ChatBubble(
+                                      message: message,
+                                      showTime: showTime,
+                                      contact: contact,
+                                      hideHeader: hideHeader,
+                                      onChanged: (String v) {
+                                        setState(() {
+                                          _sendController.text =
+                                              _sendController.text + ' @$v ';
+                                          _canSend = true;
+                                        });
+                                      },
+                                    );
+                                  }
+                                }
+                              });
                         },
                       ),
                     ),
@@ -812,6 +817,23 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   }
 
   Widget _audioInputWidget(){
+    if (showJoin == false){
+      return Container(
+        child: Button(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Label(NL10ns.of(context).tip_ask_group_owner_permission, type: LabelType.h3)
+            ],
+          ),
+          backgroundColor: DefaultTheme.primaryColor,
+          width: double.infinity,
+          // onPressed: () {
+          //
+          // },
+        ).pad(l: 20, r: 20),
+      );
+    }
     double wWidth = MediaQuery.of(context).size.width;
     return Container(
       height: 90,
@@ -1079,125 +1101,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 ),
               ),
             ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  getBottomView() {
-    if (showJoin == false) {
-      return Button(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Label(NL10ns.of(context).subscribe_or_waiting, type: LabelType.h3)
-          ],
-        ),
-        backgroundColor: DefaultTheme.primaryColor,
-        width: double.infinity,
-        onPressed: () {
-          if (isInBlackList) {
-            // TODO:
-          } else {
-            EasyLoading.show();
-            NLog.w('GroupChat getBottomView on called');
-            GroupDataCenter.subscribeTopic(
-                topicName: widget.arguments.topic.topic,
-                chatBloc: _chatBloc,
-                callback: (success, e) {
-                  if (success) {
-                    NLog.w('getBottomView joinChannel success');
-                  }
-                  EasyLoading.dismiss();
-                  refreshTop(widget.arguments.topic.topic);
-                  if (!success && e != null) {
-                    showToast('channel subscribe failed');
-                  }
-                });
-          }
-        },
-      ).pad(l: 20, r: 20);
-    }
-    return Flex(
-      direction: Axis.horizontal,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: <Widget>[
-        Expanded(
-          flex: 0,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 8, right: 8),
-            child: ButtonIcon(
-              width: 50,
-              height: 50,
-              icon: loadAssetIconsImage('grid',
-                  width: 24, color: DefaultTheme.primaryColor),
-              onPressed: () {
-                _toggleBottomMenu();
-              },
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 1,
-          child: Container(
-            decoration: BoxDecoration(
-              color: DefaultTheme.backgroundColor1,
-              borderRadius: BorderRadius.all(Radius.circular(20)),
-            ),
-            child: Flex(
-              direction: Axis.horizontal,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: <Widget>[
-                Expanded(
-                  flex: 1,
-                  child: TextField(
-                    maxLines: 5,
-                    minLines: 1,
-                    controller: _sendController,
-                    focusNode: _sendFocusNode,
-                    textInputAction: TextInputAction.newline,
-                    onChanged: (val) {
-                      setState(() {
-                        _canSend = val.isNotEmpty;
-                      });
-                    },
-                    style: TextStyle(fontSize: 14, height: 1.4),
-                    decoration: InputDecoration(
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
-                      hintText: NL10ns.of(context).type_a_message,
-                      border: UnderlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(20.w)),
-                        borderSide:
-                            const BorderSide(width: 0, style: BorderStyle.none),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 0,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 8, right: 8),
-            child: ButtonIcon(
-              width: 50,
-              height: 50,
-              icon: loadAssetIconsImage(
-                'send',
-                width: 24,
-                color: _canSend
-                    ? DefaultTheme.primaryColor
-                    : DefaultTheme.fontColor2,
-              ),
-              //disabled: !_canSend,
-              onPressed: () {
-                _sendText();
-              },
-            ),
           ),
         ),
       ],

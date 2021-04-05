@@ -304,6 +304,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "tab_keystore" : MessageLookupByLibrary.simpleMessage("Keystore"),
     "tab_seed" : MessageLookupByLibrary.simpleMessage("Seed"),
     "tip" : MessageLookupByLibrary.simpleMessage("Tips"),
+    "tip_ask_group_owner_permission" : MessageLookupByLibrary.simpleMessage("You are not in this group,ask the group owner for permission"),
     "tip_open_send_device_token" : MessageLookupByLibrary.simpleMessage("Send your device token to him?\nThen he can send you remote notification!"),
     "tip_password_error" : MessageLookupByLibrary.simpleMessage("Wrong password"),
     "tip_switch_success" : MessageLookupByLibrary.simpleMessage("Switch Success!"),

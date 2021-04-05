@@ -1325,6 +1325,10 @@ class NL10ns {
   String get tip_switch_success => Intl.message(
       'Switch Success!',
       name: 'tip_switch_success');
+
+  String get tip_ask_group_owner_permission => Intl.message(
+      'You are not in this group,ask the group owner for permission',
+      name: 'tip_ask_group_owner_permission');
 }
 
 class NMobileLocalizationsDelegate extends LocalizationsDelegate<NL10ns> {

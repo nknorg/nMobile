@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2021-03-26T18:08:23.312422",
+  "@@last_modified": "2021-04-05T15:18:02.593422",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -1830,6 +1830,11 @@
   },
   "tip_switch_success": "Switch Success!",
   "@tip_switch_success": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "tip_ask_group_owner_permission": "You are not in this group,ask the group owner for permission",
+  "@tip_ask_group_owner_permission": {
     "type": "text",
     "placeholders": {}
   }

@@ -97,13 +97,13 @@ class _ChatSinglePageState extends State<ChatSinglePage> {
   }
 
   initAsync() async {
-    _limit = 0;
-    _skip = 20;
+    _skip = 0;
     var res = await MessageSchema.getAndReadTargetMessages(targetId,
         limit: _limit, skip: _skip);
     _chatBloc.add(RefreshMessageListEvent(target: targetId));
     NLog.w('Resource is______'+res.length.toString());
     if (res != null) {
+      _skip += res.length;
       setState(() {
         _messages = res;
       });
