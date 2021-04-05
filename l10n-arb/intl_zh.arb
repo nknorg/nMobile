@@ -1810,5 +1810,10 @@
     "@tip_switch_success": {
       "type": "text",
       "placeholders": {}
-    }
+  },
+  "tip_ask_group_owner_permission": "您已不在此群，联系群主邀请您",
+    "@tip_ask_group_owner_permission": {
+      "type": "text",
+      "placeholders": {}
+  }
 }
