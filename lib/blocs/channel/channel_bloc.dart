@@ -45,28 +45,27 @@ class ChannelBloc extends Bloc<ChannelMembersEvent, ChannelState> {
     for (final sub in subscribers) {
       if (sub.chatId.length < 64) {
         NLog.w('chatID is_____' + sub.chatId.toString());
-        break;
       }
-      if (sub.chatId.contains('__permission__')) {
+      else if (sub.chatId.contains('__permission__')) {
         NLog.w('chatID is_____' + sub.chatId.toString());
-        break;
       }
+      else{
+        final contactType = sub.chatId == NKNClientCaller.currentChatId
+            ? ContactType.me
+            : ContactType.stranger;
+        ContactSchema cta =
+            await ContactSchema.fetchContactByAddress(sub.chatId) ??
+                ContactSchema(clientAddress: sub.chatId, type: contactType);
 
-      final contactType = sub.chatId == NKNClientCaller.currentChatId
-          ? ContactType.me
-          : ContactType.stranger;
-      ContactSchema cta =
-          await ContactSchema.fetchContactByAddress(sub.chatId) ??
-              ContactSchema(clientAddress: sub.chatId, type: contactType);
-
-      MemberVo member = MemberVo(
-        name: cta.getShowName,
-        chatId: sub.chatId,
-        indexPermiPage: sub.indexPermiPage,
-        contact: cta,
-        memberStatus: sub.memberStatus,
-      );
-      list.add(member);
+        MemberVo member = MemberVo(
+          name: cta.getShowName,
+          chatId: sub.chatId,
+          indexPermiPage: sub.indexPermiPage,
+          contact: cta,
+          memberStatus: sub.memberStatus,
+        );
+        list.add(member);
+      }
     }
     NLog.w('Got Own subscribers List is____' + list.length.toString());
     yield FetchOwnChannelMembersState(list);
