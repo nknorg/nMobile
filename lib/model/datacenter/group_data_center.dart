@@ -311,54 +311,6 @@ class GroupDataCenter{
     return false;
   }
 
-  // static Future<bool> checkMemberIsInGroup(Subscriber sub) async{
-  //   int pageIndex = 0;
-  //   if (sub.indexPermiPage > 0){
-  //     pageIndex = sub.indexPermiPage;
-  //   }
-  //
-  //   final owner = getPubkeyFromTopicOrChatId(sub.topic);
-  //   String indexWithPubKey = '__${pageIndex}__.__permission__.'+owner;
-  //   final topicHashed = genTopicHash(sub.topic);
-  //
-  //   var subscription =
-  //       await NKNClientCaller.getSubscription(
-  //     topicHash: topicHashed,
-  //     subscriber: indexWithPubKey,
-  //   );
-  //
-  //   final meta = subscription['meta'] as String;
-  //   NLog.w('meta is____'+meta.toString());
-  //
-  //   final json = jsonDecode(meta);
-  //   NLog.w('Json is____'+json.toString());
-  //   final List accept = json["accept"];
-  //   final List reject = json["reject"];
-  //   if (accept.length > 0){
-  //     for (int i = 0; i < accept.length; i++){
-  //       Map memberInfo = accept[i];
-  //       if (memberInfo['addr'] == sub.chatId){
-  //         subRepo.updateMemberStatus(sub, MemberStatus.MemberSubscribed);
-  //         return true;
-  //       }
-  //     }
-  //   }
-  //   var subs = await NKNClientCaller.getSubscribers(
-  //       topicHash: topicHashed,
-  //       offset: 0,
-  //       limit: 10000,
-  //       meta: true,
-  //       txPool: true
-  //   );
-  //   if (subs == null){
-  //     return false;
-  //   }
-  //   if (subs.keys.contains(sub.chatId)){
-  //     return true;
-  //   }
-  //   return false;
-  // }
-
   static Future<bool> isTopicExist(String topicName) async{
     Topic topic = await topicRepo.getTopicByName(topicName);
     if (topic != null){
@@ -460,12 +412,14 @@ class GroupDataCenter{
           Subscriber subscriber = await subRepo.getByTopicAndChatId(topicName, address);
           if (subscriber != null){
             if (subscriber.chatId.contains('.__permission__.')){
-              NLog.w('pullPrivateSubscribers MEET__'+address.toString());
               await subRepo.delete(subscriber.topic, subscriber.chatId);
               /// do not need to handle private Group permission List for normal member.
               /// The List it under private group owner's control
             }
             else{
+              NLog.w('subscriber.memberStatus MEET__'+subscriber.memberStatus.toString());
+              NLog.w('subscriber.chatId MEET__'+subscriber.chatId.toString());
+
               if (subscriber.memberStatus <= MemberStatus.MemberSubscribed){
                 if (address == owner){
                   await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
@@ -553,7 +507,8 @@ class GroupDataCenter{
                     if (sub.memberStatus == MemberStatus.MemberPublished){
                       await subRepo.updateMemberStatus(sub, MemberStatus.MemberSubscribed);
                     }
-                    else if (sub.memberStatus == MemberStatus.MemberSubscribed){
+                    else if (sub.memberStatus == MemberStatus.MemberSubscribed ||
+                             sub.memberStatus == MemberStatus.MemberPublishRejected){
                       /// do nothing because MemberSubscribed
                     }
                     else{
@@ -586,7 +541,13 @@ class GroupDataCenter{
                   Subscriber sub = await subRepo.getByTopicAndChatId(topicName, address);
                   if (sub != null){
                     await subRepo.updatePermitIndex(sub, pageIndex);
-                    await subRepo.updateMemberStatus(sub, MemberStatus.MemberPublishRejected);
+                    if(sub.memberStatus == MemberStatus.MemberInvited){
+
+                    }
+                    else{
+                      NLog.w('!!!!!!!+++++'+sub.memberStatus.toString());
+                      await subRepo.updateMemberStatus(sub, MemberStatus.MemberPublishRejected);
+                    }
                     NLog.w('pullPrivateSubscribers update To MemberPublishRejected!!!'+pageIndex.toString());
                   }
                   else{

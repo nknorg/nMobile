@@ -178,6 +178,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
         if (owner == NKNClientCaller.currentChatId) {
           _updatePrivateTopicBlockHeight(topic);
         }
+        _channelBloc.add(ChannelMemberCountEvent(currentTopic.topic));
       }
       else{
         NLog.w('Enter Public Topic___'+topicName);

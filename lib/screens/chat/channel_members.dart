@@ -429,6 +429,7 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
           await GroupDataCenter.updatePrivatePermissionList(widget.topic.topic, member.chatId, true);
         }
         showToast(NL10ns.of(context).invitation_sent);
+        _inviteMessage(member.chatId);
         _refreshMemberList();
       }
 
