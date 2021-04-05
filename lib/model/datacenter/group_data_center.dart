@@ -799,6 +799,9 @@ class GroupDataCenter{
       if (nonEmpty(topicHash) && topicHash.length < 32){
         NLog.w('Wrong!!! topicHash is less then 32');
       }
+      callback(true, null);
+
+      await GroupDataCenter.pullPrivateSubscribers(topicName);
       var sendMsg = MessageSchema.fromSendData(
         from: NKNClientCaller.currentChatId,
         topic: topicName,
@@ -806,9 +809,7 @@ class GroupDataCenter{
       );
       sendMsg.content = sendMsg.toEventSubscribeData();
       chatBloc.add(SendMessageEvent(sendMsg));
-      callback(true, null);
-      showToast('success');
-      callback(true, null);
+
     } catch (e) {
       if (e != null) {
         NLog.w('Group_Chat_Helper__ got Exception:' + e.toString());
