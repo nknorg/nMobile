@@ -407,9 +407,14 @@ class GroupDataCenter{
         String address = subscribersMap.keys.elementAt(i);
 
         String permissionAddressReg = '.__permission__.';
+        Subscriber subscriber = await subRepo.getByTopicAndChatId(topicName, address);
+        if (subscriber.chatId.contains('.__permission__.')){
+          await subRepo.delete(subscriber.topic, subscriber.chatId);
+          /// do not need to handle private Group permission List for normal member.
+          /// The List it under private group owner's control
+        }
         if (address.contains(permissionAddressReg) == false){
           await GroupDataCenter.checkContactIfExists(address);
-          Subscriber subscriber = await subRepo.getByTopicAndChatId(topicName, address);
           if (subscriber != null){
             if (subscriber.chatId.contains('.__permission__.')){
               await subRepo.delete(subscriber.topic, subscriber.chatId);
@@ -417,9 +422,6 @@ class GroupDataCenter{
               /// The List it under private group owner's control
             }
             else{
-              NLog.w('subscriber.memberStatus MEET__'+subscriber.memberStatus.toString());
-              NLog.w('subscriber.chatId MEET__'+subscriber.chatId.toString());
-
               if (subscriber.memberStatus <= MemberStatus.MemberSubscribed){
                 if (address == owner){
                   await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
@@ -510,6 +512,12 @@ class GroupDataCenter{
                     else if (sub.memberStatus == MemberStatus.MemberSubscribed ||
                              sub.memberStatus == MemberStatus.MemberPublishRejected){
                       /// do nothing because MemberSubscribed
+                      if (owner == NKNClientCaller.currentChatId){
+
+                      }
+                      else{
+                        await subRepo.updateMemberStatus(sub, MemberStatus.MemberSubscribed);
+                      }
                     }
                     else{
                       await subRepo.updateMemberStatus(sub, MemberStatus.MemberInvited);
