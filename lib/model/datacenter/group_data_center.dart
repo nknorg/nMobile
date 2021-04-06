@@ -550,7 +550,12 @@ class GroupDataCenter{
                   if (sub != null){
                     await subRepo.updatePermitIndex(sub, pageIndex);
                     if(sub.memberStatus == MemberStatus.MemberInvited){
+                      if (owner == NKNClientCaller.currentChatId){
 
+                      }
+                      else{
+                        await subRepo.updateMemberStatus(sub, MemberStatus.MemberPublishRejected);
+                      }
                     }
                     else{
                       NLog.w('!!!!!!!+++++'+sub.memberStatus.toString());
