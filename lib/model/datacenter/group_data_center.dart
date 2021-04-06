@@ -723,6 +723,18 @@ class GroupDataCenter{
         await GroupChatHelper.insertTopicIfNotExists(topicName);
       }
 
+      List<Subscriber> allSubs = await SubscriberRepo().getAllMemberWithNoMemberStatus(topicName);
+      for (Subscriber oldSub in allSubs){
+        if (subscribers.keys.contains(oldSub.chatId)){
+          NLog.w('Contains______'+oldSub.chatId.toString());
+        }
+        else{
+          NLog.w('ContainsNO______'+oldSub.chatId.toString());
+          NLog.w('ContainsNOxx______'+oldSub.memberStatus.toString());
+          await subRepo.delete(topicName, oldSub.chatId);
+        }
+      }
+
       for (String chatId in subscribers.keys) {
         NLog.w('pullSubscribersPublicChannel sub is___'+chatId.toString());
         await GroupDataCenter.checkContactIfExists(chatId);

@@ -84,10 +84,6 @@
  * Set sets an element of the BytesArray.
  */
 - (void)set:(long)i b:(NSData* _Nullable)b;
-/**
- * Set nil of the BytesArray.
- */
-- (void)setNil:(long)i;
 @end
 
 /**

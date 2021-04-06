@@ -1599,7 +1599,14 @@ FOUNDATION_EXPORT NknNode* _Nullable NknGetWssAddr(NSString* _Nullable clientAdd
 // skipped function GetWssAddrContext with unsupported parameter or return types
 
 
-FOUNDATION_EXPORT NknStringArray* _Nullable NknMeasureSeedRPCServer(NknStringArray* _Nullable seedRpcList, int32_t timeout, NSError* _Nullable* _Nullable error);
+/**
+ * MeasureSeedRPCServer wraps MeasureSeedRPCServerContext with background
+context.
+ */
+FOUNDATION_EXPORT NknStringArray* _Nullable NknMeasureSeedRPCServer(NknStringArray* _Nullable seedRPCList, int32_t timeout, NSError* _Nullable* _Nullable error);
+
+// skipped function MeasureSeedRPCServerContext with unsupported parameter or return types
+
 
 /**
  * MergeClientConfig merges a given client config with the default client config
