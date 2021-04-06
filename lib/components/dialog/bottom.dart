@@ -16,8 +16,8 @@ import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/schemas/contact.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/contact.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
 import 'package:nmobile/utils/extensions.dart';
@@ -46,7 +46,8 @@ class BottomDialog extends StatefulWidget {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
       backgroundColor: DefaultTheme.backgroundLightColor,
       builder: (BuildContext context) {
         return AnimatedPadding(
@@ -58,27 +59,28 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  _openBiometric()async{
-    final success = await LocalAuthenticationService.instance.authenticateIfMay();
-    if (success){
-      LocalStorage().set('${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}', true);
+  _openBiometric() async {
+    final success =
+        await LocalAuthenticationService.instance.authenticateIfMay();
+    if (success) {
+      LocalStorage()
+          .set('${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}', true);
     }
     Navigator.pop(context);
   }
 
-  showOpenBiometric() async{
+  showOpenBiometric() async {
     double height = 300;
     show<String>(
       height: height,
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: 'Enable It!',
-          width: double.infinity,
-          onPressed:(){
-            _openBiometric();
-          }
-        ),
+            text: 'Enable It!',
+            width: double.infinity,
+            onPressed: () {
+              _openBiometric();
+            }),
       ),
       builder: (context) => GestureDetector(
         onTap: () {
@@ -120,10 +122,16 @@ class BottomDialog extends StatefulWidget {
                     Container(
                       width: 48,
                       height: 48,
-                      margin: const EdgeInsets.only(top: 10,),
+                      margin: const EdgeInsets.only(
+                        top: 10,
+                      ),
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(color: Colours.blue_0f_a1p, borderRadius: BorderRadius.circular(8)),
-                      child: Center(child: loadAssetIconsImage('lock', width: 24, color: DefaultTheme.primaryColor)),
+                      decoration: BoxDecoration(
+                          color: Colours.blue_0f_a1p,
+                          borderRadius: BorderRadius.circular(8)),
+                      child: Center(
+                          child: loadAssetIconsImage('lock',
+                              width: 24, color: DefaultTheme.primaryColor)),
                     ),
                     Spacer(),
                   ],
@@ -136,7 +144,7 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  Future<String> showInputPasswordDialog({@required String title}) async{
+  Future<String> showInputPasswordDialog({@required String title}) async {
     TextEditingController _passwordController = TextEditingController();
     double height = 280;
 
@@ -193,7 +201,11 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  showAcceptDialog({@required String title, String subTitle, String content, @required VoidCallback onPressed}) {
+  showAcceptDialog(
+      {@required String title,
+      String subTitle,
+      String content,
+      @required VoidCallback onPressed}) {
     double height = 300;
     return show<String>(
       height: height,
@@ -317,7 +329,9 @@ class BottomDialog extends StatefulWidget {
                         hintText: hint,
                         suffixIcon: GestureDetector(
                           onTap: () async {
-                            var contact = await Navigator.of(context).pushNamed(ContactHome.routeName, arguments: true);
+                            var contact = await Navigator.of(context).pushNamed(
+                                ContactHome.routeName,
+                                arguments: true);
                             if (contact is ContactSchema) {
                               _addressController.text = contact.clientAddress;
                             }
@@ -339,20 +353,6 @@ class BottomDialog extends StatefulWidget {
       ),
     );
   }
-
-//  showInputChannelDialog({@required String title}) {
-//    return show<String>(
-//      builder: (context) => GestureDetector(
-//        onTap: () {
-//          FocusScope.of(context).requestFocus(FocusNode());
-//        },
-//        child: InputChannelDialog(
-//          title: title,
-//          updateHeight: updateHeight,
-//        ),
-//      ),
-//    );
-//  }
 
   showQrcodeDialog({@required String title, String data}) {
     double height = 500;
@@ -415,8 +415,12 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  showSelectWalletDialog({@required String title, bool onlyNkn = false, void callback(WalletSchema wallet)}) {
-    FilteredWalletsBloc _filteredWalletsBloc = BlocProvider.of<FilteredWalletsBloc>(context);
+  showSelectWalletDialog(
+      {@required String title,
+      bool onlyNkn = false,
+      void callback(WalletSchema wallet)}) {
+    FilteredWalletsBloc _filteredWalletsBloc =
+        BlocProvider.of<FilteredWalletsBloc>(context);
     double height = 300;
     return show<String>(
       height: height,
@@ -441,7 +445,11 @@ class BottomDialog extends StatefulWidget {
                 child: BlocBuilder<WalletsBloc, WalletsState>(
                   builder: (context, state) {
                     if (state is WalletsLoaded) {
-                      final wallets = onlyNkn ? state.wallets.where((w) => w.type == WalletSchema.NKN_WALLET).toList() : state.wallets;
+                      final wallets = onlyNkn
+                          ? state.wallets
+                              .where((w) => w.type == WalletSchema.NKN_WALLET)
+                              .toList()
+                          : state.wallets;
                       return ListView.builder(
                         itemCount: wallets.length,
                         itemExtent: 74,
@@ -454,7 +462,8 @@ class BottomDialog extends StatefulWidget {
                               if (callback != null) {
                                 callback(wallet);
                               }
-                              _filteredWalletsBloc.add(LoadWalletFilter((x) => x.address == wallet.address));
+                              _filteredWalletsBloc.add(LoadWalletFilter(
+                                  (x) => x.address == wallet.address));
                               close();
                             },
                             child: Column(
@@ -472,9 +481,12 @@ class BottomDialog extends StatefulWidget {
                                             alignment: Alignment.center,
                                             decoration: BoxDecoration(
                                               color: Colours.light_ff,
-                                              borderRadius: BorderRadius.all(Radius.circular(8)),
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(8)),
                                             ),
-                                            child: SvgPicture.asset('assets/logo.svg', color: Colours.purple_2e),
+                                            child: SvgPicture.asset(
+                                                'assets/logo.svg',
+                                                color: Colours.purple_2e),
                                           ).pad(r: 16, t: 12, b: 12),
                                           wallet.type == WalletSchema.NKN_WALLET
                                               ? Space.empty
@@ -485,8 +497,12 @@ class BottomDialog extends StatefulWidget {
                                                     width: 20,
                                                     height: 20,
                                                     alignment: Alignment.center,
-                                                    decoration: BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
-                                                    child: SvgPicture.asset('assets/ethereum-logo.svg'),
+                                                    decoration: BoxDecoration(
+                                                        color:
+                                                            Colours.purple_53,
+                                                        shape: BoxShape.circle),
+                                                    child: SvgPicture.asset(
+                                                        'assets/ethereum-logo.svg'),
                                                   ),
                                                 )
                                         ],
@@ -495,22 +511,31 @@ class BottomDialog extends StatefulWidget {
                                     Expanded(
                                       flex: 1,
                                       child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: <Widget>[
-                                          Label(wallet.name, type: LabelType.h3).pad(b: 4),
-                                          BlocBuilder<WalletsBloc, WalletsState>(
+                                          Label(wallet.name, type: LabelType.h3)
+                                              .pad(b: 4),
+                                          BlocBuilder<WalletsBloc,
+                                              WalletsState>(
                                             builder: (context, state) {
                                               if (state is WalletsLoaded) {
-                                                var w = state.wallets.firstWhere((x) => x == wallet);
+                                                var w = state.wallets
+                                                    .firstWhere(
+                                                        (x) => x == wallet);
                                                 if (w != null) {
                                                   return Label(
-                                                    Format.nknFormat(w.balance, decimalDigits: 4, symbol: 'NKN'),
+                                                    Format.nknFormat(w.balance,
+                                                        decimalDigits: 4,
+                                                        symbol: 'NKN'),
                                                     type: LabelType.bodySmall,
                                                   );
                                                 }
                                               }
-                                              return Label('-- NKN', type: LabelType.bodySmall);
+                                              return Label('-- NKN',
+                                                  type: LabelType.bodySmall);
                                             },
                                           ),
                                         ],
@@ -519,33 +544,62 @@ class BottomDialog extends StatefulWidget {
                                     Expanded(
                                       flex: 0,
                                       child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           wallet.type == WalletSchema.NKN_WALLET
                                               ? Container(
                                                   alignment: Alignment.center,
                                                   padding: 2.pad(l: 8, r: 8),
-                                                  decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.green_06_a1p),
+                                                  decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              Radius.circular(
+                                                                  9)),
+                                                      color:
+                                                          Colours.green_06_a1p),
                                                   child: Text(
                                                     NL10ns.of(context).mainnet,
-                                                    style: TextStyle(color: Colours.green_06, fontSize: 10, fontWeight: FontWeight.bold),
+                                                    style: TextStyle(
+                                                        color: Colours.green_06,
+                                                        fontSize: 10,
+                                                        fontWeight:
+                                                            FontWeight.bold),
                                                   ),
                                                 )
                                               : Container(
                                                   alignment: Alignment.center,
                                                   padding: 2.pad(l: 8, r: 8),
-                                                  decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.purple_53_a1p),
+                                                  decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              Radius.circular(
+                                                                  9)),
+                                                      color: Colours
+                                                          .purple_53_a1p),
                                                   child: Text(
                                                     NL10ns.of(context).ERC_20,
-                                                    style: TextStyle(color: Colours.purple_53, fontSize: 10, fontWeight: FontWeight.bold),
+                                                    style: TextStyle(
+                                                        color:
+                                                            Colours.purple_53,
+                                                        fontSize: 10,
+                                                        fontWeight:
+                                                            FontWeight.bold),
                                                   ),
                                                 ),
-                                          (wallet.type == WalletSchema.NKN_WALLET
+                                          (wallet.type ==
+                                                      WalletSchema.NKN_WALLET
                                                   ? Space.empty
-                                                  : BlocBuilder<WalletsBloc, WalletsState>(builder: (context, state) {
+                                                  : BlocBuilder<WalletsBloc,
+                                                          WalletsState>(
+                                                      builder:
+                                                          (context, state) {
                                                       return Label(
-                                                        Format.nknFormat(wallet.balanceEth, symbol: 'ETH'),
-                                                        type: LabelType.bodySmall,
+                                                        Format.nknFormat(
+                                                            wallet.balanceEth,
+                                                            symbol: 'ETH'),
+                                                        type:
+                                                            LabelType.bodySmall,
                                                       );
                                                     }))
                                               .pad(t: 8),
@@ -554,7 +608,8 @@ class BottomDialog extends StatefulWidget {
                                     ),
                                   ],
                                 ),
-                                Container(height: 1, color: Colours.light_e9).pad(l: 64),
+                                Container(height: 1, color: Colours.light_e9)
+                                    .pad(l: 64),
                               ],
                             ),
                           );
@@ -570,7 +625,11 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  showBottomDialog({@required String title, @required Widget child, Widget action, double height = 300}) {
+  showBottomDialog(
+      {@required String title,
+      @required Widget child,
+      Widget action,
+      double height = 300}) {
     return show<String>(
       height: height,
       action: action,
@@ -610,7 +669,8 @@ class BottomDialog extends StatefulWidget {
   }
 }
 
-class _BottomDialogState extends State<BottomDialog> with SingleTickerProviderStateMixin {
+class _BottomDialogState extends State<BottomDialog>
+    with SingleTickerProviderStateMixin {
   double _dy = 0;
   double _height = 300;
   double _dragHeight = 24;
@@ -632,10 +692,12 @@ class _BottomDialogState extends State<BottomDialog> with SingleTickerProviderSt
       _animationController.forward();
     };
     _currentHeight = _minHeight = widget.height ?? _height;
-    _animationController = new AnimationController(duration: const Duration(milliseconds: 200), vsync: this)
+    _animationController = new AnimationController(
+        duration: const Duration(milliseconds: 200), vsync: this)
       ..addListener(() {
         setState(() {
-          _tweenHeight = (_height - _currentHeight) * _animationController.value;
+          _tweenHeight =
+              (_height - _currentHeight) * _animationController.value;
           _currentHeight = _currentHeight + _tweenHeight;
         });
       });

@@ -11,9 +11,8 @@ import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/blocs/wallet/wallets_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallets_event.dart';
 import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/model/db/contact_repo.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/utils/log_tag.dart';
 
@@ -27,7 +26,8 @@ const _INITIALIZED = "initialized";
 const LOG _LOG = LOG('AndroidMessagingService');
 
 class AndroidMessagingService {
-  static const MethodChannel _configChannel = MethodChannel(_CONFIG_CHANNEL_NAME);
+  static const MethodChannel _configChannel =
+      MethodChannel(_CONFIG_CHANNEL_NAME);
 
   static Future<bool> registerNativeCallback() async {
     Completer completer = new Completer<bool>();
@@ -37,7 +37,9 @@ class AndroidMessagingService {
       PluginUtilities.getCallbackHandle(_realCallback).toRawHandle(),
     ];
 
-    _configChannel.invokeMethod(_CONFIG_METHOD_NAME, args).then((dynamic success) {
+    _configChannel
+        .invokeMethod(_CONFIG_METHOD_NAME, args)
+        .then((dynamic success) {
       completer.complete(true);
     }).catchError((error) {
       _LOG.e('registerNativeCallback ‼️', error);
@@ -60,7 +62,8 @@ Future<void> _onNativeReady() async {
   walletBloc.add(LoadWallets());
 
   WalletSchema wallet = await TimerAuth.loadCurrentWallet();
-  String password = await TimerAuth.instance.onCheckAuthGetPassword(Global.appContext);
+  String password =
+      await TimerAuth.instance.onCheckAuthGetPassword(Global.appContext);
   _clientBloc.add(NKNCreateClientEvent(wallet, password));
 }
 

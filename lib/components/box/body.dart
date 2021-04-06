@@ -28,7 +28,8 @@ class _BodyBoxState extends State<BodyBox> {
           Expanded(
             flex: 1,
             child: Container(
-              padding: widget.padding ?? const EdgeInsets.only(top: 32, left: 20, right: 20),
+              padding: widget.padding ??
+                  const EdgeInsets.only(top: 32, left: 20, right: 20),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(0)),
               ),

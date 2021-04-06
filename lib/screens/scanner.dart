@@ -1,10 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/components/button_icon.dart';
-import 'package:nmobile/components/button.dart';
 import 'package:nmobile/consts/theme.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'package:qr_code_scanner/qr_scanner_overlay_shape.dart';
 
 const flash_on = "FLASH ON";
 const flash_off = "FLASH OFF";
@@ -20,15 +21,27 @@ class ScannerScreen extends StatefulWidget {
 }
 
 class ScannerScreenState extends State<ScannerScreen> {
-  var _data;
+  Barcode _result;
   var flashState = flash_on;
   var cameraState = front_camera;
   QRViewController controller;
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
 
+  bool popBack;
+
+  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   @override
   void initState() {
     super.initState();
+    popBack = false;
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    if (Platform.isAndroid) {
+      controller.pauseCamera();
+    }
+    controller.resumeCamera();
   }
 
   _isFlashOn(String current) {
@@ -40,11 +53,20 @@ class ScannerScreenState extends State<ScannerScreen> {
   }
 
   void _onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
+    setState(() {
+      this.controller = controller;
+    });
 
     controller.scannedDataStream.listen((scanData) {
-      Navigator.of(context).pop(scanData);
-      controller?.dispose();
+      _result = scanData;
+      setState(() {
+        if (popBack == false){
+          _result = scanData;
+          Navigator.of(context).pop(_result.code);
+        }
+        popBack = true;
+        NLog.w('Result is___'+_result.code.toString());
+      });
     });
   }
 
@@ -95,7 +117,9 @@ class ScannerScreenState extends State<ScannerScreen> {
             child: SafeArea(
               child: ButtonIcon(
                 icon: Icon(
-                  _isFlashOn(flashState) ? FontAwesomeIcons.lightbulb : FontAwesomeIcons.solidLightbulb,
+                  _isFlashOn(flashState)
+                      ? FontAwesomeIcons.lightbulb
+                      : FontAwesomeIcons.solidLightbulb,
                   size: 50,
                   color: DefaultTheme.primaryColor,
                 ),

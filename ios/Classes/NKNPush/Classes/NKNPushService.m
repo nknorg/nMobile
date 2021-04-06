@@ -10,6 +10,8 @@
 
 #import "NWSecTools.h"
 
+#import <Nkn/Nkn.h>
+
 #define Push_Developer   "gateway.sandbox.push.apple.com"
 #define Push_Production  "gateway.push.apple.com"
 
@@ -17,20 +19,21 @@
 #define APNSPushFileName            @""
 #define APNSPushPassword            @""
 
-@implementation NKNPushService 
+@implementation NKNPushService
 
 static NKNPushService * sharedService = nil;
 + (NKNPushService *)sharedService{
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        sharedService = [[NKNPushService alloc] init];
+        sharedService = [[self alloc] init];
     });
     return sharedService;
 }
 
 - (void)connectAPNS{
-    _serial = dispatch_queue_create("NKNPushService", DISPATCH_QUEUE_SERIAL);
-    
+    if(_serial == nil){
+        _serial = dispatch_queue_create("NKNPushService", DISPATCH_QUEUE_CONCURRENT);
+    }
     // If you want to add APNS, locate your own p12 or .cer file here
     NSURL *url = [NSBundle.mainBundle URLForResource:APNSPushFileName withExtension:nil];
     NSData *pkcs12 = [NSData dataWithContentsOfURL:url];
@@ -55,16 +58,19 @@ static NKNPushService * sharedService = nil;
     }
     
     NSLog(@"Connecting..");
+    __block NWHub * blockHub = _hub;
+    __block NWCertificateRef blockCertificate = _certificate;
+    __block NWIdentityRef blockIdentity = _identity;
     dispatch_async(_serial, ^{
         NSError *error = nil;
-        NWEnvironment preferredEnvironment = [self preferredEnvironmentForCertificate:_certificate];
-        NWHub *hub = [NWHub connectWithDelegate:self identity:_identity environment:preferredEnvironment error:&error];
+        NWEnvironment preferredEnvironment = [self preferredEnvironmentForCertificate:blockCertificate];
+        NWHub *hub = [NWHub connectWithDelegate:self identity:blockIdentity environment:NWEnvironmentProduction error:&error];
 
         dispatch_async(dispatch_get_main_queue(), ^{
             if (hub) {
-                NSString *summary = [NWSecTools summaryWithCertificate:_certificate];
+                NSString *summary = [NWSecTools summaryWithCertificate:blockCertificate];
                 NSLog(@"Connected to APN: %@ (%@)", summary, descriptionForEnvironent(preferredEnvironment));
-                _hub = hub;
+                blockHub = hub;
             }
             else
             {
@@ -72,6 +78,12 @@ static NKNPushService * sharedService = nil;
             }
         });
     });
+}
+
+- (void)disConnectAPNS{
+    if (_hub){
+        [_hub disconnect];
+    }
 }
 
 -(NWEnvironment)preferredEnvironmentForCertificate:(NWCertificateRef)certificate
@@ -122,25 +134,28 @@ static NKNPushService * sharedService = nil;
     NSLog(@"Pushing..");
     NSLog(@"Push Content %@ With Token %@",pushContent,pushToken);
     
-//    if (_hub){
-//        [_hub disconnect];
-//    }
     NSString *payload = [NSString stringWithFormat:@"{\"aps\":{\"alert\":\"%@\",\"badge\":1,\"sound\":\"default\"}}", pushContent];
-    payload = @"{\"aps\":{\"alert\":"",\"content-available\":1}}";
-    NSString *token = pushToken;
+//    NSString *token = pushToken;
+    
+    __block NSString * blockPayload = payload;
+    __block NSString * blockToken = pushToken;
+    __block NWHub * blockHub = _hub;
+    __block NWCertificateRef blockCertificate = _certificate;
+    __block NWIdentityRef blockIdentity = _identity;
+    
+    if(_serial == nil){
+        _serial = dispatch_queue_create("NKNPushService", DISPATCH_QUEUE_CONCURRENT);
+    }
+    __block dispatch_queue_t blockSerailQueue = _serial;
     dispatch_async(_serial, ^{
         NSError *error = nil;
-        NWEnvironment preferredEnvironment = [self preferredEnvironmentForCertificate:_certificate];
-        _hub = [NWHub connectWithDelegate:self identity:_identity environment:preferredEnvironment error:&error];
+        NWEnvironment preferredEnvironment = [self preferredEnvironmentForCertificate:blockCertificate];
+        blockHub = [NWHub connectWithDelegate:self identity:blockIdentity environment:NWEnvironmentProduction error:&error];
 
-//        NSURL *url = [NSBundle.mainBundle URLForResource:@"nkn.p12" withExtension:nil];
-//        NSData *pkcs12 = [NSData dataWithContentsOfURL:url];
-//        NWHub * hub = [NWHub connectWithDelegate:self PKCS12Data:pkcs12 password:@"nkn_5905aa60af025ac8_NKN" environment:preferredEnvironment error:&error];
         dispatch_async(dispatch_get_main_queue(), ^{
-            if (_hub) {
-                NSString *summary = [NWSecTools summaryWithCertificate:_certificate];
-                NSLog(@"Connected to APN: %@ (%@)", summary, descriptionForEnvironent(preferredEnvironment));
-//                _hub = hub;
+            if (blockHub) {
+                NSString *summary = [NWSecTools summaryWithCertificate:blockCertificate];
+                NSLog(@"Prepare to Send Message wire APNS: %@ (%@)", summary, descriptionForEnvironent(preferredEnvironment));
             }
             else
             {
@@ -148,10 +163,10 @@ static NKNPushService * sharedService = nil;
             }
         });
 
-        NSUInteger failed = [_hub pushPayload:payload token:token];
+        NSUInteger failed = [blockHub pushPayload:blockPayload token:blockToken];
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC));
-        dispatch_after(popTime, _serial, ^(void){
-            NSUInteger failed2 = failed + [_hub readFailed];
+        dispatch_after(popTime, blockSerailQueue, ^(void){
+            NSUInteger failed2 = failed + [blockHub readFailed];
             if (!failed2) NSLog(@"Payload has been pushed");
         });
     });
@@ -161,7 +176,137 @@ static NKNPushService * sharedService = nil;
     dispatch_async(dispatch_get_main_queue(), ^{
            //NSLog(@"failed notification: %@ %@ %lu %lu %lu", notification.payload, notification.token, notification.identifier, notification.expires, notification.priority);
            NSLog(@"Notification error: %@", error.localizedDescription);
-       });
+        
+    });
+}
+
+- (NSString *)combinePieces:(NSArray *)dataPieces dataShard:(NSInteger)dataPiece parityShards:(NSInteger)parityPiece bytesLength:(NSInteger)tBytesLength{
+    NSError *error = nil;
+    ReedsolomonEncoder * encoder = [[ReedsolomonEncoder alloc] init];
+    encoder = (ReedsolomonEncoder *)ReedsolomonNewDefault(dataPiece, parityPiece, &error);
+
+    NSInteger byteLength = 0;
+    for (int i = 0; i < dataPieces.count; i++){
+        NSData * pData = [dataPieces objectAtIndex:i];
+        if (pData.length > 0){
+            byteLength = pData.length;
+        }
+    }
+
+    NSInteger combineLength = dataPiece+parityPiece;
+    ReedsolomonBytesArray * encodeBytes = [[ReedsolomonBytesArray alloc] init:combineLength];
+
+    for (int i = 0; i < dataPieces.count; i++){
+        NSData * pData = [dataPieces objectAtIndex:i];
+        if (pData.length > 0){
+            NSMutableData * nData = [[NSMutableData alloc] initWithBytes:pData.bytes length:byteLength];
+            [encodeBytes set:i b:nData];
+            NSLog(@"byteLength______%lu",byteLength);
+        }
+        else{
+            [encodeBytes set:i b:nil];
+        }
+    }
+    BOOL result = [encoder reconstructBytesArray:encodeBytes error:&error];
+    if (result == true){
+        NSLog(@"reconstructBytesArray success");
+        NSMutableData * joinedData = [[NSMutableData alloc] init];
+        if (error == nil){
+            NSLog(@"joinBytesArray success");
+            for (int k = 0; k < dataPiece; k++){
+                NSData * pData = [encodeBytes get:k];
+                NSLog(@"pData byteLength______%lu",pData.length);
+                [joinedData appendData:pData];
+            }
+
+            if (joinedData.length > tBytesLength){
+                joinedData = [NSMutableData dataWithData:[joinedData subdataWithRange:NSMakeRange(0, tBytesLength)]];
+            }
+            NSString * resultString = [[NSString alloc] initWithData:joinedData encoding:NSUTF8StringEncoding];
+            return resultString;
+        }
+        else{
+            NSLog(@"joinBytesArray Error___%@",error.description);
+        }
+    }
+    else{
+        NSLog(@"reconstructBytesArray failed__%@",error.description);
+    }
+    return @"";
+}
+
+- (NSArray<NSData *> *)intoPieces:(NSString *)dataBytesString dataShard:(NSInteger)dataPiece parityShards:(NSInteger)parityPiece{
+    NSError *error = nil;
+    ReedsolomonEncoder * encoder = [[ReedsolomonEncoder alloc] init];
+    encoder = (ReedsolomonEncoder *)ReedsolomonNewDefault(dataPiece, parityPiece, &error);
+            
+    NSMutableArray * resultArray = [NSMutableArray array];
+    
+    NSLog(@"BeforeSplitDataString is____%lu",dataBytesString.length);
+    NSData * splitData = [dataBytesString dataUsingEncoding:NSUTF8StringEncoding];
+    
+    NSInteger combineLength = dataPiece+parityPiece;
+    ReedsolomonBytesArray * encodeBytes = [[ReedsolomonBytesArray alloc] init:combineLength];
+    encodeBytes = [encoder splitBytesArray:splitData error:&error];
+    [encoder encodeBytesArray:encodeBytes error:&error];
+    
+    if (error){
+        NSLog(@"Encode Error,%@",error.description);
+    }
+    else{
+        for (int i = 0; i < encodeBytes.len; i++){
+            NSData * pData = [encodeBytes get:i];
+            [resultArray addObject:pData];
+            NSLog(@"pData hexString Length is___%lu",pData.length);
+            NSLog(@"pData hash is___%lu",pData.hash);
+        }
+    }
+    return resultArray;
+}
+
+#pragma mark-----将十六进制数据转换成NSData
+- (NSData *)dataWithHexString:(NSString*)str{
+    if (!str || [str length] == 0) {
+        return nil;
+    }
+    
+    NSMutableData *hexData = [[NSMutableData alloc] initWithCapacity:8];
+    NSRange range;
+    if ([str length] % 2 == 0) {
+        range = NSMakeRange(0, 2);
+    } else {
+        range = NSMakeRange(0, 1);
+    }
+    for (NSInteger i = range.location; i < [str length]; i += 2) {
+        unsigned int anInt;
+        NSString *hexCharStr = [str substringWithRange:range];
+        NSScanner *scanner = [[NSScanner alloc] initWithString:hexCharStr];
+        
+        [scanner scanHexInt:&anInt];
+        NSData *entity = [[NSData alloc] initWithBytes:&anInt length:1];
+        [hexData appendData:entity];
+        
+        range.location += range.length;
+        range.length = 2;
+    }
+    return hexData;
+    
+}
+
+#pragma mark - 将传入的NSData类型转换成NSString并返回
+- (NSString *)hexStringWithData:(NSData *)data
+{
+    const unsigned char* dataBuffer = (const unsigned char*)[data bytes];
+    if(!dataBuffer){
+        return nil;
+    }
+    NSUInteger dataLength = [data length];
+    NSMutableString* hexString = [NSMutableString stringWithCapacity:(dataLength * 2)];
+    for(int i = 0; i < dataLength; i++){
+        [hexString appendString:[NSString stringWithFormat:@"%02lx", (unsigned long)dataBuffer[i]]];
+    }
+    NSString* result = [NSString stringWithString:hexString];
+    return result;
 }
 
 @end

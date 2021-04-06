@@ -10,7 +10,7 @@ import 'package:nmobile/consts/colors.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/image_utils.dart';
 
@@ -31,7 +31,9 @@ class _WalletDropdownState extends State<WalletDropdown> {
   void initState() {
     super.initState();
     _filteredWalletsBloc = BlocProvider.of<FilteredWalletsBloc>(context);
-    var filter = widget.schema != null ? (x) => x.address == widget.schema.address : null;
+    var filter = widget.schema != null
+        ? (x) => x.address == widget.schema.address
+        : null;
     _filteredWalletsBloc.add(LoadWalletFilter(filter));
   }
 
@@ -53,7 +55,8 @@ class _WalletDropdownState extends State<WalletDropdown> {
             var wallet = state.filteredWallets.first;
             return Container(
               decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: DefaultTheme.backgroundColor2)),
+                border: Border(
+                    bottom: BorderSide(color: DefaultTheme.backgroundColor2)),
               ),
               child: Row(
                 children: [
@@ -69,7 +72,8 @@ class _WalletDropdownState extends State<WalletDropdown> {
                             color: Colours.light_ff,
                             borderRadius: BorderRadius.all(Radius.circular(8)),
                           ),
-                          child: SvgPicture.asset('assets/logo.svg', color: Colours.purple_2e),
+                          child: SvgPicture.asset('assets/logo.svg',
+                              color: Colours.purple_2e),
                         ).pad(r: 16, t: 12, b: 12),
                         wallet.type == WalletSchema.NKN_WALLET
                             ? Space.empty
@@ -80,8 +84,11 @@ class _WalletDropdownState extends State<WalletDropdown> {
                                   width: 20,
                                   height: 20,
                                   alignment: Alignment.center,
-                                  decoration: BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
-                                  child: SvgPicture.asset('assets/ethereum-logo.svg'),
+                                  decoration: BoxDecoration(
+                                      color: Colours.purple_53,
+                                      shape: BoxShape.circle),
+                                  child: SvgPicture.asset(
+                                      'assets/ethereum-logo.svg'),
                                 ),
                               )
                       ],
@@ -95,7 +102,8 @@ class _WalletDropdownState extends State<WalletDropdown> {
                       children: [
                         Label(wallet.name, type: LabelType.h3).pad(b: 4),
                         Label(
-                          Format.nknFormat(wallet.balance, decimalDigits: 4, symbol: 'NKN'),
+                          Format.nknFormat(wallet.balance,
+                              decimalDigits: 4, symbol: 'NKN'),
                           type: LabelType.bodySmall,
                         ),
                       ],
@@ -111,25 +119,38 @@ class _WalletDropdownState extends State<WalletDropdown> {
                             ? Container(
                                 alignment: Alignment.center,
                                 padding: 2.pad(l: 8, r: 8),
-                                decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.green_06_a1p),
+                                decoration: BoxDecoration(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(9)),
+                                    color: Colours.green_06_a1p),
                                 child: Text(
                                   NL10ns.of(context).mainnet,
-                                  style: TextStyle(color: Colours.green_06, fontSize: 10, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                      color: Colours.green_06,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               )
                             : Container(
                                 alignment: Alignment.center,
                                 padding: 2.pad(l: 8, r: 8),
-                                decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: Colours.purple_53_a1p),
+                                decoration: BoxDecoration(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(9)),
+                                    color: Colours.purple_53_a1p),
                                 child: Text(
                                   NL10ns.of(context).ERC_20,
-                                  style: TextStyle(color: Colours.purple_53, fontSize: 10, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                      color: Colours.purple_53,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                         (wallet.type == WalletSchema.NKN_WALLET
                                 ? Space.empty
                                 : Label(
-                                    Format.nknFormat(wallet.balanceEth, symbol: 'ETH'),
+                                    Format.nknFormat(wallet.balanceEth,
+                                        symbol: 'ETH'),
                                     type: LabelType.bodySmall,
                                   ))
                             .pad(t: 8),

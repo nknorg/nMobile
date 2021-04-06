@@ -40,18 +40,25 @@ class _ButtonState extends State<Button> {
     var child = widget.text != null
         ? Text(
             widget.text,
-            style: TextStyle(fontSize: DefaultTheme.h3FontSize, fontWeight: FontWeight.bold, color: widget.fontColor),
+            style: TextStyle(
+                fontSize: DefaultTheme.h3FontSize,
+                fontWeight: FontWeight.bold,
+                color: widget.fontColor),
           )
         : widget.child;
     var height = widget.height ?? 52;
     return (widget.outline
             ? OutlineButton(
-                borderSide: BorderSide(color: widget.disabled ? DefaultTheme.backgroundColor2 : widget.outlineBorderColor),
+                borderSide: BorderSide(
+                    color: widget.disabled
+                        ? DefaultTheme.backgroundColor2
+                        : widget.outlineBorderColor),
                 padding: widget.padding ?? 0.pad(),
                 disabledTextColor: DefaultTheme.fontColor2,
                 color: widget.backgroundColor,
                 child: child,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(height / 2)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(height / 2)),
                 onPressed: widget.disabled ? null : widget.onPressed,
               )
             : FlatButton(
@@ -61,11 +68,16 @@ class _ButtonState extends State<Button> {
                 color: widget.backgroundColor,
                 colorBrightness: Brightness.dark,
                 child: child,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(height / 2)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(height / 2)),
                 onPressed: widget.disabled ? null : widget.onPressed,
               ))
         .sized(
-      w: widget.width == null ? double.infinity : widget.width <= 0 ? null : widget.width,
+      w: widget.width == null
+          ? double.infinity
+          : widget.width <= 0
+              ? null
+              : widget.width,
       h: height,
     );
   }

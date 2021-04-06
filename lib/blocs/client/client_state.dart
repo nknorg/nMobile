@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:nmobile/schemas/client.dart';
-import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/model/entity/message.dart';
 
 abstract class NKNClientState extends Equatable {
   const NKNClientState();
@@ -14,9 +13,7 @@ class NKNNoConnectState extends NKNClientState {}
 class NKNConnectingState extends NKNClientState {}
 
 class NKNConnectedState extends NKNClientState {
-  // NKNConnectedState();
-  final ClientSchema client;
-  MessageSchema message;
+  final MessageSchema message;
 
-  NKNConnectedState({this.client, this.message});
+  NKNConnectedState({this.message});
 }

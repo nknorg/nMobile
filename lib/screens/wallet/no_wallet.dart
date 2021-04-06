@@ -4,7 +4,7 @@ import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn_wallet.dart';
 import 'package:nmobile/screens/wallet/import_nkn_eth_wallet.dart';
 import 'package:nmobile/utils/extensions.dart';
@@ -33,7 +33,9 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
             child: Scrollbar(
               child: SingleChildScrollView(
                 child: Container(
-                  height: screenSize.size.height - screenSize.padding.top - screenSize.padding.bottom,
+                  height: screenSize.size.height -
+                      screenSize.padding.top -
+                      screenSize.padding.bottom,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -41,7 +43,9 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                         flex: 0,
                         child: Padding(
                           padding: EdgeInsets.only(),
-                          child: Image(image: AssetImage('assets/wallet/pig.png'), width: 120),
+                          child: Image(
+                              image: AssetImage('assets/wallet/pig.png'),
+                              width: 120),
                         ),
                       ),
                       Expanded(
@@ -54,7 +58,8 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                               dark: true,
                             ),
                             Padding(
-                              padding: EdgeInsets.only(top: 16, left: 24, right: 24),
+                              padding:
+                                  EdgeInsets.only(top: 16, left: 24, right: 24),
                               child: Label(
                                 NL10ns.of(context).no_wallet_desc,
                                 type: LabelType.h4,
@@ -74,7 +79,8 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                               text: NL10ns.of(context).no_wallet_create,
                               onPressed: () {
 //                                  locator<NavigateService>().pushNamed(CreateNknWalletScreen.routeName);
-                                Navigator.pushNamed(context, CreateNknWalletScreen.routeName);
+                                Navigator.pushNamed(
+                                    context, CreateNknWalletScreen.routeName);
                               },
                             ),
                             Button(
@@ -82,7 +88,9 @@ class _NoWalletScreenState extends State<NoWalletScreen> {
                               backgroundColor: Color(0xFF232D50),
                               onPressed: () {
 //                                  locator<NavigateService>().pushNamed(ImportNknWalletScreen.routeName);
-                                Navigator.pushNamed(context, ImportWalletScreen.routeName, arguments: WalletType.nkn);
+                                Navigator.pushNamed(
+                                    context, ImportWalletScreen.routeName,
+                                    arguments: WalletType.nkn);
                               },
                             ).pad(t: 12),
                           ],

@@ -1760,5 +1760,60 @@
   "@something_went_wrong": {
     "type": "text",
     "placeholders": {}
+  },
+  "unavailable_device": "暂不支持没有Google服务的机型",
+    "@unavailable_device": {
+      "type": "text",
+      "placeholders": {}
+   },
+   "slide_to_cancel": "< 左滑取消 <",
+     "@slide_to_cancel": {
+       "type": "text",
+       "placeholders": {}
+  },
+  "invite_and_send_success": "邀请发送成功",
+    "@invite_and_send_success": {
+      "type": "text",
+      "placeholders": {}
+    },
+  "join_but_not_invite": "未邀请",
+    "@join_but_not_invite": {
+      "type": "text",
+      "placeholders": {}
+  },
+  "invited_already": "你已经邀请过该成员，继续邀请?",
+    "@invited_already": {
+      "type": "text",
+      "placeholders": {}
+  },
+  "group_member_already": "该成员已经加入本群",
+    "@group_member_already": {
+      "type": "text",
+      "placeholders": {}
+  },
+  "invite_yourself_error": "不能邀请你自己!",
+    "@invite_yourself_error": {
+      "type": "text",
+      "placeholders": {}
+  },
+  "member_no_auth_invite": "私有群聊群成员暂不能支持邀请他人，联系群主邀请他人",
+    "@member_no_auth_invite": {
+      "type": "text",
+      "placeholders": {}
+  },
+  "tip_open_send_device_token": "发送你的设备token给他?\n他将可以给你发送远程推送!",
+      "@tip_open_send_device_token": {
+        "type": "text",
+        "placeholders": {}
+  },
+  "tip_switch_success": "切换成功!",
+    "@tip_switch_success": {
+      "type": "text",
+      "placeholders": {}
+  },
+  "tip_ask_group_owner_permission": "您已不在此群，联系群主邀请您",
+    "@tip_ask_group_owner_permission": {
+      "type": "text",
+      "placeholders": {}
   }
 }

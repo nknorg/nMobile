@@ -7,11 +7,13 @@ class CenterAction extends StatefulWidget {
 }
 
 class CenterActionState extends State<CenterAction> {
-
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
-      child: Image.asset('assets/logo.png',height: 30, ),
+      child: Image.asset(
+        'assets/logo.png',
+        height: 30,
+      ),
       onPressed: () => {},
     );
   }

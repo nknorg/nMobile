@@ -11,7 +11,7 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/api.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/schemas/news.dart';
+import 'package:nmobile/model/entity/news.dart';
 import 'package:nmobile/screens/view/news_header_view.dart';
 import 'package:nmobile/utils/image_utils.dart';
 import 'package:nmobile/utils/nkn_date_util.dart';
@@ -23,7 +23,8 @@ class NewsScreen extends StatefulWidget {
   _NewsScreenState createState() => _NewsScreenState();
 }
 
-class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMixin {
+class _NewsScreenState extends State<NewsScreen>
+    with AutomaticKeepAliveClientMixin {
   List<NewsSchema> banners = [];
   List<NewsSchema> lastDatas = [];
   EasyRefreshController _controller;
@@ -118,7 +119,9 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
                           },
                           child: Container(
                             padding: EdgeInsets.all(16.w),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.w)),
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16.w)),
                             child: Row(
                               children: <Widget>[
                                 ClipRRect(
@@ -133,8 +136,10 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
                                 SizedBox(width: 16.w),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
                                       Label(
                                         newsSchema.title,
@@ -159,7 +164,9 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
                                           ),
                                           SizedBox(width: 4.w),
                                           Label(
-                                            NknDateUtil.getNewDate(DateTime.parse(newsSchema.time)),
+                                            NknDateUtil.getNewDate(
+                                                DateTime.parse(
+                                                    newsSchema.time)),
                                             type: LabelType.bodySmall,
                                             color: DefaultTheme.fontColor2,
                                             height: 1.2,
@@ -198,7 +205,8 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
       return Column(
         children: <Widget>[
           Padding(
-            padding: const EdgeInsets.only(top: 16, bottom: 16, left: 20, right: 20),
+            padding:
+                const EdgeInsets.only(top: 16, bottom: 16, left: 20, right: 20),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.start,
@@ -229,7 +237,9 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
                     child: Column(
                       children: <Widget>[
                         ClipRRect(
-                          borderRadius: BorderRadius.only(topLeft: Radius.circular(8.w), topRight: Radius.circular(8.w)),
+                          borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(8.w),
+                              topRight: Radius.circular(8.w)),
                           child: loadNetworkImage(
                             newsSchema.image,
                             fit: BoxFit.cover,
@@ -239,7 +249,11 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
                         ),
                         Container(
                           height: 72.h,
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.only(bottomLeft: Radius.circular(8.w), bottomRight: Radius.circular(8.w))),
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(8.w),
+                                  bottomRight: Radius.circular(8.w))),
                           child: Flex(
                             direction: Axis.horizontal,
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -248,10 +262,12 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
                               Expanded(
                                 flex: 0,
                                 child: Padding(
-                                  padding: const EdgeInsets.only(left: 16, right: 16),
+                                  padding: const EdgeInsets.only(
+                                      left: 16, right: 16),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(40.w),
-                                    child: loadAssetImage('ic_launcher', width: 30.w, fit: BoxFit.cover),
+                                    child: loadAssetImage('ic_launcher',
+                                        width: 30.w, fit: BoxFit.cover),
                                   ),
                                 ),
                               ),
@@ -259,7 +275,8 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
                                 flex: 1,
                                 child: Container(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: <Widget>[
                                       Label(
@@ -269,7 +286,11 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
                                       ),
                                       SizedBox(height: 4.h),
                                       Label(
-                                        NL10ns.of(context).news_from + ' NKN.org - ' + NknDateUtil.getNewDate(DateTime.parse(newsSchema.time)),
+                                        NL10ns.of(context).news_from +
+                                            ' NKN.org - ' +
+                                            NknDateUtil.getNewDate(
+                                                DateTime.parse(
+                                                    newsSchema.time)),
                                         type: LabelType.bodyRegular,
                                         color: DefaultTheme.fontColor2,
                                         height: 1,
@@ -298,8 +319,10 @@ class _NewsScreenState extends State<NewsScreen> with AutomaticKeepAliveClientMi
 
   getCacheData() async {
     if (banners == null || banners.length == 0) {
-      List<NewsSchema> b = SpUtil.getObjList("new_banners", (v) => NewsSchema.fromJson(v));
-      List<NewsSchema> l = SpUtil.getObjList("lastDatas", (v) => NewsSchema.fromJson(v));
+      List<NewsSchema> b =
+          SpUtil.getObjList("new_banners", (v) => NewsSchema.fromJson(v));
+      List<NewsSchema> l =
+          SpUtil.getObjList("lastDatas", (v) => NewsSchema.fromJson(v));
       if (b == null) b = [];
       if (l == null) l = [];
       if (mounted) {

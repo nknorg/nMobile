@@ -11,7 +11,8 @@ class ChangeUpdateContentPage extends StatefulWidget {
   const ChangeUpdateContentPage({Key key, this.arguments}) : super(key: key);
 
   @override
-  ChangeUpdateContentPageState createState() => new ChangeUpdateContentPageState();
+  ChangeUpdateContentPageState createState() =>
+      new ChangeUpdateContentPageState();
 }
 
 class ChangeUpdateContentPageState extends State<ChangeUpdateContentPage> {
@@ -40,14 +41,19 @@ class ChangeUpdateContentPageState extends State<ChangeUpdateContentPage> {
                   child: TextField(
                     controller: _controller,
                     maxLines: 1,
-                    style: TextStyle(fontSize: DefaultTheme.bodyRegularFontSize, color: Color(0xFF2A2A3C)),
+                    style: TextStyle(
+                        fontSize: DefaultTheme.bodyRegularFontSize,
+                        color: Color(0xFF2A2A3C)),
                     decoration: InputDecoration(
                         hintText: widget.arguments['hint'] ?? '',
-                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFDFDFE2), width: 0.6.w)),
+                        enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color(0xFFDFDFE2), width: 0.6.w)),
                         labelStyle: TextStyle(
                           color: Color(0xFFCACACD),
                         ),
-                        contentPadding: EdgeInsets.fromLTRB(0, 14.h, 14.w, 14.h)),
+                        contentPadding:
+                            EdgeInsets.fromLTRB(0, 14.h, 14.w, 14.h)),
                   ),
                 ),
                 SizedBox(width: 20.w)
@@ -55,7 +61,8 @@ class ChangeUpdateContentPageState extends State<ChangeUpdateContentPage> {
             ),
             SizedBox(height: 20.h),
             Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
+              padding: const EdgeInsets.only(
+                  left: 20, right: 20, top: 8, bottom: 34),
               child: Button(
                 text: NL10ns.of(context).save,
                 width: double.infinity,

@@ -10,6 +10,8 @@
 #include "ref.h"
 #include "Universe.objc.h"
 
+#include "Transaction.objc.h"
+#include "Ncp.objc.h"
 
 @class NknAccount;
 @class NknAmount;
@@ -23,6 +25,7 @@
 @class NknNanoPay;
 @class NknNanoPayClaimer;
 @class NknNode;
+@class NknNodeState;
 @class NknOnConnect;
 @class NknOnError;
 @class NknOnMessage;
@@ -67,7 +70,9 @@
 @end
 
 @protocol NknRPCConfigInterface <NSObject>
-- (NSString* _Nonnull)getRandomSeedRPCServerAddr;
+- (int32_t)rpcGetConcurrency;
+- (int32_t)rpcGetRPCTimeout;
+- (NknStringArray* _Nullable)rpcGetSeedRPCServerAddr;
 @end
 
 @protocol NknStringMapFunc <NSObject>
@@ -169,70 +174,75 @@ vice versa.
  */
 - (NSString* _Nonnull)address;
 /**
- * Balance is the same as package level GetBalance, but using connected node as
-the RPC server, followed by this client's SeedRPCServerAddr if failed.
+ * Balance wraps BalanceContext with background context.
  */
 - (NknAmount* _Nullable)balance:(NSError* _Nullable* _Nullable)error;
 /**
- * BalanceByAddress is the same as package level GetBalance, but using connected
-node as the RPC server, followed by this client's SeedRPCServerAddr if
-failed.
+ * BalanceByAddress wraps BalanceByAddressContext with background context.
  */
 - (NknAmount* _Nullable)balanceByAddress:(NSString* _Nullable)address error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.BalanceByAddressContext with unsupported parameter or return types
+
+// skipped method Client.BalanceContext with unsupported parameter or return types
+
 /**
  * Close closes the client.
  */
 - (BOOL)close:(NSError* _Nullable* _Nullable)error;
 /**
- * DeleteName is a shortcut for DeleteName using this client as SignerRPCClient.
+ * DeleteName wraps DeleteNameContext with background context.
  */
 - (NSString* _Nonnull)deleteName:(NSString* _Nullable)name config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.DeleteNameContext with unsupported parameter or return types
+
 // skipped method Client.GetConn with unsupported parameter or return types
 
 /**
- * GetHeight is the same as package level GetHeight, but using connected node as
-the RPC server, followed by this client's SeedRPCServerAddr if failed.
+ * GetHeight wraps GetHeightContext with background context.
  */
 - (BOOL)getHeight:(int32_t* _Nullable)ret0_ error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.GetHeightContext with unsupported parameter or return types
+
 /**
  * GetNode returns the node that client is currently connected to.
  */
 - (NknNode* _Nullable)getNode;
 /**
- * GetNonce is the same as package level GetNonce, but using connected node as
-the RPC server, followed by this client's SeedRPCServerAddr if failed.
+ * GetNonce wraps GetNonceContext with background context.
  */
 - (BOOL)getNonce:(BOOL)txPool ret0_:(int64_t* _Nullable)ret0_ error:(NSError* _Nullable* _Nullable)error;
 /**
- * GetNonceByAddress is the same as package level GetNonce, but using connected
-node as the RPC server, followed by this client's SeedRPCServerAddr if
-failed.
+ * GetNonceByAddress wraps GetNonceByAddressContext with background context.
  */
 - (BOOL)getNonceByAddress:(NSString* _Nullable)address txPool:(BOOL)txPool ret0_:(int64_t* _Nullable)ret0_ error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.GetNonceByAddressContext with unsupported parameter or return types
+
+// skipped method Client.GetNonceContext with unsupported parameter or return types
+
 /**
- * GetRegistrant is the same as package level GetRegistrant, but using connected
-node as the RPC server, followed by this client's SeedRPCServerAddr if
-failed.
+ * GetRegistrant wraps GetRegistrantContext with background context.
  */
 - (NknRegistrant* _Nullable)getRegistrant:(NSString* _Nullable)name error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.GetRegistrantContext with unsupported parameter or return types
+
 /**
- * GetSubscribers is the same as package level GetSubscribers, but using
-connected node as the RPC server, followed by this client's SeedRPCServerAddr
-if failed.
+ * GetSubscribers wraps GetSubscribersContext with background context.
  */
 - (NknSubscribers* _Nullable)getSubscribers:(NSString* _Nullable)topic offset:(long)offset limit:(long)limit meta:(BOOL)meta txPool:(BOOL)txPool error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.GetSubscribersContext with unsupported parameter or return types
+
 /**
- * GetSubscribersCount is the same as package level GetSubscribersCount, but
-using connected node as the RPC server, followed by this client's
-SeedRPCServerAddr if failed.
+ * GetSubscribersCount wraps GetSubscribersCountContext with background context.
  */
 - (BOOL)getSubscribersCount:(NSString* _Nullable)topic ret0_:(long* _Nullable)ret0_ error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.GetSubscribersCountContext with unsupported parameter or return types
+
 /**
- * GetSubscription is the same as package level GetSubscription, but using
-connected node as the RPC server, followed by this client's SeedRPCServerAddr
-if failed.
+ * GetSubscription wraps GetSubscriptionContext with background context.
  */
 - (NknSubscription* _Nullable)getSubscription:(NSString* _Nullable)topic subscriber:(NSString* _Nullable)subscriber error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.GetSubscriptionContext with unsupported parameter or return types
+
 /**
  * IsClosed returns whether the client is closed and should not be used anymore.
  */
@@ -248,7 +258,7 @@ Duration is changed to signed int for gomobile compatibility.
  * NewNanoPayClaimer is a shortcut for NewNanoPayClaimer using this client as
 RPC client.
  */
-- (NknNanoPayClaimer* _Nullable)newNanoPayClaimer:(NSString* _Nullable)recipientAddress claimIntervalMs:(int32_t)claimIntervalMs onError:(NknOnError* _Nullable)onError error:(NSError* _Nullable* _Nullable)error;
+- (NknNanoPayClaimer* _Nullable)newNanoPayClaimer:(NSString* _Nullable)recipientAddress claimIntervalMs:(int32_t)claimIntervalMs minFlushAmount:(NSString* _Nullable)minFlushAmount onError:(NknOnError* _Nullable)onError error:(NSError* _Nullable* _Nullable)error;
 /**
  * PubKey returns the public key of the client.
  */
@@ -270,10 +280,11 @@ compatibility.
  */
 - (void)reconnect;
 /**
- * RegisterName is a shortcut for RegisterName using this client as
-SignerRPCClient.
+ * RegisterName wraps RegisterNameContext with background context.
  */
 - (NSString* _Nonnull)registerName:(NSString* _Nullable)name config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.RegisterNameContext with unsupported parameter or return types
+
 /**
  * Seed returns the secret seed of the client. Secret seed can be used to create
 client/wallet with the same key pair and should be kept secret and safe.
@@ -286,7 +297,11 @@ client/wallet with the same key pair and should be kept secret and safe.
 compatibility.
  */
 - (NknOnMessage* _Nullable)sendBinary:(NknStringArray* _Nullable)dests data:(NSData* _Nullable)data config:(NknMessageConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
-// skipped method Client.SendRawTransaction with unsupported parameter or return types
+/**
+ * SendRawTransaction wraps SendRawTransactionContext with background context.
+ */
+- (NSString* _Nonnull)sendRawTransaction:(TransactionTransaction* _Nullable)txn error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.SendRawTransactionContext with unsupported parameter or return types
 
 /**
  * SendText is a wrapper of Send without interface type for gomobile
@@ -295,28 +310,34 @@ compatibility.
 - (NknOnMessage* _Nullable)sendText:(NknStringArray* _Nullable)dests data:(NSString* _Nullable)data config:(NknMessageConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
 // skipped method Client.SetWriteDeadline with unsupported parameter or return types
 
-// skipped method Client.SignTransaction with unsupported parameter or return types
-
 /**
- * Subscribe is a shortcut for Subscribe using this client as SignerRPCClient.
-
-Duration is changed to signed int for gomobile compatibility.
+ * SignTransaction signs an unsigned transaction using this client's key pair.
+ */
+- (BOOL)signTransaction:(TransactionTransaction* _Nullable)tx error:(NSError* _Nullable* _Nullable)error;
+/**
+ * Subscribe wraps SubscribeContext with background context.
  */
 - (NSString* _Nonnull)subscribe:(NSString* _Nullable)identifier topic:(NSString* _Nullable)topic duration:(long)duration meta:(NSString* _Nullable)meta config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.SubscribeContext with unsupported parameter or return types
+
 /**
- * Transfer is a shortcut for Transfer using this client as SignerRPCClient.
+ * Transfer wraps TransferContext with background context.
  */
 - (NSString* _Nonnull)transfer:(NSString* _Nullable)address amount:(NSString* _Nullable)amount config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.TransferContext with unsupported parameter or return types
+
 /**
- * TransferName is a shortcut for TransferName using this client as
-SignerRPCClient.
+ * TransferName wraps TransferNameContext with background context.
  */
 - (NSString* _Nonnull)transferName:(NSString* _Nullable)name recipientPubKey:(NSData* _Nullable)recipientPubKey config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.TransferNameContext with unsupported parameter or return types
+
 /**
- * Unsubscribe is a shortcut for Unsubscribe using this client as
-SignerRPCClient.
+ * Unsubscribe wraps UnsubscribeContext with background context.
  */
 - (NSString* _Nonnull)unsubscribe:(NSString* _Nullable)identifier topic:(NSString* _Nullable)topic config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method Client.UnsubscribeContext with unsupported parameter or return types
+
 @end
 
 /**
@@ -351,6 +372,8 @@ SignerRPCClient.
 - (nonnull instancetype)initWithRef:(_Nonnull id)ref;
 - (nonnull instancetype)init;
 @property (nonatomic) NknStringArray* _Nullable seedRPCServerAddr;
+@property (nonatomic) int32_t rpcTimeout;
+@property (nonatomic) int32_t rpcConcurrency;
 @property (nonatomic) int32_t msgChanLen;
 @property (nonatomic) int32_t connectRetries;
 @property (nonatomic) int32_t msgCacheExpiration;
@@ -360,13 +383,22 @@ SignerRPCClient.
 @property (nonatomic) int32_t minReconnectInterval;
 @property (nonatomic) int32_t maxReconnectInterval;
 @property (nonatomic) NknMessageConfig* _Nullable messageConfig;
-// skipped field ClientConfig.SessionConfig with unsupported type: *github.com/nknorg/ncp-go.Config
-
+@property (nonatomic) NcpConfig* _Nullable sessionConfig;
 /**
- * GetRandomSeedRPCServerAddr returns a random seed rpc server address from the
-client config.
+ * RPCGetConcurrency returns RPC concurrency. RPC prefix is added to avoid
+gomobile compile error.
  */
-- (NSString* _Nonnull)getRandomSeedRPCServerAddr;
+- (int32_t)rpcGetConcurrency;
+/**
+ * RPCGetRPCTimeout returns RPC timeout in millisecond. RPC prefix is added to
+avoid gomobile compile error.
+ */
+- (int32_t)rpcGetRPCTimeout;
+/**
+ * RPCGetSeedRPCServerAddr returns all seed rpc server addresses. RPC prefix is
+added to avoid gomobile compile error.
+ */
+- (NknStringArray* _Nullable)rpcGetSeedRPCServerAddr;
 @end
 
 /**
@@ -379,8 +411,7 @@ client config.
 - (nonnull instancetype)initWithRef:(_Nonnull id)ref;
 - (nonnull instancetype)init;
 @property (nonatomic) int32_t dialTimeout;
-// skipped field DialConfig.SessionConfig with unsupported type: *github.com/nknorg/ncp-go.Config
-
+@property (nonatomic) NcpConfig* _Nullable sessionConfig;
 @end
 
 /**
@@ -457,8 +488,12 @@ be used.
 @property (nonatomic) NknOnMessage* _Nullable onMessage;
 // skipped method MultiClient.Accept with unsupported parameter or return types
 
-// skipped method MultiClient.AcceptSession with unsupported parameter or return types
-
+/**
+ * AcceptSession will wait and return the first incoming session from allowed
+remote addresses. If multiclient is closed, it will return immediately with
+ErrClosed.
+ */
+- (NcpSession* _Nullable)acceptSession:(NSError* _Nullable* _Nullable)error;
 /**
  * Account returns the account of the multiclient.
  */
@@ -479,16 +514,17 @@ vice versa.
  */
 - (NSString* _Nonnull)address;
 /**
- * Balance is the same as package level GetBalance, but using connected node as
-the RPC server, followed by this multiclient's SeedRPCServerAddr if failed.
+ * Balance wraps BalanceContext with background context.
  */
 - (NknAmount* _Nullable)balance:(NSError* _Nullable* _Nullable)error;
 /**
- * BalanceByAddress is the same as package level GetBalance, but using connected
-node as the RPC server, followed by this multiclient's SeedRPCServerAddr if
-failed.
+ * BalanceByAddress wraps BalanceByAddressContext with background context.
  */
 - (NknAmount* _Nullable)balanceByAddress:(NSString* _Nullable)address error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.BalanceByAddressContext with unsupported parameter or return types
+
+// skipped method MultiClient.BalanceContext with unsupported parameter or return types
+
 /**
  * Close closes the multiclient, including all clients it created and all
 sessions dialed and accepted. Calling close multiple times is allowed and
@@ -496,16 +532,24 @@ will not have any effect.
  */
 - (BOOL)close:(NSError* _Nullable* _Nullable)error;
 /**
- * DeleteName is a shortcut for DeleteName using this multiclient as
-SignerRPCClient.
+ * DeleteName wraps DeleteNameContext with background context.
  */
 - (NSString* _Nonnull)deleteName:(NSString* _Nullable)name config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.DeleteNameContext with unsupported parameter or return types
+
 // skipped method MultiClient.Dial with unsupported parameter or return types
 
-// skipped method MultiClient.DialSession with unsupported parameter or return types
-
-// skipped method MultiClient.DialWithConfig with unsupported parameter or return types
-
+/**
+ * DialSession dials a session to a remote client address using this
+multiclient's dial config.
+ */
+- (NcpSession* _Nullable)dialSession:(NSString* _Nullable)remoteAddr error:(NSError* _Nullable* _Nullable)error;
+/**
+ * DialWithConfig dials a session with a dial config. For any zero value field
+in config, this default dial config value of this multiclient will be used.
+If config is nil, the default dial config of this multiclient will be used.
+ */
+- (NcpSession* _Nullable)dialWithConfig:(NSString* _Nullable)remoteAddr config:(NknDialConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
 /**
  * GetClient returns a client with a given index.
  */
@@ -518,45 +562,47 @@ smallest index.
  */
 - (NknClient* _Nullable)getDefaultClient;
 /**
- * GetHeight is the same as package level GetHeight, but using connected node as
-the RPC server, followed by this multiclient's SeedRPCServerAddr if failed.
+ * GetHeight wraps GetHeightContext with background context.
  */
 - (BOOL)getHeight:(int32_t* _Nullable)ret0_ error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.GetHeightContext with unsupported parameter or return types
+
 /**
- * GetNonce is the same as package level GetNonce, but using connected node as
-the RPC server, followed by this multiclient's SeedRPCServerAddr if failed.
+ * GetNonce wraps GetNonceContext with background context.
  */
 - (BOOL)getNonce:(BOOL)txPool ret0_:(int64_t* _Nullable)ret0_ error:(NSError* _Nullable* _Nullable)error;
 /**
- * GetNonceByAddress is the same as package level GetNonce, but using connected
-node as the RPC server, followed by this multiclient's SeedRPCServerAddr if
-failed.
+ * GetNonceByAddress wraps GetNonceByAddressContext with background context.
  */
 - (BOOL)getNonceByAddress:(NSString* _Nullable)address txPool:(BOOL)txPool ret0_:(int64_t* _Nullable)ret0_ error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.GetNonceByAddressContext with unsupported parameter or return types
+
+// skipped method MultiClient.GetNonceContext with unsupported parameter or return types
+
 /**
- * GetRegistrant is the same as package level GetRegistrant, but using connected
-node as the RPC server, followed by this multiclient's SeedRPCServerAddr if
-failed.
+ * GetRegistrant wraps GetRegistrantContext with background context.
  */
 - (NknRegistrant* _Nullable)getRegistrant:(NSString* _Nullable)name error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.GetRegistrantContext with unsupported parameter or return types
+
 /**
- * GetSubscribers is the same as package level GetSubscribers, but using
-connected node as the RPC server, followed by this multiclient's
-SeedRPCServerAddr if failed.
+ * GetSubscribers wraps GetSubscribersContext with background context.
  */
 - (NknSubscribers* _Nullable)getSubscribers:(NSString* _Nullable)topic offset:(long)offset limit:(long)limit meta:(BOOL)meta txPool:(BOOL)txPool error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.GetSubscribersContext with unsupported parameter or return types
+
 /**
- * GetSubscribersCount is the same as package level GetSubscribersCount, but
-using connected node as the RPC server, followed by this multiclient's
-SeedRPCServerAddr if failed.
+ * GetSubscribersCount wraps GetSubscribersCountContext with background context.
  */
 - (BOOL)getSubscribersCount:(NSString* _Nullable)topic ret0_:(long* _Nullable)ret0_ error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.GetSubscribersCountContext with unsupported parameter or return types
+
 /**
- * GetSubscription is the same as package level GetSubscription, but using
-connected node as the RPC server, followed by this multiclient's
-SeedRPCServerAddr if failed.
+ * GetSubscription wraps GetSubscriptionContext with background context.
  */
 - (NknSubscription* _Nullable)getSubscription:(NSString* _Nullable)topic subscriber:(NSString* _Nullable)subscriber error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.GetSubscriptionContext with unsupported parameter or return types
+
 /**
  * IsClosed returns whether this multiclient is closed.
  */
@@ -579,7 +625,7 @@ Duration is changed to signed int for gomobile compatibility.
  * NewNanoPayClaimer is a shortcut for NewNanoPayClaimer using this multiclient
 as RPC client.
  */
-- (NknNanoPayClaimer* _Nullable)newNanoPayClaimer:(NSString* _Nullable)recipientAddress claimIntervalMs:(int32_t)claimIntervalMs onError:(NknOnError* _Nullable)onError error:(NSError* _Nullable* _Nullable)error;
+- (NknNanoPayClaimer* _Nullable)newNanoPayClaimer:(NSString* _Nullable)recipientAddress claimIntervalMs:(int32_t)claimIntervalMs minFlushAmount:(NSString* _Nullable)minFlushAmount onError:(NknOnError* _Nullable)onError error:(NSError* _Nullable* _Nullable)error;
 /**
  * PubKey returns the public key of the multiclient.
  */
@@ -601,10 +647,11 @@ compatibility.
  */
 - (void)reconnect;
 /**
- * RegisterName is a shortcut for RegisterName using this multiclient as
-SignerRPCClient.
+ * RegisterName wraps RegisterNameContext with background context.
  */
 - (NSString* _Nonnull)registerName:(NSString* _Nullable)name config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.RegisterNameContext with unsupported parameter or return types
+
 /**
  * Seed returns the secret seed of the multiclient. Secret seed can be used to
 create client/wallet with the same key pair and should be kept secret and
@@ -623,7 +670,11 @@ compatibility.
 for gomobile compatibility.
  */
 - (NknOnMessage* _Nullable)sendBinaryWithClient:(long)clientID dests:(NknStringArray* _Nullable)dests data:(NSData* _Nullable)data config:(NknMessageConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
-// skipped method MultiClient.SendRawTransaction with unsupported parameter or return types
+/**
+ * SendRawTransaction wraps SendRawTransactionContext with background context.
+ */
+- (NSString* _Nonnull)sendRawTransaction:(TransactionTransaction* _Nullable)txn error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.SendRawTransactionContext with unsupported parameter or return types
 
 /**
  * SendText is a wrapper of Send without interface type for gomobile
@@ -637,30 +688,35 @@ gomobile compatibility.
 - (NknOnMessage* _Nullable)sendTextWithClient:(long)clientID dests:(NknStringArray* _Nullable)dests data:(NSString* _Nullable)data config:(NknMessageConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
 // skipped method MultiClient.SendWithClient with unsupported parameter or return types
 
-// skipped method MultiClient.SignTransaction with unsupported parameter or return types
-
 /**
- * Subscribe is a shortcut for Subscribe using this multiclient as
-SignerRPCClient.
-
-Duration is changed to signed int for gomobile compatibility.
+ * SignTransaction signs an unsigned transaction using this multiclient's key
+pair.
+ */
+- (BOOL)signTransaction:(TransactionTransaction* _Nullable)tx error:(NSError* _Nullable* _Nullable)error;
+/**
+ * Subscribe wraps SubscribeContext with background context.
  */
 - (NSString* _Nonnull)subscribe:(NSString* _Nullable)identifier topic:(NSString* _Nullable)topic duration:(long)duration meta:(NSString* _Nullable)meta config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.SubscribeContext with unsupported parameter or return types
+
 /**
- * Transfer is a shortcut for Transfer using this multiclient as
-SignerRPCClient.
+ * Transfer wraps TransferContext with background context.
  */
 - (NSString* _Nonnull)transfer:(NSString* _Nullable)address amount:(NSString* _Nullable)amount config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.TransferContext with unsupported parameter or return types
+
 /**
- * TransferName is a shortcut for TransferName using this multiclient as
-SignerRPCClient.
+ * TransferName wraps TransferNameContext with background context.
  */
 - (NSString* _Nonnull)transferName:(NSString* _Nullable)name recipientPubKey:(NSData* _Nullable)recipientPubKey config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.TransferNameContext with unsupported parameter or return types
+
 /**
- * Unsubscribe is a shortcut for Unsubscribe using this multiclient as
-SignerRPCClient.
+ * Unsubscribe wraps UnsubscribeContext with background context.
  */
 - (NSString* _Nonnull)unsubscribe:(NSString* _Nullable)identifier topic:(NSString* _Nullable)topic config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method MultiClient.UnsubscribeContext with unsupported parameter or return types
+
 @end
 
 /**
@@ -673,8 +729,12 @@ payment amount can increase monotonically.
 
 - (nonnull instancetype)initWithRef:(_Nonnull id)ref;
 - (nonnull instancetype)init;
-// skipped method NanoPay.IncrementAmount with unsupported parameter or return types
-
+/**
+ * IncrementAmount increments the NanoPay amount by delta and returns the signed
+NanoPay transaction. Delta is the string representation of the amount in unit
+of NKN to avoid precision loss. For example, "0.1" will be parsed as 0.1 NKN.
+ */
+- (TransactionTransaction* _Nullable)incrementAmount:(NSString* _Nullable)delta error:(NSError* _Nullable* _Nullable)error;
 /**
  * Recipient returns the recipient wallet address.
  */
@@ -696,8 +756,14 @@ blockchain periodically.
 amount) of this NanoPayClaimer.
  */
 - (NknAmount* _Nullable)amount;
-// skipped method NanoPayClaimer.Claim with unsupported parameter or return types
-
+/**
+ * Claim accepts a NanoPay transaction and update NanoPay state. If the NanoPay
+in transaction has the same ID as before, it will be considered as an update
+to the previous NanoPay. If it has a different ID, it will be considered a
+new NanoPay, and previous NanoPay state will be flushed and sent to chain
+before accepting new one.
+ */
+- (NknAmount* _Nullable)claim:(TransactionTransaction* _Nullable)tx error:(NSError* _Nullable* _Nullable)error;
 /**
  * Close closes the NanoPayClaimer.
  */
@@ -729,6 +795,34 @@ amount) of this NanoPayClaimer.
 @property (nonatomic) NSString* _Nonnull rpcAddr;
 @property (nonatomic) NSString* _Nonnull pubKey;
 @property (nonatomic) NSString* _Nonnull id_;
+@end
+
+/**
+ * NodeState struct contains the state of a NKN full node.
+ */
+@interface NknNodeState : NSObject <goSeqRefInterface> {
+}
+@property(strong, readonly) _Nonnull id _ref;
+
+- (nonnull instancetype)initWithRef:(_Nonnull id)ref;
+- (nonnull instancetype)init;
+@property (nonatomic) NSString* _Nonnull addr;
+@property (nonatomic) int64_t currTimeStamp;
+@property (nonatomic) int32_t height;
+@property (nonatomic) NSString* _Nonnull id_;
+@property (nonatomic) int32_t jsonrpcPort;
+@property (nonatomic) int32_t proposalSubmitted;
+@property (nonatomic) int32_t protocolVersion;
+@property (nonatomic) NSString* _Nonnull publicKey;
+@property (nonatomic) int64_t relayMessageCount;
+@property (nonatomic) NSString* _Nonnull syncState;
+@property (nonatomic) NSString* _Nonnull tlsjsonRpcDomain;
+@property (nonatomic) int32_t tlsjsonRpcPort;
+@property (nonatomic) NSString* _Nonnull tlsWebsocketDomain;
+@property (nonatomic) int32_t tlsWebsocketPort;
+@property (nonatomic) int64_t uptime;
+@property (nonatomic) NSString* _Nonnull version;
+@property (nonatomic) int32_t websocketPort;
 @end
 
 /**
@@ -796,7 +890,7 @@ function.
  */
 - (NknMessage* _Nullable)next;
 /**
- * Next waits and returns the next element from the channel, timeout in millisecond.
+ * NextWithTimeout waits and returns the next element from the channel, timeout in millisecond.
  */
 - (NknMessage* _Nullable)nextWithTimeout:(int32_t)timeout;
 @end
@@ -811,11 +905,23 @@ function.
 - (nonnull instancetype)initWithRef:(_Nonnull id)ref;
 - (nonnull instancetype)init;
 @property (nonatomic) NknStringArray* _Nullable seedRPCServerAddr;
+@property (nonatomic) int32_t rpcTimeout;
+@property (nonatomic) int32_t rpcConcurrency;
 /**
- * GetRandomSeedRPCServerAddr returns a random seed rpc server address from the
-rpc config.
+ * RPCGetConcurrency returns RPC concurrency. RPC prefix is added to avoid
+gomobile compile error.
  */
-- (NSString* _Nonnull)getRandomSeedRPCServerAddr;
+- (int32_t)rpcGetConcurrency;
+/**
+ * RPCGetRPCTimeout returns RPC timeout in millisecond. RPC prefix is added to
+avoid gomobile compile error.
+ */
+- (int32_t)rpcGetRPCTimeout;
+/**
+ * RPCGetSeedRPCServerAddr returns all seed rpc server addresses. RPC prefix is
+added to avoid gomobile compile error.
+ */
+- (NknStringArray* _Nullable)rpcGetSeedRPCServerAddr;
 @end
 
 /**
@@ -872,6 +978,11 @@ The input string will be split to string array by whitespace.
  * Len returns the string array length.
  */
 - (long)len;
+/**
+ * RandomElem returns a randome element from the string array. The random number
+is generated using math/rand and thus not cryptographically secure.
+ */
+- (NSString* _Nonnull)randomElem;
 @end
 
 /**
@@ -982,54 +1093,65 @@ wallet from the generated wallet JSON.
  */
 - (NSString* _Nonnull)address;
 /**
- * Balance is the same as package level GetBalance, but using this wallet's
-SeedRPCServerAddr.
+ * Balance wraps BalanceContext with background context.
  */
 - (NknAmount* _Nullable)balance:(NSError* _Nullable* _Nullable)error;
 /**
- * BalanceByAddress is the same as package level GetBalance, but using this
-wallet's SeedRPCServerAddr.
+ * BalanceByAddress wraps BalanceByAddressContext with background context.
  */
 - (NknAmount* _Nullable)balanceByAddress:(NSString* _Nullable)address error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.BalanceByAddressContext with unsupported parameter or return types
+
+// skipped method Wallet.BalanceContext with unsupported parameter or return types
+
 /**
- * DeleteName is a shortcut for DeleteName using this wallet as SignerRPCClient.
+ * DeleteName wraps DeleteNameContext with background context.
  */
 - (NSString* _Nonnull)deleteName:(NSString* _Nullable)name config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.DeleteNameContext with unsupported parameter or return types
+
 /**
- * GetHeight is the same as package level GetHeight, but using this wallet's
-SeedRPCServerAddr.
+ * GetHeight wraps GetHeightContext with background context.
  */
 - (BOOL)getHeight:(int32_t* _Nullable)ret0_ error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.GetHeightContext with unsupported parameter or return types
+
 /**
- * GetNonce is the same as package level GetNonce, but using this wallet's
-SeedRPCServerAddr.
+ * GetNonce wraps GetNonceContext with background context.
  */
 - (BOOL)getNonce:(BOOL)txPool ret0_:(int64_t* _Nullable)ret0_ error:(NSError* _Nullable* _Nullable)error;
 /**
- * GetNonceByAddress is the same as package level GetNonce, but using this
-wallet's SeedRPCServerAddr.
+ * GetNonceByAddress wraps GetNonceByAddressContext with background context.
  */
 - (BOOL)getNonceByAddress:(NSString* _Nullable)address txPool:(BOOL)txPool ret0_:(int64_t* _Nullable)ret0_ error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.GetNonceByAddressContext with unsupported parameter or return types
+
+// skipped method Wallet.GetNonceContext with unsupported parameter or return types
+
 /**
- * GetRegistrant is the same as package level GetRegistrant, but this wallet's
-SeedRPCServerAddr.
+ * GetRegistrant wraps GetRegistrantContext with background context.
  */
 - (NknRegistrant* _Nullable)getRegistrant:(NSString* _Nullable)name error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.GetRegistrantContext with unsupported parameter or return types
+
 /**
- * GetSubscribers is the same as package level GetSubscribers, but using this
-wallet's SeedRPCServerAddr.
+ * GetSubscribers wraps GetSubscribersContext with background context.
  */
 - (NknSubscribers* _Nullable)getSubscribers:(NSString* _Nullable)topic offset:(long)offset limit:(long)limit meta:(BOOL)meta txPool:(BOOL)txPool error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.GetSubscribersContext with unsupported parameter or return types
+
 /**
- * GetSubscribersCount is the same as package level GetSubscribersCount, but
-this wallet's SeedRPCServerAddr.
+ * GetSubscribersCount wraps GetSubscribersCountContext with background context.
  */
 - (BOOL)getSubscribersCount:(NSString* _Nullable)topic ret0_:(long* _Nullable)ret0_ error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.GetSubscribersCountContext with unsupported parameter or return types
+
 /**
- * GetSubscription is the same as package level GetSubscription, but using this
-wallet's SeedRPCServerAddr.
+ * GetSubscription wraps GetSubscriptionContext with background context.
  */
 - (NknSubscription* _Nullable)getSubscription:(NSString* _Nullable)topic subscriber:(NSString* _Nullable)subscriber error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.GetSubscriptionContext with unsupported parameter or return types
+
 /**
  * MarshalJSON serialize the wallet to JSON string encrypted by password used to
 create the wallet. The same password must be used to recover the wallet from
@@ -1046,7 +1168,7 @@ Duration is changed to signed int for gomobile compatibility.
  * NewNanoPayClaimer is a shortcut for NewNanoPayClaimer using this wallet as
 RPC client.
  */
-- (NknNanoPayClaimer* _Nullable)newNanoPayClaimer:(NSString* _Nullable)recipientAddress claimIntervalMs:(int32_t)claimIntervalMs onError:(NknOnError* _Nullable)onError error:(NSError* _Nullable* _Nullable)error;
+- (NknNanoPayClaimer* _Nullable)newNanoPayClaimer:(NSString* _Nullable)recipientAddress claimIntervalMs:(int32_t)claimIntervalMs minFlushAmount:(NSString* _Nullable)minFlushAmount onError:(NknOnError* _Nullable)onError error:(NSError* _Nullable* _Nullable)error;
 // skipped method Wallet.ProgramHash with unsupported parameter or return types
 
 /**
@@ -1054,44 +1176,55 @@ RPC client.
  */
 - (NSData* _Nullable)pubKey;
 /**
- * RegisterName is a shortcut for RegisterName using this wallet as
-SignerRPCClient.
+ * RegisterName wraps RegisterNameContext with background context.
  */
 - (NSString* _Nonnull)registerName:(NSString* _Nullable)name config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.RegisterNameContext with unsupported parameter or return types
+
 /**
  * Seed returns the secret seed of the wallet. Secret seed can be used to create
 client/wallet with the same key pair and should be kept secret and safe.
  */
 - (NSData* _Nullable)seed;
-// skipped method Wallet.SendRawTransaction with unsupported parameter or return types
-
-// skipped method Wallet.SignTransaction with unsupported parameter or return types
+/**
+ * SendRawTransaction wraps SendRawTransactionContext with background context.
+ */
+- (NSString* _Nonnull)sendRawTransaction:(TransactionTransaction* _Nullable)txn error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.SendRawTransactionContext with unsupported parameter or return types
 
 /**
- * Subscribe is a shortcut for Subscribe using this wallet as SignerRPCClient.
-
-Duration is changed to signed int for gomobile compatibility.
+ * SignTransaction signs an unsigned transaction using this wallet's key pair.
+ */
+- (BOOL)signTransaction:(TransactionTransaction* _Nullable)tx error:(NSError* _Nullable* _Nullable)error;
+/**
+ * Subscribe wraps SubscribeContext with background context.
  */
 - (NSString* _Nonnull)subscribe:(NSString* _Nullable)identifier topic:(NSString* _Nullable)topic duration:(long)duration meta:(NSString* _Nullable)meta config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.SubscribeContext with unsupported parameter or return types
+
 /**
  * ToJSON is a shortcut for wallet.MarshalJSON, but returns string instead of
 bytes.
  */
 - (NSString* _Nonnull)toJSON:(NSError* _Nullable* _Nullable)error;
 /**
- * Transfer is a shortcut for Transfer using this wallet as SignerRPCClient.
+ * Transfer wraps TransferContext with background context.
  */
 - (NSString* _Nonnull)transfer:(NSString* _Nullable)address amount:(NSString* _Nullable)amount config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.TransferContext with unsupported parameter or return types
+
 /**
- * TransferName is a shortcut for TransferName using this wallet as
-SignerRPCClient.
+ * TransferName wraps TransferNameContext with background context.
  */
 - (NSString* _Nonnull)transferName:(NSString* _Nullable)name recipientPubKey:(NSData* _Nullable)recipientPubKey config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.TransferNameContext with unsupported parameter or return types
+
 /**
- * Unsubscribe is a shortcut for Unsubscribe using this wallet as
-SignerRPCClient.
+ * Unsubscribe wraps UnsubscribeContext with background context.
  */
 - (NSString* _Nonnull)unsubscribe:(NSString* _Nullable)identifier topic:(NSString* _Nullable)topic config:(NknTransactionConfig* _Nullable)config error:(NSError* _Nullable* _Nullable)error;
+// skipped method Wallet.UnsubscribeContext with unsupported parameter or return types
+
 /**
  * VerifyPassword returns nil if provided password is the correct password of
 this wallet.
@@ -1109,15 +1242,27 @@ this wallet.
 - (nonnull instancetype)initWithRef:(_Nonnull id)ref;
 - (nonnull instancetype)init;
 @property (nonatomic) NknStringArray* _Nullable seedRPCServerAddr;
+@property (nonatomic) int32_t rpcTimeout;
+@property (nonatomic) int32_t rpcConcurrency;
 @property (nonatomic) NSString* _Nonnull password;
 @property (nonatomic) NSData* _Nullable iv;
 @property (nonatomic) NSData* _Nullable masterKey;
 @property (nonatomic) NknScryptConfig* _Nullable scryptConfig;
 /**
- * GetRandomSeedRPCServerAddr returns a random seed rpc server address from the
-wallet config.
+ * RPCGetConcurrency returns RPC concurrency. RPC prefix is added to avoid
+gomobile compile error.
  */
-- (NSString* _Nonnull)getRandomSeedRPCServerAddr;
+- (int32_t)rpcGetConcurrency;
+/**
+ * RPCGetRPCTimeout returns RPC timeout in millisecond. RPC prefix is added to
+avoid gomobile compile error.
+ */
+- (int32_t)rpcGetRPCTimeout;
+/**
+ * RPCGetSeedRPCServerAddr returns all seed rpc server addresses. RPC prefix is
+added to avoid gomobile compile error.
+ */
+- (NknStringArray* _Nullable)rpcGetSeedRPCServerAddr;
 @end
 
 /**
@@ -1182,7 +1327,11 @@ FOUNDATION_EXPORT const int32_t NknTextType;
 + (NSError* _Nullable) errAddrNotAllowed;
 + (void) setErrAddrNotAllowed:(NSError* _Nullable)v;
 
-// skipped variable ErrClosed with unsupported type: *github.com/nknorg/ncp-go.GenericError
+/**
+ * Error definitions.
+ */
++ (NcpGenericError* _Nullable) errClosed;
++ (void) setErrClosed:(NcpGenericError* _Nullable)v;
 
 /**
  * Error definitions.
@@ -1331,9 +1480,12 @@ PubKeyToWalletAddr.
 FOUNDATION_EXPORT NSString* _Nonnull NknClientAddrToWalletAddr(NSString* _Nullable clientAddr, NSError* _Nullable* _Nullable error);
 
 /**
- * GetBalance RPC returns the balance of a wallet address.
+ * GetBalance wraps GetBalanceContext with background context.
  */
 FOUNDATION_EXPORT NknAmount* _Nullable NknGetBalance(NSString* _Nullable address, id<NknRPCConfigInterface> _Nullable config, NSError* _Nullable* _Nullable error);
+
+// skipped function GetBalanceContext with unsupported parameter or return types
+
 
 /**
  * GetDefaultClientConfig returns the default client config with nil pointer
@@ -1341,8 +1493,11 @@ fields set to default.
  */
 FOUNDATION_EXPORT NknClientConfig* _Nullable NknGetDefaultClientConfig(void);
 
-// skipped function GetDefaultDialConfig with unsupported parameter or return types
-
+/**
+ * GetDefaultDialConfig returns the default dial config with nil pointer fields
+set to default.
+ */
+FOUNDATION_EXPORT NknDialConfig* _Nullable NknGetDefaultDialConfig(NcpConfig* _Nullable baseSessionConfig);
 
 /**
  * GetDefaultMessageConfig returns the default message config.
@@ -1355,8 +1510,10 @@ set to default.
  */
 FOUNDATION_EXPORT NknRPCConfig* _Nullable NknGetDefaultRPCConfig(void);
 
-// skipped function GetDefaultSessionConfig with unsupported parameter or return types
-
+/**
+ * GetDefaultSessionConfig returns the default session config.
+ */
+FOUNDATION_EXPORT NcpConfig* _Nullable NknGetDefaultSessionConfig(void);
 
 /**
  * GetDefaultTransactionConfig returns the default rpc config with nil pointer
@@ -1371,59 +1528,78 @@ fields set to default.
 FOUNDATION_EXPORT NknWalletConfig* _Nullable NknGetDefaultWalletConfig(void);
 
 /**
- * GetHeight RPC returns the latest block height.
+ * GetHeight wraps GetHeightContext with background context.
  */
 FOUNDATION_EXPORT BOOL NknGetHeight(id<NknRPCConfigInterface> _Nullable config, int32_t* _Nullable ret0_, NSError* _Nullable* _Nullable error);
 
-/**
- * GetNonce RPC gets the next nonce to use of an address. If txPool is false,
-result only counts transactions in ledger; if txPool is true, transactions in
-txPool are also counted.
+// skipped function GetHeightContext with unsupported parameter or return types
 
-Nonce is changed to signed int for gomobile compatibility.
+
+/**
+ * GetNodeState wraps GetNodeStateContext with background context.
+ */
+FOUNDATION_EXPORT NknNodeState* _Nullable NknGetNodeState(id<NknRPCConfigInterface> _Nullable config, NSError* _Nullable* _Nullable error);
+
+// skipped function GetNodeStateContext with unsupported parameter or return types
+
+
+/**
+ * GetNonce wraps GetNonceContext with background context.
  */
 FOUNDATION_EXPORT BOOL NknGetNonce(NSString* _Nullable address, BOOL txPool, id<NknRPCConfigInterface> _Nullable config, int64_t* _Nullable ret0_, NSError* _Nullable* _Nullable error);
 
+// skipped function GetNonceContext with unsupported parameter or return types
+
+
 /**
- * GetRegistrant RPC gets the registrant of a name.
+ * GetRegistrant wraps GetRegistrantContext with background context.
  */
 FOUNDATION_EXPORT NknRegistrant* _Nullable NknGetRegistrant(NSString* _Nullable name, id<NknRPCConfigInterface> _Nullable config, NSError* _Nullable* _Nullable error);
 
-/**
- * GetSubscribers gets the subscribers of a topic with a offset and max number
-of results (limit). If meta is true, results contain each subscriber's
-metadata. If txPool is true, results contain subscribers in txPool. Enabling
-this will get subscribers sooner after they send subscribe transactions, but
-might affect the correctness of subscribers because transactions in txpool is
-not guaranteed to be packed into a block.
+// skipped function GetRegistrantContext with unsupported parameter or return types
 
-Offset and limit are changed to signed int for gomobile compatibility
+
+/**
+ * GetSubscribers wraps GetSubscribersContext with background context.
  */
 FOUNDATION_EXPORT NknSubscribers* _Nullable NknGetSubscribers(NSString* _Nullable topic, long offset, long limit, BOOL meta, BOOL txPool, id<NknRPCConfigInterface> _Nullable config, NSError* _Nullable* _Nullable error);
 
-/**
- * GetSubscribersCount RPC returns the number of subscribers of a topic (not
-including txPool).
+// skipped function GetSubscribersContext with unsupported parameter or return types
 
-Count is changed to signed int for gomobile compatibility
+
+/**
+ * GetSubscribersCount wraps GetSubscribersCountContext with background context.
  */
 FOUNDATION_EXPORT BOOL NknGetSubscribersCount(NSString* _Nullable topic, id<NknRPCConfigInterface> _Nullable config, long* _Nullable ret0_, NSError* _Nullable* _Nullable error);
 
+// skipped function GetSubscribersCountContext with unsupported parameter or return types
+
+
 /**
- * GetSubscription RPC gets the subscription details of a subscriber in a topic.
+ * GetSubscription wraps GetSubscriptionContext with background context.
  */
 FOUNDATION_EXPORT NknSubscription* _Nullable NknGetSubscription(NSString* _Nullable topic, NSString* _Nullable subscriber, id<NknRPCConfigInterface> _Nullable config, NSError* _Nullable* _Nullable error);
 
+// skipped function GetSubscriptionContext with unsupported parameter or return types
+
+
 /**
- * GetWsAddr RPC gets the node that a client address should connect to using ws.
+ * GetWsAddr wraps GetWsAddrContext with background context.
  */
 FOUNDATION_EXPORT NknNode* _Nullable NknGetWsAddr(NSString* _Nullable clientAddr, id<NknRPCConfigInterface> _Nullable config, NSError* _Nullable* _Nullable error);
 
+// skipped function GetWsAddrContext with unsupported parameter or return types
+
+
 /**
- * GetWssAddr RPC gets the node that a client address should connect to using
-wss.
+ * GetWssAddr wraps GetWssAddrContext with background context.
  */
 FOUNDATION_EXPORT NknNode* _Nullable NknGetWssAddr(NSString* _Nullable clientAddr, id<NknRPCConfigInterface> _Nullable config, NSError* _Nullable* _Nullable error);
+
+// skipped function GetWssAddrContext with unsupported parameter or return types
+
+
+FOUNDATION_EXPORT NknStringArray* _Nullable NknMeasureSeedRPCServer(NknStringArray* _Nullable seedRpcList, int32_t timeout, NSError* _Nullable* _Nullable error);
 
 /**
  * MergeClientConfig merges a given client config with the default client config
@@ -1431,8 +1607,11 @@ recursively. Any non zero value fields will override the default config.
  */
 FOUNDATION_EXPORT NknClientConfig* _Nullable NknMergeClientConfig(NknClientConfig* _Nullable conf, NSError* _Nullable* _Nullable error);
 
-// skipped function MergeDialConfig with unsupported parameter or return types
-
+/**
+ * MergeDialConfig merges a given dial config with the default dial config
+recursively. Any non zero value fields will override the default config.
+ */
+FOUNDATION_EXPORT NknDialConfig* _Nullable NknMergeDialConfig(NcpConfig* _Nullable baseSessionConfig, NknDialConfig* _Nullable conf, NSError* _Nullable* _Nullable error);
 
 /**
  * MergeMessageConfig merges a given message config with the default message
@@ -1547,7 +1726,12 @@ FOUNDATION_EXPORT NSString* _Nonnull NknPubKeyToWalletAddr(NSData* _Nullable pub
  */
 FOUNDATION_EXPORT NSData* _Nullable NknRandomBytes(long numBytes, NSError* _Nullable* _Nullable error);
 
-// skipped function SendRawTransaction with unsupported parameter or return types
+/**
+ * SendRawTransaction wraps SendRawTransactionContext with background context.
+ */
+FOUNDATION_EXPORT NSString* _Nonnull NknSendRawTransaction(TransactionTransaction* _Nullable txn, id<NknRPCConfigInterface> _Nullable config, NSError* _Nullable* _Nullable error);
+
+// skipped function SendRawTransactionContext with unsupported parameter or return types
 
 
 /**
@@ -1621,14 +1805,17 @@ FOUNDATION_EXPORT NknWallet* _Nullable NknWalletFromJSON(NSString* _Nullable wal
 /**
  * RPCConfigInterface is the config interface for making rpc call. ClientConfig,
 WalletConfig and RPCConfig all implement this interface and thus can be used
-directly.
+directly. RPC prefix is added to all public methods to avoid gomobile compile
+error.
  */
 @interface NknRPCConfigInterface : NSObject <goSeqRefInterface, NknRPCConfigInterface> {
 }
 @property(strong, readonly) _Nonnull id _ref;
 
 - (nonnull instancetype)initWithRef:(_Nonnull id)ref;
-- (NSString* _Nonnull)getRandomSeedRPCServerAddr;
+- (int32_t)rpcGetConcurrency;
+- (int32_t)rpcGetRPCTimeout;
+- (NknStringArray* _Nullable)rpcGetSeedRPCServerAddr;
 @end
 
 /**

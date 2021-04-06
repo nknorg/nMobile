@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 
 abstract class WalletsState extends Equatable {
   const WalletsState();
@@ -21,4 +21,3 @@ class WalletsLoaded extends WalletsState {
   @override
   String toString() => 'WalletsLoaded { wallets: $wallets }';
 }
-

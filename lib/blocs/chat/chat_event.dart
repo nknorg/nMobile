@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:nmobile/schemas/message.dart';
+import 'package:nmobile/model/entity/message.dart';
 
 abstract class ChatEvent extends Equatable {
   const ChatEvent();
@@ -13,6 +13,11 @@ class NKNChatOnMessageEvent extends ChatEvent {}
 class RefreshMessageListEvent extends ChatEvent {
   final String target;
   const RefreshMessageListEvent({this.target});
+}
+
+class RefreshMessageChatEvent extends ChatEvent {
+  final MessageSchema message;
+  const RefreshMessageChatEvent(this.message);
 }
 
 class ReceiveMessageEvent extends ChatEvent {

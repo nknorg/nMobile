@@ -13,6 +13,9 @@ import io.flutter.plugin.common.MethodChannel
 import nkn.*
 import org.json.JSONObject
 import org.nkn.mobile.app.util.Bytes2String.toHex
+import reedsolomon.BytesArray
+import reedsolomon.Encoder
+import reedsolomon.Reedsolomon
 import service.GooglePushService
 import java.security.KeyStore
 import java.util.*
@@ -36,6 +39,8 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
 
     private var clientList = ArrayList<String>()
     private var mNode:Node = Node()
+
+    private var nullList = IntArray(0)
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
         clientEventSink = events
@@ -107,6 +112,15 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             "fetchDebugInfo" -> {
                 fetchDebugInfo(call, result)
             }
+            "intoPieces" -> {
+                intoPieces(call, result)
+            }
+            "combinePieces" -> {
+                combinePieces(call, result)
+            }
+            "nknPush" -> {
+                pushContent(call, result)
+            }
             else -> {
                 result.notImplemented()
             }
@@ -140,17 +154,17 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
     }
 
     /**
-     * 检查 Google Play 服务
+     * Check Google Play Service
      */
     private fun onCheckGooglePlayServices(call: MethodCall, result: MethodChannel.Result) {
-        // 验证是否已在此设备上安装并启用Google Play服务，以及此设备上安装的旧版本是否为此客户端所需的版本
         val code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(acty)
-        var googleServiceOn:Boolean = true;
+        var googleServiceOn:Boolean = false;
         if (code == ConnectionResult.SUCCESS) {
             // 支持Google服务
+            googleServiceOn = true
             Log.e("GoogleC","GoogleService Available")
         } else {
-            googleServiceOn = false;
+
             Log.e("GoogleC","GoogleService Unavailable")
         }
         val _id = call.argument<String>("_id")!!
@@ -274,6 +288,7 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
             }
             return
         }
+
         if (multiClient == null) {
             Log.e("connectNKN", "create Client First")
             return
@@ -298,7 +313,6 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
                         onSaveSeedRpc(null,null);
                     }
                 }
-
             }
             catch (e: Exception) {
                 Log.e("connectNKN", "Connect E:", e)
@@ -362,6 +376,29 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         }
     }
 
+    private fun pushContent(call: MethodCall, result: MethodChannel.Result){
+        var deviceToken = call.argument<String>("deviceToken")!!
+        var pushContent = call.argument<String>("pushContent")!!
+        result.success(null)
+
+        if (deviceToken.isNotEmpty()){
+            val code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(acty)
+            if (code == ConnectionResult.SUCCESS && pushContent?.length > 0){
+                if (deviceToken?.length >= 32){
+                    msgSendHandler.post {
+                        try {
+                            val service = GooglePushService()
+                            service.sendMessageToFireBase(deviceToken, pushContent)
+                            Log.e("pushContentE", "pushContent Success")
+                        } catch (e: Exception) {
+                            Log.e("pushContentE", "pushContentE | e:", e)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private fun sendText(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id")!!
         val dests = call.argument<ArrayList<String>>("dests")!!
@@ -371,16 +408,18 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
 
         result.success(null)
 
-        val dataObj = JSONObject(data)
-        if (dataObj.optString("deviceToken").isNotEmpty()){
-            val deviceToken = dataObj["deviceToken"].toString()
-            val pushContent = dataObj["pushContent"].toString()
-            val code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(acty)
-            if (code == ConnectionResult.SUCCESS && pushContent?.length > 0){
-                val service = GooglePushService()
-                service.sendMessageToFireBase(deviceToken, pushContent)
-            }
-        }
+//        val dataObj = JSONObject(data)
+//        if (dataObj.optString("deviceToken").isNotEmpty()){
+//            val deviceToken = dataObj["deviceToken"].toString()
+//            val pushContent = dataObj["pushContent"].toString()
+//            val code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(acty)
+//            if (code == ConnectionResult.SUCCESS && pushContent?.length > 0){
+//                if (deviceToken?.length >= 32){
+//                    val service = GooglePushService()
+//                    service.sendMessageToFireBase(deviceToken, pushContent)
+//                }
+//            }
+//        }
 
         var nknDests: StringArray? = null
         for (d in dests) {
@@ -566,11 +605,14 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         subscribersHandler.post {
             try {
                 val subscription = multiClient!!.getSubscription(topicHash, subscriber)
+                val data = hashMapOf(
+                        "meta" to subscription.meta,
+                        "expiresAt" to subscription.expiresAt
+                )
                 val resp = hashMapOf(
                         "_id" to _id,
                         "event" to "getSubscription",
-                        "meta" to subscription.meta,
-                        "expiresAt" to subscription.expiresAt
+                        "data" to data
                 )
                 App.runOnMainThread {
                     clientEventSink.success(resp)
@@ -642,6 +684,75 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         }
     }
 
+    private fun intoPieces(call: MethodCall, result: MethodChannel.Result) {
+        val _id = call.argument<String>("_id")!!
+        val flutterDataString = call.argument<String>("data") ?: ""
+        val dataShards = call.argument<Int>("dataShards")!!
+        val parityShards = call.argument<Int>("parityShards")!!
+
+        val encoder: Encoder? = Reedsolomon.newDefault(dataShards.toLong(), parityShards.toLong());
+        val dataBytes: BytesArray? = encoder?.splitBytesArray(flutterDataString.toByteArray())
+
+        encoder?.encodeBytesArray(dataBytes)
+
+        var dataBytesArray = ArrayList<ByteArray>()
+
+        var totalPieces:Int = dataShards+parityShards-1
+        for(index:Int in 0..totalPieces){
+            var theBytes = dataBytes?.get(index.toLong())
+            if (theBytes != null) {
+                dataBytesArray.add(theBytes)
+            }
+        }
+
+        msgSendHandler.post{
+            try {
+                val resp = hashMapOf(
+                        "_id" to _id,
+                        "event" to "intoPieces",
+                        "data" to dataBytesArray
+                )
+                Log.e("intoPiecesE", "intoPieces | e:"+resp.toString())
+                App.runOnMainThread {
+                    clientEventSink.success(resp)
+                }
+            } catch (e: Exception) {
+                Log.e("intoPiecesE", "intoPieces | e:", e)
+                App.runOnMainThread {
+                    clientEventSink.error(_id, "subscribe", e.message)
+                }
+            }
+        }
+    }
+
+    private fun combinePieces(call: MethodCall, result: MethodChannel.Result) {
+        val _id = call.argument<String>("_id")!!
+        val fDataList = call.argument<ArrayList<ByteArray>>("data") !!
+        val dataShards = call.argument<Int>("dataShards")!!
+        val parityShards = call.argument<Int>("parityShards")!!
+        val bytesLength = call.argument<Int>("bytesLength")!!
+
+        val service = GooglePushService()
+        val result:String = service.combineBytesArray(fDataList,dataShards,parityShards,bytesLength);
+        msgSendHandler.post{
+            try {
+                val resp = hashMapOf(
+                        "_id" to _id,
+                        "event" to "combinePieces",
+                        "data" to result
+                )
+                App.runOnMainThread {
+                    clientEventSink.success(resp)
+                }
+            } catch (e: Exception) {
+                Log.e("subscribeE", "subscribe | e:", e)
+                App.runOnMainThread {
+                    clientEventSink.error(_id, "subscribe", e.message)
+                }
+            }
+        }
+    }
+
     private fun getSubscribersCount(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id")!!
         val topicHash = call.argument<String>("topicHash")!!
@@ -680,25 +791,31 @@ class NknClientPlugin(private val acty: MainActivity?, flutterEngine: FlutterEng
         return multiClient ?: synchronized(this) {
             try {
                 val conf = ClientConfig()
-                if (clientList.count() > 0 && clientList[0].isNotEmpty()){
-                    for (index in clientList.indices) {
-                        var rpcNodeAddress:String = clientList[index]
-
-                        if (index == 0){
-                            conf.seedRPCServerAddr = Nkn.newStringArrayFromString(rpcNodeAddress)
+                if (clientList.count() > 1 && clientList[0].isNotEmpty()) {
+                    if (clientList.size > 0) {
+                        var seedRpcArray: StringArray = Nkn.newStringArrayFromString(clientList[0])
+                        for (index in clientList.indices) {
+                            var rpcNodeAddress: String = clientList[index]
+                            if (index != 0) {
+                                seedRpcArray.append(rpcNodeAddress)
+                            }
                         }
-                        else{
-                            conf.seedRPCServerAddr.append(rpcNodeAddress)
-                        }
+                        var measuredArray = Nkn.measureSeedRPCServer(seedRpcArray, 1500)
+                        conf.seedRPCServerAddr = measuredArray
+                    } else {
+                        conf.seedRPCServerAddr = Nkn.newStringArrayFromString("http://seed.nkn.org:30003")
+                        multiClient = Nkn.newMultiClient(account, identifier, 3, true, conf)
                     }
-                    conf.seedRPCServerAddr = Nkn.newStringArrayFromString("")
                 }
-
+                conf.wsWriteTimeout = 20000
                 multiClient = Nkn.newMultiClient(account, identifier, 3, true, conf)
                 multiClient!!
             } catch (e: Exception) {
-                Log.w("g111111",e.toString());
-                closeClientIfExists()
+                val conf = ClientConfig()
+                conf.seedRPCServerAddr = Nkn.newStringArrayFromString("http://seed.nkn.org:30003")
+                Log.w("genClientIfNotExists", conf.rpcGetConcurrency().toString())
+                conf.wsWriteTimeout = 20000
+                multiClient = Nkn.newMultiClient(account, identifier, 3, true, conf)
                 null
             }
         }

@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nmobile/blocs/chat/channel_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/button.dart';
@@ -13,15 +12,13 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/model/db/black_list_repo.dart';
-import 'package:nmobile/model/db/subscriber_repo.dart';
-import 'package:nmobile/model/db/topic_repo.dart';
+import 'package:nmobile/model/datacenter/group_data_center.dart';
+import 'package:nmobile/model/entity/topic_repo.dart';
 import 'package:nmobile/model/popular_channel.dart';
-import 'package:nmobile/schemas/chat.dart';
+import 'package:nmobile/model/entity/chat.dart';
 import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/utils/extensions.dart';
@@ -71,7 +68,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 14),
+                padding: const EdgeInsets.only(
+                    left: 20, right: 20, top: 24, bottom: 14),
                 child: Label(
                   NL10ns.of(context).create_channel,
                   type: LabelType.h3,
@@ -168,7 +166,9 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                                   ),
                                   RotatedBox(
                                     quarterTurns: _showFeeLayout ? 2 : 0,
-                                    child: loadAssetIconsImage('down', color: DefaultTheme.primaryColor, width: 20),
+                                    child: loadAssetIconsImage('down',
+                                        color: DefaultTheme.primaryColor,
+                                        width: 20),
                                   ),
                                 ],
                               ),
@@ -185,7 +185,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                       child: Column(
                         children: <Widget>[
                           Padding(
-                            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 8),
+                            padding: const EdgeInsets.only(
+                                left: 20, right: 20, bottom: 8),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.center,
@@ -210,7 +211,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                                     onSaved: (v) => _fee = double.parse(v ?? 0),
                                     onChanged: (v) {
                                       setState(() {
-                                        double fee = v.isNotEmpty ? double.parse(v) : 0;
+                                        double fee =
+                                            v.isNotEmpty ? double.parse(v) : 0;
                                         if (fee > _sliderFeeMax) {
                                           fee = _sliderFeeMax;
                                         } else if (fee < _sliderFeeMin) {
@@ -230,18 +232,23 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                                         ),
                                       ),
                                     ),
-                                    keyboardType: TextInputType.numberWithOptions(
+                                    keyboardType:
+                                        TextInputType.numberWithOptions(
                                       decimal: true,
                                     ),
                                     textInputAction: TextInputAction.done,
-                                    inputFormatters: [WhitelistingTextInputFormatter(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
+                                    inputFormatters: [
+                                      WhitelistingTextInputFormatter(
+                                          RegExp(r'^[0-9]+\.?[0-9]{0,8}'))
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(left: 16, right: 8, top: 0),
+                            padding: const EdgeInsets.only(
+                                left: 16, right: 8, top: 0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
@@ -264,7 +271,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(left: 8, right: 6, top: 0),
+                            padding: const EdgeInsets.only(
+                                left: 8, right: 6, top: 0),
                             child: Slider(
                               value: _sliderFee,
                               onChanged: (v) {
@@ -294,7 +302,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
               SizedBox(height: 10),
               getPopularView(),
               Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 10),
+                padding: const EdgeInsets.only(
+                    left: 20, right: 20, top: 8, bottom: 10),
                 child: Button(
                   text: NL10ns.of(context).continue_text,
                   width: double.infinity,
@@ -330,7 +339,9 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
               Container(
                 height: 40.h,
                 width: 40.w,
-                decoration: BoxDecoration(color: item.titleBgColor, borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(
+                    color: item.titleBgColor,
+                    borderRadius: BorderRadius.circular(8)),
                 child: Center(
                   child: Label(
                     item.title,
@@ -388,13 +399,13 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
     );
   }
 
-  _createOrJoinGroupSuccess(String topicName) async{
+  _createOrJoinGroupSuccess(String topicName) async {
     await GroupChatHelper.insertTopicIfNotExists(topicName);
     var group = await GroupChatHelper.fetchTopicInfoByName(topicName);
     Navigator.of(context).pushReplacementNamed(
       ChatGroupPage.routeName,
       arguments: ChatSchema(
-        type: group.isPrivate ? ChatType.PrivateChannel : ChatType.Channel,
+        type: group.isPrivateTopic() ? ChatType.PrivateChannel : ChatType.Channel,
         topic: group,
       ),
     );
@@ -405,54 +416,42 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
       return;
     }
     if (_privateSelected) {
-      if (!isPrivateTopic(topicName)) {
+      if (!isPrivateTopicReg(topicName)) {
         String pubKey = NKNClientCaller.currentChatId;
         topicName = '$topicName.$pubKey';
       }
     }
     var group = await GroupChatHelper.fetchTopicInfoByName(topicName);
-    if (group != null){
+    if (group != null) {
       _createOrJoinGroupSuccess(topicName);
-    }
-    else {
+    } else {
       setState(() {
         _loading = true;
       });
       EasyLoading.show();
-      await GroupChatHelper.subscribeTopic(
+      await GroupDataCenter.subscribeTopic(
           topicName: topicName,
           chatBloc: _chatBloc,
           callback: (success, e) async {
             if (success) {
+              NLog.w('SubscriberTopic Success____'+topicName.toString());
               final topicSpotName = Topic.spotName(name: topicName);
               if (topicSpotName.isPrivate) {
-                // TODO: delay pull action at least 3 minutes.
-                GroupChatPrivateChannel.pullSubscribersPrivateChannel(
-                    topicName: topicName,
-                    membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
-                    needUploadMetaCallback: (topicName) {
-                      GroupChatPrivateChannel.uploadPermissionMeta(
-                        topicName: topicName,
-                        repoSub: SubscriberRepo(),
-                        repoBlackL: BlackListRepo(),
-                      );
-                    });
+                GroupDataCenter.pullPrivateSubscribers(topicName);
+                GroupDataCenter.addPrivatePermissionList(topicName, NKNClientCaller.currentChatId);
               } else {
-                GroupChatPublicChannel.pullSubscribersPublicChannel(
-                  topicName: topicName,
-                  membersBloc: BlocProvider.of<ChannelBloc>(Global.appContext),
-                );
+                GroupDataCenter.pullSubscribersPublicChannel(topicName);
               }
               _createOrJoinGroupSuccess(topicName);
-            }
-            else {
-              if (e != null){
-                NLog.w('Create Or join Group E:'+e.toString());
+            } else {
+              if (e != null) {
+                NLog.w('Create Or join Group E:' + e.toString());
               }
               showToast('create_input_group topic failed');
             }
           });
       EasyLoading.dismiss();
+      Navigator.pop(context);
       setState(() {
         _loading = false;
       });

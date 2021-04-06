@@ -19,7 +19,7 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/eth_erc20_token.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/wallet/create_eth_wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn_wallet.dart';
@@ -40,7 +40,8 @@ class WalletHome extends StatefulWidget {
   _WalletHomeState createState() => _WalletHomeState();
 }
 
-class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateMixin, Tag {
+class _WalletHomeState extends State<WalletHome>
+    with SingleTickerProviderStateMixin, Tag {
   WalletsBloc _walletsBloc;
   StreamSubscription _walletSubscription;
   final GetIt locator = GetIt.instance;
@@ -103,9 +104,11 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
                 final type = await SelectWalletTypeDialog.of(context).show();
                 _LOG.i('WalletType:$type');
                 if (type == WalletType.nkn) {
-                  Navigator.of(context).pushNamed(CreateNknWalletScreen.routeName);
+                  Navigator.of(context)
+                      .pushNamed(CreateNknWalletScreen.routeName);
                 } else if (type == WalletType.eth) {
-                  Navigator.of(context).pushNamed(CreateEthWalletScreen.routeName);
+                  Navigator.of(context)
+                      .pushNamed(CreateEthWalletScreen.routeName);
                 } else {
                   // nothing...
                 }
@@ -113,7 +116,8 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
               case 1:
                 final type = await SelectWalletTypeDialog.of(context).show();
                 assert(type == WalletType.nkn || type == WalletType.eth);
-                Navigator.of(context).pushNamed(ImportWalletScreen.routeName, arguments: type);
+                Navigator.of(context)
+                    .pushNamed(ImportWalletScreen.routeName, arguments: type);
                 break;
             }
           },
@@ -149,7 +153,12 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
                       WalletSchema w = state.wallets[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
-                        child: WalletItem(schema: w, index: index, type: w.type == WalletSchema.NKN_WALLET ? WalletType.nkn : WalletType.eth),
+                        child: WalletItem(
+                            schema: w,
+                            index: index,
+                            type: w.type == WalletSchema.NKN_WALLET
+                                ? WalletType.nkn
+                                : WalletType.eth),
                       );
                     });
               }
@@ -170,12 +179,16 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
                 SizedBox(
                   width: 20,
                   height: 20,
-                  child: SvgPicture.asset('assets/icons/warning_20.svg', color: Colours.yellow_f0),
+                  child: SvgPicture.asset('assets/icons/warning_20.svg',
+                      color: Colours.yellow_f0),
                 ),
                 Text(
                   NL10ns.of(context).not_backed_up,
                   textAlign: TextAlign.end,
-                  style: TextStyle(fontSize: DefaultTheme.bodySmallFontSize, fontStyle: FontStyle.italic, color: Colours.pink_f8),
+                  style: TextStyle(
+                      fontSize: DefaultTheme.bodySmallFontSize,
+                      fontStyle: FontStyle.italic,
+                      color: Colours.pink_f8),
                   overflow: TextOverflow.ellipsis,
                   softWrap: false,
                   maxLines: 1,
@@ -190,7 +203,8 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
   _onNotBackedUpTipClicked() {
     // Don't use `context` as `Widget build(BuildContext context)`.
     WalletNotBackedUpDialog.of(context).show(() {
-      BottomDialog.of(context).showSelectWalletDialog(title: NL10ns.of(context).select_asset_to_backup, callback: _listen);
+      BottomDialog.of(context).showSelectWalletDialog(
+          title: NL10ns.of(context).select_asset_to_backup, callback: _listen);
     });
   }
 
@@ -202,8 +216,10 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
         if (password != null) {
           if (ws.type == WalletSchema.ETH_WALLET) {
             String keyStore = await ws.getKeystore();
-            EthWallet ethWallet = Ethereum.restoreWallet(name: ws.name, keystore: keyStore, password: password);
-            Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+            EthWallet ethWallet = Ethereum.restoreWallet(
+                name: ws.name, keystore: keyStore, password: password);
+            Navigator.of(context)
+                .pushNamed(NknWalletExportScreen.routeName, arguments: {
               'wallet': null,
               'keystore': ethWallet.keystore,
               'address': (await ethWallet.address).hex,
@@ -213,10 +229,10 @@ class _WalletHomeState extends State<WalletHome> with SingleTickerProviderStateM
             });
           } else {
             try {
-              print('exportWallet___77');
               var wallet = await ws.exportWallet(password);
               if (wallet['address'] == ws.address) {
-                Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+                Navigator.of(context)
+                    .pushNamed(NknWalletExportScreen.routeName, arguments: {
                   'wallet': wallet,
                   'keystore': wallet['keystore'],
                   'address': wallet['address'],
