@@ -9,12 +9,19 @@ class NKNTimeUtil {
     String timeFormat;
     if (now.difference(time).inDays == 0 && time.day == now.day) {
       timeFormat = DateFormat.Hm(localizations).format(time);
-    } else if (now.difference(time).inDays <= 7 && time.weekday <= now.weekday) {
-      timeFormat = DateFormat.E(localizations).format(time) + ' ' + DateFormat.Hm(localizations).format(timestamp);
+    } else if (now.difference(time).inDays <= 7 &&
+        time.weekday <= now.weekday) {
+      timeFormat = DateFormat.E(localizations).format(time) +
+          ' ' +
+          DateFormat.Hm(localizations).format(timestamp);
     } else if (now.difference(time).inDays <= 31 && time.month == time.month) {
-      timeFormat = DateFormat.Md(localizations).format(time) + ' ' + DateFormat.Hm(localizations).format(timestamp);
+      timeFormat = DateFormat.Md(localizations).format(time) +
+          ' ' +
+          DateFormat.Hm(localizations).format(timestamp);
     } else {
-      timeFormat = DateFormat.yMd(localizations).format(time) + ' ' + DateFormat.Hm(localizations).format(timestamp);
+      timeFormat = DateFormat.yMd(localizations).format(time) +
+          ' ' +
+          DateFormat.Hm(localizations).format(timestamp);
     }
 
     return timeFormat;

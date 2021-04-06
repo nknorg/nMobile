@@ -34,7 +34,34 @@ class Textbox extends StatefulWidget {
   final Color borderColor;
   final Color color;
 
-  Textbox({this.value, this.color = Colours.dark_2d, this.padding = const EdgeInsets.only(bottom: 8), this.showErrorMessage = true, this.enabled = true, this.readOnly = false, this.multi = false, this.minLines, this.maxLines = 3, this.autofocus = false, this.focusNode, this.controller, this.password = false, this.validator, this.hintText, this.helperText, this.keyboardType, this.textInputAction, this.suffixIcon, this.onSaved, this.onChanged, this.onFieldSubmitted, this.inputFormatters, this.maxLength, this.maxLengthEnforced = true, this.fontSize = 14, this.borderColor});
+  Textbox(
+      {this.value,
+      this.color = Colours.dark_2d,
+      this.padding = const EdgeInsets.only(bottom: 8),
+      this.showErrorMessage = true,
+      this.enabled = true,
+      this.readOnly = false,
+      this.multi = false,
+      this.minLines,
+      this.maxLines = 3,
+      this.autofocus = false,
+      this.focusNode,
+      this.controller,
+      this.password = false,
+      this.validator,
+      this.hintText,
+      this.helperText,
+      this.keyboardType,
+      this.textInputAction,
+      this.suffixIcon,
+      this.onSaved,
+      this.onChanged,
+      this.onFieldSubmitted,
+      this.inputFormatters,
+      this.maxLength,
+      this.maxLengthEnforced = true,
+      this.fontSize = 14,
+      this.borderColor});
 
   @override
   _TextboxState createState() => _TextboxState();
@@ -50,7 +77,9 @@ class _TextboxState extends State<Textbox> {
 
   @override
   Widget build(BuildContext context) {
-    InputBorder borderStyle = UnderlineInputBorder(borderSide: BorderSide(color: widget.borderColor ?? DefaultTheme.lineColor, width: 1));
+    InputBorder borderStyle = UnderlineInputBorder(
+        borderSide: BorderSide(
+            color: widget.borderColor ?? DefaultTheme.lineColor, width: 1));
     if (widget.password) {
       return Padding(
         padding: widget.padding,

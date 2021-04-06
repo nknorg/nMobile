@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2020-11-20T14:10:02.001601",
+  "@@last_modified": "2021-04-05T15:18:02.593422",
   "nkn": "NKN",
   "@nkn": {
     "description": "",
@@ -840,13 +840,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "setting_deny_notification": "Have Deny Remote Notification",
+  "setting_deny_notification": "Have Denied Remote Notification",
   "@setting_deny_notification": {
     "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "setting_accept_notification": "Have Accept Remote Notification",
+  "setting_accept_notification": "Have Accepted Remote Notification",
   "@setting_accept_notification": {
     "description": "",
     "type": "text",
@@ -1780,6 +1780,61 @@
   },
   "something_went_wrong": "Oops, something went wrong! Please try again later.",
   "@something_went_wrong": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "unavailable_device": "Not available for Android device without Google Service Currently",
+  "@unavailable_device": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "slide_to_cancel": "< Slide Cancel <",
+  "@slide_to_cancel": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "invite_and_send_success": "invite and send success",
+  "@invite_and_send_success": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "join_but_not_invite": "not invited",
+  "@join_but_not_invite": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "invited_already": "You have already invited this member,still invite?",
+  "@invited_already": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "group_member_already": "The member is in group already",
+  "@group_member_already": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "invite_yourself_error": "Can not invite yourself!",
+  "@invite_yourself_error": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "member_no_auth_invite": "Private group member can not invite others currently,ask group owner to invite others",
+  "@member_no_auth_invite": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "tip_open_send_device_token": "Send your device token to him?\nThen he can send you remote notification!",
+  "@tip_open_send_device_token": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "tip_switch_success": "Switch Success!",
+  "@tip_switch_success": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "tip_ask_group_owner_permission": "You are not in this group,ask the group owner for permission",
+  "@tip_ask_group_owner_permission": {
     "type": "text",
     "placeholders": {}
   }

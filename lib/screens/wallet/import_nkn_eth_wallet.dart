@@ -4,7 +4,7 @@ import 'package:nmobile/components/tabs.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/event/eventbus.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/screens/wallet/import_keystore_nkn_eth_wallet.dart';
 import 'package:nmobile/screens/wallet/import_seed_nkn_eth_wallet.dart';
@@ -22,7 +22,8 @@ class ImportWalletScreen extends StatefulWidget {
   _ImportWalletScreenState createState() => _ImportWalletScreenState();
 }
 
-class _ImportWalletScreenState extends State<ImportWalletScreen> with SingleTickerProviderStateMixin {
+class _ImportWalletScreenState extends State<ImportWalletScreen>
+    with SingleTickerProviderStateMixin {
   TabController _tabController;
 
   @override
@@ -33,10 +34,15 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> with SingleTick
 
   @override
   Widget build(BuildContext context) {
-    List<String> tabs = [NL10ns.of(context).tab_keystore, NL10ns.of(context).tab_seed];
+    List<String> tabs = [
+      NL10ns.of(context).tab_keystore,
+      NL10ns.of(context).tab_seed
+    ];
     return Scaffold(
       appBar: Header(
-        title: widget.type == WalletType.eth ? NL10ns.of(context).import_ethereum_wallet : NL10ns.of(context).import_nkn_wallet,
+        title: widget.type == WalletType.eth
+            ? NL10ns.of(context).import_ethereum_wallet
+            : NL10ns.of(context).import_nkn_wallet,
         backgroundColor: DefaultTheme.backgroundColor4,
         action: IconButton(
           icon: loadAssetIconsImage(
@@ -45,7 +51,8 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> with SingleTick
             color: DefaultTheme.backgroundLightColor,
           ),
           onPressed: () async {
-            var qrData = await Navigator.of(context).pushNamed(ScannerScreen.routeName);
+            var qrData =
+                await Navigator.of(context).pushNamed(ScannerScreen.routeName);
             eventBus.fire(QMScan(qrData));
             NLog.d(qrData);
           },
@@ -61,7 +68,8 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> with SingleTick
             alignment: Alignment.bottomCenter,
             children: <Widget>[
               ConstrainedBox(
-                constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height),
+                constraints: BoxConstraints(
+                    minHeight: MediaQuery.of(context).size.height),
                 child: Container(
                   constraints: BoxConstraints.expand(),
                   color: DefaultTheme.backgroundColor4,
@@ -73,7 +81,8 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> with SingleTick
                         child: Container(
                           decoration: BoxDecoration(
                             color: DefaultTheme.backgroundLightColor,
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(32)),
                           ),
                           child: Flex(
                             direction: Axis.vertical,

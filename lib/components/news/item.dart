@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:nmobile/schemas/news.dart';
+import 'package:nmobile/model/entity/news.dart';
 
 class NewsListItem extends StatelessWidget {
   final NewsSchema _newsSchema;
@@ -15,7 +15,8 @@ class NewsListItem extends StatelessWidget {
         width: 100,
       ),
       title: Text(_newsSchema.title),
-      subtitle: Text(DateFormat('yyyy-MM-dd').format(DateTime.parse(_newsSchema.time))),
+      subtitle: Text(
+          DateFormat('yyyy-MM-dd').format(DateTime.parse(_newsSchema.time))),
       onTap: () => {},
     );
   }

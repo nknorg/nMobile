@@ -22,7 +22,7 @@ import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/settings.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/screens/advice_page.dart';
 import 'package:nmobile/screens/select.dart';
 import 'package:nmobile/services/local_authentication_service.dart';
@@ -37,7 +37,8 @@ class SettingsScreen extends StatefulWidget {
   _SettingsScreenState createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAliveClientMixin {
+class _SettingsScreenState extends State<SettingsScreen>
+    with AutomaticKeepAliveClientMixin {
   final LocalStorage _localStorage = LocalStorage();
   GlobalBloc _globalBloc;
   StreamSubscription _globalBlocSubs;
@@ -56,7 +57,8 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
     _globalBlocSubs = _globalBloc.listen((state) {
       if (state is LocaleUpdated) {
         if (_languageList != null) {
-          var item = _languageList.firstWhere((x) => x.value == state.locale, orElse: () => null);
+          var item = _languageList.firstWhere((x) => x.value == state.locale,
+              orElse: () => null);
           if (item != null) {
             setState(() {
               _currentLanguage = item.text;
@@ -69,8 +71,10 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
   }
 
   initAsync() async {
-    _authSelected = await LocalAuthenticationService.instance.protectionStatus();
-    BiometricType authType = await LocalAuthenticationService.instance.getAuthType();
+    _authSelected =
+        await LocalAuthenticationService.instance.protectionStatus();
+    BiometricType authType =
+        await LocalAuthenticationService.instance.getAuthType();
     if (authType == BiometricType.face) {
       _authTypeString = NL10ns.of(Global.appContext).face_id;
     } else if (authType == BiometricType.fingerprint) {
@@ -113,13 +117,20 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
     if (Global.locale == null) {
       _currentLanguage = NL10ns.of(Global.appContext).auto;
     } else {
-      _currentLanguage = _languageList.firstWhere((x) => x.value == Global.locale, orElse: () => null)?.text ?? NL10ns.of(Global.appContext).auto;
+      _currentLanguage = _languageList
+              .firstWhere((x) => x.value == Global.locale, orElse: () => null)
+              ?.text ??
+          NL10ns.of(Global.appContext).auto;
     }
 
     if (Settings.localNotificationType == null) {
-      _currentLocalNotificationType = NL10ns.of(Global.appContext).local_notification_only_name;
+      _currentLocalNotificationType =
+          NL10ns.of(Global.appContext).local_notification_only_name;
     } else {
-      _currentLocalNotificationType = _localNotificationTypeList?.firstWhere((x) => x.value == Settings.localNotificationType, orElse: () => null)?.text ??
+      _currentLocalNotificationType = _localNotificationTypeList
+              ?.firstWhere((x) => x.value == Settings.localNotificationType,
+                  orElse: () => null)
+              ?.text ??
           NL10ns.of(Global.appContext).local_notification_only_name;
     }
 
@@ -140,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
     initData();
 
     String showVersion = Global.version;
-    if (Platform.isIOS){
+    if (Platform.isIOS) {
       showVersion = Global.versionFull;
     }
 
@@ -188,13 +199,19 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                       height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(12),
+                                bottom: Radius.circular(12))),
                         onPressed: () async {
-                          Navigator.pushNamed(context, SelectScreen.routeName, arguments: {
-                            SelectScreen.title: NL10ns.of(context).change_language,
-                            SelectScreen.selectedValue: Global.locale ?? 'auto',
-                            SelectScreen.list: _languageList,
-                          }).then((lang) {
+                          Navigator.pushNamed(context, SelectScreen.routeName,
+                              arguments: {
+                                SelectScreen.title:
+                                    NL10ns.of(context).change_language,
+                                SelectScreen.selectedValue:
+                                    Global.locale ?? 'auto',
+                                SelectScreen.list: _languageList,
+                              }).then((lang) {
                             if (lang != null) {
                               _globalBloc.add(UpdateLanguage(lang));
                             }
@@ -255,24 +272,32 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                                 width: double.infinity,
                                 height: 50,
                                 child: FlatButton(
-                                    padding: const EdgeInsets.only(left: 16, right: 16),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
-                                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: <Widget>[
-                                      Label(
-                                        _authTypeString ?? '',
-                                        type: LabelType.bodyRegular,
-                                        color: DefaultTheme.fontColor1,
-                                        height: 1,
-                                      ),
-                                      Row(children: <Widget>[
-                                        CupertinoSwitch(
-                                            value: _authSelected,
-                                            activeColor: DefaultTheme.primaryColor,
-                                            onChanged: (value) async {
-                                              changeAuthAction(value);
-                                            })
-                                      ])
-                                    ]),
+                                    padding: const EdgeInsets.only(
+                                        left: 16, right: 16),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.vertical(
+                                            top: Radius.circular(12),
+                                            bottom: Radius.circular(12))),
+                                    child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          Label(
+                                            _authTypeString ?? '',
+                                            type: LabelType.bodyRegular,
+                                            color: DefaultTheme.fontColor1,
+                                            height: 1,
+                                          ),
+                                          Row(children: <Widget>[
+                                            CupertinoSwitch(
+                                                value: _authSelected,
+                                                activeColor:
+                                                    DefaultTheme.primaryColor,
+                                                onChanged: (value) async {
+                                                  changeAuthAction(value);
+                                                })
+                                          ])
+                                        ]),
                                     onPressed: () {}))
                           ]))
                     ]),
@@ -298,18 +323,31 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                       height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(12),
+                                bottom: Radius.circular(12))),
                         onPressed: () async {
-                          Navigator.pushNamed(context, SelectScreen.routeName, arguments: {
-                            SelectScreen.title: NL10ns.of(context).local_notification,
-                            SelectScreen.selectedValue: Settings.localNotificationType,
-                            SelectScreen.list: _localNotificationTypeList,
-                          }).then((type) {
+                          Navigator.pushNamed(context, SelectScreen.routeName,
+                              arguments: {
+                                SelectScreen.title:
+                                    NL10ns.of(context).local_notification,
+                                SelectScreen.selectedValue:
+                                    Settings.localNotificationType,
+                                SelectScreen.list: _localNotificationTypeList,
+                              }).then((type) {
                             if (type != null) {
                               Settings.localNotificationType = type;
-                              _localStorage.set('${LocalStorage.SETTINGS_KEY}:${LocalStorage.LOCAL_NOTIFICATION_TYPE_KEY}', type);
+                              _localStorage.set(
+                                  '${LocalStorage.SETTINGS_KEY}:${LocalStorage.LOCAL_NOTIFICATION_TYPE_KEY}',
+                                  type);
                               setState(() {
-                                _currentLocalNotificationType = _localNotificationTypeList?.firstWhere((x) => x.value == Settings.localNotificationType)?.text;
+                                _currentLocalNotificationType =
+                                    _localNotificationTypeList
+                                        ?.firstWhere((x) =>
+                                            x.value ==
+                                            Settings.localNotificationType)
+                                        ?.text;
                               });
                             }
                           });
@@ -371,7 +409,9 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                       height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(12))),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
@@ -397,7 +437,8 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                       height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(0))),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(0))),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
@@ -434,7 +475,9 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                       height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                                bottom: Radius.circular(12))),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
@@ -495,7 +538,10 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                       height: 50,
                       child: FlatButton(
                         padding: const EdgeInsets.only(left: 16, right: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(12),
+                                bottom: Radius.circular(12))),
                         onPressed: () async {
                           Navigator.pushNamed(context, AdvancePage.routeName);
                         },
@@ -535,31 +581,39 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
   changeAuthAction(bool value) async {
     var wallet = await WalletSchema.getWallet();
     if (wallet == null) {
-      CommonUI.showAlertMessage(context, '没有找到钱包信息,退出重新导入');
+      CommonUI.showAlertMessage(context, 'Wallet Info missing,Quit and ReImport');
       return;
     }
-    var password = await BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NL10ns.of(Global.appContext).verify_wallet_password);
+    var password = await BottomDialog.of(Global.appContext)
+        .showInputPasswordDialog(
+            title: NL10ns.of(Global.appContext).verify_wallet_password);
 
     if (password != null) {
       try {
         var w = await wallet.exportWallet(password);
-        _localStorage.set('${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}', value);
+        _localStorage.set(
+            '${LocalStorage.SETTINGS_KEY}:${LocalStorage.AUTH_KEY}', value);
         setState(() {
           _authSelected = value;
         });
       } catch (e) {
-        print("changeAuthActionE"+e.toString());
+        print("changeAuthActionE" + e.toString());
         if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
           showToast(NL10ns.of(context).tip_password_error);
-        }
-        else{
-          CommonUI.showChooseAlert(context, '发生严重错误', e.toString().substring(0,200)+'\n'+'点击确定清除缓存重新导入账户', '确定', '取消', ()=>_shutDown());
+        } else {
+          CommonUI.showChooseAlert(
+              context,
+              'Critical Bug',
+              e.toString().substring(0, 200) + '\n' + 'Clear Cache and ReImport Account',
+              NL10ns.of(context).ok,
+              NL10ns.of(context).cancel,
+              () => _shutDown());
         }
       }
     }
   }
 
-  _shutDown(){
+  _shutDown() {
     _localStorage.clear();
     clearDbFile(Global.applicationRootDirectory);
     Timer(Duration(milliseconds: 200), () async {

@@ -23,7 +23,8 @@ class PhotoPage extends StatefulWidget {
   }
 }
 
-class PhotoPageState extends State<PhotoPage> with SingleTickerProviderStateMixin {
+class PhotoPageState extends State<PhotoPage>
+    with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,9 +46,11 @@ class PhotoPageState extends State<PhotoPage> with SingleTickerProviderStateMixi
                 bool exist = await file.exists();
                 if (exist) {
                   try {
-                    String name = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString();
+                    String name = 'nkn_' +
+                        DateTime.now().millisecondsSinceEpoch.toString();
                     final Uint8List bytes = await file.readAsBytes();
-                    bool success = await ImageSave.saveImage(bytes, 'jpeg', albumName: name);
+                    bool success = await ImageSave.saveImage(bytes, 'jpeg',
+                        albumName: name);
                     if (success) {
                       showToast(NL10ns.of(context).success);
                     } else {

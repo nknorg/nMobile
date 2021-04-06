@@ -6,7 +6,8 @@ import 'package:flutter_svg/svg.dart';
 
 class ImageUtils {}
 
-Widget loadAssetImage(String name, {double width, double height, BoxFit fit, Color color, double scale}) {
+Widget loadAssetImage(String name,
+    {double width, double height, BoxFit fit, Color color, double scale}) {
   return Image.asset(
     getImgPath(name),
     height: height,
@@ -17,7 +18,8 @@ Widget loadAssetImage(String name, {double width, double height, BoxFit fit, Col
   );
 }
 
-Widget loadAssetChatPng(String name, {double width, double height, BoxFit fit, Color color, double scale}) {
+Widget loadAssetChatPng(String name,
+    {double width, double height, BoxFit fit, Color color, double scale}) {
   return Image.asset(
     getImgPath(name, path: 'chat'),
     height: height,
@@ -28,7 +30,8 @@ Widget loadAssetChatPng(String name, {double width, double height, BoxFit fit, C
   );
 }
 
-Widget loadAssetChatSvg(String name, {double width, double height, BoxFit fit, Color color, double scale}) {
+Widget loadAssetChatSvg(String name,
+    {double width, double height, BoxFit fit, Color color, double scale}) {
   return SvgPicture.asset(
     'assets/chat/$name.svg',
     color: color,
@@ -36,7 +39,8 @@ Widget loadAssetChatSvg(String name, {double width, double height, BoxFit fit, C
   );
 }
 
-Widget loadAssetContactImage(String name, {double width, double height, BoxFit fit, Color color, double scale}) {
+Widget loadAssetContactImage(String name,
+    {double width, double height, BoxFit fit, Color color, double scale}) {
   return Image.asset(
     getImgPath(name, path: 'contact'),
     height: height,
@@ -55,7 +59,8 @@ Widget loadAssetIconsImage(String name, {double width, Color color}) {
   );
 }
 
-Widget loadAssetSplashImage(String name, {double width, double height, BoxFit fit, Color color, double scale}) {
+Widget loadAssetSplashImage(String name,
+    {double width, double height, BoxFit fit, Color color, double scale}) {
   return Image.asset(
     getImgPath(name, path: 'splash'),
     height: height,
@@ -66,7 +71,8 @@ Widget loadAssetSplashImage(String name, {double width, double height, BoxFit fi
   );
 }
 
-Widget loadAssetWalletImage(String name, {double width, double height, BoxFit fit, Color color, double scale}) {
+Widget loadAssetWalletImage(String name,
+    {double width, double height, BoxFit fit, Color color, double scale}) {
   return Image.asset(
     getImgPath(name, path: 'wallet'),
     height: height,
@@ -77,7 +83,11 @@ Widget loadAssetWalletImage(String name, {double width, double height, BoxFit fi
   );
 }
 
-Widget loadNetworkImage(String imageUrl, {double width, double height, BoxFit fit: BoxFit.cover, String holderImg: "ic_launcher"}) {
+Widget loadNetworkImage(String imageUrl,
+    {double width,
+    double height,
+    BoxFit fit: BoxFit.cover,
+    String holderImg: "ic_launcher"}) {
   if (TextUtil.isEmpty(imageUrl) || !imageUrl.startsWith('http')) {
     return loadAssetImage(holderImg, height: height, width: width, fit: fit);
   }

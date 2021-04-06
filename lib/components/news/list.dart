@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/components/news/item.dart';
-import 'package:nmobile/schemas/news.dart';
+import 'package:nmobile/model/entity/news.dart';
 
 class NewsList extends StatelessWidget {
   final List<NewsSchema> _newsSchemas;
@@ -17,5 +17,4 @@ class NewsList extends StatelessWidget {
       },
     );
   }
-
 }

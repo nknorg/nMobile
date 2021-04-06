@@ -75,7 +75,9 @@ class PopularItem extends StatelessWidget {
           Container(
             width: 90.w,
             height: 84.h,
-            decoration: BoxDecoration(color: data.titleBgColor, borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(
+                color: data.titleBgColor,
+                borderRadius: BorderRadius.circular(8)),
             child: Center(
               child: Label(
                 data.title,

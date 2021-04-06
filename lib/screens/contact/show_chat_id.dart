@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:nmobile/blocs/account_depends_bloc.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/header/header.dart';
@@ -33,10 +32,13 @@ class ShowMyChatIDState extends State<ShowMyChatID> {
           children: <Widget>[
             SizedBox(height: 20),
             Container(
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(16)),
               child: FlatButton(
                 padding: EdgeInsets.all(16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16), bottom: Radius.circular(16))),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(16), bottom: Radius.circular(16))),
                 onPressed: () {
                   CopyUtils.copyAction(context, NKNClientCaller.currentChatId);
                 },
@@ -78,7 +80,8 @@ class ShowMyChatIDState extends State<ShowMyChatID> {
             ),
             SizedBox(height: 40),
             Container(
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(10)),
               padding: EdgeInsets.all(10.w),
               child: Column(
                 children: <Widget>[

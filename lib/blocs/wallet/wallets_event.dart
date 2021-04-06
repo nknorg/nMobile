@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 
 abstract class WalletsEvent extends Equatable {
   const WalletsEvent();
@@ -9,6 +9,7 @@ abstract class WalletsEvent extends Equatable {
 }
 
 class LoadWallets extends WalletsEvent {}
+
 class ReLoadWallets extends WalletsEvent {}
 
 class UpdateWalletsBalance extends WalletsEvent {}
@@ -58,5 +59,3 @@ class DeleteWallet extends WalletsEvent {
   @override
   String toString() => 'DeleteWallet { wallet: $wallet }';
 }
-
-

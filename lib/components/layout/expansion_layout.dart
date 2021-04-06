@@ -18,13 +18,14 @@ class ExpansionLayout extends StatefulWidget {
     this.isExpanded,
   }) : super(key: key);
 
-
   @override
   _ExpansionLayoutState createState() => _ExpansionLayoutState();
 }
 
-class _ExpansionLayoutState extends State<ExpansionLayout> with SingleTickerProviderStateMixin {
-  static final Animatable<double> _easeInTween = CurveTween(curve: Curves.easeIn);
+class _ExpansionLayoutState extends State<ExpansionLayout>
+    with SingleTickerProviderStateMixin {
+  static final Animatable<double> _easeInTween =
+      CurveTween(curve: Curves.easeIn);
   AnimationController _controller;
   Animation<double> _heightFactor;
 
@@ -57,7 +58,8 @@ class _ExpansionLayoutState extends State<ExpansionLayout> with SingleTickerProv
       }
       PageStorage.of(context)?.writeState(context, _isExpanded);
     });
-    if (widget.onExpansionChanged != null) widget.onExpansionChanged(_isExpanded);
+    if (widget.onExpansionChanged != null)
+      widget.onExpansionChanged(_isExpanded);
   }
 
   Widget _buildChildren(BuildContext context, Widget child) {

@@ -34,32 +34,52 @@ Map<String, WidgetBuilder> routes = {
   AppScreen.routeName: (BuildContext context) => AppScreen(0),
   HomeScreen.routeName: (BuildContext context) => HomeScreen(),
   ScannerScreen.routeName: (BuildContext context) => ScannerScreen(),
-  SelectScreen.routeName: (BuildContext context, {arguments}) => SelectScreen(arguments: arguments),
-  PhotoPage.routeName: (BuildContext context, {arguments}) => PhotoPage(arguments: arguments),
-  CreateNknWalletScreen.routeName: (BuildContext context) => CreateNknWalletScreen(),
-  CreateEthWalletScreen.routeName: (BuildContext context) => CreateEthWalletScreen(),
-  ImportWalletScreen.routeName: (BuildContext context, {arguments}) => ImportWalletScreen(type: arguments),
-  NknWalletDetailScreen.routeName: (BuildContext context, {arguments}) => NknWalletDetailScreen(arguments: arguments),
-  NknWalletExportScreen.routeName: (BuildContext context, {arguments}) => NknWalletExportScreen(arguments: arguments),
-  ReceiveNknScreen.routeName: (BuildContext context, {arguments}) => ReceiveNknScreen(arguments: arguments),
-  SendNknScreen.routeName: (BuildContext context, {arguments}) => SendNknScreen(arguments: arguments),
-  SendErc20Screen.routeName: (BuildContext context, {arguments}) => SendErc20Screen(arguments: arguments),
+  SelectScreen.routeName: (BuildContext context, {arguments}) =>
+      SelectScreen(arguments: arguments),
+  PhotoPage.routeName: (BuildContext context, {arguments}) =>
+      PhotoPage(arguments: arguments),
+  CreateNknWalletScreen.routeName: (BuildContext context) =>
+      CreateNknWalletScreen(),
+  CreateEthWalletScreen.routeName: (BuildContext context) =>
+      CreateEthWalletScreen(),
+  ImportWalletScreen.routeName: (BuildContext context, {arguments}) =>
+      ImportWalletScreen(type: arguments),
+  NknWalletDetailScreen.routeName: (BuildContext context, {arguments}) =>
+      NknWalletDetailScreen(arguments: arguments),
+  NknWalletExportScreen.routeName: (BuildContext context, {arguments}) =>
+      NknWalletExportScreen(arguments: arguments),
+  ReceiveNknScreen.routeName: (BuildContext context, {arguments}) =>
+      ReceiveNknScreen(arguments: arguments),
+  SendNknScreen.routeName: (BuildContext context, {arguments}) =>
+      SendNknScreen(arguments: arguments),
+  SendErc20Screen.routeName: (BuildContext context, {arguments}) =>
+      SendErc20Screen(arguments: arguments),
 //  NoConnectScreen.routeName: (BuildContext context) => NoConnectScreen(),
-  ChatSinglePage.routeName: (BuildContext context, {arguments}) => ChatSinglePage(arguments: arguments),
-  ChatGroupPage.routeName: (BuildContext context, {arguments}) => ChatGroupPage(arguments: arguments),
-  ContactScreen.routeName: (BuildContext context, {arguments}) => ContactScreen(contactInfo: arguments),
-  ContactHome.routeName: (BuildContext context, {arguments}) => ContactHome(arguments: arguments),
-  ChannelSettingsScreen.routeName: (BuildContext context, {arguments}) => ChannelSettingsScreen(arguments: arguments),
-  ChannelMembersScreen.routeName: (BuildContext context, {arguments}) => ChannelMembersScreen(topic: arguments),
-  CommonWebViewPage.routeName: (BuildContext context, {arguments}) => CommonWebViewPage(arguments: arguments),
-  ChangeUpdateContentPage.routeName: (BuildContext context, {arguments}) => ChangeUpdateContentPage(arguments: arguments),
+  ChatSinglePage.routeName: (BuildContext context, {arguments}) =>
+      ChatSinglePage(arguments: arguments),
+  ChatGroupPage.routeName: (BuildContext context, {arguments}) =>
+      ChatGroupPage(arguments: arguments),
+  ContactScreen.routeName: (BuildContext context, {arguments}) =>
+      ContactScreen(contactInfo: arguments),
+  ContactHome.routeName: (BuildContext context, {arguments}) =>
+      ContactHome(arguments: arguments),
+  ChannelSettingsScreen.routeName: (BuildContext context, {arguments}) =>
+      ChannelSettingsScreen(arguments: arguments),
+  ChannelMembersScreen.routeName: (BuildContext context, {arguments}) =>
+      ChannelMembersScreen(topic: arguments),
+  CommonWebViewPage.routeName: (BuildContext context, {arguments}) =>
+      CommonWebViewPage(arguments: arguments),
+  ChangeUpdateContentPage.routeName: (BuildContext context, {arguments}) =>
+      ChangeUpdateContentPage(arguments: arguments),
   AddContact.routeName: (BuildContext context) => AddContact(),
   PopularGroupPage.routeName: (BuildContext context) => PopularGroupPage(),
   ShowMyChatID.routeName: (BuildContext context) => ShowMyChatID(),
   WalletScreen.routeName: (BuildContext context) => WalletScreen(),
   AdvancePage.routeName: (BuildContext context) => AdvancePage(),
-  ChatProfile.routeName: (BuildContext context, {arguments}) => ChatProfile(arguments: arguments),
-  ShowMyChatAddress.routeName: (BuildContext context, {arguments}) => ShowMyChatAddress(arguments: arguments),
+  ChatProfile.routeName: (BuildContext context, {arguments}) =>
+      ChatProfile(arguments: arguments),
+  ShowMyChatAddress.routeName: (BuildContext context, {arguments}) =>
+      ShowMyChatAddress(arguments: arguments),
 };
 
 var onGenerateRoute = (RouteSettings settings) {
@@ -69,10 +89,13 @@ var onGenerateRoute = (RouteSettings settings) {
   final Function pageContentBuilder = routes[name];
   if (pageContentBuilder != null) {
     if (settings.arguments != null) {
-      final Route route = MaterialPageRoute(builder: (context) => pageContentBuilder(context, arguments: settings.arguments));
+      final Route route = MaterialPageRoute(
+          builder: (context) =>
+              pageContentBuilder(context, arguments: settings.arguments));
       return route;
     } else {
-      final Route route = MaterialPageRoute(builder: (context) => pageContentBuilder(context));
+      final Route route =
+          MaterialPageRoute(builder: (context) => pageContentBuilder(context));
       return route;
     }
   }

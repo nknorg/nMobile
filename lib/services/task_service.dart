@@ -8,7 +8,7 @@ import 'package:nmobile/blocs/wallet/wallets_state.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/utils/log_tag.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
@@ -23,7 +23,8 @@ class TaskService with Tag {
     if (!_isInit) {
       _walletsBloc = BlocProvider.of<WalletsBloc>(Global.appContext);
       _erc20client = EthErc20Client();
-      _queryNknWalletBalanceTask = Timer.periodic(Duration(seconds: 60), (timer) {
+      _queryNknWalletBalanceTask =
+          Timer.periodic(Duration(seconds: 60), (timer) {
         queryNknWalletBalanceTask();
       });
 
@@ -38,12 +39,14 @@ class TaskService with Tag {
       List<Future> futures = <Future>[];
       state.wallets.forEach((w) {
         if (w.type == WalletSchema.ETH_WALLET) {
-          futures.add(_erc20client.getBalance(address: w.address).then((balance) {
+          futures
+              .add(_erc20client.getBalance(address: w.address).then((balance) {
             NLog.w('Get Wallet:${w.name} | balance: ${balance.ether}');
             w.balanceEth = balance.ether;
             _walletsBloc.add(UpdateWallet(w));
           }));
-          futures.add(_erc20client.getNknBalance(address: w.address).then((balance) {
+          futures.add(
+              _erc20client.getNknBalance(address: w.address).then((balance) {
             if (balance != null) {
               NLog.w('Get Wallet:${w.name} | balance: ${balance.ether}');
               w.balance = balance.ether;
@@ -51,8 +54,8 @@ class TaskService with Tag {
             }
           }));
         } else {
-          futures.add(NknWalletPlugin.
-          getBalanceAsync(w.address).then((balance) {
+          futures
+              .add(NknWalletPlugin.getBalanceAsync(w.address).then((balance) {
             w.balance = balance;
             _walletsBloc.add(UpdateWallet(w));
           }));

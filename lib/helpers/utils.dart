@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 import 'package:path/path.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:web3dart/credentials.dart';
@@ -35,7 +36,8 @@ String getPublicKeyByClientAddr(String addr) {
 
 String addressStringToProgramHash(String address) {
   var addressBytes = base58.decode(address);
-  var programHashBytes = addressBytes.sublist(ADDRESS_GEN_PREFIX_LEN, addressBytes.length - CHECKSUM_LEN);
+  var programHashBytes = addressBytes.sublist(
+      ADDRESS_GEN_PREFIX_LEN, addressBytes.length - CHECKSUM_LEN);
   return hexEncode(programHashBytes);
 }
 
@@ -70,7 +72,8 @@ bool verifyAddress(String address) {
     }
     var programHash = addressStringToProgramHash(address);
     var addressVerifyCode = getAddressStringVerifyCode(address);
-    var programHashVerifyCode = genAddressVerifyCodeFromProgramHash(programHash);
+    var programHashVerifyCode =
+        genAddressVerifyCodeFromProgramHash(programHash);
     return addressVerifyCode == programHashVerifyCode;
   } catch (e) {
     return false;
@@ -81,7 +84,7 @@ bool isValidEthAddress(String address) {
   try {
     EthereumAddress.fromHex(address);
     return true;
-  }catch (e) {
+  } catch (e) {
     return false;
   }
 }
@@ -93,7 +96,9 @@ Future<File> compressAndGetFile(String accountPubkey, File file) async {
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
-  var result = await FlutterImageCompress.compressAndGetFile(file.absolute.path, targetPath, quality: 30, minWidth: 640, minHeight: 1024, format: CompressFormat.jpeg);
+  var result = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path, targetPath,
+      quality: 30, minWidth: 640, minHeight: 1024, format: CompressFormat.jpeg);
   return result;
 }
 
@@ -126,6 +131,9 @@ String createFileCachePath(String accountPubkey, File file) {
 }
 
 String createContactFilePath(String accountPubkey, File file) {
+  if (file == null){
+    NLog.w('Wrong!!!!! createContactFilePath file is null');
+  }
   String name = hexEncode(md5.convert(file.readAsBytesSync()).bytes);
   Directory rootDir = Global.applicationRootDirectory;
   String p = join(rootDir.path, accountPubkey, 'contact');
@@ -271,7 +279,7 @@ Duration blockToExpiresTime(int blockCount) {
 }
 
 final privateTopicRegExp = RegExp(r'\.[0-9a-f]{64}$');
-bool isPrivateTopic(String topic) {
+bool isPrivateTopicReg(String topic) {
   return privateTopicRegExp.hasMatch(topic);
 }
 

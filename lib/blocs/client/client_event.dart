@@ -1,10 +1,8 @@
-
 import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
-import 'package:nmobile/schemas/message.dart';
-import 'package:nmobile/schemas/wallet.dart';
-
+import 'package:nmobile/model/entity/message.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 
 typedef OnConnectFunc = void Function();
 typedef OnMessageFunc = void Function(String src, String data, Uint8List pid);
@@ -23,7 +21,14 @@ class NKNCreateClientEvent extends NKNClientEvent {
   const NKNCreateClientEvent(this.wallet, this.password);
 }
 
-class NKNRecreateClientEvent extends NKNClientEvent{}
+class NKNConnectingClientEvent extends NKNClientEvent {
+  final Uint8List seedList;
+  final String clientAddress;
+
+  const NKNConnectingClientEvent(this.seedList, this.clientAddress);
+}
+
+class NKNRecreateClientEvent extends NKNClientEvent {}
 
 class NKNDisConnectClientEvent extends NKNClientEvent {}
 
@@ -34,4 +39,3 @@ class NKNOnMessageEvent extends NKNClientEvent {
 
   const NKNOnMessageEvent(this.message);
 }
-

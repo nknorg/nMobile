@@ -53,7 +53,10 @@ class NotificationDialog extends StatefulWidget {
           this.cancelFunc = cancelFunc;
           return NotificationToast(
             child: this,
-            dismissDirections: const [DismissDirection.horizontal, DismissDirection.up],
+            dismissDirections: const [
+              DismissDirection.horizontal,
+              DismissDirection.up
+            ],
             slideOffFunc: cancelFunc,
           );
         },
@@ -73,7 +76,8 @@ class _NotificationDialogState extends State<NotificationDialog> {
       alignment: Alignment.topCenter,
       padding: EdgeInsets.all(0),
       height: 140,
-      decoration: BoxDecoration(color: widget.color ?? DefaultTheme.primaryColor),
+      decoration:
+          BoxDecoration(color: widget.color ?? DefaultTheme.primaryColor),
       child: SafeArea(
         bottom: false,
         child: Row(
@@ -81,11 +85,17 @@ class _NotificationDialogState extends State<NotificationDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            (widget.icon ?? SvgPicture.asset('assets/wallet/dui_gou_yuan_quan.svg', color: Colours.white)).pad(t: 16),
+            (widget.icon ??
+                    SvgPicture.asset('assets/wallet/dui_gou_yuan_quan.svg',
+                        color: Colours.white))
+                .pad(t: 16),
             _buildText(context),
             GestureDetector(
               behavior: HitTestBehavior.translucent,
-              child: SvgPicture.asset('assets/icons/x_cha.svg', color: Colours.white, width: 12, height: 12).center.sized(w: 48, h: 48),
+              child: SvgPicture.asset('assets/icons/x_cha.svg',
+                      color: Colours.white, width: 12, height: 12)
+                  .center
+                  .sized(w: 48, h: 48),
               onTap: widget.cancelFunc,
             ),
           ],
@@ -102,11 +112,15 @@ class _NotificationDialogState extends State<NotificationDialog> {
         children: <Widget>[
           Text(
             widget.title,
-            style: TextStyle(fontSize: DefaultTheme.h4FontSize, fontWeight: FontWeight.bold, color: Colours.white),
+            style: TextStyle(
+                fontSize: DefaultTheme.h4FontSize,
+                fontWeight: FontWeight.bold,
+                color: Colours.white),
           ).pad(l: 16, t: 14),
           Text(
             widget.content,
-            style: TextStyle(fontSize: DefaultTheme.bodySmallFontSize, color: Colours.white),
+            style: TextStyle(
+                fontSize: DefaultTheme.bodySmallFontSize, color: Colours.white),
           ).pad(l: 16, t: 6),
         ],
       ),

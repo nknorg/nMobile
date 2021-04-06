@@ -5,8 +5,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nmobile/blocs/chat/auth_bloc.dart';
-import 'package:nmobile/blocs/chat/auth_state.dart';
+import 'package:nmobile/blocs/auth/auth_bloc.dart';
+import 'package:nmobile/blocs/auth/auth_state.dart';
 import 'package:nmobile/blocs/contact/contact_bloc.dart';
 import 'package:nmobile/blocs/contact/contact_state.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
@@ -20,9 +20,9 @@ import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/event/eventbus.dart';
 import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/model/db/topic_repo.dart';
-import 'package:nmobile/schemas/chat.dart';
-import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/model/entity/topic_repo.dart';
+import 'package:nmobile/model/entity/chat.dart';
+import 'package:nmobile/model/entity/contact.dart';
 import 'package:nmobile/screens/chat/channel.dart';
 import 'package:nmobile/screens/contact/add_contact.dart';
 import 'package:nmobile/screens/contact/contact.dart';
@@ -111,7 +111,10 @@ class _ContactHomeState extends State<ContactHome> {
 
   @override
   Widget build(BuildContext context) {
-    if (_allTopic.length > 0 || _allStrangerContacts.length > 0 || searchText.length != 0 || _allFriends.length > 0) {
+    if (_allTopic.length > 0 ||
+        _allStrangerContacts.length > 0 ||
+        searchText.length != 0 ||
+        _allFriends.length > 0) {
       List<Widget> friendList = getFriendItemView();
       List<Widget> strangerContactList = getStrangeContactList();
       List<Widget> topicList = getTopicList();
@@ -120,11 +123,13 @@ class _ContactHomeState extends State<ContactHome> {
         appBar: Header(
           titleChild: GestureDetector(
             onTap: () async {
-              ContactSchema currentUser = await ContactSchema.fetchCurrentUser();
-              Navigator.of(context).pushNamed(ContactScreen.routeName, arguments: currentUser);
+              ContactSchema currentUser =
+                  await ContactSchema.fetchCurrentUser();
+              Navigator.of(context)
+                  .pushNamed(ContactScreen.routeName, arguments: currentUser);
             },
-            child: BlocBuilder<AuthBloc, AuthState>(builder: (context, state){
-              if (state is AuthToUserState){
+            child: BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
+              if (state is AuthToUserState) {
                 ContactSchema currentUser = state.currentUser;
                 String currentChatId = NKNClientCaller.currentChatId;
                 return Flex(
@@ -140,8 +145,8 @@ class _ContactHomeState extends State<ContactHome> {
                           tag: 'header_avatar:$currentChatId',
                           child: Container(
                             child: CommonUI.avatarWidget(
-                                radiusSize: 24,
-                                contact: currentUser,
+                              radiusSize: 24,
+                              contact: currentUser,
                             ),
                           ),
                         ),
@@ -152,8 +157,11 @@ class _ContactHomeState extends State<ContactHome> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Label(currentUser.name, type: LabelType.h3, dark: true),
-                          Label(NL10ns.of(context).connected, type: LabelType.bodySmall, color: DefaultTheme.riseColor),
+                          Label(currentUser.getShowName,
+                              type: LabelType.h3, dark: true),
+                          Label(NL10ns.of(context).connected,
+                              type: LabelType.bodySmall,
+                              color: DefaultTheme.riseColor),
                         ],
                       ),
                     )
@@ -224,10 +232,13 @@ class _ContactHomeState extends State<ContactHome> {
                               style: TextStyle(fontSize: 14, height: 1.5),
                               decoration: InputDecoration(
                                 hintText: NL10ns.of(context).search,
-                                contentPadding: const EdgeInsets.only(left: 0, right: 16, top: 9, bottom: 9),
+                                contentPadding: const EdgeInsets.only(
+                                    left: 0, right: 16, top: 9, bottom: 9),
                                 border: UnderlineInputBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(20)),
-                                  borderSide: const BorderSide(width: 0, style: BorderStyle.none),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(20)),
+                                  borderSide: const BorderSide(
+                                      width: 0, style: BorderStyle.none),
                                 ),
                               ),
                             ),
@@ -313,8 +324,8 @@ class _ContactHomeState extends State<ContactHome> {
                                 tag: 'avatar:${item.clientAddress}',
                                 child: Container(
                                   child: CommonUI.avatarWidget(
-                                      radiusSize: 24,
-                                      contact: item,
+                                    radiusSize: 24,
+                                    contact: item,
                                   ),
                                 ),
                               ),
@@ -332,11 +343,13 @@ class _ContactHomeState extends State<ContactHome> {
                                     height: 50,
                                     child: Column(
                                       mainAxisSize: MainAxisSize.max,
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: <Widget>[
                                         Label(
-                                          item.name,
+                                          item.getShowName,
                                           type: LabelType.h3,
                                         ),
                                         Row(
@@ -450,10 +463,8 @@ class _ContactHomeState extends State<ContactHome> {
                     margin: const EdgeInsets.only(right: 8),
                     alignment: Alignment.center,
                     child: Container(
-                      child: CommonUI.avatarWidget(
-                          radiusSize: 24,
-                          contact: item
-                      ),
+                      child:
+                          CommonUI.avatarWidget(radiusSize: 24, contact: item),
                     ),
                   ),
                 ),
@@ -462,7 +473,9 @@ class _ContactHomeState extends State<ContactHome> {
                   child: Container(
                     padding: const EdgeInsets.only(),
                     decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: DefaultTheme.backgroundColor2)),
+                      border: Border(
+                          bottom:
+                              BorderSide(color: DefaultTheme.backgroundColor2)),
                     ),
                     child: Flex(
                       direction: Axis.horizontal,
@@ -478,7 +491,7 @@ class _ContactHomeState extends State<ContactHome> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
                                 Label(
-                                  item.name,
+                                  item.getShowName,
                                   type: LabelType.h3,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -564,8 +577,8 @@ class _ContactHomeState extends State<ContactHome> {
                   alignment: Alignment.center,
                   child: Container(
                     child: CommonUI.avatarWidget(
-                        radiusSize: 24,
-                        contact: item,
+                      radiusSize: 24,
+                      contact: item,
                     ),
                   ),
                 ),
@@ -575,7 +588,9 @@ class _ContactHomeState extends State<ContactHome> {
                 child: Container(
                   padding: const EdgeInsets.only(),
                   decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: DefaultTheme.backgroundColor2)),
+                    border: Border(
+                        bottom:
+                            BorderSide(color: DefaultTheme.backgroundColor2)),
                   ),
                   child: Flex(
                     direction: Axis.horizontal,
@@ -591,7 +606,7 @@ class _ContactHomeState extends State<ContactHome> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               Label(
-                                item.name,
+                                item.getShowName,
                                 type: LabelType.h3,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -660,7 +675,8 @@ class _ContactHomeState extends State<ContactHome> {
       topicList.add(InkWell(
         onTap: () async {
           Topic topic = await TopicRepo().getTopicByName(item.topic);
-          Navigator.of(context).pushNamed(ChatGroupPage.routeName, arguments: ChatSchema(type: ChatType.Channel, topic: topic));
+          Navigator.of(context).pushNamed(ChatGroupPage.routeName,
+              arguments: ChatSchema(type: ChatType.Channel, topic: topic));
         },
         child: Container(
           height: 72,
@@ -687,7 +703,9 @@ class _ContactHomeState extends State<ContactHome> {
                 child: Container(
                   padding: const EdgeInsets.only(),
                   decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: DefaultTheme.backgroundColor2)),
+                    border: Border(
+                        bottom:
+                            BorderSide(color: DefaultTheme.backgroundColor2)),
                   ),
                   child: Flex(
                     direction: Axis.horizontal,
@@ -704,7 +722,7 @@ class _ContactHomeState extends State<ContactHome> {
                             children: <Widget>[
                               Row(
                                 children: <Widget>[
-                                  item.type == TopicType.private
+                                  item.isPrivateTopic()
                                       ? loadAssetIconsImage(
                                           'lock',
                                           width: 18,
@@ -712,7 +730,7 @@ class _ContactHomeState extends State<ContactHome> {
                                         )
                                       : Container(),
                                   Label(
-                                    item.shortName,
+                                    item.topicShort,
                                     type: LabelType.h3,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -749,8 +767,13 @@ class _ContactHomeState extends State<ContactHome> {
       });
     } else {
       setState(() {
-        _strangerContacts = _allStrangerContacts.where((ContactSchema e) => e.name.toLowerCase().contains(val.toLowerCase())).toList();
-        _friends = _allFriends.where((ContactSchema e) => e.name.contains(val)).toList();
+        _strangerContacts = _allStrangerContacts
+            .where((ContactSchema e) =>
+                e.getShowName.toLowerCase().contains(val.toLowerCase()))
+            .toList();
+        _friends = _allFriends
+            .where((ContactSchema e) => e.getShowName.contains(val))
+            .toList();
         _topic = _allTopic.where((Topic e) => e.topic.contains(val)).toList();
       });
     }

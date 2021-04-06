@@ -9,7 +9,8 @@ import 'package:nmobile/utils/image_utils.dart';
 
 class WalletNotBackedUpDialog extends StatefulWidget {
   @override
-  _WalletNotBackedUpDialogState createState() => _WalletNotBackedUpDialogState();
+  _WalletNotBackedUpDialogState createState() =>
+      _WalletNotBackedUpDialogState();
   final BuildContext _context;
   VoidCallback _callback;
 
@@ -71,12 +72,17 @@ class _WalletNotBackedUpDialogState extends State<WalletNotBackedUpDialog> {
                 children: <Widget>[
                   Text(
                     NL10ns.of(context).d_not_backed_up_title,
-                    style: TextStyle(fontSize: DefaultTheme.h2FontSize, color: Colours.dark_2d, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: DefaultTheme.h2FontSize,
+                        color: Colours.dark_2d,
+                        fontWeight: FontWeight.bold),
                     maxLines: 2,
                   ),
                   Text(
                     NL10ns.of(context).d_not_backed_up_desc,
-                    style: TextStyle(fontSize: DefaultTheme.h3FontSize, color: Colours.gray_81),
+                    style: TextStyle(
+                        fontSize: DefaultTheme.h3FontSize,
+                        color: Colours.gray_81),
                   ).pad(t: 16)
                 ],
               ).pad(l: 24, r: 24),

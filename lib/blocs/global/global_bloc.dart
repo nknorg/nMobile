@@ -27,7 +27,8 @@ class GlobalBloc extends Bloc<GlobalEvent, GlobalState> {
 
   Future _setLanguage(String lang) async {
     List<Future> futures = <Future>[];
-    futures.add(_localStorage.set('${LocalStorage.SETTINGS_KEY}:${LocalStorage.LOCALE_KEY}', lang));
+    futures.add(_localStorage.set(
+        '${LocalStorage.SETTINGS_KEY}:${LocalStorage.LOCALE_KEY}', lang));
     await Future.wait(futures);
   }
 }

@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/model/entity/contact.dart';
 
 abstract class ContactEvent extends Equatable {
   const ContactEvent();
@@ -13,12 +13,17 @@ class LoadContact extends ContactEvent {
   const LoadContact({this.address});
 }
 
-class RefreshContact extends ContactEvent {
-  final int id;
-  const RefreshContact({this.id}); 
+class LoadContactInfoEvent extends ContactEvent {
+  final String address;
+  const LoadContactInfoEvent(this.address);
 }
 
-class UpdateUserInfoEvent extends ContactEvent{
+class RefreshContact extends ContactEvent {
+  final int id;
+  const RefreshContact({this.id});
+}
+
+class UpdateUserInfoEvent extends ContactEvent {
   final ContactSchema userInfo;
   const UpdateUserInfoEvent(this.userInfo);
 }

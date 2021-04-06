@@ -15,12 +15,14 @@ class TransferStatusPopup extends PopupRoute {
   }
 
   @override
-  Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
+  Widget buildPage(BuildContext context, Animation<double> animation,
+      Animation<double> secondaryAnimation) {
     return Material(
       color: Colors.transparent,
       child: Stack(
         children: [
-          Container(width: double.infinity, height: 143, color: Colours.green_06),
+          Container(
+              width: double.infinity, height: 143, color: Colours.green_06),
           Positioned(
             left: 24,
             top: 46,
@@ -29,11 +31,16 @@ class TransferStatusPopup extends PopupRoute {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                SvgPicture.asset('assets/wallet/dui_gou_yuan_quan.svg', color: Colours.white).pad(t: 16),
+                SvgPicture.asset('assets/wallet/dui_gou_yuan_quan.svg',
+                        color: Colours.white)
+                    .pad(t: 16),
                 _buildText(context),
                 GestureDetector(
                   behavior: HitTestBehavior.translucent,
-                  child: SvgPicture.asset('assets/icons/x_cha.svg', color: Colours.white, width: 12, height: 12).center.sized(w: 48, h: 48),
+                  child: SvgPicture.asset('assets/icons/x_cha.svg',
+                          color: Colours.white, width: 12, height: 12)
+                      .center
+                      .sized(w: 48, h: 48),
                   onTap: () {
                     Navigator.pop(context);
                   },
@@ -54,11 +61,15 @@ class TransferStatusPopup extends PopupRoute {
         children: <Widget>[
           Text(
             NL10ns.of(context).transfer_initiated,
-            style: TextStyle(fontSize: DefaultTheme.h4FontSize, fontWeight: FontWeight.bold, color: Colours.white),
+            style: TextStyle(
+                fontSize: DefaultTheme.h4FontSize,
+                fontWeight: FontWeight.bold,
+                color: Colours.white),
           ).pad(l: 16, t: 14),
           Text(
             NL10ns.of(context).transfer_initiated_desc,
-            style: TextStyle(fontSize: DefaultTheme.bodySmallFontSize, color: Colours.white),
+            style: TextStyle(
+                fontSize: DefaultTheme.bodySmallFontSize, color: Colours.white),
           ).pad(l: 16, t: 12),
         ],
       ),

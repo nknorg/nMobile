@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:nmobile/schemas/wallet.dart';
-
+import 'package:nmobile/model/entity/wallet.dart';
 
 abstract class FilteredWalletsState extends Equatable {
   const FilteredWalletsState();

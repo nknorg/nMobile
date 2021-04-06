@@ -1,10 +1,7 @@
 import 'dart:io';
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:nmobile/blocs/account_depends_bloc.dart';
-import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/components/box/body.dart';
 import 'package:nmobile/components/button.dart';
 import 'package:nmobile/components/header/header.dart';
@@ -12,16 +9,15 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/textbox.dart';
 import 'package:nmobile/consts/theme.dart';
 import 'package:nmobile/event/eventbus.dart';
-import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/nkn_image_utils.dart';
-import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
+import 'package:nmobile/model/datacenter/contact_data_center.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/schemas/contact.dart';
+import 'package:nmobile/model/entity/contact.dart';
 import 'package:nmobile/screens/scanner.dart';
 import 'package:nmobile/utils/image_utils.dart';
-import 'package:path/path.dart';
+import 'package:oktoast/oktoast.dart';
 
 class AddContact extends StatefulWidget {
   static final String routeName = "AddContact";
@@ -45,6 +41,8 @@ class AddContactState extends State<AddContact> {
 
   File imageHeaderFile;
 
+  String scanNickName;
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +62,8 @@ class AddContactState extends State<AddContact> {
         chatId = qm.toString();
       }
 
+      scanNickName = nickName;
+
       setState(() {
         _nameController.text = nickName;
         _pubKeyController.text = chatId;
@@ -77,6 +77,8 @@ class AddContactState extends State<AddContact> {
         });
       }
     } catch (e) {}
+    // todo Check return '';
+    return '';
   }
 
   @override
@@ -93,10 +95,11 @@ class AddContactState extends State<AddContact> {
             color: DefaultTheme.backgroundLightColor,
           ),
           onPressed: () async {
-            var qrData = await Navigator.of(context).pushNamed(ScannerScreen.routeName);
-            if (qrData != null) {
-              formatName(qrData);
-            }
+            Navigator.of(context).pushNamed(ScannerScreen.routeName).then((value) => {
+              if (value != null) {
+                formatName(value),
+              }
+            });
           },
         ),
       ),
@@ -114,7 +117,8 @@ class AddContactState extends State<AddContact> {
                     autovalidate: true,
                     onChanged: () {
                       setState(() {
-                        _formValid = (_formKey.currentState as FormState).validate();
+                        _formValid =
+                            (_formKey.currentState as FormState).validate();
                       });
                     },
                     child: Flex(
@@ -139,23 +143,32 @@ class AddContactState extends State<AddContact> {
                                             imageHeaderFile == null
                                                 ? CircleAvatar(
                                                     radius: 80,
-                                                    backgroundColor: DefaultTheme.backgroundColor1,
-                                                    child: loadAssetIconsImage('user', color: DefaultTheme.fontColor2),
+                                                    backgroundColor:
+                                                        DefaultTheme
+                                                            .backgroundColor1,
+                                                    child: loadAssetIconsImage(
+                                                        'user',
+                                                        color: DefaultTheme
+                                                            .fontColor2),
                                                   )
                                                 : CircleAvatar(
                                                     radius: 80,
-                                                    backgroundImage: FileImage(imageHeaderFile),
+                                                    backgroundImage: FileImage(
+                                                        imageHeaderFile),
                                                   ),
                                             InkWell(
                                               onTap: _updatePic,
                                               child: Align(
-                                                alignment: Alignment.bottomRight,
+                                                alignment:
+                                                    Alignment.bottomRight,
                                                 child: CircleAvatar(
                                                   radius: 14,
-                                                  backgroundColor: DefaultTheme.primaryColor,
+                                                  backgroundColor:
+                                                      DefaultTheme.primaryColor,
                                                   child: loadAssetIconsImage(
                                                     'camera',
-                                                    color: DefaultTheme.backgroundLightColor,
+                                                    color: DefaultTheme
+                                                        .backgroundLightColor,
                                                     width: 14,
                                                   ),
                                                 ),
@@ -172,7 +185,8 @@ class AddContactState extends State<AddContact> {
                                     child: Padding(
                                       padding: EdgeInsets.only(bottom: 32),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: <Widget>[
                                           Label(
                                             NL10ns.of(context).nickname,
@@ -180,14 +194,19 @@ class AddContactState extends State<AddContact> {
                                             textAlign: TextAlign.start,
                                           ),
                                           Textbox(
-                                            hintText: NL10ns.of(context).input_name,
+                                            hintText:
+                                                NL10ns.of(context).input_name,
                                             focusNode: _nameFocusNode,
                                             controller: _nameController,
                                             onFieldSubmitted: (_) {
-                                              FocusScope.of(context).requestFocus(_pubKeyFocusNode);
+                                              FocusScope.of(context)
+                                                  .requestFocus(
+                                                      _pubKeyFocusNode);
                                             },
-                                            textInputAction: TextInputAction.next,
-                                            validator: Validator.of(context).contactName(),
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            validator: Validator.of(context)
+                                                .contactName(),
                                           ),
                                           SizedBox(height: 14.h),
                                           Label(
@@ -200,17 +219,23 @@ class AddContactState extends State<AddContact> {
                                             controller: _pubKeyController,
                                             maxLines: 2,
                                             multi: true,
-                                            hintText: NL10ns.of(context).input_pubKey,
+                                            hintText:
+                                                NL10ns.of(context).input_pubKey,
                                             onFieldSubmitted: (_) {
-                                              FocusScope.of(context).requestFocus(_addressFocusNode);
+                                              FocusScope.of(context)
+                                                  .requestFocus(
+                                                      _addressFocusNode);
                                             },
-                                            textInputAction: TextInputAction.next,
-                                            validator: Validator.of(context).pubKey(),
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            validator:
+                                                Validator.of(context).pubKey(),
                                           ),
                                           Row(
                                             children: <Widget>[
                                               Label(
-                                                NL10ns.of(context).wallet_address,
+                                                NL10ns.of(context)
+                                                    .wallet_address,
                                                 type: LabelType.h3,
                                                 textAlign: TextAlign.start,
                                               ),
@@ -224,7 +249,8 @@ class AddContactState extends State<AddContact> {
                                           Textbox(
                                             focusNode: _addressFocusNode,
                                             controller: _addressController,
-                                            hintText: NL10ns.of(context).input_wallet_address,
+                                            hintText: NL10ns.of(context)
+                                                .input_wallet_address,
                                           ),
                                           Row(
                                             children: <Widget>[
@@ -243,7 +269,8 @@ class AddContactState extends State<AddContact> {
                                           Textbox(
                                             focusNode: _notesFocusNode,
                                             controller: _notesController,
-                                            hintText: NL10ns.of(context).input_notes,
+                                            hintText:
+                                                NL10ns.of(context).input_notes,
                                           ),
                                         ],
                                       ),
@@ -262,7 +289,8 @@ class AddContactState extends State<AddContact> {
                               child: Column(
                                 children: <Widget>[
                                   Padding(
-                                    padding: EdgeInsets.only(left: 30, right: 30),
+                                    padding:
+                                        EdgeInsets.only(left: 30, right: 30),
                                     child: Button(
                                       text: NL10ns.of(context).save_contact,
                                       disabled: !_formValid,
@@ -295,9 +323,28 @@ class AddContactState extends State<AddContact> {
       String pubKey = _pubKeyController.text;
       String address = _addressController.text;
       String note = _notesController.text;
-      ContactSchema contact = ContactSchema(firstName: name, clientAddress: pubKey, nknWalletAddress: address, type: ContactType.friend, notes: note);
+      ContactSchema contact = ContactSchema(
+          firstName: name,
+          clientAddress: pubKey,
+          nknWalletAddress: address,
+          type: ContactType.friend,
+          notes: note);
       var result = await contact.insertContact();
       contact.setFriend(true);
+
+      Map dataInfo = Map<String, dynamic>();
+      if (imageHeaderFile != null) {
+        dataInfo['avatar'] = imageHeaderFile.path;
+      }
+      if (name != null && name.length > 0) {
+        if (name != scanNickName){
+          dataInfo['first_name'] = name;
+        }
+      }
+      if (note != null && note.length > 0) {
+        dataInfo['notes'] = note;
+      }
+      await ContactDataCenter.saveRemarkProfile(contact, dataInfo);
 
       eventBus.fire(AddContactEvent());
       Navigator.pop(context);
@@ -305,29 +352,42 @@ class AddContactState extends State<AddContact> {
   }
 
   _updatePic() async {
-    File savedImg = await getHeaderImage(NKNClientCaller.currentChatId);
+    String address = _pubKeyController.text;
+    String saveImagePath = 'remark_' + address;
+    File savedImg = await getHeaderImage(saveImagePath);
     if (savedImg == null) return;
-  }
 
-  String createContactFilePath(File file) {
-    String name = hexEncode(md5.convert(file.readAsBytesSync()).bytes);
-    Directory rootDir = Global.applicationRootDirectory;
-    String p = join(rootDir.path, NKNClientCaller.currentChatId, 'contact');
-    Directory dir = Directory(p);
-    if (!dir.existsSync()) {
-      dir.createSync(recursive: true);
-    } else {}
-    String fullName = file?.path?.split('/')?.last;
-    String fileName;
-    String fileExt;
-    int index = fullName.lastIndexOf('.');
-    if (index > -1) {
-      fileExt = fullName?.split('.')?.last;
-      fileName = fullName?.substring(0, index);
+    if (savedImg == null) {
+      showToast(
+          'Open camera or MediaLibrary for nMobile to update your profile');
     } else {
-      fileName = fullName;
+      if (mounted) {
+        setState(() {
+          imageHeaderFile = savedImg;
+        });
+      }
     }
-    String path = join(rootDir.path, dir.path, name + '.' + fileExt);
-    return path;
   }
+  //
+  // String createContactFilePath(File file) {
+  //   String name = hexEncode(md5.convert(file.readAsBytesSync()).bytes);
+  //   Directory rootDir = Global.applicationRootDirectory;
+  //   String p = join(rootDir.path, NKNClientCaller.currentChatId, 'contact');
+  //   Directory dir = Directory(p);
+  //   if (!dir.existsSync()) {
+  //     dir.createSync(recursive: true);
+  //   } else {}
+  //   String fullName = file?.path?.split('/')?.last;
+  //   String fileName;
+  //   String fileExt;
+  //   int index = fullName.lastIndexOf('.');
+  //   if (index > -1) {
+  //     fileExt = fullName?.split('.')?.last;
+  //     fileName = fullName?.substring(0, index);
+  //   } else {
+  //     fileName = fullName;
+  //   }
+  //   String path = join(rootDir.path, dir.path, name + '.' + fileExt);
+  //   return path;
+  // }
 }
