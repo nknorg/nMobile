@@ -229,7 +229,6 @@ class _WalletHomeState extends State<WalletHome>
             });
           } else {
             try {
-              print('exportWallet___77');
               var wallet = await ws.exportWallet(password);
               if (wallet['address'] == ws.address) {
                 Navigator.of(context)

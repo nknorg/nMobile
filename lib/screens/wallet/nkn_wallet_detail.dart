@@ -24,7 +24,7 @@ import 'package:nmobile/helpers/format.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/model/eth_erc20_token.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/screens/chat/authentication_helper.dart';
 import 'package:nmobile/screens/view/dialog_confirm.dart';
 import 'package:nmobile/screens/wallet/nkn_wallet_export.dart';
@@ -77,19 +77,22 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
   }
 
   @override
-  void dispose(){
+  void dispose() {
     super.dispose();
     TimerAuth.onOtherPage = false;
   }
 
   _receive() {
-    Navigator.of(context).pushNamed(ReceiveNknScreen.routeName, arguments: widget.wallet);
+    Navigator.of(context)
+        .pushNamed(ReceiveNknScreen.routeName, arguments: widget.wallet);
   }
 
   _send() {
     Navigator.of(context)
         .pushNamed(
-      widget.wallet.type == WalletSchema.ETH_WALLET ? SendErc20Screen.routeName : SendNknScreen.routeName,
+      widget.wallet.type == WalletSchema.ETH_WALLET
+          ? SendErc20Screen.routeName
+          : SendNknScreen.routeName,
       arguments: widget.wallet,
     )
         .then((FutureOr success) async {
@@ -102,24 +105,51 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     });
   }
 
+  Widget _ethLogoWidget() {
+    if (widget.wallet.type == WalletSchema.NKN_WALLET) {
+      return Positioned(
+          top: 16,
+          left: 60,
+          child: Container(
+            width: 0,
+            height: 0,
+            alignment: Alignment.center,
+            // decoration: BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
+          ));
+    }
+    return Positioned(
+        top: 16,
+        left: 60,
+        child: Container(
+          width: 20,
+          height: 20,
+          alignment: Alignment.center,
+          decoration:
+              BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
+          child: SvgPicture.asset('assets/ethereum-logo.svg'),
+        ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: DefaultTheme.backgroundColor4,
       appBar: Header(
-        title:
-            widget.index == 0 ? NL10ns.of(context).main_wallet : widget.wallet.name.toUpperCase(),
+        title: widget.index == 0
+            ? NL10ns.of(context).main_wallet
+            : widget.wallet.name.toUpperCase(),
         backgroundColor: DefaultTheme.backgroundColor4,
         action: PopupMenuButton(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           icon: loadAssetIconsImage('more', width: 24),
-          onSelected: (int result) async{
+          onSelected: (int result) async {
             _onMenuSelected(result);
           },
           itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
             PopupMenuItem<int>(
               value: 0,
-              child: Label(NL10ns.of(context).export_wallet, type: LabelType.display),
+              child: Label(NL10ns.of(context).export_wallet,
+                  type: LabelType.display),
             ),
             PopupMenuItem<int>(
               value: 1,
@@ -156,23 +186,13 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
                                   color: Colours.light_ff,
-                                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(8)),
                                 ),
-                                child: SvgPicture.asset('assets/logo.svg', color: Colours.purple_2e),
+                                child: SvgPicture.asset('assets/logo.svg',
+                                    color: Colours.purple_2e),
                               ).symm(h: 16, v: 20),
-                              widget.wallet.type == WalletSchema.NKN_WALLET
-                                  ? Space.empty
-                                  : Positioned(
-                                      top: 16,
-                                      left: 60,
-                                      child: Container(
-                                        width: 20,
-                                        height: 20,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(color: Colours.purple_53, shape: BoxShape.circle),
-                                        child: SvgPicture.asset('assets/ethereum-logo.svg'),
-                                      ),
-                                    )
+                              _ethLogoWidget(),
                             ],
                           ),
                         ),
@@ -182,27 +202,48 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                           children: [
                             Expanded(
                               flex: 0,
-                              child: BlocBuilder<WalletsBloc, WalletsState>(builder: (context, state) {
+                              child: BlocBuilder<WalletsBloc, WalletsState>(
+                                  builder: (context, state) {
                                 if (state is WalletsLoaded) {
-                                  _currWallet = state.wallets.firstWhere((x) => x.address == widget.wallet.address, orElse: () => null);
+                                  _currWallet = state.wallets.firstWhere(
+                                      (x) => x.address == widget.wallet.address,
+                                      orElse: () => null);
                                 }
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         _currWallet != null
-                                            ? Label(Format.nknFormat(_currWallet.balance, decimalDigits: 4), type: LabelType.h1)
+                                            ? Label(
+                                                Format.nknFormat(
+                                                    _currWallet.balance,
+                                                    decimalDigits: 4),
+                                                type: LabelType.h1)
                                             : Label('--', type: LabelType.h1),
-                                        Label('NKN', type: LabelType.bodySmall, color: DefaultTheme.fontColor1).pad(t: 4),
+                                        Label('NKN',
+                                                type: LabelType.bodySmall,
+                                                color: DefaultTheme.fontColor1)
+                                            .pad(t: 4),
                                       ],
                                     ),
-                                    _currWallet != null && _currWallet.type == WalletSchema.ETH_WALLET
+                                    _currWallet != null &&
+                                            _currWallet.type ==
+                                                WalletSchema.ETH_WALLET
                                         ? Row(
                                             children: [
-                                              Label(Format.nknFormat(_currWallet.balanceEth, decimalDigits: 4), type: LabelType.bodySmall),
-                                              Label('ETH', type: LabelType.bodySmall, color: DefaultTheme.fontColor1).pad(l: 6, r: 2),
+                                              Label(
+                                                  Format.nknFormat(
+                                                      _currWallet.balanceEth,
+                                                      decimalDigits: 4),
+                                                  type: LabelType.bodySmall),
+                                              Label('ETH',
+                                                      type: LabelType.bodySmall,
+                                                      color: DefaultTheme
+                                                          .fontColor1)
+                                                  .pad(l: 6, r: 2),
                                             ],
                                           )
                                         : Space.empty,
@@ -244,7 +285,8 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
                                   Label(
                                     NL10ns.of(context).wallet_name,
@@ -258,7 +300,8 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                                 readOnly: true,
                               ),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
                                   Label(
                                     NL10ns.of(context).wallet_address,
@@ -272,14 +315,16 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                                       type: LabelType.bodyLarge,
                                     ),
                                     onTap: () {
-                                      CopyUtils.copyAction(context, widget.wallet.address);
+                                      CopyUtils.copyAction(
+                                          context, widget.wallet.address);
                                     },
                                   ),
                                 ],
                               ),
                               InkWell(
                                 onTap: () {
-                                  CopyUtils.copyAction(context, widget.wallet.address);
+                                  CopyUtils.copyAction(
+                                      context, widget.wallet.address);
                                 },
                                 child: Textbox(
                                   value: widget.wallet.address,
@@ -341,7 +386,8 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
           text: NL10ns.of(context).save,
           width: double.infinity,
           onPressed: () async {
-            if (_walletNameController.text != null && _walletNameController.text.length > 0) {
+            if (_walletNameController.text != null &&
+                _walletNameController.text.length > 0) {
               setState(() {
                 widget.wallet.name = _walletNameController.text;
                 _nameController.text = _walletNameController.text;
@@ -355,15 +401,18 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
     );
   }
 
-  _onMenuSelected(int result) async{
+  _onMenuSelected(int result) async {
     switch (result) {
       case 0:
         if (widget.wallet.type == WalletSchema.ETH_WALLET) {
           var password = await widget.wallet.getPassword();
           if (password != null) {
             try {
-              final ethWallet = await Ethereum.restoreWalletSaved(schema: widget.wallet, password: password);
-              Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+              final ethWallet = await Ethereum.restoreWalletSaved(
+                  schema: widget.wallet, password: password);
+
+              Navigator.of(context)
+                  .pushNamed(NknWalletExportScreen.routeName, arguments: {
                 'wallet': null,
                 'keystore': ethWallet.keystore,
                 'address': (await ethWallet.address).hex,
@@ -379,17 +428,20 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
           var password = await widget.wallet.getPassword();
           if (password != null) {
             try {
-              print('exportWallet___88');
               var wallet = await widget.wallet.exportWallet(password);
               if (wallet['address'] == widget.wallet.address) {
                 TimerAuth.instance.enableAuth();
-                Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+
+                Navigator.of(context)
+                    .pushNamed(NknWalletExportScreen.routeName, arguments: {
                   'wallet': wallet,
                   'keystore': wallet['keystore'],
                   'address': wallet['address'],
                   'publicKey': wallet['publicKey'],
                   'seed': wallet['seed'],
-                  'name': isDefault ? NL10ns.of(context).main_wallet : widget.wallet.name,
+                  'name': isDefault
+                      ? NL10ns.of(context).main_wallet
+                      : widget.wallet.name,
                 });
               } else {
                 showToast(NL10ns.of(context).password_wrong);
@@ -410,8 +462,9 @@ class _NknWalletDetailScreenState extends State<NknWalletDetailScreen> {
                 callback: (v) async {
                   if (v) {
                     _walletsBloc.add(DeleteWallet(widget.wallet));
-                    if (NKNClientCaller.pubKey != null) {
-                      var walletAddr = await NknWalletPlugin.pubKeyToWalletAddr(NKNClientCaller.pubKey);
+                    if (NKNClientCaller.currentChatId != null) {
+                      var walletAddr = await NknWalletPlugin.pubKeyToWalletAddr(
+                          NKNClientCaller.currentChatId);
                       if (walletAddr == widget.wallet.address) {
                         NLog.d('delete client');
                         _clientBloc.add(NKNDisConnectClientEvent());

@@ -18,8 +18,9 @@ import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/l10n/localization_intl.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
-import 'package:nmobile/schemas/wallet.dart';
+import 'package:nmobile/model/entity/wallet.dart';
 import 'package:nmobile/utils/image_utils.dart';
+import 'package:nmobile/utils/nlog_util.dart';
 
 class CreateNknWalletScreen extends StatefulWidget {
   static const String routeName = '/wallet/create_nkn_wallet';
@@ -48,7 +49,6 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
 
   next() async {
     if ((_formKey.currentState as FormState).validate()) {
-
       (_formKey.currentState as FormState).save();
       EasyLoading.show();
 
@@ -56,15 +56,20 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
       var json = jsonDecode(keystore);
 
       String address = json['Address'];
-      _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystore));
+      _walletsBloc.add(AddWallet(
+          WalletSchema(
+              address: address, type: WalletSchema.NKN_WALLET, name: _name),
+          keystore));
 
-
-      await SecureStorage().set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
+      await SecureStorage()
+          .set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
       var wallet = WalletSchema(name: _name, address: address);
 
-      var w = await wallet.exportWallet(_password);
-
-      print('ExportWallet Success___'+w.toString());
+      try {
+        var w = await wallet.exportWallet(_password);
+      } catch (e) {
+        NLog.w('create_nkn_wallet.dart exportWallet E:' + e.toString());
+      }
 
       EasyLoading.dismiss();
       Navigator.of(context).pushReplacementNamed(AppScreen.routeName);
@@ -92,7 +97,8 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                 left: 0,
                 right: 0,
                 child: Container(
-                  constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height),
+                  constraints: BoxConstraints.expand(
+                      height: MediaQuery.of(context).size.height),
                   color: DefaultTheme.backgroundColor4,
                   child: Flex(direction: Axis.vertical, children: <Widget>[
                     Expanded(
@@ -101,7 +107,8 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                         children: <Widget>[
                           Padding(
                             padding: EdgeInsets.only(bottom: 32),
-                            child: loadAssetWalletImage('create-wallet', width: 142),
+                            child: loadAssetWalletImage('create-wallet',
+                                width: 142),
                           ),
                         ],
                       ),
@@ -112,7 +119,8 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
               ConstrainedBox(
                 constraints: BoxConstraints(minHeight: 400),
                 child: Container(
-                  constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - 280),
+                  constraints: BoxConstraints.expand(
+                      height: MediaQuery.of(context).size.height - 280),
                   color: DefaultTheme.backgroundColor4,
                   child: Flex(
                     direction: Axis.vertical,
@@ -122,14 +130,17 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: DefaultTheme.backgroundLightColor,
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(32)),
                           ),
                           child: Form(
                             key: _formKey,
                             autovalidate: true,
                             onChanged: () {
                               setState(() {
-                                _formValid = (_formKey.currentState as FormState).validate();
+                                _formValid =
+                                    (_formKey.currentState as FormState)
+                                        .validate();
                               });
                             },
                             child: Flex(
@@ -142,66 +153,109 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                                     child: Scrollbar(
                                       child: SingleChildScrollView(
                                         child: Padding(
-                                          padding: EdgeInsets.only(top: 32, left: 20, right: 20),
+                                          padding: EdgeInsets.only(
+                                              top: 32, left: 20, right: 20),
                                           child: Flex(
                                             direction: Axis.vertical,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: <Widget>[
                                               Expanded(
                                                 flex: 0,
                                                 child: Padding(
-                                                  padding: EdgeInsets.only(bottom: 32),
+                                                  padding: EdgeInsets.only(
+                                                      bottom: 32),
                                                   child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
                                                     children: <Widget>[
                                                       Label(
-                                                        NL10ns.of(context).wallet_name,
+                                                        NL10ns.of(context)
+                                                            .wallet_name,
                                                         type: LabelType.h3,
-                                                        textAlign: TextAlign.start,
+                                                        textAlign:
+                                                            TextAlign.start,
                                                       ),
                                                       Textbox(
-                                                        hintText: NL10ns.of(context).hint_enter_wallet_name,
-                                                        focusNode: _nameFocusNode,
-                                                        onSaved: (v) => _name = v,
+                                                        hintText: NL10ns.of(
+                                                                context)
+                                                            .hint_enter_wallet_name,
+                                                        focusNode:
+                                                            _nameFocusNode,
+                                                        onSaved: (v) =>
+                                                            _name = v,
                                                         onFieldSubmitted: (_) {
-                                                          FocusScope.of(context).requestFocus(_passwordFocusNode);
+                                                          FocusScope.of(context)
+                                                              .requestFocus(
+                                                                  _passwordFocusNode);
                                                         },
-                                                        textInputAction: TextInputAction.next,
-                                                        validator: Validator.of(context).walletName(),
+                                                        textInputAction:
+                                                            TextInputAction
+                                                                .next,
+                                                        validator: Validator.of(
+                                                                context)
+                                                            .walletName(),
                                                       ),
                                                       SizedBox(height: 14.h),
                                                       Label(
-                                                        NL10ns.of(context).wallet_password,
+                                                        NL10ns.of(context)
+                                                            .wallet_password,
                                                         type: LabelType.h3,
-                                                        textAlign: TextAlign.start,
+                                                        textAlign:
+                                                            TextAlign.start,
                                                       ),
                                                       Textbox(
-                                                        focusNode: _passwordFocusNode,
-                                                        controller: _passwordController,
-                                                        hintText: NL10ns.of(context).input_password,
-                                                        onSaved: (v) => _password = v,
+                                                        focusNode:
+                                                            _passwordFocusNode,
+                                                        controller:
+                                                            _passwordController,
+                                                        hintText:
+                                                            NL10ns.of(context)
+                                                                .input_password,
+                                                        onSaved: (v) =>
+                                                            _password = v,
                                                         onFieldSubmitted: (_) {
-                                                          print('on___________');
-                                                          FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
+                                                          FocusScope.of(context)
+                                                              .requestFocus(
+                                                                  _confirmPasswordFocusNode);
                                                         },
-                                                        textInputAction: TextInputAction.next,
-                                                        validator: Validator.of(context).password(),
+                                                        textInputAction:
+                                                            TextInputAction
+                                                                .next,
+                                                        validator: Validator.of(
+                                                                context)
+                                                            .password(),
                                                         password: true,
                                                       ),
                                                       Text(
-                                                        NL10ns.of(context).wallet_password_mach,
-                                                        style: TextStyle(color: Colours.gray_81, fontSize: DefaultTheme.bodySmallFontSize),
+                                                        NL10ns.of(context)
+                                                            .wallet_password_mach,
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colours.gray_81,
+                                                            fontSize: DefaultTheme
+                                                                .bodySmallFontSize),
                                                       ),
                                                       SizedBox(height: 24.h),
                                                       Label(
-                                                        NL10ns.of(context).confirm_password,
+                                                        NL10ns.of(context)
+                                                            .confirm_password,
                                                         type: LabelType.h3,
-                                                        textAlign: TextAlign.start,
+                                                        textAlign:
+                                                            TextAlign.start,
                                                       ),
                                                       Textbox(
-                                                        focusNode: _confirmPasswordFocusNode,
-                                                        hintText: NL10ns.of(context).input_password_again,
-                                                        validator: Validator.of(context).confrimPassword(_passwordController.text),
+                                                        focusNode:
+                                                            _confirmPasswordFocusNode,
+                                                        hintText: NL10ns.of(
+                                                                context)
+                                                            .input_password_again,
+                                                        validator: Validator.of(
+                                                                context)
+                                                            .confrimPassword(
+                                                                _passwordController
+                                                                    .text),
                                                         password: true,
                                                       ),
                                                     ],
@@ -219,13 +273,16 @@ class _CreateNknWalletScreenState extends State<CreateNknWalletScreen> {
                                   flex: 0,
                                   child: SafeArea(
                                     child: Padding(
-                                      padding: EdgeInsets.only(bottom: 8, top: 8),
+                                      padding:
+                                          EdgeInsets.only(bottom: 8, top: 8),
                                       child: Column(
                                         children: <Widget>[
                                           Padding(
-                                            padding: EdgeInsets.only(left: 30, right: 30),
+                                            padding: EdgeInsets.only(
+                                                left: 30, right: 30),
                                             child: Button(
-                                              text: NL10ns.of(context).create_wallet,
+                                              text: NL10ns.of(context)
+                                                  .create_wallet,
                                               disabled: !_formValid,
                                               onPressed: next,
                                             ),
