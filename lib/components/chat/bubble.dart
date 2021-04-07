@@ -710,7 +710,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                 .toString()
                 .contains('duplicate subscription exist in block')) {
               NLog.w('duplicate subscription exist in block');
-              showToast('Joining');
+              showToast(NL10ns().subscribed);
             } else {
               showToast(e.toString());
             }

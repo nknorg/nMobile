@@ -408,10 +408,12 @@ class GroupDataCenter{
 
         String permissionAddressReg = '.__permission__.';
         Subscriber subscriber = await subRepo.getByTopicAndChatId(topicName, address);
-        if (subscriber.chatId.contains('.__permission__.')){
-          await subRepo.delete(subscriber.topic, subscriber.chatId);
-          /// do not need to handle private Group permission List for normal member.
-          /// The List it under private group owner's control
+        if (subscriber != null){
+          if (subscriber.chatId.contains('.__permission__.')){
+            await subRepo.delete(subscriber.topic, subscriber.chatId);
+            /// do not need to handle private Group permission List for normal member.
+            /// The List it under private group owner's control
+          }
         }
         if (address.contains(permissionAddressReg) == false){
           await GroupDataCenter.checkContactIfExists(address);
@@ -826,7 +828,13 @@ class GroupDataCenter{
       }
       callback(true, null);
 
-      await GroupDataCenter.pullPrivateSubscribers(topicName);
+      if (isPrivateTopicReg(topicName)){
+        await GroupDataCenter.pullPrivateSubscribers(topicName);
+      }
+      else{
+        await GroupDataCenter.pullSubscribersPublicChannel(topicName);
+      }
+
       var sendMsg = MessageSchema.fromSendData(
         from: NKNClientCaller.currentChatId,
         topic: topicName,
