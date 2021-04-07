@@ -167,19 +167,19 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     if (topic != null){
       if (topic.isPrivateTopic()) {
         NLog.w('Enter Private Topic___'+topicName);
-        /// check if in group
-        bool isMeInGroup = await GroupDataCenter.checkMeIn(topicName);
-        NLog.w('isMeInGroup is_____'+isMeInGroup.toString());
-        setState(() {
-          showJoin = isMeInGroup;
-        });
-
         await GroupDataCenter.pullPrivateSubscribers(topic.topic);
         String owner = getPubkeyFromTopicOrChatId(topicName);
         if (owner == NKNClientCaller.currentChatId) {
           _updatePrivateTopicBlockHeight(topic);
         }
         _channelBloc.add(ChannelMemberCountEvent(currentTopic.topic));
+
+        /// check if in group
+        bool isMeInGroup = await GroupDataCenter.checkMeIn(topicName);
+        NLog.w('isMeInGroup is_____'+isMeInGroup.toString());
+        setState(() {
+          showJoin = isMeInGroup;
+        });
       }
       else{
         NLog.w('Enter Public Topic___'+topicName);

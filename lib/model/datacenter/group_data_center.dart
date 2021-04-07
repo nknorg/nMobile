@@ -3,13 +3,11 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
 import 'package:nmobile/helpers/global.dart';
 import 'package:nmobile/helpers/hash.dart';
-import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/model/datacenter/contact_data_center.dart';
 import 'package:nmobile/model/db/nkn_data_manager.dart';
@@ -21,7 +19,6 @@ import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/plugins/nkn_wallet.dart';
 import 'package:nmobile/utils/extensions.dart';
 import 'package:nmobile/utils/nlog_util.dart';
-import 'package:oktoast/oktoast.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class GroupDataCenter{
@@ -108,10 +105,18 @@ class GroupDataCenter{
     else{
       pageIndex = updateSub.indexPermiPage;
     }
-    NLog.w('Update updateSub.indexPermiPage is_____'+updateSub.indexPermiPage.toString());
-    NLog.w('Update updateSub.indexPermiPage is_____'+updateSub.chatId.toString());
+
     List<Subscriber> pageMembers = await subRepo.findAllSubscribersWithPermitIndex(topicName, pageIndex);
     NLog.w('Subs pageIndex is_____'+pageIndex.toString());
+    NLog.w('pageMembers is_____'+pageMembers.length.toString());
+    if (pageMembers.length > 10){
+      for (int i = 0; i < pageMembers.length; i++){
+        Subscriber uSub = pageMembers[i];
+        await subRepo.updatePermitIndex(uSub, pageIndex+1);
+      }
+      pageMembers = await subRepo.findAllSubscribersWithPermitIndex(topicName, pageIndex);
+    }
+
     if (pageMembers != null && pageMembers.length > 0){
       List acceptList = new List();
       List rejectList = new List();
@@ -386,7 +391,6 @@ class GroupDataCenter{
   }
 
   static Future<void> pullPrivateSubscribers(String topicName) async {
-    int pageIndex = 0;
     final topicHashed = genTopicHash(topicName.toString());
     final owner = getPubkeyFromTopicOrChatId(topicName);
 
@@ -430,6 +434,10 @@ class GroupDataCenter{
               else if (subscriber.memberStatus == MemberStatus.MemberSubscribed){
                 /// do nothing
               }
+              else if (subscriber.memberStatus == MemberStatus.MemberPublishRejected &&
+                       owner == NKNClientCaller.currentChatId){
+                /// do nothing
+              }
               else{
                 await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberPublished);
               }
@@ -446,7 +454,7 @@ class GroupDataCenter{
               Subscriber insertSub = Subscriber(
                   topic: topicName,
                   chatId: address,
-                  indexPermiPage: pageIndex,
+                  indexPermiPage: 0,
                   timeCreate: DateTime
                       .now()
                       .millisecondsSinceEpoch,
@@ -459,7 +467,9 @@ class GroupDataCenter{
         else{
           String permissionValue = subscribersMap.values.elementAt(i);
           Map permissionData = jsonDecode(permissionValue);
-          await pullPrivateGroupUpdateTxPoolData(permissionData,topicName, pageIndex);
+          String indexPermitValue = subscribersMap.keys.elementAt(i).substring(2,3);
+          NLog.w('indexPermitValue is____'+indexPermitValue.toString());
+          await pullPrivateGroupUpdateTxPoolData(permissionData,topicName, int.parse(indexPermitValue));
           // await pullPrivateGroupUpdateSubscriptionData(pageIndex, topicName);
         }
       }
@@ -495,11 +505,19 @@ class GroupDataCenter{
         }
         else{
           Subscriber sub = await subRepo.getByTopicAndChatId(topicName, address);
+          if (sub.indexPermiPage == null){
+            if (sub.indexPermiPage == 0 && sub.indexPermiPage != pageIndex){
+              await subRepo.updatePermitIndex(sub, pageIndex);
+            }
+          }
           if (sub != null){
             if (sub.memberStatus <= MemberStatus.MemberInvited){
               await subRepo.updateMemberStatus(sub, MemberStatus.MemberInvited);
             }
             else if (sub.memberStatus == MemberStatus.MemberPublished){
+              await subRepo.updateMemberStatus(sub, MemberStatus.MemberSubscribed);
+            }
+            else if (sub.memberStatus == MemberStatus.MemberPublishRejected){
               await subRepo.updateMemberStatus(sub, MemberStatus.MemberSubscribed);
             }
             else{
