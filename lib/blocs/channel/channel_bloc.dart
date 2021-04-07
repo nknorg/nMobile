@@ -76,7 +76,7 @@ class ChannelBloc extends Bloc<ChannelMembersEvent, ChannelState> {
     String topicName = event.topicName;
     List<MemberVo> list = [];
 
-    final subscribers = await SubscriberRepo().getAllMemberByTopic(topicName);
+    final subscribers = await SubscriberRepo().getAllSubscribedMemberByTopic(topicName);
     NLog.w('Got subscribers subscribers is____' + subscribers.runtimeType.toString());
 
     for (var insider in subscribers){

@@ -821,18 +821,16 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   Widget _audioInputWidget(){
     if (showJoin == false){
       return Container(
+        margin: EdgeInsets.only(left: 5,right: 5),
         child: Button(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Label(NL10ns.of(context).tip_ask_group_owner_permission, type: LabelType.h3)
-            ],
+          child:Label(
+            NL10ns.of(context).tip_ask_group_owner_permission,
+            type: LabelType.h4,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
           backgroundColor: DefaultTheme.primaryColor,
           width: double.infinity,
-          // onPressed: () {
-          //
-          // },
         ).pad(l: 20, r: 20),
       );
     }

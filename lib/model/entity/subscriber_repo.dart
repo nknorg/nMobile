@@ -51,7 +51,7 @@ class SubscriberRepo with Tag {
     return parseEntities(result);
   }
 
-  Future<List<Subscriber>> getAllMemberByTopic(String topicName) async {
+  Future<List<Subscriber>> getAllSubscribedMemberByTopic(String topicName) async {
     Database cdb = await NKNDataManager().currentDatabase();
     List<Map<String, dynamic>> result = await cdb.query(tableName,
         where: '$topic = ? AND $member_status = ?',

@@ -375,6 +375,7 @@ class _ContactScreenState extends State<ContactScreen> {
         await currentUser.setAvatar(avatarImage);
       }
       _contactBloc.add(UpdateUserInfoEvent(currentUser));
+      NLog.w('UpdateContactBLockcccccccc');
     } else {
       Map dataInfo = Map<String, dynamic>();
       if (nickName != null && nickName.length > 0) {

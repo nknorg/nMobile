@@ -5,6 +5,7 @@
  */
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flustars/flustars.dart';
@@ -543,12 +544,19 @@ class NKNClientCaller {
           break;
 
         case 'getSubscribers':
-          NLog.w('getSubscribers res is____'+res.toString());
-
           Map dataMap = res['data'];
           Map subscriberMap = new Map<String, dynamic>();
-          for (String key in dataMap.keys) {
-            subscriberMap[key] = '1';
+          for (int i = 0; i < dataMap.keys.length; i++) {
+            String key = dataMap.keys.toList()[i];
+            String value = dataMap.values.toList()[i];
+            if (value != null && value.toString().length > 0){
+              NLog.w('Value Key is____'+key.toString());
+              NLog.w('Value is____'+value.toString());
+              subscriberMap[key] = value;
+            }
+            else{
+              subscriberMap[key] = '1';
+            }
           }
           _clientEventQueue[eventKey].complete(subscriberMap);
           break;
@@ -604,12 +612,6 @@ class NKNClientCaller {
       String errDetail = err.details.toString();
       String errCode = err.code.toString();
       if (errMsg.length > 0) {
-        // if (errMsg == 'sendText' || errMsg == 'publishText') {
-        //   // Map info = _clientEventData[errCode];
-        //   // if (info != null) {
-        //   //   _clientEventQueue[errCode].completeError(errMsg);
-        //   // }
-        // } else
         if (errMsg == 'subscribe' || errMsg == 'unsubscribe') {
           _clientEventQueue[errCode].completeError(errDetail);
           _removeEventIdByKey(errCode);
@@ -625,9 +627,6 @@ class NKNClientCaller {
   }
 
   _removeEventIdByKey(String key) {
-    // if (_clientEventData.containsKey(key)) {
-    //   _clientEventData.remove(key);
-    // }
     if (_clientEventQueue.containsKey(key)) {
       _clientEventQueue.remove(key);
     }

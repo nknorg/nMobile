@@ -43,12 +43,12 @@ class GroupDataCenter{
   }
 
   static Future<List<Subscriber>> fetchSubscribedMember(String topicName) async{
-    List<Subscriber> memberList = await subRepo.getAllMemberByTopic(topicName);
+    List<Subscriber> memberList = await subRepo.getAllSubscribedMemberByTopic(topicName);
     return memberList;
   }
 
   static Future<List<String>> fetchGroupMembersTargets(String topicName) async {
-    List<Subscriber> memberList = await subRepo.getAllMemberByTopic(topicName);
+    List<Subscriber> memberList = await subRepo.getAllSubscribedMemberByTopic(topicName);
 
     List<String> resultList = new List<String>();
     if (memberList.isNotEmpty){
@@ -386,10 +386,9 @@ class GroupDataCenter{
     }
   }
 
-  static Future<void> pullPrivateSubscribers(String topicName) async{
+  static Future<void> pullPrivateSubscribers(String topicName) async {
     int pageIndex = 0;
     final topicHashed = genTopicHash(topicName.toString());
-
     final owner = getPubkeyFromTopicOrChatId(topicName);
 
     var subscribersMap = await NKNClientCaller.getSubscribers(
@@ -400,198 +399,312 @@ class GroupDataCenter{
         txPool: true
     );
 
-    NLog.w('pullPrivateSubscribers subscribersMap:'+subscribersMap.toString());
+    NLog.w('pullPrivateSubscribers subscribersMap:' + subscribersMap.toString());
 
-    if (subscribersMap != null){
-      for(int i = 0; i < subscribersMap.length; i++){
+    if (subscribersMap != null) {
+      for (int i = 0; i < subscribersMap.length; i++) {
         String address = subscribersMap.keys.elementAt(i);
 
         String permissionAddressReg = '.__permission__.';
         Subscriber subscriber = await subRepo.getByTopicAndChatId(topicName, address);
-        if (subscriber != null){
-          if (subscriber.chatId.contains('.__permission__.')){
+        if (subscriber != null) {
+          if (subscriber.chatId.contains('.__permission__.')) {
             await subRepo.delete(subscriber.topic, subscriber.chatId);
+
             /// do not need to handle private Group permission List for normal member.
             /// The List it under private group owner's control
           }
         }
-        if (address.contains(permissionAddressReg) == false){
+        if (address.contains(permissionAddressReg) == false) {
           await GroupDataCenter.checkContactIfExists(address);
-          if (subscriber != null){
-            if (subscriber.chatId.contains('.__permission__.')){
+          if (subscriber != null) {
+            if (subscriber.chatId.contains('.__permission__.')) {
               await subRepo.delete(subscriber.topic, subscriber.chatId);
+
               /// do not need to handle private Group permission List for normal member.
               /// The List it under private group owner's control
             }
-            else{
-              if (subscriber.memberStatus <= MemberStatus.MemberSubscribed){
-                if (address == owner){
+            else {
+              if (subscriber.memberStatus <= MemberStatus.MemberSubscribed) {
+                if (address == owner) {
                   await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
                 }
-                else{
-                  if (subscriber.memberStatus != MemberStatus.MemberSubscribed){
-                    if (owner == NKNClientCaller.currentChatId){
+                else {
+                  if (subscriber.memberStatus != MemberStatus.MemberSubscribed) {
+                    if (owner == NKNClientCaller.currentChatId) {
                       await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
                     }
-                    else{
+                    else {
                       await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberPublished);
                     }
                   }
                 }
               }
-              else{
-                NLog.w('Subscriber subscriber.memberStatus'+subscriber.memberStatus.toString());
-                if (subscriber.memberStatus == MemberStatus.MemberJoinedButNotInvited){
+              else {
+                NLog.w('Subscriber subscriber.memberStatus' + subscriber.memberStatus.toString());
+                if (subscriber.memberStatus == MemberStatus.MemberJoinedButNotInvited) {
                   await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberPublished);
                 }
               }
             }
           }
-          else{
-            NLog.w('Chat Id is_____'+address.toString());
-            if (address.contains('.__permission__.')){
+          else {
+            NLog.w('Chat Id is_____' + address.toString());
+            if (address.contains('.__permission__.')) {
               /// do not need to handle private Group permission List for normal member.
               /// The List it under private group owner's control
-              NLog.w('pullPrivateSubscribers MEET__'+address.toString());
+              NLog.w('pullPrivateSubscribers MEET__' + address.toString());
             }
-            else{
+            else {
               Subscriber insertSub = Subscriber(
                   topic: topicName,
                   chatId: address,
                   indexPermiPage: pageIndex,
-                  timeCreate: DateTime.now().millisecondsSinceEpoch,
+                  timeCreate: DateTime
+                      .now()
+                      .millisecondsSinceEpoch,
                   memberStatus: MemberStatus.MemberSubscribed);
               await subRepo.insertSubscriber(insertSub);
               NLog.w('pullPrivateSubscribers insert Subscriber to subscribed');
             }
           }
         }
-        else {
-          String owner = getPubkeyFromTopicOrChatId(topicName);
-          String indexWithPubKey = '__${pageIndex}__.__permission__.'+owner;
-
-          var subscription =
-          await NKNClientCaller.getSubscription(
-            topicHash: topicHashed,
-            subscriber: indexWithPubKey,
-          );
-
-          final meta = subscription['meta'] as String;
-
-          if (meta == null || meta.trim().isEmpty) {
-            break;
-          }
-          try {
-            final json = jsonDecode(meta);
-            NLog.w('Json is____'+json.toString());
-            NLog.w('indexWithPubKey is____'+indexWithPubKey.toString());
-            final List accept = json["accept"];
-            final List reject = json["reject"];
-            if (accept != null) {
-              if (accept.length > 0){
-                if (accept[0] == "*"){
-                  Topic topic = await topicRepo.getTopicByName(topicName);
-                  topic.updateTopicToAcceptAll(true);
-                  break;
-                }
-              }
-              for (var i = 0; i < accept.length; i++) {
-                Map subMap = accept[i];
-                String address = subMap['addr'];
-                if (address.length < 64){
-                  NLog.w('Wrong!!!,invalid address! for pullPrivateSubscribers'+address.toString());
-                }
-                else if (address.contains('.__permission__.')){
-                  NLog.w('Wrong!!!,contains invalid __permission__'+address.toString());
-                }
-                else{
-                  Subscriber sub = await subRepo.getByTopicAndChatId(topicName, address);
-                  if (sub != null){
-                    await subRepo.updatePermitIndex(sub, pageIndex);
-                    if (sub.memberStatus == MemberStatus.MemberPublished){
-                      await subRepo.updateMemberStatus(sub, MemberStatus.MemberSubscribed);
-                    }
-                    else if (sub.memberStatus == MemberStatus.MemberSubscribed ||
-                             sub.memberStatus == MemberStatus.MemberPublishRejected){
-                      /// do nothing because MemberSubscribed
-                      if (owner == NKNClientCaller.currentChatId){
-
-                      }
-                      else{
-                        await subRepo.updateMemberStatus(sub, MemberStatus.MemberSubscribed);
-                      }
-                    }
-                    else{
-                      await subRepo.updateMemberStatus(sub, MemberStatus.MemberInvited);
-                    }
-                  }
-                  else{
-                    sub = Subscriber(
-                        topic: topicName,
-                        chatId: address,
-                        indexPermiPage: pageIndex,
-                        timeCreate: DateTime.now().millisecondsSinceEpoch,
-                        memberStatus: MemberStatus.MemberSubscribed);
-                    await subRepo.insertSubscriber(sub);
-                  }
-                }
-              }
-            }
-            if (reject != null) {
-              for (var i = 0; i < reject.length; i++) {
-                Map subMap = reject[i];
-                String address = subMap['addr'];
-                if (address.length < 64){
-                  NLog.w('Wrong!!!,reject invalid address! for pullPrivateSubscribers'+address.toString());
-                }
-                else if (address.contains('.__permission__.')){
-                  NLog.w('Wrong!!!,reject contains invalid __permission__'+address.toString());
-                }
-                else{
-                  Subscriber sub = await subRepo.getByTopicAndChatId(topicName, address);
-                  if (sub != null){
-                    await subRepo.updatePermitIndex(sub, pageIndex);
-                    if(sub.memberStatus == MemberStatus.MemberInvited){
-                      if (owner == NKNClientCaller.currentChatId){
-
-                      }
-                      else{
-                        await subRepo.updateMemberStatus(sub, MemberStatus.MemberPublishRejected);
-                      }
-                    }
-                    else{
-                      NLog.w('!!!!!!!+++++'+sub.memberStatus.toString());
-                      await subRepo.updateMemberStatus(sub, MemberStatus.MemberPublishRejected);
-                    }
-                    NLog.w('pullPrivateSubscribers update To MemberPublishRejected!!!'+pageIndex.toString());
-                  }
-                  else{
-                    NLog.w('pullPrivateSubscribers___!!!'+pageIndex.toString());
-                    sub = Subscriber(
-                        topic: topicName,
-                        chatId: address,
-                        indexPermiPage: pageIndex,
-                        timeCreate: DateTime.now().millisecondsSinceEpoch,
-                        blockHeightExpireAt: -1,
-                        memberStatus: MemberStatus.MemberPublishRejected);
-                    await subRepo.insertSubscriber(sub);
-                  }
-                }
-              }
-            }
-          } catch (e) {
-            NLog.e("pullSubscribersPrivateChannel, e:" + e.toString());
-          }
-          ++pageIndex;
-          NLog.w('PageIndex is-___'+pageIndex.toString());
+        else{
+          String permissionValue = subscribersMap.values.elementAt(i);
+          Map permissionData = jsonDecode(permissionValue);
+          await pullPrivateGroupUpdateTxPoolData(permissionData,topicName, pageIndex);
+          // await pullPrivateGroupUpdateSubscriptionData(pageIndex, topicName);
         }
       }
     }
-
     /// Group member do not need to catch the invited but not subscribed member.
     if (owner != NKNClientCaller.currentChatId) {
       NLog.w('Not the private group owner, do not need to manager group members');
       return;
+    }
+  }
+
+  static pullPrivateGroupUpdateTxPoolData(Map permissionData,String topicName, int pageIndex) async{
+    NLog.w('PermissionData is______'+permissionData.toString());
+    final owner = getPubkeyFromTopicOrChatId(topicName);
+    final List accept = permissionData["accept"];
+    final List reject = permissionData["reject"];
+    if (accept != null) {
+      // if (accept.length > 0){
+      //   if (accept[0] == "*"){
+      //     Topic topic = await topicRepo.getTopicByName(topicName);
+      //     topic.updateTopicToAcceptAll(true);
+      //     return;
+      //   }
+      // }
+      List<Subscriber> memberList = await subRepo.getAllSubscribedMemberByTopic(topicName);
+      for (Subscriber sub in memberList){
+        if (accept.contains(sub.chatId) == false){
+          await subRepo.updateMemberStatus(sub, MemberStatus.MemberPublished);
+        }
+      }
+      for (var i = 0; i < accept.length; i++) {
+        Map subMap = accept[i];
+        String address = subMap['addr'];
+        if (address.length < 64){
+          NLog.w('Wrong!!!,invalid address! for pullPrivateSubscribers'+address.toString());
+        }
+        else if (address.contains('.__permission__.')){
+          NLog.w('Wrong!!!,contains invalid __permission__'+address.toString());
+        }
+        else{
+          Subscriber sub = await subRepo.getByTopicAndChatId(topicName, address);
+          if (sub != null){
+            await subRepo.updatePermitIndex(sub, pageIndex);
+            if (sub.memberStatus == MemberStatus.MemberPublished){
+              await subRepo.updateMemberStatus(sub, MemberStatus.MemberSubscribed);
+            }
+            else if (sub.memberStatus == MemberStatus.MemberSubscribed ||
+                sub.memberStatus == MemberStatus.MemberPublishRejected){
+              /// do nothing because MemberSubscribed
+              if (owner == NKNClientCaller.currentChatId){
+
+              }
+              else{
+                await subRepo.updateMemberStatus(sub, MemberStatus.MemberSubscribed);
+              }
+            }
+            else{
+              await subRepo.updateMemberStatus(sub, MemberStatus.MemberInvited);
+            }
+          }
+          else{
+            sub = Subscriber(
+                topic: topicName,
+                chatId: address,
+                indexPermiPage: pageIndex,
+                timeCreate: DateTime.now().millisecondsSinceEpoch,
+                memberStatus: MemberStatus.MemberSubscribed);
+            await subRepo.insertSubscriber(sub);
+          }
+        }
+      }
+    }
+    if (reject != null) {
+      for (var i = 0; i < reject.length; i++) {
+        Map subMap = reject[i];
+        String address = subMap['addr'];
+        if (address.length < 64){
+          NLog.w('Wrong!!!,reject invalid address! for pullPrivateSubscribers'+address.toString());
+        }
+        else if (address.contains('.__permission__.')){
+          NLog.w('Wrong!!!,reject contains invalid __permission__'+address.toString());
+        }
+        else{
+          Subscriber sub = await subRepo.getByTopicAndChatId(topicName, address);
+          if (sub != null){
+            await subRepo.updatePermitIndex(sub, pageIndex);
+            if(sub.memberStatus == MemberStatus.MemberInvited){
+              if (owner == NKNClientCaller.currentChatId){
+
+              }
+              else{
+                await subRepo.updateMemberStatus(sub, MemberStatus.MemberPublishRejected);
+              }
+            }
+            else{
+              NLog.w('!!!!!!!+++++'+sub.memberStatus.toString());
+              await subRepo.updateMemberStatus(sub, MemberStatus.MemberPublishRejected);
+            }
+            NLog.w('pullPrivateSubscribers update To MemberPublishRejected!!!'+pageIndex.toString());
+          }
+          else{
+            NLog.w('pullPrivateSubscribers___!!!'+pageIndex.toString());
+            sub = Subscriber(
+                topic: topicName,
+                chatId: address,
+                indexPermiPage: pageIndex,
+                timeCreate: DateTime.now().millisecondsSinceEpoch,
+                blockHeightExpireAt: -1,
+                memberStatus: MemberStatus.MemberPublishRejected);
+            await subRepo.insertSubscriber(sub);
+          }
+        }
+      }
+    }
+  }
+
+  static pullPrivateGroupUpdateSubscriptionData(String topicName, int pageIndex) async{
+    final topicHashed = genTopicHash(topicName.toString());
+    String owner = getPubkeyFromTopicOrChatId(topicName);
+    String indexWithPubKey = '__${pageIndex}__.__permission__.'+owner;
+
+    var subscription =
+    await NKNClientCaller.getSubscription(
+      topicHash: topicHashed,
+      subscriber: indexWithPubKey,
+    );
+
+    final meta = subscription['meta'] as String;
+
+    if (meta == null || meta.trim().isEmpty) {
+      return;
+    }
+    try {
+      final json = jsonDecode(meta);
+      NLog.w('Json is____'+json.toString());
+      NLog.w('indexWithPubKey is____'+indexWithPubKey.toString());
+      final List accept = json["accept"];
+      final List reject = json["reject"];
+      if (accept != null) {
+        if (accept.length > 0){
+          if (accept[0] == "*"){
+            Topic topic = await topicRepo.getTopicByName(topicName);
+            topic.updateTopicToAcceptAll(true);
+            return;
+          }
+        }
+        for (var i = 0; i < accept.length; i++) {
+          Map subMap = accept[i];
+          String address = subMap['addr'];
+          if (address.length < 64){
+            NLog.w('Wrong!!!,invalid address! for pullPrivateSubscribers'+address.toString());
+          }
+          else if (address.contains('.__permission__.')){
+            NLog.w('Wrong!!!,contains invalid __permission__'+address.toString());
+          }
+          else{
+            Subscriber sub = await subRepo.getByTopicAndChatId(topicName, address);
+            if (sub != null){
+              await subRepo.updatePermitIndex(sub, pageIndex);
+              if (sub.memberStatus == MemberStatus.MemberPublished){
+                await subRepo.updateMemberStatus(sub, MemberStatus.MemberSubscribed);
+              }
+              else if (sub.memberStatus == MemberStatus.MemberSubscribed ||
+                  sub.memberStatus == MemberStatus.MemberPublishRejected){
+                /// do nothing because MemberSubscribed
+                if (owner == NKNClientCaller.currentChatId){
+
+                }
+                else{
+                  await subRepo.updateMemberStatus(sub, MemberStatus.MemberSubscribed);
+                }
+              }
+              else{
+                await subRepo.updateMemberStatus(sub, MemberStatus.MemberInvited);
+              }
+            }
+            else{
+              sub = Subscriber(
+                  topic: topicName,
+                  chatId: address,
+                  indexPermiPage: pageIndex,
+                  timeCreate: DateTime.now().millisecondsSinceEpoch,
+                  memberStatus: MemberStatus.MemberSubscribed);
+              await subRepo.insertSubscriber(sub);
+            }
+          }
+        }
+      }
+      if (reject != null) {
+        for (var i = 0; i < reject.length; i++) {
+          Map subMap = reject[i];
+          String address = subMap['addr'];
+          if (address.length < 64){
+            NLog.w('Wrong!!!,reject invalid address! for pullPrivateSubscribers'+address.toString());
+          }
+          else if (address.contains('.__permission__.')){
+            NLog.w('Wrong!!!,reject contains invalid __permission__'+address.toString());
+          }
+          else{
+            Subscriber sub = await subRepo.getByTopicAndChatId(topicName, address);
+            if (sub != null){
+              await subRepo.updatePermitIndex(sub, pageIndex);
+              if(sub.memberStatus == MemberStatus.MemberInvited){
+                if (owner == NKNClientCaller.currentChatId){
+
+                }
+                else{
+                  await subRepo.updateMemberStatus(sub, MemberStatus.MemberPublishRejected);
+                }
+              }
+              else{
+                NLog.w('!!!!!!!+++++'+sub.memberStatus.toString());
+                await subRepo.updateMemberStatus(sub, MemberStatus.MemberPublishRejected);
+              }
+              NLog.w('pullPrivateSubscribers update To MemberPublishRejected!!!'+pageIndex.toString());
+            }
+            else{
+              NLog.w('pullPrivateSubscribers___!!!'+pageIndex.toString());
+              sub = Subscriber(
+                  topic: topicName,
+                  chatId: address,
+                  indexPermiPage: pageIndex,
+                  timeCreate: DateTime.now().millisecondsSinceEpoch,
+                  blockHeightExpireAt: -1,
+                  memberStatus: MemberStatus.MemberPublishRejected);
+              await subRepo.insertSubscriber(sub);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      NLog.e("pullSubscribersPrivateChannel, e:" + e.toString());
     }
   }
 
@@ -763,7 +876,7 @@ class GroupDataCenter{
           memberStatus: MemberStatus.MemberSubscribed);
       await subRepo.insertSubscriber(selfSub);
 
-      List<Subscriber> dataList = await subRepo.getAllMemberByTopic(topicName);
+      List<Subscriber> dataList = await subRepo.getAllSubscribedMemberByTopic(topicName);
       NLog.w('Find Members Count___'+dataList.length.toString()+'__forTopic__'+topicName);
       return dataList;
     } catch (e) {
