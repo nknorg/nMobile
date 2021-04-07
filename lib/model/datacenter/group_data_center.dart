@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:nmobile/blocs/chat/chat_bloc.dart';
 import 'package:nmobile/blocs/chat/chat_event.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
@@ -141,36 +142,12 @@ class GroupDataCenter{
       String cMapString = jsonEncode(cMap);
       NLog.w('cMapString is________'+cMapString);
 
+
       /// save last subscribe time. If operated, operated 20s later.
       String appendMetaIndex = '__${pageIndex}__.__permission__';
       NLog.w('appendMetaIndex is________'+appendMetaIndex.toString());
 
       updatePrivateGroupMemberSubscribe(topicHashed, appendMetaIndex, cMapString);
-
-      // int responseTime = await LocalStorage().get(LocalStorage.NKN_SUBSRIBE_GAP_TIME);
-      // if (responseTime != null){
-      //   DateTime responseTimeExpire =
-      //   DateTime.fromMillisecondsSinceEpoch(responseTime);
-      //   DateTime beforeTime = DateTime.now().subtract(Duration(seconds: 20));
-      //   if (responseTimeExpire.isBefore(beforeTime)){
-      //     NLog.w('responseTimeExpire is > =___'+responseTimeExpire.second.toString());
-      //     // updatePrivateGroupMemberSubscribe(topicHashed, appendMetaIndex, cMapString);
-      //
-      //     int responseTimeValue = DateTime.now().millisecondsSinceEpoch;
-      //     await LocalStorage().set(LocalStorage.NKN_SUBSRIBE_GAP_TIME, responseTimeValue);
-      //   }
-      //   else{
-      //     showToast('Operate too often,20s later!');
-      //     /// todo should Do in Operation List
-      //   }
-      //   int responseTimeValue = DateTime.now().millisecondsSinceEpoch;
-      //   await LocalStorage().set(LocalStorage.NKN_SUBSRIBE_GAP_TIME, responseTimeValue);
-      // }
-      // else{
-      //   updatePrivateGroupMemberSubscribe(topicHashed, appendMetaIndex, cMapString);
-      //   int responseTimeValue = DateTime.now().millisecondsSinceEpoch;
-      //   await LocalStorage().set(LocalStorage.NKN_SUBSRIBE_GAP_TIME, responseTimeValue);
-      // }
     }
     else{
       NLog.w('Wrong!!! no pageMembers');
@@ -234,9 +211,11 @@ class GroupDataCenter{
     if (maxPageIndex == null){
       maxPageIndex = 0;
     }
+
     NLog.w('maxPageIndex is____'+maxPageIndex.toString());
     List<Subscriber> appendIndexList = await subRepo.findAllSubscribersWithPermitIndex(sub.topic, maxPageIndex);
     NLog.w('appendIndexList is____'+appendIndexList.length.toString());
+
     if (appendIndexList == null){
       appendIndexList = new List<Subscriber>();
     }
@@ -246,7 +225,7 @@ class GroupDataCenter{
 
     List acceptList = new List();
     List rejectList = new List();
-    int maxLength = 1024;
+    int maxLength = 800;
     String cMapString = '';
     for (int index = 0; index < appendIndexList.length; index++){
       Subscriber tSub = appendIndexList[index];
@@ -258,13 +237,6 @@ class GroupDataCenter{
       }
       else{
         rejectList.add(addressMap);
-        /// todo check if any status is out of this judge
-        // static const int DefaultNotMember = 0;
-        // static const int MemberInvited = 1;
-        // static const int MemberPublished = 2;
-        // static const int MemberSubscribed = 3;
-        // static const int MemberPublishRejected = 4;
-        // static const int MemberJoinedButNotInvited = 5;
       }
       Map cMap = new Map();
       cMap['accept'] = acceptList;
@@ -273,20 +245,28 @@ class GroupDataCenter{
       cMapString = jsonEncode(cMap);
       int currentLength = utf8.encode(cMapString).length;
       if (currentLength > maxLength){
-        NLog.w('______MEET MAX:'+cMapString.toString());
+
         acceptList.clear();
         rejectList.clear();
 
         maxPageIndex += 1;
+
+        Map addressMap = {
+          'addr':sub.chatId
+        };
         acceptList.add(addressMap);
         cMap['accept'] = acceptList;
         cMapString = jsonEncode(cMap);
+        NLog.w('______MEET MAX:'+cMapString.toString());
+        NLog.w('______MEET MAX maxPageNow:'+maxPageIndex.toString());
+        break;
       }
     }
     double minerFee = 0;
     String groupTopicIdentifier = '__${maxPageIndex}__.__permission__';
     String theTopicHash = genTopicHash(topicName);
 
+    NLog.w('appendOneMemberOnChain cMapString is___'+cMapString.toString());
     try {
       var subHash = await NKNClientCaller.subscribe(
         identifier: groupTopicIdentifier,
@@ -330,7 +310,7 @@ class GroupDataCenter{
     List acceptList = new List();
     List rejectList = new List();
     List resultList = new List();
-    int maxLength = 1024;
+    int maxLength = 800;
     int nextLength = 0;
     for (int index = 0; index < subs.length; index++){
       Subscriber tSub = subs[index];
@@ -364,12 +344,28 @@ class GroupDataCenter{
         acceptList.clear();
         rejectList.clear();
       }
+      if (index == subs.length-1){
+        if (acceptList != null && acceptList.length > 0){
+          resultList.add(cMapString);
+
+          NLog.w('index == subs.length______MEET MAX:'+cMapString.toString());
+        }
+      }
     }
     double minerFee = 0;
+    for (int rIndex = 0; rIndex < resultList.length; rIndex++) {
+      String cMapString = resultList[rIndex];
+      String groupTopicKey = '__${rIndex}__.__permission__';
+      String theTopicHash = genTopicHash(topicName);
+
+      NLog.w('TestInsert cMapString is___' + cMapString.toString());
+      NLog.w('groupTopicKey cMapString is___' + groupTopicKey.toString());
+    }
     for (int rIndex = 0; rIndex < resultList.length; rIndex++){
       String cMapString = resultList[rIndex];
       String groupTopicKey = '__${rIndex}__.__permission__';
       String theTopicHash = genTopicHash(topicName);
+
       Timer(Duration(seconds: rIndex*20),() async {
         try {
           var subHash = await NKNClientCaller.subscribe(
@@ -428,26 +424,14 @@ class GroupDataCenter{
               /// The List it under private group owner's control
             }
             else {
-              if (subscriber.memberStatus <= MemberStatus.MemberSubscribed) {
-                if (address == owner) {
-                  await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
-                }
-                else {
-                  if (subscriber.memberStatus != MemberStatus.MemberSubscribed) {
-                    if (owner == NKNClientCaller.currentChatId) {
-                      await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
-                    }
-                    else {
-                      await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberPublished);
-                    }
-                  }
-                }
+              if (subscriber.memberStatus == MemberStatus.MemberInvited){
+                await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberSubscribed);
               }
-              else {
-                NLog.w('Subscriber subscriber.memberStatus' + subscriber.memberStatus.toString());
-                if (subscriber.memberStatus == MemberStatus.MemberJoinedButNotInvited) {
-                  await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberPublished);
-                }
+              else if (subscriber.memberStatus == MemberStatus.MemberSubscribed){
+                /// do nothing
+              }
+              else{
+                await subRepo.updateMemberStatus(subscriber, MemberStatus.MemberPublished);
               }
             }
           }
@@ -466,7 +450,7 @@ class GroupDataCenter{
                   timeCreate: DateTime
                       .now()
                       .millisecondsSinceEpoch,
-                  memberStatus: MemberStatus.MemberSubscribed);
+                  memberStatus: MemberStatus.MemberPublished);
               await subRepo.insertSubscriber(insertSub);
               NLog.w('pullPrivateSubscribers insert Subscriber to subscribed');
             }
@@ -493,19 +477,13 @@ class GroupDataCenter{
     final List accept = permissionData["accept"];
     final List reject = permissionData["reject"];
     if (accept != null) {
-      // if (accept.length > 0){
-      //   if (accept[0] == "*"){
-      //     Topic topic = await topicRepo.getTopicByName(topicName);
-      //     topic.updateTopicToAcceptAll(true);
-      //     return;
-      //   }
+      ///todo  old data in dataList but not in this list need to update kick
+      // List addressList = new List();
+      // for (var i = 0; i < accept.length; i++) {
+      //   Map subMap = accept[i];
+      //   String address = subMap['addr'];
+      //   addressList.add(address);
       // }
-      List<Subscriber> memberList = await subRepo.getAllSubscribedMemberByTopic(topicName);
-      for (Subscriber sub in memberList){
-        if (accept.contains(sub.chatId) == false){
-          await subRepo.updateMemberStatus(sub, MemberStatus.MemberPublished);
-        }
-      }
       for (var i = 0; i < accept.length; i++) {
         Map subMap = accept[i];
         String address = subMap['addr'];
@@ -518,22 +496,16 @@ class GroupDataCenter{
         else{
           Subscriber sub = await subRepo.getByTopicAndChatId(topicName, address);
           if (sub != null){
-            await subRepo.updatePermitIndex(sub, pageIndex);
-            if (sub.memberStatus == MemberStatus.MemberPublished){
+            if (sub.memberStatus <= MemberStatus.MemberInvited){
+              await subRepo.updateMemberStatus(sub, MemberStatus.MemberInvited);
+            }
+            else if (sub.memberStatus == MemberStatus.MemberPublished){
               await subRepo.updateMemberStatus(sub, MemberStatus.MemberSubscribed);
             }
-            else if (sub.memberStatus == MemberStatus.MemberSubscribed ||
-                sub.memberStatus == MemberStatus.MemberPublishRejected){
-              /// do nothing because MemberSubscribed
-              if (owner == NKNClientCaller.currentChatId){
-
-              }
-              else{
-                await subRepo.updateMemberStatus(sub, MemberStatus.MemberSubscribed);
-              }
-            }
             else{
-              await subRepo.updateMemberStatus(sub, MemberStatus.MemberInvited);
+              // MemberSubscribed
+              NLog.w('pullPrivateGroupUpdateTxPoolData___ no update of status___'+sub.memberStatus.toString());
+              NLog.w('pullPrivateGroupUpdateTxPoolData___ no update of ChatId'+sub.chatId.toString());
             }
           }
           else{
@@ -542,7 +514,7 @@ class GroupDataCenter{
                 chatId: address,
                 indexPermiPage: pageIndex,
                 timeCreate: DateTime.now().millisecondsSinceEpoch,
-                memberStatus: MemberStatus.MemberSubscribed);
+                memberStatus: MemberStatus.MemberInvited);
             await subRepo.insertSubscriber(sub);
           }
         }
@@ -649,6 +621,7 @@ class GroupDataCenter{
                 }
               }
               else{
+                NLog.w('MemberStatus.MemberInvited!!!!!'+sub.memberStatus.toString());
                 await subRepo.updateMemberStatus(sub, MemberStatus.MemberInvited);
               }
             }
@@ -687,7 +660,6 @@ class GroupDataCenter{
                 }
               }
               else{
-                NLog.w('!!!!!!!+++++'+sub.memberStatus.toString());
                 await subRepo.updateMemberStatus(sub, MemberStatus.MemberPublishRejected);
               }
               NLog.w('pullPrivateSubscribers update To MemberPublishRejected!!!'+pageIndex.toString());

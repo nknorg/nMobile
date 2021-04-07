@@ -131,7 +131,7 @@ class SubscriberRepo with Tag {
     );
     NLog.w('findAllSubscribersWithPermitIndex__'+res.length.toString());
     List<Subscriber> members = parseEntities(res);
-
+    NLog.w('findAllSubscribersWithPermitIndex parseEntities__'+res.length.toString());
     return members;
   }
 

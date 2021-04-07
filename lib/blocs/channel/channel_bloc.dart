@@ -2,10 +2,12 @@ import 'package:bloc/bloc.dart';
 import 'package:nmobile/blocs/channel/channel_event.dart';
 import 'package:nmobile/blocs/channel/channel_state.dart';
 import 'package:nmobile/blocs/nkn_client_caller.dart';
+import 'package:nmobile/helpers/utils.dart';
 import 'package:nmobile/model/datacenter/contact_data_center.dart';
 import 'package:nmobile/model/datacenter/group_data_center.dart';
 import 'package:nmobile/model/entity/subscriber_repo.dart';
 import 'package:nmobile/model/entity/contact.dart';
+import 'package:nmobile/model/group_chat_helper.dart';
 import 'package:nmobile/screens/chat/channel_members.dart';
 import 'package:nmobile/utils/nlog_util.dart';
 
@@ -32,64 +34,19 @@ class ChannelBloc extends Bloc<ChannelMembersEvent, ChannelState> {
     else if (event is FetchChannelMembersEvent) {
       yield* _mapFetchMembersEvent(event);
     }
-    // else if (event is FetchOwnChannelMembersEvent){
-    //   yield* _mapFetchOwnMembersEvent(event);
-    // }
   }
-
-  // Stream<FetchOwnChannelMembersState> _mapFetchOwnMembersEvent(
-  //     FetchOwnChannelMembersEvent event) async* {
-  //   String topicName = event.topicName;
-  //   List<MemberVo> list = [];
-  //   final subscribers = await SubscriberRepo().getAllMemberWithNoMemberStatus(topicName) ;
-  //
-  //   for (final sub in subscribers) {
-  //     if (sub.chatId.length < 64) {
-  //       NLog.w('chatID is_____' + sub.chatId.toString());
-  //     }
-  //     else if (sub.chatId.contains('__permission__')) {
-  //       NLog.w('chatID is_____' + sub.chatId.toString());
-  //     }
-  //     else{
-  //       final contactType = sub.chatId == NKNClientCaller.currentChatId
-  //           ? ContactType.me
-  //           : ContactType.stranger;
-  //       ContactSchema cta =
-  //           await ContactSchema.fetchContactByAddress(sub.chatId) ??
-  //               ContactSchema(clientAddress: sub.chatId, type: contactType);
-  //
-  //       MemberVo member = MemberVo(
-  //         name: cta.getShowName,
-  //         chatId: sub.chatId,
-  //         indexPermiPage: sub.indexPermiPage,
-  //         contact: cta,
-  //         memberStatus: sub.memberStatus,
-  //       );
-  //       list.add(member);
-  //     }
-  //   }
-  //   NLog.w('Got Own subscribers List is____' + list.length.toString());
-  //   yield FetchOwnChannelMembersState(list);
-  // }
 
   Stream<FetchChannelMembersState> _mapFetchMembersEvent(
       FetchChannelMembersEvent event) async* {
     String topicName = event.topicName;
     List<MemberVo> list = [];
 
-    final subscribers = await SubscriberRepo().getAllSubscribedMemberByTopic(topicName);
-    NLog.w('Got subscribers subscribers is____' + subscribers.runtimeType.toString());
-
-    for (var insider in subscribers){
-      NLog.w('Got subscribers insider is____' + insider.runtimeType.toString());
-    }
-
-    for (var insider in subscribers){
-      NLog.w('Got subscribers insider2 is____' + insider.topic.toString());
-      if (insider.chatId == null){
-        NLog.w('Got subscribers is null' + insider.memberStatus.toString());
+    List<Subscriber> subscribers = await SubscriberRepo().getAllSubscribedMemberByTopic(topicName);
+    if (isPrivateTopicReg(topicName)){
+      String owner = getPubkeyFromTopicOrChatId(topicName);
+      if (owner == NKNClientCaller.currentChatId){
+        subscribers = await SubscriberRepo().getAllMemberWithNoMemberStatus(topicName);
       }
-      NLog.w('Got subscribers insider1 is____' + insider.chatId.toString());
     }
 
     for (Subscriber sub in subscribers) {

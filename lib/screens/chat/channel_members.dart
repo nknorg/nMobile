@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -89,12 +90,14 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
   }
 
   _refreshMemberList() {
+    _channelBloc.add(FetchChannelMembersEvent(widget.topic.topic));
     if (widget.topic.isPrivateTopic() && widget.topic.isOwner(NKNClientCaller.currentChatId)){
-      _channelBloc.add(ChannelOwnMemberCountEvent(widget.topic.topic));
+      Timer(Duration(milliseconds: 200), () async {
+        _channelBloc.add(ChannelOwnMemberCountEvent(widget.topic.topic));
+      });
       // _channelBloc.add(FetchOwnChannelMembersEvent(widget.topic.topic));
       NLog.w('_refreshMemberList called!!!');
     }
-    _channelBloc.add(FetchChannelMembersEvent(widget.topic.topic));
   }
 
   @override
