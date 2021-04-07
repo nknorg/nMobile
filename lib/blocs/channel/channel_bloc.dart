@@ -32,44 +32,45 @@ class ChannelBloc extends Bloc<ChannelMembersEvent, ChannelState> {
     else if (event is FetchChannelMembersEvent) {
       yield* _mapFetchMembersEvent(event);
     }
-    else if (event is FetchOwnChannelMembersEvent){
-      yield* _mapFetchOwnMembersEvent(event);
-    }
+    // else if (event is FetchOwnChannelMembersEvent){
+    //   yield* _mapFetchOwnMembersEvent(event);
+    // }
   }
-  Stream<FetchOwnChannelMembersState> _mapFetchOwnMembersEvent(
-      FetchOwnChannelMembersEvent event) async* {
-    String topicName = event.topicName;
-    List<MemberVo> list = [];
-    final subscribers = await SubscriberRepo().getAllMemberWithNoMemberStatus(topicName) ;
 
-    for (final sub in subscribers) {
-      if (sub.chatId.length < 64) {
-        NLog.w('chatID is_____' + sub.chatId.toString());
-      }
-      else if (sub.chatId.contains('__permission__')) {
-        NLog.w('chatID is_____' + sub.chatId.toString());
-      }
-      else{
-        final contactType = sub.chatId == NKNClientCaller.currentChatId
-            ? ContactType.me
-            : ContactType.stranger;
-        ContactSchema cta =
-            await ContactSchema.fetchContactByAddress(sub.chatId) ??
-                ContactSchema(clientAddress: sub.chatId, type: contactType);
-
-        MemberVo member = MemberVo(
-          name: cta.getShowName,
-          chatId: sub.chatId,
-          indexPermiPage: sub.indexPermiPage,
-          contact: cta,
-          memberStatus: sub.memberStatus,
-        );
-        list.add(member);
-      }
-    }
-    NLog.w('Got Own subscribers List is____' + list.length.toString());
-    yield FetchOwnChannelMembersState(list);
-  }
+  // Stream<FetchOwnChannelMembersState> _mapFetchOwnMembersEvent(
+  //     FetchOwnChannelMembersEvent event) async* {
+  //   String topicName = event.topicName;
+  //   List<MemberVo> list = [];
+  //   final subscribers = await SubscriberRepo().getAllMemberWithNoMemberStatus(topicName) ;
+  //
+  //   for (final sub in subscribers) {
+  //     if (sub.chatId.length < 64) {
+  //       NLog.w('chatID is_____' + sub.chatId.toString());
+  //     }
+  //     else if (sub.chatId.contains('__permission__')) {
+  //       NLog.w('chatID is_____' + sub.chatId.toString());
+  //     }
+  //     else{
+  //       final contactType = sub.chatId == NKNClientCaller.currentChatId
+  //           ? ContactType.me
+  //           : ContactType.stranger;
+  //       ContactSchema cta =
+  //           await ContactSchema.fetchContactByAddress(sub.chatId) ??
+  //               ContactSchema(clientAddress: sub.chatId, type: contactType);
+  //
+  //       MemberVo member = MemberVo(
+  //         name: cta.getShowName,
+  //         chatId: sub.chatId,
+  //         indexPermiPage: sub.indexPermiPage,
+  //         contact: cta,
+  //         memberStatus: sub.memberStatus,
+  //       );
+  //       list.add(member);
+  //     }
+  //   }
+  //   NLog.w('Got Own subscribers List is____' + list.length.toString());
+  //   yield FetchOwnChannelMembersState(list);
+  // }
 
   Stream<FetchChannelMembersState> _mapFetchMembersEvent(
       FetchChannelMembersEvent event) async* {

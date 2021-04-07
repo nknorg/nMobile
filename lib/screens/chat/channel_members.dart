@@ -91,12 +91,10 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
   _refreshMemberList() {
     if (widget.topic.isPrivateTopic() && widget.topic.isOwner(NKNClientCaller.currentChatId)){
       _channelBloc.add(ChannelOwnMemberCountEvent(widget.topic.topic));
-      _channelBloc.add(FetchOwnChannelMembersEvent(widget.topic.topic));
+      // _channelBloc.add(FetchOwnChannelMembersEvent(widget.topic.topic));
       NLog.w('_refreshMemberList called!!!');
     }
-    else{
-      _channelBloc.add(FetchChannelMembersEvent(widget.topic.topic));
-    }
+    _channelBloc.add(FetchChannelMembersEvent(widget.topic.topic));
   }
 
   @override
@@ -253,36 +251,36 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
                   .pad(r: 2));
         }
       }
-      else if (channelState is FetchOwnChannelMembersState){
-        _members = channelState.memberList;
-        _topicCount = _members.length;
-
-        if (_members.length > 0) {
-          MemberVo owner = !widget.topic.isPrivateTopic()
-              ? null
-              : _members.firstWhere((c) => widget.topic.isOwner(c.chatId),
-              orElse: () => null);
-          if (owner != null) _members.remove(owner);
-          MemberVo me = _members.firstWhere(
-                  (c) => c.chatId == NKNClientCaller.currentChatId,
-              orElse: () => null);
-          if (me != null) _members.remove(me);
-          /// todo Member List sort
-          // _members.sort((a, b) =>
-          //     (a.isBlack && b.isBlack || !a.isBlack && !b.isBlack)
-          //         ? a.name.compareTo(b.name)
-          //         : (!a.isBlack ? -1 : 1));
-          if (me != null) _members.insert(0, me);
-          if (owner != null && owner != me) _members.insert(0, owner);
-        }
-        if (widget.topic.isPrivateTopic()) {
-          topicWidget.insert(
-              0,
-              loadAssetIconsImage('lock',
-                  width: 18, color: DefaultTheme.fontLightColor)
-                  .pad(r: 2));
-        }
-      }
+      // else if (channelState is FetchOwnChannelMembersState){
+      //   _members = channelState.memberList;
+      //   _topicCount = _members.length;
+      //
+      //   if (_members.length > 0) {
+      //     MemberVo owner = !widget.topic.isPrivateTopic()
+      //         ? null
+      //         : _members.firstWhere((c) => widget.topic.isOwner(c.chatId),
+      //         orElse: () => null);
+      //     if (owner != null) _members.remove(owner);
+      //     MemberVo me = _members.firstWhere(
+      //             (c) => c.chatId == NKNClientCaller.currentChatId,
+      //         orElse: () => null);
+      //     if (me != null) _members.remove(me);
+      //     /// todo Member List sort
+      //     // _members.sort((a, b) =>
+      //     //     (a.isBlack && b.isBlack || !a.isBlack && !b.isBlack)
+      //     //         ? a.name.compareTo(b.name)
+      //     //         : (!a.isBlack ? -1 : 1));
+      //     if (me != null) _members.insert(0, me);
+      //     if (owner != null && owner != me) _members.insert(0, owner);
+      //   }
+      //   if (widget.topic.isPrivateTopic()) {
+      //     topicWidget.insert(
+      //         0,
+      //         loadAssetIconsImage('lock',
+      //             width: 18, color: DefaultTheme.fontLightColor)
+      //             .pad(r: 2));
+      //   }
+      // }
       return ListView.builder(
         padding: EdgeInsets.only(top: 4, bottom: 32),
         controller: _scrollController,

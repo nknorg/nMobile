@@ -100,9 +100,11 @@ class GroupDataCenter{
       updateResult = await subRepo.updateMemberStatus(updateSub, MemberStatus.MemberPublishRejected);
     }
 
-    String pubKey = NKNClientCaller.currentChatId;
     int pageIndex = 0;
-    if (updateSub.indexPermiPage != null && updateSub.indexPermiPage != -1){
+    if (updateSub.indexPermiPage == null || updateSub.indexPermiPage < 0){
+      await subRepo.updatePermitIndex(updateSub, 0);
+    }
+    else{
       pageIndex = updateSub.indexPermiPage;
     }
     NLog.w('Update updateSub.indexPermiPage is_____'+updateSub.indexPermiPage.toString());
@@ -143,31 +145,32 @@ class GroupDataCenter{
       String appendMetaIndex = '__${pageIndex}__.__permission__';
       NLog.w('appendMetaIndex is________'+appendMetaIndex.toString());
 
-      int responseTime = await LocalStorage().get(LocalStorage.NKN_SUBSRIBE_GAP_TIME);
-      if (responseTime != null){
-        DateTime responseTimeExpire =
-        DateTime.fromMillisecondsSinceEpoch(responseTime);
-        DateTime beforeTime = DateTime.now().subtract(Duration(seconds: 20));
-        if (responseTimeExpire.isBefore(beforeTime)){
-          NLog.w('responseTimeExpire is > =___'+responseTimeExpire.second.toString());
-          // updatePrivateGroupMemberSubscribe(topicHashed, appendMetaIndex, cMapString);
+      updatePrivateGroupMemberSubscribe(topicHashed, appendMetaIndex, cMapString);
 
-          updatePrivateGroupMemberSubscribe(topicHashed, appendMetaIndex, cMapString);
-          int responseTimeValue = DateTime.now().millisecondsSinceEpoch;
-          await LocalStorage().set(LocalStorage.NKN_SUBSRIBE_GAP_TIME, responseTimeValue);
-        }
-        else{
-          showToast('Operate too often,20s later!');
-          /// todo should Do in Operation List
-        }
-        int responseTimeValue = DateTime.now().millisecondsSinceEpoch;
-        await LocalStorage().set(LocalStorage.NKN_SUBSRIBE_GAP_TIME, responseTimeValue);
-      }
-      else{
-        updatePrivateGroupMemberSubscribe(topicHashed, appendMetaIndex, cMapString);
-        int responseTimeValue = DateTime.now().millisecondsSinceEpoch;
-        await LocalStorage().set(LocalStorage.NKN_SUBSRIBE_GAP_TIME, responseTimeValue);
-      }
+      // int responseTime = await LocalStorage().get(LocalStorage.NKN_SUBSRIBE_GAP_TIME);
+      // if (responseTime != null){
+      //   DateTime responseTimeExpire =
+      //   DateTime.fromMillisecondsSinceEpoch(responseTime);
+      //   DateTime beforeTime = DateTime.now().subtract(Duration(seconds: 20));
+      //   if (responseTimeExpire.isBefore(beforeTime)){
+      //     NLog.w('responseTimeExpire is > =___'+responseTimeExpire.second.toString());
+      //     // updatePrivateGroupMemberSubscribe(topicHashed, appendMetaIndex, cMapString);
+      //
+      //     int responseTimeValue = DateTime.now().millisecondsSinceEpoch;
+      //     await LocalStorage().set(LocalStorage.NKN_SUBSRIBE_GAP_TIME, responseTimeValue);
+      //   }
+      //   else{
+      //     showToast('Operate too often,20s later!');
+      //     /// todo should Do in Operation List
+      //   }
+      //   int responseTimeValue = DateTime.now().millisecondsSinceEpoch;
+      //   await LocalStorage().set(LocalStorage.NKN_SUBSRIBE_GAP_TIME, responseTimeValue);
+      // }
+      // else{
+      //   updatePrivateGroupMemberSubscribe(topicHashed, appendMetaIndex, cMapString);
+      //   int responseTimeValue = DateTime.now().millisecondsSinceEpoch;
+      //   await LocalStorage().set(LocalStorage.NKN_SUBSRIBE_GAP_TIME, responseTimeValue);
+      // }
     }
     else{
       NLog.w('Wrong!!! no pageMembers');
@@ -856,7 +859,6 @@ class GroupDataCenter{
       }
 
       for (String chatId in subscribers.keys) {
-        NLog.w('pullSubscribersPublicChannel sub is___'+chatId.toString());
         await GroupDataCenter.checkContactIfExists(chatId);
         Subscriber sub = Subscriber(
             id: 0,
