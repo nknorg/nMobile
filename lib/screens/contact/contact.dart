@@ -375,7 +375,6 @@ class _ContactScreenState extends State<ContactScreen> {
         await currentUser.setAvatar(avatarImage);
       }
       _contactBloc.add(UpdateUserInfoEvent(currentUser));
-      NLog.w('UpdateContactBLockcccccccc');
     } else {
       Map dataInfo = Map<String, dynamic>();
       if (nickName != null && nickName.length > 0) {
@@ -593,6 +592,7 @@ class _ContactScreenState extends State<ContactScreen> {
     NKNClientCaller.instance.createClient(seedList, null, publicKey);
 
     Timer(Duration(milliseconds: 200), () async {
+      _contactBloc.add(UpdateUserInfoEvent(currentUser));
       EasyLoading.dismiss();
       showToast(NL10ns.of(context).tip_switch_success);
     });
