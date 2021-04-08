@@ -427,7 +427,11 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
         member.chatId != NKNClientCaller.currentChatId) {
       acceptAction() async {
         if (member.memberStatus != MemberStatus.MemberSubscribed) {
-          await GroupDataCenter.updatePrivatePermissionList(widget.topic.topic, member.chatId, true);
+          bool acceptResult = await GroupDataCenter.updatePrivatePermissionList(widget.topic.topic, member.chatId, true);
+          if (acceptResult == false){
+            showToast(NL10ns.of(context).something_went_wrong);
+            return;
+          }
         }
         showToast(NL10ns.of(context).invitation_sent);
         _inviteMessage(member.chatId);
@@ -436,7 +440,11 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
 
       rejectAction() async {
         if (member.memberStatus != MemberStatus.MemberPublishRejected) {
-          await GroupDataCenter.updatePrivatePermissionList(widget.topic.topic, member.chatId, false);
+          bool rejectResult = await GroupDataCenter.updatePrivatePermissionList(widget.topic.topic, member.chatId, false);
+          if (rejectResult == false){
+            showToast(NL10ns.of(context).something_went_wrong);
+            return;
+          }
         }
         showToast(NL10ns.of(context).rejected);
         _refreshMemberList();
@@ -445,7 +453,6 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
       Widget acceptIcon = loadAssetIconsImage('check',
           width: 20, color: DefaultTheme.successColor);
       Widget rejectIcon = Icon(Icons.block, size: 20, color: Colours.red);
-
 
       if (member.memberStatus != MemberStatus.MemberPublishRejected){
         toolBtns.add(InkWell(
@@ -484,6 +491,10 @@ class _ChannelMembersScreenState extends State<ChannelMembersScreen> {
           String alertText = NL10ns.of(context).invited_already;
           if (memberStatus == MemberStatus.MemberSubscribed){
             showToast(NL10ns.of(context).group_member_already);
+            return;
+          }
+          else if (memberStatus == MemberStatus.DefaultNotMember){
+            showToast(NL10ns.of(context).something_went_wrong);
             return;
           }
           else if (memberStatus >= MemberStatus.MemberPublished){

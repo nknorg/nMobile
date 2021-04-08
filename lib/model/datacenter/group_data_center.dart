@@ -152,7 +152,10 @@ class GroupDataCenter{
       String appendMetaIndex = '__${pageIndex}__.__permission__';
       NLog.w('appendMetaIndex is________'+appendMetaIndex.toString());
 
-      updatePrivateGroupMemberSubscribe(topicHashed, appendMetaIndex, cMapString);
+      bool updatePermissionResult = await updatePrivateGroupMemberSubscribe(topicHashed, appendMetaIndex, cMapString);
+      if (updatePermissionResult == false){
+        return false;
+      }
     }
     else{
       NLog.w('Wrong!!! no pageMembers');
@@ -162,7 +165,7 @@ class GroupDataCenter{
     /// node sync job
   }
 
-  static updatePrivateGroupMemberSubscribe(String topicHash, String appendMetaIndex, String cMapString) async{
+  static Future<bool> updatePrivateGroupMemberSubscribe(String topicHash, String appendMetaIndex, String cMapString) async{
     double minerFee = 0;
     try {
       await NKNClientCaller.subscribe(
@@ -174,7 +177,9 @@ class GroupDataCenter{
       );
     } catch (e) {
       NLog.e('uploadPermissionMeta' + e.toString());
+      return false;
     }
+    return true;
   }
 
   static Future<int> addPrivatePermissionList(String topicName,String chatId) async{
@@ -195,7 +200,10 @@ class GroupDataCenter{
           memberStatus: MemberStatus.MemberInvited);
       subRepo.insertSubscriber(insertSub);
 
-      appendOneMemberOnChain(insertSub);
+      bool onChainSuccess = await appendOneMemberOnChain(insertSub);
+      if (onChainSuccess == false){
+        return MemberStatus.DefaultNotMember;
+      }
       /// Insert Logic
       return MemberStatus.MemberInvited;
     }
@@ -208,7 +216,7 @@ class GroupDataCenter{
     return sub.memberStatus;
   }
 
-  static Future<void> appendOneMemberOnChain(Subscriber sub) async{
+  static Future<bool> appendOneMemberOnChain(Subscriber sub) async{
     String topicName = sub.topic;
     final topicHashed = genTopicHash(topicName);
 
@@ -285,7 +293,9 @@ class GroupDataCenter{
       }
     } catch (e) {
       NLog.e('uploadPermissionMeta' + e.toString());
+      return false;
     }
+    return true;
   }
 
   static Future<bool> checkMeIn(String topicName) async{

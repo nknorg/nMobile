@@ -38,8 +38,8 @@ void main() async {
             dsn:
                 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
             environmentAttributes: const Event(
-              release: '217',
-              environment: 'Android217',
+              release: '218',
+              environment: 'Android218',
             ));
         runApp(App());
       });
@@ -87,8 +87,8 @@ void main() async {
             dsn:
                 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
             environmentAttributes: const Event(
-              release: '217',
-              environment: 'iOS217',
+              release: '218',
+              environment: 'iOS218',
             ));
         runApp(App());
       });

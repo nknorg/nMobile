@@ -2,12 +2,9 @@ import 'package:nmobile/model/db/nkn_data_manager.dart';
 import 'package:nmobile/model/entity/topic_repo.dart';
 import 'package:nmobile/model/entity/contact.dart';
 import 'package:nmobile/model/entity/message.dart';
-import 'package:nmobile/utils/log_tag.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class MessageItem {
-  static LOG _log = LOG('MessageItem'.tag());
-
   String targetId;
   String sender;
   Topic topic;
@@ -61,12 +58,13 @@ class MessageItem {
         'MAX(send_time)'
       ],
       where:
-          "type = ? or type = ? or type = ? or type = ? or type = ? or type = ?",
+          "type = ? or type = ? or type = ? or type = ? or type = ? or type = ? or type = ?",
       whereArgs: [
         ContentType.text,
         ContentType.textExtension,
         ContentType.nknImage,
         ContentType.channelInvitation,
+        ContentType.eventSubscribe,
         ContentType.media,
         ContentType.nknAudio
       ],
