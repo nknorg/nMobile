@@ -61,13 +61,12 @@ class MessageItem {
         'MAX(send_time)'
       ],
       where:
-          "type = ? or type = ? or type = ? or type = ? or type = ? or type = ? or type = ?",
+          "type = ? or type = ? or type = ? or type = ? or type = ? or type = ?",
       whereArgs: [
         ContentType.text,
         ContentType.textExtension,
         ContentType.nknImage,
         ContentType.channelInvitation,
-        ContentType.eventSubscribe,
         ContentType.media,
         ContentType.nknAudio
       ],

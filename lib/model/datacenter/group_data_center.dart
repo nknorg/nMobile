@@ -486,14 +486,29 @@ class GroupDataCenter{
     final owner = getPubkeyFromTopicOrChatId(topicName);
     final List accept = permissionData["accept"];
     final List reject = permissionData["reject"];
+
+    List<String> acceptMembers = new List<String>();
+    if (accept != null){
+      for (int i = 0; i < accept.length; i++){
+        Map subMap = accept[i];
+        String address = subMap['addr'];
+        acceptMembers.add(address);
+      }
+    }
+    
+    List<Subscriber> allMember = await subRepo.getAllMemberWithNoMemberStatus(topicName);
+    for (Subscriber sub in allMember){
+      if (acceptMembers.contains(sub.chatId)){
+        NLog.w('Contains_____'+sub.chatId.toString());
+        NLog.w('Contains memberStatus_____'+sub.memberStatus.toString());
+      }
+      else{
+        subRepo.updateMemberStatus(sub, MemberStatus.DefaultNotMember);
+        NLog.w('Contains NO_____'+sub.chatId.toString());
+        NLog.w('Contains NO memberStatus_____'+sub.memberStatus.toString());
+      }
+    }
     if (accept != null) {
-      ///todo  old data in dataList but not in this list need to update kick
-      // List addressList = new List();
-      // for (var i = 0; i < accept.length; i++) {
-      //   Map subMap = accept[i];
-      //   String address = subMap['addr'];
-      //   addressList.add(address);
-      // }
       for (var i = 0; i < accept.length; i++) {
         Map subMap = accept[i];
         String address = subMap['addr'];
@@ -505,12 +520,14 @@ class GroupDataCenter{
         }
         else{
           Subscriber sub = await subRepo.getByTopicAndChatId(topicName, address);
-          if (sub.indexPermiPage == null){
-            if (sub.indexPermiPage == 0 && sub.indexPermiPage != pageIndex){
-              await subRepo.updatePermitIndex(sub, pageIndex);
-            }
-          }
           if (sub != null){
+            NLog.w('pullPrivateGroupUpdateTxPoolData memberStatus is____'+sub.memberStatus.toString());
+            NLog.w('pullPrivateGroupUpdateTxPoolData chatId is____'+sub.chatId.toString());
+            if (sub.indexPermiPage == null){
+              if (sub.indexPermiPage == 0 && sub.indexPermiPage != pageIndex){
+                await subRepo.updatePermitIndex(sub, pageIndex);
+              }
+            }
             if (sub.memberStatus <= MemberStatus.MemberInvited){
               await subRepo.updateMemberStatus(sub, MemberStatus.MemberInvited);
             }
