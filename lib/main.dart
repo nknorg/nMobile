@@ -1,160 +1,125 @@
-import 'dart:async';
+import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:nmobile/app.dart';
-import 'package:nmobile/blocs/chat/channel_members.dart';
-import 'package:nmobile/blocs/chat/chat_bloc.dart';
-import 'package:nmobile/blocs/client/client_bloc.dart';
-import 'package:nmobile/blocs/contact/contact_bloc.dart';
-import 'package:nmobile/blocs/global/global_bloc.dart';
-import 'package:nmobile/blocs/global/global_state.dart';
-import 'package:nmobile/blocs/wallet/filtered_wallets_bloc.dart';
-import 'package:nmobile/consts/theme.dart';
-import 'package:nmobile/helpers/global.dart';
-import 'package:nmobile/helpers/local_notification.dart';
-import 'package:nmobile/l10n/localization_intl.dart';
-import 'package:nmobile/router/route_observer.dart';
-import 'package:nmobile/router/routes.dart';
-import 'package:nmobile/utils/log_tag.dart';
-import 'package:oktoast/oktoast.dart';
-import 'package:sentry/sentry.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nkn_sdk_flutter/client.dart';
+import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/storages/settings.dart';
+import 'package:nmobile/theme/light.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
-import 'blocs/wallet/wallets_bloc.dart';
+import 'app.dart';
+import 'blocs/settings/settings_bloc.dart';
+import 'blocs/settings/settings_state.dart';
+import 'common/global.dart';
+import 'common/locator.dart';
+import 'common/settings.dart';
+import 'generated/l10n.dart';
+import 'services/task_service.dart';
+import 'routes/routes.dart' as routes;
 
+void initialize() {
+  application.registerInitialize(() async {
+    Global.init();
+
+    SettingsStorage settingsStorage = SettingsStorage();
+    // load language
+    Settings.locale = (await settingsStorage.getSettings(SettingsStorage.LOCALE_KEY)) ?? 'auto';
+  });
+}
 
 void main() async {
-  SentryClient sentry;
-    // Global.init(() {
-    //   runApp(App());
-    // });
-  runZonedGuarded(() {
-    Global.init(() {
-      sentry = SentryClient(
-        // log
-          dsn: 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254',
-          environmentAttributes: const Event(
-            release: 'nMobile',
-            environment: 'production',
-          ));
-      runApp(App());
-    });
-  }, (error, stackTrace) async {
-    await sentry.captureException(
-      exception: error,
-      stackTrace: stackTrace,
-    );
+  WidgetsFlutterBinding.ensureInitialized();
+
+  if (Platform.isAndroid) {
+    SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(statusBarColor: Colors.transparent);
+    SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
+  }
+  await Wallet.install();
+  await Client.install();
+
+  setupLocator();
+  routes.init();
+  initialize();
+  await application.initialize();
+  application.registerMounted(() async {
+    locator.get<TaskService>().install();
   });
-  FlutterError.onError = (details, {bool forceReport = false}) {
-    sentry.captureException(
-      exception: details.exception,
-      stackTrace: details.stack,
-    );
-  };
+
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254';
+      options.environment = Global.isRelease ? 'production' : 'debug';
+      options.release = Global.versionFormat;
+    },
+    appRunner: () => runApp(Main()),
+  );
 }
 
-class App extends StatefulWidget {
-  static final String sName = "App";
+class Main extends StatefulWidget {
+  static final String name = 'nMobile';
 
   @override
-  AppState createState() => new AppState();
+  _MainState createState() => _MainState();
 }
 
-class AppState extends State<App> with WidgetsBindingObserver, Tag {
+class _MainState extends State<Main> {
   List<BlocProvider> providers = [
-    BlocProvider<GlobalBloc>(
-      create: (BuildContext context) => GlobalBloc(),
+    BlocProvider<SettingsBloc>(
+      create: (BuildContext context) => SettingsBloc(),
     ),
-    BlocProvider<WalletsBloc>(
-      create: (BuildContext context) => WalletsBloc(),
-    ),
-    BlocProvider<ContactBloc>(
-      create: (BuildContext context) => ContactBloc(),
-    ),
-    BlocProvider<FilteredWalletsBloc>(
-      create: (BuildContext context) => FilteredWalletsBloc(
-        walletsBloc: BlocProvider.of<WalletsBloc>(context),
-      ),
-    ),
-    BlocProvider<ChatBloc>(
-      create: (BuildContext context) => ChatBloc(
-        contactBloc: BlocProvider.of<ContactBloc>(context),
-      ),
-    ),
-    BlocProvider<ClientBloc>(
-      create: (BuildContext context) => ClientBloc(
-        chatBloc: BlocProvider.of<ChatBloc>(context),
-      ),
-    ),
-    BlocProvider<ChannelMembersBloc>(
-      create: (BuildContext context) => ChannelMembersBloc(),
-    ),
+
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    LocalNotification.debugNotification('<[DEBUG]> --- app init ---', DateTime.now().toLocal().toString());
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    LOG(tag).d('didChangeAppLifecycleState($state)');
-    Global.state = state;
-    LocalNotification.debugNotification('<[DEBUG]> $state', DateTime.now().toLocal().toString());
-  }
+  final botToastBuilder = BotToastInit();
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: providers,
-      child: BotToastInit(
-        child: BlocBuilder<GlobalBloc, GlobalState>(builder: (context, state) {
-          return OKToast(
-            position: ToastPosition.bottom,
-            backgroundColor: Colors.black54,
-            radius: 100,
-            textPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 14),
-            child: MaterialApp(
-              builder: (context, child) {
-                return FlutterEasyLoading(child: child);
-              },
-              navigatorObservers: [BotToastNavigatorObserver(), RouteUtils.routeObserver],
-              onGenerateTitle: (context) {
-                return NL10ns.of(context).title;
-              },
-              onGenerateRoute: onGenerateRoute,
-              title: 'nMobile',
-              theme: ThemeData(
-                primarySwatch: Colors.blue,
-                primaryColor: DefaultTheme.primaryColor,
-                sliderTheme: SliderThemeData(
-                  overlayShape: RoundSliderOverlayShape(overlayRadius: 18),
-                  trackHeight: 8,
-                  tickMarkShape: RoundSliderTickMarkShape(tickMarkRadius: 0),
-                  // thumbShape: SliderThemeShape(),
-                ),
-              ),
-              home: AppScreen(),
-              locale: Global.locale != null && Global.locale != 'auto' ? Locale.fromSubtags(languageCode: Global.locale) : null,
-              localizationsDelegates: [
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-                NMobileLocalizationsDelegate(),
-              ],
-              supportedLocales: [
-                const Locale('en'),
-                const Locale.fromSubtags(languageCode: 'zh'),
-              ],
-            ),
+      child: BlocBuilder<SettingsBloc, SettingsState>(
+        builder: (context, state) {
+          return MaterialApp(
+            builder: (context, child) {
+              child = botToastBuilder(context, child);
+              return child;
+            },
+            onGenerateTitle: (context) {
+              return S.of(context).app_name;
+            },
+            title: Main.name,
+            theme: application.theme.themeData,
+            locale: Settings.locale == 'auto' ? null : Locale.fromSubtags(languageCode: Settings.locale),
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: [
+              ...S.delegate.supportedLocales,
+            ],
+            initialRoute: AppScreen.routeName,
+            onGenerateRoute: application.onGenerateRoute,
+            localeResolutionCallback: (locale, supportLocales) {
+              if (locale?.languageCode == 'zh') {
+                if (locale?.scriptCode == 'Hant') {
+                  return const Locale('zh', 'TW');
+                } else {
+                  return const Locale('zh', 'CN');
+                }
+              } else if (locale?.languageCode == 'zh_Hant_CN') {
+                return const Locale('zh', 'TW');
+              } else if (locale?.languageCode == 'auto') {
+                return null;
+              }
+              return locale;
+            },
           );
-        }),
+        },
       ),
     );
   }
