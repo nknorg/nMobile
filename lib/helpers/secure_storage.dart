@@ -4,7 +4,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorage {
   final FlutterSecureStorage _storage = FlutterSecureStorage();
-  static const String NKN_KEYSTORES_KEY = 'NKN_KEYSTORES';
   static const String PASSWORDS_KEY = 'PASSWORDS';
   static const String LENGTH_SUFFIX = 'length';
 

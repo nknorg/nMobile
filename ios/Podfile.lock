@@ -1,0 +1,158 @@
+PODS:
+  - DKImagePickerController/Core (4.3.2):
+    - DKImagePickerController/ImageDataManager
+    - DKImagePickerController/Resource
+  - DKImagePickerController/ImageDataManager (4.3.2)
+  - DKImagePickerController/PhotoGallery (4.3.2):
+    - DKImagePickerController/Core
+    - DKPhotoGallery
+  - DKImagePickerController/Resource (4.3.2)
+  - DKPhotoGallery (0.0.17):
+    - DKPhotoGallery/Core (= 0.0.17)
+    - DKPhotoGallery/Model (= 0.0.17)
+    - DKPhotoGallery/Preview (= 0.0.17)
+    - DKPhotoGallery/Resource (= 0.0.17)
+    - SDWebImage
+    - SwiftyGif
+  - DKPhotoGallery/Core (0.0.17):
+    - DKPhotoGallery/Model
+    - DKPhotoGallery/Preview
+    - SDWebImage
+    - SwiftyGif
+  - DKPhotoGallery/Model (0.0.17):
+    - SDWebImage
+    - SwiftyGif
+  - DKPhotoGallery/Preview (0.0.17):
+    - DKPhotoGallery/Model
+    - DKPhotoGallery/Resource
+    - SDWebImage
+    - SwiftyGif
+  - DKPhotoGallery/Resource (0.0.17):
+    - SDWebImage
+    - SwiftyGif
+  - file_picker (0.0.1):
+    - DKImagePickerController/PhotoGallery
+    - Flutter
+  - Flutter (1.0.0)
+  - flutter_secure_storage (3.3.1):
+    - Flutter
+  - FMDB/SQLCipher (2.7.5):
+    - SQLCipher
+  - image_picker (0.0.1):
+    - Flutter
+  - local_auth (0.0.1):
+    - Flutter
+  - MTBBarcodeScanner (5.0.11)
+  - nkn_sdk_flutter (0.0.4):
+    - Flutter
+  - package_info (0.0.1):
+    - Flutter
+  - path_provider (0.0.1):
+    - Flutter
+  - qr_code_scanner (0.2.0):
+    - Flutter
+    - MTBBarcodeScanner
+  - SDWebImage (5.10.4):
+    - SDWebImage/Core (= 5.10.4)
+  - SDWebImage/Core (5.10.4)
+  - Sentry (6.1.4):
+    - Sentry/Core (= 6.1.4)
+  - Sentry/Core (6.1.4)
+  - sentry_flutter (0.0.1):
+    - Flutter
+    - Sentry (~> 6.1.4)
+  - shared_preferences (0.0.1):
+    - Flutter
+  - sqflite_sqlcipher (0.0.1):
+    - Flutter
+    - FMDB/SQLCipher (~> 2.7.5)
+    - SQLCipher (= 4.4.2)
+  - SQLCipher (4.4.2):
+    - SQLCipher/standard (= 4.4.2)
+  - SQLCipher/common (4.4.2)
+  - SQLCipher/standard (4.4.2):
+    - SQLCipher/common
+  - SwiftyGif (5.4.0)
+  - url_launcher (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - file_picker (from `.symlinks/plugins/file_picker/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
+  - image_picker (from `.symlinks/plugins/image_picker/ios`)
+  - local_auth (from `.symlinks/plugins/local_auth/ios`)
+  - nkn_sdk_flutter (from `.symlinks/plugins/nkn_sdk_flutter/ios`)
+  - package_info (from `.symlinks/plugins/package_info/ios`)
+  - path_provider (from `.symlinks/plugins/path_provider/ios`)
+  - qr_code_scanner (from `.symlinks/plugins/qr_code_scanner/ios`)
+  - sentry_flutter (from `.symlinks/plugins/sentry_flutter/ios`)
+  - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
+  - sqflite_sqlcipher (from `.symlinks/plugins/sqflite_sqlcipher/ios`)
+  - url_launcher (from `.symlinks/plugins/url_launcher/ios`)
+
+SPEC REPOS:
+  trunk:
+    - DKImagePickerController
+    - DKPhotoGallery
+    - FMDB
+    - MTBBarcodeScanner
+    - SDWebImage
+    - Sentry
+    - SQLCipher
+    - SwiftyGif
+
+EXTERNAL SOURCES:
+  file_picker:
+    :path: ".symlinks/plugins/file_picker/ios"
+  Flutter:
+    :path: Flutter
+  flutter_secure_storage:
+    :path: ".symlinks/plugins/flutter_secure_storage/ios"
+  image_picker:
+    :path: ".symlinks/plugins/image_picker/ios"
+  local_auth:
+    :path: ".symlinks/plugins/local_auth/ios"
+  nkn_sdk_flutter:
+    :path: ".symlinks/plugins/nkn_sdk_flutter/ios"
+  package_info:
+    :path: ".symlinks/plugins/package_info/ios"
+  path_provider:
+    :path: ".symlinks/plugins/path_provider/ios"
+  qr_code_scanner:
+    :path: ".symlinks/plugins/qr_code_scanner/ios"
+  sentry_flutter:
+    :path: ".symlinks/plugins/sentry_flutter/ios"
+  shared_preferences:
+    :path: ".symlinks/plugins/shared_preferences/ios"
+  sqflite_sqlcipher:
+    :path: ".symlinks/plugins/sqflite_sqlcipher/ios"
+  url_launcher:
+    :path: ".symlinks/plugins/url_launcher/ios"
+
+SPEC CHECKSUMS:
+  DKImagePickerController: b5eb7f7a388e4643264105d648d01f727110fc3d
+  DKPhotoGallery: fdfad5125a9fdda9cc57df834d49df790dbb4179
+  file_picker: 3e6c3790de664ccf9b882732d9db5eaf6b8d4eb1
+  Flutter: 434fef37c0980e73bb6479ef766c45957d4b510c
+  flutter_secure_storage: 7953c38a04c3fdbb00571bcd87d8e3b5ceb9daec
+  FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
+  image_picker: 50e7c7ff960e5f58faa4d1f4af84a771c671bc4a
+  local_auth: 25938960984c3a7f6e3253e3f8d962fdd16852bd
+  MTBBarcodeScanner: f453b33c4b7dfe545d8c6484ed744d55671788cb
+  nkn_sdk_flutter: 474f0ff5cf11795bd592708a1c707cc15e70e49a
+  package_info: 873975fc26034f0b863a300ad47e7f1ac6c7ec62
+  path_provider: abfe2b5c733d04e238b0d8691db0cfd63a27a93c
+  qr_code_scanner: bb67d64904c3b9658ada8c402e8b4d406d5d796e
+  SDWebImage: c666b97e1fa9c64b4909816a903322018f0a9c84
+  Sentry: 9d055e2de30a77685e86b219acf02e59b82091fc
+  sentry_flutter: 8b2b2e1c0101ef562106b5d272d3c0c741512c01
+  shared_preferences: af6bfa751691cdc24be3045c43ec037377ada40d
+  sqflite_sqlcipher: 70eb7fd8d4f0b0352d0bde5cf345b810737f54bb
+  SQLCipher: 1ab0b9486a77d141e72e92ff30681926ed79c07a
+  SwiftyGif: 5d4af95df24caf1c570dbbcb32a3b8a0763bc6d7
+  url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
+
+PODFILE CHECKSUM: 4e8f8b2be68aeea4c0d5beb6ff1e79fface1d048
+
+COCOAPODS: 1.10.1

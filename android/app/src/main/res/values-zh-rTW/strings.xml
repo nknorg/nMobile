@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="n_mobile">nMobile</string>
-    <string name="d_chat_background_connection">D-Chat 后台连接</string>
-    <string name="follow_system">跟随系统</string>
-    <string name="something_went_wrong_format_html"><![CDATA[
-        啊噢！哪里出错了：<b><font color="#ff0000">%s</font></b>，请重试！
-        ]]></string>
-</resources>
