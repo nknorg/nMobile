@@ -27,26 +27,26 @@ dependencies:
     sdk: flutter
   base_x: ^1.0.1
   bot_toast: ^4.0.1
-  dio: ^4.0.0-prev3
+  dio: ^4.0.0
   equatable: ^2.0.0
-  font_awesome_flutter: ^8.12.0
+  font_awesome_flutter: ^9.0.0
   file_picker: ^3.0.1
   flutter_bloc: ^7.0.0
   flutter_cupertino_localizations: ^1.0.1
   flutter_secure_storage: ^4.1.0
-  flutter_svg: ^0.21.0-nullsafety.0
+  flutter_svg: ^0.22.0
   flutter_spinkit: ^5.0.0
   flutter_markdown: ^0.6.1
-  get_it: ^6.0.0
+  get_it: ^6.1.1
   intl: ^0.17.0
   image_picker: ^0.7.4
-  local_auth: ^1.1.2
+  local_auth: ^1.1.5
   package_info: ^2.0.0
   path: ^1.8.0
   path_provider: ^2.0.1
-  qr_code_scanner: ^0.3.5
+  qr_code_scanner: ^0.4.0
   qr_flutter: ^4.0.0
-  sentry_flutter: ^4.0.6
+  sentry_flutter: ^5.0.0
   shared_preferences: ^2.0.5
   sqflite_sqlcipher: ^2.0.0
   url_launcher: ^6.0.2
