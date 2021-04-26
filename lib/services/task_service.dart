@@ -1,6 +1,5 @@
 import 'dart:async';
 
-
 class TaskService {
   bool _isInit = false;
   Timer _queryNConnectWalletBalanceTask;
@@ -15,11 +14,11 @@ class TaskService {
     }
   }
 
-  uninstall (){
+  uninstall() {
     _queryNConnectWalletBalanceTask?.cancel();
   }
 
-  queryNConnectWalletBalanceTask(){
-
+  queryNConnectWalletBalanceTask() {
+    // TODO:GG wallet_balance
   }
 }

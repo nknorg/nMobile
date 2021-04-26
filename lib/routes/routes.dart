@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../common/locator.dart';
 import '../app.dart';
+import '../common/locator.dart';
 import 'home.dart' as home;
-
 import 'wallet.dart' as wallet;
 
 Map<String, WidgetBuilder> routes = {

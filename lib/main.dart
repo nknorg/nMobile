@@ -3,12 +3,12 @@ import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/storages/settings.dart';
-import 'package:nmobile/theme/light.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'app.dart';
@@ -18,8 +18,8 @@ import 'common/global.dart';
 import 'common/locator.dart';
 import 'common/settings.dart';
 import 'generated/l10n.dart';
-import 'services/task_service.dart';
 import 'routes/routes.dart' as routes;
+import 'services/task_service.dart';
 
 void initialize() {
   application.registerInitialize(() async {
@@ -68,10 +68,8 @@ class Main extends StatefulWidget {
 
 class _MainState extends State<Main> {
   List<BlocProvider> providers = [
-    BlocProvider<SettingsBloc>(
-      create: (BuildContext context) => SettingsBloc(),
-    ),
-
+    BlocProvider<SettingsBloc>(create: (BuildContext context) => SettingsBloc()),
+    BlocProvider<WalletBloc>(create: (BuildContext context) => WalletBloc()),
   ];
 
   final botToastBuilder = BotToastInit();
