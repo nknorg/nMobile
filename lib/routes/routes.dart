@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../common/locator.dart';
 import '../app.dart';
+import '../common/locator.dart';
 import 'chat.dart' as chat;
 import 'home.dart' as home;
-import 'wallet.dart' as wallet;
 import 'settings.dart' as settings;
+import 'wallet.dart' as wallet;
 
 Map<String, WidgetBuilder> routes = {
   AppScreen.routeName: (BuildContext context) => AppScreen(),
