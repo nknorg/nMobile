@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/storages/settings.dart';
 
 import 'settings_event.dart';
@@ -16,6 +17,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   Stream<SettingsState> _mapUpdateLanguageState(UpdateLanguage event) async* {
+    Settings.locale = event.lang;
     _setLanguage(event.lang);
     yield LocaleUpdated(event.lang);
   }

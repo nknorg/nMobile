@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/blocs/settings/settings_event.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/theme/light.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -24,10 +25,7 @@ import 'routes/routes.dart' as routes;
 void initialize() {
   application.registerInitialize(() async {
     Global.init();
-
-    SettingsStorage settingsStorage = SettingsStorage();
-    // load language
-    Settings.locale = (await settingsStorage.getSettings(SettingsStorage.LOCALE_KEY)) ?? 'auto';
+    Settings.init();
   });
 }
 
@@ -71,7 +69,6 @@ class _MainState extends State<Main> {
     BlocProvider<SettingsBloc>(
       create: (BuildContext context) => SettingsBloc(),
     ),
-
   ];
 
   final botToastBuilder = BotToastInit();

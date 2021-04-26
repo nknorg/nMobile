@@ -5,6 +5,8 @@ import './theme.dart';
 
 class LightTheme implements SkinTheme {
   @override
+  Brightness brightness = Brightness.light;
+  @override
   Color primaryColor = Color(0xFF0F6EFF);
   @override
   Color fontColor1 = Color(0xFF2D2D2D);
@@ -18,10 +20,13 @@ class LightTheme implements SkinTheme {
   Color fontLightColor = Color(0xFFFFFFFF);
 
   @override
-  TextStyle get bodyText1 => TextStyle(fontWeight: FontWeight.normal, fontSize: 16, color: fontColor2);
+  TextStyle get bodyText1 => TextStyle(fontWeight: FontWeight.normal, fontSize: 16, height: 1.5, color: fontColor2);
 
   @override
-  TextStyle get bodyText2 => TextStyle(fontWeight: FontWeight.normal, fontSize: 14, color: fontColor2);
+  TextStyle get bodyText2 => TextStyle(fontWeight: FontWeight.normal, fontSize: 14, height: 1.5, color: fontColor2);
+
+  @override
+  TextStyle get bodyText3 => TextStyle(fontWeight: FontWeight.normal, fontSize: 12, height: 1.5, color: fontColor2);
 
   @override
   TextStyle get headline1 => TextStyle(fontWeight: FontWeight.bold, fontSize: 30, height: 1.2, color: fontColor1);
@@ -40,7 +45,7 @@ class LightTheme implements SkinTheme {
 
   @override
   ThemeData get themeData => ThemeData(
-        brightness: Brightness.light,
+        brightness: brightness,
         primaryColor: primaryColor,
         // primarySwatch: primaryColor,
         textTheme: TextTheme(
@@ -92,6 +97,9 @@ class LightTheme implements SkinTheme {
   Color get disabledColor => backgroundColor5;
 
   @override
+  Color get dividerColor => backgroundColor2;
+
+  @override
   Color backgroundColor1 = Color(0xFFF6F7FB);
 
   @override
@@ -111,4 +119,15 @@ class LightTheme implements SkinTheme {
 
   @override
   Color backgroundLightColor = Color(0xFFFFFFFF);
+
+  @override
+  Color strongColor = Color(0xFFFC5D68);
+
+  @override
+  double iconTextFontSize = 12;
+
+  @override
+  double buttonFontSize = 16;
+
+
 }

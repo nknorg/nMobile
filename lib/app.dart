@@ -60,16 +60,6 @@ class _AppScreenState extends State<AppScreen> {
       },
       child: Scaffold(
         backgroundColor: application.theme.backgroundColor,
-        bottomNavigationBar: PhysicalModel(
-          color: application.theme.backgroundColor,
-          clipBehavior: Clip.antiAlias,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-          child: Nav(
-            currentIndex: _currentIndex,
-            screens: screens,
-            controller: _pageController,
-          ),
-        ),
         body: Stack(
           children: [
             PageView(
@@ -81,6 +71,22 @@ class _AppScreenState extends State<AppScreen> {
               },
               children: screens,
             ),
+            // footer nav
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: PhysicalModel(
+                color: application.theme.backgroundColor,
+                clipBehavior: Clip.antiAlias,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                child: Nav(
+                  currentIndex: _currentIndex,
+                  screens: screens,
+                  controller: _pageController,
+                ),
+              ),
+            )
           ],
         ),
       ),

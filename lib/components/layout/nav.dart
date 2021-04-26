@@ -45,7 +45,7 @@ class _NavState extends State<Nav> {
         BottomNavigationBarItem(
           icon: assetIcon('chat', color: _color),
           activeIcon: assetIcon('chat', color: _selectedColor),
-          label: _localizations.menu_home,
+          label: _localizations.menu_chat,
         ),
         BottomNavigationBarItem(
           icon: assetIcon('wallet', color: _color),

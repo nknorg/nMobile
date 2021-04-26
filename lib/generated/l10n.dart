@@ -45,11 +45,31 @@ class S {
     );
   }
 
+  /// `D-Chat`
+  String get d_chat {
+    return Intl.message(
+      'D-Chat',
+      name: 'd_chat',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Home`
   String get menu_home {
     return Intl.message(
       'Home',
       name: 'menu_home',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `D-Chat`
+  String get menu_chat {
+    return Intl.message(
+      'D-Chat',
+      name: 'menu_chat',
       desc: '',
       args: [],
     );
@@ -80,6 +100,496 @@ class S {
     return Intl.message(
       'News',
       name: 'menu_news',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `OK`
+  String get ok {
+    return Intl.message(
+      'OK',
+      name: 'ok',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete`
+  String get delete {
+    return Intl.message(
+      'Delete',
+      name: 'delete',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cancel`
+  String get cancel {
+    return Intl.message(
+      'Cancel',
+      name: 'cancel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Close`
+  String get close {
+    return Intl.message(
+      'Close',
+      name: 'close',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Back`
+  String get back {
+    return Intl.message(
+      'Back',
+      name: 'back',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Agree`
+  String get agree {
+    return Intl.message(
+      'Agree',
+      name: 'agree',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reject`
+  String get reject {
+    return Intl.message(
+      'Reject',
+      name: 'reject',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Warning`
+  String get warning {
+    return Intl.message(
+      'Warning',
+      name: 'warning',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Save`
+  String get save {
+    return Intl.message(
+      'Save',
+      name: 'save',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Name`
+  String get name {
+    return Intl.message(
+      'Name',
+      name: 'name',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Loading`
+  String get loading {
+    return Intl.message(
+      'Loading',
+      name: 'loading',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connect`
+  String get connect {
+    return Intl.message(
+      'Connect',
+      name: 'connect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connected`
+  String get connected {
+    return Intl.message(
+      'Connected',
+      name: 'connected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connecting`
+  String get connecting {
+    return Intl.message(
+      'Connecting',
+      name: 'connecting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Disconnect`
+  String get disconnect {
+    return Intl.message(
+      'Disconnect',
+      name: 'disconnect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tips`
+  String get tips {
+    return Intl.message(
+      'Tips',
+      name: 'tips',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `General`
+  String get general {
+    return Intl.message(
+      'General',
+      name: 'general',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Language`
+  String get language {
+    return Intl.message(
+      'Language',
+      name: 'language',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Auto`
+  String get language_auto {
+    return Intl.message(
+      'Auto',
+      name: 'language_auto',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Change Language`
+  String get change_language {
+    return Intl.message(
+      'Change Language',
+      name: 'change_language',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Scan`
+  String get scan {
+    return Intl.message(
+      'Scan',
+      name: 'scan',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `About`
+  String get about {
+    return Intl.message(
+      'About',
+      name: 'about',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Version`
+  String get version {
+    return Intl.message(
+      'Version',
+      name: 'version',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Help`
+  String get help {
+    return Intl.message(
+      'Help',
+      name: 'help',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Contact`
+  String get contact_us {
+    return Intl.message(
+      'Contact',
+      name: 'contact_us',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Security`
+  String get security {
+    return Intl.message(
+      'Security',
+      name: 'security',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Face ID`
+  String get face_id {
+    return Intl.message(
+      'Face ID',
+      name: 'face_id',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Touch ID`
+  String get touch_id {
+    return Intl.message(
+      'Touch ID',
+      name: 'touch_id',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Notification`
+  String get notification {
+    return Intl.message(
+      'Notification',
+      name: 'notification',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Notification Type`
+  String get notification_type {
+    return Intl.message(
+      'Notification Type',
+      name: 'notification_type',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Local Notification`
+  String get local_notification {
+    return Intl.message(
+      'Local Notification',
+      name: 'local_notification',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Only display name`
+  String get local_notification_only_name {
+    return Intl.message(
+      'Only display name',
+      name: 'local_notification_only_name',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Display name and message`
+  String get local_notification_both_name_message {
+    return Intl.message(
+      'Display name and message',
+      name: 'local_notification_both_name_message',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `None display`
+  String get local_notification_none_display {
+    return Intl.message(
+      'None display',
+      name: 'local_notification_none_display',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Notification Sound`
+  String get notification_sound {
+    return Intl.message(
+      'Notification Sound',
+      name: 'notification_sound',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Advanced`
+  String get advanced {
+    return Intl.message(
+      'Advanced',
+      name: 'advanced',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cache`
+  String get cache {
+    return Intl.message(
+      'Cache',
+      name: 'cache',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Clear Cache`
+  String get clear_cache {
+    return Intl.message(
+      'Clear Cache',
+      name: 'clear_cache',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Clear Database`
+  String get clear_database {
+    return Intl.message(
+      'Clear Database',
+      name: 'clear_database',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete Account`
+  String get delete_wallet {
+    return Intl.message(
+      'Delete Account',
+      name: 'delete_wallet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to delete this account?`
+  String get delete_wallet_confirm_title {
+    return Intl.message(
+      'Are you sure you want to delete this account?',
+      name: 'delete_wallet_confirm_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This will remove the account off your local device. Please make sure your account is fully backed up or you will lose your funds.`
+  String get delete_wallet_confirm_text {
+    return Intl.message(
+      'This will remove the account off your local device. Please make sure your account is fully backed up or you will lose your funds.',
+      name: 'delete_wallet_confirm_text',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to delete this message?`
+  String get delete_message_confirm_title {
+    return Intl.message(
+      'Are you sure you want to delete this message?',
+      name: 'delete_message_confirm_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to delete this contact?`
+  String get delete_contact_confirm_title {
+    return Intl.message(
+      'Are you sure you want to delete this contact?',
+      name: 'delete_contact_confirm_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to delete this friend?`
+  String get delete_friend_confirm_title {
+    return Intl.message(
+      'Are you sure you want to delete this friend?',
+      name: 'delete_friend_confirm_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to leave this group?`
+  String get leave_group_confirm_title {
+    return Intl.message(
+      'Are you sure you want to leave this group?',
+      name: 'leave_group_confirm_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to delete cache?`
+  String get delete_cache_confirm_title {
+    return Intl.message(
+      'Are you sure you want to delete cache?',
+      name: 'delete_cache_confirm_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to clear the database?`
+  String get delete_db_confirm_title {
+    return Intl.message(
+      'Are you sure you want to clear the database?',
+      name: 'delete_db_confirm_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to delete this device?`
+  String get delete_device_confirm_title {
+    return Intl.message(
+      'Are you sure you want to delete this device?',
+      name: 'delete_device_confirm_title',
       desc: '',
       args: [],
     );
