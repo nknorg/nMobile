@@ -37,7 +37,7 @@ class _LayoutState extends State<Layout> {
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: PhysicalModel(
-          // color: widget.color ?? SkinTheme.backgroundColor1,
+          color: widget.color ?? application.theme.backgroundColor,
           clipBehavior: Clip.antiAlias,
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           child: Flex(
