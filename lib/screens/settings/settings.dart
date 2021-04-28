@@ -27,7 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   SettingsBloc _settingsBloc;
   SettingsStorage _settingsStorage = SettingsStorage();
   String _currentLanguage;
-  String _currentLocalNotificationType;
+  String _currentNotificationType;
   List<SelectListItem> _languageList;
   List<SelectListItem> _notificationTypeList;
 
@@ -85,7 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   _changeNotificationType() {
     setState(() {
-      _currentLocalNotificationType = _notificationTypeList?.firstWhere((x) => x.value == Settings.notificationType)?.text;
+      _currentNotificationType = _notificationTypeList?.firstWhere((x) => x.value == Settings.notificationType)?.text;
     });
   }
 
@@ -227,7 +227,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Row(
                           children: <Widget>[
                             Label(
-                              _currentLocalNotificationType,
+                              _currentNotificationType,
                               type: LabelType.bodyRegular,
                               color: application.theme.fontColor2,
                               height: 1,
@@ -251,7 +251,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Settings.notificationType = type;
                           _settingsStorage.setSettings('${SettingsStorage.NOTIFICATION_TYPE_KEY}', type);
                           setState(() {
-                            _currentLocalNotificationType = _notificationTypeList?.firstWhere((x) => x.value == Settings.notificationType)?.text;
+                            _currentNotificationType = _notificationTypeList?.firstWhere((x) => x.value == Settings.notificationType)?.text;
                           });
                         }
                       });

@@ -7,9 +7,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
-import 'package:nmobile/blocs/settings/settings_event.dart';
-import 'package:nmobile/storages/settings.dart';
-import 'package:nmobile/theme/light.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'app.dart';
