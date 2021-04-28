@@ -18,12 +18,6 @@ class Global {
 
   static String get versionFormat => '${Global.version} + (Build ${Global.build})';
 
-  static DateTime nConnectTrialTime;
-
-  static bool get isNConnectTrial {
-    return !(Global.nConnectTrialTime != null && Global.nConnectTrialTime.add(Duration(days: 3)).isBefore(DateTime.now()));
-  }
-
   static List<String> defaultSeedRpcList = ['http://seed.nkn.org:30003', 'http://mainnet-seed-0009.nkn.org:30003'];
   static List<String> seedRpcList;
 
