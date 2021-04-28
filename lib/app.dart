@@ -3,10 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
+import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/wallet/home.dart';
 
-import 'common/application.dart';
 import 'common/global.dart';
+import 'common/application.dart';
 import 'common/locator.dart';
 import 'components/layout/nav.dart';
 import 'native/common.dart';
@@ -25,6 +26,7 @@ class _AppScreenState extends State<AppScreen> {
   PageController _pageController;
   int _currentIndex = 0;
   List<Widget> screens = <Widget>[
+    ChatHomeScreen(),
     WalletHomeScreen(),
     SettingsScreen(),
   ];
