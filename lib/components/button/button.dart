@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/theme/theme.dart';
 
 class Button extends StatefulWidget {
   final String text;
@@ -23,9 +23,9 @@ class Button extends StatefulWidget {
     this.onPressed,
     this.disabled = false,
     this.height,
-    this.fontColor ,
-    this.backgroundColor ,
-    this.outlineBorderColor ,
+    this.fontColor,
+    this.backgroundColor,
+    this.outlineBorderColor,
     this.padding,
   });
 
@@ -39,7 +39,7 @@ class _ButtonState extends State<Button> {
     var child = widget.text != null
         ? Text(
             widget.text,
-            style: TextStyle(fontSize: application.theme.buttonFontSize, fontWeight: FontWeight.bold, color: widget.fontColor),
+            style: TextStyle(fontSize: SkinTheme.buttonFontSize, fontWeight: FontWeight.bold, color: widget.fontColor),
           )
         : widget.child;
     var height = widget.height ?? 52;
