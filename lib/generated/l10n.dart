@@ -495,6 +495,86 @@ class S {
     );
   }
 
+  /// `Account Name`
+  String get wallet_name {
+    return Intl.message(
+      'Account Name',
+      name: 'wallet_name',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter wallet name`
+  String get hint_enter_wallet_name {
+    return Intl.message(
+      'Enter wallet name',
+      name: 'hint_enter_wallet_name',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Password`
+  String get wallet_password {
+    return Intl.message(
+      'Password',
+      name: 'wallet_password',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter your local password`
+  String get input_password {
+    return Intl.message(
+      'Enter your local password',
+      name: 'input_password',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your password must be at least 8 characters. It is recommended to use a mix of different characters.`
+  String get wallet_password_mach {
+    return Intl.message(
+      'Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
+      name: 'wallet_password_mach',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Confirm Password`
+  String get confirm_password {
+    return Intl.message(
+      'Confirm Password',
+      name: 'confirm_password',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter your password again`
+  String get input_password_again {
+    return Intl.message(
+      'Enter your password again',
+      name: 'input_password_again',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create Account`
+  String get create_wallet {
+    return Intl.message(
+      'Create Account',
+      name: 'create_wallet',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Delete Account`
   String get delete_wallet {
     return Intl.message(
@@ -630,6 +710,16 @@ class S {
     return Intl.message(
       'Import Existing Account',
       name: 'no_wallet_import',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create Mainnet Account`
+  String get create_nkn_wallet {
+    return Intl.message(
+      'Create Mainnet Account',
+      name: 'create_nkn_wallet',
       desc: '',
       args: [],
     );
