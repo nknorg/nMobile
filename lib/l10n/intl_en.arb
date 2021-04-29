@@ -58,5 +58,11 @@
   "leave_group_confirm_title": "Are you sure you want to leave this group?",
   "delete_cache_confirm_title": "Are you sure you want to delete cache?",
   "delete_db_confirm_title": "Are you sure you want to clear the database?",
-  "delete_device_confirm_title": "Are you sure you want to delete this device?"
+  "delete_device_confirm_title": "Are you sure you want to delete this device?",
+
+  "no_wallet_title": "Keep your NKN organised",
+  "no_wallet_desc": "Manage both your Mainnet NKN\n tokens with our smart wallet manager.",
+  "no_wallet_create": "Create New Account",
+  "no_wallet_import": "Import Existing Account"
+
 }
