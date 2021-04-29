@@ -49,6 +49,15 @@
   "clear_cache": "清除缓存",
   "clear_database": "清除数据库",
 
+  "wallet_name": "账户名称",
+  "hint_enter_wallet_name": "账户名称",
+  "wallet_password": "密码",
+  "input_password": "密码",
+  "wallet_password_mach": "密码必须包含至少8位字符。建议使用大、小写和特殊字符的组合。",
+  "confirm_password": "确认密码",
+  "input_password_again": "再次输入密码",
+  "create_wallet": "创建账户",
+
   "delete_wallet": "删除账户",
   "delete_wallet_confirm_title": "您确定要删除此账户吗?",
   "delete_wallet_confirm_text": "这将从您的设备中删除账户。请确保您的账户已备份，否则您的资金将丢失且无法找回。",
@@ -63,6 +72,7 @@
   "no_wallet_title": "保持您的NKN井井有条",
   "no_wallet_desc": "使用我们的智能账户管理器管理您的主网和\nNKN通证。",
   "no_wallet_create": "创建新账户",
-  "no_wallet_import": "导入已备份的账户"
+  "no_wallet_import": "导入已备份的账户",
+  "create_nkn_wallet": "创建主网账户"
 
 }

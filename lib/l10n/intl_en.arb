@@ -49,6 +49,15 @@
   "clear_cache": "Clear Cache",
   "clear_database": "Clear Database",
 
+  "wallet_name": "Account Name",
+  "hint_enter_wallet_name": "Enter wallet name",
+  "wallet_password": "Password",
+  "input_password": "Enter your local password",
+  "wallet_password_mach": "Your password must be at least 8 characters. It is recommended to use a mix of different characters.",
+  "confirm_password": "Confirm Password",
+  "input_password_again": "Enter your password again",
+  "create_wallet": "Create Account",
+
   "delete_wallet": "Delete Account",
   "delete_wallet_confirm_title": "Are you sure you want to delete this account?",
   "delete_wallet_confirm_text": "This will remove the account off your local device. Please make sure your account is fully backed up or you will lose your funds.",
@@ -63,6 +72,7 @@
   "no_wallet_title": "Keep your NKN organised",
   "no_wallet_desc": "Manage both your Mainnet NKN\n tokens with our smart wallet manager.",
   "no_wallet_create": "Create New Account",
-  "no_wallet_import": "Import Existing Account"
+  "no_wallet_import": "Import Existing Account",
+  "create_nkn_wallet": "Create Mainnet Account"
 
 }

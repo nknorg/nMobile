@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+enum WalletType { nkn, eth }
+
 class WalletSchema extends Equatable {
   static const String TYPE_NKN = 'nkn';
   static const String TYPE_ETH = 'eth';
