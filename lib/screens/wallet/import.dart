@@ -7,12 +7,15 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
 
+import 'import_by_keystore.dart';
+import 'import_by_seed.dart';
+
 class WalletImportScreen extends StatefulWidget {
   static const String routeName = '/wallet/import_nkn';
 
   final String walletType;
 
-  const WalletImportScreen({this.walletType});
+  const WalletImportScreen({this.walletType = WalletType.nkn});
 
   @override
   _ImportWalletScreenState createState() => _ImportWalletScreenState();
@@ -70,10 +73,8 @@ class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTick
                     child: TabBarView(
                       controller: _tabController,
                       children: <Widget>[
-                        Container(),
-                        Container(),
-                        // WalletImportByKeystoreScreen(walletType: widget.walletType),
-                        // WalletImportBySeedScreen(walletType: widget.walletType),
+                        WalletImportByKeystoreLayout(walletType: widget.walletType),
+                        WalletImportBySeedLayout(walletType: widget.walletType),
                       ],
                     ),
                   ),

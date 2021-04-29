@@ -626,6 +626,26 @@ class S {
   }
 
   /// `Keystore`
+  String get keystore {
+    return Intl.message(
+      'Keystore',
+      name: 'keystore',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Seed`
+  String get seed {
+    return Intl.message(
+      'Seed',
+      name: 'seed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Keystore`
   String get tab_keystore {
     return Intl.message(
       'Keystore',
@@ -660,6 +680,66 @@ class S {
     return Intl.message(
       'Import Mainnet Account',
       name: 'import_nkn_wallet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import with Keystore`
+  String get import_with_keystore_title {
+    return Intl.message(
+      'Import with Keystore',
+      name: 'import_with_keystore_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `From your existing wallet, find out how to export keystore as well as associated password, make a backup of both, and then use both to import your existing wallet into nMobile.`
+  String get import_with_keystore_desc {
+    return Intl.message(
+      'From your existing wallet, find out how to export keystore as well as associated password, make a backup of both, and then use both to import your existing wallet into nMobile.',
+      name: 'import_with_keystore_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please paste keystore`
+  String get input_keystore {
+    return Intl.message(
+      'Please paste keystore',
+      name: 'input_keystore',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import with Seed`
+  String get import_with_seed_title {
+    return Intl.message(
+      'Import with Seed',
+      name: 'import_with_seed_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `From your existing wallet, find out how to export Seed (also called "Secret Seed"), make a backup copy, and then use it to import your existing wallet into nMobile.`
+  String get import_with_seed_desc {
+    return Intl.message(
+      'From your existing wallet, find out how to export Seed (also called "Secret Seed"), make a backup copy, and then use it to import your existing wallet into nMobile.',
+      name: 'import_with_seed_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please input seed`
+  String get input_seed {
+    return Intl.message(
+      'Please input seed',
+      name: 'input_seed',
       desc: '',
       args: [],
     );

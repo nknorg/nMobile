@@ -37,7 +37,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
     // _walletsBloc = BlocProvider.of<WalletsBloc>(context);
   }
 
-  next() async {
+  create() async {
     // TODO:GG create nkn
     // if ((_formKey.currentState as FormState).validate()) {
     //   (_formKey.currentState as FormState).save();
@@ -99,8 +99,8 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                     borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
                   ),
                   child: Form(
-                    autovalidateMode: AutovalidateMode.always,
                     key: _formKey,
+                    autovalidateMode: AutovalidateMode.always,
                     onChanged: () {
                       setState(() {
                         _formValid = (_formKey.currentState as FormState).validate();
@@ -179,7 +179,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                     child: Button(
                                       text: _localizations.create_wallet,
                                       disabled: !_formValid,
-                                      onPressed: next,
+                                      onPressed: create,
                                     ),
                                   ),
                                 ],

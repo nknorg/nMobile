@@ -64,10 +64,18 @@
   "create_wallet": "创建账户",
   "create_nkn_wallet": "创建主网账户",
 
+  "keystore": "Keystore",
+  "seed": "Seed",
   "tab_keystore": "Keystore",
   "tab_seed": "Seed",
   "import_ethereum_wallet": "导入以太坊账户",
   "import_nkn_wallet": "导入主网账户",
+  "import_with_keystore_title": "使用Keystore导入",
+  "import_with_keystore_desc": "从已有的账户中，找出如何导出keystore以及关联的密码，对二者进行备份，然后用其导入nMobile。",
+  "input_keystore": "请粘贴 keystore",
+  "import_with_seed_title": "使用Seed导入",
+  "import_with_seed_desc": "从已有的账户中，找出如何导出Seed（也称为“秘密种子”），对其进行备份，然后使用它导入nMobile。",
+  "input_seed": "请输入seed",
 
   "delete_wallet": "删除账户",
   "delete_wallet_confirm_title": "您确定要删除此账户吗?",

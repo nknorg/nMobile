@@ -8,12 +8,12 @@ import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/utils/assets.dart';
 
-class WalletHomeEmptyScreen extends StatefulWidget {
+class WalletHomeEmptyLayout extends StatefulWidget {
   @override
-  _WalletHomeEmptyScreenState createState() => _WalletHomeEmptyScreenState();
+  _WalletHomeEmptyLayoutState createState() => _WalletHomeEmptyLayoutState();
 }
 
-class _WalletHomeEmptyScreenState extends State<WalletHomeEmptyScreen> {
+class _WalletHomeEmptyLayoutState extends State<WalletHomeEmptyLayout> {
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
