@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/chat.dart';
 import 'package:uuid/uuid.dart';
 
 var uuid = Uuid();
 
 class MessageSchema {
-  Uint8List msgId;
+  Uint8List pid;
+  String msgId;
   String from;
   String to;
   String content;
@@ -28,7 +28,7 @@ class MessageSchema {
     this.topic,
     this.timestamp,
   }) {
-    if (msgId == null) msgId = hexDecode(uuid.v4());
+    if (msgId == null) msgId = uuid.v4();
     if (timestamp == null) timestamp = DateTime.now();
   }
 
