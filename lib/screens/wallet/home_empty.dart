@@ -5,7 +5,7 @@ import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/screens/wallet/create_nkn.dart';
-import 'package:nmobile/screens/wallet/import_nkn.dart';
+import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/utils/assets.dart';
 
 class WalletHomeEmptyScreen extends StatefulWidget {
@@ -69,7 +69,7 @@ class _WalletHomeEmptyScreenState extends State<WalletHomeEmptyScreen> {
                   fontColor: application.theme.fontLightColor,
                   backgroundColor: application.theme.primaryColor.withAlpha(20),
                   onPressed: () {
-                    Navigator.pushNamed(context, WalletImportNKNScreen.routeName);
+                    Navigator.pushNamed(context, WalletImportScreen.routeName);
                   },
                 ),
               ],

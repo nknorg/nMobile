@@ -625,6 +625,46 @@ class S {
     );
   }
 
+  /// `Keystore`
+  String get tab_keystore {
+    return Intl.message(
+      'Keystore',
+      name: 'tab_keystore',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Seed`
+  String get tab_seed {
+    return Intl.message(
+      'Seed',
+      name: 'tab_seed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import Ethereum Account`
+  String get import_ethereum_wallet {
+    return Intl.message(
+      'Import Ethereum Account',
+      name: 'import_ethereum_wallet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import Mainnet Account`
+  String get import_nkn_wallet {
+    return Intl.message(
+      'Import Mainnet Account',
+      name: 'import_nkn_wallet',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Delete Account`
   String get delete_wallet {
     return Intl.message(

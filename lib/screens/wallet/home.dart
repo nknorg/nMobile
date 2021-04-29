@@ -24,8 +24,8 @@ class _WalletHomeScreenState extends State<WalletHomeScreen> with AutomaticKeepA
   Widget build(BuildContext context) {
     super.build(context);
     return BlocBuilder<WalletBloc, WalletState>(
-      // key: UniqueKey(), // TODO:GG test
       builder: (context, state) {
+        // TODO:GG test
         return WalletHomeEmptyScreen();
 
         // if (state is WalletStateLoaded) {

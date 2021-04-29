@@ -17,7 +17,7 @@ class WalletCreateNKNScreen extends StatefulWidget {
 }
 
 class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
-  // TODO:GG
+  // TODO:GG params
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
 
@@ -33,12 +33,12 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
   @override
   void initState() {
     super.initState();
-    // TODO:GG
+    // TODO:GG event
     // _walletsBloc = BlocProvider.of<WalletsBloc>(context);
   }
 
   next() async {
-    // TODO:GG
+    // TODO:GG create nkn
     // if ((_formKey.currentState as FormState).validate()) {
     //   (_formKey.currentState as FormState).save();
     //   EasyLoading.show();
@@ -127,7 +127,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                     FocusScope.of(context).requestFocus(_passwordFocusNode);
                                   },
                                   textInputAction: TextInputAction.next,
-                                  // validator: Validator.of(context).walletName(), // TODO:GG
+                                  // validator: Validator.of(context).walletName(), // TODO:GG validator
                                 ),
                                 SizedBox(height: 14),
                                 Label(
@@ -144,7 +144,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                     FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
                                   },
                                   textInputAction: TextInputAction.next,
-                                  // validator: Validator.of(context).password(), // TODO:GG
+                                  // validator: Validator.of(context).password(), // TODO:GG validator
                                   password: true,
                                 ),
                                 Text(
@@ -160,7 +160,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                 TextBox(
                                   focusNode: _confirmPasswordFocusNode,
                                   hintText: _localizations.input_password_again,
-                                  // validator: Validator.of(context).confrimPassword(_passwordController.text), // TODO:GG
+                                  // validator: Validator.of(context).confrimPassword(_passwordController.text), // TODO:GG validator
                                   password: true,
                                 ),
                               ],
