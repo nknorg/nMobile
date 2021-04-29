@@ -9,12 +9,12 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/utils/assets.dart';
 
-class WalletHomeEmpty extends StatefulWidget {
+class WalletHomeEmptyScreen extends StatefulWidget {
   @override
-  _WalletHomeEmptyState createState() => _WalletHomeEmptyState();
+  _WalletHomeEmptyScreenState createState() => _WalletHomeEmptyScreenState();
 }
 
-class _WalletHomeEmptyState extends State<WalletHomeEmpty> {
+class _WalletHomeEmptyScreenState extends State<WalletHomeEmptyScreen> {
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
@@ -70,14 +70,14 @@ class _WalletHomeEmptyState extends State<WalletHomeEmpty> {
                     Button(
                       text: _localizations.no_wallet_create,
                       onPressed: () {
-                        Navigator.pushNamed(context, WalletCreateNKN.routeName);
+                        Navigator.pushNamed(context, WalletCreateNKNScreen.routeName);
                       },
                     ),
                     Button(
                       text: _localizations.no_wallet_import,
                       backgroundColor: Color(0xFF232D50),
                       onPressed: () {
-                        // TODO:GG route_wallet_import
+                        // Navigator.pushNamed(context, WalletImportNKNScreen.routeName);
                       },
                     ),
                   ],

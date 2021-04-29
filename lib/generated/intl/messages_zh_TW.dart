@@ -32,10 +32,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "clear_cache" : MessageLookupByLibrary.simpleMessage("清除緩存"),
     "clear_database" : MessageLookupByLibrary.simpleMessage("清除數據庫"),
     "close" : MessageLookupByLibrary.simpleMessage("關閉"),
+    "confirm_password" : MessageLookupByLibrary.simpleMessage("確認密碼"),
     "connect" : MessageLookupByLibrary.simpleMessage("連接"),
     "connected" : MessageLookupByLibrary.simpleMessage("已連接"),
     "connecting" : MessageLookupByLibrary.simpleMessage("連接中"),
     "contact_us" : MessageLookupByLibrary.simpleMessage("聯繫我們"),
+    "create_nkn_wallet" : MessageLookupByLibrary.simpleMessage("創建主網帳戶"),
+    "create_wallet" : MessageLookupByLibrary.simpleMessage("創建賬戶"),
     "d_chat" : MessageLookupByLibrary.simpleMessage("滴聊"),
     "delete" : MessageLookupByLibrary.simpleMessage("刪除"),
     "delete_cache_confirm_title" : MessageLookupByLibrary.simpleMessage("您確定要刪除緩存嗎?"),
@@ -51,6 +54,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "face_id" : MessageLookupByLibrary.simpleMessage("Face ID"),
     "general" : MessageLookupByLibrary.simpleMessage("通用"),
     "help" : MessageLookupByLibrary.simpleMessage("幫助"),
+    "hint_enter_wallet_name" : MessageLookupByLibrary.simpleMessage("賬戶名稱"),
+    "input_password" : MessageLookupByLibrary.simpleMessage("密碼"),
+    "input_password_again" : MessageLookupByLibrary.simpleMessage("再次輸入密碼"),
     "language" : MessageLookupByLibrary.simpleMessage("語言"),
     "language_auto" : MessageLookupByLibrary.simpleMessage("跟随系统"),
     "leave_group_confirm_title" : MessageLookupByLibrary.simpleMessage("您確定要退出該群嗎？"),
@@ -80,6 +86,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "tips" : MessageLookupByLibrary.simpleMessage("提示"),
     "touch_id" : MessageLookupByLibrary.simpleMessage("Touch ID"),
     "version" : MessageLookupByLibrary.simpleMessage("版本"),
+    "wallet_name" : MessageLookupByLibrary.simpleMessage("賬戶名稱"),
+    "wallet_password" : MessageLookupByLibrary.simpleMessage("密碼"),
+    "wallet_password_mach" : MessageLookupByLibrary.simpleMessage("密碼必須包含至少8位字符。建議使用大、小寫和特殊字符的組合。"),
     "warning" : MessageLookupByLibrary.simpleMessage("警告")
   };
 }
