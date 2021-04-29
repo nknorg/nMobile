@@ -64,10 +64,18 @@
   "create_wallet": "Create Account",
   "create_nkn_wallet": "Create Mainnet Account",
 
+  "keystore": "Keystore",
+  "seed": "Seed",
   "tab_keystore": "Keystore",
   "tab_seed": "Seed",
   "import_ethereum_wallet": "Import Ethereum Account",
   "import_nkn_wallet": "Import Mainnet Account",
+  "import_with_keystore_title": "Import with Keystore",
+  "import_with_keystore_desc": "From your existing wallet, find out how to export keystore as well as associated password, make a backup of both, and then use both to import your existing wallet into nMobile.",
+  "input_keystore": "Please paste keystore",
+  "import_with_seed_title": "Import with Seed",
+  "import_with_seed_desc": "From your existing wallet, find out how to export Seed (also called \"Secret Seed\"), make a backup copy, and then use it to import your existing wallet into nMobile.",
+  "input_seed": "Please input seed",
 
   "delete_wallet": "Delete Account",
   "delete_wallet_confirm_title": "Are you sure you want to delete this account?",
