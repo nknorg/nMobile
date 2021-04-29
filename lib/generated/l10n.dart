@@ -594,6 +594,46 @@ class S {
       args: [],
     );
   }
+
+  /// `Keep your NKN organised`
+  String get no_wallet_title {
+    return Intl.message(
+      'Keep your NKN organised',
+      name: 'no_wallet_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Manage both your Mainnet NKN\n tokens with our smart wallet manager.`
+  String get no_wallet_desc {
+    return Intl.message(
+      'Manage both your Mainnet NKN\n tokens with our smart wallet manager.',
+      name: 'no_wallet_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create New Account`
+  String get no_wallet_create {
+    return Intl.message(
+      'Create New Account',
+      name: 'no_wallet_create',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import Existing Account`
+  String get no_wallet_import {
+    return Intl.message(
+      'Import Existing Account',
+      name: 'no_wallet_import',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
