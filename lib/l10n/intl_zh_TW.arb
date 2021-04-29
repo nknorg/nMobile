@@ -58,5 +58,11 @@
   "leave_group_confirm_title": "您確定要退出該群嗎？",
   "delete_cache_confirm_title": "您確定要刪除緩存嗎?",
   "delete_db_confirm_title": "您確定要清空資料庫嗎？",
-  "delete_device_confirm_title": "您確定要刪除該設備嗎？"
+  "delete_device_confirm_title": "您確定要刪除該設備嗎？",
+
+  "no_wallet_title": "保持您的NKN井井有條",
+  "no_wallet_desc": "使用我們的智慧帳戶管理器管理您的主網和\nNKN通證。",
+  "no_wallet_create": "創建新帳戶",
+  "no_wallet_import": "導入已備份的帳戶"
+
 }

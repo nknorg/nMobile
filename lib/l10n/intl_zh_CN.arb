@@ -58,5 +58,11 @@
   "leave_group_confirm_title": "您确定要退出该群吗？",
   "delete_cache_confirm_title": "您确定要删除缓存吗?",
   "delete_db_confirm_title": "您确定要清空数据库吗？",
-  "delete_device_confirm_title": "您确定要删除该设备吗？"
+  "delete_device_confirm_title": "您确定要删除该设备吗？",
+
+  "no_wallet_title": "保持您的NKN井井有条",
+  "no_wallet_desc": "使用我们的智能账户管理器管理您的主网和\nNKN通证。",
+  "no_wallet_create": "创建新账户",
+  "no_wallet_import": "导入已备份的账户"
+
 }
