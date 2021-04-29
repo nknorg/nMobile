@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/theme/theme.dart';
 
 class Button extends StatefulWidget {
@@ -39,7 +40,7 @@ class _ButtonState extends State<Button> {
     var child = widget.text != null
         ? Text(
             widget.text,
-            style: TextStyle(fontSize: SkinTheme.buttonFontSize, fontWeight: FontWeight.bold, color: widget.fontColor),
+            style: TextStyle(fontSize: application.theme.buttonFontSize, fontWeight: FontWeight.bold, color: widget.fontColor ?? application.theme.fontLightColor),
           )
         : widget.child;
     var height = widget.height ?? 52;
@@ -60,7 +61,7 @@ class _ButtonState extends State<Button> {
               style: ButtonStyle(
                 padding: MaterialStateProperty.resolveWith((states) => widget.padding ?? EdgeInsets.all(0)),
                 shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.circular(height / 2))),
-                backgroundColor: MaterialStateProperty.resolveWith((states) => widget.backgroundColor),
+                backgroundColor: MaterialStateProperty.resolveWith((states) => widget.backgroundColor ?? application.theme.primaryColor),
               ),
               child: child,
               onPressed: widget.disabled ? null : widget.onPressed,

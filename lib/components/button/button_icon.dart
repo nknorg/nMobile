@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/theme/theme.dart';
 
 class ButtonIcon extends StatefulWidget {
@@ -33,7 +34,7 @@ class _ButtonIconState extends State<ButtonIcon> {
                   Text(
                     widget.text,
                     softWrap: false,
-                    style: TextStyle(fontSize: SkinTheme.iconTextFontSize, color: widget.fontColor),
+                    style: TextStyle(fontSize: application.theme.iconTextFontSize, color: widget.fontColor),
                   )
                 ],
         ),

@@ -50,7 +50,7 @@ class _TextBoxState extends State<TextBox> {
 
   @override
   Widget build(BuildContext context) {
-    InputBorder borderStyle = UnderlineInputBorder(borderSide: BorderSide(color: widget.borderColor ?? SkinTheme.lineColor, width: 1));
+    InputBorder borderStyle = UnderlineInputBorder(borderSide: BorderSide(color: widget.borderColor ?? application.theme.lineColor, width: 1));
     if (widget.password) {
       return Padding(
         padding: widget.padding,

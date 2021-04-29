@@ -265,6 +265,16 @@ class S {
     );
   }
 
+  /// `Click this button for connect`
+  String get click_connect {
+    return Intl.message(
+      'Click this button for connect',
+      name: 'click_connect',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `General`
   String get general {
     return Intl.message(
@@ -495,6 +505,36 @@ class S {
     );
   }
 
+  /// `MAINNET`
+  String get mainnet {
+    return Intl.message(
+      'MAINNET',
+      name: 'mainnet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Private and Secure\n Messaging`
+  String get chat_no_wallet_title {
+    return Intl.message(
+      'Private and Secure\n Messaging',
+      name: 'chat_no_wallet_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You need a Mainnet compatible wallet before you can use D-Chat.`
+  String get chat_no_wallet_desc {
+    return Intl.message(
+      'You need a Mainnet compatible wallet before you can use D-Chat.',
+      name: 'chat_no_wallet_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Account Name`
   String get wallet_name {
     return Intl.message(
@@ -570,6 +610,16 @@ class S {
     return Intl.message(
       'Create Account',
       name: 'create_wallet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create Mainnet Account`
+  String get create_nkn_wallet {
+    return Intl.message(
+      'Create Mainnet Account',
+      name: 'create_nkn_wallet',
       desc: '',
       args: [],
     );
@@ -675,6 +725,56 @@ class S {
     );
   }
 
+  /// `Select Asset to Send`
+  String get select_asset_to_send {
+    return Intl.message(
+      'Select Asset to Send',
+      name: 'select_asset_to_send',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select Asset to Receive`
+  String get select_asset_to_receive {
+    return Intl.message(
+      'Select Asset to Receive',
+      name: 'select_asset_to_receive',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select Another Account`
+  String get select_another_wallet {
+    return Intl.message(
+      'Select Another Account',
+      name: 'select_another_wallet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select Account Type`
+  String get select_wallet_type {
+    return Intl.message(
+      'Select Account Type',
+      name: 'select_wallet_type',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select whether to create/import a NKN Mainnet wallet or an Ethereum based wallet to hold ERC-20 tokens. The two are not compatible.`
+  String get select_wallet_type_desc {
+    return Intl.message(
+      'Select whether to create/import a NKN Mainnet wallet or an Ethereum based wallet to hold ERC-20 tokens. The two are not compatible.',
+      name: 'select_wallet_type_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Keep your NKN organised`
   String get no_wallet_title {
     return Intl.message(
@@ -710,16 +810,6 @@ class S {
     return Intl.message(
       'Import Existing Account',
       name: 'no_wallet_import',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Create Mainnet Account`
-  String get create_nkn_wallet {
-    return Intl.message(
-      'Create Mainnet Account',
-      name: 'create_nkn_wallet',
       desc: '',
       args: [],
     );

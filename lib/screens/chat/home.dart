@@ -7,6 +7,7 @@ import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/screens/chat/no_connect.dart';
 
 class ChatHomeScreen extends StatefulWidget {
   static const String routeName = '/chat/home';
@@ -33,6 +34,9 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
+
+    //todo test
+    return NoConnectScreen();
     return Layout(
       headerColor: application.theme.primaryColor,
       header: Header(

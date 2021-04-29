@@ -24,6 +24,7 @@
   "connecting": "连接中",
   "disconnect": "断开连接",
   "tips": "提示",
+  "click_connect": "点击连接",
 
   "general": "通用",
   "language": "语言",
@@ -48,6 +49,10 @@
   "cache": "缓存",
   "clear_cache": "清除缓存",
   "clear_database": "清除数据库",
+  "mainnet": "主网",
+
+  "chat_no_wallet_title": "私密和安全的通讯",
+  "chat_no_wallet_desc": "您需要一个主网账户，然后才能使用D-Chat。",
 
   "wallet_name": "账户名称",
   "hint_enter_wallet_name": "账户名称",
@@ -57,6 +62,7 @@
   "confirm_password": "确认密码",
   "input_password_again": "再次输入密码",
   "create_wallet": "创建账户",
+  "create_nkn_wallet": "创建主网账户",
 
   "delete_wallet": "删除账户",
   "delete_wallet_confirm_title": "您确定要删除此账户吗?",
@@ -69,10 +75,14 @@
   "delete_db_confirm_title": "您确定要清空数据库吗？",
   "delete_device_confirm_title": "您确定要删除该设备吗？",
 
+  "select_asset_to_send": "选择要发送资金的账户",
+  "select_asset_to_receive": "选择要接收资金的账户",
+  "select_another_wallet": "选择其他账户",
+  "select_wallet_type": "选择账户类型",
+  "select_wallet_type_desc": "选择创建或导入 NKN主网钱账户还是用来保存 NKN通证的以太坊账户。两者是不兼容的。",
+
   "no_wallet_title": "保持您的NKN井井有条",
   "no_wallet_desc": "使用我们的智能账户管理器管理您的主网和\nNKN通证。",
   "no_wallet_create": "创建新账户",
-  "no_wallet_import": "导入已备份的账户",
-  "create_nkn_wallet": "创建主网账户"
-
+  "no_wallet_import": "导入已备份的账户"
 }

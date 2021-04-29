@@ -24,6 +24,7 @@
   "connecting": "連接中",
   "disconnect": "斷開連接",
   "tips": "提示",
+  "click_connect": "點擊連接",
 
   "general": "通用",
   "language": "語言",
@@ -48,6 +49,10 @@
   "cache": "緩存",
   "clear_cache": "清除緩存",
   "clear_database": "清除數據庫",
+  "mainnet": "主網",
+
+  "chat_no_wallet_title": "私密和安全的通訊",
+  "chat_no_wallet_desc": "您需要一個主網賬戶，然後才能使用D-Chat。",
 
   "wallet_name": "賬戶名稱",
   "hint_enter_wallet_name": "賬戶名稱",
@@ -57,6 +62,7 @@
   "confirm_password": "確認密碼",
   "input_password_again": "再次輸入密碼",
   "create_wallet": "創建賬戶",
+  "create_nkn_wallet": "創建主網帳戶",
 
   "delete_wallet": "刪除帳戶",
   "delete_wallet_confirm_title": "您確定要刪除此帳戶嗎?",
@@ -69,10 +75,14 @@
   "delete_db_confirm_title": "您確定要清空資料庫嗎？",
   "delete_device_confirm_title": "您確定要刪除該設備嗎？",
 
+  "select_asset_to_send": "選擇要發送資金的賬戶",
+  "select_asset_to_receive": "選擇要接收資金的賬戶",
+  "select_another_wallet": "選擇其他賬戶",
+  "select_wallet_type": "選擇賬戶類型",
+  "select_wallet_type_desc": "選擇創建或導入 NKN主網錢賬戶還是用來保存 NKN通證的以太坊賬戶。兩者是不兼容的。",
+
   "no_wallet_title": "保持您的NKN井井有條",
   "no_wallet_desc": "使用我們的智慧帳戶管理器管理您的主網和\nNKN通證。",
   "no_wallet_create": "創建新帳戶",
-  "no_wallet_import": "導入已備份的帳戶",
-  "create_nkn_wallet": "創建主網帳戶"
-
+  "no_wallet_import": "導入已備份的帳戶"
 }

@@ -1,26 +1,15 @@
-import 'package:equatable/equatable.dart';
+class WalletType {
+  static const String nkn = 'nkn';
+  static const String eth = 'eth';
+}
 
-enum WalletType { nkn, eth }
-
-class WalletSchema extends Equatable {
-  static const String TYPE_NKN = 'nkn';
-  static const String TYPE_ETH = 'eth';
-
+class WalletSchema {
   final String address;
   final String type;
-
-  String name = "";
+  String name;
   double balance = 0;
+  String keystore;
   double balanceEth = 0;
-  bool isBackedUp = false;
 
-  WalletSchema(this.type, this.address, {this.name = "", this.balance = 0, this.balanceEth = 0, this.isBackedUp = false});
-
-  @override
-  List<Object> get props => [address, type, name];
-
-  @override
-  String toString() {
-    return 'WalletSchema{type: $type, address: $address, name: $name, balance: $balance, balanceEth: $balanceEth, isBackedUp: $isBackedUp}';
-  }
+  WalletSchema({this.address, this.type, this.name, this.balance = 0, this.balanceEth = 0});
 }
