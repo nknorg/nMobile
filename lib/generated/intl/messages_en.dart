@@ -32,10 +32,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "clear_cache" : MessageLookupByLibrary.simpleMessage("Clear Cache"),
     "clear_database" : MessageLookupByLibrary.simpleMessage("Clear Database"),
     "close" : MessageLookupByLibrary.simpleMessage("Close"),
+    "confirm_password" : MessageLookupByLibrary.simpleMessage("Confirm Password"),
     "connect" : MessageLookupByLibrary.simpleMessage("Connect"),
     "connected" : MessageLookupByLibrary.simpleMessage("Connected"),
     "connecting" : MessageLookupByLibrary.simpleMessage("Connecting"),
     "contact_us" : MessageLookupByLibrary.simpleMessage("Contact"),
+    "create_nkn_wallet" : MessageLookupByLibrary.simpleMessage("Create Mainnet Account"),
+    "create_wallet" : MessageLookupByLibrary.simpleMessage("Create Account"),
     "d_chat" : MessageLookupByLibrary.simpleMessage("D-Chat"),
     "delete" : MessageLookupByLibrary.simpleMessage("Delete"),
     "delete_cache_confirm_title" : MessageLookupByLibrary.simpleMessage("Are you sure you want to delete cache?"),
@@ -51,6 +54,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "face_id" : MessageLookupByLibrary.simpleMessage("Face ID"),
     "general" : MessageLookupByLibrary.simpleMessage("General"),
     "help" : MessageLookupByLibrary.simpleMessage("Help"),
+    "hint_enter_wallet_name" : MessageLookupByLibrary.simpleMessage("Enter wallet name"),
+    "input_password" : MessageLookupByLibrary.simpleMessage("Enter your local password"),
+    "input_password_again" : MessageLookupByLibrary.simpleMessage("Enter your password again"),
     "language" : MessageLookupByLibrary.simpleMessage("Language"),
     "language_auto" : MessageLookupByLibrary.simpleMessage("Auto"),
     "leave_group_confirm_title" : MessageLookupByLibrary.simpleMessage("Are you sure you want to leave this group?"),
@@ -80,6 +86,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "tips" : MessageLookupByLibrary.simpleMessage("Tips"),
     "touch_id" : MessageLookupByLibrary.simpleMessage("Touch ID"),
     "version" : MessageLookupByLibrary.simpleMessage("Version"),
+    "wallet_name" : MessageLookupByLibrary.simpleMessage("Account Name"),
+    "wallet_password" : MessageLookupByLibrary.simpleMessage("Password"),
+    "wallet_password_mach" : MessageLookupByLibrary.simpleMessage("Your password must be at least 8 characters. It is recommended to use a mix of different characters."),
     "warning" : MessageLookupByLibrary.simpleMessage("Warning")
   };
 }
