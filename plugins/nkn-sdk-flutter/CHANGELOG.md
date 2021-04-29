@@ -1,3 +1,7 @@
+## 0.0.10
+
+* Update dependencies
+
 ## 0.0.9
 
 * Fix transfer params nonce
