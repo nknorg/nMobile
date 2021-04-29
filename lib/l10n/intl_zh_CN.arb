@@ -64,6 +64,11 @@
   "create_wallet": "创建账户",
   "create_nkn_wallet": "创建主网账户",
 
+  "tab_keystore": "Keystore",
+  "tab_seed": "Seed",
+  "import_ethereum_wallet": "导入以太坊账户",
+  "import_nkn_wallet": "导入主网账户",
+
   "delete_wallet": "删除账户",
   "delete_wallet_confirm_title": "您确定要删除此账户吗?",
   "delete_wallet_confirm_text": "这将从您的设备中删除账户。请确保您的账户已备份，否则您的资金将丢失且无法找回。",
