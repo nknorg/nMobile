@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/theme/theme.dart';
-import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/format.dart';
-
-import '../label.dart';
 
 class WalletItem extends StatefulWidget {
   final WalletSchema schema;
@@ -102,8 +100,7 @@ class _WalletItemState extends State<WalletItem> {
                       color: theme.logoBackground,
                       borderRadius: BorderRadius.all(Radius.circular(8)),
                     ),
-                    child: SvgPicture.asset('assets/logo.svg',
-                        color: theme.nknLogoColor),
+                    child: SvgPicture.asset('assets/logo.svg', color: theme.nknLogoColor),
                   ),
                 ),
                 Positioned(
@@ -113,8 +110,7 @@ class _WalletItemState extends State<WalletItem> {
                     width: 20,
                     height: 20,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                        color: theme.ethLogoBackground, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: theme.ethLogoBackground, shape: BoxShape.circle),
                     child: SvgPicture.asset('assets/ethereum-logo.svg'),
                   ),
                 )
