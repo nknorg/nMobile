@@ -13,7 +13,12 @@ class WalletItem extends StatefulWidget {
   final GestureTapCallback onTap;
   final Widget leading;
 
-  WalletItem({this.schema, this.type, this.onTap, this.leading});
+  WalletItem({
+    this.schema,
+    this.type,
+    this.onTap,
+    this.leading,
+  });
 
   @override
   _WalletItemState createState() => _WalletItemState();
@@ -24,9 +29,9 @@ class _WalletItemState extends State<WalletItem> {
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
     SkinTheme theme = application.theme;
+
     if (widget.type == WalletType.nkn) {
-      return Flex(
-        direction: Axis.horizontal,
+      return Row(
         children: [
           Expanded(
             flex: 0,
@@ -53,9 +58,12 @@ class _WalletItemState extends State<WalletItem> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Label('wallet.name', type: LabelType.h3),
                 Label(
-                  nknFormat(123.123, decimalDigits: 4, symbol: 'NKN'),
+                  widget.schema?.name ?? "",
+                  type: LabelType.h3,
+                ),
+                Label(
+                  nknFormat(widget.schema?.balance ?? 0, decimalDigits: 4, symbol: 'NKN'),
                   type: LabelType.bodySmall,
                 ),
               ],
@@ -70,21 +78,28 @@ class _WalletItemState extends State<WalletItem> {
                 Container(
                   alignment: Alignment.center,
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: theme.successColor.withAlpha(25)),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(9)),
+                    color: theme.successColor.withAlpha(25),
+                  ),
                   child: Text(
                     _localizations.mainnet,
-                    style: TextStyle(color: theme.successColor, fontSize: 10, fontWeight: FontWeight.bold, height: 1.2),
+                    style: TextStyle(
+                      color: theme.successColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
+                    ),
                   ),
                 )
               ],
             ),
           ),
-          widget.leading != null ? widget.leading : Container(),
+          widget.leading ?? Container(),
         ],
       );
     } else if (widget.type == WalletType.eth) {
-      return Flex(
-        direction: Axis.horizontal,
+      return Row(
         children: [
           Hero(
             tag: 'avatar:${'widget.schema.address'}',
@@ -100,7 +115,7 @@ class _WalletItemState extends State<WalletItem> {
                       color: theme.logoBackground,
                       borderRadius: BorderRadius.all(Radius.circular(8)),
                     ),
-                    child: SvgPicture.asset('assets/logo.svg', color: theme.nknLogoColor),
+                    child: SvgPicture.asset('assets/logo.svg', color: theme.ethLogoColor),
                   ),
                 ),
                 Positioned(
@@ -110,7 +125,10 @@ class _WalletItemState extends State<WalletItem> {
                     width: 20,
                     height: 20,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: theme.ethLogoBackground, shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                      color: theme.ethLogoBackground,
+                      shape: BoxShape.circle,
+                    ),
                     child: SvgPicture.asset('assets/ethereum-logo.svg'),
                   ),
                 )
@@ -123,9 +141,12 @@ class _WalletItemState extends State<WalletItem> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Label('wallet.name', type: LabelType.h3),
                 Label(
-                  nknFormat(123.123, decimalDigits: 4, symbol: 'NKN'),
+                  widget.schema?.name ?? "",
+                  type: LabelType.h3,
+                ),
+                Label(
+                  nknFormat(widget.schema?.balance ?? 0, decimalDigits: 4, symbol: 'NKN'),
                   type: LabelType.bodySmall,
                 ),
               ],
@@ -140,18 +161,27 @@ class _WalletItemState extends State<WalletItem> {
                 Container(
                   alignment: Alignment.center,
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(9)), color: theme.successColor.withAlpha(25)),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(9)),
+                    color: theme.successColor.withAlpha(25),
+                  ),
                   child: Text(
                     _localizations.mainnet,
-                    style: TextStyle(color: theme.successColor, fontSize: 10, fontWeight: FontWeight.bold, height: 1.2),
+                    style: TextStyle(
+                      color: theme.successColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
+                    ),
                   ),
                 )
               ],
             ),
           ),
-          widget.leading != null ? widget.leading : Container(),
+          widget.leading ?? Container(),
         ],
       );
     }
+    return SizedBox.shrink();
   }
 }
