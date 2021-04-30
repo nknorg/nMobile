@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/theme/theme.dart';
 
 class TextBox extends StatefulWidget {
   dynamic value;
@@ -34,7 +33,35 @@ class TextBox extends StatefulWidget {
   final Color borderColor;
   final Color color;
 
-  TextBox({this.value, this.color, this.padding = const EdgeInsets.only(bottom: 8), this.showErrorMessage = true, this.enabled = true, this.readOnly = false, this.multi = false, this.minLines, this.maxLines = 3, this.autofocus = false, this.focusNode, this.controller, this.password = false, this.validator, this.hintText, this.helperText, this.keyboardType, this.textInputAction, this.suffixIcon, this.onSaved, this.onChanged, this.onFieldSubmitted, this.inputFormatters, this.maxLength, this.maxLengthEnforced = true, this.fontSize = 14, this.borderColor});
+  TextBox({
+    this.value,
+    this.color,
+    this.padding = const EdgeInsets.only(bottom: 8),
+    this.showErrorMessage = true,
+    this.enabled = true,
+    this.readOnly = false,
+    this.multi = false,
+    this.minLines,
+    this.maxLines = 3,
+    this.autofocus = false,
+    this.focusNode,
+    this.controller,
+    this.password = false,
+    this.validator,
+    this.hintText,
+    this.helperText,
+    this.keyboardType,
+    this.textInputAction,
+    this.suffixIcon,
+    this.onSaved,
+    this.onChanged,
+    this.onFieldSubmitted,
+    this.inputFormatters,
+    this.maxLength,
+    this.maxLengthEnforced = true,
+    this.fontSize = 14,
+    this.borderColor,
+  });
 
   @override
   _TextBoxState createState() => _TextBoxState();
@@ -50,7 +77,12 @@ class _TextBoxState extends State<TextBox> {
 
   @override
   Widget build(BuildContext context) {
-    InputBorder borderStyle = UnderlineInputBorder(borderSide: BorderSide(color: widget.borderColor ?? application.theme.lineColor, width: 1));
+    InputBorder borderStyle = UnderlineInputBorder(
+      borderSide: BorderSide(
+        color: widget.borderColor ?? application.theme.lineColor,
+        width: 1,
+      ),
+    );
     if (widget.password) {
       return Padding(
         padding: widget.padding,
@@ -66,12 +98,7 @@ class _TextBoxState extends State<TextBox> {
           decoration: InputDecoration(
             disabledBorder: borderStyle,
             enabledBorder: borderStyle,
-            errorStyle: widget.showErrorMessage
-                ? null
-                : TextStyle(
-                    height: 0,
-                    fontSize: 0,
-                  ),
+            errorStyle: widget.showErrorMessage ? null : TextStyle(height: 0, fontSize: 0),
             hintText: widget.hintText,
             helperMaxLines: 3,
             hintStyle: TextStyle(fontSize: widget.fontSize),
@@ -83,11 +110,9 @@ class _TextBoxState extends State<TextBox> {
                 });
               },
               child: Opacity(
-                  opacity: _showPassword ? 1 : 0.25,
-                  child: Icon(
-                    FontAwesomeIcons.eye,
-                    size: 20,
-                  )),
+                opacity: _showPassword ? 1 : 0.25,
+                child: Icon(FontAwesomeIcons.eye, size: 20),
+              ),
             ),
           ),
           validator: widget.validator,
@@ -116,18 +141,14 @@ class _TextBoxState extends State<TextBox> {
           style: TextStyle(fontSize: widget.fontSize, color: widget.color ?? application.theme.fontColor1),
           inputFormatters: widget.inputFormatters,
           decoration: InputDecoration(
-              errorStyle: widget.showErrorMessage
-                  ? null
-                  : TextStyle(
-                      height: 0,
-                      fontSize: 0,
-                    ),
-              hintText: widget.hintText,
-              hintStyle: TextStyle(fontSize: widget.fontSize),
-              helperText: widget.helperText,
-              suffixIcon: widget.suffixIcon,
-              disabledBorder: borderStyle,
-              enabledBorder: borderStyle),
+            errorStyle: widget.showErrorMessage ? null : TextStyle(height: 0, fontSize: 0),
+            hintText: widget.hintText,
+            hintStyle: TextStyle(fontSize: widget.fontSize),
+            helperText: widget.helperText,
+            suffixIcon: widget.suffixIcon,
+            disabledBorder: borderStyle,
+            enabledBorder: borderStyle,
+          ),
           validator: widget.validator,
           keyboardType: widget.keyboardType,
           textInputAction: widget.textInputAction,
