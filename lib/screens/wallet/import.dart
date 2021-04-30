@@ -68,15 +68,12 @@ class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTick
                 ),
                 Expanded(
                   flex: 1,
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 0.2),
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: <Widget>[
-                        WalletImportByKeystoreLayout(walletType: widget.walletType),
-                        WalletImportBySeedLayout(walletType: widget.walletType),
-                      ],
-                    ),
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: <Widget>[
+                      WalletImportByKeystoreLayout(walletType: widget.walletType),
+                      WalletImportBySeedLayout(walletType: widget.walletType),
+                    ],
                   ),
                 ),
               ],

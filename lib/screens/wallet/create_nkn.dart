@@ -111,9 +111,10 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                         Expanded(
                           flex: 1,
                           child: Padding(
-                            padding: EdgeInsets.only(top: 32, left: 20, right: 20, bottom: 10),
+                            padding: EdgeInsets.only(left: 20, right: 20),
                             child: ListView(
                               children: [
+                                SizedBox(height: 32),
                                 Label(
                                   _localizations.wallet_name,
                                   type: LabelType.h3,
@@ -163,6 +164,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                   // validator: Validator.of(context).confrimPassword(_passwordController.text), // TODO:GG validator
                                   password: true,
                                 ),
+                                SizedBox(height: 32),
                               ],
                             ),
                           ),
