@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/components/label.dart';
+import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/message_item.dart';
 import 'package:nmobile/utils/format.dart';
 
@@ -181,7 +181,11 @@ class _MessageListScreenState extends State<MessageListScreen> {
           color: application.theme.badgeColor,
           height: 25,
           child: Center(
-            child: Label(countStr, type: LabelType.bodySmall, dark: true,),
+            child: Label(
+              countStr,
+              type: LabelType.bodySmall,
+              dark: true,
+            ),
           ),
         ),
       ),
