@@ -95,34 +95,36 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
         children: <Widget>[
           Expanded(
             flex: 1,
-            child: Padding(
-              padding: EdgeInsets.only(left: 20, right: 20),
-              child: ListView(
-                children: <Widget>[
-                  SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 8),
-                    child: Label(
-                      _localizations.import_with_keystore_title,
-                      type: LabelType.h2,
-                      textAlign: TextAlign.start,
-                    ),
+            child: ListView(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 24),
+                  child: Label(
+                    _localizations.import_with_keystore_title,
+                    type: LabelType.h2,
+                    textAlign: TextAlign.start,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 32),
-                    child: Label(
-                      _localizations.import_with_keystore_desc,
-                      type: LabelType.bodyRegular,
-                      textAlign: TextAlign.start,
-                      softWrap: true,
-                    ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20, bottom: 32),
+                  child: Label(
+                    _localizations.import_with_keystore_desc,
+                    type: LabelType.bodyRegular,
+                    textAlign: TextAlign.start,
+                    softWrap: true,
                   ),
-                  Label(
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20, right: 20),
+                  child: Label(
                     _localizations.keystore,
                     type: LabelType.h4,
                     textAlign: TextAlign.start,
                   ),
-                  TextBox(
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20, right: 20),
+                  child: TextBox(
                     multi: true,
                     controller: _keystoreController,
                     hintText: _localizations.input_keystore,
@@ -155,12 +157,18 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                     ),
                     // validator: widget.walletType == WalletType.nkn ? Validator.of(context).keystore() : Validator.of(context).keystoreEth(), // TODO:GG validator
                   ),
-                  Label(
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20, right: 20),
+                  child: Label(
                     _localizations.wallet_name,
                     type: LabelType.h4,
                     textAlign: TextAlign.start,
                   ),
-                  TextBox(
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20, right: 20),
+                  child: TextBox(
                     focusNode: _nameFocusNode,
                     hintText: _localizations.hint_enter_wallet_name,
                     onSaved: (v) => _name = v,
@@ -170,12 +178,18 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                     textInputAction: TextInputAction.next,
                     // validator: Validator.of(context).walletName(), // TODO:GG validator
                   ),
-                  Label(
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20, right: 20),
+                  child: Label(
                     _localizations.wallet_password,
                     type: LabelType.h4,
                     textAlign: TextAlign.start,
                   ),
-                  TextBox(
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20, right: 20, bottom: 16),
+                  child: TextBox(
                     focusNode: _passwordFocusNode,
                     controller: _passwordController,
                     hintText: _localizations.input_password,
@@ -186,9 +200,8 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                     // validator: Validator.of(context).password(), // TODO:GG validator
                     password: true,
                   ),
-                  SizedBox(height: 16),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           Expanded(

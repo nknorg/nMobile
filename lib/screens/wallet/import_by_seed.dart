@@ -94,34 +94,36 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
         children: <Widget>[
           Expanded(
             flex: 1,
-            child: Padding(
-              padding: EdgeInsets.only(left: 20, right: 20),
-              child: ListView(
-                children: <Widget>[
-                  SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 8),
-                    child: Label(
-                      _localizations.import_with_seed_title,
-                      type: LabelType.h2,
-                      textAlign: TextAlign.start,
-                    ),
+            child: ListView(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 24),
+                  child: Label(
+                    _localizations.import_with_seed_title,
+                    type: LabelType.h2,
+                    textAlign: TextAlign.start,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 32),
-                    child: Label(
-                      _localizations.import_with_seed_desc,
-                      type: LabelType.bodyRegular,
-                      textAlign: TextAlign.start,
-                      softWrap: true,
-                    ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20, bottom: 32),
+                  child: Label(
+                    _localizations.import_with_seed_desc,
+                    type: LabelType.bodyRegular,
+                    textAlign: TextAlign.start,
+                    softWrap: true,
                   ),
-                  Label(
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20, right: 20),
+                  child: Label(
                     _localizations.seed,
                     type: LabelType.h4,
                     textAlign: TextAlign.start,
                   ),
-                  TextBox(
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20, right: 20),
+                  child: TextBox(
                     controller: _seedController,
                     focusNode: _seedFocusNode,
                     hintText: _localizations.input_seed,
@@ -131,12 +133,18 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                     },
                     // validator: Validator.of(context).seed(), // TODO:GG validator
                   ),
-                  Label(
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20, right: 20),
+                  child: Label(
                     _localizations.wallet_name,
                     type: LabelType.h4,
                     textAlign: TextAlign.start,
                   ),
-                  TextBox(
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20, right: 20),
+                  child: TextBox(
                     focusNode: _nameFocusNode,
                     hintText: _localizations.hint_enter_wallet_name,
                     onSaved: (v) => _name = v,
@@ -146,12 +154,18 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                     textInputAction: TextInputAction.next,
                     // validator: Validator.of(context).walletName(), // TODO:GG validator
                   ),
-                  Label(
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20, right: 20),
+                  child: Label(
                     _localizations.wallet_password,
                     type: LabelType.h4,
                     textAlign: TextAlign.start,
                   ),
-                  TextBox(
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20, right: 20, bottom: 24),
+                  child: TextBox(
                     focusNode: _passwordFocusNode,
                     controller: _passwordController,
                     hintText: _localizations.input_password,
@@ -162,9 +176,8 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                     // validator: Validator.of(context).password(), // TODO:GG validator
                     password: true,
                   ),
-                  SizedBox(height: 16),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           Expanded(

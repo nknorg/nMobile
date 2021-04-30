@@ -68,6 +68,9 @@
   "my_wallets": "我的账户",
   "import_wallet": "导入账户",
   "not_backed_up": "尚未全部备份",
+  "d_not_backed_up_title": "重要提示：请备份您的账户！",
+  "d_not_backed_up_desc": "当您更新您的 nMobile App 或者偶然地卸载 nMobile 时，您的账户可能会丢失，这时您将无法访问您的资产！因此，请现在花3分钟时间备份所有账户。",
+  "go_backup": "去备份",
 
   "keystore": "Keystore",
   "seed": "Seed",

@@ -135,7 +135,7 @@ class _WalletHomeListScreenState extends State<WalletHomeListScreen> {
                 color: application.theme.backgroundLightColor,
               ),
               padding: EdgeInsets.only(left: 16, right: 16),
-              child: WalletItem(schema: w, type: w.type == WalletType.nkn ? WalletType.nkn : WalletType.eth),
+              child: WalletItem(schema: w, type: index % 2 == 0 ? WalletType.nkn : WalletType.eth), // TODO:GG type
             ),
           );
         },
@@ -174,7 +174,8 @@ class _WalletHomeListScreenState extends State<WalletHomeListScreen> {
 
   _onNotBackedUpTipClicked() {
     // WalletNotBackedUpDialog.of(context).show(() {
-    //   BottomDialog.of(context).showSelectWalletDialog(title: NL10ns.of(context).select_asset_to_backup, callback: _listen);
+    //   // TODO:GG
+    //   // BottomDialog.of(context).showSelectWalletDialog(title: NL10ns.of(context).select_asset_to_backup, callback: _listen);
     // });
   }
 
