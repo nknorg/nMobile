@@ -115,7 +115,7 @@ class _WalletItemState extends State<WalletItem> {
                       color: theme.logoBackground,
                       borderRadius: BorderRadius.all(Radius.circular(8)),
                     ),
-                    child: SvgPicture.asset('assets/logo.svg', color: theme.ethLogoColor),
+                    child: SvgPicture.asset('assets/logo.svg', color: theme.nknLogoColor),
                   ),
                 ),
                 Positioned(

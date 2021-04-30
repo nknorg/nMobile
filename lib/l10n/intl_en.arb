@@ -68,6 +68,9 @@
   "my_wallets": "My Accounts",
   "import_wallet": "Import Account",
   "not_backed_up": "Not backed up yet",
+  "d_not_backed_up_title": "Important: Please Back Up\n Your Accounts!",
+  "d_not_backed_up_desc": "When you update your nMobile software or accidentally uninstall nMobile, your wallet might be lost and you might NOT be able to access your assets! So please take 3 minutes time now to back up all your wallets.",
+  "go_backup": "Go Backup",
 
   "keystore": "Keystore",
   "seed": "Seed",
