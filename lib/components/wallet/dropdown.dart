@@ -26,15 +26,16 @@ class _WalletDropdownState extends State<WalletDropdown> {
         BottomDialog.of(context).showBottomDialog(
           title: _localizations.select_another_wallet,
           child: ListView.builder(
-            itemCount: 10,
+            itemCount: 10, // TODO:GG wallet list
             itemExtent: 81,
             padding: const EdgeInsets.all(0),
             itemBuilder: (BuildContext context, int index) {
+              String type = index % 2 == 0 ? WalletType.nkn : WalletType.eth; // TODO:GG wallet list
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                    WalletItem(type: WalletType.nkn),
+                    WalletItem(type: type), // TODO:GG wallet item
                     Divider(height: 1, indent: 64),
                   ],
                 ),
@@ -45,11 +46,13 @@ class _WalletDropdownState extends State<WalletDropdown> {
       },
       child: Container(
         decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: application.theme.backgroundColor2)),
+          border: Border(
+            bottom: BorderSide(color: application.theme.backgroundColor2),
+          ),
         ),
         child: WalletItem(
-          type: WalletType.nkn,
-          leading: Expanded(
+          type: widget.schema?.type ?? WalletType.nkn,
+          tail: Expanded(
             flex: 0,
             child: Container(
               alignment: Alignment.centerRight,

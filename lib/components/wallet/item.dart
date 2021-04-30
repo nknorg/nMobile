@@ -11,13 +11,13 @@ class WalletItem extends StatefulWidget {
   final WalletSchema schema;
   final String type;
   final GestureTapCallback onTap;
-  final Widget leading;
+  final Widget tail;
 
   WalletItem({
     this.schema,
     this.type,
     this.onTap,
-    this.leading,
+    this.tail,
   });
 
   @override
@@ -95,7 +95,7 @@ class _WalletItemState extends State<WalletItem> {
               ],
             ),
           ),
-          widget.leading ?? Container(),
+          widget.tail ?? Container(),
         ],
       );
     } else if (widget.type == WalletType.eth) {
@@ -178,7 +178,7 @@ class _WalletItemState extends State<WalletItem> {
               ],
             ),
           ),
-          widget.leading ?? Container(),
+          widget.tail ?? Container(),
         ],
       );
     }
