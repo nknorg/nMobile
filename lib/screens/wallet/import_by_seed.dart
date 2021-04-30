@@ -95,9 +95,10 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
           Expanded(
             flex: 1,
             child: Padding(
-              padding: EdgeInsets.only(top: 10, left: 20, right: 20, bottom: 10),
+              padding: EdgeInsets.only(left: 20, right: 20),
               child: ListView(
                 children: <Widget>[
+                  SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.only(top: 8, bottom: 8),
                     child: Label(
@@ -161,6 +162,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                     // validator: Validator.of(context).password(), // TODO:GG validator
                     password: true,
                   ),
+                  SizedBox(height: 16),
                 ],
               ),
             ),
