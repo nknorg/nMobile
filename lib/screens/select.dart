@@ -1,11 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
+import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/utils/assets.dart';
-
 
 class SelectListItem {
   final String text;
@@ -80,15 +79,12 @@ class _SelectScreenState extends State<SelectScreen> {
                     return Container(
                       decoration: BoxDecoration(
                         color: application.theme.backgroundLightColor,
-                        borderRadius:
-                            BorderRadius.vertical(top: index == 0 ? Radius.circular(12) : Radius.zero, bottom: index == list.length - 1 ? Radius.circular(12) : Radius.zero),
+                        borderRadius: BorderRadius.vertical(top: index == 0 ? Radius.circular(12) : Radius.zero, bottom: index == list.length - 1 ? Radius.circular(12) : Radius.zero),
                       ),
                       child: TextButton(
                         style: ButtonStyle(
                           padding: MaterialStateProperty.resolveWith((states) => const EdgeInsets.only(left: 16, right: 16)),
-                          shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                  top: index == 0 ? Radius.circular(12) : Radius.zero, bottom: index == list.length - 1 ? Radius.circular(12) : Radius.zero))),
+                          shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: index == 0 ? Radius.circular(12) : Radius.zero, bottom: index == list.length - 1 ? Radius.circular(12) : Radius.zero))),
                         ),
                         onPressed: () {
                           Navigator.of(context).pop(item.value);

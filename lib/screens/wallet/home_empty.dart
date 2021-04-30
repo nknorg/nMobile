@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
-import 'package:nmobile/components/label.dart';
+import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/screens/wallet/import.dart';
