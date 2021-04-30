@@ -51,6 +51,7 @@ class Label extends StatelessWidget {
     final DefaultTextStyle defaultTextStyle = DefaultTextStyle.of(context);
     final theme = application.theme;
     TextStyle textStyle = defaultTextStyle.style;
+
     switch (type) {
       case LabelType.h1:
         textStyle = textStyle.merge(theme.headline1);
@@ -82,6 +83,10 @@ class Label extends StatelessWidget {
         break;
       default:
         break;
+    }
+
+    if (dark) {
+      textStyle = textStyle.copyWith(color: theme.fontLightColor);
     }
 
     if (color != null) {
