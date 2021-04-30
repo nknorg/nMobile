@@ -625,6 +625,36 @@ class S {
     );
   }
 
+  /// `My Accounts`
+  String get my_wallets {
+    return Intl.message(
+      'My Accounts',
+      name: 'my_wallets',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import Account`
+  String get import_wallet {
+    return Intl.message(
+      'Import Account',
+      name: 'import_wallet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not backed up yet`
+  String get not_backed_up {
+    return Intl.message(
+      'Not backed up yet',
+      name: 'not_backed_up',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Keystore`
   String get keystore {
     return Intl.message(

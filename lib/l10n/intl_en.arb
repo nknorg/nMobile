@@ -64,6 +64,10 @@
   "create_wallet": "Create Account",
   "create_nkn_wallet": "Create Mainnet Account",
 
+  "my_wallets": "My Accounts",
+  "import_wallet": "Import Account",
+  "not_backed_up": "Not backed up yet",
+
   "keystore": "Keystore",
   "seed": "Seed",
   "tab_keystore": "Keystore",

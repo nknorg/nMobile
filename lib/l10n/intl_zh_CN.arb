@@ -64,6 +64,10 @@
   "create_wallet": "创建账户",
   "create_nkn_wallet": "创建主网账户",
 
+  "my_wallets": "我的账户",
+  "import_wallet": "导入账户",
+  "not_backed_up": "尚未全部备份",
+
   "keystore": "Keystore",
   "seed": "Seed",
   "tab_keystore": "Keystore",
