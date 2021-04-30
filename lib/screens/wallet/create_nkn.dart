@@ -110,17 +110,19 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                       children: <Widget>[
                         Expanded(
                           flex: 1,
-                          child: Padding(
-                            padding: EdgeInsets.only(left: 20, right: 20),
-                            child: ListView(
-                              children: [
-                                SizedBox(height: 32),
-                                Label(
+                          child: ListView(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.only(left: 20, right: 20, top: 32),
+                                child: Label(
                                   _localizations.wallet_name,
                                   type: LabelType.h3,
                                   textAlign: TextAlign.start,
                                 ),
-                                TextBox(
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(left: 20, right: 20),
+                                child: TextBox(
                                   hintText: _localizations.hint_enter_wallet_name,
                                   focusNode: _nameFocusNode,
                                   onSaved: (v) => _name = v,
@@ -130,13 +132,19 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                   textInputAction: TextInputAction.next,
                                   // validator: Validator.of(context).walletName(), // TODO:GG validator
                                 ),
-                                SizedBox(height: 14),
-                                Label(
+                              ),
+                              SizedBox(height: 14),
+                              Padding(
+                                padding: EdgeInsets.only(left: 20, right: 20),
+                                child: Label(
                                   _localizations.wallet_password,
                                   type: LabelType.h3,
                                   textAlign: TextAlign.start,
                                 ),
-                                TextBox(
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(left: 20, right: 20),
+                                child: TextBox(
                                   focusNode: _passwordFocusNode,
                                   controller: _passwordController,
                                   hintText: _localizations.input_password,
@@ -148,25 +156,33 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                   // validator: Validator.of(context).password(), // TODO:GG validator
                                   password: true,
                                 ),
-                                Text(
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(left: 20, right: 20),
+                                child: Text(
                                   _localizations.wallet_password_mach,
                                   style: application.theme.bodyText2,
                                 ),
-                                SizedBox(height: 24),
-                                Label(
+                              ),
+                              SizedBox(height: 24),
+                              Padding(
+                                padding: EdgeInsets.only(left: 20, right: 20),
+                                child: Label(
                                   _localizations.confirm_password,
                                   type: LabelType.h3,
                                   textAlign: TextAlign.start,
                                 ),
-                                TextBox(
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(left: 20, right: 20, bottom: 32),
+                                child: TextBox(
                                   focusNode: _confirmPasswordFocusNode,
                                   hintText: _localizations.input_password_again,
                                   // validator: Validator.of(context).confrimPassword(_passwordController.text), // TODO:GG validator
                                   password: true,
                                 ),
-                                SizedBox(height: 32),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                         Expanded(

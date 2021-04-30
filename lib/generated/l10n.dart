@@ -665,6 +665,36 @@ class S {
     );
   }
 
+  /// `Important: Please Back Up\n Your Accounts!`
+  String get d_not_backed_up_title {
+    return Intl.message(
+      'Important: Please Back Up\n Your Accounts!',
+      name: 'd_not_backed_up_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `When you update your nMobile software or accidentally uninstall nMobile, your wallet might be lost and you might NOT be able to access your assets! So please take 3 minutes time now to back up all your wallets.`
+  String get d_not_backed_up_desc {
+    return Intl.message(
+      'When you update your nMobile software or accidentally uninstall nMobile, your wallet might be lost and you might NOT be able to access your assets! So please take 3 minutes time now to back up all your wallets.',
+      name: 'd_not_backed_up_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Go Backup`
+  String get go_backup {
+    return Intl.message(
+      'Go Backup',
+      name: 'go_backup',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Keystore`
   String get keystore {
     return Intl.message(
