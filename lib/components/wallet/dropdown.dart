@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
-import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/assets.dart';
-import 'package:nmobile/utils/format.dart';
 
-import '../label.dart';
 import 'item.dart';
 
 class WalletDropdown extends StatefulWidget {
@@ -24,7 +20,7 @@ class _WalletDropdownState extends State<WalletDropdown> {
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
-    SkinTheme theme = application.theme;
+
     return InkWell(
       onTap: () {
         BottomDialog.of(context).showBottomDialog(
@@ -38,7 +34,7 @@ class _WalletDropdownState extends State<WalletDropdown> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                  WalletItem(type: WalletType.nkn,),
+                    WalletItem(type: WalletType.nkn),
                     Divider(height: 1, indent: 64),
                   ],
                 ),
@@ -51,21 +47,20 @@ class _WalletDropdownState extends State<WalletDropdown> {
         decoration: BoxDecoration(
           border: Border(bottom: BorderSide(color: application.theme.backgroundColor2)),
         ),
-        child: WalletItem(type: WalletType.nkn, leading: Expanded(
-          flex: 0,
-          child: Container(
-            alignment: Alignment.centerRight,
-            height: 44,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16),
-              child: assetIcon(
-                'down2',
-                width: 24,
+        child: WalletItem(
+          type: WalletType.nkn,
+          leading: Expanded(
+            flex: 0,
+            child: Container(
+              alignment: Alignment.centerRight,
+              height: 44,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16),
+                child: assetIcon('down2', width: 24),
               ),
             ),
           ),
-        ),),
-
+        ),
       ),
     );
   }

@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/button/button_icon.dart';
+import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/utils/assets.dart';
-
-import '../label.dart';
 
 class ModalDialog extends StatefulWidget {
   @override

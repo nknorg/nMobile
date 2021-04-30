@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
-import 'package:nmobile/components/dialog/bottom.dart';
-import 'package:nmobile/components/label.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
+import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/dropdown.dart';
-import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 
@@ -85,7 +83,6 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
                 ],
               ),
             ),
-
           ],
         ),
       ),

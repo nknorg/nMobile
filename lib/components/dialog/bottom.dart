@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
-
-import '../label.dart';
+import 'package:nmobile/components/text/label.dart';
 
 class BottomDialog extends StatefulWidget {
   @override
