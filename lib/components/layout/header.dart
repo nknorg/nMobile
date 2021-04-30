@@ -3,16 +3,21 @@ import 'package:flutter/material.dart';
 class Header extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final Widget titleChild;
-  final Color backgroundColor;
-  final List<Widget> actions;
   final Widget leading;
+  final List<Widget> actions;
+  final Widget childLead;
+  final Widget childTail;
+  final Color backgroundColor;
   final Brightness brightness;
+
   Header({
     this.title,
     this.titleChild,
-    this.backgroundColor,
-    this.actions,
     this.leading,
+    this.actions,
+    this.childLead,
+    this.childTail,
+    this.backgroundColor,
     this.brightness = Brightness.dark,
   }) {
     _header = AppBar(
@@ -22,11 +27,11 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: 0,
       leading: leading,
       elevation: 0,
-      title: Flex(
-        direction: Axis.horizontal,
+      title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
+          this.childLead ?? SizedBox.shrink(),
           Expanded(
             flex: 1,
             child: (titleChild ??
@@ -40,6 +45,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
                   maxLines: 1,
                 )),
           ),
+          this.childTail ?? SizedBox.shrink(),
           // Expanded(flex: 0, child: notBackedUpTip != null ? notBackedUpTip : Space.empty)
         ],
       ),
