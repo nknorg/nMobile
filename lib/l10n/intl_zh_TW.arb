@@ -64,6 +64,10 @@
   "create_wallet": "創建賬戶",
   "create_nkn_wallet": "創建主網帳戶",
 
+  "my_wallets": "我的賬戶",
+  "import_wallet": "導入賬戶",
+  "not_backed_up": "尚未全部備份",
+
   "keystore": "Keystore",
   "seed": "Seed",
   "tab_keystore": "Keystore",

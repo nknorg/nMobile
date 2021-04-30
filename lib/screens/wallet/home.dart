@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 
-import 'home_empty.dart';
+import 'home_list.dart';
 
 class WalletHomeScreen extends StatefulWidget {
   static const String routeName = '/wallet/home';
@@ -26,7 +26,8 @@ class _WalletHomeScreenState extends State<WalletHomeScreen> with AutomaticKeepA
     return BlocBuilder<WalletBloc, WalletState>(
       builder: (context, state) {
         // TODO:GG test
-        return WalletHomeEmptyLayout();
+        // return WalletHomeEmptyLayout();
+        return WalletHomeListScreen();
 
         // if (state is WalletStateLoaded) {
         //   // loaded
