@@ -6,6 +6,8 @@ import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/utils/hash.dart';
 
+import 'global.dart';
+
 class ChatConnectStatus {
   static const int disconnected = 0;
   static const int connecting = 1;
@@ -47,7 +49,7 @@ class Chat {
 
   StreamSink<int> get _statusStreamSink => _statusController.sink;
 
-  Stream<int> get _statusStream => _statusController.stream;
+  Stream<int> get statusStream => _statusController.stream;
 
   int status;
 
@@ -59,14 +61,15 @@ class Chat {
 
   Chat() {
     status = ChatConnectStatus.disconnected;
-    _statusStream.listen((event) {
+    statusStream.listen((event) {
       status = event;
     });
   }
 
   Future connect(Wallet wallet) async {
+    ClientConfig config = ClientConfig(seedRPCServerAddr: await Global.getSeedRpcList());
     _statusStreamSink.add(ChatConnectStatus.connecting);
-    client = await Client.create(wallet.seed);
+    client = await Client.create(wallet.seed, config: config);
     onConnect = client.onConnect;
     onMessage = client.onMessage;
     onError = client.onError;

@@ -40,6 +40,7 @@ abstract class SkinTheme {
   Color ethLogoColor;
   Color successColor;
   Color notificationBackgroundColor;
+  Color badgeColor;
 
   double iconTextFontSize;
   double buttonFontSize;

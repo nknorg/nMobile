@@ -45,38 +45,38 @@ class LightTheme implements SkinTheme {
 
   @override
   ThemeData get themeData => ThemeData(
-    brightness: brightness,
-    primaryColor: primaryColor,
-    // primarySwatch: primaryColor,
-    textTheme: TextTheme(
-      headline1: headline1,
-      headline2: headline2,
-      headline3: headline3,
-      headline4: headline4,
-      headline5: display,
-      bodyText1: bodyText1,
-      bodyText2: bodyText2,
-    ),
-    buttonTheme: ButtonThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      buttonColor: primaryColor,
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.resolveWith((states) => primaryColor),
-        textStyle: MaterialStateProperty.resolveWith((states) => TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-      ),
-    ),
-    visualDensity: VisualDensity.adaptivePlatformDensity,
-    sliderTheme: SliderThemeData(
-      overlayShape: RoundSliderOverlayShape(overlayRadius: 18),
-      trackHeight: 8,
-      tickMarkShape: RoundSliderTickMarkShape(tickMarkRadius: 0),
-      // thumbShape: SliderThemeShape(),
-    ),
-    unselectedWidgetColor: unselectedWidgetColor,
-  );
+        brightness: brightness,
+        primaryColor: primaryColor,
+        // primarySwatch: primaryColor,
+        textTheme: TextTheme(
+          headline1: headline1,
+          headline2: headline2,
+          headline3: headline3,
+          headline4: headline4,
+          headline5: display,
+          bodyText1: bodyText1,
+          bodyText2: bodyText2,
+        ),
+        buttonTheme: ButtonThemeData(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          buttonColor: primaryColor,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.resolveWith((states) => primaryColor),
+            textStyle: MaterialStateProperty.resolveWith((states) => TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+          ),
+        ),
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        sliderTheme: SliderThemeData(
+          overlayShape: RoundSliderOverlayShape(overlayRadius: 18),
+          trackHeight: 8,
+          tickMarkShape: RoundSliderTickMarkShape(tickMarkRadius: 0),
+          // thumbShape: SliderThemeShape(),
+        ),
+        unselectedWidgetColor: unselectedWidgetColor,
+      );
 
   @override
   Color get backgroundColor => backgroundColor1;
@@ -145,10 +145,11 @@ class LightTheme implements SkinTheme {
   Color successColor = Color(0xFF00CC96);
 
   @override
+  Color badgeColor = Color(0xFF5458F7);
+
+  @override
   double iconTextFontSize = 12;
 
   @override
   double buttonFontSize = 16;
-
-
 }

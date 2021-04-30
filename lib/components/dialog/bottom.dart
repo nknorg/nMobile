@@ -168,7 +168,7 @@ class _BottomDialogState extends State<BottomDialog> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    _maxHeight = MediaQuery.of(context).size.height - 110;
+    _maxHeight = MediaQuery.of(context).size.height - 122;
 
     List<Widget> body = <Widget>[
       Expanded(

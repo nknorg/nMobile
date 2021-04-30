@@ -465,6 +465,16 @@ class S {
     );
   }
 
+  /// `Biometrics`
+  String get biometrics {
+    return Intl.message(
+      'Biometrics',
+      name: 'biometrics',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Advanced`
   String get advanced {
     return Intl.message(

@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:nmobile/common/chat.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/screens/chat/message_list.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
+import 'package:nmobile/utils/assets.dart';
 
 class ChatHomeScreen extends StatefulWidget {
   static const String routeName = '/chat/home';
@@ -31,39 +38,78 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
-
-    //todo test
-    return NoConnectScreen();
-    return Layout(
-      headerColor: application.theme.primaryColor,
-      header: Header(
-        titleChild: Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: Label(
-            _localizations.menu_chat,
-            type: LabelType.h2,
-            color: application.theme.fontLightColor,
-          ),
-        ),
-      ),
-      child: ListView(
-        padding: const EdgeInsets.only(top: 20, bottom: 100, left: 20, right: 20),
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 16, bottom: 16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Label(
-                  _localizations.general,
-                  type: LabelType.h3,
+    return StreamBuilder<int>(
+      stream: chat.statusStream,
+      initialData: chat.status,
+      builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+        if (snapshot.data == ChatConnectStatus.disconnected) {
+          return NoConnectScreen();
+        } else {
+          return Layout(
+            headerColor: application.theme.primaryColor,
+            header: Header(
+              titleChild: Container(
+                margin: EdgeInsets.only(left: 20),
+                child: Flex(
+                  direction: Axis.horizontal,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Container(
+                      margin: const EdgeInsets.only(right: 12),
+                      child: CircleAvatar(
+                        radius: 24,
+                        backgroundColor: Colors.red,
+                        child: Label(
+                          'HR',
+                          type: LabelType.bodyLarge,
+                          color: Colors.yellow,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Label('currentUser.getShowName', type: LabelType.h3, dark: true),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: <Widget>[
+                              Label(_localizations.connect, type: LabelType.bodySmall, color: application.theme.fontLightColor.withAlpha(200)),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 2, left: 4),
+                                child: SpinKitThreeBounce(
+                                  color: application.theme.fontLightColor.withAlpha(200),
+                                  size: 10,
+                                ),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                    )
+                  ],
                 ),
-              ],
+              ),
+              actions: [Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: IconButton(
+                  icon: assetIcon('addbook', color: Colors.white, width: 24),
+                  onPressed: () {
+                    // todo
+                    // if (TimerAuth.authed) {
+                    //   Navigator.of(context).pushNamed(ContactHome.routeName);
+                    // } else {
+                    //   TimerAuth.instance.onCheckAuthGetPassword(context);
+                    // }
+                  },
+                ),
+              )],
             ),
-          ),
-        ],
-      ),
+            child: MessageListScreen(),
+          );
+        }
+      },
     );
   }
 }

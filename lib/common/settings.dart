@@ -9,6 +9,7 @@ class NotificationType {
 class Settings {
   static String locale;
   static int notificationType;
+  static bool biometricsAuthentication;
   static bool debug = false;
 
   static init() async {
@@ -17,5 +18,7 @@ class Settings {
     Settings.locale = (await settingsStorage.getSettings(SettingsStorage.LOCALE_KEY)) ?? 'auto';
     // load notification type
     Settings.notificationType = (await settingsStorage.getSettings(SettingsStorage.NOTIFICATION_TYPE_KEY)) ?? NotificationType.only_name;
+    // load biometrics authentication
+    Settings.biometricsAuthentication = (await settingsStorage.getSettings(SettingsStorage.BIOMETRICS_AUTHENTICATION)) ?? false;
   }
 }

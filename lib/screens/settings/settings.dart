@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -30,6 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _currentNotificationType;
   List<SelectListItem> _languageList;
   List<SelectListItem> _notificationTypeList;
+  bool _biometricsSelected = false;
 
   _buttonStyle({bool top = false, bool bottom = false}) {
     return ButtonStyle(
@@ -95,6 +97,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _initData();
     _currentLanguage = _getLanguageText(Settings.locale);
     _settingsBloc = BlocProvider.of<SettingsBloc>(context);
+    _biometricsSelected = Settings.biometricsAuthentication;
   }
 
   @override
@@ -182,6 +185,79 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ],
                     ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          //security
+          Padding(
+            padding: const EdgeInsets.only(top: 16, bottom: 16),
+            child: Row(
+              children: <Widget>[
+                Label(
+                  _localizations.security,
+                  type: LabelType.h3,
+                ),
+              ],
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: application.theme.backgroundLightColor,
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+            child: Column(
+              children: <Widget>[
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: TextButton(
+                    style: _buttonStyle(top: true, bottom: true),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Label(
+                          _localizations.biometrics,
+                          type: LabelType.bodyRegular,
+                          color: application.theme.fontColor1,
+                          fontWeight: FontWeight.bold,
+                          height: 1,
+                        ),
+                        Row(
+                          children: <Widget>[
+                            CupertinoSwitch(
+                                value: _biometricsSelected,
+                                activeColor: application.theme.primaryColor,
+                                onChanged: (value) async {
+                                  Settings.biometricsAuthentication = value;
+                                  _settingsStorage.setSettings('${SettingsStorage.BIOMETRICS_AUTHENTICATION}', value);
+                                  setState(() {
+                                    _biometricsSelected = value;
+                                  });
+                                })
+                          ],
+                        ),
+                      ],
+                    ),
+                    onPressed: () {
+                      Navigator.pushNamed(context, SelectScreen.routeName, arguments: {
+                        SelectScreen.title: _localizations.local_notification,
+                        SelectScreen.selectedValue: Settings.notificationType,
+                        SelectScreen.list: _notificationTypeList,
+                      }).then((type) {
+                        if (type != null) {
+                          Settings.notificationType = type;
+                          _settingsStorage.setSettings('${SettingsStorage.NOTIFICATION_TYPE_KEY}', type);
+                          setState(() {
+                            _currentNotificationType = _notificationTypeList?.firstWhere((x) => x.value == Settings.notificationType)?.text;
+                          });
+                        }
+                      });
+                    },
                   ),
                 ),
               ],

@@ -13,6 +13,7 @@ class SelectListItem {
   SelectListItem({this.text, this.value});
 }
 
+// ignore: must_be_immutable
 class SelectScreen extends StatefulWidget {
   static const String routeName = '/select';
   final Map arguments;
@@ -65,6 +66,8 @@ class _SelectScreenState extends State<SelectScreen> {
                         item.text,
                         type: LabelType.bodyRegular,
                         height: 1,
+                        fontWeight: FontWeight.bold,
+                        color: application.theme.fontColor1,
                       ),
                     ];
                     if (item.value.toString() == selectedValue.toString()) {
@@ -121,9 +124,9 @@ class _SelectScreenState extends State<SelectScreen> {
         this.list = widget.arguments['list'];
       });
     } else {
-      List<SelectListItem> datas = widget.arguments['list'];
+      List<SelectListItem> data = widget.arguments['list'];
       setState(() {
-        this.list = datas.where((item) => item.text.contains(val)).toList();
+        this.list = data.where((item) => item.text.contains(val)).toList();
       });
     }
   }
