@@ -7,6 +7,7 @@ class SettingsStorage {
   static const String SETTINGS_KEY = 'SETTINGS';
   static const String LOCALE_KEY = 'locale';
   static const String NOTIFICATION_TYPE_KEY = 'notification_type';
+  static const String BIOMETRICS_AUTHENTICATION = 'biometrics_authentication';
   static const String SEED_RPC_SERVERS_KEY = 'seed_rpc_servers';
 
   final LocalStorage _localStorage = LocalStorage();

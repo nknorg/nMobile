@@ -61,5 +61,6 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => _header.preferredSize;
+  // Size get preferredSize => _header.preferredSize;
+  Size get preferredSize => Size.fromHeight(68);
 }
