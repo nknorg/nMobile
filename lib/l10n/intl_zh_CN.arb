@@ -45,6 +45,7 @@
   "local_notification_both_name_message": "显示名字和消息",
   "local_notification_none_display": "不显示",
   "notification_sound": "推送声音",
+  "biometrics": "生物识别",
   "advanced": "高级",
   "cache": "缓存",
   "clear_cache": "清除缓存",

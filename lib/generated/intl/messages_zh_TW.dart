@@ -26,6 +26,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "agree" : MessageLookupByLibrary.simpleMessage("同意"),
     "app_name" : MessageLookupByLibrary.simpleMessage("nMobile"),
     "back" : MessageLookupByLibrary.simpleMessage("後退"),
+    "biometrics" : MessageLookupByLibrary.simpleMessage("生物識別"),
     "cache" : MessageLookupByLibrary.simpleMessage("緩存"),
     "cancel" : MessageLookupByLibrary.simpleMessage("取消"),
     "change_language" : MessageLookupByLibrary.simpleMessage("修改語言"),

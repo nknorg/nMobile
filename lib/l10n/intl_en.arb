@@ -45,6 +45,7 @@
   "local_notification_both_name_message": "Display name and message",
   "local_notification_none_display": "None display",
   "notification_sound": "Notification Sound",
+  "biometrics": "Biometrics",
   "advanced": "Advanced",
   "cache": "Cache",
   "clear_cache": "Clear Cache",

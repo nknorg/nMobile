@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -7,6 +9,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/dropdown.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/common/locator.dart';
 
 class NoConnectScreen extends StatefulWidget {
   @override
@@ -77,7 +80,12 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
                     child: Button(
                       width: double.infinity,
                       text: _localizations.connect,
-                      onPressed: () {},
+                      onPressed: () async{
+                        // todo for test
+                        Wallet wallet = await Wallet.create('b62aed51da1d79fd0ccc8584592fe97636344239a34b7fcc49baa303fef3c038', config: WalletConfig(password: '123'));
+                        chat.connect(wallet);
+
+                      },
                     ),
                   )
                 ],
