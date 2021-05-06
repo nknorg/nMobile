@@ -5,7 +5,7 @@ import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/components/text/text_box.dart';
+import 'package:nmobile/components/text/form_field_box.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/utils/assets.dart';
 
@@ -122,7 +122,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                               ),
                               Padding(
                                 padding: EdgeInsets.only(left: 20, right: 20),
-                                child: TextBox(
+                                child: FormFieldBox(
                                   hintText: _localizations.hint_enter_wallet_name,
                                   focusNode: _nameFocusNode,
                                   onSaved: (v) => _name = v,
@@ -144,7 +144,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                               ),
                               Padding(
                                 padding: EdgeInsets.only(left: 20, right: 20),
-                                child: TextBox(
+                                child: FormFieldBox(
                                   focusNode: _passwordFocusNode,
                                   controller: _passwordController,
                                   hintText: _localizations.input_password,
@@ -175,7 +175,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                               ),
                               Padding(
                                 padding: EdgeInsets.only(left: 20, right: 20, bottom: 32),
-                                child: TextBox(
+                                child: FormFieldBox(
                                   focusNode: _confirmPasswordFocusNode,
                                   hintText: _localizations.input_password_again,
                                   // validator: Validator.of(context).confrimPassword(_passwordController.text), // TODO:GG validator

@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/common/locator.dart';
 
-class TextBox extends StatefulWidget {
+class FormFieldBox extends StatefulWidget {
   dynamic value;
   final EdgeInsetsGeometry padding;
   final bool multi;
@@ -33,7 +33,7 @@ class TextBox extends StatefulWidget {
   final Color borderColor;
   final Color color;
 
-  TextBox({
+  FormFieldBox({
     this.value,
     this.color,
     this.padding = const EdgeInsets.only(bottom: 8),
@@ -64,10 +64,10 @@ class TextBox extends StatefulWidget {
   });
 
   @override
-  _TextBoxState createState() => _TextBoxState();
+  _FormFieldBoxState createState() => _FormFieldBoxState();
 }
 
-class _TextBoxState extends State<TextBox> {
+class _FormFieldBoxState extends State<FormFieldBox> {
   bool _showPassword = false;
 
   @override
