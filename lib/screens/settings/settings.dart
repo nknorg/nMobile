@@ -15,7 +15,7 @@ import 'package:nmobile/screens/settings/cache.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/utils.dart';
 
-import '../select.dart';
+import '../common/select.dart';
 
 class SettingsScreen extends StatefulWidget {
   static const String routeName = '/settings';
