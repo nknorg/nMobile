@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/components/text/text_box.dart';
+import 'package:nmobile/components/text/form_field_box.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 
@@ -124,7 +124,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                 ),
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20),
-                  child: TextBox(
+                  child: FormFieldBox(
                     multi: true,
                     controller: _keystoreController,
                     hintText: _localizations.input_keystore,
@@ -168,7 +168,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                 ),
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20),
-                  child: TextBox(
+                  child: FormFieldBox(
                     focusNode: _nameFocusNode,
                     hintText: _localizations.hint_enter_wallet_name,
                     onSaved: (v) => _name = v,
@@ -189,7 +189,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                 ),
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20, bottom: 16),
-                  child: TextBox(
+                  child: FormFieldBox(
                     focusNode: _passwordFocusNode,
                     controller: _passwordController,
                     hintText: _localizations.input_password,
