@@ -13,7 +13,7 @@ import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/cache.dart';
 import 'package:nmobile/utils/format.dart';
 
-import '../select.dart';
+import '../common/select.dart';
 
 class CacheScreen extends StatefulWidget {
   static const String routeName = '/settings/cache';
