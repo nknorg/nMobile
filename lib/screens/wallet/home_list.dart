@@ -8,11 +8,11 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/screens/wallet/create_eth.dart';
 import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/assets.dart';
-import 'package:nmobile/utils/logger.dart';
 
 class WalletHomeListScreen extends StatefulWidget {
   static const String routeName = '/wallet/home_list';
@@ -95,8 +95,7 @@ class _WalletHomeListScreenState extends State<WalletHomeListScreen> {
                   if (walletType == WalletType.nkn) {
                     Navigator.pushNamed(context, WalletCreateNKNScreen.routeName);
                   } else if (walletType == WalletType.eth) {
-                    // TODO:GG
-                    logger.i("select - eth");
+                    Navigator.pushNamed(context, WalletCreateETHScreen.routeName);
                   }
                   break;
                 case 1:

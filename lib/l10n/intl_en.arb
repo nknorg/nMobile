@@ -52,6 +52,11 @@
   "clear_database": "Clear Database",
   "mainnet": "MAINNET",
 
+  "ethereum": "Ethereum",
+  "ERC_20": "ERC-20",
+  "nkn_mainnet": "NKN Mainnet",
+  "create_ethereum_wallet": "Create Ethereum Account",
+
   "chat_no_wallet_title": "Private and Secure\n Messaging",
   "chat_no_wallet_desc": "You need a Mainnet compatible wallet before you can use D-Chat.",
 

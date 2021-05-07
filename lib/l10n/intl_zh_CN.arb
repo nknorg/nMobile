@@ -52,6 +52,11 @@
   "clear_database": "清除数据库",
   "mainnet": "主网",
 
+  "ethereum": "以太坊",
+  "ERC_20": "ERC-20",
+  "nkn_mainnet": "NKN 主网",
+  "create_ethereum_wallet": "创建以太坊账户",
+
   "chat_no_wallet_title": "私密和安全的通讯",
   "chat_no_wallet_desc": "您需要一个主网账户，然后才能使用D-Chat。",
 
