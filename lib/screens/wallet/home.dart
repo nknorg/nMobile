@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/utils/logger.dart';
 
+import 'home_empty.dart';
 import 'home_list.dart';
 
 class WalletHomeScreen extends StatefulWidget {
@@ -18,6 +20,9 @@ class _WalletHomeScreenState extends State<WalletHomeScreen> with AutomaticKeepA
   @override
   void initState() {
     super.initState();
+    // init wallets TODO:GG 有延迟
+    WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(context);
+    _walletBloc.add(LoadWallet());
   }
 
   @override
@@ -25,18 +30,13 @@ class _WalletHomeScreenState extends State<WalletHomeScreen> with AutomaticKeepA
     super.build(context);
     return BlocBuilder<WalletBloc, WalletState>(
       builder: (context, state) {
-        // TODO:GG test
-        // return WalletHomeEmptyLayout();
-        return WalletHomeListScreen();
-
-        // if (state is WalletStateLoaded) {
-        //   // loaded
-        //   logger.i("wallets: ${state.wallets.toString()}");
-        //   // return WalletHomeList(); // WalletHomeEmpty();
-        //   // return state.wallets.isEmpty ? WalletHomeEmpty() : WalletHomeList();
-        // }
-        // // initial + loading
-        // return WalletHomeInitial();
+        if (state is WalletLoaded) {
+          logger.i("wallets: ${state.wallets?.toString()}");
+          bool isWalletEmpty = state.wallets == null || state.wallets.isEmpty;
+          return isWalletEmpty ? WalletHomeEmptyLayout() : WalletHomeListLayout();
+        }
+        // loading
+        return WalletHomeEmptyLayout();
       },
     );
   }

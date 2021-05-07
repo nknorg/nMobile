@@ -14,14 +14,12 @@ import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/assets.dart';
 
-class WalletHomeListScreen extends StatefulWidget {
-  static const String routeName = '/wallet/home_list';
-
+class WalletHomeListLayout extends StatefulWidget {
   @override
-  _WalletHomeListScreenState createState() => _WalletHomeListScreenState();
+  _WalletHomeListLayoutState createState() => _WalletHomeListLayoutState();
 }
 
-class _WalletHomeListScreenState extends State<WalletHomeListScreen> {
+class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
   // TODO:GG params
   // WalletsBloc _walletsBloc;
   // StreamSubscription _walletSubscription;
@@ -100,9 +98,11 @@ class _WalletHomeListScreenState extends State<WalletHomeListScreen> {
                   break;
                 case 1:
                   // import
-                  Navigator.pushNamed(context, WalletImportScreen.routeName, arguments: {
-                    WalletImportScreen.argWalletType: walletType,
-                  });
+                  if (walletType == WalletType.nkn || walletType == WalletType.eth) {
+                    Navigator.pushNamed(context, WalletImportScreen.routeName, arguments: {
+                      WalletImportScreen.argWalletType: walletType,
+                    });
+                  }
                   break;
               }
             },
