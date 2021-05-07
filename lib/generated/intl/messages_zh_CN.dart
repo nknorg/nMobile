@@ -59,6 +59,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "delete_wallet_confirm_text" : MessageLookupByLibrary.simpleMessage("这将从您的设备中删除账户。请确保您的账户已备份，否则您的资金将丢失且无法找回。"),
     "delete_wallet_confirm_title" : MessageLookupByLibrary.simpleMessage("您确定要删除此账户吗?"),
     "disconnect" : MessageLookupByLibrary.simpleMessage("断开连接"),
+    "error_required" : MessageLookupByLibrary.simpleMessage("必填"),
     "ethereum" : MessageLookupByLibrary.simpleMessage("以太坊"),
     "face_id" : MessageLookupByLibrary.simpleMessage("Face ID"),
     "general" : MessageLookupByLibrary.simpleMessage("通用"),

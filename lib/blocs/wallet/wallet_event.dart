@@ -5,26 +5,26 @@ abstract class WalletEvent {
 }
 
 // load
-class Load extends WalletEvent {}
+class LoadWallet extends WalletEvent {}
 
 // add
-class Add extends WalletEvent {
+class AddWallet extends WalletEvent {
   final WalletSchema wallet;
   final String keystore;
 
-  Add(this.wallet, this.keystore);
+  AddWallet(this.wallet, this.keystore);
 }
 
 // delete
-class Delete extends WalletEvent {
+class DeleteWallet extends WalletEvent {
   final WalletSchema wallet;
 
-  Delete(this.wallet);
+  DeleteWallet(this.wallet);
 }
 
 // update
-class Update extends WalletEvent {
+class UpdateWallet extends WalletEvent {
   final WalletSchema wallet;
 
-  Update(this.wallet);
+  UpdateWallet(this.wallet);
 }
