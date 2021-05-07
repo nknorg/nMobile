@@ -21,6 +21,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
+    "ERC_20" : MessageLookupByLibrary.simpleMessage("ERC-20"),
     "about" : MessageLookupByLibrary.simpleMessage("关于"),
     "advanced" : MessageLookupByLibrary.simpleMessage("高级"),
     "agree" : MessageLookupByLibrary.simpleMessage("同意"),
@@ -41,6 +42,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "connected" : MessageLookupByLibrary.simpleMessage("已连接"),
     "connecting" : MessageLookupByLibrary.simpleMessage("连接中"),
     "contact_us" : MessageLookupByLibrary.simpleMessage("联系我们"),
+    "create_ethereum_wallet" : MessageLookupByLibrary.simpleMessage("创建以太坊账户"),
     "create_nkn_wallet" : MessageLookupByLibrary.simpleMessage("创建主网账户"),
     "create_wallet" : MessageLookupByLibrary.simpleMessage("创建账户"),
     "d_chat" : MessageLookupByLibrary.simpleMessage("滴聊"),
@@ -57,6 +59,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "delete_wallet_confirm_text" : MessageLookupByLibrary.simpleMessage("这将从您的设备中删除账户。请确保您的账户已备份，否则您的资金将丢失且无法找回。"),
     "delete_wallet_confirm_title" : MessageLookupByLibrary.simpleMessage("您确定要删除此账户吗?"),
     "disconnect" : MessageLookupByLibrary.simpleMessage("断开连接"),
+    "ethereum" : MessageLookupByLibrary.simpleMessage("以太坊"),
     "face_id" : MessageLookupByLibrary.simpleMessage("Face ID"),
     "general" : MessageLookupByLibrary.simpleMessage("通用"),
     "go_backup" : MessageLookupByLibrary.simpleMessage("去备份"),
@@ -90,6 +93,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "menu_wallet" : MessageLookupByLibrary.simpleMessage("账户"),
     "my_wallets" : MessageLookupByLibrary.simpleMessage("我的账户"),
     "name" : MessageLookupByLibrary.simpleMessage("名字"),
+    "nkn_mainnet" : MessageLookupByLibrary.simpleMessage("NKN 主网"),
     "no_wallet_create" : MessageLookupByLibrary.simpleMessage("创建新账户"),
     "no_wallet_desc" : MessageLookupByLibrary.simpleMessage("使用我们的智能账户管理器管理您的主网和\nNKN通证。"),
     "no_wallet_import" : MessageLookupByLibrary.simpleMessage("导入已备份的账户"),
