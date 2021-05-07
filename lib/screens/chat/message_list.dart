@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/message_item.dart';
+import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 
 class MessageListScreen extends StatefulWidget {
@@ -12,9 +13,26 @@ class MessageListScreen extends StatefulWidget {
 class _MessageListScreenState extends State<MessageListScreen> {
   ScrollController _scrollController = ScrollController();
 
+  MessageStorage _messageStorage = MessageStorage();
+  List<MessageListItem> _list;
+
+  initAsync() async {
+    var res = await _messageStorage.getLastMessageList(0, 20);
+    // todo
+    print('------------------');
+    print(res[0].notReadCount);
+    print(res[0].sender);
+    print(res[0].content);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initAsync();
+  }
+
   // todo
-  // Widget getTopicItemView(MessageListModel item) {
-  //   ContactSchema contact = item.contact;
+  // Widget getTopicItemView(MessageListModel item) {  //   ContactSchema contact = item.contact;
   //   Widget contentWidget;
   //   LabelType bottomType = LabelType.bodySmall;
   //   String draft = '';
@@ -168,7 +186,7 @@ class _MessageListScreenState extends State<MessageListScreen> {
   //   );
   // }
 
-  Widget _unReadWidget(MessageItem item) {
+  Widget _unReadWidget(MessageListItem item) {
     String countStr = item.notReadCount.toString();
     if (item.notReadCount > 999) {
       countStr = '999+';
@@ -194,88 +212,147 @@ class _MessageListScreenState extends State<MessageListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: EdgeInsets.only(bottom: 72),
-      controller: _scrollController,
-      itemCount: 10,
-      itemBuilder: (BuildContext context, int index) {
-        if (index % 2 == 0) {
-          return Container(
-            color: Colors.transparent,
-            padding: const EdgeInsets.only(left: 12, right: 12),
-            height: 72,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  margin: const EdgeInsets.only(right: 12),
-                  child: CircleAvatar(
-                    radius: 24,
-                    backgroundColor: Colors.red,
-                    child: Label(
-                      'HR',
-                      type: LabelType.bodyLarge,
-                      color: Colors.yellow,
+    return SafeArea(
+      child: ListView.builder(
+        padding: EdgeInsets.only(bottom: 72),
+        controller: _scrollController,
+        itemCount: 20,
+        itemBuilder: (BuildContext context, int index) {
+          if (index % 2 == 0) {
+            return Container(
+              color: Colors.transparent,
+              padding: const EdgeInsets.only(left: 12, right: 12),
+              height: 72,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(right: 12),
+                    child: CircleAvatar(
+                      radius: 24,
+                      backgroundColor: Colors.red,
+                      child: Label(
+                        'HR',
+                        type: LabelType.bodyLarge,
+                        color: Colors.yellow,
+                      ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 0.6, color: application.theme.dividerColor))),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 1, color: application.theme.dividerColor))),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Row(children: topicWidget),
+                                // contentWidget.pad(t: 6),
+                              ],
+                            ),
+                          ),
+                          Column(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              // Row(children: topicWidget),
-                              // contentWidget.pad(t: 6),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 0, bottom: 6),
+                                child: Label(
+                                  timeFormat(DateTime.now()),
+                                  type: LabelType.bodySmall,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 0),
+                                child: _unReadWidget(MessageListItem(notReadCount: 12)),
+                              ),
                             ],
                           ),
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(right: 0, bottom: 6),
-                              child: Label(
-                                timeFormat(DateTime.now()),
-                                type: LabelType.bodySmall,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(right: 0),
-                              child: _unReadWidget(MessageItem(notReadCount: 12)),
-                            ),
-                          ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        } else {
-          return Container();
-        }
+                ],
+              ),
+            );
+          } else {
+            return Container(
+              color: Colors.transparent,
+              padding: const EdgeInsets.only(left: 12, right: 12),
+              height: 72,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(right: 12),
+                    child: CircleAvatar(
+                      radius: 24,
+                      backgroundColor: Colors.red,
+                      child: Label(
+                        'HR',
+                        type: LabelType.bodyLarge,
+                        color: Colors.yellow,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 1, color: application.theme.dividerColor))),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Row(children: topicWidget),
+                                // contentWidget.pad(t: 6),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(right: 0, bottom: 6),
+                                child: Label(
+                                  timeFormat(DateTime.now()),
+                                  type: LabelType.bodySmall,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 0),
+                                child: _unReadWidget(MessageListItem(notReadCount: 12)),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
 
-        // var item = _messagesList[index];
-        // Widget widget;
-        // if (item.topic != null) {
-        //   widget = getTopicItemView(item);
-        // } else {
-        //   widget = getSingleChatItemView(item);
-        // }
-        // return InkWell(
-        //   onLongPress: () {
-        //     showMenu(item, index);
-        //   },
-        //   child: widget,
-        // );
-      },
+          // var item = _messagesList[index];
+          // Widget widget;
+          // if (item.topic != null) {
+          //   widget = getTopicItemView(item);
+          // } else {
+          //   widget = getSingleChatItemView(item);
+          // }
+          // return InkWell(
+          //   onLongPress: () {
+          //     showMenu(item, index);
+          //   },
+          //   child: widget,
+          // );
+        },
+      ),
     );
   }
 }
