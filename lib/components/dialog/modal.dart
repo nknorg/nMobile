@@ -46,6 +46,10 @@ class ModalDialog extends StatefulWidget {
     );
   }
 
+  close() {
+    Navigator.of(context).pop();
+  }
+
   confirm({
     Widget title,
     Widget content,
@@ -74,10 +78,6 @@ class ModalDialog extends StatefulWidget {
         );
       },
     );
-  }
-
-  close() {
-    Navigator.of(context).pop();
   }
 }
 
