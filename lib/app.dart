@@ -87,6 +87,7 @@ class _AppScreenState extends State<AppScreen> {
               child: PhysicalModel(
                 color: application.theme.backgroundColor,
                 clipBehavior: Clip.antiAlias,
+                elevation: 2,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
                 child: Nav(
                   currentIndex: _currentIndex,

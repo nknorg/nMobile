@@ -1,4 +1,4 @@
-class MessageItem {
+class MessageListItem {
   String targetId;
   String sender;
   String content;
@@ -11,7 +11,7 @@ class MessageItem {
   // Topic topic;
   // ContactSchema contact;
 
-  MessageItem({
+  MessageListItem({
     this.targetId,
     this.sender,
     this.content,
@@ -20,4 +20,5 @@ class MessageItem {
     this.notReadCount,
     this.isTop = false,
   });
+
 }

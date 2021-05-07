@@ -48,6 +48,12 @@ class LightTheme implements SkinTheme {
         brightness: brightness,
         primaryColor: primaryColor,
         // primarySwatch: primaryColor,
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: navBackgroundColor,
+          type: BottomNavigationBarType.fixed,
+          unselectedItemColor: fontColor2,
+          selectedItemColor: primaryColor,
+        ),
         textTheme: TextTheme(
           headline1: headline1,
           headline2: headline2,

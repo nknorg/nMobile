@@ -242,21 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ],
                     ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, SelectScreen.routeName, arguments: {
-                        SelectScreen.title: _localizations.local_notification,
-                        SelectScreen.selectedValue: Settings.notificationType,
-                        SelectScreen.list: _notificationTypeList,
-                      }).then((type) {
-                        if (type != null) {
-                          Settings.notificationType = type;
-                          _settingsStorage.setSettings('${SettingsStorage.NOTIFICATION_TYPE_KEY}', type);
-                          setState(() {
-                            _currentNotificationType = _notificationTypeList?.firstWhere((x) => x.value == Settings.notificationType)?.text;
-                          });
-                        }
-                      });
-                    },
+                    onPressed: () {},
                   ),
                 ),
               ],

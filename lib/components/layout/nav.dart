@@ -35,11 +35,7 @@ class _NavState extends State<Nav> {
     Color _color = Theme.of(context).unselectedWidgetColor;
     Color _selectedColor = _theme.primaryColor;
     return BottomNavigationBar(
-      backgroundColor: _theme.navBackgroundColor,
       currentIndex: widget.currentIndex,
-      type: BottomNavigationBarType.fixed,
-      unselectedItemColor: _theme.fontColor2,
-      selectedItemColor: _theme.primaryColor,
       onTap: _onItemTapped,
       items: [
         BottomNavigationBarItem(
