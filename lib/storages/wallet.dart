@@ -1,12 +1,9 @@
 import 'dart:io';
 
-import 'package:get_it/get_it.dart';
-import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/schema/wallet.dart';
 
-import '../helpers/secure_storage.dart';
 import '../helpers/local_storage.dart';
+import '../helpers/secure_storage.dart';
 
 class WalletStorage {
   static const String SEED_KEY = 'SEED';
@@ -19,7 +16,7 @@ class WalletStorage {
 
   Future<List> getWallets() async {
     var wallets = await _localStorage.getArray(WALLET_KEY);
-    if (wallets == null) {
+    if (wallets != null && wallets.isNotEmpty) {
       final list = wallets.map((e) {
         WalletSchema walletSchema = WalletSchema.fromCacheMap(e);
         return walletSchema;
