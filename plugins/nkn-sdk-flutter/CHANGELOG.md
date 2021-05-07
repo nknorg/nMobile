@@ -1,3 +1,7 @@
+## 0.0.11
+
+* Fix create wallet bug
+
 ## 0.0.10
 
 * Update dependencies
