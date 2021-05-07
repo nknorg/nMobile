@@ -59,6 +59,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "delete_wallet_confirm_text" : MessageLookupByLibrary.simpleMessage("This will remove the account off your local device. Please make sure your account is fully backed up or you will lose your funds."),
     "delete_wallet_confirm_title" : MessageLookupByLibrary.simpleMessage("Are you sure you want to delete this account?"),
     "disconnect" : MessageLookupByLibrary.simpleMessage("Disconnect"),
+    "error_required" : MessageLookupByLibrary.simpleMessage("This field is required."),
     "ethereum" : MessageLookupByLibrary.simpleMessage("Ethereum"),
     "face_id" : MessageLookupByLibrary.simpleMessage("Face ID"),
     "general" : MessageLookupByLibrary.simpleMessage("General"),

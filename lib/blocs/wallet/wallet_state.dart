@@ -5,11 +5,11 @@ abstract class WalletState {
 }
 
 // loading
-class Loading extends WalletState {}
+class WalletLoading extends WalletState {}
 
 // loaded
-class Loaded extends WalletState {
+class WalletLoaded extends WalletState {
   final List<WalletSchema> wallets;
 
-  Loaded(this.wallets);
+  WalletLoaded(this.wallets);
 }

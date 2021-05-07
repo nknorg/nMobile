@@ -5,7 +5,7 @@ class Loading {
     BotToast.showLoading();
   }
 
-  static dispose() {
+  static dismiss() {
     BotToast.closeAllLoading();
   }
 }
