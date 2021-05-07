@@ -36,7 +36,7 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  showBottomDialog<T>({@required String title, @required Widget child, Widget action, double height = 300}) {
+  showWithTitle<T>({@required Widget child, @required String title, Widget action, String desc = "", double height = 300}) {
     return show<T>(
       height: height,
       action: action,
@@ -44,27 +44,34 @@ class BottomDialog extends StatefulWidget {
         onTap: () {
           FocusScope.of(context).requestFocus(FocusNode());
         },
-        child: Container(
-          child: Flex(
-            direction: Axis.vertical,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Expanded(
-                flex: 0,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 24),
-                  child: Label(
-                    title,
-                    type: LabelType.h2,
-                  ),
+        child: Flex(
+          direction: Axis.vertical,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 12),
+              child: Label(
+                title,
+                type: LabelType.h2,
+              ),
+            ),
+            Builder(builder: (BuildContext context) {
+              if (desc == null || desc.isEmpty) {
+                return SizedBox(height: 12);
+              }
+              return Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20, top: 0, bottom: 24),
+                child: Label(
+                  desc,
+                  type: LabelType.bodyLarge,
                 ),
-              ),
-              Expanded(
-                flex: 1,
-                child: child,
-              ),
-            ],
-          ),
+              );
+            }),
+            Expanded(
+              flex: 1,
+              child: child,
+            ),
+          ],
         ),
       ),
     );
@@ -168,7 +175,7 @@ class _BottomDialogState extends State<BottomDialog> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    _maxHeight = MediaQuery.of(context).size.height - 122;
+    _maxHeight = MediaQuery.of(context).size.height - 86 - 38;
 
     List<Widget> body = <Widget>[
       Expanded(
@@ -176,12 +183,14 @@ class _BottomDialogState extends State<BottomDialog> with SingleTickerProviderSt
         child: widget.builder(widget.context),
       ),
     ];
+
     if (widget.action != null) {
       body.add(Expanded(
         flex: 0,
         child: widget.action,
       ));
     }
+
     List<Widget> content = <Widget>[
       Expanded(
         flex: 0,
@@ -191,20 +200,25 @@ class _BottomDialogState extends State<BottomDialog> with SingleTickerProviderSt
             onVerticalDragEnd: _handleDragEnd,
             onTapDown: _handleTapDown,
             onTapUp: _handleTapUp,
-            child: Container(
-              width: MediaQuery.of(context).size.width - 88,
-              height: _dragHeight,
-              decoration: BoxDecoration(),
-              child: UnconstrainedBox(
-                child: Container(
-                  width: 80,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(4)),
-                    color: _dragColor,
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                // logger.i("---> ${constraints}");
+                return Container(
+                  width: constraints.maxWidth - 32 * 2,
+                  height: _dragHeight,
+                  decoration: BoxDecoration(),
+                  child: UnconstrainedBox(
+                    child: Container(
+                      width: 80,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(4)),
+                        color: _dragColor,
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
         ),
@@ -232,12 +246,10 @@ class _BottomDialogState extends State<BottomDialog> with SingleTickerProviderSt
         FocusScope.of(context).requestFocus(FocusNode());
       },
       child: Container(
-        decoration: BoxDecoration(),
         height: _currentHeight + _dragHeight,
-        child: Flex(
-          direction: Axis.vertical,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: content,
         ),
       ),
