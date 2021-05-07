@@ -1,11 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/item.dart';
-import 'package:nmobile/components/wallet/select_type.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn.dart';
@@ -85,8 +85,7 @@ class _WalletHomeListScreenState extends State<WalletHomeListScreen> {
             icon: assetIcon('more', width: 24),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             onSelected: (int result) async {
-              final walletType = await WalletSelectType.show(
-                context: context,
+              final walletType = await BottomDialog.of(context).showWalletTypeSelect(
                 title: _localizations.select_wallet_type,
                 desc: _localizations.select_wallet_type_desc,
               );
