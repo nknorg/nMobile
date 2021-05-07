@@ -90,6 +90,8 @@
   "import_with_seed_desc": "从已有的账户中，找出如何导出Seed（也称为“秘密种子”），对其进行备份，然后使用它导入nMobile。",
   "input_seed": "请输入seed",
 
+  "error_required": "必填",
+
   "delete_wallet": "删除账户",
   "delete_wallet_confirm_title": "您确定要删除此账户吗?",
   "delete_wallet_confirm_text": "这将从您的设备中删除账户。请确保您的账户已备份，否则您的资金将丢失且无法找回。",

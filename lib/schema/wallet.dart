@@ -4,9 +4,9 @@ class WalletType {
 }
 
 class WalletSchema {
-  String address;
-  String type;
-  String name;
+  String address; // TODO:GG require?
+  String type; // TODO:GG require?
+  String name; // TODO:GG require?
   double balance = 0;
   double balanceEth = 0;
 
@@ -28,5 +28,10 @@ class WalletSchema {
       'balance': balance,
       'balanceEth': balanceEth,
     };
+  }
+
+  @override
+  String toString() {
+    return 'WalletSchema{address: $address, type: $type, name: $name, balance: $balance, balanceEth: $balanceEth}';
   }
 }

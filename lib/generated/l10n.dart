@@ -855,6 +855,16 @@ class S {
     );
   }
 
+  /// `This field is required.`
+  String get error_required {
+    return Intl.message(
+      'This field is required.',
+      name: 'error_required',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Delete Account`
   String get delete_wallet {
     return Intl.message(

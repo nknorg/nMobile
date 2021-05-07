@@ -90,6 +90,8 @@
   "import_with_seed_desc": "From your existing wallet, find out how to export Seed (also called \"Secret Seed\"), make a backup copy, and then use it to import your existing wallet into nMobile.",
   "input_seed": "Please input seed",
 
+  "error_required": "This field is required.",
+
   "delete_wallet": "Delete Account",
   "delete_wallet_confirm_title": "Are you sure you want to delete this account?",
   "delete_wallet_confirm_text": "This will remove the account off your local device. Please make sure your account is fully backed up or you will lose your funds.",
