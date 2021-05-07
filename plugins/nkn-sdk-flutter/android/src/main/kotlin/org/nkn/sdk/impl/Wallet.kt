@@ -71,9 +71,8 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun create(call: MethodCall, result: MethodChannel.Result) {
-        val seedHex = call.argument<String>("seed")
+        val seed = call.argument<ByteArray>("seed") ?: Nkn.randomBytes(32)
         val password = call.argument<String>("password") ?: ""
-        val seed = if (seedHex != null) Hex.decode(seedHex) else Nkn.randomBytes(32)
         val account = Nkn.newAccount(seed)
         val config = WalletConfig()
         config.password = password

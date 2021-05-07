@@ -31,7 +31,7 @@ class Wallet {
 
   Wallet({this.walletConfig});
 
-  static Future<Wallet> create(String seed, {WalletConfig config}) async {
+  static Future<Wallet> create(Uint8List seed, {WalletConfig config}) async {
     try {
       final Map data = await _methodChannel.invokeMethod('create', {
         'seed': seed,
