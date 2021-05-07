@@ -1,13 +1,21 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
-import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/form_field_box.dart';
+import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
+import 'package:nmobile/utils/logger.dart';
+
+import '../../app.dart';
 
 class WalletCreateNKNScreen extends StatefulWidget {
   static const String routeName = '/wallet/create_nkn';
@@ -26,47 +34,37 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
   FocusNode _passwordFocusNode = FocusNode();
   FocusNode _confirmPasswordFocusNode = FocusNode();
 
-  // WalletsBloc _walletsBloc;
+  WalletBloc _walletBloc;
   var _name;
   var _password;
 
   @override
   void initState() {
     super.initState();
-    // TODO:GG event
-    // _walletsBloc = BlocProvider.of<WalletsBloc>(context);
+    _walletBloc = BlocProvider.of<WalletBloc>(context);
   }
 
   create() async {
-    // TODO:GG create nkn
-    // if ((_formKey.currentState as FormState).validate()) {
-    //   (_formKey.currentState as FormState).save();
-    //   EasyLoading.show();
-    //
-    //   String keystore = await NknWalletPlugin.createWallet(null, _password);
-    //   var json = jsonDecode(keystore);
-    //
-    //   String address = json['Address'];
-    //   _walletsBloc.add(AddWallet(
-    //       WalletSchema(
-    //           address: address, type: WalletSchema.NKN_WALLET, name: _name),
-    //       keystore));
-    //
-    //   await SecureStorage()
-    //       .set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
-    //   var wallet = WalletSchema(name: _name, address: address);
-    //
-    //   try {
-    //     var w = await wallet.exportWallet(_password);
-    //   } catch (e) {
-    //     NLog.w('create_nkn_wallet.dart exportWallet E:' + e.toString());
-    //   }
-    //
-    //   EasyLoading.dismiss();
-    //   Navigator.of(context).pushReplacementNamed(AppScreen.routeName);
-    // }
+    if ((_formKey.currentState as FormState).validate()) {
+      Loading.show();
+
+      (_formKey.currentState as FormState).save();
+      logger.i("name:$_name, _password:$_password");
+
+      Wallet result = await Wallet.create(null, config: WalletConfig(password: _password));
+
+      WalletSchema wallet = WalletSchema(name: _name, address: result?.address, type: WalletType.nkn);
+      logger.i("create:${wallet.toString()}");
+
+      _walletBloc.add(AddWallet(wallet, result?.keystore));
+
+      Loading.dismiss();
+      Navigator.pushReplacementNamed(context, AppScreen.routeName);
+    }
+    // TODO:GG set btn grey
   }
 
+  // TODO:GG edit upup
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
@@ -197,6 +195,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                     child: Button(
                                       text: _localizations.create_wallet,
                                       disabled: !_formValid,
+                                      // backgroundColor: _formValid ? application.theme.primaryColor : application.theme.fontColor2, // TODO:GG
                                       onPressed: create,
                                     ),
                                   ),
