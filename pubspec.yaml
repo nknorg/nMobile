@@ -25,39 +25,46 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  base_x: ^1.0.1
-  bot_toast: ^4.0.1
-  dio: ^4.0.0
-  equatable: ^2.0.0
-  font_awesome_flutter: ^9.0.0
-  file_picker: ^3.0.1
-  flutter_bloc: ^7.0.0
-  flutter_cupertino_localizations: ^1.0.1
-  flutter_secure_storage: ^4.2.0
-  flutter_svg: ^0.22.0
-  flutter_spinkit: ^5.0.0
-  flutter_markdown: ^0.6.1
-  get_it: ^6.1.1
-  intl: ^0.17.0
+  # flutter_plugins
+  package_info: ^2.0.0
+  path_provider: ^2.0.1
+  shared_preferences: ^2.0.5
+  url_launcher: ^6.0.2
   image_picker: ^0.7.4
   local_auth: ^1.1.5
-  package_info: ^2.0.0
+  # common
+  flutter_bloc: ^7.0.0
+  logger: ^1.0.0
+  equatable: ^2.0.0
+  dio: ^4.0.0
+  get_it: ^7.1.2
+  sentry_flutter: ^5.0.0
+  # locale
+  intl: ^0.17.0
+  flutter_cupertino_localizations: ^1.0.1
+  # storage
+  flutter_secure_storage: ^4.2.0
+  sqflite_sqlcipher: ^2.0.0
+  # UI
+  bot_toast: ^4.0.1
+  font_awesome_flutter: ^9.0.0
+  flutter_spinkit: ^5.0.0
+  flutter_svg: ^0.22.0
+  flutter_markdown: ^0.6.1
+  # media
+  file_picker: ^3.0.1
+  # data
+  uuid: ^3.0.4
+  base_x: ^1.0.1
+  web3dart: ^2.0.0
   path: ^1.8.0
-  path_provider: ^2.0.1
+  # QR
   qr_code_scanner: ^0.4.0
   qr_flutter: ^4.0.0
-  sentry_flutter: ^5.0.0
-  shared_preferences: ^2.0.5
-  sqflite_sqlcipher: ^2.0.0
-  url_launcher: ^6.0.2
-  uuid: ^3.0.4
-
-  # log
-  logger: ^1.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^1.0.3
 
   # plugins
   nkn_sdk_flutter:
