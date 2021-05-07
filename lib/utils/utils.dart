@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:path/path.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -95,4 +96,12 @@ bool verifyAddress(String address) {
   } catch (e) {
     return false;
   }
+}
+
+String getFileName(String path) {
+  return path?.split('/')?.last;
+}
+
+String getLocalPath(String pubkey, String path) {
+  return join(pubkey, 'data', getFileName(path));
 }

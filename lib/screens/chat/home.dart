@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nmobile/common/chat.dart';
+import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -21,14 +18,6 @@ class ChatHomeScreen extends StatefulWidget {
 }
 
 class _ChatHomeScreenState extends State<ChatHomeScreen> {
-  _buttonStyle({bool top = false, bool bottom = false}) {
-    return ButtonStyle(
-      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16)),
-      shape: MaterialStateProperty.resolveWith(
-        (states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: top ? Radius.circular(12) : Radius.zero, bottom: bottom ? Radius.circular(12) : Radius.zero)),
-      ),
-    );
-  }
 
   @override
   void initState() {
@@ -67,14 +56,14 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                     ),
                     Expanded(
                       flex: 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Label('currentUser.getShowName', type: LabelType.h3, dark: true),
-                          Row(
+                      child: StreamBuilder<int>(
+                        initialData: chat.status,
+                        stream: chat.statusStream,
+                        builder: (context, snapshot) {
+                          Widget statusWidget = Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: <Widget>[
-                              Label(_localizations.connect, type: LabelType.bodySmall, color: application.theme.fontLightColor.withAlpha(200)),
+                              Label(_localizations.connecting, type: LabelType.h4, color: application.theme.fontLightColor.withAlpha(200)),
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 2, left: 4),
                                 child: SpinKitThreeBounce(
@@ -83,8 +72,34 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                 ),
                               ),
                             ],
-                          )
-                        ],
+                          );
+                          switch(snapshot.data) {
+                            case ChatConnectStatus.disconnected:
+                              statusWidget = Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: <Widget>[
+                                  Label(_localizations.disconnect, type: LabelType.h4, color: application.theme.strongColor),
+                                ],
+                              );
+                              break;
+                            case ChatConnectStatus.connected:
+                              statusWidget = Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: <Widget>[
+                                  Label(_localizations.connected, type: LabelType.h4, color: application.theme.successColor),
+                                ],
+                              );
+                              break;
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Label('currentUser.getShowName', type: LabelType.h3, dark: true),
+                              statusWidget,
+                            ],
+                          );
+                        }
                       ),
                     )
                   ],
@@ -95,12 +110,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                 child: IconButton(
                   icon: assetIcon('addbook', color: Colors.white, width: 24),
                   onPressed: () {
-                    // todo
-                    // if (TimerAuth.authed) {
-                    //   Navigator.of(context).pushNamed(ContactHome.routeName);
-                    // } else {
-                    //   TimerAuth.instance.onCheckAuthGetPassword(context);
-                    // }
+
                   },
                 ),
               )],

@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/common/db.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/utils/hash.dart';
 
-import 'global.dart';
+import '../global.dart';
 
 class ChatConnectStatus {
   static const int disconnected = 0;
@@ -18,14 +21,19 @@ class ChatConnectStatus {
 class ContentType {
   static const String system = 'system';
   static const String text = 'text';
-  static const String receipt = 'receipt';
   static const String textExtension = 'textExtension';
+  static const String receipt = 'receipt';
   static const String media = 'media';
+
+  static const String nknImage = 'nknImage'; // todo, remove this, or rename image
+  static const String audio = 'audio';
+
   static const String contact = 'contact';
+  static const String nknOnePiece = 'nknOnePiece';
   static const String eventContactOptions = 'event:contactOptions';
   static const String eventSubscribe = 'event:subscribe';
   static const String eventUnsubscribe = 'event:unsubscribe';
-  static const String ChannelInvitation = 'event:channelInvitation';
+  static const String channelInvitation = 'event:channelInvitation';
 }
 
 unleadingHashIt(String str) {
@@ -55,6 +63,8 @@ class Chat {
 
   String get id => client?.address;
 
+  Uint8List get publicKey => client?.publicKey;
+
   Stream<OnConnect> onConnect;
   Stream<OnMessage> onMessage;
   Stream<dynamic> onError;
@@ -64,6 +74,17 @@ class Chat {
     statusStream.listen((event) {
       status = event;
     });
+  }
+
+  Future signin() async {
+    // todo for test
+    Wallet wallet = await Wallet.create(hexDecode('b62aed51da1d79fd0ccc8584592fe97636344239a34b7fcc49baa303fef3c038'), config: WalletConfig(password: '123'));
+
+    String pubkey = hexEncode(wallet.publicKey);
+    String password = hexEncode(sha256(wallet.seed));
+
+    await DB.open(pubkey, password);
+    connect(wallet);
   }
 
   Future connect(Wallet wallet) async {
@@ -79,10 +100,13 @@ class Chat {
       completer.complete();
     });
     await completer.future;
+
+    receiveMessage.startReceiveMessage();
   }
 
   close() {
     _statusStreamSink.add(ChatConnectStatus.disconnected);
+    _statusController.close();
   }
 
   Future sendText(MessageSchema messageSchema) async {
