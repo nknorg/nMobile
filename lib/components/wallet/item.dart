@@ -36,7 +36,7 @@ class _WalletItemState extends State<WalletItem> {
           Expanded(
             flex: 0,
             child: Hero(
-              tag: 'avatar:${'widget.schema.address'}',
+              tag: 'avatar:${'widget.schema.address'}', // TODO:GG
               child: Padding(
                 padding: const EdgeInsets.only(right: 20, top: 16, bottom: 16),
                 child: Container(
@@ -102,7 +102,7 @@ class _WalletItemState extends State<WalletItem> {
       return Row(
         children: [
           Hero(
-            tag: 'avatar:${'widget.schema.address'}',
+            tag: 'avatar:${'widget.schema.address'}', // TODO:GG
             child: Stack(
               children: [
                 Padding(

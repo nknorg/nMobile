@@ -21,6 +21,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
+    "ERC_20" : MessageLookupByLibrary.simpleMessage("ERC-20"),
     "about" : MessageLookupByLibrary.simpleMessage("About"),
     "advanced" : MessageLookupByLibrary.simpleMessage("Advanced"),
     "agree" : MessageLookupByLibrary.simpleMessage("Agree"),
@@ -41,6 +42,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "connected" : MessageLookupByLibrary.simpleMessage("Connected"),
     "connecting" : MessageLookupByLibrary.simpleMessage("Connecting"),
     "contact_us" : MessageLookupByLibrary.simpleMessage("Contact"),
+    "create_ethereum_wallet" : MessageLookupByLibrary.simpleMessage("Create Ethereum Account"),
     "create_nkn_wallet" : MessageLookupByLibrary.simpleMessage("Create Mainnet Account"),
     "create_wallet" : MessageLookupByLibrary.simpleMessage("Create Account"),
     "d_chat" : MessageLookupByLibrary.simpleMessage("D-Chat"),
@@ -57,6 +59,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "delete_wallet_confirm_text" : MessageLookupByLibrary.simpleMessage("This will remove the account off your local device. Please make sure your account is fully backed up or you will lose your funds."),
     "delete_wallet_confirm_title" : MessageLookupByLibrary.simpleMessage("Are you sure you want to delete this account?"),
     "disconnect" : MessageLookupByLibrary.simpleMessage("Disconnect"),
+    "ethereum" : MessageLookupByLibrary.simpleMessage("Ethereum"),
     "face_id" : MessageLookupByLibrary.simpleMessage("Face ID"),
     "general" : MessageLookupByLibrary.simpleMessage("General"),
     "go_backup" : MessageLookupByLibrary.simpleMessage("Go Backup"),
@@ -90,6 +93,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "menu_wallet" : MessageLookupByLibrary.simpleMessage("Account"),
     "my_wallets" : MessageLookupByLibrary.simpleMessage("My Accounts"),
     "name" : MessageLookupByLibrary.simpleMessage("Name"),
+    "nkn_mainnet" : MessageLookupByLibrary.simpleMessage("NKN Mainnet"),
     "no_wallet_create" : MessageLookupByLibrary.simpleMessage("Create New Account"),
     "no_wallet_desc" : MessageLookupByLibrary.simpleMessage("Manage both your Mainnet NKN\n tokens with our smart wallet manager."),
     "no_wallet_import" : MessageLookupByLibrary.simpleMessage("Import Existing Account"),

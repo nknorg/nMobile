@@ -1,9 +1,9 @@
 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path fill-rule="evenodd" clip-rule="evenodd" d="M2.81061 7.15909L6.78788 0.47727L10.7652 7.15909L6.78788 9.54545L2.81061 7.15909ZM6.78788 13.5227L2.81061 7.95454L6.78788 10.3409L10.7652 7.95454L6.78788 13.5227Z" fill="black"/>
-<mask id="mask0" mask-type="alpha" maskUnits="userSpaceOnUse" x="2" y="0" width="9" height="14">
-<path fill-rule="evenodd" clip-rule="evenodd" d="M2.81061 7.15909L6.78788 0.47727L10.7652 7.15909L6.78788 9.54545L2.81061 7.15909ZM6.78788 13.5227L2.81061 7.95454L6.78788 10.3409L10.7652 7.95454L6.78788 13.5227Z" fill="white"/>
-</mask>
-<g mask="url(#mask0)">
-<rect width="14" height="14" fill="white"/>
-</g>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M2.81061 7.15909L6.78788 0.47727L10.7652 7.15909L6.78788 9.54545L2.81061 7.15909ZM6.78788 13.5227L2.81061 7.95454L6.78788 10.3409L10.7652 7.95454L6.78788 13.5227Z" fill="white" />
+<!--    <mask id="mask0" mask-type="alpha" maskUnits="userSpaceOnUse" x="2" y="0" width="9" height="14">-->
+<!--        <path fill-rule="evenodd" clip-rule="evenodd" d="M2.81061 7.15909L6.78788 0.47727L10.7652 7.15909L6.78788 9.54545L2.81061 7.15909ZM6.78788 13.5227L2.81061 7.95454L6.78788 10.3409L10.7652 7.95454L6.78788 13.5227Z" fill="white" />-->
+<!--    </mask>-->
+<!--    <g mask="url(#mask0)">-->
+<!--        <rect width="14" height="14" fill="white" />-->
+<!--    </g>-->
 </svg>

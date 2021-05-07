@@ -525,6 +525,46 @@ class S {
     );
   }
 
+  /// `Ethereum`
+  String get ethereum {
+    return Intl.message(
+      'Ethereum',
+      name: 'ethereum',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `ERC-20`
+  String get ERC_20 {
+    return Intl.message(
+      'ERC-20',
+      name: 'ERC_20',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `NKN Mainnet`
+  String get nkn_mainnet {
+    return Intl.message(
+      'NKN Mainnet',
+      name: 'nkn_mainnet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create Ethereum Account`
+  String get create_ethereum_wallet {
+    return Intl.message(
+      'Create Ethereum Account',
+      name: 'create_ethereum_wallet',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Private and Secure\n Messaging`
   String get chat_no_wallet_title {
     return Intl.message(

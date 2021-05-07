@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/components/wallet/item.dart';
+import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 
 class BottomDialog extends StatefulWidget {
@@ -99,6 +100,10 @@ class BottomDialog extends StatefulWidget {
     String desc,
     Widget action,
   }) {
+    S _localizations = S.of(context);
+    final walletTypeNkn = WalletType.nkn;
+    final walletTypeEth = WalletType.eth;
+
     return showWithTitle<String>(
       title: title,
       desc: desc,
@@ -109,20 +114,134 @@ class BottomDialog extends StatefulWidget {
           InkWell(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
-              child: WalletItem(type: WalletType.nkn),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 0,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 20, top: 16, bottom: 16),
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: application.theme.logoBackground,
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        child: SvgPicture.asset(
+                          'assets/logo.svg',
+                          width: 22,
+                          height: 22,
+                          color: application.theme.nknLogoColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Label(
+                      _localizations.nkn_mainnet,
+                      type: LabelType.h3,
+                    ),
+                  ),
+                  Expanded(
+                    flex: 0,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(9)),
+                            color: application.theme.successColor.withAlpha(25),
+                          ),
+                          child: Text(
+                            _localizations.mainnet,
+                            style: TextStyle(
+                              color: application.theme.successColor,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              height: 1.2,
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
             onTap: () {
-              close(result: WalletType.nkn);
+              close(result: walletTypeNkn);
             },
           ),
           Divider(height: 1, indent: 64),
           InkWell(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
-              child: WalletItem(type: WalletType.eth),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 0,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 20, top: 16, bottom: 16),
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: application.theme.logoBackground,
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        child: SvgPicture.asset(
+                          'assets/ethereum-logo.svg',
+                          width: 22,
+                          height: 22,
+                          color: application.theme.nknLogoColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Label(
+                      _localizations.ethereum,
+                      type: LabelType.h3,
+                    ),
+                  ),
+                  Expanded(
+                    flex: 0,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(9)),
+                            color: application.theme.successColor.withAlpha(25),
+                          ),
+                          child: Text(
+                            _localizations.ERC_20,
+                            style: TextStyle(
+                              color: application.theme.successColor,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              height: 1.2,
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
             onTap: () {
-              close(result: WalletType.eth);
+              close(result: walletTypeEth);
             },
           ),
           Divider(height: 1, indent: 64),
