@@ -8,7 +8,7 @@ import 'package:nmobile/screens/wallet/import.dart';
 Map<String, WidgetBuilder> routes = {
   WalletHomeScreen.routeName: (BuildContext context) => WalletHomeScreen(),
   WalletCreateNKNScreen.routeName: (BuildContext context) => WalletCreateNKNScreen(),
-  WalletImportScreen.routeName: (BuildContext context) => WalletImportScreen(),
+  WalletImportScreen.routeName: (BuildContext context, {arguments}) => WalletImportScreen(arguments: arguments),
   WalletHomeListScreen.routeName: (BuildContext context) => WalletHomeListScreen(),
 };
 

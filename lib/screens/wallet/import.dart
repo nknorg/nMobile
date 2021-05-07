@@ -11,22 +11,25 @@ import 'import_by_keystore.dart';
 import 'import_by_seed.dart';
 
 class WalletImportScreen extends StatefulWidget {
-  static const String routeName = '/wallet/import_nkn';
+  static const String routeName = '/wallet/import';
+  final Map arguments;
 
-  final String walletType;
+  static final String argWalletType = "wallet_type";
 
-  const WalletImportScreen({this.walletType = WalletType.nkn});
+  const WalletImportScreen({Key key, this.arguments}) : super(key: key);
 
   @override
   _ImportWalletScreenState createState() => _ImportWalletScreenState();
 }
 
 class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTickerProviderStateMixin {
+  String walletType;
   TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    this.walletType = widget.arguments[WalletImportScreen.argWalletType];
     _tabController = TabController(length: 2, vsync: this);
   }
 
@@ -38,7 +41,7 @@ class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTick
     return Layout(
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: widget.walletType == WalletType.eth ? _localizations.import_ethereum_wallet : _localizations.import_nkn_wallet,
+        title: this.walletType == WalletType.eth ? _localizations.import_ethereum_wallet : _localizations.import_nkn_wallet,
         backgroundColor: application.theme.backgroundColor4,
         actions: [
           IconButton(
@@ -71,8 +74,8 @@ class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTick
                   child: TabBarView(
                     controller: _tabController,
                     children: <Widget>[
-                      WalletImportByKeystoreLayout(walletType: widget.walletType),
-                      WalletImportBySeedLayout(walletType: widget.walletType),
+                      WalletImportByKeystoreLayout(walletType: this.walletType),
+                      WalletImportBySeedLayout(walletType: this.walletType),
                     ],
                   ),
                 ),

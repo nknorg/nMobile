@@ -5,10 +5,14 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/item.dart';
+import 'package:nmobile/components/wallet/select_type.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/screens/wallet/create_nkn.dart';
+import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/assets.dart';
+import 'package:nmobile/utils/logger.dart';
 
 class WalletHomeListScreen extends StatefulWidget {
   static const String routeName = '/wallet/home_list';
@@ -25,6 +29,7 @@ class _WalletHomeListScreenState extends State<WalletHomeListScreen> {
   //
   // double _totalNkn = 0;
   bool _allBackedUp = false;
+
   //
   // // ignore: non_constant_identifier_names
   // LOG _LOG;
@@ -80,24 +85,26 @@ class _WalletHomeListScreenState extends State<WalletHomeListScreen> {
             icon: assetIcon('more', width: 24),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             onSelected: (int result) async {
+              final walletType = await WalletSelectType.show(
+                context: context,
+                title: _localizations.select_wallet_type,
+                desc: _localizations.select_wallet_type_desc,
+              );
               switch (result) {
                 case 0:
-                  // TODO:GG create wallet
-                  // final type = await SelectWalletTypeDialog.of(context).show();
-                  // _LOG.i('WalletType:$type');
-                  // if (type == WalletType.nkn) {
-                  //   Navigator.of(context).pushNamed(CreateNknWalletScreen.routeName);
-                  // } else if (type == WalletType.eth) {
-                  //   Navigator.of(context).pushNamed(CreateEthWalletScreen.routeName);
-                  // } else {
-                  //   // nothing...
-                  // }
+                  // create
+                  if (walletType == WalletType.nkn) {
+                    Navigator.pushNamed(context, WalletCreateNKNScreen.routeName);
+                  } else if (walletType == WalletType.eth) {
+                    // TODO:GG
+                    logger.i("select - eth");
+                  }
                   break;
                 case 1:
-                  // TODO:GG import wallet
-                  // final type = await SelectWalletTypeDialog.of(context).show();
-                  // assert(type == WalletType.nkn || type == WalletType.eth);
-                  // Navigator.of(context).pushNamed(ImportWalletScreen.routeName, arguments: type);
+                  // import
+                  Navigator.pushNamed(context, WalletImportScreen.routeName, arguments: {
+                    WalletImportScreen.argWalletType: walletType,
+                  });
                   break;
               }
             },

@@ -17,7 +17,11 @@ class BottomDialog extends StatefulWidget {
   double height;
   Function updateHeight;
 
-  show<T>({@required WidgetBuilder builder, Widget action, double height}) {
+  Future<T> show<T>({
+    @required WidgetBuilder builder,
+    Widget action,
+    double height,
+  }) {
     this.builder = builder;
     this.action = action;
     this.height = height;
@@ -36,7 +40,13 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  showWithTitle<T>({@required Widget child, @required String title, Widget action, String desc = "", double height = 300}) {
+  Future<T> showWithTitle<T>({
+    @required Widget child,
+    @required String title,
+    Widget action,
+    String desc = "",
+    double height = 300,
+  }) {
     return show<T>(
       height: height,
       action: action,
@@ -60,10 +70,11 @@ class BottomDialog extends StatefulWidget {
                 return SizedBox(height: 12);
               }
               return Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 0, bottom: 24),
+                padding: const EdgeInsets.only(left: 20, right: 20, top: 0, bottom: 12),
                 child: Label(
                   desc,
                   type: LabelType.bodyLarge,
+                  maxLines: 10,
                 ),
               );
             }),
@@ -77,8 +88,8 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  close() {
-    Navigator.of(context).pop();
+  close({result}) {
+    Navigator.of(context).pop(result);
   }
 }
 
