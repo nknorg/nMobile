@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/wallet/item.dart';
+import 'package:nmobile/schema/wallet.dart';
 
 class BottomDialog extends StatefulWidget {
   @override
@@ -38,6 +40,10 @@ class BottomDialog extends StatefulWidget {
         );
       },
     );
+  }
+
+  close({result}) {
+    Navigator.of(context).pop(result);
   }
 
   Future<T> showWithTitle<T>({
@@ -88,8 +94,41 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  close({result}) {
-    Navigator.of(context).pop(result);
+  Future<String> showWalletTypeSelect({
+    @required String title,
+    String desc,
+    Widget action,
+  }) {
+    return showWithTitle<String>(
+      title: title,
+      desc: desc,
+      action: action,
+      height: 330,
+      child: Column(
+        children: [
+          InkWell(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: WalletItem(type: WalletType.nkn),
+            ),
+            onTap: () {
+              close(result: WalletType.nkn);
+            },
+          ),
+          Divider(height: 1, indent: 64),
+          InkWell(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: WalletItem(type: WalletType.eth),
+            ),
+            onTap: () {
+              close(result: WalletType.eth);
+            },
+          ),
+          Divider(height: 1, indent: 64),
+        ],
+      ),
+    );
   }
 }
 
