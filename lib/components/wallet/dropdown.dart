@@ -23,7 +23,7 @@ class _WalletDropdownState extends State<WalletDropdown> {
 
     return InkWell(
       onTap: () {
-        BottomDialog.of(context).showBottomDialog(
+        BottomDialog.of(context).showWithTitle(
           title: _localizations.select_another_wallet,
           child: ListView.builder(
             itemCount: 10, // TODO:GG wallet list
