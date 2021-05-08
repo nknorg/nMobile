@@ -25,7 +25,6 @@ class WalletCreateNKNScreen extends StatefulWidget {
 }
 
 class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
-  // TODO:GG params
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
 
@@ -46,25 +45,22 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
 
   create() async {
     if ((_formKey.currentState as FormState).validate()) {
+      (_formKey.currentState as FormState).save();
+      logger.d("name:$_name, password:$_password");
+
       Loading.show();
 
-      (_formKey.currentState as FormState).save();
-      logger.i("name:$_name, _password:$_password");
-
       Wallet result = await Wallet.create(null, config: WalletConfig(password: _password));
-
       WalletSchema wallet = WalletSchema(name: _name, address: result?.address, type: WalletType.nkn);
-      logger.i("create:${wallet.toString()}");
+      logger.d("create:${wallet.toString()}");
 
       _walletBloc.add(AddWallet(wallet, result?.keystore));
 
       Loading.dismiss();
-      Navigator.pushReplacementNamed(context, AppScreen.routeName);
+      Navigator.pushReplacementNamed(context, AppScreen.routeName); // TODO:GG home_index
     }
-    // TODO:GG set btn grey
   }
 
-  // TODO:GG edit upup
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
@@ -89,6 +85,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                   child: assetImage('wallet/create-wallet.png', width: MediaQuery.of(context).size.width / 2.5),
                 ),
               ),
+              // TODO:GG keyboard_adapt
               Expanded(
                 flex: 1,
                 child: Container(
@@ -195,7 +192,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                     child: Button(
                                       text: _localizations.create_wallet,
                                       disabled: !_formValid,
-                                      // backgroundColor: _formValid ? application.theme.primaryColor : application.theme.fontColor2, // TODO:GG
+                                      // backgroundColor: _formValid ? application.theme.primaryColor : application.theme.fontColor2, // TODO:GG enable_color
                                       onPressed: create,
                                     ),
                                   ),

@@ -51,7 +51,6 @@ class WalletStorage {
 
   Future updateWallet(int n, WalletSchema walletSchema) async {
     List<Future> futures = <Future>[];
-
     futures.add(_localStorage.setItem(WALLET_KEY, n, walletSchema.toCacheMap()));
     await Future.wait(futures);
   }
