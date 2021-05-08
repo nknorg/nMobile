@@ -50,7 +50,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
     // TimerAuth.onOtherPage = true;
   }
 
-  import() async {
+  _import() async {
     // TODO:GG create wallet
     // if ((_formKey.currentState as FormState).validate()) {
     //   (_formKey.currentState as FormState).save();
@@ -217,7 +217,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                       child: Button(
                         text: widget.walletType == WalletType.nkn ? _localizations.import_nkn_wallet : _localizations.import_ethereum_wallet,
                         disabled: !_formValid,
-                        onPressed: import,
+                        onPressed: _import,
                       ),
                     ),
                   ],

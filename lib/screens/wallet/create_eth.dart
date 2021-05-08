@@ -35,7 +35,7 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
     // _walletsBloc = BlocProvider.of<WalletsBloc>(context);
   }
 
-  create() async {
+  _create() async {
     // TODO:GG create eth
     // if ((_formKey.currentState as FormState).validate()) {
     //   (_formKey.currentState as FormState).save();
@@ -178,7 +178,7 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
                                       text: _localizations.create_wallet,
                                       disabled: !_formValid,
                                       // backgroundColor: _formValid ? application.theme.primaryColor : application.theme.fontColor2, // TODO:GG enable_color
-                                      onPressed: create,
+                                      onPressed: _create,
                                     ),
                                   ),
                                 ],

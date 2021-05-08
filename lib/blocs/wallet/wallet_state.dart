@@ -16,4 +16,9 @@ class WalletLoaded extends WalletState {
   bool isWalletsEmpty() {
     return wallets == null || wallets.isEmpty;
   }
+
+  WalletSchema getWalletByAddress(String address) {
+    if (isWalletsEmpty() || address == null || address.length == 0) return null;
+    return wallets.firstWhere((x) => x.address == address, orElse: () => null);
+  }
 }
