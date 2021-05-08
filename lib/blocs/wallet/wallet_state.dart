@@ -12,4 +12,8 @@ class WalletLoaded extends WalletState {
   final List<WalletSchema> wallets;
 
   WalletLoaded(this.wallets);
+
+  bool isWalletsEmpty() {
+    return wallets == null || wallets.isEmpty;
+  }
 }
