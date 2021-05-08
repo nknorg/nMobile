@@ -275,6 +275,36 @@ class S {
     );
   }
 
+  /// `authenticate to access`
+  String get authenticate_to_access {
+    return Intl.message(
+      'authenticate to access',
+      name: 'authenticate_to_access',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Top`
+  String get top {
+    return Intl.message(
+      'Top',
+      name: 'top',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cancel Top`
+  String get top_cancel {
+    return Intl.message(
+      'Cancel Top',
+      name: 'top_cancel',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `General`
   String get general {
     return Intl.message(
@@ -585,6 +615,46 @@ class S {
     );
   }
 
+  /// `[Draft]`
+  String get placeholder_draft {
+    return Intl.message(
+      '[Draft]',
+      name: 'placeholder_draft',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `group invitation`
+  String get channel_invitation {
+    return Intl.message(
+      'group invitation',
+      name: 'channel_invitation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Accept Invitation`
+  String get accept_invitation {
+    return Intl.message(
+      'Accept Invitation',
+      name: 'accept_invitation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Joined group`
+  String get joined_channel {
+    return Intl.message(
+      'Joined group',
+      name: 'joined_channel',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Account Name`
   String get wallet_name {
     return Intl.message(
@@ -780,16 +850,6 @@ class S {
     return Intl.message(
       'Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.',
       name: 'seed_qrcode_dec',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `authenticate to access`
-  String get authenticate_to_access {
-    return Intl.message(
-      'authenticate to access',
-      name: 'authenticate_to_access',
       desc: '',
       args: [],
     );

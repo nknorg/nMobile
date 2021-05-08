@@ -20,21 +20,6 @@ Future<double> getTotalSizeOfCacheFile(final FileSystemEntity file) async {
   return 0;
 }
 
-Future<void> clearCacheFile(final FileSystemEntity file) async {
-  if (file is File) {
-    file.deleteSync();
-  }
-  if (file is Directory) {
-    final List<FileSystemEntity> children = file.listSync();
-    if (children != null)
-      for (final FileSystemEntity child in children) {
-        if (RegExp(r'[0-9a-f]{64}(/[^/]+)?$').hasMatch(child.path)) {
-          await clearCacheFile(child);
-        }
-      }
-  }
-}
-
 Future<double> getTotalSizeOfDbFile(final FileSystemEntity file) async {
   if (file is File) {
     int length = await file.length();
@@ -54,10 +39,26 @@ Future<double> getTotalSizeOfDbFile(final FileSystemEntity file) async {
   return 0;
 }
 
+Future<void> clearCacheFile(final FileSystemEntity file) async {
+  if (file is File) {
+    file.deleteSync();
+  }
+  if (file is Directory) {
+    final List<FileSystemEntity> children = file.listSync();
+    if (children != null)
+      for (final FileSystemEntity child in children) {
+        if (RegExp(r'[0-9a-f]{64}(/[^/]+)?$').hasMatch(child.path)) {
+          await clearCacheFile(child);
+        }
+      }
+  }
+}
+
 Future<void> clearDbFile(final FileSystemEntity file) async {
   if (file is File) {
     file.deleteSync();
   }
+
   if (file is Directory) {
     final List<FileSystemEntity> children = file.listSync();
     if (children != null)

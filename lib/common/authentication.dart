@@ -1,5 +1,9 @@
 import 'package:local_auth/local_auth.dart';
+import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/utils/logger.dart';
+
+import 'global.dart';
+
 
 /// Biometric authentication (Face ID, Touch ID or lock code), pin coode, wallet password
 class Authorization {
@@ -13,7 +17,10 @@ class Authorization {
 
   Future<List<BiometricType>> get availableBiometrics async => await _localAuth.getAvailableBiometrics();
 
-  Future<bool> authentication(String localizedReason) async {
+  Future<bool> authentication([String localizedReason]) async {
+    if(localizedReason?.isNotEmpty != true) {
+      localizedReason = S.of(Global.appContext).authenticate_to_access;
+    }
     try {
       bool success = await _localAuth.authenticate(localizedReason: localizedReason);
       return success;

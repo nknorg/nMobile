@@ -24,7 +24,7 @@ class SettingsScreen extends StatefulWidget {
   _SettingsScreenState createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAliveClientMixin {
   SettingsBloc _settingsBloc;
   SettingsStorage _settingsStorage = SettingsStorage();
   String _currentLanguage;
@@ -232,6 +232,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 value: _biometricsSelected,
                                 activeColor: application.theme.primaryColor,
                                 onChanged: (value) async {
+                                  // TODO: auth password
                                   Settings.biometricsAuthentication = value;
                                   _settingsStorage.setSettings('${SettingsStorage.BIOMETRICS_AUTHENTICATION}', value);
                                   setState(() {
@@ -499,4 +500,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

@@ -25,6 +25,9 @@
   "disconnect": "断开连接",
   "tips": "提示",
   "click_connect": "点击连接",
+  "authenticate_to_access": "认证以授权访问",
+  "top": "置顶",
+  "top_cancel": "取消置顶",
 
   "general": "通用",
   "language": "语言",
@@ -59,6 +62,10 @@
 
   "chat_no_wallet_title": "私密和安全的通讯",
   "chat_no_wallet_desc": "您需要一个主网账户，然后才能使用D-Chat。",
+  "placeholder_draft": "[草稿]",
+  "channel_invitation": "群聊邀请",
+  "accept_invitation": "接受邀请",
+  "joined_channel": "加入群聊",
 
   "wallet_name": "账户名称",
   "hint_enter_wallet_name": "账户名称",

@@ -1,7 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/chat/chat.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/chat/message_list_item.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/schema/message_item.dart';
+import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/message_list_item.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 
@@ -12,23 +19,57 @@ class MessageListScreen extends StatefulWidget {
 
 class _MessageListScreenState extends State<MessageListScreen> {
   ScrollController _scrollController = ScrollController();
-
+  StreamSubscription _statusStreamSubscription;
+  StreamSubscription _onMessageStreamSubscription;
   MessageStorage _messageStorage = MessageStorage();
-  List<MessageListItem> _list;
+  List<MessageListItem> _messageList = [];
+
+  _sortMessages() {
+    setState(() {
+      _messageList.sort((a, b) => a.isTop ? (b.isTop ? -1 : -1) : (b.isTop ? 1 : b.lastReceiveTime.compareTo(a.lastReceiveTime)));
+    });
+  }
+
+  _updateMessage(MessageListItem model) {
+    int replaceIndex = -1;
+    for (int i = 0; i < _messageList.length; i++) {
+      MessageListItem item = _messageList[i];
+      if (model.targetId == item.targetId) {
+        _messageList.removeAt(i);
+        _messageList.insert(i, model);
+        replaceIndex = i;
+        break;
+      }
+    }
+    if (replaceIndex < 0) {
+      _messageList.insert(0, model);
+    }
+    _sortMessages();
+  }
 
   initAsync() async {
-    var res = await _messageStorage.getLastMessageList(0, 20);
-    // todo
-    print('------------------');
-    print(res[0].notReadCount);
-    print(res[0].sender);
-    print(res[0].content);
+    var messages = await _messageStorage.getLastMessageList(0, 20);
+    _messageList = messages;
+    _sortMessages();
   }
 
   @override
   void initState() {
     super.initState();
     initAsync();
+
+    _onMessageStreamSubscription = chat.onMessageSaved.listen((event) {
+      _messageStorage.getUpdateMessageList(event.src).then((value) {
+        _updateMessage(value);
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _onMessageStreamSubscription?.cancel();
+    _statusStreamSubscription?.cancel();
+    super.dispose();
   }
 
   // todo
@@ -186,27 +227,65 @@ class _MessageListScreenState extends State<MessageListScreen> {
   //   );
   // }
 
-  Widget _unReadWidget(MessageListItem item) {
-    String countStr = item.notReadCount.toString();
-    if (item.notReadCount > 999) {
-      countStr = '999+';
-    }
-    return Container(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12.5),
-        child: Container(
-          padding: const EdgeInsets.only(left: 10, right: 10),
-          color: application.theme.badgeColor,
-          height: 25,
-          child: Center(
-            child: Label(
-              countStr,
-              type: LabelType.bodySmall,
-              dark: true,
+  // TODO
+  _showItemMenu(MessageListItem item, int index) {
+    showDialog<Null>(
+      context: context,
+      builder: (BuildContext context) {
+        return new SimpleDialog(
+          contentPadding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(6))),
+          children: [
+            SimpleDialogOption(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 4),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Icon(item.isTop ? Icons.vertical_align_bottom : Icons.vertical_align_top),
+                    ),
+                    Text(item.isTop ? S.of(context).top_cancel : S.of(context).top),
+                  ],
+                ),
+              ),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                // final top = !item.isTop;
+                // final numChanges = await (item.topic == null
+                //     ? ContactSchema.setTop(item.targetId, top)
+                //     : TopicRepo().updateIsTop(item.topic.topic,
+                //     top)); // TopicSchema.setTop(db, item.topic.topic, top));
+                // if (numChanges > 0) {
+                //   setState(() {
+                //     item.isTop = top;
+                //     _messageList.remove(item);
+                //     _messagesList.insert(0, item);
+                //   });
+                // }
+              },
             ),
-          ),
-        ),
-      ),
+            // SimpleDialogOption(
+            //   child: Row(
+            //     children: [
+            //       Icon(Icons.delete_outline).pad(r: 12),
+            //       Text(NL10ns.of(context).delete),
+            //     ],
+            //   ).pad(t: 4, b: 8),
+            //   onPressed: () {
+            //     Navigator.of(context).pop();
+            //     // MessageListModel.deleteTargetChat(item.targetId).then((numChanges) {
+            //     //   if (numChanges > 0) {
+            //     //     setState(() {
+            //     //       _messagesList.remove(item);
+            //     //     });
+            //     //   }
+            //     // });
+            //   },
+            // ),
+          ],
+        );
+      },
     );
   }
 
@@ -216,141 +295,17 @@ class _MessageListScreenState extends State<MessageListScreen> {
       child: ListView.builder(
         padding: EdgeInsets.only(bottom: 72),
         controller: _scrollController,
-        itemCount: 20,
+        itemCount: _messageList.length,
         itemBuilder: (BuildContext context, int index) {
-          if (index % 2 == 0) {
-            return Container(
-              color: Colors.transparent,
-              padding: const EdgeInsets.only(left: 12, right: 12),
-              height: 72,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(right: 12),
-                    child: CircleAvatar(
-                      radius: 24,
-                      backgroundColor: Colors.red,
-                      child: Label(
-                        'HR',
-                        type: LabelType.bodyLarge,
-                        color: Colors.yellow,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 1, color: application.theme.dividerColor))),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                // Row(children: topicWidget),
-                                // contentWidget.pad(t: 6),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(right: 0, bottom: 6),
-                                child: Label(
-                                  timeFormat(DateTime.now()),
-                                  type: LabelType.bodySmall,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(right: 0),
-                                child: _unReadWidget(MessageListItem(notReadCount: 12)),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          } else {
-            return Container(
-              color: Colors.transparent,
-              padding: const EdgeInsets.only(left: 12, right: 12),
-              height: 72,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(right: 12),
-                    child: CircleAvatar(
-                      radius: 24,
-                      backgroundColor: Colors.red,
-                      child: Label(
-                        'HR',
-                        type: LabelType.bodyLarge,
-                        color: Colors.yellow,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 1, color: application.theme.dividerColor))),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                // Row(children: topicWidget),
-                                // contentWidget.pad(t: 6),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(right: 0, bottom: 6),
-                                child: Label(
-                                  timeFormat(DateTime.now()),
-                                  type: LabelType.bodySmall,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(right: 0),
-                                child: _unReadWidget(MessageListItem(notReadCount: 12)),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
+          var item = _messageList[index];
+          Widget widget = createMessageListItemWidget(context, item);
 
-          // var item = _messagesList[index];
-          // Widget widget;
-          // if (item.topic != null) {
-          //   widget = getTopicItemView(item);
-          // } else {
-          //   widget = getSingleChatItemView(item);
-          // }
-          // return InkWell(
-          //   onLongPress: () {
-          //     showMenu(item, index);
-          //   },
-          //   child: widget,
-          // );
+          return InkWell(
+            onLongPress: () {
+              _showItemMenu(item, index);
+            },
+            child: widget,
+          );
         },
       ),
     );

@@ -69,6 +69,10 @@ class Chat {
   Stream<OnMessage> onMessage;
   Stream<dynamic> onError;
 
+  StreamController<OnMessage> onMessageSavedController = StreamController<OnMessage>.broadcast();
+  StreamSink<OnMessage> get onMessageSavedStreamSink => onMessageSavedController.sink;
+  Stream<OnMessage> get onMessageSaved => onMessageSavedController.stream;
+
   Chat() {
     status = ChatConnectStatus.disconnected;
     statusStream.listen((event) {
@@ -99,14 +103,14 @@ class Chat {
       _statusStreamSink.add(ChatConnectStatus.connected);
       completer.complete();
     });
-    await completer.future;
-
     receiveMessage.startReceiveMessage();
+    await completer.future;
   }
 
   close() {
     _statusStreamSink.add(ChatConnectStatus.disconnected);
-    _statusController.close();
+    _statusController?.close();
+    onMessageSavedController?.close();
   }
 
   Future sendText(MessageSchema messageSchema) async {

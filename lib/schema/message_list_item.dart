@@ -1,3 +1,6 @@
+import 'contact.dart';
+import 'topic.dart';
+
 class MessageListItem {
   String targetId;
   String sender;
@@ -6,10 +9,8 @@ class MessageListItem {
   DateTime lastReceiveTime;
   int notReadCount;
   bool isTop;
-
-  // todo
-  // Topic topic;
-  // ContactSchema contact;
+  TopicSchema topic;
+  ContactSchema contact;
 
   MessageListItem({
     this.targetId,
@@ -20,5 +21,4 @@ class MessageListItem {
     this.notReadCount,
     this.isTop = false,
   });
-
 }
