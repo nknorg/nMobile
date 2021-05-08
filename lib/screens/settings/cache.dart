@@ -125,40 +125,6 @@ class _CacheScreenState extends State<CacheScreen> {
                             onPressed: () => Navigator.of(context).pop(),
                           ),
                         );
-                        // SimpleConfirm(
-                        //     context: context,
-                        //     content: _localizations.delete_cache_confirm_title,
-                        //     buttonText: _localizations.delete,
-                        //     buttonColor: Colors.red,
-                        //     callback: (v) {
-                        //       if (v) {
-                        //         // Timer(Duration(milliseconds: 200), () async {
-                        //         //   var walletData = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
-                        //         //   var wallet = WalletSchema(name: walletData['name'], address: walletData['address']);
-                        //         //   var password = await wallet.getPassword();
-                        //         //   if (password != null) {
-                        //         //     try {
-                        //         //       var w = await wallet.exportWallet(password);
-                        //         //       await clearCacheFile(Global.applicationRootDirectory);
-                        //         //       var size = await getTotalSizeOfCacheFile(Global.applicationRootDirectory);
-                        //         //       setState(() {
-                        //         //         _cacheSize = Format.formatSize(size);
-                        //         //       });
-                        //         //     } catch (e) {
-                        //         //       if (e.message == WalletError.WALLET_PASSWORD_WRONG) {
-                        //         //         ModalDialog.of(context).show(
-                        //         //           height: 240,
-                        //         //           content: Label(
-                        //         //             _localizations.password_wrong,
-                        //         //             type: LabelType.bodyRegular,
-                        //         //           ),
-                        //         //         );
-                        //         //       }
-                        //         //     }
-                        //         //   }
-                        //         // });
-                        //       }
-                        //     }).show();
                       },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -229,7 +195,13 @@ class _CacheScreenState extends State<CacheScreen> {
                             backgroundColor: application.theme.strongColor,
                             width: double.infinity,
                             onPressed: () async {
-                              // todo
+                              // todo auth
+                              await clearDbFile(Global.applicationRootDirectory);
+                              var size = await getTotalSizeOfDbFile(Global.applicationRootDirectory);
+                              setState(() {
+                                _dbSize = formatFlowSize(size, unitArr: ['B', 'KB', 'MB', 'GB']);
+                              });
+                              Navigator.of(context).pop();
                             },
                           ),
                           reject: Button(
@@ -240,41 +212,6 @@ class _CacheScreenState extends State<CacheScreen> {
                             onPressed: () => Navigator.of(context).pop(),
                           ),
                         );
-
-                        // SimpleConfirm(
-                        //     context: context,
-                        //     content: _localizations.delete_db_confirm_title,
-                        //     buttonText: _localizations.delete,
-                        //     buttonColor: Colors.red,
-                        //     callback: (v) {
-                        //       if (v) {
-                        //         // Timer(Duration(milliseconds: 200), () async {
-                        //         //   var walletData = await _localStorage.getItem(LocalStorage.NKN_WALLET_KEY, 0);
-                        //         //   var wallet = WalletSchema(name: walletData['name'], address: walletData['address']);
-                        //         //   var password = await wallet.getPassword();
-                        //         //   if (password != null) {
-                        //         //     try {
-                        //         //       var w = await wallet.exportWallet(password);
-                        //         //       await clearDbFile(Global.applicationRootDirectory);
-                        //         //       var size = await getTotalSizeOfDbFile(Global.applicationRootDirectory);
-                        //         //       setState(() {
-                        //         //         _dbSize = Format.formatSize(size);
-                        //         //       });
-                        //         //     } catch (e) {
-                        //         //       if (e.message == WalletError.WALLET_PASSWORD_WRONG) {
-                        //         //         ModalDialog.of(context).show(
-                        //         //           height: 240,
-                        //         //           content: Label(
-                        //         //             _localizations.password_wrong,
-                        //         //             type: LabelType.bodyRegular,
-                        //         //           ),
-                        //         //         );
-                        //         //       }
-                        //         //     }
-                        //         //   }
-                        //         // });
-                        //       }
-                        //     }).show();
                       },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
