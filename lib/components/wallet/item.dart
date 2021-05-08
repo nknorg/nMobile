@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/theme/theme.dart';
@@ -36,19 +36,12 @@ class _WalletItemState extends State<WalletItem> {
           Expanded(
             flex: 0,
             child: Hero(
-              tag: 'avatar:${'widget.schema.address'}', // TODO:GG
-              child: Padding(
-                padding: const EdgeInsets.only(right: 20, top: 16, bottom: 16),
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: theme.logoBackground,
-                    borderRadius: BorderRadius.all(Radius.circular(8)),
-                  ),
-                  child: SvgPicture.asset('assets/logo.svg', color: theme.nknLogoColor),
-                ),
+              tag: 'avatar:${widget?.schema?.address}',
+              child: WalletAvatar(
+                width: 48,
+                height: 48,
+                walletType: WalletType.nkn,
+                padding: EdgeInsets.only(right: 20, top: 16, bottom: 16),
               ),
             ),
           ),
@@ -102,37 +95,12 @@ class _WalletItemState extends State<WalletItem> {
       return Row(
         children: [
           Hero(
-            tag: 'avatar:${'widget.schema.address'}', // TODO:GG
-            child: Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 20, top: 16, bottom: 16),
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: theme.logoBackground,
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
-                    ),
-                    child: SvgPicture.asset('assets/logo.svg', color: theme.nknLogoColor),
-                  ),
-                ),
-                Positioned(
-                  top: 12,
-                  left: 34,
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: theme.ethLogoBackground,
-                      shape: BoxShape.circle,
-                    ),
-                    child: SvgPicture.asset('assets/ethereum-logo.svg'),
-                  ),
-                )
-              ],
+            tag: 'avatar:${widget?.schema?.address}',
+            child: WalletAvatar(
+              width: 48,
+              height: 48,
+              walletType: WalletType.eth,
+              padding: EdgeInsets.only(right: 20, top: 16, bottom: 16),
             ),
           ),
           Expanded(
