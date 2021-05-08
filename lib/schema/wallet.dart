@@ -4,9 +4,9 @@ class WalletType {
 }
 
 class WalletSchema {
-  String address; // TODO:GG require?
-  String type; // TODO:GG require?
-  String name; // TODO:GG require?
+  String address;
+  String type;
+  String name;
   double balance = 0;
   double balanceEth = 0;
 
