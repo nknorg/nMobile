@@ -25,6 +25,9 @@
   "disconnect": "Disconnect",
   "tips": "Tips",
   "click_connect": "Click this button for connect",
+  "authenticate_to_access": "authenticate to access",
+  "top": "Top",
+  "top_cancel": "Cancel Top",
 
   "general": "General",
   "language": "Language",
@@ -59,6 +62,10 @@
 
   "chat_no_wallet_title": "Private and Secure\n Messaging",
   "chat_no_wallet_desc": "You need a Mainnet compatible wallet before you can use D-Chat.",
+  "placeholder_draft": "[Draft]",
+  "channel_invitation": "group invitation",
+  "accept_invitation": "Accept Invitation",
+  "joined_channel": "Joined group",
 
   "wallet_name": "Account Name",
   "hint_enter_wallet_name": "Enter wallet name",

@@ -27,7 +27,6 @@ List<int> sha1Hex(raw) {
 Future<String> sha1File(File f) async {
   List<int> buffer = [];
   await for (var d in crypto.sha1.bind(f.openRead())) {
-    print('sha1File for loop: ${d.bytes}');
     buffer.addAll(d.bytes);
   }
   return hex.encode(buffer);
