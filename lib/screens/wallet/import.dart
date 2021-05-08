@@ -12,9 +12,9 @@ import 'import_by_seed.dart';
 
 class WalletImportScreen extends StatefulWidget {
   static const String routeName = '/wallet/import';
-  final Map arguments;
-
   static final String argWalletType = "wallet_type";
+
+  final Map<String, dynamic> arguments;
 
   const WalletImportScreen({Key key, this.arguments}) : super(key: key);
 
@@ -23,13 +23,13 @@ class WalletImportScreen extends StatefulWidget {
 }
 
 class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTickerProviderStateMixin {
-  String walletType;
+  String _walletType;
   TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    this.walletType = widget.arguments[WalletImportScreen.argWalletType];
+    this._walletType = widget.arguments[WalletImportScreen.argWalletType];
     _tabController = TabController(length: 2, vsync: this);
   }
 
@@ -41,7 +41,7 @@ class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTick
     return Layout(
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: this.walletType == WalletType.eth ? _localizations.import_ethereum_wallet : _localizations.import_nkn_wallet,
+        title: this._walletType == WalletType.eth ? _localizations.import_ethereum_wallet : _localizations.import_nkn_wallet,
         backgroundColor: application.theme.backgroundColor4,
         actions: [
           IconButton(
@@ -74,8 +74,8 @@ class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTick
                   child: TabBarView(
                     controller: _tabController,
                     children: <Widget>[
-                      WalletImportByKeystoreLayout(walletType: this.walletType),
-                      WalletImportBySeedLayout(walletType: this.walletType),
+                      WalletImportByKeystoreLayout(walletType: this._walletType),
+                      WalletImportBySeedLayout(walletType: this._walletType),
                     ],
                   ),
                 ),

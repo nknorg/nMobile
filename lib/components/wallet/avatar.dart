@@ -35,35 +35,29 @@ class WalletAvatar extends StatefulWidget {
 class _WalletAvatarState extends State<WalletAvatar> {
   @override
   Widget build(BuildContext context) {
+    bool canEtgBig = widget.walletType == WalletType.eth && widget.ethBig;
     return Stack(
       children: [
         Padding(
           padding: widget.padding,
-          child: Builder(
-            builder: (BuildContext context) {
-              bool canEtgBig = widget.walletType == WalletType.eth && widget.ethBig;
-              return Container(
-                width: widget.width,
-                height: widget.height,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: application.theme.logoBackground,
-                  borderRadius: BorderRadius.all(Radius.circular(widget.radius)),
-                ),
-                child: SvgPicture.asset(
-                  canEtgBig ? 'assets/ethereum-logo.svg' : 'assets/logo.svg',
-                  color: canEtgBig ? application.theme.ethLogoColor : application.theme.nknLogoColor,
-                  width: canEtgBig ? widget.ethWidth : null,
-                  height: canEtgBig ? widget.ethHeight : null,
-                ),
-              );
-            },
+          child: Container(
+            width: widget.width,
+            height: widget.height,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: application.theme.logoBackground,
+              borderRadius: BorderRadius.all(Radius.circular(widget.radius)),
+            ),
+            child: SvgPicture.asset(
+              canEtgBig ? 'assets/ethereum-logo.svg' : 'assets/logo.svg',
+              color: canEtgBig ? application.theme.ethLogoColor : application.theme.nknLogoColor,
+              width: canEtgBig ? widget.ethWidth : null,
+              height: canEtgBig ? widget.ethHeight : null,
+            ),
           ),
         ),
-        Builder(
-          builder: (BuildContext context) {
-            if (widget.walletType == WalletType.eth && !widget.ethBig) {
-              return Positioned(
+        widget.walletType == WalletType.eth && !widget.ethBig
+            ? Positioned(
                 top: widget.ethTop,
                 right: widget.ethRight,
                 child: Container(
@@ -76,11 +70,8 @@ class _WalletAvatarState extends State<WalletAvatar> {
                   ),
                   child: SvgPicture.asset('assets/ethereum-logo.svg'),
                 ),
-              );
-            }
-            return SizedBox.shrink();
-          },
-        ),
+              )
+            : SizedBox.shrink(),
       ],
     );
   }
