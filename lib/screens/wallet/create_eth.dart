@@ -17,7 +17,6 @@ class WalletCreateETHScreen extends StatefulWidget {
 }
 
 class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
-  // TODO:GG params
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
 
@@ -33,7 +32,6 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
   @override
   void initState() {
     super.initState();
-    // TODO:GG event
     // _walletsBloc = BlocProvider.of<WalletsBloc>(context);
   }
 
@@ -44,7 +42,7 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
     //   final eth = Ethereum.createWallet(name: _name, password: _password);
     //   Ethereum.saveWallet(ethWallet: eth, walletsBloc: _walletsBloc);
     //
-    //   Navigator.of(context).pushReplacementNamed(AppScreen.routeName);
+    //   Navigator.of(context).pushReplacementNamed(AppScreen.routeName); // TODO:GG home_index
     // }
   }
 
@@ -72,6 +70,7 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
                   child: SvgPicture.asset('assets/ethereum-logo.svg', width: MediaQuery.of(context).size.width / 3),
                 ),
               ),
+              // TODO:GG keyboard_adapt
               Expanded(
                 flex: 1,
                 child: Container(
@@ -178,6 +177,7 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
                                     child: Button(
                                       text: _localizations.create_wallet,
                                       disabled: !_formValid,
+                                      // backgroundColor: _formValid ? application.theme.primaryColor : application.theme.fontColor2, // TODO:GG enable_color
                                       onPressed: create,
                                     ),
                                   ),
