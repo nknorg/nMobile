@@ -43,7 +43,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
     _walletBloc = BlocProvider.of<WalletBloc>(context);
   }
 
-  create() async {
+  _create() async {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
       logger.d("name:$_name, password:$_password");
@@ -193,7 +193,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                       text: _localizations.create_wallet,
                                       disabled: !_formValid,
                                       // backgroundColor: _formValid ? application.theme.primaryColor : application.theme.fontColor2, // TODO:GG enable_color + wave
-                                      onPressed: create,
+                                      onPressed: _create,
                                     ),
                                   ),
                                 ],

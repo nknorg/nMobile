@@ -12,10 +12,10 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/create_eth.dart';
 import 'package:nmobile/screens/wallet/create_nkn.dart';
+import 'package:nmobile/screens/wallet/detail_nkn.dart';
 import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/assets.dart';
-import 'package:nmobile/utils/logger.dart';
 
 class WalletHomeListLayout extends StatefulWidget {
   @override
@@ -80,7 +80,30 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
             color: application.theme.fontLightColor,
           ),
         ),
-        childTail: notBackedUpTip(context),
+        childTail: _allBackedUp
+            ? SizedBox.shrink()
+            : TextButton(
+                onPressed: _onNotBackedUpTipClicked,
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.warning_rounded,
+                      color: Color(0xFFF5B800),
+                      size: 20,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      _localizations.not_backed_up,
+                      textAlign: TextAlign.end,
+                      style: TextStyle(fontSize: SkinTheme.bodySmallFontSize, color: application.theme.strongColor),
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      maxLines: 1,
+                    ),
+                  ],
+                ),
+                // onPressed: _onNotBackedUpTipClicked,
+              ),
         actions: [
           PopupMenuButton(
             icon: assetIcon('more', width: 24),
@@ -136,18 +159,20 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
               itemCount: state.wallets?.length ?? 0,
               itemBuilder: (context, index) {
                 WalletSchema wallet = state.wallets[index];
+                if (index == 1) wallet.type = WalletType.eth; // TODO:GG test
                 return Padding(
                   padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
                   child: Material(
                     color: application.theme.backgroundLightColor,
-                    // shape: ,
                     elevation: 0,
                     borderRadius: BorderRadius.circular(8),
                     child: InkWell(
-                      autofocus: true,
                       borderRadius: BorderRadius.circular(8),
                       onTap: () {
-                        logger.i(wallet);
+                        Navigator.pushNamed(context, WalletDetailNKNScreen.routeName, arguments: {
+                          WalletDetailNKNScreen.argWallet: wallet,
+                          WalletDetailNKNScreen.argListIndex: index,
+                        });
                       },
                       child: Padding(
                         padding: EdgeInsets.only(left: 16, right: 16),
@@ -163,35 +188,6 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
         },
       ),
     );
-  }
-
-  Widget notBackedUpTip(BuildContext context) {
-    S _localizations = S.of(context);
-
-    return _allBackedUp
-        ? SizedBox.shrink()
-        : TextButton(
-            onPressed: _onNotBackedUpTipClicked,
-            child: Row(
-              children: <Widget>[
-                Icon(
-                  Icons.warning_rounded,
-                  color: Color(0xFFF5B800),
-                  size: 20,
-                ),
-                SizedBox(width: 4),
-                Text(
-                  _localizations.not_backed_up,
-                  textAlign: TextAlign.end,
-                  style: TextStyle(fontSize: SkinTheme.bodySmallFontSize, color: application.theme.strongColor),
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  maxLines: 1,
-                ),
-              ],
-            ),
-            // onPressed: _onNotBackedUpTipClicked,
-          );
   }
 
   _onNotBackedUpTipClicked() {

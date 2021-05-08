@@ -120,6 +120,7 @@ class _WalletItemState extends State<WalletItem> {
               ],
             ),
           ),
+          // TODO:GG eth adapt
           Expanded(
             flex: 0,
             child: Column(
@@ -134,7 +135,7 @@ class _WalletItemState extends State<WalletItem> {
                     color: theme.successColor.withAlpha(25),
                   ),
                   child: Text(
-                    _localizations.mainnet,
+                    _localizations.ERC_20,
                     style: TextStyle(
                       color: theme.successColor,
                       fontSize: 10,
