@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/components/button/button.dart';
-import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/form_field_box.dart';
+import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 
@@ -189,6 +189,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                   children: <Widget>[
                     Padding(
                       padding: EdgeInsets.only(left: 30, right: 30),
+                      // TODO:GG wave
                       child: Button(
                         text: widget.walletType == WalletType.nkn ? _localizations.import_nkn_wallet : _localizations.import_ethereum_wallet,
                         disabled: !_formValid,
