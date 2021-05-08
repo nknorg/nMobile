@@ -192,7 +192,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                     child: Button(
                                       text: _localizations.create_wallet,
                                       disabled: !_formValid,
-                                      // backgroundColor: _formValid ? application.theme.primaryColor : application.theme.fontColor2, // TODO:GG enable_color
+                                      // backgroundColor: _formValid ? application.theme.primaryColor : application.theme.fontColor2, // TODO:GG enable_color + wave
                                       onPressed: create,
                                     ),
                                   ),

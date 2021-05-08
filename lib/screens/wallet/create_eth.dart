@@ -158,7 +158,7 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
                                 child: FormFieldBox(
                                   focusNode: _confirmPasswordFocusNode,
                                   hintText: _localizations.input_password_again,
-                                  // validator: Validator.of(context).confrimPassword(_passwordController.text), // TODO:GG validator
+                                  // validator: Validator.of(context).confrimPassword(_passwordController.text), // TODO:GG validator + wave
                                   password: true,
                                 ),
                               ),

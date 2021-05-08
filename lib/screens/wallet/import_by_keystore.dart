@@ -3,8 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/components/button/button.dart';
-import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/form_field_box.dart';
+import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 
@@ -213,6 +213,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                   children: <Widget>[
                     Padding(
                       padding: EdgeInsets.only(left: 30, right: 30),
+                      // TODO:GG wave
                       child: Button(
                         text: widget.walletType == WalletType.nkn ? _localizations.import_nkn_wallet : _localizations.import_ethereum_wallet,
                         disabled: !_formValid,

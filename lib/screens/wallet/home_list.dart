@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -13,6 +15,7 @@ import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/assets.dart';
+import 'package:nmobile/utils/logger.dart';
 
 class WalletHomeListLayout extends StatefulWidget {
   @override
@@ -125,24 +128,38 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
           ),
         ],
       ),
-      child: ListView.builder(
-        padding: EdgeInsets.only(top: 22, bottom: 86),
-        itemCount: 10, // TODO:GG item count
-        // itemCount: state.wallets.length,
-        itemBuilder: (context, index) {
-          // WalletSchema w = state.wallets[index];
-          WalletSchema w = WalletSchema(); // TODO:GG item scheme
-          return Padding(
-            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: application.theme.backgroundLightColor,
-              ),
-              padding: EdgeInsets.only(left: 16, right: 16),
-              child: WalletItem(schema: w, type: index % 2 == 0 ? WalletType.nkn : WalletType.eth), // TODO:GG type
-            ),
-          );
+      child: BlocBuilder<WalletBloc, WalletState>(
+        builder: (context, state) {
+          if (state is WalletLoaded) {
+            return ListView.builder(
+              padding: EdgeInsets.only(top: 22, bottom: 86),
+              itemCount: state.wallets?.length ?? 0,
+              itemBuilder: (context, index) {
+                WalletSchema wallet = state.wallets[index];
+                return Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
+                  child: Material(
+                    color: application.theme.backgroundLightColor,
+                    // shape: ,
+                    elevation: 0,
+                    borderRadius: BorderRadius.circular(8),
+                    child: InkWell(
+                      autofocus: true,
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        logger.i(wallet);
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 16, right: 16),
+                        child: WalletItem(schema: wallet, type: wallet.type),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+          return ListView();
         },
       ),
     );
