@@ -92,6 +92,19 @@
 
   "error_required": "必填",
 
+  "main_wallet": "主账户",
+  "export_wallet": "导出账户",
+  "send": "发送",
+  "send_nkn": "发送 NKN",
+  "send_eth": "发送 Eth",
+  "receive": "接收",
+  "wallet_address": "账户地址",
+  "copy": "复制",
+  "copy_success": "已复制",
+  "success": "成功",
+  "copied": "已复制",
+  "copy_to_clipboard": "复制到剪贴板",
+
   "delete_wallet": "删除账户",
   "delete_wallet_confirm_title": "您确定要删除此账户吗?",
   "delete_wallet_confirm_text": "这将从您的设备中删除账户。请确保您的账户已备份，否则您的资金将丢失且无法找回。",

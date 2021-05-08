@@ -92,6 +92,19 @@
 
   "error_required": "This field is required.",
 
+  "main_wallet": "Main Account",
+  "export_wallet": "Export Account",
+  "send": "Send",
+  "send_nkn": "Send NKN",
+  "send_eth": "Send Eth",
+  "receive": "Receive",
+  "wallet_address": "Account Address",
+  "copy": "Copy",
+  "copy_success": "Copied to Clipboard",
+  "success": "Success",
+  "copied": "Copied",
+  "copy_to_clipboard": "Copy to Clipboard",
+
   "delete_wallet": "Delete Account",
   "delete_wallet_confirm_title": "Are you sure you want to delete this account?",
   "delete_wallet_confirm_text": "This will remove the account off your local device. Please make sure your account is fully backed up or you will lose your funds.",
