@@ -1,7 +1,7 @@
 import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/schema/message_item.dart';
+import 'package:nmobile/schema/message_list_item.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class MessageStorage {
@@ -77,7 +77,6 @@ class MessageStorage {
     return list;
   }
 
-
   /// message list
   Future<MessageListItem> parseMessageListItem(Map e) async {
     var res = MessageListItem(
@@ -118,22 +117,19 @@ class MessageStorage {
       columns: [
         'm.*',
         '(SELECT COUNT(id) from $tableName WHERE target_id = m.target_id AND is_outbound = 0 AND is_read = 0 '
-            'or type = "text" '
+            'AND (type = "text" '
             'or type = "textExtension" '
             'or type = "media" '
-            'or type = "audio") as not_read',
+            'or type = "audio")) as not_read',
         'MAX(send_time)'
       ],
-      where: "type = ? or type = ? or type = ? or type = ? or type = ? or type = ? or type = ? or type = ?",
+      where: "type = ? or type = ? or type = ? or type = ? or type = ?",
       whereArgs: [
         ContentType.text,
         ContentType.textExtension,
         ContentType.media,
         ContentType.nknImage,
         ContentType.audio,
-        ContentType.channelInvitation,
-        ContentType.eventSubscribe,
-        ContentType.eventUnsubscribe,
       ],
       groupBy: 'm.target_id',
       orderBy: 'm.send_time desc',
@@ -144,7 +140,6 @@ class MessageStorage {
     List<MessageListItem> list = <MessageListItem>[];
     for (var i = 0, length = res.length; i < length; i++) {
       var item = res[i];
-      print(item);
       MessageListItem model = await parseMessageListItem(item);
       if (model != null) {
         list.add(model);
@@ -152,6 +147,50 @@ class MessageStorage {
     }
     if (list.length > 0) {
       return list;
+    }
+    return null;
+  }
+
+  Future<MessageListItem> getUpdateMessageList(String targetId) async {
+    var res = await db.query(
+      '$tableName',
+      where: 'target_id = ? AND is_outbound = 0 AND is_read = 0 AND (type = ? or type = ? or type = ? or type = ? or type = ?)',
+      whereArgs: [
+        targetId,
+        ContentType.text,
+        ContentType.textExtension,
+        ContentType.media,
+        ContentType.audio,
+        ContentType.nknImage,
+      ],
+      orderBy: 'send_time desc',
+    );
+
+    if (res != null && res.length > 0) {
+      Map info = res[0];
+      MessageListItem model = await parseMessageListItem(info);
+      model.notReadCount = res.length;
+      return model;
+    } else {
+      var countResult = await db.query(
+        '$tableName',
+        where: 'target_id = ? AND (type = ? or type = ? or type = ? or type = ? or type = ?)',
+        whereArgs: [
+          targetId,
+          ContentType.text,
+          ContentType.textExtension,
+          ContentType.media,
+          ContentType.audio,
+          ContentType.nknImage,
+        ],
+        orderBy: 'send_time desc',
+      );
+      if (countResult != null && countResult.length > 0) {
+        Map info = countResult[0];
+        MessageListItem model = await parseMessageListItem(info);
+        model.notReadCount = 0;
+        return model;
+      }
     }
     return null;
   }
