@@ -865,6 +865,126 @@ class S {
     );
   }
 
+  /// `Main Account`
+  String get main_wallet {
+    return Intl.message(
+      'Main Account',
+      name: 'main_wallet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Export Account`
+  String get export_wallet {
+    return Intl.message(
+      'Export Account',
+      name: 'export_wallet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send`
+  String get send {
+    return Intl.message(
+      'Send',
+      name: 'send',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send NKN`
+  String get send_nkn {
+    return Intl.message(
+      'Send NKN',
+      name: 'send_nkn',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send Eth`
+  String get send_eth {
+    return Intl.message(
+      'Send Eth',
+      name: 'send_eth',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Receive`
+  String get receive {
+    return Intl.message(
+      'Receive',
+      name: 'receive',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Account Address`
+  String get wallet_address {
+    return Intl.message(
+      'Account Address',
+      name: 'wallet_address',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Copy`
+  String get copy {
+    return Intl.message(
+      'Copy',
+      name: 'copy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Copied to Clipboard`
+  String get copy_success {
+    return Intl.message(
+      'Copied to Clipboard',
+      name: 'copy_success',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Success`
+  String get success {
+    return Intl.message(
+      'Success',
+      name: 'success',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Copied`
+  String get copied {
+    return Intl.message(
+      'Copied',
+      name: 'copied',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Copy to Clipboard`
+  String get copy_to_clipboard {
+    return Intl.message(
+      'Copy to Clipboard',
+      name: 'copy_to_clipboard',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Delete Account`
   String get delete_wallet {
     return Intl.message(
