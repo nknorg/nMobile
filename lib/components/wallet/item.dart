@@ -10,7 +10,7 @@ import 'package:nmobile/utils/format.dart';
 class WalletItem extends StatefulWidget {
   final WalletSchema schema;
   final String type;
-  final GestureTapCallback onTap;
+  final GestureTapCallback onTap; // TODO:GG
   final Widget tail;
 
   WalletItem({

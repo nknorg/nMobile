@@ -6,10 +6,10 @@ import '../helpers/local_storage.dart';
 import '../helpers/secure_storage.dart';
 
 class WalletStorage {
-  static const String SEED_KEY = 'SEED';
+  static const String SEED_KEY = 'SEED'; // TODO:GG
   static const String WALLET_KEY = 'WALLETS';
-  static const String KEYSTORES_KEY = 'KEYSTORES';
-  static const String PASSWORDS_KEY = 'PASSWORDS';
+  static const String KEYSTORE_KEY = 'KEYSTORE';
+  static const String PASSWORD_KEY = 'PASSWORD'; // TODO:GG
 
   final LocalStorage _localStorage = LocalStorage();
   final SecureStorage _secureStorage = SecureStorage();
@@ -36,9 +36,9 @@ class WalletStorage {
       futures.add(_localStorage.setItem(WALLET_KEY, index, walletSchema.toCacheMap()));
     }
     if (Platform.isAndroid) {
-      futures.add(_localStorage.set('$KEYSTORES_KEY:${walletSchema.address}', keystore));
+      futures.add(_localStorage.set('$KEYSTORE_KEY:${walletSchema.address}', keystore));
     } else {
-      futures.add(_secureStorage.set('$KEYSTORES_KEY:${walletSchema.address}', keystore));
+      futures.add(_secureStorage.set('$KEYSTORE_KEY:${walletSchema.address}', keystore));
     }
     await Future.wait(futures);
   }

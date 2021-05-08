@@ -10,6 +10,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/screens/wallet/export_nkn.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/utils.dart';
@@ -102,7 +103,7 @@ class _WalletDetailNKNScreenState extends State<WalletDetailNKNScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             icon: assetIcon('more', width: 24),
             onSelected: (int result) {
-              _onMenuSelected(result);
+              _onAppBarActionSelected(result);
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
               PopupMenuItem<int>(
@@ -313,78 +314,90 @@ class _WalletDetailNKNScreenState extends State<WalletDetailNKNScreen> {
     // );
   }
 
-  _onMenuSelected(int result) async {
-    // switch (result) {
-    //   case 0:
-    //     if (widget.wallet.type == WalletSchema.ETH_WALLET) {
-    //       var password = await widget.wallet.getPassword();
-    //       if (password != null) {
-    //         try {
-    //           final ethWallet = await Ethereum.restoreWalletSaved(schema: widget.wallet, password: password);
-    //
-    //           Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
-    //             'wallet': null,
-    //             'keystore': ethWallet.keystore,
-    //             'address': (await ethWallet.address).hex,
-    //             'publicKey': ethWallet.pubkeyHex,
-    //             'seed': ethWallet.privateKeyHex,
-    //             'name': ethWallet.name,
-    //           });
-    //         } catch (e) {
-    //           showToast(_localizations.password_wrong);
-    //         }
-    //       }
-    //     } else {
-    //       var password = await widget.wallet.getPassword();
-    //       if (password != null) {
-    //         try {
-    //           var wallet = await widget.wallet.exportWallet(password);
-    //           if (wallet['address'] == widget.wallet.address) {
-    //             TimerAuth.instance.enableAuth();
-    //
-    //             Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
-    //               'wallet': wallet,
-    //               'keystore': wallet['keystore'],
-    //               'address': wallet['address'],
-    //               'publicKey': wallet['publicKey'],
-    //               'seed': wallet['seed'],
-    //               'name': isDefault ? _localizations.main_wallet : widget.wallet.name,
-    //             });
-    //           } else {
-    //             showToast(_localizations.password_wrong);
-    //           }
-    //         } catch (e) {
-    //           if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-    //             showToast(_localizations.password_wrong);
-    //           }
-    //         }
-    //       }
-    //     }
-    //     break;
-    //   case 1:
-    //     SimpleConfirm(
-    //             context: context,
-    //             title: _localizations.delete_wallet_confirm_title,
-    //             content: _localizations.delete_wallet_confirm_text,
-    //             callback: (v) async {
-    //               if (v) {
-    //                 _walletsBloc.add(DeleteWallet(widget.wallet));
-    //                 if (NKNClientCaller.currentChatId != null) {
-    //                   var walletAddr = await NknWalletPlugin.pubKeyToWalletAddr(NKNClientCaller.currentChatId);
-    //                   if (walletAddr == widget.wallet.address) {
-    //                     NLog.d('delete client');
-    //                     _clientBloc.add(NKNDisConnectClientEvent());
-    //                   } else {
-    //                     NLog.d('no delete client');
-    //                   }
-    //                 }
-    //                 Navigator.popAndPushNamed(context, AppScreen.routeName);
-    //               }
-    //             },
-    //             buttonColor: Colors.red,
-    //             buttonText: _localizations.delete_wallet)
-    //         .show();
-    //     break;
-    // }
+  _onAppBarActionSelected(int result) async {
+    switch (result) {
+      case 0:
+        if (this._wallet?.type == WalletType.eth) {
+          // TODO:GG export eth
+          // var password = await this._wallet.getPassword();
+          // if (password != null) {
+          //   try {
+          //     final ethWallet = await Ethereum.restoreWalletSaved(schema: widget.wallet, password: password);
+          //
+          //     Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+          //       'wallet': null,
+          //       'keystore': ethWallet.keystore,
+          //       'address': (await ethWallet.address).hex,
+          //       'publicKey': ethWallet.pubkeyHex,
+          //       'seed': ethWallet.privateKeyHex,
+          //       'name': ethWallet.name,
+          //     });
+          //   } catch (e) {
+          //     showToast(_localizations.password_wrong);
+          //   }
+          // }
+        } else {
+          // TODO:GG export nkn
+          // var password = await widget.wallet.getPassword();
+          // if (password != null) {
+          //   try {
+          //     var wallet = await widget.wallet.exportWallet(password);
+          //     if (wallet['address'] == widget.wallet.address) {
+          //       TimerAuth.instance.enableAuth();
+          //
+          //       Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+          //         'wallet': wallet,
+          //         'keystore': wallet['keystore'],
+          //         'address': wallet['address'],
+          //         'publicKey': wallet['publicKey'],
+          //         'seed': wallet['seed'],
+          //         'name': isDefault ? _localizations.main_wallet : widget.wallet.name,
+          //       });
+          //     } else {
+          //       showToast(_localizations.password_wrong);
+          //     }
+          //   } catch (e) {
+          //     if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+          //       showToast(_localizations.password_wrong);
+          //     }
+          //   }
+          // }
+
+          Navigator.pushNamed(context, WalletExportNKNScreen.routeName, arguments: {
+            WalletExportNKNScreen.argWalletType: WalletType.nkn,
+            WalletExportNKNScreen.argName: true ? "_localizations.main_wallet" : this._wallet?.name ?? "", // TODO:GG default
+            WalletExportNKNScreen.argAddress: "wallet['address']", // TODO:GG address
+            WalletExportNKNScreen.argPublicKey: "wallet['publicKey']", // TODO:GG publicKey
+            WalletExportNKNScreen.argSeed: "wallet['seed']", // TODO:GG seed
+            WalletExportNKNScreen.argKeystore: "wallet['keystore']", // TODO:GG keystore
+          });
+        }
+        break;
+      case 1:
+        // TODO:GG delete
+        // SimpleConfirm(
+        //         context: context,
+        //         title: _localizations.delete_wallet_confirm_title,
+        //         content: _localizations.delete_wallet_confirm_text,
+        //         callback: (v) async {
+        //           if (v) {
+        //             _walletsBloc.add(DeleteWallet(widget.wallet));
+        //             if (NKNClientCaller.currentChatId != null) {
+        //               var walletAddr = await NknWalletPlugin.pubKeyToWalletAddr(NKNClientCaller.currentChatId);
+        //               if (walletAddr == widget.wallet.address) {
+        //                 NLog.d('delete client');
+        //                 _clientBloc.add(NKNDisConnectClientEvent());
+        //               } else {
+        //                 NLog.d('no delete client');
+        //               }
+        //             }
+        //             Navigator.popAndPushNamed(context, AppScreen.routeName);
+        //           }
+        //         },
+        //         buttonColor: Colors.red,
+        //         buttonText: _localizations.delete_wallet)
+        //     .show();
+        break;
+    }
   }
 }
