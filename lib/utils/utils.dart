@@ -1,11 +1,14 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/generated/l10n.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'hash.dart';
 import 'logger.dart';
-
 
 const ADDRESS_GEN_PREFIX = '02b825';
 const ADDRESS_GEN_PREFIX_LEN = ADDRESS_GEN_PREFIX.length ~/ 2;
@@ -13,6 +16,14 @@ const UINT160_LEN = 20;
 const CHECKSUM_LEN = 4;
 const SEED_LENGTH = 32;
 const ADDRESS_LEN = ADDRESS_GEN_PREFIX_LEN + UINT160_LEN + CHECKSUM_LEN;
+
+copyText(String content, {BuildContext context}) {
+  Clipboard.setData(ClipboardData(text: content));
+  if (context != null) {
+    S _localizations = S.of(context);
+    Toast.show(_localizations.copy_success);
+  }
+}
 
 launchUrl(String url) async {
   try {
