@@ -6,7 +6,6 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/utils/assets.dart';
 
-// TODO:GG adapt height or scroll
 class ModalDialog extends StatefulWidget {
   @override
   _ModalDialogState createState() => _ModalDialogState();
@@ -17,25 +16,37 @@ class ModalDialog extends StatefulWidget {
 
   ModalDialog.of(this.context);
 
-  Widget title;
-  Widget content;
-  List<Widget> actions;
-  double height;
+  String title;
+  Widget titleWidget;
+  String content;
+  Widget contentWidget;
+  bool hasCloseIcon;
   bool hasCloseButton;
+  double height;
+  List<Widget> actions;
+
+  close() {
+    Navigator.of(context).pop();
+  }
 
   show({
-    Widget title,
-    Widget close,
-    Widget content,
-    List<Widget> actions,
-    double height = 300,
+    String title,
+    Widget titleWidget,
+    String content,
+    Widget contentWidget,
+    bool hasCloseIcon = false,
     bool hasCloseButton = true,
+    double height,
+    List<Widget> actions,
   }) {
     this.title = title;
+    this.titleWidget = titleWidget;
     this.content = content;
-    this.actions = actions ?? [];
-    this.height = height;
+    this.contentWidget = contentWidget;
+    this.hasCloseIcon = hasCloseIcon;
     this.hasCloseButton = hasCloseButton;
+    this.height = height;
+    this.actions = actions ?? [];
     return showDialog(
       context: context, //      barrierDismissible: false,
       builder: (ctx) {
@@ -47,29 +58,25 @@ class ModalDialog extends StatefulWidget {
     );
   }
 
-  close() {
-    Navigator.of(context).pop();
-  }
-
   confirm({
-    Widget title,
-    Widget content,
+    String title,
+    Widget titleWidget,
+    String content,
+    Widget contentWidget,
+    bool hasCloseIcon = true,
+    bool hasCloseButton = false,
+    double height,
     Widget agree,
     Widget reject,
-    double height = 300,
-    bool hasCloseButton = false,
   }) {
     this.title = title;
+    this.titleWidget = titleWidget;
     this.content = content;
-    this.actions = <Widget>[
-      agree,
-      Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: reject,
-      )
-    ];
-    this.height = height;
+    this.contentWidget = contentWidget;
+    this.hasCloseIcon = hasCloseIcon;
     this.hasCloseButton = hasCloseButton;
+    this.height = height;
+    this.actions = <Widget>[agree, reject];
     return showDialog(
       context: context,
       builder: (ctx) {
@@ -83,11 +90,6 @@ class ModalDialog extends StatefulWidget {
 }
 
 class _ModalDialogState extends State<ModalDialog> {
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
@@ -113,73 +115,65 @@ class _ModalDialogState extends State<ModalDialog> {
             width: MediaQuery.of(context).size.width - 40,
             height: widget.height,
             constraints: BoxConstraints(
-              minHeight: 200,
+              minHeight: 150,
               maxHeight: MediaQuery.of(context).size.height - 180,
             ),
-            child: Flex(
-              direction: Axis.vertical,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Expanded(
-                  flex: 1,
-                  child: Container(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  // title
+                  Padding(
+                    padding: EdgeInsets.only(left: 24, right: 24, bottom: 24, top: 36),
+                    child: widget.titleWidget ??
+                        Label(
+                          widget.title ?? _localizations.warning,
+                          type: LabelType.h2,
+                          maxLines: 5,
+                        ),
+                  ),
+                  // content
+                  Container(
+                    padding: EdgeInsets.only(left: 24, right: 24, bottom: 24),
+                    child: widget.contentWidget ??
+                        Label(
+                          widget.content ?? "",
+                          maxLines: 100,
+                        ),
+                  ),
+                  // actions
+                  Expanded(
+                    flex: 0,
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 24, right: 24),
-                      child: Flex(
-                        direction: Axis.vertical,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Expanded(
-                            flex: 0,
-                            child: Padding(
-                              padding: EdgeInsets.only(bottom: 24, top: 24),
-                              child: widget.title ??
-                                  Label(
-                                    _localizations.warning,
-                                    type: LabelType.h2,
-                                  ),
-                            ),
-                          ),
-                          Expanded(flex: 1, child: widget.content ?? Label(''))
-                        ],
+                      padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+                      child: Column(
+                        children: actions,
                       ),
                     ),
                   ),
-                ),
-                Expanded(
-                  flex: 0,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
-                    child: Column(
-                      children: actions,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            right: 0,
-            top: 0,
-            child: SizedBox(
-              height: 60,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    ButtonIcon(
-                      padding: const EdgeInsets.all(0),
-                      width: 50,
-                      height: 50,
-                      icon: assetIcon('close', width: 16),
-                      onPressed: () => widget.close(),
-                    )
-                  ],
-                ),
+                ],
               ),
             ),
           ),
+          widget.hasCloseIcon
+              ? Positioned(
+                  right: 0,
+                  top: 0,
+                  child: SizedBox(
+                    height: 55,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 5),
+                      child: ButtonIcon(
+                        width: 50,
+                        height: 50,
+                        icon: assetIcon('close', width: 16),
+                        onPressed: () => widget.close(),
+                      ),
+                    ),
+                  ),
+                )
+              : SizedBox.shrink(),
         ],
       ),
     );

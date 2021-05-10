@@ -26,7 +26,7 @@ class WalletStorage {
     return null;
   }
 
-  Future addWallet(WalletSchema walletSchema, String keystore, {String password}) async {
+  Future addWallet(WalletSchema walletSchema, String keystore, {String password, String seed}) async {
     List<Future> futures = <Future>[];
     var wallets = await _localStorage.getArray(KEY_WALLET);
     int index = wallets?.indexWhere((x) => x['address'] == walletSchema.address) ?? -1;
@@ -45,6 +45,13 @@ class WalletStorage {
         futures.add(_localStorage.set('$KEY_PASSWORD:${walletSchema.address}', password));
       } else {
         futures.add(_secureStorage.set('$KEY_PASSWORD:${walletSchema.address}', password));
+      }
+    }
+    if (seed != null && seed.isNotEmpty) {
+      if (Platform.isAndroid) {
+        futures.add(_localStorage.set('$KEY_SEED:${walletSchema.address}', seed));
+      } else {
+        futures.add(_secureStorage.set('$KEY_SEED:${walletSchema.address}', seed));
       }
     }
     await Future.wait(futures);
