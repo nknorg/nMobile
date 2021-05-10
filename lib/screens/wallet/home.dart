@@ -32,7 +32,9 @@ class _WalletHomeScreenState extends State<WalletHomeScreen> with AutomaticKeepA
         if (state is WalletLoaded) {
           return state.isWalletsEmpty() ? WalletHomeEmptyLayout() : WalletHomeListLayout();
         }
-        return WalletHomeEmptyLayout(); // TODO:GG loading
+        return Center(
+          child: CircularProgressIndicator(),
+        ); // TODO:GG loading
       },
     );
   }
