@@ -161,23 +161,17 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
                 if (index == 1) wallet.type = WalletType.eth; // TODO:GG test
                 return Padding(
                   padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
-                  child: Material(
-                    color: application.theme.backgroundLightColor,
-                    elevation: 0,
-                    borderRadius: BorderRadius.circular(8),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: () {
-                        Navigator.pushNamed(context, WalletDetailNKNScreen.routeName, arguments: {
-                          WalletDetailNKNScreen.argWallet: wallet,
-                          WalletDetailNKNScreen.argListIndex: index,
-                        });
-                      },
-                      child: Padding(
-                        padding: EdgeInsets.only(left: 16, right: 16),
-                        child: WalletItem(schema: wallet, type: wallet.type),
-                      ),
-                    ),
+                  child: WalletItem(
+                    schema: wallet,
+                    type: wallet.type,
+                    onTap: () {
+                      Navigator.pushNamed(context, WalletDetailNKNScreen.routeName, arguments: {
+                        WalletDetailNKNScreen.argWallet: wallet,
+                        WalletDetailNKNScreen.argListIndex: index,
+                      });
+                    },
+                    bgColor: application.theme.backgroundLightColor,
+                    radius: BorderRadius.circular(8),
                   ),
                 );
               },
