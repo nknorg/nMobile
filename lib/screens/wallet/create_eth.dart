@@ -5,7 +5,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
-import 'package:nmobile/components/text/form_field_box.dart';
+import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 
@@ -56,7 +56,7 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
         title: _localizations.create_ethereum_wallet,
         backgroundColor: application.theme.backgroundColor4,
       ),
-      child: Container(
+      body: Container(
         color: application.theme.backgroundColor4,
         child: GestureDetector(
           onTap: () {
@@ -102,7 +102,7 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
                               ),
                               Padding(
                                 padding: EdgeInsets.only(left: 20, right: 20),
-                                child: FormFieldBox(
+                                child: FormText(
                                   hintText: _localizations.hint_enter_wallet_name,
                                   focusNode: _nameFocusNode,
                                   onSaved: (v) => _name = v,
@@ -124,7 +124,7 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
                               ),
                               Padding(
                                 padding: EdgeInsets.only(left: 20, right: 20),
-                                child: FormFieldBox(
+                                child: FormText(
                                   focusNode: _passwordFocusNode,
                                   controller: _passwordController,
                                   hintText: _localizations.input_password,
@@ -155,7 +155,7 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
                               ),
                               Padding(
                                 padding: EdgeInsets.only(left: 20, right: 20, bottom: 32),
-                                child: FormFieldBox(
+                                child: FormText(
                                   focusNode: _confirmPasswordFocusNode,
                                   hintText: _localizations.input_password_again,
                                   // validator: Validator.of(context).confrimPassword(_passwordController.text), // TODO:GG validator + wave

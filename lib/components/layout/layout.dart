@@ -5,15 +5,15 @@ class Layout extends StatefulWidget {
   final Key key;
   final Color headerColor;
   final PreferredSizeWidget header;
-  final Color color;
-  final Widget child;
+  final Color bodyColor;
+  final Widget body;
 
   Layout({
     this.key,
-    this.headerColor,
     this.header,
-    this.color,
-    this.child,
+    this.body,
+    this.headerColor,
+    this.bodyColor,
   });
 
   @override
@@ -25,7 +25,7 @@ class _LayoutState extends State<Layout> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: widget.key,
-      backgroundColor: widget.headerColor,
+      backgroundColor: widget.headerColor ?? application.theme.headBarColor1,
       appBar: widget.header,
       body: Container(
         constraints: BoxConstraints.expand(),
@@ -33,14 +33,14 @@ class _LayoutState extends State<Layout> {
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: PhysicalModel(
-          color: widget.color ?? application.theme.backgroundColor,
+          color: widget.bodyColor ?? application.theme.backgroundColor,
           clipBehavior: Clip.antiAlias,
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           child: Column(
             children: <Widget>[
               Expanded(
                 flex: 1,
-                child: widget.child,
+                child: widget.body,
               ),
             ],
           ),

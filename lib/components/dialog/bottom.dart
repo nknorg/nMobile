@@ -5,6 +5,7 @@ import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 
+// TODO:GG adapt height or scroll
 class BottomDialog extends StatefulWidget {
   @override
   _BottomDialogState createState() => _BottomDialogState();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/components/button/button.dart';
-import 'package:nmobile/components/text/form_field_box.dart';
+import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
@@ -123,7 +123,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                 ),
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20),
-                  child: FormFieldBox(
+                  child: FormText(
                     controller: _seedController,
                     focusNode: _seedFocusNode,
                     hintText: _localizations.input_seed,
@@ -144,7 +144,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                 ),
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20),
-                  child: FormFieldBox(
+                  child: FormText(
                     focusNode: _nameFocusNode,
                     hintText: _localizations.hint_enter_wallet_name,
                     onSaved: (v) => _name = v,
@@ -165,7 +165,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                 ),
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20, bottom: 24),
-                  child: FormFieldBox(
+                  child: FormText(
                     focusNode: _passwordFocusNode,
                     controller: _passwordController,
                     hintText: _localizations.input_password,
