@@ -1,13 +1,21 @@
+import 'dart:io';
 import 'dart:ui';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/utils/logger.dart';
 
 class WalletImportByKeystoreLayout extends StatefulWidget {
   final String walletType;
@@ -29,7 +37,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
   FocusNode _passwordFocusNode = FocusNode();
   FocusNode _confirmPasswordFocusNode = FocusNode();
 
-  // WalletsBloc _walletsBloc;
+  WalletBloc _walletBloc;
   String _keystore;
   String _name;
   String _password;
@@ -37,44 +45,49 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
   @override
   void initState() {
     super.initState();
-    // _walletsBloc = BlocProvider.of<WalletsBloc>(context);
+    _walletBloc = BlocProvider.of<WalletBloc>(context);
 
-    // TimerAuth.onOtherPage = true;
+    // TimerAuth.onOtherPage = true; // TODO:GG wallet lock
   }
 
   @override
   void dispose() {
     super.dispose();
-    // TimerAuth.onOtherPage = true;
+    // TimerAuth.onOtherPage = true; // TODO:GG wallet unlock
   }
 
   _import() async {
-    // TODO:GG create wallet
-    // if ((_formKey.currentState as FormState).validate()) {
-    //   (_formKey.currentState as FormState).save();
-    //   EasyLoading.show();
-    //   try {
-    //     if (widget.type == WalletType.nkn) {
-    //       String keystoreJson = await NknWalletPlugin.restoreWallet(_keystore, _password);
-    //       var keystore = jsonDecode(keystoreJson);
-    //       String address = keystore['Address'];
-    //
-    //       await SecureStorage().set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
-    //       _walletsBloc.add(AddWallet(WalletSchema(address: address, type: WalletSchema.NKN_WALLET, name: _name), keystoreJson));
-    //     } else {
-    //       final ethWallet = Ethereum.restoreWallet(name: _name, keystore: _keystore, password: _password);
-    //       Ethereum.saveWallet(ethWallet: ethWallet, walletsBloc: _walletsBloc);
-    //     }
-    //     EasyLoading.dismiss();
-    //     showToast(NL10ns.of(context).success);
-    //
-    //     Navigator.of(context).pop();
-    //   } catch (e) {
-    //     EasyLoading.dismiss();
-    //     showToast(NL10ns.of(context).password_wrong);
-    //     NLog.w('ImportKeystoreWallet__ E:' + e.toString());
-    //   }
-    // }
+    if ((_formKey.currentState as FormState).validate()) {
+      (_formKey.currentState as FormState).save();
+      logger.d("keystore:$_keystore, name:$_name, password:$_password");
+
+      Loading.show();
+      S _localizations = S.of(context);
+
+      try {
+        if (widget.walletType == WalletType.nkn) {
+          Wallet result = await Wallet.restore(_keystore, config: WalletConfig(password: _password));
+          WalletSchema wallet = WalletSchema(name: _name, address: result?.address, type: WalletType.nkn);
+          logger.d("import_nkn:${wallet.toString()}");
+
+          // TODO:GG password
+          //await SecureStorage().set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
+          _walletBloc.add(AddWallet(wallet, result?.keystore));
+        } else {
+          // TODO:GG import eth by keystore
+          // final ethWallet = Ethereum.restoreWallet(name: _name, keystore: _keystore, password: _password);
+          // Ethereum.saveWallet(ethWallet: ethWallet, walletsBloc: _walletsBloc);
+        }
+        Loading.dismiss();
+        Toast.show(_localizations.success);
+
+        Navigator.pop(context);
+      } catch (e) {
+        logger.e("import_by_keystore", e);
+        Loading.dismiss();
+        Toast.show(e.message);
+      }
+    }
   }
 
   @override
@@ -133,16 +146,19 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                     },
                     suffixIcon: GestureDetector(
                       onTap: () async {
-                        // TODO:GG file_picker keystore
-                        // File file = await FilePicker.getFile();
-                        // if (file != null) {
-                        //   String fileText = file.readAsStringSync();
-                        //   NLog.w('FileText is_-_____' + fileText.toString());
-                        //   NLog.w('FileText length is______' + fileText.length.toString());
-                        //   setState(() {
-                        //     _keystoreController.text = fileText;
-                        //   });
-                        // }
+                        FilePickerResult result = await FilePicker.platform.pickFiles(
+                          allowMultiple: false,
+                          type: FileType.any,
+                        );
+                        logger.d("result:$result");
+                        if (result != null && result.files != null && result.files.isNotEmpty) {
+                          String path = result.files?.first?.path;
+                          File picked = File(path);
+                          String keystore = picked.readAsStringSync();
+                          logger.d("picked:$keystore");
+
+                          setState(() => _keystoreController.text = keystore);
+                        }
                       },
                       child: Container(
                         width: 20,
@@ -153,7 +169,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                         ),
                       ),
                     ),
-                    // validator: widget.walletType == WalletType.nkn ? Validator.of(context).keystore() : Validator.of(context).keystoreEth(), // TODO:GG validator
+                    validator: widget.walletType == WalletType.nkn ? Validator.of(context).keystoreNKN() : Validator.of(context).keystoreETH(),
                   ),
                 ),
                 Padding(
@@ -211,7 +227,6 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                   children: <Widget>[
                     Padding(
                       padding: EdgeInsets.only(left: 30, right: 30),
-                      // TODO:GG wave
                       child: Button(
                         text: widget.walletType == WalletType.nkn ? _localizations.import_nkn_wallet : _localizations.import_ethereum_wallet,
                         disabled: !_formValid,
