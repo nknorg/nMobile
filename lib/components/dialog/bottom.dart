@@ -96,7 +96,6 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  // TODO:GG color
   Future<String> showWalletTypeSelect({
     @required String title,
     String desc,
@@ -202,12 +201,12 @@ class BottomDialog extends StatefulWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.all(Radius.circular(9)),
-                            color: application.theme.successColor.withAlpha(25),
+                            color: application.theme.ethLogoBackground.withAlpha(25),
                           ),
                           child: Text(
                             _localizations.ERC_20,
                             style: TextStyle(
-                              color: application.theme.successColor,
+                              color: application.theme.ethLogoBackground,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               height: 1.2,

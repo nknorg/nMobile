@@ -8,7 +8,7 @@ import 'settings.dart' as settings;
 import 'wallet.dart' as wallet;
 
 Map<String, WidgetBuilder> routes = {
-  AppScreen.routeName: (BuildContext context) => AppScreen(),
+  AppScreen.routeName: (BuildContext context, {arguments}) => AppScreen(arguments: arguments),
 };
 
 init() {
