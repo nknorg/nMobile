@@ -4,6 +4,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/utils/assets.dart';
@@ -69,7 +70,9 @@ class _WalletHomeEmptyLayoutState extends State<WalletHomeEmptyLayout> {
                   fontColor: application.theme.fontLightColor,
                   backgroundColor: application.theme.primaryColor.withAlpha(20),
                   onPressed: () {
-                    Navigator.pushNamed(context, WalletImportScreen.routeName);
+                    Navigator.pushNamed(context, WalletImportScreen.routeName, arguments: {
+                      WalletImportScreen.argWalletType: WalletType.nkn,
+                    });
                   },
                 ),
               ],
