@@ -11,51 +11,9 @@ class Validator {
   Validator.of(context) : this(context);
 
   S _localizations;
+
   Validator(this.context) {
     _localizations = S.of(context);
-  }
-
-  keystore() {
-    return (value) {
-      var jsonFormat;
-      try {
-        jsonDecode(value.trim());
-        jsonFormat = true;
-      } on FormatException catch (e) {
-        jsonFormat = false;
-      }
-
-      return value.trim().length == 0
-          ? _localizations.error_required
-          : !jsonFormat
-              ? _localizations.error_keystore_format
-              : null;
-    };
-  }
-
-  // TODO:GG keystoreEth
-  // keystoreEth() {
-  //   return (value) {
-  //     bool isValid = false;
-  //     try {
-  //       isValid = Ethereum.isKeystoreValid(value.trim());
-  //     } catch (e) {}
-  //     return value.trim().length == 0
-  //         ? _localizations.error_required
-  //         : !isValid
-  //             ? _localizations.error_keystore_format
-  //             : null;
-  //   };
-  // }
-
-  seed() {
-    return (value) {
-      return value.trim().length == 0
-          ? _localizations.error_required
-          : value.trim().length != 64 || !RegExp(r'^[0-9a-f]{64}$').hasMatch(value)
-              ? _localizations.error_seed_format
-              : null;
-    };
   }
 
   walletName() {
@@ -88,7 +46,76 @@ class Validator {
     };
   }
 
-  nknAddress() {
+  password() {
+    return (value) {
+      return value.trim().length > 0 ? null : _localizations.error_required;
+    };
+  }
+
+  confirmPassword(password) {
+    return (value) {
+      return value.trim().length == 0
+          ? _localizations.error_required
+          : value != password
+              ? _localizations.error_confirm_password
+              : null;
+    };
+  }
+
+  seed() {
+    return (value) {
+      return value.trim().length == 0
+          ? _localizations.error_required
+          : value.trim().length != 64 || !RegExp(r'^[0-9a-f]{64}$').hasMatch(value)
+              ? _localizations.error_seed_format
+              : null;
+    };
+  }
+
+  identifierNKN() {
+    return (value) {
+      return value.trim().length == 0
+          ? _localizations.error_required
+          : !RegExp(r'^[^.]*.?[0-9a-f]{64}$').hasMatch(value)
+              ? _localizations.error_client_address_format
+              : null;
+    };
+  }
+
+  keystoreNKN() {
+    return (value) {
+      var jsonFormat;
+      try {
+        jsonDecode(value.trim());
+        jsonFormat = true;
+      } on FormatException catch (e) {
+        jsonFormat = false;
+      }
+
+      return value.trim().length == 0
+          ? _localizations.error_required
+          : !jsonFormat
+              ? _localizations.error_keystore_format
+              : null;
+    };
+  }
+
+  keystoreETH() {
+    return (value) {
+      bool isValid = false;
+      try {
+        // TODO:GG keystoreEth
+        // isValid = Ethereum.isKeystoreValid(value.trim());
+      } catch (e) {}
+      return value.trim().length == 0
+          ? _localizations.error_required
+          : !isValid
+              ? _localizations.error_keystore_format
+              : null;
+    };
+  }
+
+  addressNKN() {
     return (value) {
       bool addressFormat = false;
       try {
@@ -104,7 +131,7 @@ class Validator {
     };
   }
 
-  ethAddress() {
+  addressETH() {
     return (value) {
       bool addressFormat = false;
       try {
@@ -117,32 +144,6 @@ class Validator {
           ? _localizations.error_required
           : !addressFormat
               ? _localizations.error_nkn_address_format
-              : null;
-    };
-  }
-
-  nknIdentifier() {
-    return (value) {
-      return value.trim().length == 0
-          ? _localizations.error_required
-          : !RegExp(r'^[^.]*.?[0-9a-f]{64}$').hasMatch(value)
-              ? _localizations.error_client_address_format
-              : null;
-    };
-  }
-
-  password() {
-    return (value) {
-      return value.trim().length > 0 ? null : _localizations.error_required;
-    };
-  }
-
-  confirmPassword(password) {
-    return (value) {
-      return value.trim().length == 0
-          ? _localizations.error_required
-          : value != password
-              ? _localizations.error_confirm_password
               : null;
     };
   }

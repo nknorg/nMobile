@@ -40,6 +40,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
   Stream<WalletState> _mapAddWalletToState(AddWallet event) async* {
     logger.d("wallet:${event.wallet}, keystore:${event.keystore}");
     if (state is WalletLoaded) {
+      // TODO:GG duplicated
       _walletStorage.addWallet(event.wallet, event.keystore);
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets)..add(event.wallet);
       logger.d("newList:$list");
