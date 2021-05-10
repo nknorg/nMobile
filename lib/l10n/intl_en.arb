@@ -91,6 +91,12 @@
   "input_seed": "Please input seed",
 
   "error_required": "This field is required.",
+  "error_field_required": "{field} is required.",
+  "error_confirm_password": "Password does not match.",
+  "error_keystore_format": "Keystore format does not match.",
+  "error_seed_format": "Seed format does not match.",
+  "error_client_address_format": "Client address format does not match.",
+  "error_nkn_address_format": "Invalid wallet address.",
 
   "main_wallet": "Main Account",
   "export_wallet": "Export Account",
