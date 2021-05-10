@@ -21,6 +21,10 @@ class BottomDialog extends StatefulWidget {
   double height;
   Function updateHeight;
 
+  close({result}) {
+    Navigator.of(context).pop(result);
+  }
+
   Future<T> show<T>({
     @required WidgetBuilder builder,
     Widget action,
@@ -42,10 +46,6 @@ class BottomDialog extends StatefulWidget {
         );
       },
     );
-  }
-
-  close({result}) {
-    Navigator.of(context).pop(result);
   }
 
   Future<T> showWithTitle<T>({
