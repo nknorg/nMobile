@@ -1,21 +1,24 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 
 class WalletImportBySeedLayout extends StatefulWidget {
   final String walletType;
+  final Stream<String> qrStream;
 
-  const WalletImportBySeedLayout({this.walletType});
+  const WalletImportBySeedLayout({this.walletType, this.qrStream});
 
   @override
   _WalletImportBySeedLayoutState createState() => _WalletImportBySeedLayoutState();
 }
 
 class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> with SingleTickerProviderStateMixin {
-  // TODO:GG params
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
 
@@ -31,25 +34,23 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
   var _name;
   var _password;
 
-  // StreamSubscription _qrSubscription;
+  StreamSubscription _qrSubscription;
 
   @override
   void initState() {
     super.initState();
-    // TODO:GG wallet event
     // _walletsBloc = BlocProvider.of<WalletsBloc>(context);
-    // _qrSubscription = eventBus.on<QMScan>().listen((event) {
-    //   setState(() {
-    //     _seedController.text = event.content;
-    //   });
-    // });
+    _qrSubscription = widget.qrStream?.listen((event) {
+      setState(() {
+        _seedController.text = event;
+      });
+    });
   }
 
   @override
   void dispose() {
     super.dispose();
-    // TODO:GG destroy
-    // _qrSubscription.cancel();
+    _qrSubscription.cancel();
   }
 
   _import() async {
@@ -131,7 +132,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                     onFieldSubmitted: (_) {
                       FocusScope.of(context).requestFocus(_nameFocusNode);
                     },
-                    // validator: Validator.of(context).seed(), // TODO:GG validator
+                    validator: Validator.of(context).seed(),
                   ),
                 ),
                 Padding(
@@ -152,7 +153,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                       FocusScope.of(context).requestFocus(_passwordFocusNode);
                     },
                     textInputAction: TextInputAction.next,
-                    // validator: Validator.of(context).walletName(), // TODO:GG validator
+                    validator: Validator.of(context).walletName(),
                   ),
                 ),
                 Padding(
@@ -173,7 +174,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                     onFieldSubmitted: (_) {
                       FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
                     },
-                    // validator: Validator.of(context).password(), // TODO:GG validator
+                    validator: Validator.of(context).password(),
                     password: true,
                   ),
                 ),
