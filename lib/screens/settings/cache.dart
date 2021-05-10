@@ -82,13 +82,12 @@ class _CacheScreenState extends State<CacheScreen> {
                       style: _buttonStyle(top: true),
                       onPressed: () async {
                         await ModalDialog.of(context).confirm(
-                          height: 260,
-                          title: Label(
+                          titleWidget: Label(
                             _localizations.tips,
                             type: LabelType.h3,
                             softWrap: true,
                           ),
-                          content: Label(
+                          contentWidget: Label(
                             _localizations.delete_cache_confirm_title,
                             type: LabelType.bodyRegular,
                             softWrap: true,
@@ -198,13 +197,12 @@ class _CacheScreenState extends State<CacheScreen> {
                       style: _buttonStyle(bottom: true),
                       onPressed: () async {
                         await ModalDialog.of(context).confirm(
-                          height: 260,
-                          title: Label(
+                          titleWidget: Label(
                             _localizations.tips,
                             type: LabelType.h3,
                             softWrap: true,
                           ),
-                          content: Label(
+                          contentWidget: Label(
                             _localizations.delete_db_confirm_title,
                             type: LabelType.bodyRegular,
                             softWrap: true,
