@@ -6,6 +6,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/utils/assets.dart';
 
+// TODO:GG adapt height or scroll
 class ModalDialog extends StatefulWidget {
   @override
   _ModalDialogState createState() => _ModalDialogState();

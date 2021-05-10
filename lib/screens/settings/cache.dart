@@ -63,7 +63,7 @@ class _CacheScreenState extends State<CacheScreen> {
         title: _localizations.cache,
         backgroundColor: application.theme.headBarColor2,
       ),
-      child: Container(
+      body: Container(
         padding: const EdgeInsets.only(top: 20, left: 16, right: 16),
         child: Flex(
           direction: Axis.vertical,

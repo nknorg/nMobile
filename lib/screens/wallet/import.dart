@@ -55,7 +55,7 @@ class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTick
           )
         ],
       ),
-      child: SafeArea(
+      body: SafeArea(
         child: GestureDetector(
             onTap: () {
               FocusScope.of(context).requestFocus(FocusNode());

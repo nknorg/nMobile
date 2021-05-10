@@ -46,7 +46,6 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
           return NoConnectScreen();
         } else {
           return Layout(
-            headerColor: application.theme.primaryColor,
             header: Header(
               titleChild: Container(
                 margin: EdgeInsets.only(left: 20),
@@ -106,7 +105,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                 ),
               )],
             ),
-            child: MessageListScreen(),
+            body: MessageListScreen(),
           );
         }
       },
