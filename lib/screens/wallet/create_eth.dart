@@ -43,6 +43,7 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
     //   final eth = Ethereum.createWallet(name: _name, password: _password);
     //   Ethereum.saveWallet(ethWallet: eth, walletsBloc: _walletsBloc);
     //
+    //   // Password
     //   Navigator.of(context).pushReplacementNamed(AppScreen.routeName, arguments: {
     //   AppScreen.argIndex: 1,
     //   });
