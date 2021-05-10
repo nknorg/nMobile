@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/theme/theme.dart';
 
 class ButtonIcon extends StatefulWidget {
-  final String text;
-  final Widget icon;
-  final Color fontColor;
-  final EdgeInsets padding;
   final double width;
   final double height;
+  final Widget icon;
+  final String text;
+  final EdgeInsets padding;
   final VoidCallback onPressed;
+  final Color fontColor;
 
-  ButtonIcon({this.text, this.icon, this.fontColor, this.padding, this.width, this.height, this.onPressed});
+  ButtonIcon({
+    this.width,
+    this.height,
+    this.icon,
+    this.text,
+    this.padding,
+    this.onPressed,
+    this.fontColor,
+  });
 
   @override
   _ButtonIconState createState() => _ButtonIconState();

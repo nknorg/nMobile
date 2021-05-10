@@ -21,7 +21,6 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
     return Layout(
-      headerColor: application.theme.primaryColor,
       header: Header(
         titleChild: Padding(
           padding: const EdgeInsets.only(left: 20),
@@ -32,7 +31,7 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
           ),
         ),
       ),
-      child: Padding(
+      body: Padding(
         padding: const EdgeInsets.only(bottom: 80),
         child: Flex(
           direction: Axis.vertical,

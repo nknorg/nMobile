@@ -1,33 +1,36 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/theme/theme.dart';
 
 class Button extends StatefulWidget {
   final String text;
   final Widget child;
+  final double fontSize;
   final Color fontColor;
-  final Color backgroundColor;
-  final Color outlineBorderColor;
+  final FontWeight fontWeight;
   final double width;
   final double height;
-  final VoidCallback onPressed;
-  final bool disabled;
   final bool outline;
+  final bool disabled;
+  final VoidCallback onPressed;
   final EdgeInsets padding;
+  final Color backgroundColor;
+  final Color borderColor;
 
   Button({
-    this.outline = false,
     this.text,
     this.child,
-    this.width,
-    this.onPressed,
-    this.disabled = false,
-    this.height,
+    this.fontSize,
     this.fontColor,
-    this.backgroundColor,
-    this.outlineBorderColor,
+    this.fontWeight,
+    this.width,
+    this.height,
+    this.outline = false,
+    this.disabled = false,
+    this.onPressed,
     this.padding,
+    this.backgroundColor,
+    this.borderColor,
   });
 
   @override
@@ -37,34 +40,43 @@ class Button extends StatefulWidget {
 class _ButtonState extends State<Button> {
   @override
   Widget build(BuildContext context) {
+    var width = widget.width ?? double.infinity;
+    var height = widget.height ?? 52;
+
     var child = widget.text != null
         ? Text(
             widget.text,
-            style: TextStyle(fontSize: application.theme.buttonFontSize, fontWeight: FontWeight.bold, color: widget.fontColor ?? application.theme.fontLightColor),
+            style: TextStyle(
+              fontSize: widget.fontSize ?? application.theme.buttonFontSize,
+              color: widget.fontColor ?? application.theme.fontLightColor,
+              fontWeight: widget.fontWeight ?? FontWeight.bold,
+            ),
           )
         : widget.child;
-    var height = widget.height ?? 52;
+
+    var btnStyle = ButtonStyle(
+      padding: MaterialStateProperty.resolveWith((states) => widget.padding ?? EdgeInsets.all(0)),
+      shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.circular(height / 2))),
+      backgroundColor: MaterialStateProperty.resolveWith((states) => widget.backgroundColor ?? (widget.outline ? null : application.theme.primaryColor)),
+    );
+
+    if (widget.borderColor != null) {
+      btnStyle = btnStyle.copyWith(side: MaterialStateProperty.resolveWith((state) => BorderSide(color: widget.disabled ? application.theme.backgroundColor2 : widget.borderColor)));
+    }
+
     return SizedBox(
-      width: widget.width == null ? double.infinity : widget.width,
+      width: width,
       height: height,
       child: widget.outline
           ? OutlinedButton(
-              style: ButtonStyle(
-                padding: MaterialStateProperty.resolveWith((states) => widget.padding ?? EdgeInsets.all(0)),
-                shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.circular(height / 2))),
-                backgroundColor: MaterialStateProperty.resolveWith((states) => widget.backgroundColor),
-              ),
               child: child,
               onPressed: widget.disabled ? null : widget.onPressed,
+              style: btnStyle,
             )
           : TextButton(
-              style: ButtonStyle(
-                padding: MaterialStateProperty.resolveWith((states) => widget.padding ?? EdgeInsets.all(0)),
-                shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.circular(height / 2))),
-                backgroundColor: MaterialStateProperty.resolveWith((states) => widget.backgroundColor ?? application.theme.primaryColor),
-              ),
               child: child,
               onPressed: widget.disabled ? null : widget.onPressed,
+              style: btnStyle,
             ),
     );
   }
