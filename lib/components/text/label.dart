@@ -17,31 +17,33 @@ class Label extends StatelessWidget {
   String text;
   final LabelType type;
   final Color color;
-  final bool dark;
-  final bool softWrap;
-  final TextAlign textAlign;
-  final FontWeight fontWeight;
-  final double height;
-  TextOverflow overflow;
-  final int maxLines;
   final double fontSize;
+  final FontWeight fontWeight;
+  final TextAlign textAlign;
+  final int maxLines;
+  final bool softWrap;
+  TextOverflow overflow;
+  final bool dark;
+  final double height;
   final TextDecoration decoration;
   final FontStyle fontStyle;
+  final double textScaleFactor;
 
   Label(
     this.text, {
-    this.fontSize,
     this.type = LabelType.label,
-    this.maxLines,
     this.color,
-    this.dark = false,
-    this.textAlign,
+    this.fontSize,
     this.fontWeight,
-    this.height,
-    this.overflow,
+    this.textAlign,
+    this.maxLines,
     this.softWrap = false,
+    this.overflow,
+    this.dark = false,
+    this.height,
     this.decoration,
     this.fontStyle,
+    this.textScaleFactor = 1.0,
   }) {
     overflow ??= softWrap ? null : TextOverflow.ellipsis;
   }
@@ -85,26 +87,42 @@ class Label extends StatelessWidget {
         break;
     }
 
-    if (dark) {
-      textStyle = textStyle.copyWith(color: theme.fontLightColor);
-    }
-
     if (color != null) {
       textStyle = textStyle.copyWith(color: color);
+    }
+
+    if (fontSize != null) {
+      textStyle = textStyle.copyWith(fontSize: fontSize);
     }
 
     if (fontWeight != null) {
       textStyle = textStyle.copyWith(fontWeight: fontWeight);
     }
 
+    if (dark) {
+      textStyle = textStyle.copyWith(color: theme.fontLightColor);
+    }
+
+    if (height != null) {
+      textStyle = textStyle.copyWith(height: height);
+    }
+
+    if (decoration != null) {
+      textStyle = textStyle.copyWith(decoration: decoration);
+    }
+
+    if (fontStyle != null) {
+      textStyle = textStyle.copyWith(fontStyle: fontStyle);
+    }
+
     return Text(
       text,
-      textScaleFactor: 1.0,
       style: textStyle,
       textAlign: textAlign,
-      overflow: overflow,
-      softWrap: softWrap,
       maxLines: maxLines ?? defaultTextStyle.maxLines,
+      softWrap: softWrap,
+      overflow: overflow,
+      textScaleFactor: textScaleFactor,
     );
   }
 }

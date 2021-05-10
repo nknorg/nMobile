@@ -70,7 +70,6 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
     S _localizations = S.of(context);
 
     return Layout(
-      headerColor: application.theme.primaryColor,
       header: Header(
         titleChild: Padding(
           padding: EdgeInsets.only(left: 20),
@@ -151,7 +150,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
           ),
         ],
       ),
-      child: BlocBuilder<WalletBloc, WalletState>(
+      body: BlocBuilder<WalletBloc, WalletState>(
         builder: (context, state) {
           if (state is WalletLoaded) {
             return ListView.builder(

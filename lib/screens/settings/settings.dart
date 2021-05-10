@@ -104,7 +104,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
     return Layout(
-      headerColor: application.theme.headBarColor1,
       header: Header(
         titleChild: Padding(
           padding: const EdgeInsets.only(left: 20),
@@ -115,7 +114,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ),
-      child: ListView(
+      body: ListView(
         padding: const EdgeInsets.only(top: 20, bottom: 100, left: 20, right: 20),
         children: [
           // general

@@ -50,7 +50,7 @@ class _SelectScreenState extends State<SelectScreen> {
         title: title,
         backgroundColor: application.theme.backgroundColor4,
       ),
-      child: Container(
+      body: Container(
         padding: const EdgeInsets.only(top: 12, left: 16, right: 16),
         child: Flex(
           direction: Axis.vertical,
