@@ -70,9 +70,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
           WalletSchema wallet = WalletSchema(name: _name, address: result?.address, type: WalletType.nkn);
           logger.d("import_nkn:${wallet.toString()}");
 
-          // TODO:GG password
-          //await SecureStorage().set('${SecureStorage.PASSWORDS_KEY}:$address', _password);
-          _walletBloc.add(AddWallet(wallet, result?.keystore));
+          _walletBloc.add(AddWallet(wallet, result?.keystore, password: _password));
         } else {
           // TODO:GG import eth by keystore
           // final ethWallet = Ethereum.restoreWallet(name: _name, keystore: _keystore, password: _password);

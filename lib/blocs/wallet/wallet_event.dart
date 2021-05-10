@@ -11,8 +11,9 @@ class LoadWallet extends WalletEvent {}
 class AddWallet extends WalletEvent {
   final WalletSchema wallet;
   final String keystore;
+  final String password;
 
-  AddWallet(this.wallet, this.keystore);
+  AddWallet(this.wallet, this.keystore, {this.password});
 }
 
 // delete
