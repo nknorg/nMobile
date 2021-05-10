@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -5,7 +7,9 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/layout/tabs.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/utils/assets.dart';
+import 'package:nmobile/utils/logger.dart';
 
 import 'import_by_keystore.dart';
 import 'import_by_seed.dart';
@@ -26,11 +30,19 @@ class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTick
   String _walletType;
   TabController _tabController;
 
+  StreamController<String> _qrController = StreamController<String>.broadcast();
+
   @override
   void initState() {
     super.initState();
     this._walletType = widget.arguments[WalletImportScreen.argWalletType];
     _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _qrController.close();
   }
 
   @override
@@ -47,10 +59,13 @@ class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTick
           IconButton(
             icon: assetIcon('scan', width: 24, color: application.theme.backgroundLightColor),
             onPressed: () async {
-              // TODO:GG scan
-              // var qrData = await Navigator.of(context).pushNamed(ScannerScreen.routeName);
-              // eventBus.fire(QMScan(qrData));
-              // NLog.d(qrData);
+              if (_tabController.index != 1) {
+                _tabController.index = 1;
+              }
+
+              var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
+              logger.d("QR_DATA:$qrData");
+              _qrController.sink?.add(qrData);
             },
           )
         ],
@@ -75,7 +90,7 @@ class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTick
                     controller: _tabController,
                     children: <Widget>[
                       WalletImportByKeystoreLayout(walletType: this._walletType),
-                      WalletImportBySeedLayout(walletType: this._walletType),
+                      WalletImportBySeedLayout(walletType: this._walletType, qrStream: _qrController.stream),
                     ],
                   ),
                 ),

@@ -6,6 +6,7 @@ import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 
 class WalletImportByKeystoreLayout extends StatefulWidget {
@@ -18,7 +19,6 @@ class WalletImportByKeystoreLayout extends StatefulWidget {
 }
 
 class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLayout> with SingleTickerProviderStateMixin {
-  // TODO:GG params
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
 
@@ -39,14 +39,12 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
     super.initState();
     // _walletsBloc = BlocProvider.of<WalletsBloc>(context);
 
-    // TODO:GG lock
     // TimerAuth.onOtherPage = true;
   }
 
   @override
   void dispose() {
     super.dispose();
-    // TODO:GG unlock
     // TimerAuth.onOtherPage = true;
   }
 
@@ -176,7 +174,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                       FocusScope.of(context).requestFocus(_passwordFocusNode);
                     },
                     textInputAction: TextInputAction.next,
-                    // validator: Validator.of(context).walletName(), // TODO:GG validator
+                    validator: Validator.of(context).walletName(),
                   ),
                 ),
                 Padding(
@@ -197,7 +195,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                     onFieldSubmitted: (_) {
                       FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
                     },
-                    // validator: Validator.of(context).password(), // TODO:GG validator
+                    validator: Validator.of(context).password(),
                     password: true,
                   ),
                 ),
