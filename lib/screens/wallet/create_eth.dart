@@ -8,6 +8,7 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validation.dart';
 
 class WalletCreateETHScreen extends StatefulWidget {
   static const String routeName = '/wallet/create_eth';
@@ -42,13 +43,16 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
     //   final eth = Ethereum.createWallet(name: _name, password: _password);
     //   Ethereum.saveWallet(ethWallet: eth, walletsBloc: _walletsBloc);
     //
-    //   Navigator.of(context).pushReplacementNamed(AppScreen.routeName); // TODO:GG home_index
+    //   Navigator.of(context).pushReplacementNamed(AppScreen.routeName, arguments: {
+    //   AppScreen.argIndex: 1,
+    //   });
     // }
   }
 
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
+    double headIconSize = MediaQuery.of(context).size.width / 3;
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
@@ -62,132 +66,134 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
           onTap: () {
             FocusScope.of(context).requestFocus(FocusNode());
           },
-          child: Column(
+          child: Stack(
+            alignment: Alignment.bottomCenter,
             children: <Widget>[
-              Container(
-                padding: EdgeInsets.symmetric(vertical: 44),
-                child: Center(
-                  child: SvgPicture.asset('assets/ethereum-logo.svg', width: MediaQuery.of(context).size.width / 3),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding: EdgeInsets.all(24),
+                  child: Center(
+                    child: SvgPicture.asset('assets/ethereum-logo.svg', width: headIconSize),
+                  ),
                 ),
               ),
-              // TODO:GG keyboard_adapt
-              Expanded(
-                flex: 1,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: application.theme.backgroundLightColor,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    autovalidateMode: AutovalidateMode.always,
-                    onChanged: () {
-                      setState(() {
-                        _formValid = (_formKey.currentState as FormState).validate();
-                      });
-                    },
-                    child: Column(
-                      children: <Widget>[
-                        Expanded(
-                          flex: 1,
-                          child: ListView(
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.only(left: 20, right: 20, top: 32),
-                                child: Label(
-                                  _localizations.wallet_name,
-                                  type: LabelType.h3,
-                                  textAlign: TextAlign.start,
-                                ),
+              Container(
+                constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - Header.height - headIconSize - 24 * 2 - 30),
+                decoration: BoxDecoration(
+                  color: application.theme.backgroundLightColor,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                ),
+                child: Form(
+                  key: _formKey,
+                  autovalidateMode: AutovalidateMode.always,
+                  onChanged: () {
+                    setState(() {
+                      _formValid = (_formKey.currentState as FormState).validate();
+                    });
+                  },
+                  child: Column(
+                    children: <Widget>[
+                      Expanded(
+                        flex: 1,
+                        child: ListView(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(left: 20, right: 20, top: 32),
+                              child: Label(
+                                _localizations.wallet_name,
+                                type: LabelType.h3,
+                                textAlign: TextAlign.start,
                               ),
-                              Padding(
-                                padding: EdgeInsets.only(left: 20, right: 20),
-                                child: FormText(
-                                  hintText: _localizations.hint_enter_wallet_name,
-                                  focusNode: _nameFocusNode,
-                                  onSaved: (v) => _name = v,
-                                  onFieldSubmitted: (_) {
-                                    FocusScope.of(context).requestFocus(_passwordFocusNode);
-                                  },
-                                  textInputAction: TextInputAction.next,
-                                  // validator: Validator.of(context).walletName(), // TODO:GG validator
-                                ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20, right: 20),
+                              child: FormText(
+                                hintText: _localizations.hint_enter_wallet_name,
+                                focusNode: _nameFocusNode,
+                                onSaved: (v) => _name = v,
+                                onFieldSubmitted: (_) {
+                                  FocusScope.of(context).requestFocus(_passwordFocusNode);
+                                },
+                                textInputAction: TextInputAction.next,
+                                validator: Validator.of(context).walletName(),
                               ),
-                              SizedBox(height: 14),
-                              Padding(
-                                padding: EdgeInsets.only(left: 20, right: 20),
-                                child: Label(
-                                  _localizations.wallet_password,
-                                  type: LabelType.h3,
-                                  textAlign: TextAlign.start,
-                                ),
+                            ),
+                            SizedBox(height: 14),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20, right: 20),
+                              child: Label(
+                                _localizations.wallet_password,
+                                type: LabelType.h3,
+                                textAlign: TextAlign.start,
                               ),
-                              Padding(
-                                padding: EdgeInsets.only(left: 20, right: 20),
-                                child: FormText(
-                                  focusNode: _passwordFocusNode,
-                                  controller: _passwordController,
-                                  hintText: _localizations.input_password,
-                                  onSaved: (v) => _password = v,
-                                  onFieldSubmitted: (_) {
-                                    FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
-                                  },
-                                  textInputAction: TextInputAction.next,
-                                  // validator: Validator.of(context).password(), // TODO:GG validator
-                                  password: true,
-                                ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20, right: 20),
+                              child: FormText(
+                                focusNode: _passwordFocusNode,
+                                controller: _passwordController,
+                                hintText: _localizations.input_password,
+                                onSaved: (v) => _password = v,
+                                onFieldSubmitted: (_) {
+                                  FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
+                                },
+                                textInputAction: TextInputAction.next,
+                                validator: Validator.of(context).password(),
+                                password: true,
                               ),
-                              Padding(
-                                padding: EdgeInsets.only(left: 20, right: 20),
-                                child: Text(
-                                  _localizations.wallet_password_mach,
-                                  style: application.theme.bodyText2,
-                                ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20, right: 20),
+                              child: Text(
+                                _localizations.wallet_password_mach,
+                                style: application.theme.bodyText2,
                               ),
-                              SizedBox(height: 24),
-                              Padding(
-                                padding: EdgeInsets.only(left: 20, right: 20),
-                                child: Label(
-                                  _localizations.confirm_password,
-                                  type: LabelType.h3,
-                                  textAlign: TextAlign.start,
-                                ),
+                            ),
+                            SizedBox(height: 24),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20, right: 20),
+                              child: Label(
+                                _localizations.confirm_password,
+                                type: LabelType.h3,
+                                textAlign: TextAlign.start,
                               ),
-                              Padding(
-                                padding: EdgeInsets.only(left: 20, right: 20, bottom: 32),
-                                child: FormText(
-                                  focusNode: _confirmPasswordFocusNode,
-                                  hintText: _localizations.input_password_again,
-                                  // validator: Validator.of(context).confrimPassword(_passwordController.text), // TODO:GG validator + wave
-                                  password: true,
-                                ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20, right: 20, bottom: 32),
+                              child: FormText(
+                                focusNode: _confirmPasswordFocusNode,
+                                hintText: _localizations.input_password_again,
+                                validator: Validator.of(context).confirmPassword(_passwordController.text),
+                                password: true,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        Expanded(
-                          flex: 0,
-                          child: SafeArea(
-                            child: Padding(
-                              padding: EdgeInsets.only(bottom: 8, top: 8),
-                              child: Column(
-                                children: <Widget>[
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 30, right: 30),
-                                    child: Button(
-                                      text: _localizations.create_wallet,
-                                      disabled: !_formValid,
-                                      // backgroundColor: _formValid ? application.theme.primaryColor : application.theme.fontColor2, // TODO:GG enable_color
-                                      onPressed: _create,
-                                    ),
+                      ),
+                      Expanded(
+                        flex: 0,
+                        child: SafeArea(
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: 8, top: 8),
+                            child: Column(
+                              children: <Widget>[
+                                Padding(
+                                  padding: EdgeInsets.only(left: 30, right: 30),
+                                  child: Button(
+                                    text: _localizations.create_wallet,
+                                    disabled: !_formValid,
+                                    onPressed: _create,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),

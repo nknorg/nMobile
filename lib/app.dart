@@ -6,8 +6,8 @@ import 'package:get_it/get_it.dart';
 import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/wallet/home.dart';
 
-import 'common/global.dart';
 import 'common/application.dart';
+import 'common/global.dart';
 import 'common/locator.dart';
 import 'components/layout/nav.dart';
 import 'native/common.dart';
@@ -15,6 +15,11 @@ import 'screens/settings/settings.dart';
 
 class AppScreen extends StatefulWidget {
   static const String routeName = '/';
+  static final String argIndex = "index";
+
+  final Map<String, dynamic> arguments;
+
+  const AppScreen({Key key, this.arguments}) : super(key: key);
 
   @override
   _AppScreenState createState() => _AppScreenState();
@@ -23,8 +28,8 @@ class AppScreen extends StatefulWidget {
 class _AppScreenState extends State<AppScreen> {
   GetIt locator = GetIt.instance;
   Application app;
+  int _currentIndex = 0; // TODO:GG fixed_me
   PageController _pageController;
-  int _currentIndex = 0;
   List<Widget> screens = <Widget>[
     ChatHomeScreen(),
     WalletHomeScreen(),
@@ -34,11 +39,12 @@ class _AppScreenState extends State<AppScreen> {
   @override
   void initState() {
     super.initState();
+    app = locator.get<Application>();
+    this._currentIndex = widget.arguments != null ? (widget.arguments[AppScreen.argIndex] ?? 0) : 0;
     _pageController = PageController();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
-    app = locator.get<Application>();
   }
 
   @override

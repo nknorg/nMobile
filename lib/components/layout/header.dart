@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class Header extends StatelessWidget implements PreferredSizeWidget {
+  static double height = 68;
+
   final String title;
   final Widget titleChild;
   final Widget leading;
@@ -62,5 +64,5 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   // Size get preferredSize => _header.preferredSize;
-  Size get preferredSize => Size.fromHeight(68);
+  Size get preferredSize => Size.fromHeight(height);
 }
