@@ -41,7 +41,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     logger.d("wallet:${event.wallet}, keystore:${event.keystore}");
     if (state is WalletLoaded) {
       // TODO:GG duplicated
-      _walletStorage.addWallet(event.wallet, event.keystore);
+      _walletStorage.addWallet(event.wallet, event.keystore, password: event.password);
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets)..add(event.wallet);
       logger.d("newList:$list");
       yield WalletLoaded(list);

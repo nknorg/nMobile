@@ -55,7 +55,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
       WalletSchema wallet = WalletSchema(name: _name, address: result?.address, type: WalletType.nkn);
       logger.d("create:${wallet.toString()}");
 
-      _walletBloc.add(AddWallet(wallet, result?.keystore));
+      _walletBloc.add(AddWallet(wallet, result?.keystore, password: _password));
 
       Loading.dismiss();
       Navigator.pushReplacementNamed(context, AppScreen.routeName, arguments: {
