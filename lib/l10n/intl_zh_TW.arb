@@ -91,6 +91,12 @@
   "input_seed": "請輸入seed",
 
   "error_required": "必填",
+  "error_field_required": "{field} 必填",
+  "error_confirm_password": "密碼不匹配",
+  "error_keystore_format": "Keystore 错误",
+  "error_seed_format": "Seed 錯誤",
+  "error_client_address_format": "地址不正確",
+  "error_nkn_address_format": "賬戶地址無效",
 
   "main_wallet": "主賬戶",
   "export_wallet": "導出賬戶",

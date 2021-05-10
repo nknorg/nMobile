@@ -19,6 +19,8 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'zh_TW';
 
+  static m0(field) => "${field} 必填";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
     "ERC_20" : MessageLookupByLibrary.simpleMessage("ERC-20"),
@@ -63,7 +65,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "delete_wallet_confirm_text" : MessageLookupByLibrary.simpleMessage("這將從您的設備中刪除帳戶。請確保您的帳戶已備份，否則您的資金將丟失且無法找回。"),
     "delete_wallet_confirm_title" : MessageLookupByLibrary.simpleMessage("您確定要刪除此帳戶嗎?"),
     "disconnect" : MessageLookupByLibrary.simpleMessage("斷開連接"),
+    "error_client_address_format" : MessageLookupByLibrary.simpleMessage("地址不正確"),
+    "error_confirm_password" : MessageLookupByLibrary.simpleMessage("密碼不匹配"),
+    "error_field_required" : m0,
+    "error_keystore_format" : MessageLookupByLibrary.simpleMessage("Keystore 错误"),
+    "error_nkn_address_format" : MessageLookupByLibrary.simpleMessage("賬戶地址無效"),
     "error_required" : MessageLookupByLibrary.simpleMessage("必填"),
+    "error_seed_format" : MessageLookupByLibrary.simpleMessage("Seed 錯誤"),
     "ethereum" : MessageLookupByLibrary.simpleMessage("以太坊"),
     "export_wallet" : MessageLookupByLibrary.simpleMessage("導出賬戶"),
     "face_id" : MessageLookupByLibrary.simpleMessage("Face ID"),

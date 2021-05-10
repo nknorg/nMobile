@@ -11,6 +11,7 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -125,7 +126,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                     FocusScope.of(context).requestFocus(_passwordFocusNode);
                                   },
                                   textInputAction: TextInputAction.next,
-                                  // validator: Validator.of(context).walletName(), // TODO:GG validator
+                                  validator: Validator.of(context).walletName(),
                                 ),
                               ),
                               SizedBox(height: 14),
@@ -148,7 +149,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                     FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
                                   },
                                   textInputAction: TextInputAction.next,
-                                  // validator: Validator.of(context).password(), // TODO:GG validator
+                                  validator: Validator.of(context).password(),
                                   password: true,
                                 ),
                               ),
@@ -173,7 +174,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                 child: FormText(
                                   focusNode: _confirmPasswordFocusNode,
                                   hintText: _localizations.input_password_again,
-                                  // validator: Validator.of(context).confrimPassword(_passwordController.text), // TODO:GG validator
+                                  validator: Validator.of(context).confirmPassword(_passwordController.text),
                                   password: true,
                                 ),
                               ),
@@ -192,7 +193,6 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                     child: Button(
                                       text: _localizations.create_wallet,
                                       disabled: !_formValid,
-                                      // backgroundColor: _formValid ? application.theme.primaryColor : application.theme.fontColor2, // TODO:GG enable_color + wave
                                       onPressed: _create,
                                     ),
                                   ),

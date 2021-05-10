@@ -865,6 +865,66 @@ class S {
     );
   }
 
+  /// `{field} is required.`
+  String error_field_required(Object field) {
+    return Intl.message(
+      '$field is required.',
+      name: 'error_field_required',
+      desc: '',
+      args: [field],
+    );
+  }
+
+  /// `Password does not match.`
+  String get error_confirm_password {
+    return Intl.message(
+      'Password does not match.',
+      name: 'error_confirm_password',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Keystore format does not match.`
+  String get error_keystore_format {
+    return Intl.message(
+      'Keystore format does not match.',
+      name: 'error_keystore_format',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Seed format does not match.`
+  String get error_seed_format {
+    return Intl.message(
+      'Seed format does not match.',
+      name: 'error_seed_format',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Client address format does not match.`
+  String get error_client_address_format {
+    return Intl.message(
+      'Client address format does not match.',
+      name: 'error_client_address_format',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid wallet address.`
+  String get error_nkn_address_format {
+    return Intl.message(
+      'Invalid wallet address.',
+      name: 'error_nkn_address_format',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Main Account`
   String get main_wallet {
     return Intl.message(
