@@ -48,7 +48,7 @@ class _ButtonState extends State<Button> {
             widget.text,
             style: TextStyle(
               fontSize: widget.fontSize ?? application.theme.buttonFontSize,
-              color: widget.fontColor ?? application.theme.fontLightColor,
+              color: widget.disabled ? application.theme.fontColor2 : (widget.fontColor ?? application.theme.fontLightColor),
               fontWeight: widget.fontWeight ?? FontWeight.bold,
             ),
           )
@@ -57,7 +57,12 @@ class _ButtonState extends State<Button> {
     var btnStyle = ButtonStyle(
       padding: MaterialStateProperty.resolveWith((states) => widget.padding ?? EdgeInsets.all(0)),
       shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.circular(height / 2))),
-      backgroundColor: MaterialStateProperty.resolveWith((states) => widget.backgroundColor ?? (widget.outline ? null : application.theme.primaryColor)),
+      backgroundColor: MaterialStateProperty.resolveWith((states) {
+        if (widget.disabled) {
+          return application.theme.backgroundColor2;
+        }
+        return widget.backgroundColor ?? (widget.outline ? null : application.theme.primaryColor);
+      }),
     );
 
     if (widget.borderColor != null) {

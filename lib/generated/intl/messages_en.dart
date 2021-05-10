@@ -19,6 +19,8 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'en';
 
+  static m0(field) => "${field} is required.";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
     "ERC_20" : MessageLookupByLibrary.simpleMessage("ERC-20"),
@@ -63,7 +65,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "delete_wallet_confirm_text" : MessageLookupByLibrary.simpleMessage("This will remove the account off your local device. Please make sure your account is fully backed up or you will lose your funds."),
     "delete_wallet_confirm_title" : MessageLookupByLibrary.simpleMessage("Are you sure you want to delete this account?"),
     "disconnect" : MessageLookupByLibrary.simpleMessage("Disconnect"),
+    "error_client_address_format" : MessageLookupByLibrary.simpleMessage("Client address format does not match."),
+    "error_confirm_password" : MessageLookupByLibrary.simpleMessage("Password does not match."),
+    "error_field_required" : m0,
+    "error_keystore_format" : MessageLookupByLibrary.simpleMessage("Keystore format does not match."),
+    "error_nkn_address_format" : MessageLookupByLibrary.simpleMessage("Invalid wallet address."),
     "error_required" : MessageLookupByLibrary.simpleMessage("This field is required."),
+    "error_seed_format" : MessageLookupByLibrary.simpleMessage("Seed format does not match."),
     "ethereum" : MessageLookupByLibrary.simpleMessage("Ethereum"),
     "export_wallet" : MessageLookupByLibrary.simpleMessage("Export Account"),
     "face_id" : MessageLookupByLibrary.simpleMessage("Face ID"),
