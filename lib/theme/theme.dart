@@ -45,17 +45,12 @@ abstract class SkinTheme {
   double iconTextFontSize;
   double buttonFontSize;
 
+  double headerHeight = 114;
+  double bottomNavHeight = 70;
+  Color loadingColor = Color(0xFFFFFFFF);
+  Color riseColor = Color(0xFF00CC96);
+  Color fallColor = Color(0xFFFC5D68);
 
-  static final double bodySmallFontSize = 14;
-  static final double labelFontSize = bodySmallFontSize;
-  static final double chatTimeSize = bodySmallFontSize;
-
-
-  static final double headerHeight = 114;
-  static final double bottomNavHeight = 70;
-
-  static const Color loadingColor = Color(0xFFFFFFFF);
-
-  static const Color riseColor = Color(0xFF00CC96);
-  static const Color fallColor = Color(0xFFFC5D68);
+  List<Color> randomBackgroundColorList;
+  List<Color> randomColorList;
 }

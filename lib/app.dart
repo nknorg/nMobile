@@ -25,7 +25,7 @@ class AppScreen extends StatefulWidget {
   _AppScreenState createState() => _AppScreenState();
 }
 
-class _AppScreenState extends State<AppScreen> {
+class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   GetIt locator = GetIt.instance;
   Application app;
   int _currentIndex = 0; // TODO:GG fixed_me
@@ -51,6 +51,13 @@ class _AppScreenState extends State<AppScreen> {
   void dispose() {
     _pageController?.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    application.appLifecycleState = state;
+
+    super.didChangeAppLifecycleState(state);
   }
 
   @override

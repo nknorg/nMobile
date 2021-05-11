@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/utils/path.dart';
 import 'package:uuid/uuid.dart';
 
 var uuid = Uuid();

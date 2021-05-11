@@ -275,6 +275,26 @@ class S {
     );
   }
 
+  /// `Click to change`
+  String get click_to_change {
+    return Intl.message(
+      'Click to change',
+      name: 'click_to_change',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Click to settings`
+  String get click_to_settings {
+    return Intl.message(
+      'Click to settings',
+      name: 'click_to_settings',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `authenticate to access`
   String get authenticate_to_access {
     return Intl.message(
@@ -590,6 +610,26 @@ class S {
     return Intl.message(
       'Create Ethereum Account',
       name: 'create_ethereum_wallet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New Message`
+  String get new_message {
+    return Intl.message(
+      'New Message',
+      name: 'new_message',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You have a new message`
+  String get you_have_new_message {
+    return Intl.message(
+      'You have a new message',
+      name: 'you_have_new_message',
       desc: '',
       args: [],
     );
