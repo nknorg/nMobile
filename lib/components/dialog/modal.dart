@@ -139,6 +139,7 @@ class _ModalDialogState extends State<ModalDialog> {
                     child: widget.contentWidget ??
                         Label(
                           widget.content ?? "",
+                          type: LabelType.bodyRegular,
                           maxLines: 100,
                         ),
                   ),
