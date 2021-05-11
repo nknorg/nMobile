@@ -158,4 +158,39 @@ class LightTheme implements SkinTheme {
 
   @override
   double buttonFontSize = 16;
+
+  @override
+  double headerHeight = 114;
+
+  @override
+  double bottomNavHeight = 70;
+
+  @override
+  Color loadingColor = Color(0xFFFFFFFF);
+
+  @override
+  Color fallColor = Color(0xFFFC5D68);
+
+  @override
+  Color riseColor = Color(0xFF00CC96);
+
+  @override
+  List<Color> randomBackgroundColorList = [
+    Color(0x190F6EFF),
+    Color(0x19F5B800),
+    Color(0x19FC5D68),
+    Color(0x195458F7),
+    Color(0x1900CC96),
+    Color(0x199013FE),
+  ];
+
+  @override
+  List<Color> randomColorList = [
+    Color(0xFF0F6EFF),
+    Color(0xFFF5B800),
+    Color(0xFFFC5D68),
+    Color(0xff5458F7),
+    Color(0xff00CC96),
+    Color(0xff9013FE),
+  ];
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -196,6 +197,7 @@ class _CacheScreenState extends State<CacheScreen> {
                             width: double.infinity,
                             onPressed: () async {
                               // todo auth
+                              await DB.currentDatabase?.close();
                               await clearDbFile(Global.applicationRootDirectory);
                               var size = await getTotalSizeOfDbFile(Global.applicationRootDirectory);
                               setState(() {

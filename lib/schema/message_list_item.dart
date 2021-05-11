@@ -1,7 +1,9 @@
+import 'package:equatable/equatable.dart';
+
 import 'contact.dart';
 import 'topic.dart';
 
-class MessageListItem {
+class MessageListItem extends Equatable {
   String targetId;
   String sender;
   String content;
@@ -21,4 +23,7 @@ class MessageListItem {
     this.notReadCount,
     this.isTop = false,
   });
+
+  @override
+  List<Object> get props => [targetId];
 }
