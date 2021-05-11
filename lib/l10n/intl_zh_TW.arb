@@ -82,6 +82,7 @@
   "view_qrcode": "查看二維碼",
   "qrcode": "二維碼",
   "seed_qrcode_dec": "請安全地保存和備份您的種子。如果丟失，您將失去對資產的訪問權限。",
+  "authenticate_to_access": "認證以授權訪問",
 
   "keystore": "Keystore",
   "seed": "Seed",
