@@ -34,7 +34,6 @@ class WalletStorage {
     if (index < 0) {
       futures.add(_localStorage.addItem(KEY_WALLET, walletSchema?.toCacheMap()));
     } else {
-      // TODO:GG 没走吗？
       futures.add(_localStorage.setItem(KEY_WALLET, index, walletSchema?.toCacheMap()));
     }
     if (Platform.isAndroid) {
