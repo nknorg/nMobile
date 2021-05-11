@@ -112,14 +112,12 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
                             Padding(
                               padding: EdgeInsets.only(left: 20, right: 20),
                               child: FormText(
-                                hintText: _localizations.hint_enter_wallet_name,
                                 focusNode: _nameFocusNode,
-                                onSaved: (v) => _name = v,
-                                onFieldSubmitted: (_) {
-                                  FocusScope.of(context).requestFocus(_passwordFocusNode);
-                                },
-                                textInputAction: TextInputAction.next,
+                                hintText: _localizations.hint_enter_wallet_name,
                                 validator: Validator.of(context).walletName(),
+                                textInputAction: TextInputAction.next,
+                                onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
+                                onSaved: (v) => _name = v,
                               ),
                             ),
                             SizedBox(height: 14),
@@ -134,15 +132,13 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
                             Padding(
                               padding: EdgeInsets.only(left: 20, right: 20),
                               child: FormText(
-                                focusNode: _passwordFocusNode,
                                 controller: _passwordController,
+                                focusNode: _passwordFocusNode,
                                 hintText: _localizations.input_password,
-                                onSaved: (v) => _password = v,
-                                onFieldSubmitted: (_) {
-                                  FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
-                                },
-                                textInputAction: TextInputAction.next,
                                 validator: Validator.of(context).password(),
+                                textInputAction: TextInputAction.next,
+                                onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_confirmPasswordFocusNode),
+                                onSaved: (v) => _password = v,
                                 password: true,
                               ),
                             ),
@@ -168,6 +164,8 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
                                 focusNode: _confirmPasswordFocusNode,
                                 hintText: _localizations.input_password_again,
                                 validator: Validator.of(context).confirmPassword(_passwordController.text),
+                                textInputAction: TextInputAction.done,
+                                onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
                                 password: true,
                               ),
                             ),
