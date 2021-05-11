@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -12,10 +16,11 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/create_eth.dart';
 import 'package:nmobile/screens/wallet/create_nkn.dart';
-import 'package:nmobile/screens/wallet/detail_nkn.dart';
+import 'package:nmobile/screens/wallet/detail.dart';
 import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/assets.dart';
+import 'package:nmobile/utils/logger.dart';
 
 class WalletHomeListLayout extends StatefulWidget {
   @override
@@ -23,46 +28,39 @@ class WalletHomeListLayout extends StatefulWidget {
 }
 
 class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
-  // TODO:GG params
-  // WalletsBloc _walletsBloc;
-  // StreamSubscription _walletSubscription;
-  // final GetIt locator = GetIt.instance;
-  //
-  // double _totalNkn = 0;
-  bool _allBackedUp = false;
+  WalletBloc _walletBloc;
+  StreamSubscription _walletSubscription;
 
-  //
-  // // ignore: non_constant_identifier_names
-  // LOG _LOG;
+  double _totalNKN = 0;
+  bool _allBackedUp = false;
+  bool a = false;
 
   @override
   void initState() {
     super.initState();
-    // TODO:GG bloc
-//     _LOG = LOG(tag);
-//     locator<TaskService>().queryNknWalletBalanceTask();
-//     _walletsBloc = BlocProvider.of<WalletsBloc>(Global.appContext);
-//     _walletSubscription = _walletsBloc.listen((state) {
-//       if (state is WalletsLoaded) {
-//         _totalNkn = 0;
-//         _allBackedUp = true;
-//         state.wallets.forEach((w) => _totalNkn += w.balance ?? 0);
-//         state.wallets.forEach((w) {
-// //          NLog.d('w.isBackedUp: ${w.isBackedUp}, w.name: ${w.name}');
-//           _allBackedUp = w.isBackedUp && _allBackedUp;
-//         });
-//         setState(() {
-// //          NLog.d('_allBackedUp: $_allBackedUp');
-//         });
-//       }
-//     });
+    // locator<TaskService>().queryNknWalletBalanceTask(); // TODO:GG balance
+    _walletBloc = BlocProvider.of<WalletBloc>(context);
+    _walletSubscription = _walletBloc.stream.listen((state) {
+      if (state is WalletLoaded) {
+        double totalNKN = 0;
+        bool allBackUp = true;
+        state.wallets?.forEach((w) => totalNKN += w?.balance ?? 0);
+        state.wallets?.forEach((w) {
+          // allBackUp = w.isBackedUp && allBackUp; // TODO:GG backup
+        });
+        setState(() {
+          logger.d("wallet_home_list_update -> totalNKN:$totalNKN - allBackUp:$allBackUp");
+          _totalNKN = totalNKN;
+          _allBackedUp = allBackUp;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
-    // TODO:GG bloc
-    // _walletSubscription.cancel();
     super.dispose();
+    _walletSubscription.cancel();
   }
 
   @override
@@ -165,9 +163,9 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
                     schema: wallet,
                     type: wallet.type,
                     onTap: () {
-                      Navigator.pushNamed(context, WalletDetailNKNScreen.routeName, arguments: {
-                        WalletDetailNKNScreen.argWallet: wallet,
-                        WalletDetailNKNScreen.argListIndex: index,
+                      Navigator.pushNamed(context, WalletDetailScreen.routeName, arguments: {
+                        WalletDetailScreen.argWallet: wallet,
+                        WalletDetailScreen.argListIndex: index,
                       });
                     },
                     bgColor: application.theme.backgroundLightColor,
@@ -177,59 +175,68 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
               },
             );
           }
-          return ListView();
+          return SizedBox.shrink();
         },
       ),
     );
   }
 
   _onNotBackedUpTipClicked() {
-    // WalletNotBackedUpDialog.of(context).show(() {
-    //   // TODO:GG
-    //   // BottomDialog.of(context).showSelectWalletDialog(title: NL10ns.of(context).select_asset_to_backup, callback: _listen);
-    // });
+    S _localizations = S.of(context);
+    ModalDialog.of(context).show(
+      title: _localizations.d_not_backed_up_title,
+      content: _localizations.d_not_backed_up_desc,
+      hasCloseIcon: false,
+      hasCloseButton: false,
+      actions: [
+        Button(
+          text: _localizations.go_backup,
+          onPressed: _listen(null),
+        ),
+      ],
+    );
   }
 
-// _listen(WalletSchema ws) {
-//   NLog.d(ws);
-//   Future(() async {
-//     final future = ws.getPassword();
-//     future.then((password) async {
-//       if (password != null) {
-//         if (ws.type == WalletSchema.ETH_WALLET) {
-//           String keyStore = await ws.getKeystore();
-//           EthWallet ethWallet = Ethereum.restoreWallet(name: ws.name, keystore: keyStore, password: password);
-//           Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
-//             'wallet': null,
-//             'keystore': ethWallet.keystore,
-//             'address': (await ethWallet.address).hex,
-//             'publicKey': ethWallet.pubkeyHex,
-//             'seed': ethWallet.privateKeyHex,
-//             'name': ethWallet.name,
-//           });
-//         } else {
-//           try {
-//             var wallet = await ws.exportWallet(password);
-//             if (wallet['address'] == ws.address) {
-//               Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
-//                 'wallet': wallet,
-//                 'keystore': wallet['keystore'],
-//                 'address': wallet['address'],
-//                 'publicKey': wallet['publicKey'],
-//                 'seed': wallet['seed'],
-//                 'name': ws.name,
-//               });
-//             } else {
-//               showToast(NL10ns.of(context).password_wrong);
-//             }
-//           } catch (e) {
-//             if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-//               showToast(NL10ns.of(context).password_wrong);
-//             }
-//           }
-//         }
-//       }
-//     });
-//   });
-// }
+  _listen(WalletSchema ws) {
+    Future(() async {
+      // TODO:GG auth -> pwd
+      // final future = ws.getPassword();
+      // future.then((password) async {
+      //   if (password != null) {
+      //     if (ws.type == WalletSchema.ETH_WALLET) {
+      //       String keyStore = await ws.getKeystore();
+      //       EthWallet ethWallet = Ethereum.restoreWallet(name: ws.name, keystore: keyStore, password: password);
+      //       Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+      //         'wallet': null,
+      //         'keystore': ethWallet.keystore,
+      //         'address': (await ethWallet.address).hex,
+      //         'publicKey': ethWallet.pubkeyHex,
+      //         'seed': ethWallet.privateKeyHex,
+      //         'name': ethWallet.name,
+      //       });
+      //     } else {
+      //       try {
+      //         var wallet = await ws.exportWallet(password);
+      //         if (wallet['address'] == ws.address) {
+      //           Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+      //             'wallet': wallet,
+      //             'keystore': wallet['keystore'],
+      //             'address': wallet['address'],
+      //             'publicKey': wallet['publicKey'],
+      //             'seed': wallet['seed'],
+      //             'name': ws.name,
+      //           });
+      //         } else {
+      //           showToast(NL10ns.of(context).password_wrong);
+      //         }
+      //       } catch (e) {
+      //         if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+      //           showToast(NL10ns.of(context).password_wrong);
+      //         }
+      //       }
+      //     }
+      //   }
+      // });
+    });
+  }
 }

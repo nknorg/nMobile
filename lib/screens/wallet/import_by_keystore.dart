@@ -220,11 +220,11 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
             flex: 0,
             child: SafeArea(
               child: Padding(
-                padding: EdgeInsets.only(bottom: 8, top: 8),
+                padding: EdgeInsets.symmetric(vertical: 20),
                 child: Column(
                   children: <Widget>[
                     Padding(
-                      padding: EdgeInsets.only(left: 30, right: 30),
+                      padding: EdgeInsets.symmetric(horizontal: 30),
                       child: Button(
                         text: widget.walletType == WalletType.nkn ? _localizations.import_nkn_wallet : _localizations.import_ethereum_wallet,
                         disabled: !_formValid,

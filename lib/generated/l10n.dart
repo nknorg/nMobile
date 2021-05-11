@@ -735,6 +735,56 @@ class S {
     );
   }
 
+  /// `Private Key`
+  String get private_key {
+    return Intl.message(
+      'Private Key',
+      name: 'private_key',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Public Key`
+  String get public_key {
+    return Intl.message(
+      'Public Key',
+      name: 'public_key',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View QR Code`
+  String get view_qrcode {
+    return Intl.message(
+      'View QR Code',
+      name: 'view_qrcode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `QR Code`
+  String get qrcode {
+    return Intl.message(
+      'QR Code',
+      name: 'qrcode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.`
+  String get seed_qrcode_dec {
+    return Intl.message(
+      'Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.',
+      name: 'seed_qrcode_dec',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Keystore`
   String get keystore {
     return Intl.message(
