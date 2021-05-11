@@ -30,11 +30,9 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
   bool _formValid = false;
 
   TextEditingController _seedController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
   FocusNode _seedFocusNode = FocusNode();
   FocusNode _nameFocusNode = FocusNode();
   FocusNode _passwordFocusNode = FocusNode();
-  FocusNode _confirmPasswordFocusNode = FocusNode();
 
   WalletBloc _walletBloc;
   var _seed;
@@ -139,11 +137,10 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                     controller: _seedController,
                     focusNode: _seedFocusNode,
                     hintText: _localizations.input_seed,
-                    onSaved: (v) => _seed = v,
-                    onFieldSubmitted: (_) {
-                      FocusScope.of(context).requestFocus(_nameFocusNode);
-                    },
                     validator: Validator.of(context).seed(),
+                    textInputAction: TextInputAction.next,
+                    onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_nameFocusNode),
+                    onSaved: (v) => _seed = v,
                   ),
                 ),
                 Padding(
@@ -159,12 +156,10 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                   child: FormText(
                     focusNode: _nameFocusNode,
                     hintText: _localizations.hint_enter_wallet_name,
-                    onSaved: (v) => _name = v,
-                    onFieldSubmitted: (_) {
-                      FocusScope.of(context).requestFocus(_passwordFocusNode);
-                    },
-                    textInputAction: TextInputAction.next,
                     validator: Validator.of(context).walletName(),
+                    textInputAction: TextInputAction.next,
+                    onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
+                    onSaved: (v) => _name = v,
                   ),
                 ),
                 Padding(
@@ -179,13 +174,11 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                   padding: EdgeInsets.only(left: 20, right: 20, bottom: 24),
                   child: FormText(
                     focusNode: _passwordFocusNode,
-                    controller: _passwordController,
                     hintText: _localizations.input_password,
-                    onSaved: (v) => _password = v,
-                    onFieldSubmitted: (_) {
-                      FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
-                    },
                     validator: Validator.of(context).password(),
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
+                    onSaved: (v) => _password = v,
                     password: true,
                   ),
                 ),

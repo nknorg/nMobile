@@ -126,14 +126,12 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                             Padding(
                               padding: EdgeInsets.only(left: 20, right: 20),
                               child: FormText(
-                                hintText: _localizations.hint_enter_wallet_name,
                                 focusNode: _nameFocusNode,
-                                onSaved: (v) => _name = v,
-                                onFieldSubmitted: (_) {
-                                  FocusScope.of(context).requestFocus(_passwordFocusNode);
-                                },
+                                hintText: _localizations.hint_enter_wallet_name,
                                 textInputAction: TextInputAction.next,
                                 validator: Validator.of(context).walletName(),
+                                onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
+                                onSaved: (v) => _name = v,
                               ),
                             ),
                             SizedBox(height: 14),
@@ -148,15 +146,13 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                             Padding(
                               padding: EdgeInsets.only(left: 20, right: 20),
                               child: FormText(
-                                focusNode: _passwordFocusNode,
                                 controller: _passwordController,
+                                focusNode: _passwordFocusNode,
                                 hintText: _localizations.input_password,
-                                onSaved: (v) => _password = v,
-                                onFieldSubmitted: (_) {
-                                  FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
-                                },
                                 textInputAction: TextInputAction.next,
                                 validator: Validator.of(context).password(),
+                                onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_confirmPasswordFocusNode),
+                                onSaved: (v) => _password = v,
                                 password: true,
                               ),
                             ),
@@ -181,7 +177,9 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                               child: FormText(
                                 focusNode: _confirmPasswordFocusNode,
                                 hintText: _localizations.input_password_again,
+                                textInputAction: TextInputAction.done,
                                 validator: Validator.of(context).confirmPassword(_passwordController.text),
+                                onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
                                 password: true,
                               ),
                             ),
