@@ -7,8 +7,10 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/chat/message_list_item.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/message_list_item.dart';
+import 'package:nmobile/screens/chat/chat.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 
@@ -17,12 +19,16 @@ class MessageListScreen extends StatefulWidget {
   _MessageListScreenState createState() => _MessageListScreenState();
 }
 
-class _MessageListScreenState extends State<MessageListScreen> {
+class _MessageListScreenState extends State<MessageListScreen> with AutomaticKeepAliveClientMixin {
   ScrollController _scrollController = ScrollController();
   StreamSubscription _statusStreamSubscription;
   StreamSubscription _onMessageStreamSubscription;
   MessageStorage _messageStorage = MessageStorage();
   List<MessageListItem> _messageList = [];
+
+  bool loading = false;
+  int _skip = 0;
+  int _limit = 20;
 
   _sortMessages() {
     setState(() {
@@ -47,10 +53,17 @@ class _MessageListScreenState extends State<MessageListScreen> {
     _sortMessages();
   }
 
+  _loadMore() async {
+    _skip = _messageList.length;
+    var messages = await _messageStorage.getLastMessageList(_skip, _limit);
+    if(messages != null){
+      _messageList = _messageList + messages;
+      _sortMessages();
+    }
+  }
+
   initAsync() async {
-    var messages = await _messageStorage.getLastMessageList(0, 20);
-    _messageList = messages;
-    _sortMessages();
+    _loadMore();
   }
 
   @override
@@ -59,9 +72,20 @@ class _MessageListScreenState extends State<MessageListScreen> {
     initAsync();
 
     _onMessageStreamSubscription = chat.onMessageSaved.listen((event) {
-      _messageStorage.getUpdateMessageList(event.src).then((value) {
+      _messageStorage.getUpdateMessageList(event.from).then((value) {
         _updateMessage(value);
       });
+    });
+
+    _scrollController.addListener(() {
+      double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
+
+      if (offsetFromBottom < 50 && !loading) {
+        loading = true;
+        _loadMore().then((v) {
+          loading = false;
+        });
+      }
     });
   }
 
@@ -301,6 +325,10 @@ class _MessageListScreenState extends State<MessageListScreen> {
           Widget widget = createMessageListItemWidget(context, item);
 
           return InkWell(
+            onTap: (){
+              // TODO contact
+              Navigator.of(context).pushNamed(ChatScreen.routeName, arguments: ContactSchema());
+            },
             onLongPress: () {
               _showItemMenu(item, index);
             },
@@ -310,4 +338,7 @@ class _MessageListScreenState extends State<MessageListScreen> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

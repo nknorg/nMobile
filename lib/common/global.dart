@@ -10,7 +10,6 @@ import '../storages/settings.dart';
 class Global {
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
   static BuildContext appContext;
-  static Client nknClient;
 
   static Directory applicationRootDirectory;
   static String version;

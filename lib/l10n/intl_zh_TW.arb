@@ -25,6 +25,8 @@
   "disconnect": "斷開連接",
   "tips": "提示",
   "click_connect": "點擊連接",
+  "click_to_change": "點擊更改",
+  "click_to_settings": "點擊設置",
   "authenticate_to_access": "認證以授權訪問",
   "top": "置頂",
   "top_cancel": "取消置頂",
@@ -60,6 +62,8 @@
   "nkn_mainnet": "NKN 主網",
   "create_ethereum_wallet": "創建以太坊賬戶",
 
+  "new_message": "新消息",
+  "you_have_new_message": "你有一條新消息",
   "chat_no_wallet_title": "私密和安全的通訊",
   "chat_no_wallet_desc": "您需要一個主網賬戶，然後才能使用D-Chat。",
   "placeholder_draft": "[草稿]",

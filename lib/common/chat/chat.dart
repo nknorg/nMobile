@@ -65,13 +65,26 @@ class Chat {
 
   Uint8List get publicKey => client?.publicKey;
 
-  Stream<OnConnect> onConnect;
-  Stream<OnMessage> onMessage;
-  Stream<dynamic> onError;
+  StreamController<OnConnect> onConnectController = StreamController<OnConnect>.broadcast();
+  StreamSink<OnConnect> get onConnectStreamSink => onConnectController.sink;
+  Stream<OnConnect> get onConnect => onConnectController.stream;
 
-  StreamController<OnMessage> onMessageSavedController = StreamController<OnMessage>.broadcast();
-  StreamSink<OnMessage> get onMessageSavedStreamSink => onMessageSavedController.sink;
-  Stream<OnMessage> get onMessageSaved => onMessageSavedController.stream;
+  StreamController<OnMessage> onMessageController = StreamController<OnMessage>.broadcast();
+  StreamSink<OnMessage> get onMessageStreamSink => onMessageController.sink;
+  Stream<OnMessage> get onMessage => onMessageController.stream;
+
+  StreamController<dynamic> onErrorController = StreamController<dynamic>.broadcast();
+  StreamSink<dynamic> get onErrorStreamSink => onErrorController.sink;
+  Stream<dynamic> get onError => onErrorController.stream;
+
+  StreamController<MessageSchema> onReceivedMessageController = StreamController<MessageSchema>.broadcast();
+  StreamSink<MessageSchema> get onReceivedMessageStreamSink => onReceivedMessageController.sink;
+  Stream<MessageSchema> get onReceivedMessage => onReceivedMessageController.stream;
+
+  StreamController<MessageSchema> onMessageSavedController = StreamController<MessageSchema>.broadcast();
+  StreamSink<MessageSchema> get onMessageSavedStreamSink => onMessageSavedController.sink;
+  Stream<MessageSchema> get onMessageSaved => onMessageSavedController.stream;
+
 
   Chat() {
     status = ChatConnectStatus.disconnected;
@@ -86,8 +99,8 @@ class Chat {
 
     String pubkey = hexEncode(wallet.publicKey);
     String password = hexEncode(sha256(wallet.seed));
-
     await DB.open(pubkey, password);
+    await contact.fetchCurrentUser(pubkey);
     connect(wallet);
   }
 
@@ -95,13 +108,17 @@ class Chat {
     ClientConfig config = ClientConfig(seedRPCServerAddr: await Global.getSeedRpcList());
     _statusStreamSink.add(ChatConnectStatus.connecting);
     client = await Client.create(wallet.seed, config: config);
-    onConnect = client.onConnect;
-    onMessage = client.onMessage;
-    onError = client.onError;
     Completer completer = Completer();
-    onConnect.listen((event) {
+    client.onConnect.listen((event) {
       _statusStreamSink.add(ChatConnectStatus.connected);
+      onConnectStreamSink.add(event);
       completer.complete();
+    });
+    client.onError.listen((event) {
+      onErrorStreamSink.add(event);
+    });
+    client.onMessage.listen((event) {
+      onMessageStreamSink.add(event);
     });
     receiveMessage.startReceiveMessage();
     await completer.future;
@@ -110,14 +127,19 @@ class Chat {
   close() {
     _statusStreamSink.add(ChatConnectStatus.disconnected);
     _statusController?.close();
+    onConnectController?.close();
+    onMessageController?.close();
+    onReceivedMessageController?.close();
     onMessageSavedController?.close();
+    onErrorController?.close();
+    client?.close();
   }
 
-  Future sendText(MessageSchema messageSchema) async {
-    await this.client.sendText([messageSchema.to], messageSchema.toSendTextData());
+  Future sendText(String dest, String data) async {
+    return this.client.sendText([dest], data);
   }
 
-  Future publishText(MessageSchema messageSchema) async {
-    await this.client.publishText(messageSchema.topic, messageSchema.toSendTextData());
+  Future publishText(String topic, String data) async {
+    return this.client.publishText(topic, data);
   }
 }

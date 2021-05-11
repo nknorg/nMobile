@@ -9,6 +9,7 @@ class Application {
   List<Func> _mountedFutures = <Func>[];
   Map<String, WidgetBuilder> _routes = {};
   SkinTheme theme = LightTheme();
+  AppLifecycleState appLifecycleState = AppLifecycleState.resumed;
 
   registerInitialize(Func fn) {
     _initializeFutures.add(fn);

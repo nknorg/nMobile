@@ -91,7 +91,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
                     Text(
                       _localizations.not_backed_up,
                       textAlign: TextAlign.end,
-                      style: TextStyle(fontSize: SkinTheme.bodySmallFontSize, color: application.theme.strongColor),
+                      style: TextStyle(fontSize: application.theme.bodyText3.fontSize, color: application.theme.strongColor),
                       overflow: TextOverflow.ellipsis,
                       softWrap: false,
                       maxLines: 1,
