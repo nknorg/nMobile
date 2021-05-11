@@ -130,6 +130,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "seed" : MessageLookupByLibrary.simpleMessage("Seed"),
     "seed_qrcode_dec" : MessageLookupByLibrary.simpleMessage("Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets."),
     "select_another_wallet" : MessageLookupByLibrary.simpleMessage("Select Another Account"),
+    "select_asset_to_backup" : MessageLookupByLibrary.simpleMessage("Select Asset to Backup"),
     "select_asset_to_receive" : MessageLookupByLibrary.simpleMessage("Select Asset to Receive"),
     "select_asset_to_send" : MessageLookupByLibrary.simpleMessage("Select Asset to Send"),
     "select_wallet_type" : MessageLookupByLibrary.simpleMessage("Select Account Type"),
