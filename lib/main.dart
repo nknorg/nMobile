@@ -45,6 +45,10 @@ void main() async {
     notification.init();
     locator.get<TaskService>().install();
   });
+  application.registerMounted(() async {
+    WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
+    _walletBloc.add(LoadWallet());
+  });
 
   await SentryFlutter.init(
     (options) {
