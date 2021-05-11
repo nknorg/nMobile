@@ -785,6 +785,16 @@ class S {
     );
   }
 
+  /// `authenticate to access`
+  String get authenticate_to_access {
+    return Intl.message(
+      'authenticate to access',
+      name: 'authenticate_to_access',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Keystore`
   String get keystore {
     return Intl.message(
