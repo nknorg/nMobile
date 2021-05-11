@@ -43,7 +43,13 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     logger.d("wallet:${event.wallet}, keystore:${event.keystore}");
     if (state is WalletLoaded) {
       await _walletStorage.addWallet(event.wallet, event.keystore, password: event.password, seed: event.seed);
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets)..add(event.wallet);
+      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
+      int index = list?.indexWhere((x) => x?.address == event?.wallet?.address) ?? -1;
+      if (index >= 0) {
+        list[index] = event.wallet;
+      } else {
+        list.add(event.wallet);
+      }
       logger.d("newList:$list");
       yield WalletLoaded(list);
     }
