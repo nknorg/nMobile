@@ -47,10 +47,13 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
     _walletBloc = BlocProvider.of<WalletBloc>(context);
     _walletSubscription = _walletBloc.stream.listen((state) async {
       if (state is WalletLoaded) {
-        bool allBackedUp = await state.isAllWalletBackup();
-        logger.d("wallet_home_list_update -> allBackUp:$allBackedUp");
+        List backups = await state.isAllWalletBackup();
+        logger.d("wallets backup:$backups");
+        bool find = backups?.firstWhere((backup) => backup == false || backup == null, orElse: () => true);
+        bool allBackup = find == true ? true : false;
+        // logger.d("wallets allBackup:$allBackup");
         setState(() {
-          _allBackedUp = allBackedUp;
+          _allBackedUp = allBackup;
         });
       }
     });
@@ -206,6 +209,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
     logger.d("back picked:$wallet");
     if (wallet == null || wallet.address == null || wallet.address.isEmpty) return;
     S _localizations = S.of(context);
+    WalletStorage _storage = WalletStorage();
 
     Future(() async {
       if (Settings.biometricsAuthentication) {
@@ -216,12 +220,12 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
       if (!authOk) {
         return BottomDialog.of(context).showInputPassword(title: _localizations.verify_wallet_password);
       }
-      return (WalletStorage().getPassword(wallet.address) as Future<String>);
+      return (_storage.getPassword(wallet.address) as Future<String>);
     }).then((String password) async {
       if (password == null || password.isEmpty) {
         return;
       }
-      String keystore = await WalletStorage().getKeystore(wallet.address);
+      String keystore = await _storage.getKeystore(wallet.address);
 
       if (wallet.type == WalletType.eth) {
         // TODO:GG eth export
