@@ -130,6 +130,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "seed" : MessageLookupByLibrary.simpleMessage("Seed"),
     "seed_qrcode_dec" : MessageLookupByLibrary.simpleMessage("請安全地保存和備份您的種子。如果丟失，您將失去對資產的訪問權限。"),
     "select_another_wallet" : MessageLookupByLibrary.simpleMessage("選擇其他賬戶"),
+    "select_asset_to_backup" : MessageLookupByLibrary.simpleMessage("選擇要備份的賬戶"),
     "select_asset_to_receive" : MessageLookupByLibrary.simpleMessage("選擇要接收資金的賬戶"),
     "select_asset_to_send" : MessageLookupByLibrary.simpleMessage("選擇要發送資金的賬戶"),
     "select_wallet_type" : MessageLookupByLibrary.simpleMessage("選擇賬戶類型"),

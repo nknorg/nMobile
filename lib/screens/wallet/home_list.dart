@@ -176,7 +176,8 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
 
   _onNotBackedUpTipClicked() {
     S _localizations = S.of(context);
-    ModalDialog.of(context).show(
+    ModalDialog dialog = ModalDialog.of(context);
+    dialog.show(
       title: _localizations.d_not_backed_up_title,
       content: _localizations.d_not_backed_up_desc,
       hasCloseIcon: false,
@@ -184,13 +185,18 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
       actions: [
         Button(
           text: _localizations.go_backup,
-          onPressed: _readyExport(null),
+          onPressed: () async {
+            await dialog.close();
+            WalletSchema result = await BottomDialog.of(context).showWalletSelect(title: _localizations.select_asset_to_backup);
+            _readyExport(result);
+          },
         ),
       ],
     );
   }
 
   _readyExport(WalletSchema wallet) {
+    logger.d("back picked:$wallet");
     if (wallet == null || wallet.address == null || wallet.address.isEmpty) return;
     S _localizations = S.of(context);
 
