@@ -216,8 +216,8 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
       if (!authOk) {
         return BottomDialog.of(context).showInputPassword(title: _localizations.verify_wallet_password);
       }
-      return (_storage.getPassword(wallet.address) as Future<String>);
-    }).then((String password) async {
+      return _storage.getPassword(wallet.address);
+    }).then((password) async {
       if (password == null || password.isEmpty) {
         return;
       }
