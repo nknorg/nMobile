@@ -82,6 +82,7 @@
   "view_qrcode": "View QR Code",
   "qrcode": "QR Code",
   "seed_qrcode_dec": "Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.",
+  "authenticate_to_access": "authenticate to access",
 
   "keystore": "Keystore",
   "seed": "Seed",
