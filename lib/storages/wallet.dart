@@ -94,6 +94,15 @@ class WalletStorage {
     return false;
   }
 
+  Future<bool> isListBackup(List<WalletSchema> wallets) async {
+    bool allBackup = true;
+    wallets.forEach((e) async {
+      bool backup = await isBackup(e?.address);
+      allBackup = allBackup && backup;
+    });
+    return allBackup;
+  }
+
   Future isBackup(String address) async {
     List<Future> futures = <Future>[];
     futures.add(_localStorage.get('$KEY_BACKUP:$address'));
