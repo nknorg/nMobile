@@ -28,6 +28,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       yield* _mapDeleteWalletToState(event);
     } else if (event is UpdateWallet) {
       yield* _mapUpdateWalletToState(event);
+    } else if (event is BackupWallet) {
+      yield* _mapBackupWalletToState(event);
     }
   }
 
@@ -40,8 +42,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
   Stream<WalletState> _mapAddWalletToState(AddWallet event) async* {
     logger.d("wallet:${event.wallet}, keystore:${event.keystore}");
     if (state is WalletLoaded) {
-      // TODO:GG duplicated
-      _walletStorage.addWallet(event.wallet, event.keystore, password: event.password);
+      await _walletStorage.addWallet(event.wallet, event.keystore, password: event.password, seed: event.seed);
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets)..add(event.wallet);
       logger.d("newList:$list");
       yield WalletLoaded(list);
@@ -53,10 +54,12 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     if (state is WalletLoaded) {
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
       int index = list.indexOf(event.wallet);
-      list.removeAt(index);
+      if (index >= 0) {
+        list.removeAt(index);
+        await _walletStorage.deleteWallet(index, event.wallet);
+      }
       logger.d("newList:$list");
       yield WalletLoaded(list);
-      _walletStorage.deleteWallet(index, event.wallet);
     }
   }
 
@@ -67,8 +70,18 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       int index = list.indexOf(event.wallet);
       if (index >= 0) {
         list[index] = event.wallet;
-        _walletStorage.updateWallet(index, event.wallet);
+        await _walletStorage.updateWallet(index, event.wallet);
       }
+      logger.d("newList:$list");
+      yield WalletLoaded(list);
+    }
+  }
+
+  Stream<WalletState> _mapBackupWalletToState(BackupWallet event) async* {
+    logger.d("address:${event.address}, backup:${event.backup}");
+    if (state is WalletLoaded) {
+      await _walletStorage.backupWallet(event.address, event.backup);
+      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
       logger.d("newList:$list");
       yield WalletLoaded(list);
     }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 // TODO:GG adapt height or scroll
 class BottomDialog extends StatefulWidget {
@@ -225,6 +227,38 @@ class BottomDialog extends StatefulWidget {
           ),
           Divider(height: 1, indent: 64),
         ],
+      ),
+    );
+  }
+
+  showQrcode({@required String title, String desc, String data}) {
+    S _localizations = S.of(context);
+
+    return showWithTitle<String>(
+      title: title,
+      desc: desc,
+      height: 530,
+      action: Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
+        child: Button(
+          text: _localizations.close,
+          width: double.infinity,
+          backgroundColor: application.theme.primaryColor.withAlpha(20),
+          fontColor: application.theme.primaryColor,
+          onPressed: () {
+            close();
+          },
+        ),
+      ),
+      child: Container(
+        padding: const EdgeInsets.only(left: 20, right: 20),
+        child: Center(
+          child: QrImage(
+            data: data,
+            version: QrVersions.auto,
+            size: 240.0,
+          ),
+        ),
       ),
     );
   }
