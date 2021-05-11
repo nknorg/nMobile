@@ -35,7 +35,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
 
   Stream<WalletState> _mapLoadWalletsToState() async* {
     var wallets = await _walletStorage.getWallets();
-    logger.d("wallet:$wallets");
+    logger.d("wallets:${wallets.toString()}");
     yield WalletLoaded(wallets);
   }
 
@@ -50,7 +50,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       } else {
         list.add(event.wallet);
       }
-      logger.d("newList:$list");
+      logger.d("newList:${list.toString()}");
       yield WalletLoaded(list);
     }
   }
@@ -64,7 +64,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         list.removeAt(index);
         await _walletStorage.deleteWallet(index, event.wallet);
       }
-      logger.d("newList:$list");
+      logger.d("newList:${list.toString()}");
       yield WalletLoaded(list);
     }
   }
@@ -78,7 +78,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         list[index] = event.wallet;
         await _walletStorage.updateWallet(index, event.wallet);
       }
-      logger.d("newList:$list");
+      logger.d("newList:${list.toString()}");
       yield WalletLoaded(list);
     }
   }
@@ -88,7 +88,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     if (state is WalletLoaded) {
       await _walletStorage.backupWallet(event.address, event.backup);
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
-      logger.d("newList:$list");
+      logger.d("newList:${list.toString()}");
       yield WalletLoaded(list);
     }
   }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:nmobile/utils/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorage {
@@ -106,5 +107,15 @@ class LocalStorage {
     }
     futures.add(remove('$key:${length - 1}'));
     await Future.wait(futures);
+  }
+
+  debugInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String log = "";
+    Set<String> keys = prefs.getKeys();
+    keys?.forEach((key) {
+      log += "K:::$key --- V:::${prefs.get(key)}\n";
+    });
+    logger.i("local_storage_debug_info ---> $log");
   }
 }
