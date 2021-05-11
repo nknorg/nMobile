@@ -103,7 +103,7 @@ class _WalletExportScreenState extends State<WalletExportScreen> {
                     SizedBox(height: 15),
                     Label(value, type: LabelType.display),
                     SizedBox(height: 15),
-                    Container(height: 1, color: application.theme.lineColor)
+                    Divider(height: 1),
                   ],
                 ),
               ),

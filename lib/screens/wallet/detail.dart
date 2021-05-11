@@ -3,32 +3,35 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
-import 'package:nmobile/components/text/form_field_box.dart';
+import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
-import 'package:nmobile/screens/wallet/export_nkn.dart';
+import 'package:nmobile/screens/wallet/export.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/utils.dart';
 
-class WalletDetailNKNScreen extends StatefulWidget {
+import '../../app.dart';
+
+class WalletDetailScreen extends StatefulWidget {
   static const String routeName = '/wallet/detail_nkn';
   static final String argWallet = "wallet";
   static final String argListIndex = "list_index";
 
   final Map<String, dynamic> arguments;
 
-  const WalletDetailNKNScreen({Key key, this.arguments}) : super(key: key);
+  const WalletDetailScreen({Key key, this.arguments}) : super(key: key);
 
   @override
-  _WalletDetailNKNScreenState createState() => _WalletDetailNKNScreenState();
+  _WalletDetailScreenState createState() => _WalletDetailScreenState();
 }
 
-class _WalletDetailNKNScreenState extends State<WalletDetailNKNScreen> {
+class _WalletDetailScreenState extends State<WalletDetailScreen> {
   WalletSchema _wallet;
   int _listIndex;
 
@@ -43,13 +46,13 @@ class _WalletDetailNKNScreenState extends State<WalletDetailNKNScreen> {
   @override
   void initState() {
     super.initState();
-    this._wallet = widget.arguments[WalletDetailNKNScreen.argWallet];
-    this._listIndex = widget.arguments[WalletDetailNKNScreen.argListIndex];
+    this._wallet = widget.arguments[WalletDetailScreen.argWallet];
+    this._listIndex = widget.arguments[WalletDetailScreen.argListIndex];
 
-    // TODO:GG
     _walletBloc = BlocProvider.of<WalletBloc>(context);
     // _clientBloc = BlocProvider.of<NKNClientBloc>(context);
     _nameController.text = this._wallet?.name ?? "";
+    // TODO:GG default
     // widget.wallet.isDefaultWallet().then((v) {
     //   if (mounted) {
     //     setState(() {
@@ -58,22 +61,22 @@ class _WalletDetailNKNScreenState extends State<WalletDetailNKNScreen> {
     //   }
     // });
     //
-    // TimerAuth.onOtherPage = true;
+    // TimerAuth.onOtherPage = true; // TODO:GG wallet lock
   }
 
   @override
   void dispose() {
     super.dispose();
-    // TimerAuth.onOtherPage = false;
+    // TimerAuth.onOtherPage = false; // TODO:GG wallet unlock
   }
 
+  // TODO:GG receive
   _receive() {
-    // TODO:GG receive
     // Navigator.of(context).pushNamed(ReceiveNknScreen.routeName, arguments: widget.wallet);
   }
 
+  // TODO:GG send
   _send() {
-    // TODO:GG send
     // Navigator.of(context)
     //     .pushNamed(
     //   widget.wallet.type == WalletSchema.ETH_WALLET ? SendErc20Screen.routeName : SendNknScreen.routeName,
@@ -122,7 +125,7 @@ class _WalletDetailNKNScreenState extends State<WalletDetailNKNScreen> {
           ),
         ],
       ),
-      child: SingleChildScrollView(
+      body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
             SizedBox(height: 12),
@@ -212,7 +215,7 @@ class _WalletDetailNKNScreenState extends State<WalletDetailNKNScreen> {
                           ),
                         ],
                       ),
-                      FormFieldBox(
+                      FormText(
                         controller: _nameController,
                         readOnly: true,
                       ),
@@ -220,6 +223,7 @@ class _WalletDetailNKNScreenState extends State<WalletDetailNKNScreen> {
                   ),
                 ),
                 Material(
+                  color: application.theme.backgroundColor1,
                   elevation: 0,
                   child: InkWell(
                     onTap: () {
@@ -228,7 +232,9 @@ class _WalletDetailNKNScreenState extends State<WalletDetailNKNScreen> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          SizedBox(height: 15),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
@@ -244,11 +250,10 @@ class _WalletDetailNKNScreenState extends State<WalletDetailNKNScreen> {
                               ),
                             ],
                           ),
-                          FormFieldBox(
-                            value: this._wallet?.address,
-                            readOnly: true,
-                            enabled: false,
-                          ),
+                          SizedBox(height: 15),
+                          Label(this._wallet?.address ?? "", type: LabelType.display),
+                          SizedBox(height: 15),
+                          Divider(height: 1),
                         ],
                       ),
                     ),
@@ -265,6 +270,7 @@ class _WalletDetailNKNScreenState extends State<WalletDetailNKNScreen> {
   // TextEditingController _walletNameController = TextEditingController();
   // GlobalKey _nameFormKey = new GlobalKey<FormState>();
 
+  // TODO:GG modify wallet name
   showChangeNameDialog() {
     // BottomDialog.of(context).showBottomDialog(
     //   title: _localizations.wallet_name,
@@ -315,8 +321,11 @@ class _WalletDetailNKNScreenState extends State<WalletDetailNKNScreen> {
   }
 
   _onAppBarActionSelected(int result) async {
+    S _localizations = S.of(context);
+
     switch (result) {
       case 0:
+        // TODO:GG copy wallet_home_list
         if (this._wallet?.type == WalletType.eth) {
           // TODO:GG export eth
           // var password = await this._wallet.getPassword();
@@ -363,40 +372,47 @@ class _WalletDetailNKNScreenState extends State<WalletDetailNKNScreen> {
           //   }
           // }
 
-          Navigator.pushNamed(context, WalletExportNKNScreen.routeName, arguments: {
-            WalletExportNKNScreen.argWalletType: WalletType.nkn,
-            WalletExportNKNScreen.argName: true ? "_localizations.main_wallet" : this._wallet?.name ?? "", // TODO:GG default
-            WalletExportNKNScreen.argAddress: "wallet['address']", // TODO:GG address
-            WalletExportNKNScreen.argPublicKey: "wallet['publicKey']", // TODO:GG publicKey
-            WalletExportNKNScreen.argSeed: "wallet['seed']", // TODO:GG seed
-            WalletExportNKNScreen.argKeystore: "wallet['keystore']", // TODO:GG keystore
+          Navigator.pushNamed(context, WalletExportScreen.routeName, arguments: {
+            WalletExportScreen.argWalletType: WalletType.nkn,
+            WalletExportScreen.argName: true ? "_localizations.main_wallet" : this._wallet?.name ?? "", // TODO:GG default
+            WalletExportScreen.argAddress: "wallet['address']", // TODO:GG address
+            WalletExportScreen.argPublicKey: "wallet['publicKey']", // TODO:GG publicKey
+            WalletExportScreen.argSeed: "wallet['seed']", // TODO:GG seed
+            WalletExportScreen.argKeystore: "wallet['keystore']", // TODO:GG keystore
           });
         }
         break;
       case 1:
-        // TODO:GG delete
-        // SimpleConfirm(
-        //         context: context,
-        //         title: _localizations.delete_wallet_confirm_title,
-        //         content: _localizations.delete_wallet_confirm_text,
-        //         callback: (v) async {
-        //           if (v) {
-        //             _walletsBloc.add(DeleteWallet(widget.wallet));
-        //             if (NKNClientCaller.currentChatId != null) {
-        //               var walletAddr = await NknWalletPlugin.pubKeyToWalletAddr(NKNClientCaller.currentChatId);
-        //               if (walletAddr == widget.wallet.address) {
-        //                 NLog.d('delete client');
-        //                 _clientBloc.add(NKNDisConnectClientEvent());
-        //               } else {
-        //                 NLog.d('no delete client');
-        //               }
-        //             }
-        //             Navigator.popAndPushNamed(context, AppScreen.routeName);
-        //           }
-        //         },
-        //         buttonColor: Colors.red,
-        //         buttonText: _localizations.delete_wallet)
-        //     .show();
+        ModalDialog.of(context).confirm(
+          title: _localizations.delete_wallet_confirm_title,
+          content: _localizations.delete_wallet_confirm_text,
+          agree: Button(
+            text: _localizations.delete_wallet,
+            backgroundColor: application.theme.strongColor,
+            width: double.infinity,
+            onPressed: () async {
+              _walletBloc.add(DeleteWallet(this._wallet));
+              // TODO:GG client check
+              // if (NKNClientCaller.currentChatId != null) {
+              //   var walletAddr = await NknWalletPlugin.pubKeyToWalletAddr(NKNClientCaller.currentChatId);
+              //   if (walletAddr == widget.wallet.address) {
+              //     NLog.d('delete client');
+              //     _clientBloc.add(NKNDisConnectClientEvent());
+              //   } else {
+              //     NLog.d('no delete client');
+              //   }
+              // }
+              Navigator.popAndPushNamed(context, AppScreen.routeName);
+            },
+          ),
+          reject: Button(
+            text: _localizations.cancel,
+            backgroundColor: application.theme.backgroundLightColor,
+            fontColor: application.theme.fontColor2,
+            width: double.infinity,
+            onPressed: () => Navigator.pop(context),
+          ),
+        );
         break;
     }
   }
