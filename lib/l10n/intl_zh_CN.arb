@@ -77,6 +77,12 @@
   "d_not_backed_up_desc": "当您更新您的 nMobile App 或者偶然地卸载 nMobile 时，您的账户可能会丢失，这时您将无法访问您的资产！因此，请现在花3分钟时间备份所有账户。",
   "go_backup": "去备份",
 
+  "private_key": "私钥",
+  "public_key": "公钥",
+  "view_qrcode": "查看二维码",
+  "qrcode": "二维码",
+  "seed_qrcode_dec": "请安全地保存和备份您的种子。如果丢失，您将失去对资产的访问权限。",
+
   "keystore": "Keystore",
   "seed": "Seed",
   "tab_keystore": "Keystore",

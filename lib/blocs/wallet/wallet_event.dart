@@ -12,8 +12,9 @@ class AddWallet extends WalletEvent {
   final WalletSchema wallet;
   final String keystore;
   final String password;
+  final String seed;
 
-  AddWallet(this.wallet, this.keystore, {this.password});
+  AddWallet(this.wallet, this.keystore, {this.password, this.seed});
 }
 
 // delete
@@ -28,4 +29,12 @@ class UpdateWallet extends WalletEvent {
   final WalletSchema wallet;
 
   UpdateWallet(this.wallet);
+}
+
+// backup
+class BackupWallet extends WalletEvent {
+  final String address;
+  final bool backup;
+
+  BackupWallet(this.address, this.backup);
 }

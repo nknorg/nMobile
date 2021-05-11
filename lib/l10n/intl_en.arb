@@ -77,6 +77,12 @@
   "d_not_backed_up_desc": "When you update your nMobile software or accidentally uninstall nMobile, your wallet might be lost and you might NOT be able to access your assets! So please take 3 minutes time now to back up all your wallets.",
   "go_backup": "Go Backup",
 
+  "private_key": "Private Key",
+  "public_key": "Public Key",
+  "view_qrcode": "View QR Code",
+  "qrcode": "QR Code",
+  "seed_qrcode_dec": "Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.",
+
   "keystore": "Keystore",
   "seed": "Seed",
   "tab_keystore": "Keystore",

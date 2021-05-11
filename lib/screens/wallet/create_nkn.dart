@@ -192,11 +192,11 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                         flex: 0,
                         child: SafeArea(
                           child: Padding(
-                            padding: EdgeInsets.only(bottom: 8, top: 8),
+                            padding: EdgeInsets.symmetric(vertical: 20),
                             child: Column(
                               children: <Widget>[
                                 Padding(
-                                  padding: EdgeInsets.only(left: 30, right: 30),
+                                  padding: EdgeInsets.symmetric(horizontal: 30),
                                   child: Button(
                                     text: _localizations.create_wallet,
                                     disabled: !_formValid,
