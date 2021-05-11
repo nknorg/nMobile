@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/contact/contact_item.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/message_list_item.dart';
@@ -102,7 +103,8 @@ Widget createMessageListItemWidget(BuildContext context, MessageListItem model) 
         children: [
           Container(
             margin: const EdgeInsets.only(right: 12),
-            child: CircleAvatar( // TODO: create contact avatar
+            child: CircleAvatar(
+              // TODO: create contact avatar
               radius: 24,
               backgroundColor: Colors.red,
               child: Label(
@@ -160,44 +162,37 @@ Widget createMessageListItemWidget(BuildContext context, MessageListItem model) 
       color: Colors.transparent,
       padding: const EdgeInsets.only(left: 12, right: 12),
       height: 72,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Flex(
+        direction: Axis.horizontal,
         children: [
-
-          Container(
-            margin: const EdgeInsets.only(right: 12),
-            child: CircleAvatar( // TODO: create contact avatar
-              radius: 24,
-              backgroundColor: Colors.red,
-              child: Label(
-                'HR',
-                type: LabelType.bodyLarge,
-                color: Colors.yellow,
+          Expanded(
+            flex: 1,
+            child: ContactItem(
+              contact: model.contact,
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Label(
+                    model.contact.getDisplayName,
+                    type: LabelType.h3,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: contentWidget,
+                  ),
+                ],
               ),
             ),
           ),
           Expanded(
+            flex: 0,
             child: Container(
               decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 1, color: application.theme.dividerColor))),
               child: Row(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Label(
-                          'Contact Name',
-                          type: LabelType.h3,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: contentWidget,
-                        ),
-                      ],
-                    ),
-                  ),
+
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,

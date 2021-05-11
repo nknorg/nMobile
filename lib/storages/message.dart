@@ -2,6 +2,7 @@ import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/message_list_item.dart';
+import 'package:nmobile/storages/contact.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class MessageStorage {
@@ -10,6 +11,8 @@ class MessageStorage {
   Database get db => DB.currentDatabase;
 
   MessageStorage();
+
+  ContactStorage _contactStorage = ContactStorage();
 
   static create(Database db, int version) async {
     // create table
@@ -45,16 +48,12 @@ class MessageStorage {
   }
 
   Future<bool> insertReceivedMessage(MessageSchema schema) async {
-    var count = await queryCount(schema.msgId);
-    if (count > 0) {
-      return false;
-    } else {
-      Map insertMessageInfo = schema.toEntity();
-      int n = await db.insert(tableName, insertMessageInfo);
-      if (n > 0) {
-        return true;
-      }
+    Map insertMessageInfo = schema.toEntity();
+    int n = await db.insert(tableName, insertMessageInfo);
+    if (n > 0) {
+      return true;
     }
+
     return false;
   }
 
@@ -77,6 +76,11 @@ class MessageStorage {
     return list;
   }
 
+  Future<bool> receiveSuccess(String msgId) async {
+    int result = await db.update(tableName, {'is_success': 1});
+    return result > 0;
+  }
+
   /// message list
   Future<MessageListItem> parseMessageListItem(Map e) async {
     var res = MessageListItem(
@@ -89,24 +93,24 @@ class MessageStorage {
     );
 
     // todo
-    // if (e['topic'] != null) {
-    //   final repoTopic = TopicRepo();
-    //   res.topic = await repoTopic.getTopicByName(e['topic']);
-    //   res.contact = await ContactSchema.fetchContactByAddress(res.sender);
-    //   res.isTop = res.topic?.isTop ?? false;
-    //
-    //   if (res.topic == null){
-    //     res.isTop = await ContactSchema.getIsTop(res.targetId);
-    //     res.contact = await ContactSchema.fetchContactByAddress(res.targetId);
-    //   }
-    // } else {
-    //   if (res.targetId == null){
-    //     NLog.w('Wrong!!!!! error msg is___'+e.toString());
-    //     return null;
-    //   }
-    //   res.isTop = await ContactSchema.getIsTop(res.targetId);
-    //   res.contact = await ContactSchema.fetchContactByAddress(res.targetId);
-    // }
+    if (e['topic'] != null) {
+      // final repoTopic = TopicRepo();
+      // res.topic = await repoTopic.getTopicByName(e['topic']);
+      // res.contact = await ContactSchema.fetchContactByAddress(res.sender);
+      // res.isTop = res.topic?.isTop ?? false;
+      //
+      // if (res.topic == null){
+      //   res.isTop = await ContactSchema.getIsTop(res.targetId);
+      //   res.contact = await ContactSchema.fetchContactByAddress(res.targetId);
+      // }
+    } else {
+      if (res.targetId == null) {
+        return null;
+      }
+
+      res.contact = await _contactStorage.queryContactByClientAddress(res.targetId);
+      res.isTop = res.contact?.isTop ?? false;
+    }
     return res;
   }
 

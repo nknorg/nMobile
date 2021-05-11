@@ -2,23 +2,23 @@ import 'dart:async';
 
 class TaskService {
   bool _isInit = false;
-  Timer _queryNConnectWalletBalanceTask;
+  Timer _queryWalletBalanceTask;
 
   install() {
     if (!_isInit) {
-      _queryNConnectWalletBalanceTask = Timer.periodic(Duration(seconds: 60), (timer) {
-        queryNConnectWalletBalanceTask();
+      _queryWalletBalanceTask = Timer.periodic(Duration(seconds: 60), (timer) {
+        queryWalletBalanceTask();
       });
-      queryNConnectWalletBalanceTask();
+      queryWalletBalanceTask();
       _isInit = true;
     }
   }
 
   uninstall() {
-    _queryNConnectWalletBalanceTask?.cancel();
+    _queryWalletBalanceTask?.cancel();
   }
 
-  queryNConnectWalletBalanceTask() {
+  queryWalletBalanceTask() {
     // TODO:GG wallet_balance
   }
 }

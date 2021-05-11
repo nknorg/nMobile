@@ -42,6 +42,7 @@ void main() async {
   initialize();
   await application.initialize();
   application.registerMounted(() async {
+    notification.init();
     locator.get<TaskService>().install();
   });
 
