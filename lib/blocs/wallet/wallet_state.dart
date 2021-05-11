@@ -22,7 +22,7 @@ class WalletLoaded extends WalletState {
     return wallets.firstWhere((x) => x.address == address, orElse: () => null);
   }
 
-  Future<bool> isAllWalletBackup() {
-    return WalletStorage().isListBackup(wallets);
+  Future isAllWalletBackup() {
+    return WalletStorage().isBackupByList(wallets);
   }
 }

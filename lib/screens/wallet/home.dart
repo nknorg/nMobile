@@ -19,9 +19,6 @@ class _WalletHomeScreenState extends State<WalletHomeScreen> with AutomaticKeepA
   @override
   void initState() {
     super.initState();
-    // init wallets TODO:GG UI有延迟
-    WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(context);
-    _walletBloc.add(LoadWallet());
   }
 
   @override
@@ -32,9 +29,7 @@ class _WalletHomeScreenState extends State<WalletHomeScreen> with AutomaticKeepA
         if (state is WalletLoaded) {
           return state.isWalletsEmpty() ? WalletHomeEmptyLayout() : WalletHomeListLayout();
         }
-        return Center(
-          child: CircularProgressIndicator(),
-        ); // TODO:GG loading
+        return WalletHomeListLayout();
       },
     );
   }

@@ -79,37 +79,15 @@ class WalletStorage {
     return Future(() => _localStorage.set('$KEY_BACKUP:$address', backup));
   }
 
-  Future<bool> isAllBackup() async {
-    var wallets = await _localStorage.getArray(KEY_WALLET);
-    if (wallets == null || wallets.isEmpty) return false;
-    Completer completer = Completer();
-    bool allBackup = true;
-    wallets?.asMap()?.forEach((key, value) async {
-      WalletSchema walletSchema = WalletSchema.fromCacheMap(value);
-      bool backup = await isBackup(walletSchema?.address);
-      allBackup = allBackup && backup;
-      if (key >= wallets.length) {
-        completer.complete(allBackup);
-      }
+  Future isBackupByList(List<WalletSchema> wallets) async {
+    List<Future> futures = <Future>[];
+    wallets?.forEach((value) async {
+      futures.add(isBackupByAddress(value?.address));
     });
-    return completer.future;
+    return Future.wait(futures);
   }
 
-  Future<bool> isListBackup(List<WalletSchema> wallets) async {
-    if (wallets == null || wallets.isEmpty) return false;
-    Completer completer = Completer();
-    bool allBackup = true;
-    wallets.asMap()?.forEach((key, value) async {
-      bool backup = await isBackup(value?.address);
-      allBackup = allBackup && backup;
-      if (key >= wallets.length) {
-        completer.complete(allBackup);
-      }
-    });
-    return completer.future;
-  }
-
-  Future isBackup(String address) {
+  Future isBackupByAddress(String address) {
     return Future(() => _localStorage.get('$KEY_BACKUP:$address'));
   }
 
