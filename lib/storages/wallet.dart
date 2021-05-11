@@ -75,10 +75,8 @@ class WalletStorage {
     await Future.wait(futures);
   }
 
-  Future backupWallet(String address, bool backup) async {
-    List<Future> futures = <Future>[];
-    futures.add(_localStorage.set('$KEY_BACKUP:$address', backup));
-    await Future.wait(futures);
+  Future backupWallet(String address, bool backup) {
+    return Future(() => _localStorage.set('$KEY_BACKUP:$address', backup));
   }
 
   Future<bool> isAllBackup() async {
@@ -111,45 +109,40 @@ class WalletStorage {
     return completer.future;
   }
 
-  Future isBackup(String address) async {
-    List<Future> futures = <Future>[];
-    futures.add(_localStorage.get('$KEY_BACKUP:$address'));
-    await Future.wait(futures);
+  Future isBackup(String address) {
+    return Future(() => _localStorage.get('$KEY_BACKUP:$address'));
   }
 
-  Future getKeystore(String address) async {
-    List<Future> futures = <Future>[];
+  Future getKeystore(String address) {
     if (address != null && address.isNotEmpty) {
       if (Platform.isAndroid) {
-        futures.add(_localStorage.get('$KEY_KEYSTORE:$address'));
+        return Future(() => _localStorage.get('$KEY_KEYSTORE:$address'));
       } else {
-        futures.add(_secureStorage.get('$KEY_KEYSTORE:$address'));
+        return Future(() => _secureStorage.get('$KEY_KEYSTORE:$address'));
       }
     }
-    await Future.wait(futures);
+    return Future.value(null);
   }
 
-  Future getPassword(String address) async {
-    List<Future> futures = <Future>[];
+  Future getPassword(String address) {
     if (address != null && address.isNotEmpty) {
       if (Platform.isAndroid) {
-        futures.add(_localStorage.get('$KEY_PASSWORD:$address'));
+        return Future(() => _localStorage.get('$KEY_PASSWORD:$address'));
       } else {
-        futures.add(_secureStorage.get('$KEY_PASSWORD:$address'));
+        return Future(() => _secureStorage.get('$KEY_PASSWORD:$address'));
       }
     }
-    await Future.wait(futures);
+    return Future.value(null);
   }
 
-  Future getSeed(String address) async {
-    List<Future> futures = <Future>[];
+  Future getSeed(String address) {
     if (address != null && address.isNotEmpty) {
       if (Platform.isAndroid) {
-        futures.add(_localStorage.get('$KEY_SEED:$address'));
+        return Future(() => _localStorage.get('$KEY_SEED:$address'));
       } else {
-        futures.add(_secureStorage.get('$KEY_SEED:$address'));
+        return Future(() => _secureStorage.get('$KEY_SEED:$address'));
       }
     }
-    await Future.wait(futures);
+    return Future.value(null);
   }
 }

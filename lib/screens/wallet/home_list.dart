@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
@@ -12,8 +14,10 @@ import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/create_eth.dart';
 import 'package:nmobile/screens/wallet/create_nkn.dart';
@@ -23,6 +27,8 @@ import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/logger.dart';
+
+import 'export.dart';
 
 class WalletHomeListLayout extends StatefulWidget {
   @override
@@ -175,6 +181,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
   }
 
   _onNotBackedUpTipClicked() {
+    LocalStorage().debugInfo();
     S _localizations = S.of(context);
     ModalDialog dialog = ModalDialog.of(context);
     dialog.show(
@@ -205,78 +212,37 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
         return authorization.authenticationIfCan(_localizations.authenticate_to_access);
       }
       return false;
-    }).then((bool value) async {
-      if (!value) {
+    }).then((bool authOk) async {
+      if (!authOk) {
         return BottomDialog.of(context).showInputPassword(title: _localizations.verify_wallet_password);
       }
       return (WalletStorage().getPassword(wallet.address) as Future<String>);
-    }).then((String value) async {
-      if (value == null || value.isEmpty) {
+    }).then((String password) async {
+      if (password == null || password.isEmpty) {
         return;
       }
+      String keystore = await WalletStorage().getKeystore(wallet.address);
 
-      // TODO: keystore + pwd(correct) -> wallet
-      // Toast.show(_localizations.password_wrong);
+      if (wallet.type == WalletType.eth) {
+        // TODO:GG eth export
+      } else {
+        Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
+        if (restore == null || restore.address != wallet.address) {
+          Toast.show(_localizations.password_wrong);
+          return;
+        }
 
-      // try {
-      //   var wallet = await ws.exportWallet(password);
-      //   if (wallet['address'] == ws.address) {
-      //     Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
-      //       'wallet': wallet,
-      //       'keystore': wallet['keystore'],
-      //       'address': wallet['address'],
-      //       'publicKey': wallet['publicKey'],
-      //       'seed': wallet['seed'],
-      //       'name': ws.name,
-      //     });
-      //   } else {
-      //     showToast(NL10ns.of(context).password_wrong);
-      //   }
-      // } catch (e) {
-      //   if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-      //     showToast(NL10ns.of(context).password_wrong);
-      //   }
-      // }
-
-      // final future = ws.getPassword();
-      // future.then((password) async {
-      //   if (password != null) {
-      //     if (ws.type == WalletSchema.ETH_WALLET) {
-      //       String keyStore = await ws.getKeystore();
-      //       EthWallet ethWallet = Ethereum.restoreWallet(name: ws.name, keystore: keyStore, password: password);
-      //       Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
-      //         'wallet': null,
-      //         'keystore': ethWallet.keystore,
-      //         'address': (await ethWallet.address).hex,
-      //         'publicKey': ethWallet.pubkeyHex,
-      //         'seed': ethWallet.privateKeyHex,
-      //         'name': ethWallet.name,
-      //       });
-      //     } else {
-      //       try {
-      //         var wallet = await ws.exportWallet(password);
-      //         if (wallet['address'] == ws.address) {
-      //           Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
-      //             'wallet': wallet,
-      //             'keystore': wallet['keystore'],
-      //             'address': wallet['address'],
-      //             'publicKey': wallet['publicKey'],
-      //             'seed': wallet['seed'],
-      //             'name': ws.name,
-      //           });
-      //         } else {
-      //           showToast(NL10ns.of(context).password_wrong);
-      //         }
-      //       } catch (e) {
-      //         if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-      //           showToast(NL10ns.of(context).password_wrong);
-      //         }
-      //       }
-      //     }
-      //   }
-      // });
+        Navigator.pushNamed(context, WalletExportScreen.routeName, arguments: {
+          WalletExportScreen.argWalletType: WalletType.nkn,
+          WalletExportScreen.argName: wallet.name ?? "",
+          WalletExportScreen.argAddress: restore.address ?? "",
+          WalletExportScreen.argPublicKey: hexEncode(restore.publicKey ?? ""),
+          WalletExportScreen.argSeed: hexEncode(restore.seed ?? ""),
+          WalletExportScreen.argKeystore: restore.keystore ?? "",
+        });
+      }
     }).onError((error, stackTrace) {
-      logger.e(error, stackTrace);
+      logger.e(error);
     });
   }
 }
