@@ -84,6 +84,9 @@
   "seed_qrcode_dec": "请安全地保存和备份您的种子。如果丢失，您将失去对资产的访问权限。",
   "authenticate_to_access": "认证以授权访问",
   "select_asset_to_backup": "选择要备份的账户",
+  "continue_text": "下一步",
+  "verify_wallet_password": "验证账户密码",
+  "password_wrong": "账户密码或keystore错误",
 
   "keystore": "Keystore",
   "seed": "Seed",

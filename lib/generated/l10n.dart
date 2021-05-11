@@ -805,6 +805,36 @@ class S {
     );
   }
 
+  /// `Continue`
+  String get continue_text {
+    return Intl.message(
+      'Continue',
+      name: 'continue_text',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Verify Account Password`
+  String get verify_wallet_password {
+    return Intl.message(
+      'Verify Account Password',
+      name: 'verify_wallet_password',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Account password or keystore file is wrong.`
+  String get password_wrong {
+    return Intl.message(
+      'Account password or keystore file is wrong.',
+      name: 'password_wrong',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Keystore`
   String get keystore {
     return Intl.message(

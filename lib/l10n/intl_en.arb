@@ -84,6 +84,9 @@
   "seed_qrcode_dec": "Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.",
   "authenticate_to_access": "authenticate to access",
   "select_asset_to_backup": "Select Asset to Backup",
+  "continue_text": "Continue",
+  "verify_wallet_password": "Verify Account Password",
+  "password_wrong": "Account password or keystore file is wrong.",
 
   "keystore": "Keystore",
   "seed": "Seed",
