@@ -28,6 +28,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "advanced" : MessageLookupByLibrary.simpleMessage("Advanced"),
     "agree" : MessageLookupByLibrary.simpleMessage("Agree"),
     "app_name" : MessageLookupByLibrary.simpleMessage("nMobile"),
+    "authenticate_to_access" : MessageLookupByLibrary.simpleMessage("authenticate to access"),
     "back" : MessageLookupByLibrary.simpleMessage("Back"),
     "biometrics" : MessageLookupByLibrary.simpleMessage("Biometrics"),
     "cache" : MessageLookupByLibrary.simpleMessage("Cache"),

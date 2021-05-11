@@ -1,7 +1,5 @@
-import 'package:local_auth/auth_strings.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:nmobile/utils/logger.dart';
-
 
 /// Biometric authentication (Face ID, Touch ID or lock code), pin coode, wallet password
 class Authorization {
@@ -24,5 +22,16 @@ class Authorization {
     }
 
     return false;
+  }
+
+  Future<bool> authenticationIfCan(String localizedReason) async {
+    if (await canCheckBiometrics) {
+      return authentication(localizedReason);
+    }
+    return false;
+  }
+
+  Future<bool> cancelAuthentication() {
+    return _localAuth.stopAuthentication();
   }
 }

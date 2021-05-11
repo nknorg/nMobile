@@ -21,4 +21,8 @@ class WalletLoaded extends WalletState {
     if (isWalletsEmpty() || address == null || address.length == 0) return null;
     return wallets.firstWhere((x) => x.address == address, orElse: () => null);
   }
+
+  Future<bool> isAllWalletBackup() {
+    return WalletStorage().isAllBackup();
+  }
 }

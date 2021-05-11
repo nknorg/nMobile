@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
@@ -18,6 +19,7 @@ import 'package:nmobile/screens/wallet/create_eth.dart';
 import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/screens/wallet/detail.dart';
 import 'package:nmobile/screens/wallet/import.dart';
+import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -31,27 +33,18 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
   WalletBloc _walletBloc;
   StreamSubscription _walletSubscription;
 
-  double _totalNKN = 0;
   bool _allBackedUp = false;
-  bool a = false;
 
   @override
   void initState() {
     super.initState();
-    // locator<TaskService>().queryNknWalletBalanceTask(); // TODO:GG balance
     _walletBloc = BlocProvider.of<WalletBloc>(context);
-    _walletSubscription = _walletBloc.stream.listen((state) {
+    _walletSubscription = _walletBloc.stream.listen((state) async {
       if (state is WalletLoaded) {
-        double totalNKN = 0;
-        bool allBackUp = true;
-        state.wallets?.forEach((w) => totalNKN += w?.balance ?? 0);
-        state.wallets?.forEach((w) {
-          // allBackUp = w.isBackedUp && allBackUp; // TODO:GG backup
-        });
+        bool allBackedUp = await state.isAllWalletBackup();
+        logger.d("wallet_home_list_update -> allBackUp:$allBackedUp");
         setState(() {
-          logger.d("wallet_home_list_update -> totalNKN:$totalNKN - allBackUp:$allBackUp");
-          _totalNKN = totalNKN;
-          _allBackedUp = allBackUp;
+          _allBackedUp = allBackedUp;
         });
       }
     });
@@ -191,15 +184,55 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
       actions: [
         Button(
           text: _localizations.go_backup,
-          onPressed: _listen(null),
+          onPressed: _readyExport(null),
         ),
       ],
     );
   }
 
-  _listen(WalletSchema ws) {
+  _readyExport(WalletSchema wallet) {
+    if (wallet == null || wallet.address == null || wallet.address.isEmpty) return;
+    S _localizations = S.of(context);
+
     Future(() async {
-      // TODO:GG auth -> pwd
+      if (Settings.biometricsAuthentication) {
+        return authorization.authenticationIfCan(_localizations.authenticate_to_access);
+      }
+      return false;
+    }).then((bool value) async {
+      String pwd = await WalletStorage().getPassword(wallet.address);
+      if (!value) {
+        // TODO:GG pwd dialog
+        return "pwd or null";
+      }
+      return pwd;
+    }).then((String value) async {
+      if (value == null || value.isEmpty) {
+        // TODO:GG auth no pass
+        return;
+      }
+
+      // try {
+      //   // TODO: keystore + pwd -> wallet
+      //   var wallet = await ws.exportWallet(password);
+      //   if (wallet['address'] == ws.address) {
+      //     Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
+      //       'wallet': wallet,
+      //       'keystore': wallet['keystore'],
+      //       'address': wallet['address'],
+      //       'publicKey': wallet['publicKey'],
+      //       'seed': wallet['seed'],
+      //       'name': ws.name,
+      //     });
+      //   } else {
+      //     showToast(NL10ns.of(context).password_wrong);
+      //   }
+      // } catch (e) {
+      //   if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+      //     showToast(NL10ns.of(context).password_wrong);
+      //   }
+      // }
+
       // final future = ws.getPassword();
       // future.then((password) async {
       //   if (password != null) {
@@ -237,6 +270,8 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
       //     }
       //   }
       // });
+    }).onError((error, stackTrace) {
+      logger.e(error, stackTrace);
     });
   }
 }
