@@ -3,10 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -34,6 +36,7 @@ class BottomDialog extends StatefulWidget {
     @required WidgetBuilder builder,
     Widget action,
     double height,
+    bool animated = true,
   }) {
     this.builder = builder;
     this.action = action;
@@ -44,11 +47,13 @@ class BottomDialog extends StatefulWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
       backgroundColor: application.theme.backgroundLightColor,
       builder: (BuildContext context) {
-        return AnimatedPadding(
-          padding: MediaQuery.of(context).viewInsets,
-          duration: const Duration(milliseconds: 100),
-          child: this,
-        );
+        return animated
+            ? AnimatedPadding(
+                padding: MediaQuery.of(context).viewInsets,
+                duration: const Duration(milliseconds: 100),
+                child: this,
+              )
+            : this;
       },
     );
   }
@@ -59,10 +64,12 @@ class BottomDialog extends StatefulWidget {
     Widget action,
     String desc = "",
     double height = 300,
+    bool animated = true,
   }) {
     return show<T>(
       height: height,
       action: action,
+      animated: animated,
       builder: (context) => GestureDetector(
         onTap: () {
           FocusScope.of(context).requestFocus(FocusNode());
@@ -277,6 +284,50 @@ class BottomDialog extends StatefulWidget {
           }
           return SizedBox.shrink();
         },
+      ),
+    );
+  }
+
+  Future<String> showInputPassword({
+    @required String title,
+    String desc,
+  }) async {
+    S _localizations = S.of(context);
+    TextEditingController _passwordController = TextEditingController();
+
+    return showWithTitle<String>(
+      title: title,
+      desc: desc,
+      height: 300,
+      animated: false,
+      action: Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
+        child: Button(
+          text: _localizations.continue_text,
+          width: double.infinity,
+          onPressed: () {
+            Navigator.pop(context, _passwordController.text);
+          },
+        ),
+      ),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Label(
+              _localizations.wallet_password,
+              type: LabelType.h4,
+              textAlign: TextAlign.start,
+            ),
+            FormText(
+              controller: _passwordController,
+              hintText: _localizations.input_password,
+              validator: Validator.of(context).password(),
+              password: true,
+            ),
+          ],
+        ),
       ),
     );
   }

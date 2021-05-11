@@ -206,20 +206,19 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
       }
       return false;
     }).then((bool value) async {
-      String pwd = await WalletStorage().getPassword(wallet.address);
       if (!value) {
-        // TODO:GG pwd dialog
-        return "pwd or null";
+        return BottomDialog.of(context).showInputPassword(title: _localizations.verify_wallet_password);
       }
-      return pwd;
+      return (WalletStorage().getPassword(wallet.address) as Future<String>);
     }).then((String value) async {
       if (value == null || value.isEmpty) {
-        // TODO:GG auth no pass
         return;
       }
 
+      // TODO: keystore + pwd(correct) -> wallet
+      // Toast.show(_localizations.password_wrong);
+
       // try {
-      //   // TODO: keystore + pwd -> wallet
       //   var wallet = await ws.exportWallet(password);
       //   if (wallet['address'] == ws.address) {
       //     Navigator.of(context).pushNamed(NknWalletExportScreen.routeName, arguments: {
