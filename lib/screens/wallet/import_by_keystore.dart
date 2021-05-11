@@ -31,11 +31,9 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
   bool _formValid = false;
 
   TextEditingController _keystoreController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
   FocusNode _keystoreFocusNode = FocusNode();
   FocusNode _nameFocusNode = FocusNode();
   FocusNode _passwordFocusNode = FocusNode();
-  FocusNode _confirmPasswordFocusNode = FocusNode();
 
   WalletBloc _walletBloc;
   String _keystore;
@@ -135,13 +133,13 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                   padding: EdgeInsets.only(left: 20, right: 20),
                   child: FormText(
                     controller: _keystoreController,
-                    hintText: _localizations.input_keystore,
-                    maxLines: 3,
                     focusNode: _keystoreFocusNode,
+                    hintText: _localizations.input_keystore,
+                    validator: widget.walletType == WalletType.nkn ? Validator.of(context).keystoreNKN() : Validator.of(context).keystoreETH(),
+                    textInputAction: TextInputAction.next,
+                    onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_nameFocusNode),
                     onSaved: (v) => _keystore = v,
-                    onFieldSubmitted: (_) {
-                      FocusScope.of(context).requestFocus(_passwordFocusNode);
-                    },
+                    maxLines: 3,
                     suffixIcon: GestureDetector(
                       onTap: () async {
                         FilePickerResult result = await FilePicker.platform.pickFiles(
@@ -160,14 +158,12 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                       },
                       child: Container(
                         width: 20,
-                        alignment: Alignment.bottomCenter,
                         child: Icon(
                           FontAwesomeIcons.paperclip,
                           size: 20,
                         ),
                       ),
                     ),
-                    validator: widget.walletType == WalletType.nkn ? Validator.of(context).keystoreNKN() : Validator.of(context).keystoreETH(),
                   ),
                 ),
                 Padding(
@@ -183,12 +179,10 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                   child: FormText(
                     focusNode: _nameFocusNode,
                     hintText: _localizations.hint_enter_wallet_name,
-                    onSaved: (v) => _name = v,
-                    onFieldSubmitted: (_) {
-                      FocusScope.of(context).requestFocus(_passwordFocusNode);
-                    },
-                    textInputAction: TextInputAction.next,
                     validator: Validator.of(context).walletName(),
+                    textInputAction: TextInputAction.next,
+                    onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
+                    onSaved: (v) => _name = v,
                   ),
                 ),
                 Padding(
@@ -203,13 +197,11 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                   padding: EdgeInsets.only(left: 20, right: 20, bottom: 16),
                   child: FormText(
                     focusNode: _passwordFocusNode,
-                    controller: _passwordController,
                     hintText: _localizations.input_password,
-                    onSaved: (v) => _password = v,
-                    onFieldSubmitted: (_) {
-                      FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
-                    },
                     validator: Validator.of(context).password(),
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
+                    onSaved: (v) => _password = v,
                     password: true,
                   ),
                 ),
