@@ -795,6 +795,16 @@ class S {
     );
   }
 
+  /// `Select Asset to Backup`
+  String get select_asset_to_backup {
+    return Intl.message(
+      'Select Asset to Backup',
+      name: 'select_asset_to_backup',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Keystore`
   String get keystore {
     return Intl.message(

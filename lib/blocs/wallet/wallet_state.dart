@@ -23,6 +23,6 @@ class WalletLoaded extends WalletState {
   }
 
   Future<bool> isAllWalletBackup() {
-    return WalletStorage().isAllBackup();
+    return WalletStorage().isListBackup(wallets);
   }
 }

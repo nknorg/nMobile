@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
+import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -227,6 +230,53 @@ class BottomDialog extends StatefulWidget {
           ),
           Divider(height: 1, indent: 64),
         ],
+      ),
+    );
+  }
+
+  Future<WalletSchema> showWalletSelect({
+    @required String title,
+    String desc,
+    Widget action,
+    bool onlyNKN = false,
+  }) {
+    return showWithTitle<WalletSchema>(
+      title: title,
+      desc: desc,
+      action: action,
+      height: 330,
+      child: BlocBuilder<WalletBloc, WalletState>(
+        builder: (context, state) {
+          if (state is WalletLoaded) {
+            final wallets = onlyNKN ? state.wallets.where((w) => w.type == WalletType.nkn).toList() : state.wallets;
+            return ListView.builder(
+              itemCount: wallets?.length ?? 0,
+              itemBuilder: (BuildContext context, int index) {
+                WalletSchema wallet = wallets[index];
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    WalletItem(
+                      type: wallet?.type,
+                      schema: wallet,
+                      bgColor: application.theme.backgroundLightColor,
+                      radius: BorderRadius.circular(8),
+                      onTap: () {
+                        close(result: wallet);
+                      },
+                    ),
+                    Divider(
+                      height: 1,
+                      indent: 84,
+                      endIndent: 20,
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+          return SizedBox.shrink();
+        },
       ),
     );
   }

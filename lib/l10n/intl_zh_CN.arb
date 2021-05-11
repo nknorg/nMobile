@@ -83,6 +83,7 @@
   "qrcode": "二维码",
   "seed_qrcode_dec": "请安全地保存和备份您的种子。如果丢失，您将失去对资产的访问权限。",
   "authenticate_to_access": "认证以授权访问",
+  "select_asset_to_backup": "选择要备份的账户",
 
   "keystore": "Keystore",
   "seed": "Seed",
