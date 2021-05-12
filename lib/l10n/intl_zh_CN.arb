@@ -120,6 +120,22 @@
   "error_seed_format": "Seed 错误",
   "error_client_address_format": "地址不正确",
   "error_nkn_address_format": "账户地址无效",
+  "error_unknown_nkn_qrcode": "识别失败",
+
+  "to": "到",
+  "send_to": "发送给",
+  "from": "从",
+  "fee": "矿工费",
+  "amount": "数量",
+  "enter_amount": "请输入数量",
+  "available": "可用",
+  "enter_receive_address": "请输入接受地址",
+
+  "max": "全部",
+  "min": "最小",
+  "slow": "慢",
+  "average": "平均",
+  "fast": "快",
 
   "main_wallet": "主账户",
   "export_wallet": "导出账户",

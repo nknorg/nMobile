@@ -120,6 +120,22 @@
   "error_seed_format": "Seed format does not match.",
   "error_client_address_format": "Client address format does not match.",
   "error_nkn_address_format": "Invalid wallet address.",
+  "error_unknown_nkn_qrcode": "Unknown NKN qr code.",
+
+  "to": "To",
+  "send_to": "Send To",
+  "from": "From",
+  "fee": "Fee",
+  "amount": "Amount",
+  "enter_amount": "Enter amount",
+  "available": "Available",
+  "enter_receive_address": "Enter receive address",
+
+  "max": "Max",
+  "min": "Min",
+  "slow": "Slow",
+  "average": "Average",
+  "fast": "Fast",
 
   "main_wallet": "Main Account",
   "export_wallet": "Export Account",

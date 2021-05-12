@@ -120,6 +120,22 @@
   "error_seed_format": "Seed 錯誤",
   "error_client_address_format": "地址不正確",
   "error_nkn_address_format": "賬戶地址無效",
+  "error_unknown_nkn_qrcode": "識別失敗",
+
+  "to": "到",
+  "send_to": "發送給",
+  "from": "從",
+  "fee": "礦工費",
+  "amount": "數量",
+  "enter_amount": "請輸入數量",
+  "available": "可用",
+  "enter_receive_address": "請輸入接受地址",
+
+  "max": "全部",
+  "min": "最小",
+  "slow": "慢",
+  "average": "平均",
+  "fast": "快",
 
   "main_wallet": "主賬戶",
   "export_wallet": "導出賬戶",
