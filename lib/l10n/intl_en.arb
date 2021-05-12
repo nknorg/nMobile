@@ -59,8 +59,12 @@
   "mainnet": "MAINNET",
 
   "nkn": "NKN",
+  "eth": "ETH",
   "ethereum": "Ethereum",
   "ERC_20": "ERC-20",
+  "gwei": "GWEI",
+  "gas_price": "Gas Price",
+  "gas_max": "Max Gas",
   "nkn_mainnet": "NKN Mainnet",
   "create_ethereum_wallet": "Create Ethereum Account",
 

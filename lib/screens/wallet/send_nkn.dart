@@ -7,9 +7,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/common/wallet.dart';
 import 'package:nmobile/components/button/button.dart';
-import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -63,55 +62,141 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
 
   var _amount;
   var _sendTo;
-
   bool _showFeeLayout = false;
+
+  // nkn
   double _sliderFeeMin = 0;
   double _sliderFeeMax = 10;
   double _sliderFee = 0.1;
   double _fee = 0.1;
 
+  // eth
+  bool _ethTrueTokenFalse = false;
+  int _gasPriceInGwei = 72;
+  int _sliderGasPriceMin = 10;
+  int _sliderGasPriceMax = 1000;
+  int _maxGas = 60000; // default: 90000
+  int _sliderMaxGasMinEth = 21000; // Actual: 21,000
+  int _sliderMaxGasMinNkn = 30000; // Actual: 29,561
+  int _sliderMaxGasMax = 300000;
+
   @override
   void initState() {
     super.initState();
     this._wallet = widget.arguments[WalletSendNKNScreen.argWallet];
-    _feeController.text = _fee.toString();
     // balance query
     locator<TaskService>().queryWalletBalanceTask();
+    // init
+    _initEth(this._wallet?.type == WalletType.eth);
   }
 
-  _sendNKN() async {
+  _initEth(bool eth) async {
+    if (eth) {
+      // TODO:GG eth gasPrice
+      // final gasPrice = await EthErc20Client().getGasPrice;
+      // _gasPriceInGwei = (gasPrice?.gwei ?? 0 * 0.8).round();
+      // logger.d('gasPrice:$_gasPriceInGwei GWei');
+    } else {
+      _feeController.text = _fee.toString();
+    }
+    _updateFee(eth);
+  }
+
+  _updateFee(bool eth, {value}) {
+    if (_wallet == null) {
+      _amountController.text = '';
+      return;
+    }
+    if (eth) {
+      // TODO:GG eth fee
+      // _feeController.text = nknFormat(
+      //   (_gasPriceInGwei?.gwei?.ether ?? 0 * _maxGas),
+      //   decimalDigits: 8,
+      // ).trim();
+      // if (_ethTrueTokenFalse && _amountController.text.isNotEmpty) {
+      //   _amountController.text = nknFormat(
+      //     (_wallet?.balanceEth - (_gasPriceInGwei?.gwei?.ether ?? 0 * _maxGas)),
+      //     decimalDigits: 8,
+      //   ).trim();
+      // }
+    } else {
+      if (value != null) {
+        setState(() {
+          _sliderFee = _fee = value;
+          _feeController.text = _fee.toStringAsFixed(2);
+        });
+      }
+    }
+  }
+
+  _checkFeeForm(bool eth, value) {
+    if (_wallet?.type == WalletType.eth) {
+      // TODO:GG eth fee form
+      // int gasPrice = (num.parse(value).ETH.gwei / _maxGas).round();
+      // if (gasPrice < _sliderGasPriceMin) {
+      //   gasPrice = _sliderGasPriceMin;
+      // }
+      // if (gasPrice > _sliderGasPriceMax) {
+      //   gasPrice = _sliderGasPriceMax;
+      // }
+      // logger.d('fee field | gasPrice:$gasPrice');
+      // if (_gasPriceInGwei != gasPrice) {
+      //   _gasPriceInGwei = gasPrice;
+      //   _updateFee(true);
+      // }
+    } else {
+      double fee = value.isNotEmpty ? double.parse(value) : 0;
+      if (fee > _sliderFeeMax) {
+        fee = _sliderFeeMax;
+      } else if (fee < _sliderFeeMin) {
+        fee = _sliderFeeMin;
+      }
+      setState(() {
+        _sliderFee = fee;
+      });
+    }
+  }
+
+  _setAmountToMax(bool eth) {
+    if (_wallet == null) {
+      _amountController.text = '';
+      return;
+    }
+    if (eth) {
+      // TODO:GG eth amount
+      // _amountController.text = nknFormat(
+      //   _ethTrueTokenFalse ? (_wallet?.balanceEth - (_gasPriceInGwei?.gwei?.ether ?? 0 * _maxGas)) : _wallet?.balance,
+      //   decimalDigits: 8,
+      // ).trim();
+    } else {
+      _amountController.text = (_wallet?.balance ?? 0).toString();
+    }
+  }
+
+  double get _maxGasGet {
+    final min = _ethTrueTokenFalse ? _sliderMaxGasMinEth : _sliderMaxGasMinNkn;
+    _maxGas = _maxGas < min
+        ? min
+        : _maxGas > _sliderMaxGasMax
+            ? _sliderMaxGasMax
+            : _maxGas;
+    return _maxGas.toDouble();
+  }
+
+  _readyTransfer() async {
+    if (_wallet == null || _wallet.address == null || _wallet.address.isEmpty) return;
+    S _localizations = S.of(context);
+
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
       logger.d("amount:$_amount, sendTo:$_sendTo, fee:$_fee");
 
-      if (_wallet == null || _wallet.address == null || _wallet.address.isEmpty) return;
-
-      S _localizations = S.of(context);
-      WalletStorage _storage = WalletStorage();
-
-      Future(() async {
-        if (Settings.biometricsAuthentication) {
-          return authorization.authenticationIfCan();
-        }
-        return false;
-      }).then((bool authOk) async {
-        String pwd = await _storage.getPassword(_wallet?.address);
-        if (!authOk || pwd == null || pwd.isEmpty) {
-          return BottomDialog.of(context).showInput(
-            title: _localizations.verify_wallet_password,
-            inputTip: _localizations.wallet_password,
-            inputHint: _localizations.input_password,
-            actionText: _localizations.continue_text,
-            password: true,
-          );
-        }
-        return pwd;
-      }).then((password) async {
+      getWalletPassword(context, _wallet?.address).then((String password) async {
         if (password == null || password.isEmpty) {
           // no toast
           return;
         }
-        String keystore = await _storage.getKeystore(_wallet?.address);
+        String keystore = await WalletStorage().getKeystore(_wallet?.address);
 
         if (_wallet.type == WalletType.eth) {
           final result = _transferETH(keystore, password);
@@ -121,9 +206,37 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
           Navigator.pop(context, result);
         }
       }).onError((error, stackTrace) {
-        logger.e(error);
+        if (error.message == "wrong password") {
+          Toast.show(_localizations.password_wrong);
+        } else {
+          logger.e(error);
+        }
       });
     }
+  }
+
+  Future<bool> _transferETH(String keystore, String password) async {
+    // TODO:GG transfer eth
+    // try {
+    // final ethWallet = await Ethereum.restoreWalletSaved(schema: wallet, password: password);
+    //   final ethClient = EthErc20Client();
+    //   final txHash = _ethTrueTokenFalse
+    //       ? await ethClient.sendEthereum(ethWallet.credt,
+    //       address: _sendTo,
+    //       amountEth: _amount,
+    //       gasLimit: _maxGas,
+    //       gasPriceInGwei: _gasPriceInGwei)
+    //       : await ethClient.sendNknToken(ethWallet.credt,
+    //       address: _sendTo,
+    //       amountNkn: _amount,
+    //       gasLimit: _maxGas,
+    //       gasPriceInGwei: _gasPriceInGwei);
+    //   return txHash.length > 10;
+    // } catch (e) {
+    //   showToast(e.message);
+    //   return false;
+    // }
+    return false;
   }
 
   Future<bool> _transferNKN(String keystore, String password) async {
@@ -153,11 +266,6 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
     }
   }
 
-  Future<bool> _transferETH(String keystore, String password) async {
-    // TODO:GG transfer eth
-    return false;
-  }
-
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
@@ -166,7 +274,7 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
     return Layout(
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: _localizations.send_nkn,
+        title: _wallet?.type == WalletType.eth ? _localizations.send_eth : _localizations.send_nkn,
         backgroundColor: application.theme.backgroundColor4,
         actions: [
           IconButton(
@@ -189,11 +297,15 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
               }
               // data
               if (jsonFormat) {
-                logger.d("wallet send NKN scan - address:${jsonData['address']} amount:${jsonData['amount']}");
+                logger.d("wallet send scan - address:${jsonData['address']} amount:${jsonData['amount']}");
                 _sendToController.text = jsonData['address'];
                 _amountController.text = jsonData['amount'].toString();
-              } else if (verifyAddress(qrData)) {
-                logger.d("wallet send NKN scan - address:$qrData");
+              } else if (_wallet?.type == WalletType.nkn && verifyAddress(qrData)) {
+                logger.d("wallet send scan NKN - address:$qrData");
+                _sendToController.text = qrData;
+              } else if (_wallet?.type == WalletType.eth) {
+                // && verifyEthAddress(qrData) TODO:GG eth address
+                logger.d("wallet send scan ETH - address:$qrData");
                 _sendToController.text = qrData;
               } else {
                 ModalDialog.of(context).show(
@@ -235,7 +347,11 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                   builder: (context, state) {
                     if (state is WalletLoaded) {
                       _wallet = state.getWalletByAddress(_wallet?.address ?? "");
+                      if (_wallet.type == WalletType.nkn) {
+                        _ethTrueTokenFalse = false;
+                      }
                     }
+                    bool useETH = _wallet?.type == WalletType.eth && _ethTrueTokenFalse;
                     return Form(
                       key: _formKey,
                       onChanged: () {
@@ -253,6 +369,7 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  /// wallet
                                   WalletDropdown(
                                     selectTitle: _localizations.select_asset_to_receive,
                                     schema: _wallet,
@@ -264,7 +381,10 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                                       });
                                     },
                                   ),
+                                  Divider(height: 3),
                                   SizedBox(height: 20),
+
+                                  /// amount
                                   Label(
                                     _localizations.amount,
                                     type: LabelType.h4,
@@ -278,18 +398,31 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                                     keyboardType: TextInputType.numberWithOptions(decimal: true),
                                     textInputAction: TextInputAction.next,
                                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_sendToFocusNode),
-                                    onSaved: (v) => _amount = v,
+                                    onSaved: (v) => _amount = num.parse(v),
                                     inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
                                     showErrorMessage: false,
                                     suffixIcon: GestureDetector(
                                       child: Container(
                                         width: 20,
                                         alignment: Alignment.centerRight,
-                                        child: Label(_localizations.nkn, type: LabelType.label),
+                                        child: Label(
+                                          useETH ? _localizations.eth : _localizations.nkn,
+                                          type: LabelType.label,
+                                        ),
                                       ),
+                                      onTap: () {
+                                        if (_wallet?.type == WalletType.eth) {
+                                          _amountController.text = '';
+                                          setState(() {
+                                            _ethTrueTokenFalse = !_ethTrueTokenFalse;
+                                          });
+                                        }
+                                      },
                                     ),
                                   ),
                                   SizedBox(height: 4),
+
+                                  /// available
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
@@ -297,7 +430,11 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                                         children: <Widget>[
                                           Label(_localizations.available + ': '),
                                           Label(
-                                            nknFormat(_wallet?.balance ?? 0, decimalDigits: 8, symbol: 'NKN'),
+                                            nknFormat(
+                                              (useETH ? _wallet?.balanceEth : _wallet?.balance) ?? 0,
+                                              decimalDigits: 8,
+                                              symbol: useETH ? 'ETH' : 'NKN',
+                                            ),
                                             color: application.theme.fontColor1,
                                           ),
                                         ],
@@ -309,12 +446,14 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                                           type: LabelType.bodyRegular,
                                         ),
                                         onTap: () {
-                                          _amountController.text = (_wallet?.balance ?? 0).toString();
+                                          _setAmountToMax(_wallet?.type == WalletType.eth);
                                         },
                                       )
                                     ],
                                   ),
                                   SizedBox(height: 20),
+
+                                  /// sendTo
                                   Label(
                                     _localizations.send_to,
                                     type: LabelType.h4,
@@ -324,29 +463,33 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                                     controller: _sendToController,
                                     focusNode: _sendToFocusNode,
                                     hintText: _localizations.enter_receive_address,
-                                    validator: Validator.of(context).addressNKN(),
+                                    validator: _wallet?.type == WalletType.eth ? Validator.of(context).addressETH() : Validator.of(context).addressNKN(),
                                     textInputAction: TextInputAction.next,
                                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_feeToFocusNode),
                                     onSaved: (v) => _sendTo = v,
-                                    suffixIcon: GestureDetector(
-                                      onTap: () async {
-                                        // TODO:GG contact select
-                                        // if (NKNClientCaller.currentChatId != null) {
-                                        //   var contact = await Navigator.of(context).pushNamed(ContactHome.routeName, arguments: true);
-                                        //   if (contact is ContactSchema) {
-                                        //     _sendToController.text = contact.nknWalletAddress;
-                                        //   }
-                                        // } else {
-                                        //   Toast.show('D-Chat not login');
-                                        // }
-                                      },
-                                      child: Container(
-                                        width: 20,
-                                        alignment: Alignment.centerRight,
-                                        child: Icon(FontAwesomeIcons.solidAddressBook),
-                                      ),
-                                    ),
+                                    suffixIcon: _wallet?.type == WalletType.eth
+                                        ? SizedBox.shrink()
+                                        : GestureDetector(
+                                            onTap: () async {
+                                              // TODO:GG contact select
+                                              // if (NKNClientCaller.currentChatId != null) {
+                                              //   var contact = await Navigator.of(context).pushNamed(ContactHome.routeName, arguments: true);
+                                              //   if (contact is ContactSchema) {
+                                              //     _sendToController.text = contact.nknWalletAddress;
+                                              //   }
+                                              // } else {
+                                              //   Toast.show('D-Chat not login');
+                                              // }
+                                            },
+                                            child: Container(
+                                              width: 20,
+                                              alignment: Alignment.centerRight,
+                                              child: Icon(FontAwesomeIcons.solidAddressBook),
+                                            ),
+                                          ),
                                   ),
+
+                                  /// fee
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -383,15 +526,7 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                                           textInputAction: TextInputAction.done,
                                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
                                           onChanged: (v) {
-                                            setState(() {
-                                              double fee = v.isNotEmpty ? double.parse(v) : 0;
-                                              if (fee > _sliderFeeMax) {
-                                                fee = _sliderFeeMax;
-                                              } else if (fee < _sliderFeeMin) {
-                                                fee = _sliderFeeMin;
-                                              }
-                                              _sliderFee = fee;
-                                            });
+                                            _checkFeeForm(_wallet?.type == WalletType.eth, v);
                                           },
                                           keyboardType: TextInputType.numberWithOptions(decimal: true),
                                           inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
@@ -399,7 +534,10 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                                             child: Container(
                                               width: 20,
                                               alignment: Alignment.centerRight,
-                                              child: Label(_localizations.nkn, type: LabelType.label),
+                                              child: Label(
+                                                useETH ? _localizations.eth : _localizations.nkn,
+                                                type: LabelType.label,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -407,47 +545,137 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                                     ],
                                   ),
                                   SizedBox(height: 20),
-                                  ExpansionLayout(
-                                    isExpanded: _showFeeLayout,
-                                    child: Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.only(top: 0),
-                                        child: Column(
-                                          children: <Widget>[
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: <Widget>[
-                                                Label(
-                                                  _localizations.slow,
-                                                  type: LabelType.bodySmall,
-                                                  color: application.theme.primaryColor,
-                                                ),
-                                                Label(
-                                                  _localizations.average,
-                                                  type: LabelType.bodySmall,
-                                                  color: application.theme.primaryColor,
-                                                ),
-                                                Label(
-                                                  _localizations.fast,
-                                                  type: LabelType.bodySmall,
-                                                  color: application.theme.primaryColor,
-                                                ),
-                                              ],
-                                            ),
-                                            Slider(
-                                              value: _sliderFee,
-                                              onChanged: (v) {
-                                                setState(() {
-                                                  _sliderFee = _fee = v;
-                                                  _feeController.text = _fee.toStringAsFixed(2);
-                                                });
-                                              },
-                                              max: _sliderFeeMax,
-                                              min: _sliderFeeMin,
-                                            ),
-                                          ],
-                                        )),
-                                  ),
+
+                                  /// fee slider
+                                  _wallet?.type == WalletType.eth
+                                      ? ExpansionLayout(
+                                          isExpanded: _showFeeLayout,
+                                          child: Column(
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(right: 16),
+                                                    child: Label(
+                                                      _localizations.gas_price,
+                                                      type: LabelType.h4,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: Column(
+                                                      children: [
+                                                        Row(
+                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          children: <Widget>[
+                                                            Label(
+                                                              _sliderGasPriceMin.toString() + ' ' + _localizations.gwei,
+                                                              type: LabelType.bodySmall,
+                                                              color: application.theme.primaryColor,
+                                                            ),
+                                                            Label(
+                                                              _sliderGasPriceMax.toString() + ' ' + _localizations.gwei,
+                                                              type: LabelType.bodySmall,
+                                                              color: application.theme.primaryColor,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        Slider(
+                                                          value: _gasPriceInGwei.toDouble(),
+                                                          onChanged: (v) {
+                                                            _gasPriceInGwei = v.toInt();
+                                                            _updateFee(true);
+                                                          },
+                                                          min: _sliderGasPriceMin.toDouble(),
+                                                          max: _sliderGasPriceMax.toDouble(),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                children: [
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(right: 22),
+                                                    child: Label(
+                                                      _localizations.gas_max,
+                                                      type: LabelType.h4,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: Column(
+                                                      children: [
+                                                        Row(
+                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          children: <Widget>[
+                                                            Label(
+                                                              (_ethTrueTokenFalse ? _sliderMaxGasMinEth : _sliderMaxGasMinNkn).toString(),
+                                                              type: LabelType.bodySmall,
+                                                              color: application.theme.primaryColor,
+                                                            ),
+                                                            Label(
+                                                              _sliderMaxGasMax.toString(),
+                                                              type: LabelType.bodySmall,
+                                                              color: application.theme.primaryColor,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        Slider(
+                                                          value: _maxGasGet,
+                                                          onChanged: (v) {
+                                                            _maxGas = v.round();
+                                                            _updateFee(true);
+                                                          },
+                                                          min: (_ethTrueTokenFalse ? _sliderMaxGasMinEth : _sliderMaxGasMinNkn).toDouble(),
+                                                          max: _sliderMaxGasMax.toDouble(),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : ExpansionLayout(
+                                          isExpanded: _showFeeLayout,
+                                          child: Column(
+                                            children: <Widget>[
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: <Widget>[
+                                                  Label(
+                                                    _localizations.slow,
+                                                    type: LabelType.bodySmall,
+                                                    color: application.theme.primaryColor,
+                                                  ),
+                                                  Label(
+                                                    _localizations.average,
+                                                    type: LabelType.bodySmall,
+                                                    color: application.theme.primaryColor,
+                                                  ),
+                                                  Label(
+                                                    _localizations.fast,
+                                                    type: LabelType.bodySmall,
+                                                    color: application.theme.primaryColor,
+                                                  ),
+                                                ],
+                                              ),
+                                              Slider(
+                                                value: _sliderFee,
+                                                onChanged: (v) {
+                                                  _updateFee(false, value: v);
+                                                },
+                                                max: _sliderFeeMax,
+                                                min: _sliderFeeMin,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                 ],
                               ),
                             ),
@@ -464,7 +692,7 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                                       child: Button(
                                         text: _localizations.continue_text,
                                         disabled: !_formValid,
-                                        onPressed: _sendNKN,
+                                        onPressed: _readyTransfer,
                                       ),
                                     ),
                                   ],
