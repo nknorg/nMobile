@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
@@ -17,6 +19,7 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/export.dart';
 import 'package:nmobile/screens/wallet/receive_nkn.dart';
+import 'package:nmobile/screens/wallet/send_nkn.dart';
 import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/format.dart';
@@ -30,10 +33,10 @@ class WalletDetailScreen extends StatefulWidget {
   static final String argWallet = "wallet";
   static final String argListIndex = "list_index";
 
-  static go(BuildContext context, WalletSchema wallet, {int listIndex}) {
+  static Future go(BuildContext context, WalletSchema wallet, {int listIndex}) {
     logger.d("wallet detail - $wallet");
-    if (wallet == null) return;
-    Navigator.pushNamed(context, routeName, arguments: {
+    if (wallet == null) return null;
+    return Navigator.pushNamed(context, routeName, arguments: {
       argWallet: wallet,
       argListIndex: listIndex,
     });
@@ -85,21 +88,23 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
     WalletReceiveNKNScreen.go(context, _wallet);
   }
 
-  // TODO:GG send
   _send() {
-    // Navigator.of(context)
-    //     .pushNamed(
-    //   widget.wallet.type == WalletSchema.ETH_WALLET ? SendErc20Screen.routeName : SendNknScreen.routeName,
-    //   arguments: widget.wallet,
-    // )
-    //     .then((FutureOr success) async {
-    //   if (success != null && await success) {
-    //     NotificationDialog.of(context).show(
-    //       title: _localizations.transfer_initiated,
-    //       content: _localizations.transfer_initiated_desc,
-    //     );
-    //   }
-    // });
+    if (_wallet == null || _wallet.type == null) return;
+    List<Future> futures = <Future>[];
+    if (_wallet.type == WalletType.eth) {
+      // TODO:GG eth send
+    } else {
+      futures.add(WalletSendNKNScreen.go(context, _wallet));
+    }
+    Future.wait(futures).then((FutureOr success) async {
+      if (success != null && await success) {
+        // TODO:GG dialog
+        // NotificationDialog.of(context).show(
+        //   title: _localizations.transfer_initiated,
+        //   content: _localizations.transfer_initiated_desc,
+        // );
+      }
+    });
   }
 
   @override
@@ -169,7 +174,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
                           Label('NKN', type: LabelType.bodySmall, color: application.theme.fontColor1), // .pad(t: 4),
                         ],
                       ),
-                      _wallet != null && _wallet.type == WalletType.eth
+                      _wallet?.type == WalletType.eth
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.start,

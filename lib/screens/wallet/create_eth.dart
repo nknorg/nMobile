@@ -13,8 +13,8 @@ import 'package:nmobile/helpers/validation.dart';
 class WalletCreateETHScreen extends StatefulWidget {
   static const String routeName = '/wallet/create_eth';
 
-  static go(BuildContext context) {
-    Navigator.pushNamed(context, routeName);
+  static Future go(BuildContext context) {
+    return Navigator.pushNamed(context, routeName);
   }
 
   @override

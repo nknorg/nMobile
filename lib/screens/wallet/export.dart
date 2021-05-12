@@ -23,7 +23,7 @@ class WalletExportScreen extends StatefulWidget {
   static final String argSeed = "seed";
   static final String argKeystore = "keystore";
 
-  static go(
+  static Future go(
     BuildContext context,
     String walletType,
     String name,
@@ -33,7 +33,7 @@ class WalletExportScreen extends StatefulWidget {
     String keystore,
   ) {
     logger.d("wallet export - type:$walletType  name:$name \n address:$address \n publicKey:$publicKey \n seed:$seed \n keystore:$keystore");
-    Navigator.pushNamed(context, routeName, arguments: {
+    return Navigator.pushNamed(context, routeName, arguments: {
       argWalletType: walletType ?? WalletType.nkn,
       argName: name ?? "",
       argAddress: address ?? "",
