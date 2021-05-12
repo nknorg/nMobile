@@ -62,7 +62,6 @@ String addressStringToProgramHash(String address) {
 String getAddressStringVerifyCode(String address) {
   var addressBytes = base58.decode(address);
   var verifyBytes = addressBytes.sublist(addressBytes.length - CHECKSUM_LEN);
-
   return hexEncode(verifyBytes);
 }
 
