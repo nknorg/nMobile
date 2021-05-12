@@ -74,7 +74,7 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
     _feeController.text = _fee.toString();
   }
 
-  next() async {
+  _sendNKN() async {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
       // TODO:GG
@@ -208,6 +208,13 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                                   WalletDropdown(
                                     selectTitle: _localizations.select_asset_to_receive,
                                     schema: _wallet,
+                                    onSelected: (picked) {
+                                      logger.d("wallet picked - $picked");
+                                      if (picked == null) return;
+                                      setState(() {
+                                        _wallet = picked;
+                                      });
+                                    },
                                   ),
                                   SizedBox(height: 20),
                                   Label(
@@ -227,9 +234,6 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                                     inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
                                     showErrorMessage: false,
                                     suffixIcon: GestureDetector(
-                                      onTap: () {
-                                        // TODO:GG ???
-                                      },
                                       child: Container(
                                         width: 20,
                                         alignment: Alignment.centerRight,
@@ -332,7 +336,6 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
                                           onChanged: (v) {
                                             setState(() {
-                                              // TODO:GG ?? 两个var?
                                               double fee = v.isNotEmpty ? double.parse(v) : 0;
                                               if (fee > _sliderFeeMax) {
                                                 fee = _sliderFeeMax;
@@ -345,9 +348,6 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                                           keyboardType: TextInputType.numberWithOptions(decimal: true),
                                           inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
                                           suffixIcon: GestureDetector(
-                                            onTap: () {
-                                              // TODO:GG ???
-                                            },
                                             child: Container(
                                               width: 20,
                                               alignment: Alignment.centerRight,
@@ -416,7 +416,7 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
                                       child: Button(
                                         text: _localizations.continue_text,
                                         disabled: !_formValid,
-                                        onPressed: next,
+                                        onPressed: _sendNKN,
                                       ),
                                     ),
                                   ],
