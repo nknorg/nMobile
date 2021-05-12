@@ -195,6 +195,16 @@ class S {
     );
   }
 
+  /// `Done`
+  String get done {
+    return Intl.message(
+      'Done',
+      name: 'done',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Name`
   String get name {
     return Intl.message(
@@ -570,6 +580,16 @@ class S {
     return Intl.message(
       'MAINNET',
       name: 'mainnet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `NKN`
+  String get nkn {
+    return Intl.message(
+      'NKN',
+      name: 'nkn',
       desc: '',
       args: [],
     );

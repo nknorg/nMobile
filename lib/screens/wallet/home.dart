@@ -8,6 +8,10 @@ import 'home_list.dart';
 class WalletHomeScreen extends StatefulWidget {
   static const String routeName = '/wallet/home';
 
+  static go(BuildContext context) {
+    Navigator.pushNamed(context, routeName);
+  }
+
   @override
   _WalletHomeScreenState createState() => _WalletHomeScreenState();
 }

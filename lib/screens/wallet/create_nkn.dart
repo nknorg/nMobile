@@ -21,6 +21,10 @@ import '../../app.dart';
 class WalletCreateNKNScreen extends StatefulWidget {
   static const String routeName = '/wallet/create_nkn';
 
+  static go(BuildContext context) {
+    Navigator.pushNamed(context, routeName);
+  }
+
   @override
   _WalletCreateNKNScreenState createState() => _WalletCreateNKNScreenState();
 }

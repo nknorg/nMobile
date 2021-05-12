@@ -17,6 +17,7 @@
   "reject": "拒绝",
   "warning": "警告",
   "save": "保存",
+  "done": "完成",
   "name": "名字",
   "loading": "加载中",
   "connect": "连接",
@@ -57,6 +58,7 @@
   "clear_database": "清除数据库",
   "mainnet": "主网",
 
+  "nkn": "NKN",
   "ethereum": "以太坊",
   "ERC_20": "ERC-20",
   "nkn_mainnet": "NKN 主网",
@@ -93,7 +95,6 @@
   "view_qrcode": "查看二维码",
   "qrcode": "二维码",
   "seed_qrcode_dec": "请安全地保存和备份您的种子。如果丢失，您将失去对资产的访问权限。",
-  "authenticate_to_access": "认证以授权访问",
   "select_asset_to_backup": "选择要备份的账户",
   "continue_text": "下一步",
   "verify_wallet_password": "验证账户密码",

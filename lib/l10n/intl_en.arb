@@ -17,6 +17,7 @@
   "reject": "Reject",
   "warning": "Warning",
   "save": "Save",
+  "done": "Done",
   "name": "Name",
   "loading": "Loading",
   "connect": "Connect",
@@ -57,6 +58,7 @@
   "clear_database": "Clear Database",
   "mainnet": "MAINNET",
 
+  "nkn": "NKN",
   "ethereum": "Ethereum",
   "ERC_20": "ERC-20",
   "nkn_mainnet": "NKN Mainnet",
@@ -93,7 +95,6 @@
   "view_qrcode": "View QR Code",
   "qrcode": "QR Code",
   "seed_qrcode_dec": "Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.",
-  "authenticate_to_access": "authenticate to access",
   "select_asset_to_backup": "Select Asset to Backup",
   "continue_text": "Continue",
   "verify_wallet_password": "Verify Account Password",

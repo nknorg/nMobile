@@ -16,6 +16,7 @@ import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/export.dart';
+import 'package:nmobile/screens/wallet/receive_nkn.dart';
 import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/format.dart';
@@ -27,7 +28,15 @@ import '../../app.dart';
 class WalletDetailScreen extends StatefulWidget {
   static const String routeName = '/wallet/detail_nkn';
   static final String argWallet = "wallet";
-  // static final String argListIndex = "list_index";
+  static final String argListIndex = "list_index";
+
+  static go(BuildContext context, WalletSchema wallet, {int listIndex}) {
+    if (wallet == null) return;
+    Navigator.pushNamed(context, routeName, arguments: {
+      argWallet: wallet,
+      argListIndex: listIndex,
+    });
+  }
 
   final Map<String, dynamic> arguments;
 
@@ -71,9 +80,8 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
     // TimerAuth.onOtherPage = false; // TODO:GG wallet unlock
   }
 
-  // TODO:GG receive
   _receive() {
-    // Navigator.of(context).pushNamed(ReceiveNknScreen.routeName, arguments: widget.wallet);
+    ReceiveNKNScreen.go(context, _wallet);
   }
 
   // TODO:GG send
@@ -349,14 +357,15 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
 
             // TimerAuth.instance.enableAuth(); // TODO:GG auth?
 
-            Navigator.pushNamed(context, WalletExportScreen.routeName, arguments: {
-              WalletExportScreen.argWalletType: WalletType.nkn,
-              WalletExportScreen.argName: _wallet.name ?? "",
-              WalletExportScreen.argAddress: restore.address ?? "",
-              WalletExportScreen.argPublicKey: hexEncode(restore.publicKey ?? ""),
-              WalletExportScreen.argSeed: hexEncode(restore.seed ?? ""),
-              WalletExportScreen.argKeystore: restore.keystore ?? "",
-            });
+            WalletExportScreen.go(
+              context,
+              WalletType.nkn,
+              _wallet.name,
+              restore.address,
+              hexEncode(restore.publicKey ?? ""),
+              hexEncode(restore.seed ?? ""),
+              restore.keystore,
+            );
           }
         }).onError((error, stackTrace) {
           logger.e(error);

@@ -10,11 +10,13 @@ import 'item.dart';
 
 class WalletDropdown extends StatefulWidget {
   final WalletSchema schema;
+  final String selectTitle;
   final Function(WalletSchema) onSelected;
   final Color bgColor;
 
   WalletDropdown({
     this.schema,
+    this.selectTitle,
     this.onSelected,
     this.bgColor,
   });
@@ -30,7 +32,9 @@ class _WalletDropdownState extends State<WalletDropdown> {
 
     return InkWell(
       onTap: () async {
-        WalletSchema result = await BottomDialog.of(context).showWalletSelect(title: _localizations.select_another_wallet);
+        WalletSchema result = await BottomDialog.of(context).showWalletSelect(
+          title: widget.selectTitle ?? _localizations.select_another_wallet,
+        );
         logger.d("wallet dropdown select - $result");
         widget.onSelected?.call(result);
       },
