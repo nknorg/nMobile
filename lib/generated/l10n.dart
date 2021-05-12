@@ -1145,6 +1145,146 @@ class S {
     );
   }
 
+  /// `Unknown NKN qr code.`
+  String get error_unknown_nkn_qrcode {
+    return Intl.message(
+      'Unknown NKN qr code.',
+      name: 'error_unknown_nkn_qrcode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `To`
+  String get to {
+    return Intl.message(
+      'To',
+      name: 'to',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send To`
+  String get send_to {
+    return Intl.message(
+      'Send To',
+      name: 'send_to',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `From`
+  String get from {
+    return Intl.message(
+      'From',
+      name: 'from',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Fee`
+  String get fee {
+    return Intl.message(
+      'Fee',
+      name: 'fee',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Amount`
+  String get amount {
+    return Intl.message(
+      'Amount',
+      name: 'amount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter amount`
+  String get enter_amount {
+    return Intl.message(
+      'Enter amount',
+      name: 'enter_amount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Available`
+  String get available {
+    return Intl.message(
+      'Available',
+      name: 'available',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter receive address`
+  String get enter_receive_address {
+    return Intl.message(
+      'Enter receive address',
+      name: 'enter_receive_address',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Max`
+  String get max {
+    return Intl.message(
+      'Max',
+      name: 'max',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Min`
+  String get min {
+    return Intl.message(
+      'Min',
+      name: 'min',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Slow`
+  String get slow {
+    return Intl.message(
+      'Slow',
+      name: 'slow',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Average`
+  String get average {
+    return Intl.message(
+      'Average',
+      name: 'average',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Fast`
+  String get fast {
+    return Intl.message(
+      'Fast',
+      name: 'fast',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Main Account`
   String get main_wallet {
     return Intl.message(

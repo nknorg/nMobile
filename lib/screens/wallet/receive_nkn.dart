@@ -24,10 +24,10 @@ class WalletReceiveNKNScreen extends StatefulWidget {
   static const String routeName = '/wallet/receive_nkn';
   static final String argWallet = "wallet";
 
-  static go(BuildContext context, WalletSchema wallet) {
+  static Future go(BuildContext context, WalletSchema wallet) {
     logger.d("wallet receive NKN - $wallet");
-    if (wallet == null) return;
-    Navigator.pushNamed(context, routeName, arguments: {
+    if (wallet == null) return null;
+    return Navigator.pushNamed(context, routeName, arguments: {
       argWallet: wallet,
     });
   }
@@ -73,7 +73,7 @@ class _WalletReceiveNKNScreenState extends State<WalletReceiveNKNScreen> {
               var image = await boundary.toImage();
               ByteData byteData = await image.toByteData(format: ImageByteFormat.png);
               Uint8List pngBytes = byteData.buffer.asUint8List();
-              // TODO:GG share
+              // TODO:GG share (旧包废弃了...)
               // await Share.file('Recieve NKN', 'qrcode.png', pngBytes, 'image/png', text: wallet.address);
             },
           )
@@ -118,7 +118,7 @@ class _WalletReceiveNKNScreenState extends State<WalletReceiveNKNScreen> {
                                 child: InkWell(
                                   borderRadius: BorderRadius.all(Radius.circular(8)),
                                   onTap: () {
-                                    copyText(_wallet.address, context: context);
+                                    copyText(_wallet?.address, context: context);
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
@@ -136,7 +136,7 @@ class _WalletReceiveNKNScreenState extends State<WalletReceiveNKNScreen> {
                                         Padding(
                                           padding: EdgeInsets.symmetric(vertical: 8),
                                           child: Label(
-                                            _wallet.address,
+                                            _wallet?.address ?? "--",
                                             type: LabelType.bodyRegular,
                                             textAlign: TextAlign.start,
                                             maxLines: 10,
@@ -169,7 +169,7 @@ class _WalletReceiveNKNScreenState extends State<WalletReceiveNKNScreen> {
                             Container(
                               padding: const EdgeInsets.only(top: 24),
                               child: QrImage(
-                                data: _wallet.address,
+                                data: _wallet?.address ?? "",
                                 version: QrVersions.auto,
                                 size: MediaQuery.of(context).size.width * 0.57,
                               ),
