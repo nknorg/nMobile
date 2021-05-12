@@ -167,7 +167,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
                     onTap: () {
                       Navigator.pushNamed(context, WalletDetailScreen.routeName, arguments: {
                         WalletDetailScreen.argWallet: wallet,
-                        WalletDetailScreen.argListIndex: index,
+                        // WalletDetailScreen.argListIndex: index,
                       });
                     },
                     bgColor: application.theme.backgroundLightColor,

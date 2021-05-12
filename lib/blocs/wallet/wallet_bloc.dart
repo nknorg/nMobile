@@ -61,12 +61,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     if (state is WalletLoaded) {
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
       // int index = list.indexOf(wallet);
-      int index = -1;
-      list?.asMap()?.forEach((key, value) {
-        if (value?.address == wallet?.address && value?.name == wallet?.name && value?.type == wallet?.type) {
-          index = key;
-        }
-      });
+      int index = list?.indexWhere((w) => w?.address == wallet?.address) ?? -1;
       if (index >= 0) {
         list.removeAt(index);
         await _walletStorage.deleteWallet(index, wallet);
@@ -82,12 +77,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     if (state is WalletLoaded) {
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
       // int index = list.indexOf(wallet);
-      int index = -1;
-      list?.asMap()?.forEach((key, value) {
-        if (value?.address == wallet?.address && value?.name == wallet?.name && value?.type == wallet?.type) {
-          index = key;
-        }
-      });
+      int index = list?.indexWhere((w) => w?.address == wallet?.address) ?? -1;
       if (index >= 0) {
         list[index] = wallet;
         await _walletStorage.updateWallet(index, wallet);

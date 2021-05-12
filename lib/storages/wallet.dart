@@ -28,6 +28,7 @@ class WalletStorage {
     return null;
   }
 
+  // TODO:GG upgrade
   Future addWallet(WalletSchema walletSchema, String keystore, {String password, String seed}) async {
     List<Future> futures = <Future>[];
     var wallets = await _localStorage.getArray(KEY_WALLET);
@@ -61,6 +62,7 @@ class WalletStorage {
     await Future.wait(futures);
   }
 
+  // TODO:GG need support old
   Future deleteWallet(int n, WalletSchema walletSchema) async {
     List<Future> futures = <Future>[];
     if (n >= 0) {
@@ -79,6 +81,7 @@ class WalletStorage {
     await Future.wait(futures);
   }
 
+  // TODO:GG need support old
   Future updateWallet(int n, WalletSchema walletSchema) async {
     List<Future> futures = <Future>[];
     if (n >= 0) {
