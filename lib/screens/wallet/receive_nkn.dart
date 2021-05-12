@@ -96,6 +96,13 @@ class _WalletReceiveNKNScreenState extends State<WalletReceiveNKNScreen> {
                         child: WalletDropdown(
                           selectTitle: _localizations.select_asset_to_receive,
                           schema: _wallet,
+                          onSelected: (picked) {
+                            logger.d("wallet picked - $picked");
+                            if (picked == null) return;
+                            setState(() {
+                              _wallet = picked;
+                            });
+                          },
                         ),
                       ),
                       RepaintBoundary(
