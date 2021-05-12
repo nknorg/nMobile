@@ -7,6 +7,8 @@ class Layout extends StatefulWidget {
   final PreferredSizeWidget header;
   final Color bodyColor;
   final Widget body;
+  final Widget floatingActionButton;
+  final FloatingActionButtonLocation floatingActionButtonLocation;
 
   Layout({
     this.key,
@@ -14,6 +16,8 @@ class Layout extends StatefulWidget {
     this.body,
     this.headerColor,
     this.bodyColor,
+    this.floatingActionButton,
+    this.floatingActionButtonLocation,
   });
 
   @override
@@ -27,6 +31,8 @@ class _LayoutState extends State<Layout> {
       key: widget.key,
       backgroundColor: widget.headerColor ?? application.theme.headBarColor1,
       appBar: widget.header,
+      floatingActionButton: widget.floatingActionButton,
+      floatingActionButtonLocation: widget.floatingActionButtonLocation,
       body: Container(
         constraints: BoxConstraints.expand(),
         decoration: BoxDecoration(

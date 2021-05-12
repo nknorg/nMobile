@@ -37,10 +37,12 @@ class WalletStorage {
     } else {
       futures.add(_localStorage.setItem(KEY_WALLET, index, walletSchema?.toCacheMap()));
     }
-    if (Platform.isAndroid) {
-      futures.add(_localStorage.set('$KEY_KEYSTORE:${walletSchema?.address}', keystore));
-    } else {
-      futures.add(_secureStorage.set('$KEY_KEYSTORE:${walletSchema?.address}', keystore));
+    if (keystore != null && keystore.isNotEmpty) {
+      if (Platform.isAndroid) {
+        futures.add(_localStorage.set('$KEY_KEYSTORE:${walletSchema?.address}', keystore));
+      } else {
+        futures.add(_secureStorage.set('$KEY_KEYSTORE:${walletSchema?.address}', keystore));
+      }
     }
     if (password != null && password.isNotEmpty) {
       if (Platform.isAndroid) {
@@ -63,6 +65,16 @@ class WalletStorage {
     List<Future> futures = <Future>[];
     if (n >= 0) {
       futures.add(_localStorage.removeItem(KEY_WALLET, n));
+      if (Platform.isAndroid) {
+        futures.add(_localStorage.remove('$KEY_KEYSTORE:${walletSchema?.address}'));
+        futures.add(_localStorage.remove('$KEY_PASSWORD:${walletSchema?.address}'));
+        futures.add(_localStorage.remove('$KEY_SEED:${walletSchema?.address}'));
+      } else {
+        futures.add(_secureStorage.delete('$KEY_KEYSTORE:${walletSchema?.address}'));
+        futures.add(_secureStorage.delete('$KEY_PASSWORD:${walletSchema?.address}'));
+        futures.add(_secureStorage.delete('$KEY_SEED:${walletSchema?.address}'));
+      }
+      futures.add(_localStorage.remove('$KEY_BACKUP:${walletSchema?.address}'));
     }
     await Future.wait(futures);
   }
