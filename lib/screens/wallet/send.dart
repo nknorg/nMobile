@@ -28,8 +28,8 @@ import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
-class WalletSendNKNScreen extends StatefulWidget {
-  static const String routeName = '/wallet/send_nkn';
+class WalletSendScreen extends StatefulWidget {
+  static const String routeName = '/wallet/send';
   static final String argWallet = "wallet";
 
   static Future go(BuildContext context, WalletSchema wallet) {
@@ -42,13 +42,13 @@ class WalletSendNKNScreen extends StatefulWidget {
 
   final Map<String, dynamic> arguments;
 
-  WalletSendNKNScreen({Key key, this.arguments}) : super(key: key);
+  WalletSendScreen({Key key, this.arguments}) : super(key: key);
 
   @override
-  _WalletSendNKNScreenState createState() => _WalletSendNKNScreenState();
+  _WalletSendScreenState createState() => _WalletSendScreenState();
 }
 
-class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
+class _WalletSendScreenState extends State<WalletSendScreen> {
   GlobalKey _formKey = new GlobalKey<FormState>();
   WalletSchema _wallet;
 
@@ -83,7 +83,7 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
   @override
   void initState() {
     super.initState();
-    this._wallet = widget.arguments[WalletSendNKNScreen.argWallet];
+    this._wallet = widget.arguments[WalletSendScreen.argWallet];
     // balance query
     locator<TaskService>().queryWalletBalanceTask();
     // init
