@@ -116,17 +116,15 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
                 case 0:
                   // create
                   if (walletType == WalletType.nkn) {
-                    Navigator.pushNamed(context, WalletCreateNKNScreen.routeName);
+                    WalletCreateNKNScreen.go(context);
                   } else if (walletType == WalletType.eth) {
-                    Navigator.pushNamed(context, WalletCreateETHScreen.routeName);
+                    WalletCreateETHScreen.go(context);
                   }
                   break;
                 case 1:
                   // import
                   if (walletType == WalletType.nkn || walletType == WalletType.eth) {
-                    Navigator.pushNamed(context, WalletImportScreen.routeName, arguments: {
-                      WalletImportScreen.argWalletType: walletType,
-                    });
+                    WalletImportScreen.go(context, walletType);
                   }
                   break;
               }
@@ -165,10 +163,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
                     schema: wallet,
                     type: wallet.type,
                     onTap: () {
-                      Navigator.pushNamed(context, WalletDetailScreen.routeName, arguments: {
-                        WalletDetailScreen.argWallet: wallet,
-                        // WalletDetailScreen.argListIndex: index,
-                      });
+                      WalletDetailScreen.go(context, wallet, listIndex: index);
                     },
                     bgColor: application.theme.backgroundLightColor,
                     radius: BorderRadius.circular(8),
@@ -254,14 +249,15 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
           return;
         }
 
-        Navigator.pushNamed(context, WalletExportScreen.routeName, arguments: {
-          WalletExportScreen.argWalletType: WalletType.nkn,
-          WalletExportScreen.argName: wallet.name ?? "",
-          WalletExportScreen.argAddress: restore.address ?? "",
-          WalletExportScreen.argPublicKey: hexEncode(restore.publicKey ?? ""),
-          WalletExportScreen.argSeed: hexEncode(restore.seed ?? ""),
-          WalletExportScreen.argKeystore: restore.keystore ?? "",
-        });
+        WalletExportScreen.go(
+          context,
+          WalletType.nkn,
+          wallet.name,
+          restore.address,
+          hexEncode(restore.publicKey ?? ""),
+          hexEncode(restore.seed ?? ""),
+          restore.keystore,
+        );
       }
     }).onError((error, stackTrace) {
       logger.e(error);

@@ -18,6 +18,15 @@ class WalletImportScreen extends StatefulWidget {
   static const String routeName = '/wallet/import';
   static final String argWalletType = "wallet_type";
 
+  static go(BuildContext context, String walletType) {
+    if (walletType == null || walletType.isEmpty) {
+      walletType = WalletType.nkn;
+    }
+    Navigator.pushNamed(context, routeName, arguments: {
+      argWalletType: walletType,
+    });
+  }
+
   final Map<String, dynamic> arguments;
 
   const WalletImportScreen({Key key, this.arguments}) : super(key: key);
