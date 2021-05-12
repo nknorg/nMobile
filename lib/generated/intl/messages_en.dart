@@ -88,6 +88,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ethereum" : MessageLookupByLibrary.simpleMessage("Ethereum"),
     "export_wallet" : MessageLookupByLibrary.simpleMessage("Export Account"),
     "face_id" : MessageLookupByLibrary.simpleMessage("Face ID"),
+    "failure" : MessageLookupByLibrary.simpleMessage("Failure"),
     "fast" : MessageLookupByLibrary.simpleMessage("Fast"),
     "fee" : MessageLookupByLibrary.simpleMessage("Fee"),
     "from" : MessageLookupByLibrary.simpleMessage("From"),

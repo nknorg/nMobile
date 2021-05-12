@@ -211,7 +211,8 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
       }
       return false;
     }).then((bool authOk) async {
-      if (!authOk) {
+      String pwd = await _storage.getPassword(wallet.address);
+      if (!authOk || pwd == null || pwd.isEmpty) {
         return BottomDialog.of(context).showInput(
           title: _localizations.verify_wallet_password,
           inputTip: _localizations.wallet_password,
@@ -220,7 +221,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
           password: true,
         );
       }
-      return _storage.getPassword(wallet.address);
+      return pwd;
     }).then((password) async {
       if (password == null || password.isEmpty) {
         // no toast
