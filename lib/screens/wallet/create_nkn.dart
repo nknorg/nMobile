@@ -53,7 +53,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
 
       Wallet result = await Wallet.create(null, config: WalletConfig(password: _password));
       WalletSchema wallet = WalletSchema(name: _name, address: result?.address, type: WalletType.nkn);
-      logger.d("create:${wallet.toString()}");
+      logger.d("wallet create - ${wallet.toString()}");
 
       _walletBloc.add(AddWallet(wallet, result?.keystore, password: _password));
 
