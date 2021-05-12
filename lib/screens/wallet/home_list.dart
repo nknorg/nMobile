@@ -7,7 +7,7 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/common/wallet.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
@@ -203,31 +203,13 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
     logger.d("backup picked - $wallet");
     if (wallet == null || wallet.address == null || wallet.address.isEmpty) return;
     S _localizations = S.of(context);
-    WalletStorage _storage = WalletStorage();
 
-    Future(() async {
-      if (Settings.biometricsAuthentication) {
-        return authorization.authenticationIfCan();
-      }
-      return false;
-    }).then((bool authOk) async {
-      String pwd = await _storage.getPassword(wallet.address);
-      if (!authOk || pwd == null || pwd.isEmpty) {
-        return BottomDialog.of(context).showInput(
-          title: _localizations.verify_wallet_password,
-          inputTip: _localizations.wallet_password,
-          inputHint: _localizations.input_password,
-          actionText: _localizations.continue_text,
-          password: true,
-        );
-      }
-      return pwd;
-    }).then((password) async {
+    getWalletPassword(context, wallet?.address).then((String password) async {
       if (password == null || password.isEmpty) {
         // no toast
         return;
       }
-      String keystore = await _storage.getKeystore(wallet.address);
+      String keystore = await WalletStorage().getKeystore(wallet.address);
 
       if (wallet.type == WalletType.eth) {
         // TODO:GG eth export
@@ -261,7 +243,11 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
         );
       }
     }).onError((error, stackTrace) {
-      logger.e(error);
+      if (error.message == "wrong password") {
+        Toast.show(_localizations.password_wrong);
+      } else {
+        logger.e(error);
+      }
     });
   }
 }

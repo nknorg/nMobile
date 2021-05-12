@@ -59,8 +59,12 @@
   "mainnet": "主网",
 
   "nkn": "NKN",
+  "eth": "ETH",
   "ethereum": "以太坊",
   "ERC_20": "ERC-20",
+  "gwei": "GWEI",
+  "gas_price": "Gas Price",
+  "gas_max": "Max Gas",
   "nkn_mainnet": "NKN 主网",
   "create_ethereum_wallet": "创建以太坊账户",
 
