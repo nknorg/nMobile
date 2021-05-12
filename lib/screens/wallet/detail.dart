@@ -90,13 +90,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
 
   _send() {
     if (_wallet == null || _wallet.type == null) return;
-    List<Future> futures = <Future>[];
-    if (_wallet.type == WalletType.eth) {
-      // TODO:GG eth send
-    } else {
-      futures.add(WalletSendScreen.go(context, _wallet));
-    }
-    Future.wait(futures).then((FutureOr success) async {
+    WalletSendScreen.go(context, _wallet).then((FutureOr success) async {
       if (success != null && await success) {
         // TODO:GG dialog
         // NotificationDialog.of(context).show(
