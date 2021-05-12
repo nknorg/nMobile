@@ -324,7 +324,8 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
           }
           return false;
         }).then((bool authOk) async {
-          if (!authOk) {
+          String pwd = await _storage.getPassword(_wallet.address);
+          if (!authOk || pwd == null || pwd.isEmpty) {
             return BottomDialog.of(context).showInput(
               title: _localizations.verify_wallet_password,
               inputTip: _localizations.wallet_password,
@@ -333,7 +334,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
               password: true,
             );
           }
-          return _storage.getPassword(_wallet?.address);
+          return pwd;
         }).then((password) async {
           if (password == null || password.isEmpty) {
             return;

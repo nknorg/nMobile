@@ -1385,6 +1385,16 @@ class S {
     );
   }
 
+  /// `Failure`
+  String get failure {
+    return Intl.message(
+      'Failure',
+      name: 'failure',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Copied`
   String get copied {
     return Intl.message(

@@ -147,6 +147,7 @@
   "copy": "Copy",
   "copy_success": "Copied to Clipboard",
   "success": "Success",
+  "failure": "Failure",
   "copied": "Copied",
   "copy_to_clipboard": "Copy to Clipboard",
 
