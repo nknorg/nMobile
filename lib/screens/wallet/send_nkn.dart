@@ -4,21 +4,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/wallet/dropdown.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/services/task_service.dart';
+import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -69,45 +74,88 @@ class _WalletSendNKNScreenState extends State<WalletSendNKNScreen> {
   void initState() {
     super.initState();
     this._wallet = widget.arguments[WalletSendNKNScreen.argWallet];
+    _feeController.text = _fee.toString();
     // balance query
     locator<TaskService>().queryWalletBalanceTask();
-    _feeController.text = _fee.toString();
   }
 
   _sendNKN() async {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
-      // TODO:GG
-      // var password = await _wallet.getPassword();
-      // if (password != null) {
-      //   final result = transferAction(password);
-      //   Navigator.pop(context, result);
-      // }
+      logger.d("amount:$_amount, sendTo:$_sendTo, fee:$_fee");
+
+      if (_wallet == null || _wallet.address == null || _wallet.address.isEmpty) return;
+
+      S _localizations = S.of(context);
+      WalletStorage _storage = WalletStorage();
+
+      Future(() async {
+        if (Settings.biometricsAuthentication) {
+          return authorization.authenticationIfCan();
+        }
+        return false;
+      }).then((bool authOk) async {
+        String pwd = await _storage.getPassword(_wallet?.address);
+        if (!authOk || pwd == null || pwd.isEmpty) {
+          return BottomDialog.of(context).showInput(
+            title: _localizations.verify_wallet_password,
+            inputTip: _localizations.wallet_password,
+            inputHint: _localizations.input_password,
+            actionText: _localizations.continue_text,
+            password: true,
+          );
+        }
+        return pwd;
+      }).then((password) async {
+        if (password == null || password.isEmpty) {
+          // no toast
+          return;
+        }
+        String keystore = await _storage.getKeystore(_wallet?.address);
+
+        if (_wallet.type == WalletType.eth) {
+          final result = _transferETH(keystore, password);
+          Navigator.pop(context, result);
+        } else {
+          final result = _transferNKN(keystore, password);
+          Navigator.pop(context, result);
+        }
+      }).onError((error, stackTrace) {
+        logger.e(error);
+      });
     }
   }
 
-  Future<bool> transferAction(password) async {
-    // TODO:GG
-    // try {
-    //   final nw = await _wallet.exportWallet(password);
-    //   final txHash = await NknWalletPlugin.transferAsync(nw['keystore'], password, _sendTo, _amount, _fee.toString());
-    //   if (txHash != null) {
-    //     locator<TaskService>().queryNknWalletBalanceTask();
-    //     return txHash.length > 10;
-    //   }
-    //   return false;
-    // } catch (e) {
-    //   if (e.toString() == ConstUtils.WALLET_PASSWORD_ERROR) {
-    //     showToast(NL10ns.of(Global.appContext).password_wrong);
-    //   } else if (e.toString() == 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds') {
-    //     if (e.message != null) {
-    //       showToast(e.message);
-    //     }
-    //   } else {
-    //     showToast(NL10ns.of(Global.appContext).failure);
-    //   }
-    //   return false;
-    // }
+  Future<bool> _transferNKN(String keystore, String password) async {
+    if (keystore == null || password == null) return false;
+    S _localizations = S.of(context);
+    try {
+      Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
+      if (restore == null || restore?.address != _wallet?.address) {
+        Toast.show(_localizations.password_wrong);
+        return false;
+      }
+      final txHash = await restore?.transfer(_sendTo, _amount, fee: _fee.toString());
+      if (txHash != null) {
+        locator<TaskService>().queryWalletBalanceTask();
+        return txHash.length > 10;
+      }
+      return false;
+    } catch (e) {
+      if (e.toString() == "wrong password") {
+        Toast.show(_localizations.password_wrong);
+      } else if (e.toString() == 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds') {
+        Toast.show(e?.message ?? "");
+      } else {
+        Toast.show(_localizations.failure);
+      }
+      return false;
+    }
+  }
+
+  Future<bool> _transferETH(String keystore, String password) async {
+    // TODO:GG transfer eth
+    return false;
   }
 
   @override
