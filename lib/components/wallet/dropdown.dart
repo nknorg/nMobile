@@ -4,13 +4,20 @@ import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
+import 'package:nmobile/utils/logger.dart';
 
 import 'item.dart';
 
 class WalletDropdown extends StatefulWidget {
   final WalletSchema schema;
+  final Function(WalletSchema) onSelected;
+  final Color bgColor;
 
-  WalletDropdown({this.schema});
+  WalletDropdown({
+    this.schema,
+    this.onSelected,
+    this.bgColor,
+  });
 
   @override
   _WalletDropdownState createState() => _WalletDropdownState();
@@ -22,46 +29,22 @@ class _WalletDropdownState extends State<WalletDropdown> {
     S _localizations = S.of(context);
 
     return InkWell(
-      onTap: () {
-        BottomDialog.of(context).showWithTitle(
-          title: _localizations.select_another_wallet,
-          child: ListView.builder(
-            itemCount: 10, // TODO:GG wallet list
-            itemExtent: 81,
-            padding: const EdgeInsets.all(0),
-            itemBuilder: (BuildContext context, int index) {
-              String type = index % 2 == 0 ? WalletType.nkn : WalletType.eth; // TODO:GG wallet list
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    WalletItem(type: type), // TODO:GG wallet item
-                    Divider(height: 1, indent: 64),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
+      onTap: () async {
+        WalletSchema result = await BottomDialog.of(context).showWalletSelect(title: _localizations.select_another_wallet);
+        logger.d("wallet dropdown select - $result");
+        widget.onSelected?.call(result);
       },
       child: Container(
         decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: application.theme.backgroundColor2),
+            bottom: BorderSide(color: widget.bgColor ?? application.theme.backgroundColor2),
           ),
         ),
         child: WalletItem(
           type: widget.schema?.type ?? WalletType.nkn,
-          tail: Expanded(
-            flex: 0,
-            child: Container(
-              alignment: Alignment.centerRight,
-              height: 44,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 16),
-                child: assetIcon('down2', width: 24),
-              ),
-            ),
+          tail: Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: assetIcon('down2', width: 24),
           ),
         ),
       ),
