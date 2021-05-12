@@ -22,6 +22,12 @@ class WalletLoaded extends WalletState {
     return wallets.firstWhere((x) => x.address == address, orElse: () => null);
   }
 
+  bool isBalanceSame(WalletSchema old) {
+    WalletSchema wallet = getWalletByAddress(old?.address);
+    if (old == null || wallet == null) return true;
+    return old.balance == wallet.balance && old.balanceEth == wallet.balanceEth;
+  }
+
   Future<bool> isAllWalletBackup() async {
     List backups = await WalletStorage().isBackupByList(wallets);
     // logger.d("wallets backup:$backups");
