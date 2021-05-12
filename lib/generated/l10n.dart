@@ -595,6 +595,16 @@ class S {
     );
   }
 
+  /// `ETH`
+  String get eth {
+    return Intl.message(
+      'ETH',
+      name: 'eth',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Ethereum`
   String get ethereum {
     return Intl.message(
@@ -610,6 +620,36 @@ class S {
     return Intl.message(
       'ERC-20',
       name: 'ERC_20',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `GWEI`
+  String get gwei {
+    return Intl.message(
+      'GWEI',
+      name: 'gwei',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Gas Price`
+  String get gas_price {
+    return Intl.message(
+      'Gas Price',
+      name: 'gas_price',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Max Gas`
+  String get gas_max {
+    return Intl.message(
+      'Max Gas',
+      name: 'gas_max',
       desc: '',
       args: [],
     );

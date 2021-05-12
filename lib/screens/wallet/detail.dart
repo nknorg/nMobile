@@ -6,7 +6,7 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/common/wallet.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
@@ -314,32 +314,14 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
 
   _onAppBarActionSelected(int result) async {
     S _localizations = S.of(context);
-    WalletStorage _storage = WalletStorage();
 
     switch (result) {
       case 0: // export
-        Future(() async {
-          if (Settings.biometricsAuthentication) {
-            return authorization.authenticationIfCan();
-          }
-          return false;
-        }).then((bool authOk) async {
-          String pwd = await _storage.getPassword(_wallet.address);
-          if (!authOk || pwd == null || pwd.isEmpty) {
-            return BottomDialog.of(context).showInput(
-              title: _localizations.verify_wallet_password,
-              inputTip: _localizations.wallet_password,
-              inputHint: _localizations.input_password,
-              actionText: _localizations.continue_text,
-              password: true,
-            );
-          }
-          return pwd;
-        }).then((password) async {
+        getWalletPassword(context, _wallet?.address).then((String password) async {
           if (password == null || password.isEmpty) {
             return;
           }
-          String keystore = await _storage.getKeystore(_wallet.address);
+          String keystore = await WalletStorage().getKeystore(_wallet.address);
 
           if (_wallet.type == WalletType.eth) {
             // TODO:GG eth export
@@ -375,7 +357,11 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
             );
           }
         }).onError((error, stackTrace) {
-          logger.e(error);
+          if (error.message == "wrong password") {
+            Toast.show(_localizations.password_wrong);
+          } else {
+            logger.e(error);
+          }
         });
         break;
       case 1: // delete
