@@ -87,10 +87,10 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
     // balance query
     locator<TaskService>().queryWalletBalanceTask();
     // init
-    _initEth(this._wallet?.type == WalletType.eth);
+    _init(this._wallet?.type == WalletType.eth);
   }
 
-  _initEth(bool eth) async {
+  _init(bool eth) async {
     if (eth) {
       // TODO:GG eth gasPrice
       // final gasPrice = await EthErc20Client().getGasPrice;
@@ -102,7 +102,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
     _updateFee(eth);
   }
 
-  _updateFee(bool eth, {value}) {
+  _updateFee(bool eth, {gweiFee, gasFee, nknFee}) {
     if (_wallet == null) {
       _amountController.text = '';
       return;
@@ -119,13 +119,21 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
       //     decimalDigits: 8,
       //   ).trim();
       // }
+      setState(() {
+        if (gasFee != null) {
+          _maxGas = gasFee;
+        }
+        if (gweiFee != null) {
+          _gasPriceInGwei = gweiFee;
+        }
+      });
     } else {
-      if (value != null) {
-        setState(() {
-          _sliderFee = _fee = value;
+      setState(() {
+        if (nknFee != null) {
+          _sliderFee = _fee = nknFee;
           _feeController.text = _fee.toStringAsFixed(2);
-        });
-      }
+        }
+      });
     }
   }
 
@@ -379,6 +387,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                       setState(() {
                                         _wallet = picked;
                                       });
+                                      _init(_wallet?.type == WalletType.eth);
                                     },
                                   ),
                                   Divider(height: 3),
@@ -584,8 +593,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                                         Slider(
                                                           value: _gasPriceInGwei.toDouble(),
                                                           onChanged: (v) {
-                                                            _gasPriceInGwei = v.toInt();
-                                                            _updateFee(true);
+                                                            _updateFee(true, gweiFee: v.toInt());
                                                           },
                                                           min: _sliderGasPriceMin.toDouble(),
                                                           max: _sliderGasPriceMax.toDouble(),
@@ -627,8 +635,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                                         Slider(
                                                           value: _maxGasGet,
                                                           onChanged: (v) {
-                                                            _maxGas = v.round();
-                                                            _updateFee(true);
+                                                            _updateFee(true, gasFee: v.round());
                                                           },
                                                           min: (_ethTrueTokenFalse ? _sliderMaxGasMinEth : _sliderMaxGasMinNkn).toDouble(),
                                                           max: _sliderMaxGasMax.toDouble(),
@@ -668,7 +675,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                               Slider(
                                                 value: _sliderFee,
                                                 onChanged: (v) {
-                                                  _updateFee(false, value: v);
+                                                  _updateFee(false, nknFee: v);
                                                 },
                                                 max: _sliderFeeMax,
                                                 min: _sliderFeeMin,
