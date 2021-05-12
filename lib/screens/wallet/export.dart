@@ -9,6 +9,7 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/utils.dart';
 
@@ -20,6 +21,25 @@ class WalletExportScreen extends StatefulWidget {
   static final String argPublicKey = "public_key";
   static final String argSeed = "seed";
   static final String argKeystore = "keystore";
+
+  static go(
+    BuildContext context,
+    String walletType,
+    String name,
+    String address,
+    String publicKey,
+    String seed,
+    String keystore,
+  ) {
+    Navigator.pushNamed(context, routeName, arguments: {
+      argWalletType: walletType ?? WalletType.nkn,
+      argName: name ?? "",
+      argAddress: address ?? "",
+      argPublicKey: publicKey,
+      argSeed: seed,
+      argKeystore: keystore ?? "",
+    });
+  }
 
   final Map<String, dynamic> arguments;
 
