@@ -287,9 +287,14 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  Future<String> showInputPassword({
+  Future<String> showInput({
     @required String title,
     String desc,
+    String inputTip,
+    String inputHint,
+    String actionText,
+    bool password = false,
+    int maxLength = 10000,
   }) async {
     S _localizations = S.of(context);
     TextEditingController _passwordController = TextEditingController();
@@ -302,7 +307,7 @@ class BottomDialog extends StatefulWidget {
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: _localizations.continue_text,
+          text: actionText ?? _localizations.continue_text,
           width: double.infinity,
           onPressed: () {
             Navigator.pop(context, _passwordController.text);
@@ -315,15 +320,16 @@ class BottomDialog extends StatefulWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Label(
-              _localizations.wallet_password,
+              inputTip ?? "",
               type: LabelType.h4,
               textAlign: TextAlign.start,
             ),
             FormText(
               controller: _passwordController,
-              hintText: _localizations.input_password,
+              hintText: inputHint ?? "",
               validator: Validator.of(context).password(),
-              password: true,
+              password: password,
+              maxLength: maxLength,
             ),
           ],
         ),

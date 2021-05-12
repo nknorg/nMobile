@@ -10,7 +10,6 @@ import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
-import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
@@ -45,8 +44,6 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
   WalletBloc _walletBloc;
   // NKNClientBloc _clientBloc;
   bool isDefault = false;
-  TextEditingController _nameController = TextEditingController();
-  // WalletSchema _currWallet;
 
   @override
   void initState() {
@@ -56,7 +53,6 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
 
     _walletBloc = BlocProvider.of<WalletBloc>(context);
     // _clientBloc = BlocProvider.of<NKNClientBloc>(context);
-    _nameController.text = this._wallet?.name ?? "";
     // TODO:GG default wallet
     // widget.wallet.isDefaultWallet().then((v) {
     //   if (mounted) {
@@ -206,25 +202,39 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
             ),
             Column(
               children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Label(
-                            _localizations.wallet_name,
-                            type: LabelType.h3,
-                            textAlign: TextAlign.start,
+                Material(
+                  color: application.theme.backgroundColor1,
+                  elevation: 0,
+                  child: InkWell(
+                    onTap: () {
+                      _showChangeNameDialog();
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 15),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Label(
+                                _localizations.wallet_name,
+                                type: LabelType.h3,
+                                textAlign: TextAlign.start,
+                              ),
+                            ],
                           ),
+                          SizedBox(height: 15),
+                          Label(
+                            this._wallet?.name ?? "",
+                            type: LabelType.display,
+                          ),
+                          SizedBox(height: 15),
+                          Divider(height: 1),
                         ],
                       ),
-                      FormText(
-                        controller: _nameController,
-                        readOnly: true,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
                 Material(
@@ -272,57 +282,20 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
     );
   }
 
-  // TextEditingController _walletNameController = TextEditingController();
-  // GlobalKey _nameFormKey = new GlobalKey<FormState>();
-
-  // TODO:GG modify wallet name
-  showChangeNameDialog() {
-    // BottomDialog.of(context).showBottomDialog(
-    //   title: _localizations.wallet_name,
-    //   child: Form(
-    //     autovalidate: false,
-    //     key: _nameFormKey,
-    //     onChanged: () {},
-    //     child: Flex(
-    //       direction: Axis.horizontal,
-    //       children: <Widget>[
-    //         Expanded(
-    //           flex: 1,
-    //           child: Padding(
-    //             padding: const EdgeInsets.only(right: 4),
-    //             child: Column(
-    //               crossAxisAlignment: CrossAxisAlignment.start,
-    //               children: <Widget>[
-    //                 Textbox(
-    //                   controller: _walletNameController,
-    //                   hintText: _localizations.hint_enter_wallet_name,
-    //                   maxLength: 20,
-    //                 ),
-    //               ],
-    //             ),
-    //           ),
-    //         ),
-    //       ],
-    //     ),
-    //   ),
-    //   action: Padding(
-    //     padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
-    //     child: Button(
-    //       text: _localizations.save,
-    //       width: double.infinity,
-    //       onPressed: () async {
-    //         if (_walletNameController.text != null && _walletNameController.text.length > 0) {
-    //           setState(() {
-    //             widget.wallet.name = _walletNameController.text;
-    //             _nameController.text = _walletNameController.text;
-    //           });
-    //           _walletsBloc.add(UpdateWallet(widget.wallet));
-    //         }
-    //         Navigator.of(context).pop();
-    //       },
-    //     ),
-    //   ),
-    // );
+  _showChangeNameDialog() async {
+    S _localizations = S.of(context);
+    String newName = await BottomDialog.of(context).showInput(
+      title: _localizations.wallet_name,
+      inputTip: _localizations.hint_enter_wallet_name,
+      inputHint: _localizations.hint_enter_wallet_name,
+      actionText: _localizations.save,
+      maxLength: 20,
+    );
+    if (newName == null || newName.isEmpty) return;
+    setState(() {
+      this._wallet.name = newName; // update appBar title
+    });
+    _walletBloc?.add(UpdateWallet(this._wallet));
   }
 
   _onAppBarActionSelected(int result) async {
@@ -338,7 +311,13 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
           return false;
         }).then((bool authOk) async {
           if (!authOk) {
-            return BottomDialog.of(context).showInputPassword(title: _localizations.verify_wallet_password);
+            return BottomDialog.of(context).showInput(
+              title: _localizations.verify_wallet_password,
+              inputTip: _localizations.wallet_password,
+              inputHint: _localizations.input_password,
+              actionText: _localizations.continue_text,
+              password: true,
+            );
           }
           return _storage.getPassword(_wallet?.address);
         }).then((password) async {
@@ -368,7 +347,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
               return;
             }
 
-            // TimerAuth.instance.enableAuth(); // TODO:GG ???
+            // TimerAuth.instance.enableAuth(); // TODO:GG auth?
 
             Navigator.pushNamed(context, WalletExportScreen.routeName, arguments: {
               WalletExportScreen.argWalletType: WalletType.nkn,

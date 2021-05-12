@@ -217,7 +217,13 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
       return false;
     }).then((bool authOk) async {
       if (!authOk) {
-        return BottomDialog.of(context).showInputPassword(title: _localizations.verify_wallet_password);
+        return BottomDialog.of(context).showInput(
+          title: _localizations.verify_wallet_password,
+          inputTip: _localizations.wallet_password,
+          inputHint: _localizations.input_password,
+          actionText: _localizations.continue_text,
+          password: true,
+        );
       }
       return _storage.getPassword(wallet.address);
     }).then((password) async {
