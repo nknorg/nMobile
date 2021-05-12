@@ -103,6 +103,7 @@ class WalletStorage {
     return Future(() => _localStorage.get('$KEY_BACKUP:$address'));
   }
 
+  // TODO:GG need support old
   Future getKeystore(String address) {
     if (address != null && address.isNotEmpty) {
       if (Platform.isAndroid) {

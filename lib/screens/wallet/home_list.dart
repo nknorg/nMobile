@@ -17,14 +17,13 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/create_eth.dart';
 import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/screens/wallet/detail.dart';
 import 'package:nmobile/screens/wallet/import.dart';
+import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/storages/wallet.dart';
-import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -44,6 +43,9 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
   @override
   void initState() {
     super.initState();
+    // balance query
+    locator<TaskService>().queryWalletBalanceTask();
+    // wallet event
     _walletBloc = BlocProvider.of<WalletBloc>(context);
     _walletSubscription = _walletBloc.stream.listen((state) async {
       if (state is WalletLoaded) {
@@ -66,6 +68,8 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
     S _localizations = S.of(context);
 
     return Layout(
+      // floatingActionButton: FloatingActionButton(onPressed: () => LocalStorage().debugInfo()), // test
+      // floatingActionButtonLocation: FloatingActionButtonLocation.centerTop, // test
       header: Header(
         titleChild: Padding(
           padding: EdgeInsets.only(left: 20),
@@ -154,7 +158,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
               itemCount: state.wallets?.length ?? 0,
               itemBuilder: (context, index) {
                 WalletSchema wallet = state.wallets[index];
-                if (index == 1) wallet.type = WalletType.eth; // TODO:GG test
+                // if (index == 1) wallet.type = WalletType.eth; // test
                 return Padding(
                   padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
                   child: WalletItem(
@@ -180,7 +184,6 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
   }
 
   _onNotBackedUpTipClicked() {
-    LocalStorage().debugInfo();
     S _localizations = S.of(context);
     ModalDialog dialog = ModalDialog.of(context);
     dialog.show(
@@ -219,12 +222,25 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
       return _storage.getPassword(wallet.address);
     }).then((password) async {
       if (password == null || password.isEmpty) {
+        // no toast
         return;
       }
       String keystore = await _storage.getKeystore(wallet.address);
 
       if (wallet.type == WalletType.eth) {
         // TODO:GG eth export
+        // String keyStore = await ws.getKeystore();
+        // EthWallet ethWallet = Ethereum.restoreWallet(
+        //     name: ws.name, keystore: keyStore, password: password);
+        // Navigator.of(context)
+        //     .pushNamed(NknWalletExportScreen.routeName, arguments: {
+        //   'wallet': null,
+        //   'keystore': ethWallet.keystore,
+        //   'address': (await ethWallet.address).hex,
+        //   'publicKey': ethWallet.pubkeyHex,
+        //   'seed': ethWallet.privateKeyHex,
+        //   'name': ethWallet.name,
+        // });
       } else {
         Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
         if (restore == null || restore.address != wallet.address) {
