@@ -1,9 +1,7 @@
-import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
@@ -14,7 +12,6 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/dropdown.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
-import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
@@ -49,7 +46,7 @@ class _WalletReceiveNKNScreenState extends State<WalletReceiveNKNScreen> {
     super.initState();
     this._wallet = widget.arguments[WalletReceiveNKNScreen.argWallet];
     // balance query
-    locator<TaskService>().queryWalletBalanceTask();
+    // locator<TaskService>().queryWalletBalanceTask();
   }
 
   @override
@@ -61,23 +58,22 @@ class _WalletReceiveNKNScreenState extends State<WalletReceiveNKNScreen> {
       header: Header(
         title: (_localizations.receive + ' ' + _localizations.nkn),
         backgroundColor: application.theme.backgroundColor4,
-        actions: [
-          IconButton(
-            icon: assetIcon(
-              'share',
-              width: 24,
-              color: application.theme.backgroundLightColor,
-            ),
-            onPressed: () async {
-              RenderRepaintBoundary boundary = globalKey.currentContext.findRenderObject();
-              var image = await boundary.toImage();
-              ByteData byteData = await image.toByteData(format: ImageByteFormat.png);
-              Uint8List pngBytes = byteData.buffer.asUint8List();
-              // TODO:GG share (旧包废弃了...)
-              // await Share.file('Recieve NKN', 'qrcode.png', pngBytes, 'image/png', text: wallet.address);
-            },
-          )
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: assetIcon(
+        //       'share',
+        //       width: 24,
+        //       color: application.theme.backgroundLightColor,
+        //     ),
+        //     onPressed: () async {
+        //       RenderRepaintBoundary boundary = globalKey.currentContext.findRenderObject();
+        //       var image = await boundary.toImage();
+        //       ByteData byteData = await image.toByteData(format: ImageByteFormat.png);
+        //       Uint8List pngBytes = byteData.buffer.asUint8List();
+        //       await Share.file('Recieve NKN', 'qrcode.png', pngBytes, 'image/png', text: wallet.address);
+        //     },
+        //   )
+        // ],
       ),
       body: Column(
         children: <Widget>[

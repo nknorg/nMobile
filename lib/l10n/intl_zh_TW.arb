@@ -147,6 +147,7 @@
   "copy": "複製",
   "copy_success": "已復制",
   "success": "成功",
+  "failure": "失敗",
   "copied": "已復制",
   "copy_to_clipboard": "複製到剪貼板",
 
