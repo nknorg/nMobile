@@ -66,7 +66,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
         if (widget.walletType == WalletType.nkn) {
           Wallet result = await Wallet.restore(_keystore, config: WalletConfig(password: _password));
           WalletSchema wallet = WalletSchema(name: _name, address: result?.address, type: WalletType.nkn);
-          logger.d("import_nkn:${wallet.toString()}");
+          logger.d("import_nkn - ${wallet.toString()}");
 
           _walletBloc.add(AddWallet(wallet, result?.keystore, password: _password));
         } else {
