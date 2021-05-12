@@ -18,8 +18,8 @@ import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/export.dart';
-import 'package:nmobile/screens/wallet/receive_nkn.dart';
-import 'package:nmobile/screens/wallet/send_nkn.dart';
+import 'package:nmobile/screens/wallet/receive.dart';
+import 'package:nmobile/screens/wallet/send.dart';
 import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/format.dart';
@@ -85,7 +85,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
   }
 
   _receive() {
-    WalletReceiveNKNScreen.go(context, _wallet);
+    WalletReceiveScreen.go(context, _wallet);
   }
 
   _send() {
@@ -94,7 +94,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
     if (_wallet.type == WalletType.eth) {
       // TODO:GG eth send
     } else {
-      futures.add(WalletSendNKNScreen.go(context, _wallet));
+      futures.add(WalletSendScreen.go(context, _wallet));
     }
     Future.wait(futures).then((FutureOr success) async {
       if (success != null && await success) {

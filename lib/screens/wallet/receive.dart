@@ -17,8 +17,8 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-class WalletReceiveNKNScreen extends StatefulWidget {
-  static const String routeName = '/wallet/receive_nkn';
+class WalletReceiveScreen extends StatefulWidget {
+  static const String routeName = '/wallet/receive';
   static final String argWallet = "wallet";
 
   static Future go(BuildContext context, WalletSchema wallet) {
@@ -31,20 +31,20 @@ class WalletReceiveNKNScreen extends StatefulWidget {
 
   final Map<String, dynamic> arguments;
 
-  WalletReceiveNKNScreen({Key key, this.arguments}) : super(key: key);
+  WalletReceiveScreen({Key key, this.arguments}) : super(key: key);
 
   @override
-  _WalletReceiveNKNScreenState createState() => _WalletReceiveNKNScreenState();
+  _WalletReceiveScreenState createState() => _WalletReceiveScreenState();
 }
 
-class _WalletReceiveNKNScreenState extends State<WalletReceiveNKNScreen> {
+class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
   GlobalKey globalKey = new GlobalKey();
   WalletSchema _wallet;
 
   @override
   void initState() {
     super.initState();
-    this._wallet = widget.arguments[WalletReceiveNKNScreen.argWallet];
+    this._wallet = widget.arguments[WalletReceiveScreen.argWallet];
     // balance query
     // locator<TaskService>().queryWalletBalanceTask();
   }
