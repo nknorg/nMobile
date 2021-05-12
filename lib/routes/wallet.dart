@@ -6,6 +6,7 @@ import 'package:nmobile/screens/wallet/detail.dart';
 import 'package:nmobile/screens/wallet/export.dart';
 import 'package:nmobile/screens/wallet/home.dart';
 import 'package:nmobile/screens/wallet/import.dart';
+import 'package:nmobile/screens/wallet/receive_nkn.dart';
 
 Map<String, WidgetBuilder> routes = {
   WalletHomeScreen.routeName: (BuildContext context) => WalletHomeScreen(),
@@ -14,6 +15,7 @@ Map<String, WidgetBuilder> routes = {
   WalletImportScreen.routeName: (BuildContext context, {arguments}) => WalletImportScreen(arguments: arguments),
   WalletDetailScreen.routeName: (BuildContext context, {arguments}) => WalletDetailScreen(arguments: arguments),
   WalletExportScreen.routeName: (BuildContext context, {arguments}) => WalletExportScreen(arguments: arguments),
+  WalletReceiveNKNScreen.routeName: (BuildContext context, {arguments}) => WalletReceiveNKNScreen(arguments: arguments),
 };
 
 init() {
