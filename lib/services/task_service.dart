@@ -32,7 +32,7 @@ class TaskService {
   queryWalletBalanceTask() {
     var state = _walletBloc.state;
     if (state is WalletLoaded) {
-      logger.d("queryNknWalletBalanceTask begin");
+      logger.d("wallets balance query begin !!!!!");
       List<Future> futures = <Future>[];
       state.wallets?.forEach((w) {
         if (w?.type == WalletType.eth) {
@@ -52,11 +52,13 @@ class TaskService {
           //     }));
         } else {
           Wallet.getBalanceByAddr(w?.address ?? "").then((balance) {
-            logger.d("wallet balance  address:${w?.address} - balance_old:${w?.balance} - balance_new:$balance");
+            logger.d("wallet balance - balance_old:${w?.balance} - balance_new:$balance - address:${w?.address}");
             if (w?.balance != balance) {
               w?.balance = balance;
               _walletBloc.add(UpdateWallet(w));
             }
+          }).catchError((e) {
+            logger.e(e);
           });
         }
       });

@@ -205,7 +205,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
   }
 
   _readyExport(WalletSchema wallet) {
-    logger.d("back picked:$wallet");
+    logger.d("backup picked - $wallet");
     if (wallet == null || wallet.address == null || wallet.address.isEmpty) return;
     S _localizations = S.of(context);
     WalletStorage _storage = WalletStorage();
