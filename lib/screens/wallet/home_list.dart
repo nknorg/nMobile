@@ -212,7 +212,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
 
     Future(() async {
       if (Settings.biometricsAuthentication) {
-        return authorization.authenticationIfCan(_localizations.authenticate_to_access);
+        return authorization.authenticationIfCan();
       }
       return false;
     }).then((bool authOk) async {

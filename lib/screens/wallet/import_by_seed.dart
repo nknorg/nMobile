@@ -66,7 +66,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
 
       try {
         if (widget.walletType == WalletType.nkn) {
-          Wallet result = await Wallet.create(_seed, config: WalletConfig(password: _password));
+          Wallet result = await Wallet.create(_seed, config: WalletConfig(password: _password)); // TODO:GG hexEncode?
           WalletSchema wallet = WalletSchema(name: _name, address: result?.address, type: WalletType.nkn);
           logger.d("import_nkn - ${wallet.toString()}");
 
