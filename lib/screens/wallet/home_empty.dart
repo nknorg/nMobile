@@ -61,7 +61,7 @@ class _WalletHomeEmptyLayoutState extends State<WalletHomeEmptyLayout> {
                   fontColor: application.theme.fontLightColor,
                   backgroundColor: application.theme.primaryColor,
                   onPressed: () {
-                    Navigator.pushNamed(context, WalletCreateNKNScreen.routeName);
+                    WalletCreateNKNScreen.go(context);
                   },
                 ),
                 SizedBox(height: 12),
@@ -70,9 +70,7 @@ class _WalletHomeEmptyLayoutState extends State<WalletHomeEmptyLayout> {
                   fontColor: application.theme.fontLightColor,
                   backgroundColor: application.theme.primaryColor.withAlpha(20),
                   onPressed: () {
-                    Navigator.pushNamed(context, WalletImportScreen.routeName, arguments: {
-                      WalletImportScreen.argWalletType: WalletType.nkn,
-                    });
+                    WalletImportScreen.go(context, WalletType.nkn);
                   },
                 ),
               ],
