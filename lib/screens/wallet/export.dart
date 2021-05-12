@@ -11,6 +11,7 @@ import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class WalletExportScreen extends StatefulWidget {
@@ -31,6 +32,7 @@ class WalletExportScreen extends StatefulWidget {
     String seed,
     String keystore,
   ) {
+    logger.d("wallet export - type:$walletType  name:$name \n address:$address \n publicKey:$publicKey \n seed:$seed \n keystore:$keystore");
     Navigator.pushNamed(context, routeName, arguments: {
       argWalletType: walletType ?? WalletType.nkn,
       argName: name ?? "",

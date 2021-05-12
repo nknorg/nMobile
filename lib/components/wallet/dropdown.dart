@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
@@ -30,7 +29,15 @@ class _WalletDropdownState extends State<WalletDropdown> {
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
 
-    return InkWell(
+    return WalletItem(
+      type: widget.schema?.type ?? WalletType.nkn,
+      schema: widget.schema,
+      radius: BorderRadius.circular(8),
+      bgColor: Colors.transparent,
+      tail: Padding(
+        padding: const EdgeInsets.only(left: 16),
+        child: assetIcon('down2', width: 24),
+      ),
       onTap: () async {
         WalletSchema result = await BottomDialog.of(context).showWalletSelect(
           title: widget.selectTitle ?? _localizations.select_another_wallet,
@@ -38,20 +45,6 @@ class _WalletDropdownState extends State<WalletDropdown> {
         logger.d("wallet dropdown select - $result");
         widget.onSelected?.call(result);
       },
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: widget.bgColor ?? application.theme.backgroundColor2),
-          ),
-        ),
-        child: WalletItem(
-          type: widget.schema?.type ?? WalletType.nkn,
-          tail: Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: assetIcon('down2', width: 24),
-          ),
-        ),
-      ),
     );
   }
 }

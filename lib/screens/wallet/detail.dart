@@ -31,6 +31,7 @@ class WalletDetailScreen extends StatefulWidget {
   static final String argListIndex = "list_index";
 
   static go(BuildContext context, WalletSchema wallet, {int listIndex}) {
+    logger.d("wallet detail - $wallet");
     if (wallet == null) return;
     Navigator.pushNamed(context, routeName, arguments: {
       argWallet: wallet,
@@ -81,7 +82,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
   }
 
   _receive() {
-    ReceiveNKNScreen.go(context, _wallet);
+    WalletReceiveNKNScreen.go(context, _wallet);
   }
 
   // TODO:GG send

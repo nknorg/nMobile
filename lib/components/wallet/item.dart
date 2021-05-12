@@ -53,7 +53,7 @@ class _WalletItemState extends State<WalletItem> {
 
     return Container(
       decoration: BoxDecoration(
-        color: widget.bgColor,
+        color: widget.onTap != null ? null : widget.bgColor,
         borderRadius: widget.radius,
       ),
       padding: widget.padding ?? EdgeInsets.only(left: 16, right: 16),
