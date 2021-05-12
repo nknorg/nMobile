@@ -24,10 +24,10 @@ class WalletLoaded extends WalletState {
 
   Future<bool> isAllWalletBackup() async {
     List backups = await WalletStorage().isBackupByList(wallets);
-    logger.d("wallets backup:$backups");
+    // logger.d("wallets backup:$backups");
     bool find = backups?.firstWhere((backup) => backup == false || backup == null, orElse: () => true);
     bool allBackup = find == true ? true : false;
-    logger.d("wallets allBackup:$allBackup");
+    // logger.d("wallets allBackup:$allBackup");
     return allBackup;
   }
 }

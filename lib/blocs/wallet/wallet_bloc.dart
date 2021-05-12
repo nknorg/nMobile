@@ -35,12 +35,12 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
 
   Stream<WalletState> _mapLoadWalletsToState() async* {
     var wallets = await _walletStorage.getWallets();
-    logger.d("wallets:${wallets.toString()}");
+    logger.d("wallets get - ${wallets.toString()}");
     yield WalletLoaded(wallets);
   }
 
   Stream<WalletState> _mapAddWalletToState(AddWallet event) async* {
-    logger.d("wallet:${event.wallet}, keystore:${event.keystore}");
+    logger.d("wallet add - ${event.wallet}, keystore:${event.keystore}");
     if (state is WalletLoaded) {
       await _walletStorage.addWallet(event.wallet, event.keystore, password: event.password, seed: event.seed);
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
@@ -50,45 +50,61 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       } else {
         list.add(event.wallet);
       }
-      logger.d("newList:${list.toString()}");
+      logger.d("new add list:${list.toString()}");
       yield WalletLoaded(list);
     }
   }
 
   Stream<WalletState> _mapDeleteWalletToState(DeleteWallet event) async* {
-    logger.d("wallet:${event.wallet}");
+    WalletSchema wallet = event?.wallet;
+    logger.d("wallet delete - $wallet");
     if (state is WalletLoaded) {
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
-      int index = list.indexOf(event.wallet);
+      // int index = list.indexOf(wallet);
+      int index = -1;
+      list?.asMap()?.forEach((key, value) {
+        if (value?.address == wallet?.address && value?.name == wallet?.name && value?.type == wallet?.type) {
+          index = key;
+        }
+      });
       if (index >= 0) {
         list.removeAt(index);
-        await _walletStorage.deleteWallet(index, event.wallet);
+        await _walletStorage.deleteWallet(index, wallet);
       }
-      logger.d("newList:${list.toString()}");
+      logger.d("new delete list:${list.toString()}");
       yield WalletLoaded(list);
     }
   }
 
   Stream<WalletState> _mapUpdateWalletToState(UpdateWallet event) async* {
-    logger.d("wallet:${event.wallet}");
+    WalletSchema wallet = event?.wallet;
+    logger.d("wallet update - $wallet");
     if (state is WalletLoaded) {
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
-      int index = list.indexOf(event.wallet);
+      // int index = list.indexOf(wallet);
+      int index = -1;
+      list?.asMap()?.forEach((key, value) {
+        if (value?.address == wallet?.address && value?.name == wallet?.name && value?.type == wallet?.type) {
+          index = key;
+        }
+      });
       if (index >= 0) {
-        list[index] = event.wallet;
-        await _walletStorage.updateWallet(index, event.wallet);
+        list[index] = wallet;
+        await _walletStorage.updateWallet(index, wallet);
+      } else {
+        logger.e("no find $wallet");
       }
-      logger.d("newList:${list.toString()}");
+      logger.d("new update list:${list.toString()}");
       yield WalletLoaded(list);
     }
   }
 
   Stream<WalletState> _mapBackupWalletToState(BackupWallet event) async* {
-    logger.d("address:${event.address}, backup:${event.backup}");
+    logger.d("wallet backup - address:${event.address}, backup:${event.backup}");
     if (state is WalletLoaded) {
       await _walletStorage.backupWallet(event.address, event.backup);
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
-      logger.d("newList:${list.toString()}");
+      logger.d("new backup list:${list.toString()}");
       yield WalletLoaded(list);
     }
   }
