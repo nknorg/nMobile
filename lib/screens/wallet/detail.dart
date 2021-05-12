@@ -306,7 +306,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
       case 0: // export
         Future(() async {
           if (Settings.biometricsAuthentication) {
-            return authorization.authenticationIfCan(_localizations.authenticate_to_access);
+            return authorization.authenticationIfCan();
           }
           return false;
         }).then((bool authOk) async {
