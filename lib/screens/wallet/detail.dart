@@ -10,6 +10,7 @@ import 'package:nmobile/common/wallet.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
+import 'package:nmobile/components/dialog/notification.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -92,11 +93,11 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
     if (_wallet == null || _wallet.type == null) return;
     WalletSendScreen.go(context, _wallet).then((FutureOr success) async {
       if (success != null && await success) {
-        // TODO:GG dialog
-        // NotificationDialog.of(context).show(
-        //   title: _localizations.transfer_initiated,
-        //   content: _localizations.transfer_initiated_desc,
-        // );
+        S _localizations = S.of(context);
+        NotificationDialog.of(context).show(
+          title: _localizations.transfer_initiated,
+          content: _localizations.transfer_initiated_desc,
+        );
       }
     });
   }
