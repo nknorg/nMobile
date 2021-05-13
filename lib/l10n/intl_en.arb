@@ -134,6 +134,8 @@
   "enter_amount": "Enter amount",
   "available": "Available",
   "enter_receive_address": "Enter receive address",
+  "transfer_initiated": "Transfer Initiated",
+  "transfer_initiated_desc": "Your transfer is in progress. It could take a few seconds to appear on the blockchain.",
 
   "max": "Max",
   "min": "Min",

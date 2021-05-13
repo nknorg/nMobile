@@ -134,6 +134,8 @@
   "enter_amount": "请输入数量",
   "available": "可用",
   "enter_receive_address": "请输入接受地址",
+  "transfer_initiated": "转账初始化",
+  "transfer_initiated_desc": "您的转帐正在进行中，可能需要花一些时间才能出现在区块链上。",
 
   "max": "全部",
   "min": "最小",

@@ -1275,6 +1275,26 @@ class S {
     );
   }
 
+  /// `Transfer Initiated`
+  String get transfer_initiated {
+    return Intl.message(
+      'Transfer Initiated',
+      name: 'transfer_initiated',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your transfer is in progress. It could take a few seconds to appear on the blockchain.`
+  String get transfer_initiated_desc {
+    return Intl.message(
+      'Your transfer is in progress. It could take a few seconds to appear on the blockchain.',
+      name: 'transfer_initiated_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Max`
   String get max {
     return Intl.message(
