@@ -325,6 +325,16 @@ class S {
     );
   }
 
+  /// `authenticate to access`
+  String get authenticate_to_access {
+    return Intl.message(
+      'authenticate to access',
+      name: 'authenticate_to_access',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `General`
   String get general {
     return Intl.message(
