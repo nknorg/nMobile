@@ -33,6 +33,7 @@ class _WalletDropdownState extends State<WalletDropdown> {
       type: widget.schema?.type ?? WalletType.nkn,
       schema: widget.schema,
       radius: BorderRadius.circular(8),
+      padding: EdgeInsets.all(0),
       bgColor: Colors.transparent,
       tail: Padding(
         padding: const EdgeInsets.only(left: 16),
