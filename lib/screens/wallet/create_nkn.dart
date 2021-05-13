@@ -62,9 +62,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
       _walletBloc.add(AddWallet(wallet, result?.keystore, password: _password));
 
       Loading.dismiss();
-      Navigator.pushReplacementNamed(context, AppScreen.routeName, arguments: {
-        AppScreen.argIndex: 1,
-      });
+      AppScreen.go(context, index: 1);
     }
   }
 

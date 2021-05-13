@@ -108,6 +108,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
     S _localizations = S.of(context);
 
     return Layout(
+      // floatingActionButton: FloatingActionButton(onPressed: () => AppScreen.go(context, index: 1)), // test
       headerColor: application.theme.backgroundColor4,
       header: Header(
         title: isDefault ? _localizations.main_wallet : (this._wallet?.name?.toUpperCase() ?? ""),
@@ -376,7 +377,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
               //     NLog.d('no delete client');
               //   }
               // }
-              Navigator.popAndPushNamed(context, AppScreen.routeName);
+              AppScreen.go(context, index: 1);
             },
           ),
           reject: Button(

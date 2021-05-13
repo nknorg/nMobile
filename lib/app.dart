@@ -17,6 +17,12 @@ class AppScreen extends StatefulWidget {
   static const String routeName = '/';
   static final String argIndex = "index";
 
+  static Future go(BuildContext context, {int index = 0}) {
+    return Navigator.pushNamed(context, routeName, arguments: {
+      argIndex: index,
+    });
+  }
+
   final Map<String, dynamic> arguments;
 
   const AppScreen({Key key, this.arguments}) : super(key: key);
@@ -28,7 +34,7 @@ class AppScreen extends StatefulWidget {
 class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   GetIt locator = GetIt.instance;
   Application app;
-  int _currentIndex = 0; // TODO:GG fixed_me
+  int _currentIndex = 0;
   PageController _pageController;
   List<Widget> screens = <Widget>[
     ChatHomeScreen(),
@@ -41,7 +47,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     super.initState();
     app = locator.get<Application>();
     this._currentIndex = widget.arguments != null ? (widget.arguments[AppScreen.argIndex] ?? 0) : 0;
-    _pageController = PageController();
+    _pageController = PageController(initialPage: this._currentIndex);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
