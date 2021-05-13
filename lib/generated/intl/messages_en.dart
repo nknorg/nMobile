@@ -30,6 +30,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "agree" : MessageLookupByLibrary.simpleMessage("Agree"),
     "amount" : MessageLookupByLibrary.simpleMessage("Amount"),
     "app_name" : MessageLookupByLibrary.simpleMessage("nMobile"),
+    "authenticate_to_access" : MessageLookupByLibrary.simpleMessage("authenticate to access"),
     "available" : MessageLookupByLibrary.simpleMessage("Available"),
     "average" : MessageLookupByLibrary.simpleMessage("Average"),
     "back" : MessageLookupByLibrary.simpleMessage("Back"),
@@ -181,12 +182,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "top" : MessageLookupByLibrary.simpleMessage("Top"),
     "top_cancel" : MessageLookupByLibrary.simpleMessage("Cancel Top"),
     "touch_id" : MessageLookupByLibrary.simpleMessage("Touch ID"),
-<<<<<<< HEAD
-    "type_a_message" : MessageLookupByLibrary.simpleMessage("Type a message"),
-=======
     "transfer_initiated" : MessageLookupByLibrary.simpleMessage("Transfer Initiated"),
     "transfer_initiated_desc" : MessageLookupByLibrary.simpleMessage("Your transfer is in progress. It could take a few seconds to appear on the blockchain."),
->>>>>>> c50bb1b... add notification dialog
+    "type_a_message" : MessageLookupByLibrary.simpleMessage("Type a message"),
     "verify_wallet_password" : MessageLookupByLibrary.simpleMessage("Verify Account Password"),
     "version" : MessageLookupByLibrary.simpleMessage("Version"),
     "view_qrcode" : MessageLookupByLibrary.simpleMessage("View QR Code"),
