@@ -24,6 +24,7 @@ import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
+import 'package:nmobile/utils/error.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
@@ -214,11 +215,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
           Navigator.pop(context, result);
         }
       }).onError((error, stackTrace) {
-        if (error.message == "wrong password") {
-          Toast.show(_localizations.password_wrong);
-        } else {
-          logger.e(error);
-        }
+        handleError(error, stackTrace: stackTrace);
       });
     }
   }
@@ -263,13 +260,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
       }
       return false;
     } catch (e) {
-      if (e.toString() == "wrong password") {
-        Toast.show(_localizations.password_wrong);
-      } else if (e.toString() == 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds') {
-        Toast.show(e?.message ?? "");
-      } else {
-        Toast.show(_localizations.failure);
-      }
+      handleError(e, toast: _localizations.failure);
       return false;
     }
   }
