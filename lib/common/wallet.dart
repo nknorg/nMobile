@@ -4,6 +4,7 @@ import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/wallet.dart';
+import 'package:nmobile/utils/logger.dart';
 
 import 'locator.dart';
 
@@ -18,6 +19,32 @@ WalletSchema getWalletInOriginalByAddress(List<WalletSchema> wallets, String add
   if (address == null || address.length == 0) return null;
   if (wallets == null || wallets.isEmpty) return null;
   return wallets.firstWhere((x) => x?.address == address, orElse: () => null);
+}
+
+Future<bool> isWalletsBackup({List original}) async {
+  WalletStorage _walletStorage = WalletStorage();
+  List wallets = original ?? await _walletStorage.getWallets();
+  // backups
+  List<Future> futures = <Future>[];
+  wallets?.forEach((value) {
+    futures.add(_walletStorage.isBackupByAddress(value?.address));
+  });
+  List backups = await Future.wait(futures);
+  // allBackup
+  logger.d("wallet backup - $backups");
+  bool find = backups?.firstWhere((backup) => backup == false || backup == null, orElse: () => true);
+  bool allBackup = find == true ? true : false;
+  logger.d("wallet backup - allBackup:$allBackup");
+  return allBackup;
+}
+
+Future<WalletSchema> getWalletDefault() async {
+  String address = await getWalletDefaultAddress();
+  return getWalletInStorageByAddress(address);
+}
+
+Future<String> getWalletDefaultAddress() {
+  return WalletStorage().getDefaultAddress();
 }
 
 Future<String> getWalletPassword(BuildContext context, String walletAddress) {
@@ -43,24 +70,6 @@ Future<String> getWalletPassword(BuildContext context, String walletAddress) {
     }
     return pwd;
   });
-}
-
-Future<bool> isAllWalletBackup(List<WalletSchema> wallets) async {
-  List backups = await WalletStorage().isBackupByList(wallets);
-  // logger.d("wallets backup:$backups");
-  bool find = backups?.firstWhere((backup) => backup == false || backup == null, orElse: () => true);
-  bool allBackup = find == true ? true : false;
-  // logger.d("wallets allBackup:$allBackup");
-  return allBackup;
-}
-
-Future<WalletSchema> getWalletDefault() async {
-  String address = await getWalletDefaultAddress();
-  return getWalletInStorageByAddress(address);
-}
-
-Future<String> getWalletDefaultAddress() {
-  return WalletStorage().getDefaultAddress();
 }
 
 bool isBalanceSame(WalletSchema w1, WalletSchema w2) {

@@ -17,3 +17,22 @@ class WalletLoaded extends WalletState {
     return wallets == null || wallets.isEmpty;
   }
 }
+
+// backup
+class WalletBackup extends WalletLoaded {
+  final List<WalletSchema> wallets;
+
+  final String walletAddress;
+  final bool allBackup;
+
+  WalletBackup(this.wallets, this.walletAddress, this.allBackup) : super(wallets);
+}
+
+// default
+class WalletDefault extends WalletLoaded {
+  final List<WalletSchema> wallets;
+
+  final String walletAddress;
+
+  WalletDefault(this.wallets, this.walletAddress) : super(wallets);
+}

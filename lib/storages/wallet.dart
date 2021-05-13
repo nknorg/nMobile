@@ -152,16 +152,8 @@ class WalletStorage {
 
   /// backup
 
-  Future backupWallet(String address, bool backup) {
+  Future setBackup(String address, bool backup) {
     return Future(() => _localStorage.set('$KEY_BACKUP:$address', backup));
-  }
-
-  Future isBackupByList(List<WalletSchema> wallets) {
-    List<Future> futures = <Future>[];
-    wallets?.forEach((value) {
-      futures.add(isBackupByAddress(value?.address));
-    });
-    return Future.wait(futures);
   }
 
   Future isBackupByAddress(String address) {

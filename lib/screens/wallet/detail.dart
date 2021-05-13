@@ -58,6 +58,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
 
   WalletBloc _walletBloc;
   // NKNClientBloc _clientBloc;
+  StreamSubscription _walletSubscription;
   bool isDefault = false;
 
   @override
@@ -69,6 +70,14 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
     _walletBloc = BlocProvider.of<WalletBloc>(context);
     // _clientBloc = BlocProvider.of<NKNClientBloc>(context);
 
+    // default
+    _walletSubscription = _walletBloc.stream.listen((state) {
+      if (state is WalletDefault) {
+        setState(() {
+          isDefault = state?.walletAddress == _wallet?.address;
+        });
+      }
+    });
     getWalletDefaultAddress().then((value) {
       if (mounted) {
         setState(() {
@@ -83,6 +92,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
   @override
   void dispose() {
     super.dispose();
+    _walletSubscription?.cancel();
     // TimerAuth.onOtherPage = false; // TODO:GG wallet unlock
   }
 
