@@ -28,7 +28,6 @@
   "click_connect": "點擊連接",
   "click_to_change": "點擊更改",
   "click_to_settings": "點擊設置",
-  "authenticate_to_access": "認證以授權訪問",
   "top": "置頂",
   "top_cancel": "取消置頂",
 
@@ -175,5 +174,15 @@
   "no_wallet_title": "保持您的NKN井井有條",
   "no_wallet_desc": "使用我們的智慧帳戶管理器管理您的主網和\nNKN通證。",
   "no_wallet_create": "創建新帳戶",
-  "no_wallet_import": "導入已備份的帳戶"
+  "no_wallet_import": "導入已備份的帳戶",
+
+  "type_a_message": "請輸入",
+  "pictures": "圖片",
+  "camera": "相機",
+  "files": "文件",
+  "location": "位置",
+  "featured": "精選",
+  "latest": "最新",
+
+  "tip_ask_group_owner_permission": "您已不在此群，聯繫群主邀請您"
 }
