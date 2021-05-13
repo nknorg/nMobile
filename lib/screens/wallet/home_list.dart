@@ -46,13 +46,21 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
     super.initState();
     // balance query
     locator<TaskService>().queryWalletBalanceTask();
-    // wallet event
+
     _walletBloc = BlocProvider.of<WalletBloc>(context);
-    _walletSubscription = _walletBloc.stream.listen((state) async {
-      if (state is WalletLoaded) {
-        bool allBackup = await isAllWalletBackup(state?.wallets);
+
+    // backup
+    _walletSubscription = _walletBloc.stream.listen((state) {
+      if (state is WalletBackup) {
         setState(() {
-          _allBackedUp = allBackup;
+          _allBackedUp = state.allBackup ?? false;
+        });
+      }
+    });
+    isWalletsBackup().then((value) {
+      if (mounted) {
+        setState(() {
+          _allBackedUp = value ?? false;
         });
       }
     });
@@ -61,7 +69,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
   @override
   void dispose() {
     super.dispose();
-    _walletSubscription.cancel();
+    _walletSubscription?.cancel();
   }
 
   @override
