@@ -10,6 +10,15 @@ import 'package:uuid/uuid.dart';
 
 var uuid = Uuid();
 
+enum MessageStatus {
+  MessageSending,
+  MessageSendSuccess,
+  MessageSendFail,
+  MessageSendReceipt,
+  MessageReceived,
+  MessageReceivedRead,
+}
+
 class MessageSchema {
   Uint8List pid;
   String msgId;
@@ -27,6 +36,22 @@ class MessageSchema {
   bool isSuccess = false;
   bool isOutbound = false;
   bool isSendError = false;
+
+  MessageStatus messageStatus;
+
+  /// for burnAfterReading
+  int burnAfterSeconds;
+  int showBurnAfterSeconds;
+  /// for bell notification
+  String deviceToken;
+  /// for audio chat
+  double audioFileDuration;
+  /// for nknOnePiece
+  String parentType;
+  int parity;
+  int total;
+  int index;
+  int bytesLength;
 
   MessageSchema(
     this.msgId,

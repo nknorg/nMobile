@@ -325,9 +325,11 @@ class _MessageListScreenState extends State<MessageListScreen> with AutomaticKee
           Widget widget = createMessageListItemWidget(context, item);
 
           return InkWell(
-            onTap: (){
-              // TODO contact
-              Navigator.of(context).pushNamed(ChatScreen.routeName, arguments: ContactSchema());
+            onTap: () async{
+              await Navigator.of(context).pushNamed(ChatScreen.routeName, arguments: item.contact);
+              _messageStorage.getUpdateMessageList(item.targetId).then((value) {
+                _updateMessage(value);
+              });
             },
             onLongPress: () {
               _showItemMenu(item, index);

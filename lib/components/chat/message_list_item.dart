@@ -144,10 +144,12 @@ Widget createMessageListItemWidget(BuildContext context, MessageListItem model) 
                           type: LabelType.bodySmall,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 0),
-                        child: _unReadWidget(MessageListItem(notReadCount: model.notReadCount)),
-                      ),
+                      model.notReadCount > 0
+                          ? Padding(
+                              padding: const EdgeInsets.only(right: 0),
+                              child: _unReadWidget(MessageListItem(notReadCount: model.notReadCount)),
+                            )
+                          : SizedBox.shrink(),
                     ],
                   ),
                 ],
@@ -192,7 +194,6 @@ Widget createMessageListItemWidget(BuildContext context, MessageListItem model) 
               decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 1, color: application.theme.dividerColor))),
               child: Row(
                 children: [
-
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -204,10 +205,12 @@ Widget createMessageListItemWidget(BuildContext context, MessageListItem model) 
                           type: LabelType.bodySmall,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 0),
-                        child: _unReadWidget(MessageListItem(notReadCount: model.notReadCount)),
-                      ),
+                      model.notReadCount > 0
+                          ? Padding(
+                              padding: const EdgeInsets.only(right: 0),
+                              child: _unReadWidget(MessageListItem(notReadCount: model.notReadCount)),
+                            )
+                          : SizedBox.shrink(),
                     ],
                   ),
                 ],

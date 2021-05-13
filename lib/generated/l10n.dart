@@ -305,16 +305,6 @@ class S {
     );
   }
 
-  /// `authenticate to access`
-  String get authenticate_to_access {
-    return Intl.message(
-      'authenticate to access',
-      name: 'authenticate_to_access',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Top`
   String get top {
     return Intl.message(
@@ -1640,6 +1630,86 @@ class S {
     return Intl.message(
       'Import Existing Account',
       name: 'no_wallet_import',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Type a message`
+  String get type_a_message {
+    return Intl.message(
+      'Type a message',
+      name: 'type_a_message',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Pictures`
+  String get pictures {
+    return Intl.message(
+      'Pictures',
+      name: 'pictures',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Camera`
+  String get camera {
+    return Intl.message(
+      'Camera',
+      name: 'camera',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Files`
+  String get files {
+    return Intl.message(
+      'Files',
+      name: 'files',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Location`
+  String get location {
+    return Intl.message(
+      'Location',
+      name: 'location',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Featured`
+  String get featured {
+    return Intl.message(
+      'Featured',
+      name: 'featured',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Latest`
+  String get latest {
+    return Intl.message(
+      'Latest',
+      name: 'latest',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You are not in this group,ask the group owner for permission`
+  String get tip_ask_group_owner_permission {
+    return Intl.message(
+      'You are not in this group,ask the group owner for permission',
+      name: 'tip_ask_group_owner_permission',
       desc: '',
       args: [],
     );

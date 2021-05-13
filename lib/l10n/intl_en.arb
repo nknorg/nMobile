@@ -28,7 +28,6 @@
   "click_connect": "Click this button for connect",
   "click_to_change": "Click to change",
   "click_to_settings": "Click to settings",
-  "authenticate_to_access": "authenticate to access",
   "top": "Top",
   "top_cancel": "Cancel Top",
 
@@ -175,5 +174,15 @@
   "no_wallet_title": "Keep your NKN organised",
   "no_wallet_desc": "Manage both your Mainnet NKN\n tokens with our smart wallet manager.",
   "no_wallet_create": "Create New Account",
-  "no_wallet_import": "Import Existing Account"
+  "no_wallet_import": "Import Existing Account",
+
+  "type_a_message": "Type a message",
+  "pictures": "Pictures",
+  "camera": "Camera",
+  "files": "Files",
+  "location": "Location",
+  "featured": "Featured",
+  "latest": "Latest",
+
+  "tip_ask_group_owner_permission": "You are not in this group,ask the group owner for permission"
 }
