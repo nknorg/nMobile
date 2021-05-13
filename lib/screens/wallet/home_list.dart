@@ -25,6 +25,7 @@ import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/services/task_service.dart';
 import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
+import 'package:nmobile/utils/error.dart';
 import 'package:nmobile/utils/logger.dart';
 
 import 'export.dart';
@@ -243,11 +244,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
         );
       }
     }).onError((error, stackTrace) {
-      if (error.message == "wrong password") {
-        Toast.show(_localizations.password_wrong);
-      } else {
-        logger.e(error);
-      }
+      handleError(error, stackTrace: stackTrace);
     });
   }
 }

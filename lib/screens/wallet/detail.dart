@@ -23,6 +23,7 @@ import 'package:nmobile/screens/wallet/receive.dart';
 import 'package:nmobile/screens/wallet/send.dart';
 import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
+import 'package:nmobile/utils/error.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
@@ -352,11 +353,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
             );
           }
         }).onError((error, stackTrace) {
-          if (error.message == "wrong password") {
-            Toast.show(_localizations.password_wrong);
-          } else {
-            logger.e(error);
-          }
+          handleError(error, stackTrace: stackTrace);
         });
         break;
       case 1: // delete
