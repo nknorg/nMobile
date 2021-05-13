@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nmobile/common/wallet.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -94,10 +95,11 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
   Stream<WalletState> _mapBackupWalletToState(BackupWallet event) async* {
     logger.d("wallet backup - address:${event.address}, backup:${event.backup}");
     if (state is WalletLoaded) {
-      await _walletStorage.backupWallet(event.address, event.backup);
+      await _walletStorage.setBackup(event.address, event.backup);
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
+      bool allBackup = await isWalletsBackup(original: list);
       logger.d("new backup list:${list.toString()}");
-      yield WalletLoaded(list);
+      yield WalletBackup(list, event.address, allBackup);
     }
   }
 
@@ -107,7 +109,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       await _walletStorage.setDefaultAddress(event.address);
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
       logger.d("new default list:${list.toString()}");
-      yield WalletLoaded(list);
+      yield WalletDefault(list, event.address);
     }
   }
 }
