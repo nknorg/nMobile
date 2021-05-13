@@ -41,8 +41,9 @@ dependencies:
   vibration: ^1.7.3
   mime_type: ^1.0.0
 
-  # image
-  flutter_image_compress: ^1.0.0
+  # data
+  base_x: ^1.0.1
+  uuid: ^3.0.4
 
   # locale
   intl: ^0.17.0
@@ -59,14 +60,12 @@ dependencies:
   flutter_svg: ^0.22.0
   flutter_markdown: ^0.6.1
 
-  # media
-  file_picker: ^3.0.1
+  # image
+  flutter_image_compress: ^1.0.0
 
-  # data
-  base_x: ^1.0.1
-  uuid: ^3.0.4
+  # file
   path: ^1.8.0
-  web3dart: ^2.1.0
+  file_picker: ^3.0.1
 
   # QR
   qr_code_scanner: ^0.4.0
@@ -76,12 +75,15 @@ dependencies:
   logger: ^1.0.0
   sentry_flutter: ^5.0.0
 
-  #notification
+  # notification
   flutter_local_notifications: ^5.0.0+4
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.3
+
+  # eth
+  web3dart: ^2.1.0
 
   # plugins
   nkn_sdk_flutter:

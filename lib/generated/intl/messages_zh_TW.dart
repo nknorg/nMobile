@@ -30,6 +30,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "agree" : MessageLookupByLibrary.simpleMessage("同意"),
     "amount" : MessageLookupByLibrary.simpleMessage("數量"),
     "app_name" : MessageLookupByLibrary.simpleMessage("nMobile"),
+    "authenticate_to_access" : MessageLookupByLibrary.simpleMessage("認證以授權訪問"),
     "available" : MessageLookupByLibrary.simpleMessage("可用"),
     "average" : MessageLookupByLibrary.simpleMessage("平均"),
     "back" : MessageLookupByLibrary.simpleMessage("後退"),
@@ -181,12 +182,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "top" : MessageLookupByLibrary.simpleMessage("置頂"),
     "top_cancel" : MessageLookupByLibrary.simpleMessage("取消置頂"),
     "touch_id" : MessageLookupByLibrary.simpleMessage("Touch ID"),
-<<<<<<< HEAD
-    "type_a_message" : MessageLookupByLibrary.simpleMessage("請輸入"),
-=======
     "transfer_initiated" : MessageLookupByLibrary.simpleMessage("轉賬初始化"),
     "transfer_initiated_desc" : MessageLookupByLibrary.simpleMessage("您的轉帳正在進行中，可能需要花一些時間才能出現在區塊鏈上。"),
->>>>>>> c50bb1b... add notification dialog
+    "type_a_message" : MessageLookupByLibrary.simpleMessage("請輸入"),
     "verify_wallet_password" : MessageLookupByLibrary.simpleMessage("驗證賬戶密碼"),
     "version" : MessageLookupByLibrary.simpleMessage("版本"),
     "view_qrcode" : MessageLookupByLibrary.simpleMessage("查看二維碼"),

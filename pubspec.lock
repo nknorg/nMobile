@@ -711,7 +711,7 @@ packages:
       name: source_span
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "1.8.1"
+    version: "1.8.0"
   sqflite_common:
     dependency: transitive
     description:
@@ -767,7 +767,7 @@ packages:
       name: test_api
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.3.0"
+    version: "0.2.19"
   timezone:
     dependency: transitive
     description:
@@ -838,6 +838,7 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.1.0"
+<<<<<<< HEAD
   vibration:
     dependency: "direct main"
     description:
@@ -852,6 +853,8 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.6.2"
+=======
+>>>>>>> 1391f14... format pub
   watcher:
     dependency: transitive
     description:
