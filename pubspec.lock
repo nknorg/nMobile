@@ -838,7 +838,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.1.0"
-<<<<<<< HEAD
   vibration:
     dependency: "direct main"
     description:
@@ -853,8 +852,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.6.2"
-=======
->>>>>>> 1391f14... format pub
   watcher:
     dependency: transitive
     description:

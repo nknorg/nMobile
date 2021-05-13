@@ -1,9 +1,5 @@
-import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
-import 'package:nmobile/utils/utils.dart';
-
-import '../locator.dart';
 
 class ContactType {
   static const String stranger = 'stranger';
