@@ -22,7 +22,6 @@ import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/services/task_service.dart';
-import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/error.dart';
 import 'package:nmobile/utils/format.dart';
@@ -194,7 +193,6 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
 
   _readyTransfer() async {
     if (_wallet == null || _wallet.address == null || _wallet.address.isEmpty) return;
-    S _localizations = S.of(context);
 
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
@@ -205,7 +203,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
           // no toast
           return;
         }
-        String keystore = await WalletStorage().getKeystore(_wallet?.address);
+        String keystore = await getWalletKeystoreByAddress(_wallet?.address);
 
         if (_wallet.type == WalletType.eth) {
           final result = _transferETH(keystore, password);

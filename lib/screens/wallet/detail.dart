@@ -21,7 +21,6 @@ import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/export.dart';
 import 'package:nmobile/screens/wallet/receive.dart';
 import 'package:nmobile/screens/wallet/send.dart';
-import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/error.dart';
 import 'package:nmobile/utils/format.dart';
@@ -328,7 +327,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
           if (password == null || password.isEmpty) {
             return;
           }
-          String keystore = await WalletStorage().getKeystore(_wallet.address);
+          String keystore = await getWalletKeystoreByAddress(_wallet.address);
 
           if (_wallet.type == WalletType.eth) {
             // TODO:GG eth export
