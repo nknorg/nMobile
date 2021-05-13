@@ -68,14 +68,14 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
 
     _walletBloc = BlocProvider.of<WalletBloc>(context);
     // _clientBloc = BlocProvider.of<NKNClientBloc>(context);
-    // TODO:GG default wallet
-    // widget.wallet.isDefaultWallet().then((v) {
-    //   if (mounted) {
-    //     setState(() {
-    //       isDefault = v;
-    //     });
-    //   }
-    // });
+
+    getWalletDefaultAddress().then((value) {
+      if (mounted) {
+        setState(() {
+          isDefault = value == _wallet?.address;
+        });
+      }
+    });
 
     // TimerAuth.onOtherPage = true; // TODO:GG wallet lock
   }
@@ -155,7 +155,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
             BlocBuilder<WalletBloc, WalletState>(
               builder: (context, state) {
                 if (state is WalletLoaded) {
-                  this._wallet = state.getWalletByAddress(this._wallet?.address);
+                  this._wallet = getWalletInOriginalByAddress(state.wallets, this._wallet?.address);
                 }
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),

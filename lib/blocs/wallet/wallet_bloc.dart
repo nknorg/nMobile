@@ -30,6 +30,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       yield* _mapUpdateWalletToState(event);
     } else if (event is BackupWallet) {
       yield* _mapBackupWalletToState(event);
+    } else if (event is DefaultWallet) {
+      yield* _mapDefaultWalletToState(event);
     }
   }
 
@@ -95,6 +97,16 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       await _walletStorage.backupWallet(event.address, event.backup);
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
       logger.d("new backup list:${list.toString()}");
+      yield WalletLoaded(list);
+    }
+  }
+
+  Stream<WalletState> _mapDefaultWalletToState(DefaultWallet event) async* {
+    logger.d("wallet default - address:${event.address}}");
+    if (state is WalletLoaded) {
+      await _walletStorage.setDefaultAddress(event.address);
+      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
+      logger.d("new default list:${list.toString()}");
       yield WalletLoaded(list);
     }
   }

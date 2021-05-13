@@ -38,3 +38,10 @@ class BackupWallet extends WalletEvent {
 
   BackupWallet(this.address, this.backup);
 }
+
+// default
+class DefaultWallet extends WalletEvent {
+  final String address;
+
+  DefaultWallet(this.address);
+}

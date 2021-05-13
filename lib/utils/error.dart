@@ -28,7 +28,11 @@ String getErrorShow(error) {
 
   String txError = 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds';
   if (error.message == txError || error.toString() == txError) {
-    return error?.message ?? "";
+    return txError;
   }
-  return null;
+  String rpcError = 'all rpc request failed';
+  if (error.message == rpcError || error.toString() == rpcError) {
+    return rpcError;
+  }
+  return error.message;
 }
