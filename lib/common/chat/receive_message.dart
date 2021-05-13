@@ -33,6 +33,7 @@ class ReceiveMessage {
       schema.pid = pid;
       schema.isSuccess = true;
       schema.content = data['content'];
+      schema.options = data['options'];
       if (data['timestamp'] != null) {
         schema.timestamp = DateTime.fromMillisecondsSinceEpoch(data['timestamp']);
       }
