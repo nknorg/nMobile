@@ -134,6 +134,8 @@
   "enter_amount": "請輸入數量",
   "available": "可用",
   "enter_receive_address": "請輸入接受地址",
+  "transfer_initiated": "轉賬初始化",
+  "transfer_initiated_desc": "您的轉帳正在進行中，可能需要花一些時間才能出現在區塊鏈上。",
 
   "max": "全部",
   "min": "最小",

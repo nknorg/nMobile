@@ -62,10 +62,6 @@ class TaskService {
           });
         }
       });
-      // TODO:GG need?
-      // Future.wait(futures).then((data) {
-      //   _walletBloc.add(ReLoadWallets());
-      // });
     }
   }
 }

@@ -181,7 +181,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "top" : MessageLookupByLibrary.simpleMessage("Top"),
     "top_cancel" : MessageLookupByLibrary.simpleMessage("Cancel Top"),
     "touch_id" : MessageLookupByLibrary.simpleMessage("Touch ID"),
+<<<<<<< HEAD
     "type_a_message" : MessageLookupByLibrary.simpleMessage("Type a message"),
+=======
+    "transfer_initiated" : MessageLookupByLibrary.simpleMessage("Transfer Initiated"),
+    "transfer_initiated_desc" : MessageLookupByLibrary.simpleMessage("Your transfer is in progress. It could take a few seconds to appear on the blockchain."),
+>>>>>>> c50bb1b... add notification dialog
     "verify_wallet_password" : MessageLookupByLibrary.simpleMessage("Verify Account Password"),
     "version" : MessageLookupByLibrary.simpleMessage("Version"),
     "view_qrcode" : MessageLookupByLibrary.simpleMessage("View QR Code"),

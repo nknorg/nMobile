@@ -181,7 +181,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "top" : MessageLookupByLibrary.simpleMessage("置顶"),
     "top_cancel" : MessageLookupByLibrary.simpleMessage("取消置顶"),
     "touch_id" : MessageLookupByLibrary.simpleMessage("Touch ID"),
+<<<<<<< HEAD
     "type_a_message" : MessageLookupByLibrary.simpleMessage("请输入"),
+=======
+    "transfer_initiated" : MessageLookupByLibrary.simpleMessage("转账初始化"),
+    "transfer_initiated_desc" : MessageLookupByLibrary.simpleMessage("您的转帐正在进行中，可能需要花一些时间才能出现在区块链上。"),
+>>>>>>> c50bb1b... add notification dialog
     "verify_wallet_password" : MessageLookupByLibrary.simpleMessage("验证账户密码"),
     "version" : MessageLookupByLibrary.simpleMessage("版本"),
     "view_qrcode" : MessageLookupByLibrary.simpleMessage("查看二维码"),
