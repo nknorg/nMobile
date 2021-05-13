@@ -49,5 +49,38 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+
+
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+		<string>remote-notification</string>
+		<string>voip</string>
+	</array>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>AppleMusic permission is required for apple music usage.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>App want to access your Photo Library to send image message or set avatar</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Calendars usage permission is required for read calendar.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>App will use your camera to take photos and for barcode scanning.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Contacts permission is required for read contacts.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Location permission is required for record your location.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location permission is required for record your location.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app uses the microphone to record your speech and send it as a message.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Motion permission is required for record motion data.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Granting access will allow you to take and share photos with your nMobile contacts</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Recognize speech</string>
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
 </dict>
 </plist>
