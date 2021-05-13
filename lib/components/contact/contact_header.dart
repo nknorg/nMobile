@@ -3,6 +3,8 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/contact.dart';
 
+import 'avatar.dart';
+
 class ContactHeader extends StatelessWidget {
   final Widget body;
   final ContactSchema contact;
@@ -21,14 +23,8 @@ class ContactHeader extends StatelessWidget {
       children: <Widget>[
         Container(
           margin: const EdgeInsets.only(right: 12),
-          child: CircleAvatar(
-            radius: 24,
-            backgroundColor: contact.options.backgroundColor.withAlpha(90),
-            child: Label(
-              name.length > 2 ? name.substring(0, 2).toUpperCase() : name,
-              type: LabelType.h4,
-              color: contact.options.color,
-            ),
+          child: ContactAvatar(
+            contact: contact,
           ),
         ),
         Expanded(

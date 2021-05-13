@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:nmobile/common/global.dart';
+import 'package:nmobile/generated/l10n.dart';
 
 String formatFlowSize(double value, {List<String> unitArr, int decimalDigits = 2}) {
   if (null == value) {
@@ -36,5 +37,46 @@ String timeFormat(DateTime time) {
     return DateFormat.Md(localizations).format(time);
   } else {
     return DateFormat.yMd(localizations).format(time);
+  }
+}
+
+String formatChatTime(DateTime timestamp) {
+  var now = DateTime.now();
+  var localizations = Localizations.localeOf(Global.appContext).toString();
+  DateTime time = timestamp ?? now;
+  String timeFormat;
+  if (now.difference(time).inDays == 0 && time.day == now.day) {
+    timeFormat = DateFormat.Hm(localizations).format(time);
+  } else if (now.difference(time).inDays <= 7 && time.weekday <= now.weekday) {
+    timeFormat = DateFormat.E(localizations).format(time) + ' ' + DateFormat.Hm(localizations).format(timestamp);
+  } else if (now.difference(time).inDays <= 31 && time.month == time.month) {
+    timeFormat = DateFormat.Md(localizations).format(time) + ' ' + DateFormat.Hm(localizations).format(timestamp);
+  } else {
+    timeFormat = DateFormat.yMd(localizations).format(time) + ' ' + DateFormat.Hm(localizations).format(timestamp);
+  }
+
+  return timeFormat;
+}
+
+String formatDurationToTime(Duration d) {
+  return d.toString().split('.').first.padLeft(8, "0");
+}
+
+String timeFromNowFormat(DateTime time) {
+  var now = DateTime.now();
+  var diff = time.difference(now);
+
+  if (diff.inSeconds < 0) {
+    return '0';
+  } else if (diff.inSeconds < Duration.secondsPerMinute) {
+    return diff.inSeconds.toString();
+  } else if (diff.inMinutes < Duration.minutesPerHour) {
+    return formatDurationToTime(diff).toString().substring(3);
+  } else if (diff.inHours < Duration.hoursPerDay) {
+    return formatDurationToTime(diff);
+  } else if (diff.inDays < 7) {
+    return diff.inDays.toString() + ' ' + S.of(Global.appContext).days;
+  } else {
+    return (diff.inDays / 7).toStringAsFixed(0) + ' ' + S.of(Global.appContext).weeks;
   }
 }
