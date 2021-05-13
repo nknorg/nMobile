@@ -6,7 +6,9 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/wallet.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/hash.dart';
 
 import '../global.dart';
@@ -85,7 +87,6 @@ class Chat {
   StreamSink<MessageSchema> get onMessageSavedStreamSink => onMessageSavedController.sink;
   Stream<MessageSchema> get onMessageSaved => onMessageSavedController.stream;
 
-
   Chat() {
     status = ChatConnectStatus.disconnected;
     statusStream.listen((event) {
@@ -94,8 +95,11 @@ class Chat {
   }
 
   Future signin() async {
-    // todo for test
-    Wallet wallet = await Wallet.create(hexDecode('b62aed51da1d79fd0ccc8584592fe97636344239a34b7fcc49baa303fef3c038'), config: WalletConfig(password: '123'));
+    String addr = await getWalletDefaultAddress();
+    String keystore = await WalletStorage().getKeystore(addr);
+    String pwd = await getWalletPassword(Global.appContext, addr);
+
+    Wallet wallet = await Wallet.restore(keystore ?? "", config: WalletConfig(password: pwd ?? ""));
 
     String pubkey = hexEncode(wallet.publicKey);
     String password = hexEncode(sha256(wallet.seed));
