@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/components/chat/bubble.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 
 class ChatMessage extends StatefulWidget {
   MessageSchema message;
+  ContactSchema contact;
   MessageSchema prveMessage;
   MessageSchema nextMessage;
 
-  ChatMessage({this.message, this.prveMessage, this.nextMessage});
+  ChatMessage({this.message, this.contact, this.prveMessage, this.nextMessage});
 
   @override
   _ChatMessageState createState() => _ChatMessageState();
@@ -22,6 +24,7 @@ class _ChatMessageState extends State<ChatMessage> {
       case ContentType.textExtension:
         return ChatBubble(
           message: widget.message,
+          contact: widget.contact,
         );
     }
   }

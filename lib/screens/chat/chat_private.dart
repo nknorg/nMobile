@@ -8,6 +8,7 @@ import 'package:nmobile/components/button/button_icon.dart';
 import 'package:nmobile/components/chat/bottom_menu.dart';
 import 'package:nmobile/components/chat/message.dart';
 import 'package:nmobile/components/chat/send_bar.dart';
+import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/contact/contact_header.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -45,7 +46,6 @@ class _ChatPrivateState extends State<ChatPrivate> {
     _contact = widget.contact;
   }
 
-
   _loadMore() async {
     _skip = _messages.length;
     var messages = await _messageStorage.getAndReadTargetMessages(_contact.clientAddress, skip: _skip, limit: _limit);
@@ -70,6 +70,17 @@ class _ChatPrivateState extends State<ChatPrivate> {
       setState(() {
         _messages.insert(0, event);
       });
+    });
+
+    _scrollController.addListener(() {
+      double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
+
+      if (offsetFromBottom < 50 && !loading) {
+        loading = true;
+        _loadMore().then((v) {
+          loading = false;
+        });
+      }
     });
   }
 
@@ -142,15 +153,16 @@ class _ChatPrivateState extends State<ChatPrivate> {
               Expanded(
                 flex: 1,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 12, right: 16, top: 4),
+                  padding: const EdgeInsets.only(left: 12, right: 16),
                   child: ListView.builder(
                     reverse: true,
-                    padding: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.only(bottom: 8, top: 16),
                     controller: _scrollController,
                     itemCount: _messages.length,
                     physics: const AlwaysScrollableScrollPhysics(),
                     itemBuilder: (BuildContext context, int index) {
                       MessageSchema message = _messages[index];
+                      ContactSchema contact = _contact;
 
                       bool showTime;
                       bool hideHeader = false;
@@ -165,10 +177,25 @@ class _ChatPrivateState extends State<ChatPrivate> {
                         //   showTime = true;
                         // }
                       }
-
                       return ChatMessage(
                         message: message,
+                        contact: contact,
                       );
+                      // return Flex(
+                      //   direction: Axis.horizontal,
+                      //   children: [
+                      //     Container(
+                      //       margin: const EdgeInsets.only(right: 12),
+                      //       child: ContactAvatar(
+                      //         contact: contact,
+                      //       ),
+                      //     ),
+                      //     Label(message.content)
+                      //     // ChatMessage(
+                      //     //   message: message,
+                      //     // ),
+                      //   ],
+                      // );
                     },
                   ),
                 ),

@@ -59,6 +59,7 @@ dependencies:
   flutter_spinkit: ^5.0.0
   flutter_svg: ^0.22.0
   flutter_markdown: ^0.6.1
+  popup_menu: ^1.0.5
 
   # image
   flutter_image_compress: ^1.0.0
