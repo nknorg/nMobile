@@ -23,7 +23,6 @@ import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/screens/wallet/detail.dart';
 import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/services/task_service.dart';
-import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/error.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -218,7 +217,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
         // no toast
         return;
       }
-      String keystore = await WalletStorage().getKeystore(wallet.address);
+      String keystore = await getWalletKeystoreByAddress(wallet.address);
 
       if (wallet.type == WalletType.eth) {
         // TODO:GG eth export
