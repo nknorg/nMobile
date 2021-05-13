@@ -8,7 +8,6 @@ import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/wallet.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/hash.dart';
 
 import '../global.dart';
@@ -96,7 +95,7 @@ class Chat {
 
   Future signin() async {
     String addr = await getWalletDefaultAddress();
-    String keystore = await WalletStorage().getKeystore(addr);
+    String keystore = await getWalletKeystoreByAddress(addr);
     String pwd = await getWalletPassword(Global.appContext, addr);
 
     Wallet wallet = await Wallet.restore(keystore ?? "", config: WalletConfig(password: pwd ?? ""));

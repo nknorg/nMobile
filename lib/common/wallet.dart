@@ -21,6 +21,10 @@ WalletSchema getWalletInOriginalByAddress(List<WalletSchema> wallets, String add
   return wallets.firstWhere((x) => x?.address == address, orElse: () => null);
 }
 
+Future<String> getWalletKeystoreByAddress(String address) {
+  return WalletStorage().getKeystore(address);
+}
+
 Future<bool> isWalletsBackup({List original}) async {
   WalletStorage _walletStorage = WalletStorage();
   List wallets = original ?? await _walletStorage.getWallets();
