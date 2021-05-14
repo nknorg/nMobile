@@ -14,6 +14,20 @@ class NoConnectScreen extends StatefulWidget {
 }
 
 class _NoConnectScreenState extends State<NoConnectScreen> {
+  WalletSchema _defaultWallet;
+
+  @override
+  void initState() {
+    super.initState();
+    wallet.getWalletDefault().then((value) {
+      if (value != null) {
+        setState(() {
+          _defaultWallet = value;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
@@ -58,15 +72,24 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
                 ),
               ),
             ),
-            Expanded(
-              flex: 0,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
-                child: WalletDropdown(
-                  schema: WalletSchema(),
-                ),
-              ),
-            ),
+            this._defaultWallet == null
+                ? SizedBox.shrink()
+                : Expanded(
+                    flex: 0,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+                      child: WalletDropdown(
+                        onSelected: (v) {
+                          if (v != null) {
+                            setState(() {
+                              _defaultWallet = v;
+                            });
+                          }
+                        },
+                        schema: this._defaultWallet,
+                      ),
+                    ),
+                  ),
             Expanded(
               flex: 0,
               child: Column(
@@ -77,7 +100,7 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
                       width: double.infinity,
                       text: _localizations.connect,
                       onPressed: () async {
-                        chat.signin();
+                        chat.signin(this._defaultWallet);
                       },
                     ),
                   )
