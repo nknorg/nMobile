@@ -191,6 +191,7 @@ class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
                       padding: EdgeInsets.symmetric(horizontal: 30),
                       child: Button(
                         text: _localizations.done,
+                        width: double.infinity,
                         onPressed: () {
                           Navigator.of(context).pop();
                         },

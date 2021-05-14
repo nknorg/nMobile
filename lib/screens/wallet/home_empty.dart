@@ -58,6 +58,7 @@ class _WalletHomeEmptyLayoutState extends State<WalletHomeEmptyLayout> {
               children: <Widget>[
                 Button(
                   text: _localizations.no_wallet_create,
+                  width: double.infinity,
                   fontColor: application.theme.fontLightColor,
                   backgroundColor: application.theme.primaryColor,
                   onPressed: () {
@@ -67,6 +68,7 @@ class _WalletHomeEmptyLayoutState extends State<WalletHomeEmptyLayout> {
                 SizedBox(height: 12),
                 Button(
                   text: _localizations.no_wallet_import,
+                  width: double.infinity,
                   fontColor: application.theme.fontLightColor,
                   backgroundColor: application.theme.primaryColor.withAlpha(20),
                   onPressed: () {
