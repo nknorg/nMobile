@@ -7,6 +7,8 @@ import 'package:nkn_sdk_flutter/wallet.dart' as walletSDK;
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/utils/error.dart';
 import 'package:nmobile/utils/hash.dart';
 
 import '../global.dart';
@@ -92,18 +94,22 @@ class Chat {
     });
   }
 
-  Future signin() async {
-    String addr = await wallet.getWalletDefaultAddress();
-    String keystore = await wallet.getWalletKeystoreByAddress(addr);
-    String pwd = await wallet.getWalletPassword(Global.appContext, addr);
+  Future signin(WalletSchema scheme) async {
+    if (scheme == null || scheme.address == null) return null;
+    try {
+      String keystore = await wallet.getWalletKeystoreByAddress(scheme.address);
+      String pwd = await wallet.getWalletPassword(Global.appContext, scheme.address);
 
-    walletSDK.Wallet restore = await walletSDK.Wallet.restore(keystore ?? "", config: walletSDK.WalletConfig(password: pwd ?? ""));
+      walletSDK.Wallet restore = await walletSDK.Wallet.restore(keystore, config: walletSDK.WalletConfig(password: pwd));
 
-    String pubkey = hexEncode(restore.publicKey);
-    String password = hexEncode(sha256(restore.seed));
-    await DB.open(pubkey, password);
-    await contact.fetchCurrentUser(pubkey);
-    connect(restore);
+      String pubkey = hexEncode(restore.publicKey);
+      String password = hexEncode(sha256(restore.seed));
+      await DB.open(pubkey, password);
+      await contact.fetchCurrentUser(pubkey);
+      connect(restore);
+    } catch (e) {
+      handleError(e);
+    }
   }
 
   Future connect(walletSDK.Wallet wallet) async {
