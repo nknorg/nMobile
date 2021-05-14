@@ -15,7 +15,7 @@ class Wallet {
     if (address == null || address.length == 0) return null;
     List<WalletSchema> wallets = await _walletStorage.getWallets();
     if (wallets == null || wallets.isEmpty) return null;
-    return Future(() => wallets.firstWhere((x) => x?.address == address, orElse: () => null));
+    return wallets.firstWhere((x) => x?.address == address, orElse: () => null);
   }
 
   WalletSchema getWalletInOriginalByAddress(List<WalletSchema> wallets, String address) {
@@ -24,7 +24,7 @@ class Wallet {
     return wallets.firstWhere((x) => x?.address == address, orElse: () => null);
   }
 
-  Future<String> getWalletKeystoreByAddress(String address) {
+  Future getWalletKeystoreByAddress(String address) {
     return _walletStorage.getKeystore(address);
   }
 
