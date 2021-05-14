@@ -3,34 +3,34 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 
 class Button extends StatefulWidget {
-  final String text;
   final Widget child;
+  final String text;
   final double fontSize;
   final Color fontColor;
   final FontWeight fontWeight;
-  final double width;
-  final double height;
   final bool outline;
   final bool disabled;
   final VoidCallback onPressed;
   final EdgeInsets padding;
   final Color backgroundColor;
   final Color borderColor;
+  final double width;
+  final double height;
 
   Button({
-    this.text,
     this.child,
+    this.text,
     this.fontSize,
     this.fontColor,
     this.fontWeight,
-    this.width,
-    this.height,
+    this.onPressed,
     this.outline = false,
     this.disabled = false,
-    this.onPressed,
-    this.padding,
+    this.padding = const EdgeInsets.symmetric(vertical: 15),
     this.backgroundColor,
     this.borderColor,
+    this.width,
+    this.height,
   });
 
   @override
@@ -38,25 +38,21 @@ class Button extends StatefulWidget {
 }
 
 class _ButtonState extends State<Button> {
-  @override
-  Widget build(BuildContext context) {
-    var width = widget.width ?? double.infinity;
-    var height = widget.height ?? 52;
-
-    var child = widget.text != null
-        ? Text(
+  Widget _getButton() {
+    var child = widget.child != null
+        ? widget.child
+        : Text(
             widget.text,
             style: TextStyle(
               fontSize: widget.fontSize ?? application.theme.buttonFontSize,
               color: widget.disabled ? application.theme.fontColor2 : (widget.fontColor ?? application.theme.fontLightColor),
               fontWeight: widget.fontWeight ?? FontWeight.bold,
             ),
-          )
-        : widget.child;
+          );
 
     var btnStyle = ButtonStyle(
       padding: MaterialStateProperty.resolveWith((states) => widget.padding ?? EdgeInsets.all(0)),
-      shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.circular(height / 2))),
+      shape: MaterialStateProperty.resolveWith((states) => StadiumBorder()),
       backgroundColor: MaterialStateProperty.resolveWith((states) {
         if (widget.disabled) {
           return application.theme.backgroundColor2;
@@ -69,20 +65,28 @@ class _ButtonState extends State<Button> {
       btnStyle = btnStyle.copyWith(side: MaterialStateProperty.resolveWith((state) => BorderSide(color: widget.disabled ? application.theme.backgroundColor2 : widget.borderColor)));
     }
 
+    return widget.outline
+        ? OutlinedButton(
+            child: child,
+            onPressed: widget.disabled ? null : widget.onPressed,
+            style: btnStyle,
+          )
+        : TextButton(
+            child: child,
+            onPressed: widget.disabled ? null : widget.onPressed,
+            style: btnStyle,
+          );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.width == null && widget.height == null) {
+      return _getButton();
+    }
     return SizedBox(
-      width: width,
-      height: height,
-      child: widget.outline
-          ? OutlinedButton(
-              child: child,
-              onPressed: widget.disabled ? null : widget.onPressed,
-              style: btnStyle,
-            )
-          : TextButton(
-              child: child,
-              onPressed: widget.disabled ? null : widget.onPressed,
-              style: btnStyle,
-            ),
+      width: widget.width,
+      height: widget.height,
+      child: _getButton(),
     );
   }
 }

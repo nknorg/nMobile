@@ -218,6 +218,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                       padding: EdgeInsets.symmetric(horizontal: 30),
                       child: Button(
                         text: widget.walletType == WalletType.nkn ? _localizations.import_nkn_wallet : _localizations.import_ethereum_wallet,
+                        width: double.infinity,
                         disabled: !_formValid,
                         onPressed: _import,
                       ),
