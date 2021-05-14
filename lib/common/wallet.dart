@@ -24,8 +24,12 @@ class Wallet {
     return wallets.firstWhere((x) => x?.address == address, orElse: () => null);
   }
 
-  Future getWalletKeystoreByAddress(String address) {
-    return _walletStorage.getKeystore(address);
+  Future<String> getWalletKeystoreByAddress(String address) async {
+    String keystore = await _walletStorage.getKeystore(address);
+    if(keystore == null || keystore.isEmpty){
+      throw new Exception("keystore not exits");
+    }
+    return keystore;
   }
 
   Future<bool> isWalletsBackup({List original}) async {
