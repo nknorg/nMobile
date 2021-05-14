@@ -79,7 +79,6 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
 
         Navigator.pop(context);
       } catch (e) {
-        logger.e("import_by_keystore", e);
         Loading.dismiss();
         Toast.show(e.message);
       }

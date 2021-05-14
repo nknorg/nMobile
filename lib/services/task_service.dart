@@ -51,7 +51,7 @@ class TaskService {
           //       }
           //     }));
         } else {
-          Wallet.getBalanceByAddr(w?.address ?? "").then((balance) {
+          Wallet.getBalanceByAddr(w?.address).then((balance) {
             logger.d("wallet balance - balance_old:${w?.balance} - balance_new:$balance - address:${w?.address}");
             if (w?.balance != balance) {
               w?.balance = balance;
