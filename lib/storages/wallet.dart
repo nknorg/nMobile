@@ -120,34 +120,34 @@ class WalletStorage {
   Future getKeystore(String address) {
     if (address != null && address.isNotEmpty) {
       if (Platform.isAndroid) {
-        return Future(() => _localStorage.get('$KEY_KEYSTORE:$address'));
+        return _localStorage.get('$KEY_KEYSTORE:$address');
       } else {
-        return Future(() => _secureStorage.get('$KEY_KEYSTORE:$address'));
+        return _secureStorage.get('$KEY_KEYSTORE:$address');
       }
     }
-    return Future.value(null);
+    return null;
   }
 
   Future getPassword(String address) {
     if (address != null && address.isNotEmpty) {
       if (Platform.isAndroid) {
-        return Future(() => _localStorage.get('$KEY_PASSWORD:$address'));
+        return _localStorage.get('$KEY_PASSWORD:$address');
       } else {
-        return Future(() => _secureStorage.get('$KEY_PASSWORD:$address'));
+        return _secureStorage.get('$KEY_PASSWORD:$address');
       }
     }
-    return Future.value(null);
+    return null;
   }
 
   Future getSeed(String address) {
     if (address != null && address.isNotEmpty) {
       if (Platform.isAndroid) {
-        return Future(() => _localStorage.get('$KEY_SEED:$address'));
+        return _localStorage.get('$KEY_SEED:$address');
       } else {
-        return Future(() => _secureStorage.get('$KEY_SEED:$address'));
+        return _secureStorage.get('$KEY_SEED:$address');
       }
     }
-    return Future.value(null);
+    return null;
   }
 
   /// backup
@@ -157,7 +157,7 @@ class WalletStorage {
   }
 
   Future isBackupByAddress(String address) {
-    return Future(() => _localStorage.get('$KEY_BACKUP:$address'));
+    return _localStorage.get('$KEY_BACKUP:$address');
   }
 
   /// default
@@ -172,15 +172,15 @@ class WalletStorage {
     if (address == null || !verifyAddress(address)) {
       List<WalletSchema> wallets = await getWallets();
       if (wallets == null || wallets.isEmpty) {
-        return Future.value(null);
+        return null;
       }
       String firstAddress = wallets[0]?.address;
       if (firstAddress == null && !verifyAddress(address)) {
-        return Future.value(null);
+        return null;
       }
       await setDefaultAddress(firstAddress ?? "");
-      return Future(() => firstAddress);
+      return firstAddress;
     }
-    return Future(() => address);
+    return address;
   }
 }
