@@ -66,7 +66,8 @@ class _ChatPrivateState extends State<ChatPrivate> {
     _bindData();
     initAsync();
 
-    _onMessageStreamSubscription = chat.onReceivedMessage.where((event) => event.from == _contact.clientAddress).listen((event) {
+    _onMessageStreamSubscription = chat.onMessageSaved.where((event) => event.from == _contact.clientAddress).listen((event) {
+      _messageStorage.markMessageRead(event.msgId);
       setState(() {
         _messages.insert(0, event);
       });
@@ -164,38 +165,24 @@ class _ChatPrivateState extends State<ChatPrivate> {
                       MessageSchema message = _messages[index];
                       ContactSchema contact = _contact;
 
-                      bool showTime;
-                      bool hideHeader = false;
-                      if (index + 1 >= _messages.length) {
+                      // Fixme: show time
+                      bool showTime = false;
+                      if (index >= _messages.length - 1) {
                         showTime = true;
                       } else {
-                        // TODO
-                        //   showTime = (currentMessage.timestamp.isAfter(preMessage
-                        //       .timestamp
-                        //       .add(Duration(minutes: 3))));
-                        // } else {
-                        //   showTime = true;
-                        // }
+                        if(index + 1 < _messages.length) {
+                          var targetMessage = _messages[index + 1];
+                          if (message.timestamp.isAfter(targetMessage.timestamp.add(Duration(minutes: 3)))) {
+                            showTime = true;
+                          }
+                        }
                       }
+
                       return ChatMessage(
                         message: message,
                         contact: contact,
+                        showTime: showTime,
                       );
-                      // return Flex(
-                      //   direction: Axis.horizontal,
-                      //   children: [
-                      //     Container(
-                      //       margin: const EdgeInsets.only(right: 12),
-                      //       child: ContactAvatar(
-                      //         contact: contact,
-                      //       ),
-                      //     ),
-                      //     Label(message.content)
-                      //     // ChatMessage(
-                      //     //   message: message,
-                      //     // ),
-                      //   ],
-                      // );
                     },
                   ),
                 ),
