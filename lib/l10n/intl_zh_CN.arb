@@ -187,6 +187,15 @@
   "no_wallet_create": "创建新账户",
   "no_wallet_import": "导入已备份的账户",
 
+  "contacts": "通讯录",
+  "stranger": "陌生人",
+  "my_contact": "我的联系人",
+  "add_contact": "添加联系人",
+  "edit_contact": "编辑",
+  "delete_contact": "删除",
+  "contact_no_contact_title": "您还没有联系人",
+  "contact_no_contact_desc": "使用您的联系人列表快速发送消息和资金。",
+
   "type_a_message": "请输入",
   "pictures": "图片",
   "camera": "相机",

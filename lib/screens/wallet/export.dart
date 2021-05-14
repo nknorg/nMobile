@@ -226,6 +226,7 @@ class _WalletExportScreenState extends State<WalletExportScreen> {
                               ),
                               backgroundColor: application.theme.primaryColor.withAlpha(20),
                               fontColor: application.theme.primaryColor,
+                              width: double.infinity,
                               onPressed: () {
                                 BottomDialog.of(context).showQrcode(
                                   title: _localizations.seed + _localizations.qrcode,

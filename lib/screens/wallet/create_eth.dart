@@ -187,6 +187,7 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
                                   padding: EdgeInsets.symmetric(horizontal: 30),
                                   child: Button(
                                     text: _localizations.create_wallet,
+                                    width: double.infinity,
                                     disabled: !_formValid,
                                     onPressed: _create,
                                   ),
