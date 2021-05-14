@@ -1,7 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
 import 'intl/messages_all.dart';
 
 // **************************************************************************
@@ -15,21 +14,22 @@ import 'intl/messages_all.dart';
 
 class S {
   S();
-
+  
   static S current;
-
-  static const AppLocalizationDelegate delegate = AppLocalizationDelegate();
+  
+  static const AppLocalizationDelegate delegate =
+    AppLocalizationDelegate();
 
   static Future<S> load(Locale locale) {
     final name = (locale.countryCode?.isEmpty ?? false) ? locale.languageCode : locale.toString();
-    final localeName = Intl.canonicalizedLocale(name);
+    final localeName = Intl.canonicalizedLocale(name); 
     return initializeMessages(localeName).then((_) {
       Intl.defaultLocale = localeName;
       S.current = S();
-
+      
       return S.current;
     });
-  }
+  } 
 
   static S of(BuildContext context) {
     return Localizations.of<S>(context, S);
@@ -1890,6 +1890,1406 @@ class S {
     return Intl.message(
       'Latest',
       name: 'latest',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Off`
+  String get off {
+    return Intl.message(
+      'Off',
+      name: 'off',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Yes`
+  String get yes {
+    return Intl.message(
+      'Yes',
+      name: 'yes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No`
+  String get no {
+    return Intl.message(
+      'No',
+      name: 'no',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Save To Album`
+  String get save_to_album {
+    return Intl.message(
+      'Save To Album',
+      name: 'save_to_album',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invitation sent`
+  String get invitation_sent {
+    return Intl.message(
+      'Invitation sent',
+      name: 'invitation_sent',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Rename`
+  String get rename {
+    return Intl.message(
+      'Rename',
+      name: 'rename',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Edit`
+  String get edit {
+    return Intl.message(
+      'Edit',
+      name: 'edit',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Edit Name`
+  String get edit_name {
+    return Intl.message(
+      'Edit Name',
+      name: 'edit_name',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Edit Nickname`
+  String get edit_nickname {
+    return Intl.message(
+      'Edit Nickname',
+      name: 'edit_nickname',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please input Nickname`
+  String get input_nickname {
+    return Intl.message(
+      'Please input Nickname',
+      name: 'input_nickname',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please input Public Key`
+  String get input_pubKey {
+    return Intl.message(
+      'Please input Public Key',
+      name: 'input_pubKey',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please input Name`
+  String get input_name {
+    return Intl.message(
+      'Please input Name',
+      name: 'input_name',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please input Account Address`
+  String get input_wallet_address {
+    return Intl.message(
+      'Please input Account Address',
+      name: 'input_wallet_address',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please input Notes`
+  String get input_notes {
+    return Intl.message(
+      'Please input Notes',
+      name: 'input_notes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Edit Notes`
+  String get edit_notes {
+    return Intl.message(
+      'Edit Notes',
+      name: 'edit_notes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View All`
+  String get view_all {
+    return Intl.message(
+      'View All',
+      name: 'view_all',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Latest Transactions`
+  String get latest_transactions {
+    return Intl.message(
+      'Latest Transactions',
+      name: 'latest_transactions',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Today`
+  String get today {
+    return Intl.message(
+      'Today',
+      name: 'today',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Notes`
+  String get notes {
+    return Intl.message(
+      'Notes',
+      name: 'notes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `None`
+  String get none {
+    return Intl.message(
+      'None',
+      name: 'none',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `nMobile`
+  String get title {
+    return Intl.message(
+      'nMobile',
+      name: 'title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `My Details`
+  String get my_details {
+    return Intl.message(
+      'My Details',
+      name: 'my_details',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your password must be at least 8 characters. It is recommended to use a mix of different characters.`
+  String get wallet_password_helper_text {
+    return Intl.message(
+      'Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
+      name: 'wallet_password_helper_text',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your password must be at least 8 characters. It is recommended to use a mix of different characters.`
+  String get wallet_password_error {
+    return Intl.message(
+      'Your password must be at least 8 characters. It is recommended to use a mix of different characters.',
+      name: 'wallet_password_error',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create`
+  String get create {
+    return Intl.message(
+      'Create',
+      name: 'create',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Save Contact`
+  String get save_contact {
+    return Intl.message(
+      'Save Contact',
+      name: 'save_contact',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Members`
+  String get view_channel_members {
+    return Intl.message(
+      'Members',
+      name: 'view_channel_members',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invite Members`
+  String get invite_members {
+    return Intl.message(
+      'Invite Members',
+      name: 'invite_members',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `TOTAL BALANCE`
+  String get total_balance {
+    return Intl.message(
+      'TOTAL BALANCE',
+      name: 'total_balance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Eth Account`
+  String get eth_wallet {
+    return Intl.message(
+      'Eth Account',
+      name: 'eth_wallet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter first name`
+  String get enter_first_name {
+    return Intl.message(
+      'Enter first name',
+      name: 'enter_first_name',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter last name`
+  String get enter_last_name {
+    return Intl.message(
+      'Enter last name',
+      name: 'enter_last_name',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter users address`
+  String get enter_users_address {
+    return Intl.message(
+      'Enter users address',
+      name: 'enter_users_address',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter topic`
+  String get enter_topic {
+    return Intl.message(
+      'Enter topic',
+      name: 'enter_topic',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Direct Message`
+  String get new_whisper {
+    return Intl.message(
+      'Direct Message',
+      name: 'new_whisper',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New Group`
+  String get new_group {
+    return Intl.message(
+      'New Group',
+      name: 'new_group',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create/Join to group`
+  String get create_channel {
+    return Intl.message(
+      'Create/Join to group',
+      name: 'create_channel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Private Group`
+  String get private_channel {
+    return Intl.message(
+      'Private Group',
+      name: 'private_channel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Private`
+  String get private {
+    return Intl.message(
+      'Private',
+      name: 'private',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Group Settings`
+  String get channel_settings {
+    return Intl.message(
+      'Group Settings',
+      name: 'channel_settings',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Group Members`
+  String get channel_members {
+    return Intl.message(
+      'Group Members',
+      name: 'channel_members',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Topic`
+  String get topic {
+    return Intl.message(
+      'Topic',
+      name: 'topic',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Address Book`
+  String get address_book {
+    return Intl.message(
+      'Address Book',
+      name: 'address_book',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Popular Groups`
+  String get popular_channels {
+    return Intl.message(
+      'Popular Groups',
+      name: 'popular_channels',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `My Group`
+  String get my_group {
+    return Intl.message(
+      'My Group',
+      name: 'my_group',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `D-Chat Settings`
+  String get chat_settings {
+    return Intl.message(
+      'D-Chat Settings',
+      name: 'chat_settings',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View Profile`
+  String get view_profile {
+    return Intl.message(
+      'View Profile',
+      name: 'view_profile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Remark`
+  String get remark {
+    return Intl.message(
+      'Remark',
+      name: 'remark',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Contact`
+  String get contact {
+    return Intl.message(
+      'Contact',
+      name: 'contact',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Recently`
+  String get recent {
+    return Intl.message(
+      'Recently',
+      name: 'recent',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Burn After Reading`
+  String get burn_after_reading {
+    return Intl.message(
+      'Burn After Reading',
+      name: 'burn_after_reading',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `When turned on, you will receive immediate notification when this person sends you messages.`
+  String get accept_notification {
+    return Intl.message(
+      'When turned on, you will receive immediate notification when this person sends you messages.',
+      name: 'accept_notification',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Have Denied Remote Notification`
+  String get setting_deny_notification {
+    return Intl.message(
+      'Have Denied Remote Notification',
+      name: 'setting_deny_notification',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Have Accepted Remote Notification`
+  String get setting_accept_notification {
+    return Intl.message(
+      'Have Accepted Remote Notification',
+      name: 'setting_accept_notification',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New Message!`
+  String get notification_push_content {
+    return Intl.message(
+      'New Message!',
+      name: 'notification_push_content',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Message Notification`
+  String get remote_notification {
+    return Intl.message(
+      'Message Notification',
+      name: 'remote_notification',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Search`
+  String get search {
+    return Intl.message(
+      'Search',
+      name: 'search',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `App Version`
+  String get app_version {
+    return Intl.message(
+      'App Version',
+      name: 'app_version',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Auto`
+  String get auto {
+    return Intl.message(
+      'Auto',
+      name: 'auto',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Me`
+  String get me {
+    return Intl.message(
+      'Me',
+      name: 'me',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Client Address`
+  String get client_address {
+    return Intl.message(
+      'Client Address',
+      name: 'client_address',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `First Name`
+  String get first_name {
+    return Intl.message(
+      'First Name',
+      name: 'first_name',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Last Name`
+  String get last_name {
+    return Intl.message(
+      'Last Name',
+      name: 'last_name',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Updated at`
+  String get updated_at {
+    return Intl.message(
+      'Updated at',
+      name: 'updated_at',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Settings`
+  String get settings {
+    return Intl.message(
+      'Settings',
+      name: 'settings',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `members`
+  String get members {
+    return Intl.message(
+      'members',
+      name: 'members',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{other} invites You to join group`
+  String invites_desc_me(Object other) {
+    return Intl.message(
+      '$other invites You to join group',
+      name: 'invites_desc_me',
+      desc: '',
+      args: [other],
+    );
+  }
+
+  /// `You invites {other} to join group`
+  String invites_desc_other(Object other) {
+    return Intl.message(
+      'You invites $other to join group',
+      name: 'invites_desc_other',
+      desc: '',
+      args: [other],
+    );
+  }
+
+  /// `Accept`
+  String get accept {
+    return Intl.message(
+      'Accept',
+      name: 'accept',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `accepted`
+  String get accepted {
+    return Intl.message(
+      'accepted',
+      name: 'accepted',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You have already accepted`
+  String get accepted_already {
+    return Intl.message(
+      'You have already accepted',
+      name: 'accepted_already',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `rejected`
+  String get rejected {
+    return Intl.message(
+      'rejected',
+      name: 'rejected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `pending`
+  String get pending {
+    return Intl.message(
+      'pending',
+      name: 'pending',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Debug`
+  String get debug {
+    return Intl.message(
+      'Debug',
+      name: 'debug',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Subscribe`
+  String get subscribe {
+    return Intl.message(
+      'Subscribe',
+      name: 'subscribe',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Subscribe or Waiting...`
+  String get subscribe_or_waiting {
+    return Intl.message(
+      'Subscribe or Waiting...',
+      name: 'subscribe_or_waiting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Subscribed`
+  String get subscribed {
+    return Intl.message(
+      'Subscribed',
+      name: 'subscribed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Leave`
+  String get unsubscribe {
+    return Intl.message(
+      'Leave',
+      name: 'unsubscribe',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Leaved`
+  String get unsubscribed {
+    return Intl.message(
+      'Leaved',
+      name: 'unsubscribed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `by`
+  String get news_from {
+    return Intl.message(
+      'by',
+      name: 'news_from',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Messages`
+  String get chat_tab_messages {
+    return Intl.message(
+      'Messages',
+      name: 'chat_tab_messages',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Groups`
+  String get chat_tab_channels {
+    return Intl.message(
+      'Groups',
+      name: 'chat_tab_channels',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Group`
+  String get chat_tab_group {
+    return Intl.message(
+      'Group',
+      name: 'chat_tab_group',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Private and Secure\nMessaging`
+  String get chat_no_messages_title {
+    return Intl.message(
+      'Private and Secure\nMessaging',
+      name: 'chat_no_messages_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Start a new direct message or group chat, or join\nexisting ones..`
+  String get chat_no_messages_desc {
+    return Intl.message(
+      'Start a new direct message or group chat, or join\nexisting ones..',
+      name: 'chat_no_messages_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `set the disappearing message timer`
+  String get update_burn_after_reading {
+    return Intl.message(
+      'set the disappearing message timer',
+      name: 'update_burn_after_reading',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `disabled disappearing messages`
+  String get close_burn_after_reading {
+    return Intl.message(
+      'disabled disappearing messages',
+      name: 'close_burn_after_reading',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `5 seconds`
+  String get burn_5_seconds {
+    return Intl.message(
+      '5 seconds',
+      name: 'burn_5_seconds',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `10 seconds`
+  String get burn_10_seconds {
+    return Intl.message(
+      '10 seconds',
+      name: 'burn_10_seconds',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `30 seconds`
+  String get burn_30_seconds {
+    return Intl.message(
+      '30 seconds',
+      name: 'burn_30_seconds',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `1 minute`
+  String get burn_1_minute {
+    return Intl.message(
+      '1 minute',
+      name: 'burn_1_minute',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `5 minutes`
+  String get burn_5_minutes {
+    return Intl.message(
+      '5 minutes',
+      name: 'burn_5_minutes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `10 minutes`
+  String get burn_10_minutes {
+    return Intl.message(
+      '10 minutes',
+      name: 'burn_10_minutes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `30 minutes`
+  String get burn_30_minutes {
+    return Intl.message(
+      '30 minutes',
+      name: 'burn_30_minutes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `1 hour`
+  String get burn_1_hour {
+    return Intl.message(
+      '1 hour',
+      name: 'burn_1_hour',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `6 hours`
+  String get burn_6_hour {
+    return Intl.message(
+      '6 hours',
+      name: 'burn_6_hour',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `12 hours`
+  String get burn_12_hour {
+    return Intl.message(
+      '12 hours',
+      name: 'burn_12_hour',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `1 day`
+  String get burn_1_day {
+    return Intl.message(
+      '1 day',
+      name: 'burn_1_day',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `1 week`
+  String get burn_1_week {
+    return Intl.message(
+      '1 week',
+      name: 'burn_1_week',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Add New Contact`
+  String get add_new_contact {
+    return Intl.message(
+      'Add New Contact',
+      name: 'add_new_contact',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `optional`
+  String get optional {
+    return Intl.message(
+      'optional',
+      name: 'optional',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Private Messages`
+  String get private_messages {
+    return Intl.message(
+      'Private Messages',
+      name: 'private_messages',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `All direct messages are completely private and secure.`
+  String get private_messages_desc {
+    return Intl.message(
+      'All direct messages are completely private and secure.',
+      name: 'private_messages_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Learn More`
+  String get learn_more {
+    return Intl.message(
+      'Learn More',
+      name: 'learn_more',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter/Select a user D-Chat ID`
+  String get enter_or_select_a_user_pubkey {
+    return Intl.message(
+      'Enter/Select a user D-Chat ID',
+      name: 'enter_or_select_a_user_pubkey',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Scan the QR code pattern to add friends to your contacts.`
+  String get scan_show_me_desc {
+    return Intl.message(
+      'Scan the QR code pattern to add friends to your contacts.',
+      name: 'scan_show_me_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Nickname`
+  String get nickname {
+    return Intl.message(
+      'Nickname',
+      name: 'nickname',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `D-Chat ID`
+  String get d_chat_address {
+    return Intl.message(
+      'D-Chat ID',
+      name: 'd_chat_address',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please input D-Chat ID`
+  String get input_d_chat_address {
+    return Intl.message(
+      'Please input D-Chat ID',
+      name: 'input_d_chat_address',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Wrong password`
+  String get tip_password_error {
+    return Intl.message(
+      'Wrong password',
+      name: 'tip_password_error',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Friend`
+  String get friends {
+    return Intl.message(
+      'Friend',
+      name: 'friends',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Group`
+  String get group_chat {
+    return Intl.message(
+      'Group',
+      name: 'group_chat',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `D-Chat not login`
+  String get d_chat_not_login {
+    return Intl.message(
+      'D-Chat not login',
+      name: 'd_chat_not_login',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create Account`
+  String get create_account {
+    return Intl.message(
+      'Create Account',
+      name: 'create_account',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import Account`
+  String get import_wallet_as_account {
+    return Intl.message(
+      'Import Account',
+      name: 'import_wallet_as_account',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tips`
+  String get tip {
+    return Intl.message(
+      'Tips',
+      name: 'tip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `All subscriptions and tipping will come from your selected wallet.`
+  String get my_details_desc {
+    return Intl.message(
+      'All subscriptions and tipping will come from your selected wallet.',
+      name: 'my_details_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Change`
+  String get change_default_chat_wallet {
+    return Intl.message(
+      'Change',
+      name: 'change_default_chat_wallet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Coming Soon...`
+  String get coming_soon {
+    return Intl.message(
+      'Coming Soon...',
+      name: 'coming_soon',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `My Profile`
+  String get my_profile {
+    return Intl.message(
+      'My Profile',
+      name: 'my_profile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Profile`
+  String get profile {
+    return Intl.message(
+      'Profile',
+      name: 'profile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send Message`
+  String get send_message {
+    return Intl.message(
+      'Send Message',
+      name: 'send_message',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Scan the QR code, you can transfer it to me`
+  String get show_wallet_address_desc {
+    return Intl.message(
+      'Scan the QR code, you can transfer it to me',
+      name: 'show_wallet_address_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Account switching Completed`
+  String get account_switching_completed {
+    return Intl.message(
+      'Account switching Completed',
+      name: 'account_switching_completed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Storage`
+  String get storage_text {
+    return Intl.message(
+      'Storage',
+      name: 'storage_text',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Export`
+  String get export {
+    return Intl.message(
+      'Export',
+      name: 'export',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.`
+  String get eth_keystore_export_desc {
+    return Intl.message(
+      'The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately.',
+      name: 'eth_keystore_export_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Messages sent and received in this conversation will disappear {time} after they have been seen.`
+  String burn_after_reading_desc_disappear(Object time) {
+    return Intl.message(
+      'Messages sent and received in this conversation will disappear $time after they have been seen.',
+      name: 'burn_after_reading_desc_disappear',
+      desc: '',
+      args: [time],
+    );
+  }
+
+  /// `Your messages will not expire.`
+  String get burn_after_reading_desc {
+    return Intl.message(
+      'Your messages will not expire.',
+      name: 'burn_after_reading_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Oops, something went wrong! Please try again later.`
+  String get something_went_wrong {
+    return Intl.message(
+      'Oops, something went wrong! Please try again later.',
+      name: 'something_went_wrong',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not available for Android device without Google Service Currently`
+  String get unavailable_device {
+    return Intl.message(
+      'Not available for Android device without Google Service Currently',
+      name: 'unavailable_device',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `< Slide Cancel <`
+  String get slide_to_cancel {
+    return Intl.message(
+      '< Slide Cancel <',
+      name: 'slide_to_cancel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `invite and send success`
+  String get invite_and_send_success {
+    return Intl.message(
+      'invite and send success',
+      name: 'invite_and_send_success',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `not invited`
+  String get join_but_not_invite {
+    return Intl.message(
+      'not invited',
+      name: 'join_but_not_invite',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You have already invited this member,still invite?`
+  String get invited_already {
+    return Intl.message(
+      'You have already invited this member,still invite?',
+      name: 'invited_already',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The member is in group already`
+  String get group_member_already {
+    return Intl.message(
+      'The member is in group already',
+      name: 'group_member_already',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Can not invite yourself!`
+  String get invite_yourself_error {
+    return Intl.message(
+      'Can not invite yourself!',
+      name: 'invite_yourself_error',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Private group member can not invite others currently,ask group owner to invite others`
+  String get member_no_auth_invite {
+    return Intl.message(
+      'Private group member can not invite others currently,ask group owner to invite others',
+      name: 'member_no_auth_invite',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send your device token to him?\nThen he can send you remote notification!`
+  String get tip_open_send_device_token {
+    return Intl.message(
+      'Send your device token to him?\nThen he can send you remote notification!',
+      name: 'tip_open_send_device_token',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Switch Success!`
+  String get tip_switch_success {
+    return Intl.message(
+      'Switch Success!',
+      name: 'tip_switch_success',
       desc: '',
       args: [],
     );
