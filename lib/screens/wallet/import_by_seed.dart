@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -26,18 +27,17 @@ class WalletImportBySeedLayout extends StatefulWidget {
 
 class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> with SingleTickerProviderStateMixin {
   GlobalKey _formKey = new GlobalKey<FormState>();
-  StreamSubscription _qrSubscription;
-  bool _formValid = false;
 
+  WalletBloc _walletBloc;
+  StreamSubscription _qrSubscription;
+
+  bool _formValid = false;
   TextEditingController _seedController = TextEditingController();
+  TextEditingController _nameController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
   FocusNode _seedFocusNode = FocusNode();
   FocusNode _nameFocusNode = FocusNode();
   FocusNode _passwordFocusNode = FocusNode();
-
-  WalletBloc _walletBloc;
-  var _seed;
-  var _name;
-  var _password;
 
   @override
   void initState() {
@@ -57,31 +57,34 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
   }
 
   _import() async {
+    S _localizations = S.of(context);
+
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
-      logger.d("seed:$_seed, name:$_name, password:$_password");
-
       Loading.show();
-      S _localizations = S.of(context);
+
+      String seed = _seedController?.text;
+      String name = _nameController?.text;
+      String password = _passwordController?.text;
+      logger.d("seed:$seed, name:$name, password:$password");
 
       try {
         if (widget.walletType == WalletType.nkn) {
-          Wallet result = await Wallet.create(_seed, config: WalletConfig(password: _password));
-          WalletSchema wallet = WalletSchema(name: _name, address: result?.address, type: WalletType.nkn);
+          Wallet result = await Wallet.create(hexDecode(seed), config: WalletConfig(password: password));
+          WalletSchema wallet = WalletSchema(name: name, address: result?.address, type: WalletType.nkn);
           logger.d("import_nkn - ${wallet.toString()}");
 
-          _walletBloc.add(AddWallet(wallet, result?.keystore, password: _password));
+          _walletBloc.add(AddWallet(wallet, result?.keystore, password: password));
         } else {
           // TODO:GG import eth by seed
           // final ethWallet = Ethereum.restoreWalletFromPrivateKey(name: _name, privateKey: _seed, password: _password);
           // Ethereum.saveWallet(ethWallet: ethWallet, walletsBloc: _walletsBloc);
         }
+
         Loading.dismiss();
         Toast.show(_localizations.success);
-
         Navigator.pop(context);
       } catch (e) {
-        logger.e("import_by_seed", e);
         Loading.dismiss();
         Toast.show(e.message);
       }
@@ -140,7 +143,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                     validator: Validator.of(context).seed(),
                     textInputAction: TextInputAction.next,
                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_nameFocusNode),
-                    onSaved: (v) => _seed = v,
+                    maxLines: 10,
                   ),
                 ),
                 Padding(
@@ -154,12 +157,12 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20),
                   child: FormText(
+                    controller: _nameController,
                     focusNode: _nameFocusNode,
                     hintText: _localizations.hint_enter_wallet_name,
                     validator: Validator.of(context).walletName(),
                     textInputAction: TextInputAction.next,
                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
-                    onSaved: (v) => _name = v,
                   ),
                 ),
                 Padding(
@@ -173,12 +176,12 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20, bottom: 24),
                   child: FormText(
+                    controller: _passwordController,
                     focusNode: _passwordFocusNode,
                     hintText: _localizations.input_password,
                     validator: Validator.of(context).password(),
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
-                    onSaved: (v) => _password = v,
                     password: true,
                   ),
                 ),

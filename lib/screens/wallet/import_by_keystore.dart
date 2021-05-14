@@ -28,17 +28,16 @@ class WalletImportByKeystoreLayout extends StatefulWidget {
 
 class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLayout> with SingleTickerProviderStateMixin {
   GlobalKey _formKey = new GlobalKey<FormState>();
-  bool _formValid = false;
 
+  WalletBloc _walletBloc;
+
+  bool _formValid = false;
   TextEditingController _keystoreController = TextEditingController();
+  TextEditingController _nameController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
   FocusNode _keystoreFocusNode = FocusNode();
   FocusNode _nameFocusNode = FocusNode();
   FocusNode _passwordFocusNode = FocusNode();
-
-  WalletBloc _walletBloc;
-  String _keystore;
-  String _name;
-  String _password;
 
   @override
   void initState() {
@@ -55,28 +54,32 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
   }
 
   _import() async {
+    S _localizations = S.of(context);
+
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
-      logger.d("keystore:$_keystore, name:$_name, password:$_password");
-
       Loading.show();
-      S _localizations = S.of(context);
+
+      String keystore = _keystoreController?.text;
+      String name = _nameController?.text;
+      String password = _passwordController?.text;
+      logger.d("keystore:$keystore, name:$name, password:$password");
 
       try {
         if (widget.walletType == WalletType.nkn) {
-          Wallet result = await Wallet.restore(_keystore, config: WalletConfig(password: _password));
-          WalletSchema wallet = WalletSchema(name: _name, address: result?.address, type: WalletType.nkn);
+          Wallet result = await Wallet.restore(keystore, config: WalletConfig(password: password));
+          WalletSchema wallet = WalletSchema(name: name, address: result?.address, type: WalletType.nkn);
           logger.d("import_nkn - ${wallet.toString()}");
 
-          _walletBloc.add(AddWallet(wallet, result?.keystore, password: _password));
+          _walletBloc.add(AddWallet(wallet, result?.keystore, password: password));
         } else {
           // TODO:GG import eth by keystore
           // final ethWallet = Ethereum.restoreWallet(name: _name, keystore: _keystore, password: _password);
           // Ethereum.saveWallet(ethWallet: ethWallet, walletsBloc: _walletsBloc);
         }
+
         Loading.dismiss();
         Toast.show(_localizations.success);
-
         Navigator.pop(context);
       } catch (e) {
         Loading.dismiss();
@@ -137,8 +140,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                     validator: widget.walletType == WalletType.nkn ? Validator.of(context).keystoreNKN() : Validator.of(context).keystoreETH(),
                     textInputAction: TextInputAction.next,
                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_nameFocusNode),
-                    onSaved: (v) => _keystore = v,
-                    maxLines: 3,
+                    maxLines: 20,
                     suffixIcon: GestureDetector(
                       onTap: () async {
                         FilePickerResult result = await FilePicker.platform.pickFiles(
@@ -176,12 +178,12 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20),
                   child: FormText(
+                    controller: _nameController,
                     focusNode: _nameFocusNode,
                     hintText: _localizations.hint_enter_wallet_name,
                     validator: Validator.of(context).walletName(),
                     textInputAction: TextInputAction.next,
                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
-                    onSaved: (v) => _name = v,
                   ),
                 ),
                 Padding(
@@ -195,12 +197,12 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20, bottom: 16),
                   child: FormText(
+                    controller: _passwordController,
                     focusNode: _passwordFocusNode,
                     hintText: _localizations.input_password,
                     validator: Validator.of(context).password(),
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
-                    onSaved: (v) => _password = v,
                     password: true,
                   ),
                 ),
