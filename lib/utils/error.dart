@@ -25,7 +25,6 @@ String getErrorShow(error) {
   if (error.message == pwdWrong || error.toString() == pwdWrong) {
     return _localizations.password_wrong;
   }
-
   String txError = 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds';
   if (error.message == txError || error.toString() == txError) {
     return txError;
@@ -33,6 +32,10 @@ String getErrorShow(error) {
   String rpcError = 'all rpc request failed';
   if (error.message == rpcError || error.toString() == rpcError) {
     return rpcError;
+  }
+  String ksError = "keystore not exits";
+  if (error.message == ksError || error.toString() == ksError) {
+    return ksError;
   }
   return error.message;
 }

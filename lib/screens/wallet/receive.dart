@@ -83,7 +83,7 @@ class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
               child: BlocBuilder<WalletBloc, WalletState>(
                 builder: (context, state) {
                   if (state is WalletLoaded) {
-                    _wallet = wallet.getWalletInOriginalByAddress(state.wallets, _wallet?.address ?? "");
+                    _wallet = wallet.getWalletInOriginalByAddress(state.wallets, _wallet?.address);
                   }
                   return Column(
                     children: <Widget>[
@@ -166,7 +166,7 @@ class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
                             Container(
                               padding: const EdgeInsets.only(top: 24),
                               child: QrImage(
-                                data: _wallet?.address ?? "",
+                                data: _wallet?.address,
                                 version: QrVersions.auto,
                                 size: MediaQuery.of(context).size.width * 0.57,
                               ),

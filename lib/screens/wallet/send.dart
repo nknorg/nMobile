@@ -342,7 +342,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                 child: BlocBuilder<WalletBloc, WalletState>(
                   builder: (context, state) {
                     if (state is WalletLoaded) {
-                      _wallet = wallet.getWalletInOriginalByAddress(state.wallets, _wallet?.address ?? "");
+                      _wallet = wallet.getWalletInOriginalByAddress(state.wallets, _wallet?.address);
                       if (_wallet.type == WalletType.nkn) {
                         _ethTrueTokenFalse = false;
                       }
