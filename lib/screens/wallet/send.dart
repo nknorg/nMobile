@@ -686,6 +686,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                       padding: EdgeInsets.symmetric(horizontal: 30),
                                       child: Button(
                                         text: _localizations.continue_text,
+                                        width: double.infinity,
                                         disabled: !_formValid,
                                         onPressed: _readyTransfer,
                                       ),

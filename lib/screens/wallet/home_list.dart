@@ -196,6 +196,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
       actions: [
         Button(
           text: _localizations.go_backup,
+          width: double.infinity,
           onPressed: () async {
             await dialog.close();
             WalletSchema result = await BottomDialog.of(context).showWalletSelect(title: _localizations.select_asset_to_backup);

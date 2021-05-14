@@ -1,6 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import 'intl/messages_all.dart';
 
 // **************************************************************************
@@ -14,22 +15,21 @@ import 'intl/messages_all.dart';
 
 class S {
   S();
-  
+
   static S current;
-  
-  static const AppLocalizationDelegate delegate =
-    AppLocalizationDelegate();
+
+  static const AppLocalizationDelegate delegate = AppLocalizationDelegate();
 
   static Future<S> load(Locale locale) {
     final name = (locale.countryCode?.isEmpty ?? false) ? locale.languageCode : locale.toString();
-    final localeName = Intl.canonicalizedLocale(name); 
+    final localeName = Intl.canonicalizedLocale(name);
     return initializeMessages(localeName).then((_) {
       Intl.defaultLocale = localeName;
       S.current = S();
-      
+
       return S.current;
     });
-  } 
+  }
 
   static S of(BuildContext context) {
     return Localizations.of<S>(context, S);
@@ -1740,6 +1740,86 @@ class S {
     return Intl.message(
       'Import Existing Account',
       name: 'no_wallet_import',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Contacts`
+  String get contacts {
+    return Intl.message(
+      'Contacts',
+      name: 'contacts',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Stranger`
+  String get stranger {
+    return Intl.message(
+      'Stranger',
+      name: 'stranger',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `My Contact`
+  String get my_contact {
+    return Intl.message(
+      'My Contact',
+      name: 'my_contact',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Add Contact`
+  String get add_contact {
+    return Intl.message(
+      'Add Contact',
+      name: 'add_contact',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Edit Contact`
+  String get edit_contact {
+    return Intl.message(
+      'Edit Contact',
+      name: 'edit_contact',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete Contact`
+  String get delete_contact {
+    return Intl.message(
+      'Delete Contact',
+      name: 'delete_contact',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You haven’t got any\n contacts yet`
+  String get contact_no_contact_title {
+    return Intl.message(
+      'You haven’t got any\n contacts yet',
+      name: 'contact_no_contact_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Use your contact list to quickly message and\n send funds to your friends.`
+  String get contact_no_contact_desc {
+    return Intl.message(
+      'Use your contact list to quickly message and\n send funds to your friends.',
+      name: 'contact_no_contact_desc',
       desc: '',
       args: [],
     );

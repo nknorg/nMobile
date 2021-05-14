@@ -187,6 +187,15 @@
   "no_wallet_create": "創建新帳戶",
   "no_wallet_import": "導入已備份的帳戶",
 
+  "contacts": "通訊錄",
+  "stranger": "陌生人",
+  "my_contact": "我的聯繫人",
+  "add_contact": "添加聯繫人",
+  "edit_contact": "編輯",
+  "delete_contact": "刪除",
+  "contact_no_contact_title": "您還沒有聯繫人",
+  "contact_no_contact_desc": "使用您的聯繫人列表快速發送消息和資金。",
+
   "type_a_message": "請輸入",
   "pictures": "圖片",
   "camera": "相機",
