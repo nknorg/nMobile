@@ -127,7 +127,7 @@ class _ChatBubbleState extends State<ChatBubble> {
       ),
     );
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: 12, bottom: 12),
       child: Flex(
         direction: Axis.horizontal,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,7 +135,7 @@ class _ChatBubbleState extends State<ChatBubble> {
           Expanded(
             flex: 0,
             child: Container(
-              margin: const EdgeInsets.only(right: 12),
+              margin: const EdgeInsets.only(right: 8),
               child: ContactAvatar(
                 contact: _contact,
               ),
