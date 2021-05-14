@@ -4,10 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nkn_sdk_flutter/wallet.dart' as WalletSDK;
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/wallet.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
@@ -56,7 +55,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
         });
       }
     });
-    isWalletsBackup().then((value) {
+    wallet.isWalletsBackup().then((value) {
       if (mounted) {
         setState(() {
           _allBackedUp = value ?? false;
@@ -207,19 +206,19 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
     );
   }
 
-  _readyExport(WalletSchema wallet) {
-    logger.d("backup picked - $wallet");
-    if (wallet == null || wallet.address == null || wallet.address.isEmpty) return;
+  _readyExport(WalletSchema scheme) {
+    logger.d("backup picked - $scheme");
+    if (scheme == null || scheme.address == null || scheme.address.isEmpty) return;
     S _localizations = S.of(context);
 
-    getWalletPassword(context, wallet?.address).then((String password) async {
+    wallet.getWalletPassword(context, scheme?.address).then((String password) async {
       if (password == null || password.isEmpty) {
         // no toast
         return;
       }
-      String keystore = await getWalletKeystoreByAddress(wallet.address);
+      String keystore = await wallet.getWalletKeystoreByAddress(scheme.address);
 
-      if (wallet.type == WalletType.eth) {
+      if (scheme.type == WalletType.eth) {
         // TODO:GG eth export
         // String keyStore = await ws.getKeystore();
         // EthWallet ethWallet = Ethereum.restoreWallet(
@@ -234,8 +233,8 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
         //   'name': ethWallet.name,
         // });
       } else {
-        Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
-        if (restore == null || restore.address != wallet.address) {
+        WalletSDK.Wallet restore = await WalletSDK.Wallet.restore(keystore, config: WalletSDK.WalletConfig(password: password));
+        if (restore == null || restore.address != scheme.address) {
           Toast.show(_localizations.password_wrong);
           return;
         }
@@ -243,7 +242,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
         WalletExportScreen.go(
           context,
           WalletType.nkn,
-          wallet.name,
+          scheme.name,
           restore.address,
           hexEncode(restore.publicKey ?? ""),
           hexEncode(restore.seed ?? ""),

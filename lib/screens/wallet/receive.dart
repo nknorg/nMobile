@@ -5,7 +5,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/wallet.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -84,7 +83,7 @@ class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
               child: BlocBuilder<WalletBloc, WalletState>(
                 builder: (context, state) {
                   if (state is WalletLoaded) {
-                    _wallet = getWalletInOriginalByAddress(state.wallets, _wallet?.address ?? "");
+                    _wallet = wallet.getWalletInOriginalByAddress(state.wallets, _wallet?.address ?? "");
                   }
                   return Column(
                     children: <Widget>[
