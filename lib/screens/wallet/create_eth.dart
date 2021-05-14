@@ -23,16 +23,15 @@ class WalletCreateETHScreen extends StatefulWidget {
 
 class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
   GlobalKey _formKey = new GlobalKey<FormState>();
-  bool _formValid = false;
 
+  // WalletsBloc _walletsBloc;
+
+  bool _formValid = false;
+  TextEditingController _nameController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
   FocusNode _nameFocusNode = FocusNode();
   FocusNode _passwordFocusNode = FocusNode();
   FocusNode _confirmPasswordFocusNode = FocusNode();
-
-  // WalletsBloc _walletsBloc;
-  var _name;
-  var _password;
 
   @override
   void initState() {
@@ -116,12 +115,12 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
                             Padding(
                               padding: EdgeInsets.only(left: 20, right: 20),
                               child: FormText(
+                                controller: _nameController,
                                 focusNode: _nameFocusNode,
                                 hintText: _localizations.hint_enter_wallet_name,
                                 validator: Validator.of(context).walletName(),
                                 textInputAction: TextInputAction.next,
                                 onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
-                                onSaved: (v) => _name = v,
                               ),
                             ),
                             SizedBox(height: 14),
@@ -142,7 +141,6 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
                                 validator: Validator.of(context).password(),
                                 textInputAction: TextInputAction.next,
                                 onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_confirmPasswordFocusNode),
-                                onSaved: (v) => _password = v,
                                 password: true,
                               ),
                             ),
