@@ -3,10 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nkn_sdk_flutter/wallet.dart' as walletSDK;
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/wallet.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
@@ -77,7 +76,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
         });
       }
     });
-    getWalletDefaultAddress().then((value) {
+    wallet.getWalletDefaultAddress().then((value) {
       if (mounted) {
         setState(() {
           isDefault = value == _wallet?.address;
@@ -164,7 +163,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
             BlocBuilder<WalletBloc, WalletState>(
               builder: (context, state) {
                 if (state is WalletLoaded) {
-                  this._wallet = getWalletInOriginalByAddress(state.wallets, this._wallet?.address);
+                  this._wallet = wallet.getWalletInOriginalByAddress(state.wallets, this._wallet?.address);
                 }
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -323,11 +322,11 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
 
     switch (result) {
       case 0: // export
-        getWalletPassword(context, _wallet?.address).then((String password) async {
+        wallet.getWalletPassword(context, _wallet?.address).then((String password) async {
           if (password == null || password.isEmpty) {
             return;
           }
-          String keystore = await getWalletKeystoreByAddress(_wallet.address);
+          String keystore = await wallet.getWalletKeystoreByAddress(_wallet.address);
 
           if (_wallet.type == WalletType.eth) {
             // TODO:GG eth export
@@ -344,7 +343,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
             //   'name': ethWallet.name,
             // });
           } else {
-            Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
+            walletSDK.Wallet restore = await walletSDK.Wallet.restore(keystore, config: walletSDK.WalletConfig(password: password));
             if (restore == null || restore.address != _wallet.address) {
               Toast.show(_localizations.password_wrong);
               return;

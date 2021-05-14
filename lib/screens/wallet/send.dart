@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nkn_sdk_flutter/wallet.dart' as WalletSDK;
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/wallet.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
@@ -198,12 +197,12 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
       (_formKey.currentState as FormState).save();
       logger.d("amount:$_amount, sendTo:$_sendTo, fee:$_fee");
 
-      getWalletPassword(context, _wallet?.address).then((String password) async {
+      wallet.getWalletPassword(context, _wallet?.address).then((String password) async {
         if (password == null || password.isEmpty) {
           // no toast
           return;
         }
-        String keystore = await getWalletKeystoreByAddress(_wallet?.address);
+        String keystore = await wallet.getWalletKeystoreByAddress(_wallet?.address);
 
         if (_wallet.type == WalletType.eth) {
           final result = _transferETH(keystore, password);
@@ -246,7 +245,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
     if (keystore == null || password == null) return false;
     S _localizations = S.of(context);
     try {
-      Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
+      WalletSDK.Wallet restore = await WalletSDK.Wallet.restore(keystore, config: WalletSDK.WalletConfig(password: password));
       if (restore == null || restore?.address != _wallet?.address) {
         Toast.show(_localizations.password_wrong);
         return false;
@@ -343,7 +342,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                 child: BlocBuilder<WalletBloc, WalletState>(
                   builder: (context, state) {
                     if (state is WalletLoaded) {
-                      _wallet = getWalletInOriginalByAddress(state.wallets, _wallet?.address ?? "");
+                      _wallet = wallet.getWalletInOriginalByAddress(state.wallets, _wallet?.address ?? "");
                       if (_wallet.type == WalletType.nkn) {
                         _ethTrueTokenFalse = false;
                       }
