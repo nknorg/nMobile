@@ -41,14 +41,14 @@ Widget createMessageListItemWidget(BuildContext context, MessageListItem model) 
       children: <Widget>[
         Label(
           _localizations.placeholder_draft,
-          type: LabelType.bodySmall,
+          type: LabelType.bodyRegular,
           color: Colors.red,
           overflow: TextOverflow.ellipsis,
         ),
         SizedBox(width: 5),
         Label(
           draft,
-          type: LabelType.bodySmall,
+          type: LabelType.bodyRegular,
           overflow: TextOverflow.ellipsis,
         ),
       ],
@@ -75,20 +75,20 @@ Widget createMessageListItemWidget(BuildContext context, MessageListItem model) 
     contentWidget = Label(
       _localizations.channel_invitation,
       maxLines: 1,
-      type: LabelType.bodySmall,
+      type: LabelType.bodyRegular,
       overflow: TextOverflow.ellipsis,
     );
   } else if (model.contentType == ContentType.eventSubscribe) {
     contentWidget = Label(
       _localizations.joined_channel,
       maxLines: 1,
-      type: LabelType.bodySmall,
+      type: LabelType.bodyRegular,
       overflow: TextOverflow.ellipsis,
     );
   } else {
     contentWidget = Label(
       model.content,
-      type: LabelType.bodySmall,
+      type: LabelType.bodyRegular,
       overflow: TextOverflow.ellipsis,
       maxLines: 1,
     );
@@ -191,7 +191,6 @@ Widget createMessageListItemWidget(BuildContext context, MessageListItem model) 
           Expanded(
             flex: 0,
             child: Container(
-              decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 1, color: application.theme.dividerColor))),
               child: Row(
                 children: [
                   Column(
@@ -202,7 +201,7 @@ Widget createMessageListItemWidget(BuildContext context, MessageListItem model) 
                         padding: const EdgeInsets.only(right: 0, bottom: 6),
                         child: Label(
                           timeFormat(model.lastReceiveTime),
-                          type: LabelType.bodySmall,
+                          type: LabelType.bodyRegular,
                         ),
                       ),
                       model.notReadCount > 0

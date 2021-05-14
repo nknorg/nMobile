@@ -103,7 +103,7 @@ class LightTheme implements SkinTheme {
   Color get disabledColor => backgroundColor5;
 
   @override
-  Color get dividerColor => backgroundColor2;
+  Color dividerColor = Color(0xFFF2F2F2);
 
   @override
   Color backgroundColor1 = Color(0xFFF6F7FB);

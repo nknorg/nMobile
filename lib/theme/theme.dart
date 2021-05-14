@@ -24,7 +24,7 @@ abstract class SkinTheme {
   Color get headBarColor2 => backgroundColor4;
   Color get unselectedWidgetColor => fontColor2;
   Color get disabledColor => backgroundColor2;
-  Color get dividerColor => backgroundColor2;
+  Color dividerColor;
   Color backgroundLightColor;
   Color backgroundColor1;
   Color backgroundColor2;

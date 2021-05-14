@@ -136,6 +136,18 @@ class MessageStorage {
     return messages;
   }
 
+  Future<int> markMessageRead(String msgId) async {
+    var count = await db.update(
+      tableName,
+      {
+        'is_read': 1,
+      },
+      where: 'msg_id = ?',
+      whereArgs: [msgId],
+    );
+    return count;
+  }
+
   MessageSchema parseMessageSchema(Map e) {
     var message = MessageSchema(
       e['msg_id'],
