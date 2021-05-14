@@ -1,7 +1,8 @@
 import 'package:get_it/get_it.dart';
 import 'package:nmobile/common/contact/contact.dart';
-import '../services/task_service.dart';
+import 'package:nmobile/common/wallet.dart';
 
+import '../services/task_service.dart';
 import 'application.dart';
 import 'authentication.dart';
 import 'chat/chat.dart';
@@ -16,6 +17,7 @@ ReceiveMessage receiveMessage;
 Authorization authorization;
 Notification notification;
 Contact contact;
+Wallet wallet;
 
 void setupLocator() {
   locator
@@ -25,6 +27,7 @@ void setupLocator() {
     ..registerSingleton(ReceiveMessage())
     ..registerSingleton(Notification())
     ..registerSingleton(Contact())
+    ..registerSingleton(Wallet())
     ..registerSingleton(TaskService());
   application = locator.get<Application>();
   chat = locator.get<Chat>();
@@ -32,4 +35,5 @@ void setupLocator() {
   authorization = locator.get<Authorization>();
   notification = locator.get<Notification>();
   contact = locator.get<Contact>();
+  wallet = locator.get<Wallet>();
 }
