@@ -31,16 +31,15 @@ class WalletCreateNKNScreen extends StatefulWidget {
 
 class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
   GlobalKey _formKey = new GlobalKey<FormState>();
-  bool _formValid = false;
 
+  WalletBloc _walletBloc;
+
+  bool _formValid = false;
+  TextEditingController _nameController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
   FocusNode _nameFocusNode = FocusNode();
   FocusNode _passwordFocusNode = FocusNode();
   FocusNode _confirmPasswordFocusNode = FocusNode();
-
-  WalletBloc _walletBloc;
-  var _name;
-  var _password;
 
   @override
   void initState() {
@@ -51,15 +50,17 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
   _create() async {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
-      logger.d("name:$_name, password:$_password");
-
       Loading.show();
 
-      Wallet result = await Wallet.create(null, config: WalletConfig(password: _password));
-      WalletSchema wallet = WalletSchema(name: _name, address: result?.address, type: WalletType.nkn);
+      String name = _nameController?.text;
+      String password = _passwordController?.text;
+      logger.d("name:$name, password:$password");
+
+      Wallet result = await Wallet.create(null, config: WalletConfig(password: password));
+      WalletSchema wallet = WalletSchema(name: name, address: result?.address, type: WalletType.nkn);
       logger.d("wallet create - ${wallet.toString()}");
 
-      _walletBloc.add(AddWallet(wallet, result?.keystore, password: _password));
+      _walletBloc.add(AddWallet(wallet, result?.keystore, password: password));
 
       Loading.dismiss();
       AppScreen.go(context, index: 1);
@@ -128,12 +129,12 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                             Padding(
                               padding: EdgeInsets.only(left: 20, right: 20),
                               child: FormText(
+                                controller: _nameController,
                                 focusNode: _nameFocusNode,
                                 hintText: _localizations.hint_enter_wallet_name,
                                 textInputAction: TextInputAction.next,
                                 validator: Validator.of(context).walletName(),
                                 onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
-                                onSaved: (v) => _name = v,
                               ),
                             ),
                             SizedBox(height: 14),
@@ -154,7 +155,6 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                 textInputAction: TextInputAction.next,
                                 validator: Validator.of(context).password(),
                                 onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_confirmPasswordFocusNode),
-                                onSaved: (v) => _password = v,
                                 password: true,
                               ),
                             ),
