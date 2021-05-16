@@ -48,11 +48,15 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
     _walletBloc = BlocProvider.of<WalletBloc>(context);
 
     // backup
-    _walletSubscription = _walletBloc.stream.listen((state) {
-      if (state is WalletBackup) {
-        setState(() {
-          _allBackedUp = state.allBackup ?? false;
-        });
+    _walletSubscription = _walletBloc.stream.listen((state) async {
+      // if (state is WalletBackup) {
+      //   setState(() {
+      //     _allBackedUp = state.allBackup ?? false;
+      //   });
+      // }
+      if (state is WalletLoaded) {
+        _allBackedUp = await wallet.isWalletsBackup();
+        setState(() {});
       }
     });
     wallet.isWalletsBackup().then((value) {

@@ -44,9 +44,15 @@ class Application {
     final Function pageContentBuilder = _routes[name];
     if (pageContentBuilder != null) {
       if (settings.arguments != null) {
-        return MaterialPageRoute(builder: (context) => pageContentBuilder(context, arguments: settings.arguments));
+        return MaterialPageRoute(
+          settings: RouteSettings(name: name),
+          builder: (context) => pageContentBuilder(context, arguments: settings.arguments),
+        );
       } else {
-        return MaterialPageRoute(builder: (context) => pageContentBuilder(context));
+        return MaterialPageRoute(
+          settings: RouteSettings(name: name),
+          builder: (context) => pageContentBuilder(context),
+        );
       }
     }
     return null;

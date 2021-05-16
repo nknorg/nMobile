@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart' as walletSDK;
+import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -25,8 +26,6 @@ import 'package:nmobile/utils/error.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
-
-import '../../app.dart';
 
 class WalletDetailScreen extends StatefulWidget {
   static const String routeName = '/wallet/detail_nkn';
@@ -385,7 +384,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
               //     NLog.d('no delete client');
               //   }
               // }
-              AppScreen.go(context, index: 1);
+              AppScreen.go(context);
             },
           ),
           reject: Button(
