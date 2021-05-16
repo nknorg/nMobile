@@ -37,7 +37,7 @@ class _WalletDropdownState extends State<WalletDropdown> {
       bgColor: Colors.transparent,
       tail: Padding(
         padding: const EdgeInsets.only(left: 16),
-        child: assetIcon('down2', width: 24),
+        child: Asset.iconSvg('down2', width: 24),
       ),
       onTap: () async {
         WalletSchema result = await BottomDialog.of(context).showWalletSelect(

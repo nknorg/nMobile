@@ -93,7 +93,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                 child: Container(
                   padding: EdgeInsets.all(24),
                   child: Center(
-                    child: assetImage('wallet/create-wallet.png', width: headIconSize),
+                    child: Asset.image('wallet/create-wallet.png', width: headIconSize),
                   ),
                 ),
               ),

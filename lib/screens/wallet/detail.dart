@@ -123,7 +123,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
         actions: [
           PopupMenuButton(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            icon: assetIcon('more', width: 24),
+            icon: Asset.iconSvg('more', width: 24),
             onSelected: (int result) {
               _onAppBarActionSelected(result);
             },

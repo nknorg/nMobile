@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
@@ -99,7 +98,7 @@ class _CacheScreenState extends State<CacheScreen> {
                               children: <Widget>[
                                 Padding(
                                   padding: const EdgeInsets.only(right: 8),
-                                  child: assetIcon(
+                                  child: Asset.iconSvg(
                                     'trash',
                                     color: application.theme.fontLightColor,
                                     width: 24,
@@ -145,8 +144,8 @@ class _CacheScreenState extends State<CacheScreen> {
                                 color: application.theme.fontColor2,
                                 height: 1,
                               ),
-                              SvgPicture.asset(
-                                'assets/icons/right.svg',
+                              Asset.iconSvg(
+                                'right',
                                 width: 24,
                                 color: application.theme.fontColor2,
                               ),
@@ -180,7 +179,7 @@ class _CacheScreenState extends State<CacheScreen> {
                               children: <Widget>[
                                 Padding(
                                   padding: const EdgeInsets.only(right: 8),
-                                  child: assetIcon(
+                                  child: Asset.iconSvg(
                                     'trash',
                                     color: application.theme.fontLightColor,
                                     width: 24,
@@ -233,8 +232,8 @@ class _CacheScreenState extends State<CacheScreen> {
                                 color: application.theme.fontColor2,
                                 height: 1,
                               ),
-                              SvgPicture.asset(
-                                'assets/icons/right.svg',
+                              Asset.iconSvg(
+                                'right',
                                 width: 24,
                                 color: application.theme.fontColor2,
                               ),

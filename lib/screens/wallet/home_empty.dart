@@ -25,7 +25,7 @@ class _WalletHomeEmptyLayoutState extends State<WalletHomeEmptyLayout> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Center(
-            child: assetImage("wallet/pig.png", width: MediaQuery.of(context).size.width / 3),
+            child: Asset.image("wallet/pig.png", width: MediaQuery.of(context).size.width / 3),
           ),
           Expanded(
             flex: 0,
