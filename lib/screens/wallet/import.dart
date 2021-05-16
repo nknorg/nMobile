@@ -66,7 +66,7 @@ class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTick
         backgroundColor: application.theme.backgroundColor4,
         actions: [
           IconButton(
-            icon: assetIcon('scan', width: 24, color: application.theme.backgroundLightColor),
+            icon: Asset.iconSvg('scan', width: 24, color: application.theme.backgroundLightColor),
             onPressed: () async {
               if (_tabController.index != 1) {
                 _tabController.index = 1;

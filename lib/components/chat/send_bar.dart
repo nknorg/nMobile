@@ -36,7 +36,7 @@ class _ChatSendBarState extends State<ChatSendBar> {
               child: ButtonIcon(
                 width: 50,
                 height: 50,
-                icon: assetIcon(
+                icon: Asset.iconSvg(
                   'grid',
                   width: 24,
                   color: _theme.primaryColor,
@@ -96,12 +96,11 @@ class _ChatSendBarState extends State<ChatSendBar> {
               child: ButtonIcon(
                 width: 50,
                 height: 50,
-                icon: assetIcon(
+                icon: Asset.iconSvg(
                   'send',
                   width: 24,
                   color: _canSend ? _theme.primaryColor : _theme.fontColor2,
                 ),
-
                 onPressed: () {
                   // _send(); TODO
                 },

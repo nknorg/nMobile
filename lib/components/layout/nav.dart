@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/assets.dart';
+
 import '../../generated/l10n.dart';
 
 class Nav extends StatefulWidget {
@@ -39,18 +40,18 @@ class _NavState extends State<Nav> {
       onTap: _onItemTapped,
       items: [
         BottomNavigationBarItem(
-          icon: assetIcon('chat', color: _color),
-          activeIcon: assetIcon('chat', color: _selectedColor),
+          icon: Asset.iconSvg('chat', color: _color),
+          activeIcon: Asset.iconSvg('chat', color: _selectedColor),
           label: _localizations.menu_chat,
         ),
         BottomNavigationBarItem(
-          icon: assetIcon('wallet', color: _color),
-          activeIcon: assetIcon('wallet', color: _selectedColor),
+          icon: Asset.iconSvg('wallet', color: _color),
+          activeIcon: Asset.iconSvg('wallet', color: _selectedColor),
           label: _localizations.menu_wallet,
         ),
         BottomNavigationBarItem(
-          icon: assetIcon('settings', color: _color),
-          activeIcon: assetIcon('settings', color: _selectedColor),
+          icon: Asset.iconSvg('settings', color: _color),
+          activeIcon: Asset.iconSvg('settings', color: _selectedColor),
           label: _localizations.menu_settings,
         ),
       ],

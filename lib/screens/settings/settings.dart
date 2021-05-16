@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nmobile/blocs/settings/settings_bloc.dart';
 import 'package:nmobile/blocs/settings/settings_event.dart';
 import 'package:nmobile/common/global.dart';
@@ -13,6 +12,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/screens/settings/cache.dart';
 import 'package:nmobile/storages/settings.dart';
+import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/utils.dart';
 
 import '../common/select.dart';
@@ -175,8 +175,8 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                               color: application.theme.fontColor2,
                               height: 1,
                             ),
-                            SvgPicture.asset(
-                              'assets/icons/right.svg',
+                            Asset.iconSvg(
+                              'right',
                               width: 24,
                               color: application.theme.fontColor2,
                             ),
@@ -294,8 +294,8 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                               color: application.theme.fontColor2,
                               height: 1,
                             ),
-                            SvgPicture.asset(
-                              'assets/icons/right.svg',
+                            Asset.iconSvg(
+                              'right',
                               width: 24,
                               color: application.theme.fontColor2,
                             ),
@@ -479,8 +479,8 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                         ),
                         Row(
                           children: <Widget>[
-                            SvgPicture.asset(
-                              'assets/icons/right.svg',
+                            Asset.iconSvg(
+                              'right',
                               width: 24,
                               color: application.theme.fontColor2,
                             ),

@@ -72,7 +72,7 @@ class _SelectScreenState extends State<SelectScreen> {
                     ];
                     if (item.value.toString() == selectedValue.toString()) {
                       itemChild.add(
-                        assetIcon(
+                        Asset.iconSvg(
                           'check2',
                           width: 24,
                           color: application.theme.primaryColor,

@@ -85,7 +85,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: IconButton(
-                    icon: assetIcon('addbook', color: Colors.white, width: 24),
+                    icon: Asset.iconSvg('addbook', color: Colors.white, width: 24),
                     onPressed: () {},
                   ),
                 )

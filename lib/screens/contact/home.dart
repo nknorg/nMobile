@@ -149,8 +149,8 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
     //       ),
     //       backgroundColor: DefaultTheme.primaryColor,
     //       action: IconButton(
-    //         icon: SvgPicture.asset(
-    //           'assets/icons/user-plus.svg',
+    //         icon: Asset.iconSVG(
+    //           'user-plus',
     //           color: DefaultTheme.backgroundLightColor,
     //           width: 24,
     //         ),

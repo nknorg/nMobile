@@ -10,23 +10,66 @@ import 'package:path/path.dart';
 
 import 'path.dart';
 
-Widget assetIcon(String name, {double width, Color color}) {
-  return SvgPicture.asset(
-    'assets/icons/$name.svg',
-    color: color,
-    width: width,
-  );
-}
+class Asset {
+  static SvgPicture svg(
+    String path, {
+    double width,
+    double height,
+    Color color,
+    BoxFit fit = BoxFit.contain,
+    AlignmentGeometry align = Alignment.center,
+    Clip clip = Clip.none,
+  }) {
+    return SvgPicture.asset(
+      'assets/$path.svg',
+      width: width,
+      height: height,
+      color: color,
+      fit: fit,
+      alignment: align,
+      clipBehavior: clip,
+    );
+  }
 
-Widget assetImage(String path, {double width, double height, BoxFit fit, Color color, double scale}) {
-  return Image.asset(
-    'assets/$path',
-    height: height,
-    width: width,
-    scale: scale,
-    fit: fit,
-    color: color,
-  );
+  static SvgPicture iconSvg(
+    String name, {
+    double width,
+    double height,
+    Color color,
+    BoxFit fit = BoxFit.contain,
+    AlignmentGeometry align = Alignment.center,
+    Clip clip = Clip.none,
+  }) {
+    return svg(
+      'icons/$name',
+      width: width,
+      height: height,
+      color: color,
+      fit: fit,
+      align: align,
+      clip: clip,
+    );
+  }
+
+  static Image image(
+    String path, {
+    double width,
+    double height,
+    Color color,
+    double scale = 1,
+    BoxFit fit = BoxFit.contain,
+    AlignmentGeometry align = Alignment.center,
+  }) {
+    return Image.asset(
+      'assets/$path',
+      width: width,
+      height: height,
+      color: color,
+      scale: scale,
+      fit: fit,
+      alignment: align,
+    );
+  }
 }
 
 String createRandomWebPFile(String accountPubkey) {
@@ -56,7 +99,7 @@ Future<File> getCameraFile(String accountPubkey, {@required ImageSource source})
   final picker = ImagePicker();
   final pickedFile = await picker.getImage(source: source);
 
-  if(pickedFile != null) {
+  if (pickedFile != null) {
     image = File(pickedFile.path);
   }
 

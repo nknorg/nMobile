@@ -2,8 +2,8 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:bot_toast/src/toast_widget/animation.dart';
 import 'package:bot_toast/src/toast_widget/notification.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/utils/assets.dart';
 
 class NotificationDialog extends StatefulWidget {
   BuildContext context;
@@ -78,7 +78,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
               children: <Widget>[
                 Padding(
                   padding: EdgeInsets.only(top: 10),
-                  child: (widget.headIcon ?? SvgPicture.asset('assets/icons/check.svg', color: Colors.white)),
+                  child: (widget.headIcon ?? Asset.iconSvg('check', color: Colors.white)),
                 ),
                 Expanded(
                   flex: 1,
@@ -118,7 +118,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                   alignment: Alignment.center,
                   child: GestureDetector(
                     behavior: HitTestBehavior.translucent,
-                    child: SvgPicture.asset('assets/icons/close.svg', color: Colors.white, width: 14),
+                    child: Asset.iconSvg('close', color: Colors.white, width: 14),
                     onTap: widget.cancelFunc,
                   ),
                 ),

@@ -1,16 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/components/button/button_icon.dart';
 import 'package:nmobile/components/chat/bottom_menu.dart';
 import 'package:nmobile/components/chat/message.dart';
 import 'package:nmobile/components/chat/send_bar.dart';
-import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/contact/contact_header.dart';
-import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -126,7 +121,7 @@ class _ChatPrivateState extends State<ChatPrivate> {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: IconButton(
-              icon: assetIcon('notification-bell', color: Colors.white, width: 24),
+              icon: Asset.iconSvg('notification-bell', color: Colors.white, width: 24),
               onPressed: () {
                 // TODO
               },
@@ -135,7 +130,7 @@ class _ChatPrivateState extends State<ChatPrivate> {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: IconButton(
-              icon: assetIcon('more', color: Colors.white, width: 24),
+              icon: Asset.iconSvg('more', color: Colors.white, width: 24),
               onPressed: () {
                 // TODO
               },
@@ -170,7 +165,7 @@ class _ChatPrivateState extends State<ChatPrivate> {
                       if (index >= _messages.length - 1) {
                         showTime = true;
                       } else {
-                        if(index + 1 < _messages.length) {
+                        if (index + 1 < _messages.length) {
                           var targetMessage = _messages[index + 1];
                           if (message.timestamp.isAfter(targetMessage.timestamp.add(Duration(minutes: 3)))) {
                             showTime = true;

@@ -168,7 +168,7 @@ class _ModalDialogState extends State<ModalDialog> {
                       child: ButtonIcon(
                         width: 50,
                         height: 50,
-                        icon: assetIcon('close', width: 16),
+                        icon: Asset.iconSvg('close', width: 16),
                         onPressed: () => widget.close(),
                       ),
                     ),

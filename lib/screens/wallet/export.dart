@@ -96,7 +96,7 @@ class _WalletExportScreenState extends State<WalletExportScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              assetIcon(
+              Asset.iconSvg(
                 icon,
                 width: 24,
                 color: application.theme.primaryColor,

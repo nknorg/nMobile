@@ -60,7 +60,7 @@ class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
         backgroundColor: application.theme.backgroundColor4,
         // actions: [
         //   IconButton(
-        //     icon: assetIcon(
+        //     icon: Asset.iconSVG(
         //       'share',
         //       width: 24,
         //       color: application.theme.backgroundLightColor,
@@ -144,7 +144,7 @@ class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
                                           children: <Widget>[
                                             Padding(
                                               padding: const EdgeInsets.only(right: 8.0),
-                                              child: assetIcon(
+                                              child: Asset.iconSvg(
                                                 'copy',
                                                 width: 24,
                                                 color: application.theme.primaryColor,
