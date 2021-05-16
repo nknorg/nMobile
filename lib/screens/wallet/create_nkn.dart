@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -15,8 +16,6 @@ import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/logger.dart';
-
-import '../../app.dart';
 
 class WalletCreateNKNScreen extends StatefulWidget {
   static const String routeName = '/wallet/create_nkn';
@@ -63,7 +62,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
       _walletBloc.add(AddWallet(wallet, result?.keystore, password: password));
 
       Loading.dismiss();
-      AppScreen.go(context, index: 1);
+      AppScreen.go(context);
     }
   }
 
