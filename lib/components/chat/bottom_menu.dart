@@ -50,7 +50,7 @@ class ChatBottomMenu extends StatelessWidget {
                         backgroundColor: MaterialStateProperty.resolveWith((states) => application.theme.backgroundColor2),
                         shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8)))),
                       ),
-                      child: assetIcon(
+                      child: Asset.iconSvg(
                         'image',
                         width: 32,
                         color: application.theme.fontColor2,
@@ -83,7 +83,7 @@ class ChatBottomMenu extends StatelessWidget {
                         backgroundColor: MaterialStateProperty.resolveWith((states) => application.theme.backgroundColor2),
                         shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8)))),
                       ),
-                      child: assetIcon(
+                      child: Asset.iconSvg(
                         'camera',
                         width: 32,
                         color: application.theme.fontColor2,

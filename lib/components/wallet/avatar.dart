@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/utils/assets.dart';
 
 class WalletAvatar extends StatefulWidget {
   final double width;
@@ -48,8 +48,8 @@ class _WalletAvatarState extends State<WalletAvatar> {
               color: application.theme.logoBackground,
               borderRadius: BorderRadius.all(Radius.circular(widget.radius)),
             ),
-            child: SvgPicture.asset(
-              canEtgBig ? 'assets/ethereum-logo.svg' : 'assets/logo.svg',
+            child: Asset.svg(
+              canEtgBig ? 'ethereum-logo' : 'logo',
               color: canEtgBig ? application.theme.ethLogoColor : application.theme.nknLogoColor,
               width: canEtgBig ? widget.ethWidth : null,
               height: canEtgBig ? widget.ethHeight : null,
@@ -68,7 +68,7 @@ class _WalletAvatarState extends State<WalletAvatar> {
                     color: application.theme.ethLogoBackground,
                     shape: BoxShape.circle,
                   ),
-                  child: SvgPicture.asset('assets/ethereum-logo.svg'),
+                  child: Asset.svg('ethereum-logo'),
                 ),
               )
             : SizedBox.shrink(),

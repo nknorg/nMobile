@@ -67,7 +67,7 @@ class _ContactHomeEmptyLayoutState extends State<ContactHomeEmptyLayout> {
               // Navigator.pushNamed(context, AddContact.routeName);
             },
             // no effect ???
-            icon: assetIcon(
+            icon: Asset.iconSvg(
               'user-plus',
               // color: application.theme.backgroundLightColor,
               width: 24,
@@ -81,7 +81,7 @@ class _ContactHomeEmptyLayoutState extends State<ContactHomeEmptyLayout> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              assetImage("contact/no-contact.png", width: imgSize, height: imgSize),
+              Asset.image("contact/no-contact.png", width: imgSize, height: imgSize),
               SizedBox(height: 30),
               Column(
                 children: <Widget>[
@@ -113,7 +113,7 @@ class _ContactHomeEmptyLayoutState extends State<ContactHomeEmptyLayout> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
-                            assetIcon('user-plus', color: application.theme.backgroundLightColor, width: 24),
+                            Asset.iconSvg('user-plus', color: application.theme.backgroundLightColor, width: 24),
                             SizedBox(width: 24),
                             Label(
                               _localizations.add_contact,

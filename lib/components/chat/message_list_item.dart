@@ -58,7 +58,7 @@ Widget createMessageListItemWidget(BuildContext context, MessageListItem model) 
       padding: const EdgeInsets.only(top: 0),
       child: Row(
         children: <Widget>[
-          assetIcon('image', width: 16, color: application.theme.fontColor2),
+          Asset.iconSvg('image', width: 16, color: application.theme.fontColor2),
         ],
       ),
     );
@@ -67,7 +67,7 @@ Widget createMessageListItemWidget(BuildContext context, MessageListItem model) 
       padding: const EdgeInsets.only(top: 0),
       child: Row(
         children: <Widget>[
-          assetIcon('microphone', width: 16, color: application.theme.fontColor2),
+          Asset.iconSvg('microphone', width: 16, color: application.theme.fontColor2),
         ],
       ),
     );
