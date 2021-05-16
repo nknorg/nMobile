@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -9,6 +8,7 @@ import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
+import 'package:nmobile/utils/assets.dart';
 
 class WalletCreateETHScreen extends StatefulWidget {
   static const String routeName = '/wallet/create_eth';
@@ -80,7 +80,7 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
                 child: Container(
                   padding: EdgeInsets.all(24),
                   child: Center(
-                    child: SvgPicture.asset('assets/ethereum-logo.svg', width: headIconSize),
+                    child: Asset.svg('ethereum-logo', width: headIconSize),
                   ),
                 ),
               ),

@@ -116,7 +116,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
               ),
         actions: [
           PopupMenuButton(
-            icon: assetIcon('more', width: 24),
+            icon: Asset.iconSvg('more', width: 24),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             onSelected: (int result) async {
               final walletType = await BottomDialog.of(context).showWalletTypeSelect(

@@ -274,7 +274,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
         backgroundColor: application.theme.backgroundColor4,
         actions: [
           IconButton(
-            icon: assetIcon(
+            icon: Asset.iconSvg(
               'scan',
               width: 24,
               color: application.theme.backgroundLightColor,
@@ -329,7 +329,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                 child: Container(
                   padding: EdgeInsets.only(top: 10, bottom: 20, left: 20, right: 20),
                   child: Center(
-                    child: assetImage("wallet/transfer-header.png", height: headIconHeight),
+                    child: Asset.image("wallet/transfer-header.png", height: headIconHeight),
                   ),
                 ),
               ),
@@ -508,7 +508,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                             ),
                                             RotatedBox(
                                               quarterTurns: _showFeeLayout ? 2 : 0,
-                                              child: assetIcon('down', color: application.theme.primaryColor, width: 20),
+                                              child: Asset.iconSvg('down', color: application.theme.primaryColor, width: 20),
                                             ),
                                           ],
                                         ),
