@@ -17,10 +17,11 @@ class AppScreen extends StatefulWidget {
   static const String routeName = '/';
   static final String argIndex = "index";
 
-  static Future go(BuildContext context, {int index = 0}) {
-    return Navigator.pushNamed(context, routeName, arguments: {
-      argIndex: index,
-    });
+  static go(BuildContext context, {int index = 0}) {
+    // return Navigator.pushNamed(context, routeName, arguments: {
+    //   argIndex: index,
+    // });
+    Navigator.popUntil(context, ModalRoute.withName(routeName));
   }
 
   final Map<String, dynamic> arguments;
