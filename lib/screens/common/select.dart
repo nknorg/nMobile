@@ -4,7 +4,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/utils/assets.dart';
+import 'package:nmobile/helpers/asset.dart';
 
 class SelectListItem {
   final String text;

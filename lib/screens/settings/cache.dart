@@ -9,7 +9,7 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/utils/assets.dart';
+import 'package:nmobile/helpers/asset.dart';
 import 'package:nmobile/utils/cache.dart';
 import 'package:nmobile/utils/format.dart';
 

@@ -8,7 +8,7 @@ import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:path/path.dart';
 
-import 'path.dart';
+import '../utils/path.dart';
 
 class Asset {
   static SvgPicture svg(
