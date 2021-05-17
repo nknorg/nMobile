@@ -8,12 +8,12 @@ import 'home.dart' as home;
 import 'settings.dart' as settings;
 import 'wallet.dart' as wallet;
 
-Map<String, WidgetBuilder> routes = {
+Map<String, WidgetBuilder> _routes = {
   AppScreen.routeName: (BuildContext context, {arguments}) => AppScreen(arguments: arguments),
 };
 
 init() {
-  application.registerRoutes(routes);
+  application.registerRoutes(_routes);
   home.init();
   chat.init();
   wallet.init();

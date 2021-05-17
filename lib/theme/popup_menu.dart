@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:popup_menu/triangle_painter.dart';
 
+// TODO:GG move to components ?
+
 abstract class MenuItemProvider {
   String get menuTitle;
 
@@ -82,16 +84,7 @@ class PopupMenu {
 
   bool get isShow => _isShow;
 
-  PopupMenu(
-      {MenuClickCallback onClickMenu,
-      BuildContext context,
-      VoidCallback onDismiss,
-      int maxColumn,
-      Color backgroundColor,
-      Color highlightColor,
-      Color lineColor,
-      PopupMenuStateChanged stateChanged,
-      List<MenuItemProvider> items}) {
+  PopupMenu({MenuClickCallback onClickMenu, BuildContext context, VoidCallback onDismiss, int maxColumn, Color backgroundColor, Color highlightColor, Color lineColor, PopupMenuStateChanged stateChanged, List<MenuItemProvider> items}) {
     this.onClickMenu = onClickMenu;
     this.dismissCallback = onDismiss;
     this.stateChanged = stateChanged;
@@ -403,11 +396,7 @@ class _MenuItemWidgetState extends State<_MenuItemWidget> {
           widget.clickCallback(widget.item);
         }
       },
-      child: Container(
-          width: PopupMenu.itemWidth,
-          height: PopupMenu.itemHeight,
-          decoration: BoxDecoration(color: color, border: Border(right: BorderSide(color: widget.showLine ? widget.lineColor : Colors.transparent))),
-          child: _createContent()),
+      child: Container(width: PopupMenu.itemWidth, height: PopupMenu.itemHeight, decoration: BoxDecoration(color: color, border: Border(right: BorderSide(color: widget.showLine ? widget.lineColor : Colors.transparent))), child: _createContent()),
     );
   }
 
