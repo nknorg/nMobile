@@ -42,10 +42,13 @@ class MessageSchema {
   /// for burnAfterReading
   int burnAfterSeconds;
   int showBurnAfterSeconds;
+
   /// for bell notification
   String deviceToken;
+
   /// for audio chat
   double audioFileDuration;
+
   /// for nknOnePiece
   String parentType;
   int parity;
@@ -97,16 +100,16 @@ class MessageSchema {
       map['options'] = jsonEncode(options);
     }
     if (contentType == ContentType.nknImage || contentType == ContentType.media) {
-      map['content'] = getLocalPath(pubkey, (content as File).path);
+      map['content'] = Path.getLocalFilePath(pubkey, SubDirName.data, (content as File).path);
     } else if (contentType == ContentType.audio) {
-      map['content'] = getLocalPath(pubkey, (content as File).path);
+      map['content'] = Path.getLocalFilePath(pubkey, SubDirName.data, (content as File).path);
     } else if (contentType == ContentType.eventContactOptions) {
       map['content'] = content;
       if (map['send_time'] == null) {
         map['send_time'] = DateTime.now().millisecondsSinceEpoch;
       }
     } else if (contentType == ContentType.nknOnePiece) {
-      map['content'] = getLocalPath(pubkey, (content as File).path);
+      map['content'] = Path.getLocalFilePath(pubkey, SubDirName.data, (content as File).path);
     } else {
       map['content'] = content;
     }

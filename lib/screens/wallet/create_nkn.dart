@@ -12,10 +12,10 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/helpers/asset.dart';
 import 'package:nmobile/helpers/logger.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/utils/asset.dart';
 
 class WalletCreateNKNScreen extends StatefulWidget {
   static const String routeName = '/wallet/create_nkn';
