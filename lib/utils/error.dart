@@ -2,7 +2,9 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 
-import 'logger.dart';
+import '../helpers/logger.dart';
+
+// TODO:GG global handle
 
 void handleError(error, {StackTrace stackTrace, String toast}) {
   if (error == null) return;

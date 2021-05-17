@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 Future<double> getTotalSizeOfCacheFile(final FileSystemEntity file) async {

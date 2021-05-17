@@ -10,8 +10,8 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/asset.dart';
+import 'package:nmobile/helpers/logger.dart';
 import 'package:nmobile/schema/wallet.dart';
-import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class WalletExportScreen extends StatefulWidget {
