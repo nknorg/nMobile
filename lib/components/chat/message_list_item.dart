@@ -4,8 +4,8 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/contact/contact_item.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/asset.dart';
 import 'package:nmobile/schema/message_list_item.dart';
-import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/format.dart';
 
 Widget _unReadWidget(MessageListItem item) {

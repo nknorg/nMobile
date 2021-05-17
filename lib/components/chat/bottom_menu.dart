@@ -6,7 +6,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/utils/assets.dart';
+import 'package:nmobile/helpers/asset.dart';
 
 class ChatBottomMenu extends StatelessWidget {
   bool show;
