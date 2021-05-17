@@ -3,7 +3,7 @@ import 'package:bot_toast/src/toast_widget/animation.dart';
 import 'package:bot_toast/src/toast_widget/notification.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/helpers/asset.dart';
+import 'package:nmobile/utils/asset.dart';
 
 class NotificationDialog extends StatefulWidget {
   BuildContext context;

@@ -11,7 +11,7 @@ class Global {
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
   static BuildContext appContext;
 
-  static Directory applicationRootDirectory;
+  static Directory applicationRootDirectory; // eg:/data/user/0/org.nkn.mobile.app.debug/app_flutter
   static String version;
   static String build;
 

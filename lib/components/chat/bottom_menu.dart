@@ -1,12 +1,10 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/helpers/asset.dart';
+import 'package:nmobile/utils/asset.dart';
 
 class ChatBottomMenu extends StatelessWidget {
   bool show;
@@ -15,11 +13,11 @@ class ChatBottomMenu extends StatelessWidget {
 
   _getImageFile({@required ImageSource source}) async {
     try {
-      File image = await getCameraFile(chat.id, source: source);
-      if (image != null) {
-        // TODO
-        // _sendImage(image);
-      }
+      // File image = await getCameraFile(chat.id, source: source);
+      // if (image != null) {
+      //   // TODO
+      //   // _sendImage(image);
+      // }
     } catch (e) {}
   }
 
