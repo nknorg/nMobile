@@ -84,7 +84,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
     super.initState();
     this._wallet = widget.arguments[WalletSendScreen.argWallet];
     // balance query
-    locator<TaskService>().queryWalletBalanceTask();
+    taskService.queryWalletBalanceTask();
     // init
     _init(this._wallet?.type == WalletType.eth);
   }
@@ -252,7 +252,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
       }
       final txHash = await restore?.transfer(_sendTo, _amount, fee: _fee.toString());
       if (txHash != null) {
-        locator<TaskService>().queryWalletBalanceTask();
+        taskService.queryWalletBalanceTask();
         return txHash.length > 10;
       }
       return false;

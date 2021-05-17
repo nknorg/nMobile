@@ -2,9 +2,9 @@ import 'dart:collection';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:nkn_sdk_flutter/client.dart';
 import 'package:package_info/package_info.dart';
 import 'package:path_provider/path_provider.dart';
+
 import '../storages/settings.dart';
 
 class Global {

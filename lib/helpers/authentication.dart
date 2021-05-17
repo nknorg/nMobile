@@ -2,7 +2,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/logger.dart';
 
-import 'global.dart';
+import '../common/global.dart';
 
 /// Biometric authentication (Face ID, Touch ID or lock code), pin coode, wallet password
 class Authorization {

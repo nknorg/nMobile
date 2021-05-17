@@ -43,7 +43,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
   void initState() {
     super.initState();
     // balance query
-    locator<TaskService>().queryWalletBalanceTask();
+    taskService.queryWalletBalanceTask();
 
     _walletBloc = BlocProvider.of<WalletBloc>(context);
 

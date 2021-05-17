@@ -46,7 +46,7 @@ class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
     super.initState();
     this._wallet = widget.arguments[WalletReceiveScreen.argWallet];
     // balance query
-    // locator<TaskService>().queryWalletBalanceTask();
+    // taskService.queryWalletBalanceTask();
   }
 
   @override

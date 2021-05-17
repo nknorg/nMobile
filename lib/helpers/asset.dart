@@ -72,6 +72,8 @@ class Asset {
   }
 }
 
+// TODO:GG refactor
+
 String createRandomWebPFile(String accountPubkey) {
   var value = new DateTime.now().millisecondsSinceEpoch.toString();
   Directory rootDir = Global.applicationRootDirectory;
