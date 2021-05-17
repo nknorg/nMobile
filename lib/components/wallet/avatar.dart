@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/helpers/asset.dart';
 import 'package:nmobile/schema/wallet.dart';
-import 'package:nmobile/utils/assets.dart';
 
 class WalletAvatar extends StatefulWidget {
   final double width;
