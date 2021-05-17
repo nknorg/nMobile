@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/helpers/logger.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/wallet.dart';
-import 'package:nmobile/utils/logger.dart';
 
 part 'wallet_event.dart';
 part 'wallet_state.dart';

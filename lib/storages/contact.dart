@@ -4,9 +4,9 @@ import 'dart:ui';
 
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/global.dart';
+import 'package:nmobile/helpers/logger.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/option.dart';
-import 'package:nmobile/utils/logger.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
