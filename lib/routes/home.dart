@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/screens/common/select.dart';
 
-import '../common/application.dart';
-
-Map<String, WidgetBuilder> routes = {
+Map<String, WidgetBuilder> _routes = {
   ScannerScreen.routeName: (BuildContext context) => ScannerScreen(),
   SelectScreen.routeName: (BuildContext context, {arguments}) => SelectScreen(arguments: arguments),
 };
 
-GetIt locator = GetIt.instance;
-Application app = locator.get<Application>();
-
 init() {
-  app.registerRoutes(routes);
+  application.registerRoutes(_routes);
 }

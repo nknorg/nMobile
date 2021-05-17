@@ -9,7 +9,7 @@ import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/screens/wallet/receive.dart';
 import 'package:nmobile/screens/wallet/send.dart';
 
-Map<String, WidgetBuilder> routes = {
+Map<String, WidgetBuilder> _routes = {
   WalletHomeScreen.routeName: (BuildContext context) => WalletHomeScreen(),
   WalletCreateNKNScreen.routeName: (BuildContext context) => WalletCreateNKNScreen(),
   WalletCreateETHScreen.routeName: (BuildContext context) => WalletCreateETHScreen(),
@@ -21,5 +21,5 @@ Map<String, WidgetBuilder> routes = {
 };
 
 init() {
-  application.registerRoutes(routes);
+  application.registerRoutes(_routes);
 }
