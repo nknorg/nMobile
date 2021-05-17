@@ -89,7 +89,7 @@ class ContactSchema {
       'last_name': lastName,
       'data': extraInfo != null ? jsonEncode(extraInfo) : '{}',
       'options': options?.toJson(),
-      'avatar': avatar != null ? getLocalContactPath(chat.id, avatar.path) : null,
+      'avatar': avatar != null ? Path.getLocalFilePath(chat.id, SubDirName.contact, avatar.path) : null,
       'created_time': createdTime?.millisecondsSinceEpoch ?? now,
       'updated_time': updatedTime?.millisecondsSinceEpoch,
       'profile_version': profileVersion,

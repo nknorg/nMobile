@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/helpers/asset.dart';
+import 'package:nmobile/utils/asset.dart';
 
 import '../../generated/l10n.dart';
 
