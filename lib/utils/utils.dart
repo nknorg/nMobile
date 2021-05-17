@@ -7,8 +7,8 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../helpers/logger.dart';
 import 'hash.dart';
-import 'logger.dart';
 
 const ADDRESS_GEN_PREFIX = '02b825';
 const ADDRESS_GEN_PREFIX_LEN = ADDRESS_GEN_PREFIX.length ~/ 2;
