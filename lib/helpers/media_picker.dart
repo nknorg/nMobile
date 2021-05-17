@@ -17,8 +17,7 @@ class MediaType {
 }
 
 class MediaPicker {
-  static Future<File> pick(
-    String pubKey, {
+  static Future<File> pick({
     ImageSource source = ImageSource.gallery,
     int mediaType = MediaType.image,
     bool crop = false,
@@ -89,7 +88,7 @@ class MediaPicker {
     if (compressQuality >= 100) {
       compressFile = croppedFile;
     } else if (compressQuality < 100) {
-      String compressPath = await Path.getRandomFilePath(pubKey, SubDirName.cache, ext: fileExt);
+      String compressPath = await Path.getRandomFilePath("image_cropper", SubDirName.cache, ext: fileExt);
       if (mediaType == MediaType.image) {
         compressFile = await FlutterImageCompress.compressAndGetFile(
           pickedResult.path,
@@ -111,10 +110,10 @@ class MediaPicker {
     } else {
       String fileExt = Path.getFileExt(pickedFile);
       if (fileExt == null || fileExt.isEmpty) {
-        String randomPath = await Path.getRandomFilePath(pubKey, SubDirName.cache, ext: fileExt);
+        String randomPath = await Path.getRandomFilePath("image_cropper", SubDirName.cache, ext: fileExt);
         returnFile = compressFile.copySync(randomPath);
       } else {
-        String cachePath = await Path.getFilePathByOriginal(pubKey, SubDirName.cache, compressFile);
+        String cachePath = await Path.getFilePathByOriginal("image_cropper", SubDirName.cache, compressFile);
         returnFile = compressFile.copySync(cachePath);
       }
     }
