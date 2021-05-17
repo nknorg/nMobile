@@ -6,7 +6,7 @@ import 'package:nmobile/helpers/logger.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/wallet.dart';
 
-import 'locator.dart';
+import '../locator.dart';
 
 class Wallet {
   WalletStorage _walletStorage = WalletStorage();
