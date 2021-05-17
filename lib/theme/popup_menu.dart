@@ -6,8 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:popup_menu/triangle_painter.dart';
 
-// TODO:GG move to components ?
-
 abstract class MenuItemProvider {
   String get menuTitle;
 

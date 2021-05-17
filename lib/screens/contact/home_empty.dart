@@ -7,6 +7,7 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/asset.dart';
+import 'package:nmobile/screens/contact/add.dart';
 
 class ContactHomeEmptyLayout extends StatefulWidget {
   @override
@@ -63,8 +64,7 @@ class _ContactHomeEmptyLayoutState extends State<ContactHomeEmptyLayout> {
         actions: [
           IconButton(
             onPressed: () {
-              // TODO:GG add
-              // Navigator.pushNamed(context, AddContact.routeName);
+              Navigator.pushNamed(context, ContactAddScreen.routeName);
             },
             // no effect ???
             icon: Asset.iconSvg(
@@ -123,8 +123,7 @@ class _ContactHomeEmptyLayoutState extends State<ContactHomeEmptyLayout> {
                           ],
                         ),
                         onPressed: () {
-                          // TODO:GG add
-                          // Navigator.pushNamed(context, AddContact.routeName);
+                          Navigator.pushNamed(context, ContactAddScreen.routeName);
                         },
                       ),
                     ],
