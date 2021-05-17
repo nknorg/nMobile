@@ -8,10 +8,10 @@ import 'package:nmobile/helpers/logger.dart';
 import 'package:path/path.dart';
 
 class SubDirName {
-  static String cache = "cache";
-  static String data = "data";
-  static String chat = "chat";
-  static String contact = "contact";
+  static const String cache = "cache";
+  static const String data = "data";
+  static const String chat = "chat";
+  static const String contact = "contact";
 }
 
 class Path {
@@ -44,17 +44,17 @@ class Path {
   }
 
   /// eg:/{firstDir}/{secondDir}/{fileName}
-  static String getLocalFilePath(String firstDir, String secondDir, String filePath) {
-    return join(firstDir, secondDir, Path.getFileName(filePath));
+  static String getLocalFilePath(String firstDirName, String secondDirName, String filePath) {
+    return join(firstDirName, secondDirName, Path.getFileName(filePath));
   }
 
-  /// eg:/data/user/0/org.nkn.mobile.app.debug/app_flutter/{firstDir}/{secondDir}/
-  static Future<String> getDirPath(String firstDir, String secondDir) async {
-    if (firstDir == null || firstDir.isEmpty || secondDir == null || secondDir.isEmpty) {
+  /// eg:/data/user/0/org.nkn.mobile.app.debug/app_flutter/{firstDirName}/{secondDirName}/
+  static Future<String> getDirPath(String firstDirName, String secondDirName) async {
+    if (firstDirName == null || firstDirName.isEmpty || secondDirName == null || secondDirName.isEmpty) {
       logger.w('Wrong!!!!! getDirPath something is null');
       return null;
     }
-    String dirPath = join(Global.applicationRootDirectory?.path, firstDir, secondDir);
+    String dirPath = join(Global.applicationRootDirectory?.path, firstDirName, secondDirName);
     Directory dir = Directory(dirPath);
     if (!await dir.exists()) {
       dir = await dir.create(recursive: true);
@@ -63,9 +63,9 @@ class Path {
     return dir?.path;
   }
 
-  /// eg:/data/user/0/org.nkn.mobile.app.debug/app_flutter/{firstDir}/{secondDir}/{fileName}.{fileExt}
-  static Future<String> getFilePath(String firstDirPath, String secondDirPath, String fileName, {String fileExt}) async {
-    String dirPath = await getDirPath(firstDirPath, secondDirPath);
+  /// eg:/data/user/0/org.nkn.mobile.app.debug/app_flutter/{firstDirName}/{secondDirName}/{fileName}.{fileExt}
+  static Future<String> getFilePath(String firstDirName, String secondDirName, String fileName, {String fileExt}) async {
+    String dirPath = await getDirPath(firstDirName, secondDirName);
     if (dirPath == null || dirPath.isEmpty) {
       logger.w('Wrong!!!!! getFilePath dirPath is null');
       return null;
@@ -75,25 +75,25 @@ class Path {
     return path;
   }
 
-  static Future<String> getFilePathByOriginal(String pubKey, String subDirName, File file) async {
+  static Future<String> getFilePathByOriginal(String firstDirName, String secondDirName, File file) async {
     if (file == null) {
       logger.w('Wrong!!!!! getFilePathByOriginal file is null');
       return null;
     }
     String name = await getFileMD5(file);
     String fileExt = getFileExt(file);
-    String path = await getFilePath(pubKey, subDirName, joinFileExt(name, fileExt));
+    String path = await getFilePath(firstDirName, secondDirName, joinFileExt(name, fileExt));
     logger.d("getFilePathByOriginal - path:$path");
     return path;
   }
 
-  static Future<String> getRandomFilePath(String pubKey, String subDirName, {String ext}) async {
+  static Future<String> getRandomFilePath(String firstDirName, String secondDirName, {String ext}) async {
     var timestamp = new DateTime.now().millisecondsSinceEpoch.toString();
     String fileName = join(timestamp, '_temp');
     if (ext != null && ext.isNotEmpty) {
       fileName += ".$ext";
     }
-    String path = await getFilePath(pubKey, subDirName, fileName, fileExt: ext);
+    String path = await getFilePath(firstDirName, secondDirName, fileName, fileExt: ext);
     logger.d("getRandomFilePath - path:$path");
     return path;
   }
