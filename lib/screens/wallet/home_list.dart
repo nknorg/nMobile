@@ -16,13 +16,13 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/asset.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/create_eth.dart';
 import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/screens/wallet/detail.dart';
 import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/services/task_service.dart';
-import 'package:nmobile/utils/assets.dart';
 import 'package:nmobile/utils/error.dart';
 import 'package:nmobile/utils/logger.dart';
 
