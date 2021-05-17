@@ -10,9 +10,9 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/helpers/asset.dart';
 import 'package:nmobile/screens/settings/cache.dart';
 import 'package:nmobile/storages/settings.dart';
+import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/utils.dart';
 
 import '../common/select.dart';
