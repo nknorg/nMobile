@@ -41,7 +41,7 @@ class MediaPicker {
       return null;
     }
     File pickedFile = File(pickedResult.path);
-    logger.d("pick - picked - path:${pickedFile?.path}"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
+    logger.d("media_pick - picked - path:${pickedFile?.path}"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
     if (pickedFile == null) {
       return null;
     }
@@ -81,17 +81,17 @@ class MediaPicker {
           lockAspectRatio: false,
         ),
       );
-      logger.d('pick - crop - path:${croppedFile.path}');
+      logger.d('media_pick - crop - path:${croppedFile.path}');
     }
     // compress
     File compressFile;
     if (compressQuality >= 100) {
       compressFile = croppedFile;
     } else if (compressQuality < 100) {
-      String compressPath = await Path.getRandomFilePath("image_cropper", SubDirName.cache, ext: fileExt);
+      String compressPath = await Path.getCacheFile(null, ext: fileExt);
       if (mediaType == MediaType.image) {
         compressFile = await FlutterImageCompress.compressAndGetFile(
-          pickedResult.path,
+          croppedFile.path,
           compressPath,
           quality: compressQuality,
           autoCorrectionAngle: true,
@@ -100,24 +100,20 @@ class MediaPicker {
           minWidth: 300,
           minHeight: 300,
         );
+      } else {
+        compressFile = croppedFile;
       }
-      logger.d('pick - compress - path:${compressFile.path}');
+      logger.d('media_pick - compress - path:${compressFile.path}');
     }
     // return
     File returnFile;
     if (returnPath != null && returnPath.isNotEmpty) {
       returnFile = returnFile.copySync(returnPath);
     } else {
-      String fileExt = Path.getFileExt(pickedFile);
-      if (fileExt == null || fileExt.isEmpty) {
-        String randomPath = await Path.getRandomFilePath("image_cropper", SubDirName.cache, ext: fileExt);
-        returnFile = compressFile.copySync(randomPath);
-      } else {
-        String cachePath = await Path.getFilePathByOriginal("image_cropper", SubDirName.cache, compressFile);
-        returnFile = compressFile.copySync(cachePath);
-      }
+      String randomPath = await Path.getCacheFile(null, ext: fileExt);
+      returnFile = compressFile.copySync(randomPath);
     }
-    logger.d('pick - return - path:${returnFile.path}');
+    logger.d('media_pick - return - path:${returnFile.path}');
     return returnFile;
   }
 }
