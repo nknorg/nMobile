@@ -43,11 +43,6 @@ class Path {
     }
   }
 
-  /// eg:/{firstDir}/{secondDir}/{fileName}
-  static String getLocalFilePath(String firstDirName, String secondDirName, String filePath) {
-    return join(firstDirName, secondDirName, Path.getFileName(filePath));
-  }
-
   /// eg:/data/user/0/org.nkn.mobile.app.debug/app_flutter/{firstDirName}/{secondDirName}/
   static Future<String> getDirPath(String firstDirName, String secondDirName) async {
     if (firstDirName == null || firstDirName.isEmpty || secondDirName == null || secondDirName.isEmpty) {
@@ -96,5 +91,14 @@ class Path {
     String path = await getFilePath(firstDirName, secondDirName, fileName, fileExt: ext);
     logger.d("getRandomFilePath - path:$path");
     return path;
+  }
+
+  /// eg:/{firstDir}/{secondDir}/{fileName}
+  static String getLocalFilePath(String firstDirName, String secondDirName, String filePath) {
+    return join(firstDirName, secondDirName, Path.getFileName(filePath));
+  }
+
+  static String getLocalAvatarPath(String mChatId, String tChatId, String fileName) {
+    return Path.getLocalFilePath(mChatId, SubDirName.contact, fileName);
   }
 }

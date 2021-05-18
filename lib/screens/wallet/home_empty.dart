@@ -22,7 +22,7 @@ class _WalletHomeEmptyLayoutState extends State<WalletHomeEmptyLayout> {
       color: application.theme.backgroundColor4,
       padding: EdgeInsets.fromLTRB(20, 32, 20, 86),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           Center(
             child: Asset.image("wallet/pig.png", width: MediaQuery.of(context).size.width / 3),
