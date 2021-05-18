@@ -63,7 +63,7 @@ class MediaPicker {
     File croppedFile;
     if (!crop) {
       croppedFile = pickedFile;
-    } else if (crop) {
+    } else {
       croppedFile = await ImageCropper.cropImage(
         sourcePath: pickedFile.path,
         // cropStyle: CropStyle.circle,
