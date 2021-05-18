@@ -6,8 +6,9 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/helpers/logger.dart';
 import 'package:path/path.dart';
+import 'package:uuid/uuid.dart';
 
-class SubDirName {
+class SubDirType {
   static const String cache = "cache";
   static const String data = "data";
   static const String chat = "chat";
@@ -43,62 +44,68 @@ class Path {
     }
   }
 
-  /// eg:/data/user/0/org.nkn.mobile.app.debug/app_flutter/{firstDirName}/{secondDirName}/
-  static Future<String> getDirPath(String firstDirName, String secondDirName) async {
-    if (firstDirName == null || firstDirName.isEmpty || secondDirName == null || secondDirName.isEmpty) {
-      logger.w('Wrong!!!!! getDirPath something is null');
+  /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/
+  static Future<String> getDir(String mPubKey, String dirType) async {
+    String dirPath = Global.applicationRootDirectory?.path;
+    if (dirPath == null || dirPath.isEmpty) {
       return null;
     }
-    String dirPath = join(Global.applicationRootDirectory?.path, firstDirName, secondDirName);
+    if (mPubKey != null && mPubKey.isNotEmpty) {
+      dirPath = join(dirPath, mPubKey);
+    }
+    if (dirType != null && dirType.isNotEmpty) {
+      dirPath = join(dirPath, dirType);
+    }
     Directory dir = Directory(dirPath);
     if (!await dir.exists()) {
       dir = await dir.create(recursive: true);
     }
-    logger.d("getDirPath - path:${dir?.path}");
+    logger.d("getDir - path:${dir?.path}");
     return dir?.path;
   }
 
-  /// eg:/data/user/0/org.nkn.mobile.app.debug/app_flutter/{firstDirName}/{secondDirName}/{fileName}.{fileExt}
-  static Future<String> getFilePath(String firstDirName, String secondDirName, String fileName, {String fileExt}) async {
-    String dirPath = await getDirPath(firstDirName, secondDirName);
+  /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/{fileName}.{fileExt}
+  static Future<String> getFile(String mPubKey, String dirType, String fileName, {String fileExt}) async {
+    String dirPath = await getDir(mPubKey, dirType);
     if (dirPath == null || dirPath.isEmpty) {
-      logger.w('Wrong!!!!! getFilePath dirPath is null');
+      logger.w('getFile - dirPath == null');
       return null;
     }
     String path = join(dirPath, joinFileExt(fileName, fileExt));
-    logger.d("getFilePath - path:$path");
+    logger.d("getFile - path:$path");
     return path;
   }
 
-  static Future<String> getFilePathByOriginal(String firstDirName, String secondDirName, File file) async {
-    if (file == null) {
-      logger.w('Wrong!!!!! getFilePathByOriginal file is null');
-      return null;
-    }
-    String name = await getFileMD5(file);
-    String fileExt = getFileExt(file);
-    String path = await getFilePath(firstDirName, secondDirName, joinFileExt(name, fileExt));
-    logger.d("getFilePathByOriginal - path:$path");
-    return path;
-  }
+  // static Future<String> getFilePathByOriginal(String firstDirName, String secondDirName, File file) async {
+  //   if (file == null) {
+  //     logger.w('Wrong!!!!! getFilePathByOriginal file is null');
+  //     return null;
+  //   }
+  //   String name = await getFileMD5(file);
+  //   String fileExt = getFileExt(file);
+  //   String path = await getFilePath(firstDirName, secondDirName, joinFileExt(name, fileExt));
+  //   logger.d("getFilePathByOriginal - path:$path");
+  //   return path;
+  // }
 
-  static Future<String> getRandomFilePath(String firstDirName, String secondDirName, {String ext}) async {
-    var timestamp = new DateTime.now().millisecondsSinceEpoch.toString();
-    String fileName = join(timestamp, '_temp');
+  /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/{fileName}.{fileExt}
+  static Future<String> getCacheFile(String mPubKey, {String ext}) async {
+    String fileName = new DateTime.now().second.toString() + "_" + Uuid().v1() + '_temp';
     if (ext != null && ext.isNotEmpty) {
       fileName += ".$ext";
     }
-    String path = await getFilePath(firstDirName, secondDirName, fileName, fileExt: ext);
-    logger.d("getRandomFilePath - path:$path");
+    String path = await getFile(mPubKey, SubDirType.cache, fileName, fileExt: ext);
+    logger.d("getCacheFile - path:$path");
     return path;
   }
 
-  /// eg:/{firstDir}/{secondDir}/{fileName}
-  static String getLocalFilePath(String firstDirName, String secondDirName, String filePath) {
-    return join(firstDirName, secondDirName, Path.getFileName(filePath));
+  /// {mPubKey}/{dirType}/{fileName}
+  static String getLocalFile(String mPubKey, String dirType, String filePath) {
+    return join(mPubKey, dirType, Path.getFileName(filePath));
   }
 
-  static String getLocalAvatarPath(String mChatId, String tChatId, String fileName) {
-    return Path.getLocalFilePath(mChatId, SubDirName.contact, fileName);
+  /// {mPubKey}/contact/{fileName}
+  static String getLocalContactAvatar(String mPubKey, String fileName) {
+    return Path.getLocalFile(mPubKey, SubDirType.contact, fileName);
   }
 }
