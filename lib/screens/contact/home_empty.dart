@@ -6,8 +6,8 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/helpers/asset.dart';
 import 'package:nmobile/screens/contact/add.dart';
+import 'package:nmobile/utils/asset.dart';
 
 class ContactHomeEmptyLayout extends StatefulWidget {
   @override
