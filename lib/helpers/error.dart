@@ -1,12 +1,18 @@
+import 'package:flutter/cupertino.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 
-import '../helpers/logger.dart';
+import '../utils/logger.dart';
 
 // TODO:GG global handle
 
-void handleError(error, {StackTrace stackTrace, String toast}) {
+void handleError(
+  error, {
+  StackTrace stackTrace,
+  String toast,
+}) {
+  debugPrintStack();
   if (error == null) return;
   String show = getErrorShow(error);
   if (show != null && show.isNotEmpty) {
