@@ -17,13 +17,13 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/wallet/dropdown.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/helpers/logger.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/error.dart';
 import 'package:nmobile/utils/format.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class WalletSendScreen extends StatefulWidget {

@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/global.dart';
-import 'package:nmobile/helpers/logger.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/utils/logger.dart';
 
 class TaskService {
   bool _isInit = false;

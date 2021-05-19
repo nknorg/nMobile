@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 
-import '../helpers/logger.dart';
+import '../utils/logger.dart';
 
 class Common {
   static const MethodChannel _methodChannel = MethodChannel('org.nkn.mobile/native/common');

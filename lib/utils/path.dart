@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
-import 'package:nmobile/helpers/logger.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:path/path.dart';
 
 class SubDirType {

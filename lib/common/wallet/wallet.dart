@@ -3,9 +3,9 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/helpers/logger.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/wallet.dart';
+import 'package:nmobile/utils/logger.dart';
 
 import '../locator.dart';
 
