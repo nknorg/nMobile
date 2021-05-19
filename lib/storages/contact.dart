@@ -39,7 +39,7 @@ class ContactStorage {
     // create table
     db.execute(createSql);
 
-    // index TODO:GG check
+    // index
     await db.execute('CREATE INDEX index_contact_type ON $tableName (type)');
     await db.execute('CREATE INDEX index_contact_address ON $tableName (address)');
     await db.execute('CREATE INDEX index_contact_first_name ON $tableName (first_name)');
@@ -135,7 +135,7 @@ class ContactStorage {
       var res = await db.query(
         tableName,
         columns: ['*'],
-        orderBy: 'updated_time desc',
+        orderBy: 'updated_time desc', // TODO: GG top
         where: contactType != null ? 'type = ?' : '',
         whereArgs: contactType != null ? [contactType] : [],
         limit: limit,
