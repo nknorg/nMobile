@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math';
 import 'dart:ui';
 
@@ -9,14 +8,12 @@ class OptionsSchema {
   int updateBurnAfterTime;
   Color backgroundColor;
   Color color;
-  bool notificationEnabled;
 
   OptionsSchema({
     this.deleteAfterSeconds,
     this.updateBurnAfterTime,
     this.backgroundColor,
     this.color,
-    this.notificationEnabled = false,
   }) {
     final random = Random().nextInt(application.theme.randomBackgroundColorList.length);
     if (backgroundColor == null) {
@@ -32,7 +29,6 @@ class OptionsSchema {
     this.updateBurnAfterTime = map['updateTime'];
     this.backgroundColor = Color(map['backgroundColor']);
     this.color = Color(map['color']);
-    this.notificationEnabled = map['notificationEnabled'] ? true : false;
   }
 
   Map<String, dynamic> toMap() {
@@ -41,16 +37,11 @@ class OptionsSchema {
     map['backgroundColor'] = backgroundColor.value;
     map['color'] = color.value;
     map['updateTime'] = updateBurnAfterTime;
-    map['notificationEnabled'] = notificationEnabled ? true : false;
     return map;
-  }
-
-  String toJson() {
-    return jsonEncode(toMap() ?? {});
   }
 
   @override
   String toString() {
-    return 'OptionsSchema{deleteAfterSeconds: $deleteAfterSeconds, updateBurnAfterTime: $updateBurnAfterTime, backgroundColor: $backgroundColor, color: $color, notificationEnabled: $notificationEnabled}';
+    return 'OptionsSchema{deleteAfterSeconds: $deleteAfterSeconds, updateBurnAfterTime: $updateBurnAfterTime, backgroundColor: $backgroundColor, color: $color}';
   }
 }
