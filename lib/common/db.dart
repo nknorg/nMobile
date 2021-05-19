@@ -36,14 +36,14 @@ class DB {
         var walletAddress = await Wallet.pubKeyToWalletAddr(publicKey);
         await db.insert(
             ContactStorage.tableName,
-            ContactSchema(
+            await ContactSchema(
               type: ContactType.me,
               clientAddress: publicKey,
               nknWalletAddress: walletAddress,
               createdTime: now,
               updatedTime: now,
               profileVersion: uuid.v4(),
-            ).toEntity());
+            ).toMap());
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         // if (newVersion >= dataBaseVersionV2) {

@@ -21,7 +21,7 @@ class WalletSchema {
     this.balanceEth = 0,
   });
 
-  WalletSchema.fromCacheMap(Map map) {
+  WalletSchema.fromMap(Map map) {
     this.address = map['address'];
     this.type = map['type'];
     this.name = map['name'];
@@ -29,7 +29,7 @@ class WalletSchema {
     this.balanceEth = map['balanceEth'] ?? 0;
   }
 
-  Map<String, dynamic> toCacheMap() {
+  Map<String, dynamic> toMap() {
     return {
       'address': address,
       'type': type,

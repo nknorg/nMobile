@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/generated/l10n.dart';
@@ -61,7 +62,7 @@ class Wallet {
     if (walletAddress == null || walletAddress.isEmpty) {
       return Future.value(null);
     }
-    S _localizations = S.of(context);
+    S _localizations = S.of(context ?? Global.appContext);
     return Future(() async {
       if (Settings.biometricsAuthentication) {
         return authorization.authenticationIfCan();
@@ -70,7 +71,7 @@ class Wallet {
     }).then((bool authOk) async {
       String pwd = await _walletStorage.getPassword(walletAddress);
       if (!authOk || pwd == null || pwd.isEmpty) {
-        return BottomDialog.of(context).showInput(
+        return BottomDialog.of(context ?? Global.appContext).showInput(
           title: _localizations.verify_wallet_password,
           inputTip: _localizations.wallet_password,
           inputHint: _localizations.input_password,

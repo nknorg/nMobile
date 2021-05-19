@@ -22,7 +22,7 @@ class WalletStorage {
     var wallets = await _localStorage.getArray(KEY_WALLET);
     if (wallets != null && wallets.isNotEmpty) {
       final list = wallets.map((e) {
-        WalletSchema walletSchema = WalletSchema.fromCacheMap(e);
+        WalletSchema walletSchema = WalletSchema.fromMap(e);
         return walletSchema;
       }).toList();
       return list;
@@ -35,9 +35,9 @@ class WalletStorage {
     var wallets = await _localStorage.getArray(KEY_WALLET);
     int index = wallets?.indexWhere((x) => x['address'] == walletSchema?.address) ?? -1;
     if (index < 0) {
-      futures.add(_localStorage.addItem(KEY_WALLET, walletSchema?.toCacheMap()));
+      futures.add(_localStorage.addItem(KEY_WALLET, walletSchema?.toMap()));
     } else {
-      futures.add(_localStorage.setItem(KEY_WALLET, index, walletSchema?.toCacheMap()));
+      futures.add(_localStorage.setItem(KEY_WALLET, index, walletSchema?.toMap()));
     }
     if (keystore != null && keystore.isNotEmpty) {
       if (Platform.isAndroid) {
@@ -77,7 +77,7 @@ class WalletStorage {
   Future updateWallet(int n, WalletSchema walletSchema, {String keystore, String password, String seed}) {
     List<Future> futures = <Future>[];
     if (n >= 0) {
-      futures.add(_localStorage.setItem(KEY_WALLET, n, walletSchema?.toCacheMap()));
+      futures.add(_localStorage.setItem(KEY_WALLET, n, walletSchema?.toMap()));
       if (keystore != null && keystore.isNotEmpty) {
         if (Platform.isAndroid) {
           futures.add(_localStorage.set('$KEY_KEYSTORE:${walletSchema?.address}', keystore));
