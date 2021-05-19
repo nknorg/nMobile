@@ -1,9 +1,9 @@
 import 'package:nkn_sdk_flutter/wallet.dart';
-import 'package:nmobile/helpers/logger.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/message.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
