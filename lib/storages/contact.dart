@@ -287,7 +287,7 @@ class ContactStorage {
       dataInfo['remark_name'] = newExtraInfo['first_name'];
     }
     if (newExtraInfo['avatar'] != null) {
-      dataInfo['remark_avatar'] = newExtraInfo['avatar'];
+      dataInfo['remark_avatar'] = newExtraInfo['remark_avatar'];
     }
 
     Map saveDataInfo = Map<String, dynamic>();

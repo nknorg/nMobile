@@ -1,16 +1,25 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/helpers/asset.dart';
+import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validation.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/screens/common/scanner.dart';
+import 'package:nmobile/utils/asset.dart';
+import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/utils.dart';
 
 class ContactAddScreen extends StatefulWidget {
   static final String routeName = "contact/add";
@@ -24,54 +33,107 @@ class ContactAddScreenState extends State<ContactAddScreen> {
 
   bool _formValid = false;
   TextEditingController _nameController = TextEditingController();
-  TextEditingController _pubKeyController = TextEditingController();
-  TextEditingController _addressController = TextEditingController();
+  TextEditingController _clientAddressController = TextEditingController();
+  TextEditingController _walletAddressController = TextEditingController();
   TextEditingController _notesController = TextEditingController();
   FocusNode _nameFocusNode = FocusNode();
-  FocusNode _pubKeyFocusNode = FocusNode();
-  FocusNode _addressFocusNode = FocusNode();
+  FocusNode _clientAddressFocusNode = FocusNode();
+  FocusNode _walletAddressFocusNode = FocusNode();
   FocusNode _notesFocusNode = FocusNode();
 
-  File _imageHeaderFile;
-
-  String scanNickName;
+  File _headImage;
 
   @override
   void initState() {
     super.initState();
   }
 
-  String formatName(String qm) {
-    // String nickName, chatId;
-    // try {
-    //   if (qm.contains('@')) {
-    //     nickName = qm.substring(0, qm.lastIndexOf('@'));
-    //     chatId = qm.substring(qm.lastIndexOf('@') + 1, qm.length);
-    //   } else if (qm.contains('.')) {
-    //     nickName = qm.substring(0, qm.lastIndexOf('.'));
-    //     chatId = qm.substring(qm.lastIndexOf('.') + 1, qm.length);
-    //   } else {
-    //     nickName = qm.toString().substring(0, 6);
-    //     chatId = qm.toString();
-    //   }
-    //
-    //   scanNickName = nickName;
-    //
-    //   setState(() {
-    //     _nameController.text = nickName;
-    //     _pubKeyController.text = chatId;
-    //   });
-    //
-    //   if (chatId.indexOf('.') == -1) {
-    //     NknWalletPlugin.pubKeyToWalletAddr(chatId).then((value) {
-    //       setState(() {
-    //         _addressController.text = value;
-    //       });
-    //     });
-    //   }
-    // } catch (e) {}
-    // // todo Check return '';
-    return '';
+  _selectAvatarPicture() async {
+    File picked = await MediaPicker.pick(
+      mediaType: MediaType.image,
+      source: ImageSource.gallery,
+      crop: true,
+    );
+    if (picked == null) {
+      // Toast.show("Open camera or MediaLibrary for nMobile to update your profile");
+      return;
+    }
+    if (mounted) {
+      setState(() {
+        _headImage = picked;
+      });
+    }
+  }
+
+  formatQrDate(String clientAddress) async {
+    logger.d("QR_DATA - $clientAddress");
+    if (clientAddress == null || clientAddress.isEmpty) return;
+
+    String nickName = ContactSchema.getDefaultName(clientAddress);
+    String walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+
+    logger.d("QR_DATA_DECODE - nickname:$nickName - clientAddress:$clientAddress - walletAddress:$walletAddress");
+
+    setState(() {
+      _nameController.text = nickName;
+      _clientAddressController.text = clientAddress;
+      _walletAddressController.text = walletAddress;
+    });
+  }
+
+  // TODO:GG
+  _saveContact(BuildContext context) async {
+    if ((_formKey.currentState as FormState).validate()) {
+      (_formKey.currentState as FormState).save();
+      Loading.show();
+
+      String name = _nameController.text;
+      String pubKey = _clientAddressController.text;
+      String address = _walletAddressController.text;
+      String note = _notesController.text;
+      logger.d("name:$name, pubKey:$pubKey, address:$address, note:$note");
+
+      // String saveImagePath = 'remark_' + pubKey; // TODO:GG need??
+
+      // String remarkPath = 'remark_' + profile.clientAddress;
+      // String filePath = getLocalContactPath(remarkPath, profileInfo['avatar']);
+
+      // REMOVE:GG
+      // File avatarSaveFile = Path.getFilePathByOriginal(firstDirName, secondDirName, file)
+
+      ContactSchema scheme = ContactSchema(
+        // avatar: ,
+        firstName: name,
+        clientAddress: pubKey,
+        nknWalletAddress: address,
+        type: ContactType.friend,
+        notes: note,
+      );
+
+      ContactSchema added = await contact.add(scheme);
+      if (added != null) {
+        Toast.show(S.of(context).failure);
+        return;
+      }
+
+      // TODO:GG need??
+      // Map dataInfo = Map<String, dynamic>();
+      // if (_headImage != null) {
+      //   dataInfo['avatar'] = _headImage.path;
+      // }
+      // if (name != null && name.length > 0) {
+      //   if (name != _scanNickName) {
+      //     dataInfo['first_name'] = name;
+      //   }
+      // }
+      // if (note != null && note.length > 0) {
+      //   dataInfo['notes'] = note;
+      // }
+      // await ContactDataCenter.saveRemarkProfile(scheme, dataInfo);
+
+      // eventBus.fire(AddContactEvent()); // TODO:GG update home_list
+      Navigator.pop(context);
+    }
   }
 
   @override
@@ -94,9 +156,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
             ),
             onPressed: () async {
               Navigator.pushNamed(context, ScannerScreen.routeName).then((value) {
-                if (value != null) {
-                  formatName(value);
-                }
+                formatQrDate(value);
               });
             },
           ),
@@ -126,7 +186,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
                           height: avatarSize,
                           child: Stack(
                             children: <Widget>[
-                              _imageHeaderFile == null
+                              _headImage == null
                                   ? CircleAvatar(
                                       radius: avatarSize / 2,
                                       backgroundColor: application.theme.backgroundColor2,
@@ -134,7 +194,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
                                     )
                                   : CircleAvatar(
                                       radius: avatarSize / 2,
-                                      backgroundImage: FileImage(_imageHeaderFile),
+                                      backgroundImage: FileImage(_headImage),
                                     ),
                               InkWell(
                                 onTap: _selectAvatarPicture,
@@ -172,7 +232,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
                           validator: Validator.of(context).contactName(),
                           textInputAction: TextInputAction.next,
                           onFieldSubmitted: (_) {
-                            FocusScope.of(context).requestFocus(_pubKeyFocusNode);
+                            FocusScope.of(context).requestFocus(_clientAddressFocusNode);
                           },
                         ),
                         SizedBox(height: 14),
@@ -182,13 +242,13 @@ class ContactAddScreenState extends State<ContactAddScreen> {
                           textAlign: TextAlign.start,
                         ),
                         FormText(
-                          controller: _pubKeyController,
-                          focusNode: _pubKeyFocusNode,
+                          controller: _clientAddressController,
+                          focusNode: _clientAddressFocusNode,
                           hintText: _localizations.input_pubKey,
                           validator: Validator.of(context).pubKey(),
                           textInputAction: TextInputAction.next,
                           onFieldSubmitted: (_) {
-                            FocusScope.of(context).requestFocus(_addressFocusNode);
+                            FocusScope.of(context).requestFocus(_walletAddressFocusNode);
                           },
                           // multi: true,
                           maxLines: 10,
@@ -208,8 +268,8 @@ class ContactAddScreenState extends State<ContactAddScreen> {
                           ],
                         ),
                         FormText(
-                          controller: _addressController,
-                          focusNode: _addressFocusNode,
+                          controller: _walletAddressController,
+                          focusNode: _walletAddressFocusNode,
                           hintText: _localizations.input_wallet_address,
                           validator: Validator.of(context).addressNKN(),
                           textInputAction: TextInputAction.next,
@@ -274,78 +334,4 @@ class ContactAddScreenState extends State<ContactAddScreen> {
       ),
     );
   }
-
-  _saveContact(BuildContext context) async {
-    // if ((_formKey.currentState as FormState).validate()) {
-    //   (_formKey.currentState as FormState).save();
-    //   String name = _nameController.text;
-    //   String pubKey = _pubKeyController.text;
-    //   String address = _addressController.text;
-    //   String note = _notesController.text;
-    //   ContactSchema contact = ContactSchema(
-    //       firstName: name,
-    //       clientAddress: pubKey,
-    //       nknWalletAddress: address,
-    //       type: ContactType.friend,
-    //       notes: note);
-    //   var result = await contact.insertContact();
-    //   contact.setFriend(true);
-    //
-    //   Map dataInfo = Map<String, dynamic>();
-    //   if (imageHeaderFile != null) {
-    //     dataInfo['avatar'] = imageHeaderFile.path;
-    //   }
-    //   if (name != null && name.length > 0) {
-    //     if (name != scanNickName){
-    //       dataInfo['first_name'] = name;
-    //     }
-    //   }
-    //   if (note != null && note.length > 0) {
-    //     dataInfo['notes'] = note;
-    //   }
-    //   await ContactDataCenter.saveRemarkProfile(contact, dataInfo);
-    //
-    //   eventBus.fire(AddContactEvent());
-    //   Navigator.pop(context);
-    // }
-  }
-
-  _selectAvatarPicture() async {
-    // String address = _pubKeyController.text;
-    // String saveImagePath = 'remark_' + address;
-    // File savedImg = await getHeaderImage(saveImagePath);
-    // if (savedImg == null) return;
-    //
-    // if (savedImg == null) {
-    //   showToast('Open camera or MediaLibrary for nMobile to update your profile');
-    // } else {
-    //   if (mounted) {
-    //     setState(() {
-    //       imageHeaderFile = savedImg;
-    //     });
-    //   }
-    // }
-  }
-
-// String createContactFilePath(File file) {
-//   String name = hexEncode(md5.convert(file.readAsBytesSync()).bytes);
-//   Directory rootDir = Global.applicationRootDirectory;
-//   String p = join(rootDir.path, NKNClientCaller.currentChatId, 'contact');
-//   Directory dir = Directory(p);
-//   if (!dir.existsSync()) {
-//     dir.createSync(recursive: true);
-//   } else {}
-//   String fullName = file?.path?.split('/')?.last;
-//   String fileName;
-//   String fileExt;
-//   int index = fullName.lastIndexOf('.');
-//   if (index > -1) {
-//     fileExt = fullName?.split('.')?.last;
-//     fileName = fullName?.substring(0, index);
-//   } else {
-//     fileName = fullName;
-//   }
-//   String path = join(rootDir.path, dir.path, name + '.' + fileExt);
-//   return path;
-// }
 }
