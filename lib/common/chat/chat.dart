@@ -6,9 +6,9 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart' as walletSDK;
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
-import 'package:nmobile/utils/error.dart';
 import 'package:nmobile/utils/hash.dart';
 
 import '../global.dart';

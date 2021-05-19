@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:nmobile/helpers/logger.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorage {
