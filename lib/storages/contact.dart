@@ -8,10 +8,10 @@ import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
-import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'package:uuid/uuid.dart';
 
 class ContactStorage {
   static String get tableName => 'Contact';
@@ -202,7 +202,7 @@ class ContactStorage {
     if (newProfileInfo['profile_expires_at'] != null) {
       saveDataInfo['profile_expires_at'] = newProfileInfo['profile_expires_at'];
     }
-    saveDataInfo['profile_version'] = uuid.v4();
+    saveDataInfo['profile_version'] = Uuid().v4();
     saveDataInfo['updated_time'] = DateTime.now().millisecondsSinceEpoch;
 
     try {
