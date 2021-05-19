@@ -117,7 +117,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
       );
 
       ContactSchema added = await contact.add(scheme);
-      if (added != null) {
+      if (added == null) {
         Toast.show(S.of(context).failure);
         return;
       }

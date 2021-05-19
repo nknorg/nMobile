@@ -13,7 +13,7 @@ void handleError(
   String toast,
 }) {
   logger.e(error);
-  debugPrintStack();
+  debugPrintStack(maxFrames: 20);
   if (error == null) return;
   String show = getErrorShow(error);
   if (show != null && show.isNotEmpty) {

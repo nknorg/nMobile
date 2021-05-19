@@ -61,6 +61,7 @@ class ContactStorage {
       int id = await db.insert(tableName, entity);
       if (id != 0) {
         ContactSchema schema = await ContactSchema.fromMap(entity);
+        schema.id = id;
         logger.d("insertContact - success - schema:$schema");
         return schema;
       }
@@ -356,7 +357,7 @@ class ContactStorage {
       var count = await db.update(
         tableName,
         {
-          'options': jsonEncode(options),
+          'options': jsonEncode(options.toMap()),
           'updated_time': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
@@ -390,7 +391,7 @@ class ContactStorage {
       var count = await db.update(
         tableName,
         {
-          'options': jsonEncode(options),
+          'options': jsonEncode(options.toMap()),
           'updated_time': currentTimeStamp,
         },
         where: 'id = ?',
