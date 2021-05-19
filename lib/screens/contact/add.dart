@@ -17,13 +17,13 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
-import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:path/path.dart';
+import 'package:uuid/uuid.dart';
 
 class ContactAddScreen extends StatefulWidget {
   static final String routeName = "contact/add";
@@ -57,7 +57,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
       mediaType: MediaType.image,
       source: ImageSource.gallery,
       crop: true,
-      returnPath: join(Global.applicationRootDirectory.path, Path.getLocalContactAvatar(chat.id, "${uuid.v4()}.jpeg")),
+      returnPath: join(Global.applicationRootDirectory.path, Path.getLocalContactAvatar(chat.id, "${Uuid().v4()}.jpeg")),
     );
     if (picked == null) {
       // Toast.show("Open camera or MediaLibrary for nMobile to update your profile");
@@ -122,6 +122,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
         return;
       }
 
+      Loading.dismiss();
       Navigator.pop(context);
     }
   }
