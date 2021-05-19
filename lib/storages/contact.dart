@@ -1,13 +1,15 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:math';
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
+import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/db.dart';
-import 'package:nmobile/common/global.dart';
-import 'package:nmobile/helpers/logger.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/option.dart';
-import 'package:path/path.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class ContactStorage {
@@ -31,12 +33,13 @@ class ContactStorage {
         profile_version TEXT,
         profile_expires_at INTEGER,
         is_top BOOLEAN DEFAULT 0,
-        device_token TEXT
+        device_token TEXT,
+        notification_open BOOLEAN DEFAULT 0
       )''';
     // create table
     db.execute(createSql);
 
-    // index
+    // index TODO:GG check
     await db.execute('CREATE INDEX index_contact_type ON $tableName (type)');
     await db.execute('CREATE INDEX index_contact_address ON $tableName (address)');
     await db.execute('CREATE INDEX index_contact_first_name ON $tableName (first_name)');
@@ -45,111 +48,448 @@ class ContactStorage {
     await db.execute('CREATE INDEX index_contact_updated_time ON $tableName (updated_time)');
   }
 
-  ContactSchema parseEntity(Map e) {
-    if (e == null) {
-      return null;
-    }
-    var contact = ContactSchema(
-      id: e['id'],
-      type: e['type'],
-      clientAddress: e['address'],
-      firstName: e['first_name'],
-      lastName: e['last_name'],
-      createdTime: e['created_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['created_time']) : null,
-      updatedTime: e['updated_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['updated_time']) : null,
-      profileVersion: e['profile_version'],
-      profileExpiresAt: e['profile_expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['profile_expires_at']) : DateTime.now(),
-      deviceToken: e['device_token'],
-      isTop: e['is_top'] == 1 ? true : false,
-    );
-
-    if (e['avatar'] != null && e['avatar'].toString().length > 0) {
-      contact.avatar = File(join(Global.applicationRootDirectory.path, e['avatar']));
-    }
-
-    if (e['data'] != null) {
-      try {
-        Map<String, dynamic> data = jsonDecode(e['data']);
-
-        if (contact.extraInfo == null) {
-          contact.extraInfo = new Map<String, dynamic>();
-        }
-        contact.extraInfo.addAll(data);
-        contact.nknWalletAddress = data['nknWalletAddress'];
-
-        if (contact.firstName == null) {
-          var notes = data['notes'].toString();
-          if (data['notes'] != null && notes.length > 0) {
-            contact.firstName = data['notes'];
-          } else if (data['remark_name'] != null) {
-            // FIXME: only keeps notes for name
-            contact.firstName = data['remark_name'];
-          } else if (data['firstName'] != null) {
-            // FIXME: only keeps notes for name
-            contact.firstName = data['firstName'];
-          }
-        }
-
-        if (contact.avatar == null) {
-          if (data['avatar'] != null) {
-            contact.avatar = File(join(Global.applicationRootDirectory.path, data['avatar']));
-          } else if (data['remark_avatar'] != null) {
-            // FIXME: only keeps avatar
-            contact.avatar = File(join(Global.applicationRootDirectory.path, data['remark_avatar']));
-          }
-        }
-      } on FormatException catch (e) {
-        logger.e(e);
+  Future<ContactSchema> insertContact(ContactSchema schema) async {
+    if (schema == null) return null;
+    try {
+      ContactSchema exist = await queryContactByClientAddress(schema?.clientAddress);
+      if (exist != null) {
+        logger.d("insertContact - exist:$exist");
+        return exist;
       }
-    }
-    contact.options = OptionsSchema();
-    if (e['options'] != null) {
-      try {
-        Map<String, dynamic> options = jsonDecode(e['options']);
-        contact.options = OptionsSchema(
-          deleteAfterSeconds: options['deleteAfterSeconds'],
-          backgroundColor: Color(options['backgroundColor']),
-          color: Color(options['color']),
-          notificationEnabled: options['notificationEnabled'],
-          updateBurnAfterTime: options['updateBurnAfterTime'],
-        );
-      } on FormatException catch (e) {
-        logger.e(e);
+      Map entity = await schema.toMap();
+      int id = await db.insert(tableName, entity);
+      if (id != 0) {
+        ContactSchema schema = await ContactSchema.fromMap(entity);
+        logger.d("insertContact - schema:$schema");
+        return schema;
       }
+      logger.w("insertContact - fail:$schema");
+    } catch (e) {
+      debugPrintStack();
     }
-    return contact;
+    return null;
+  }
+
+  Future<int> deleteContact(int contactId) async {
+    if (contactId == null || contactId == 0) return 0;
+    try {
+      var count = await db.delete(
+        tableName,
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count > 0) {
+        logger.d("deleteContact - success - contactId:$contactId");
+        return count;
+      }
+      logger.d("deleteContact - fail - contactId:$contactId");
+    } catch (e) {
+      debugPrintStack();
+    }
+    return 0;
+  }
+
+  /// Query
+
+  Future<ContactSchema> queryContactByClientAddress(String clientAddress) async {
+    if (clientAddress == null || clientAddress.isEmpty) return null;
+    try {
+      var res = await db.query(
+        tableName,
+        columns: ['*'],
+        where: 'address = ?',
+        whereArgs: [clientAddress],
+      );
+      if (res.length > 0) {
+        ContactSchema schema = await ContactSchema.fromMap(res.first);
+        logger.d("queryContactByClientAddress - schema:$schema");
+        return schema;
+      }
+      logger.w("queryContactByClientAddress - fail");
+    } catch (e) {
+      debugPrintStack();
+    }
+    return null;
   }
 
   Future<int> queryCountByClientAddress(String clientAddress) async {
-    var query = await db.query(
-      tableName,
-      columns: ['COUNT(id)'],
-      where: 'address = ?',
-      whereArgs: [clientAddress],
-    );
-    return Sqflite.firstIntValue(query);
+    if (clientAddress == null || clientAddress.isEmpty) return 0;
+    try {
+      var res = await db.query(
+        tableName,
+        columns: ['COUNT(id)'],
+        where: 'address = ?',
+        whereArgs: [clientAddress],
+      );
+      int count = Sqflite.firstIntValue(res);
+      logger.d("queryCountByClientAddress - count:$count");
+      return count ?? 0;
+    } catch (e) {
+      debugPrintStack();
+    }
+    return 0;
   }
 
-  Future<bool> insertContact(ContactSchema schema) async {
-    Map entity = schema.toEntity();
-    int n = await db.insert(tableName, entity);
-    if (n > 0) {
-      return true;
+  Future<List<ContactSchema>> queryContacts({String contactType, int limit = 20, int offset = 0}) async {
+    try {
+      var res = await db.query(
+        tableName,
+        columns: ['*'],
+        orderBy: 'updated_time desc',
+        where: contactType != null ? 'type = ?' : '',
+        whereArgs: contactType != null ? [contactType] : [],
+        limit: limit,
+        offset: offset,
+      );
+      if (res == null || res.isEmpty) {
+        logger.d("queryContacts - empty");
+        return [];
+      }
+      List<Future<ContactSchema>> futures = <Future<ContactSchema>>[];
+      res.forEach((map) {
+        logger.d("queryContacts - map:$map");
+        futures.add(ContactSchema.fromMap(map));
+      });
+      return await Future.wait(futures);
+    } catch (e) {
+      debugPrintStack();
+    }
+    return [];
+  }
+
+  /// Type
+
+  Future<bool> setType(int contactId, String contactType) async {
+    if (contactType == null || contactType == ContactType.me) return false;
+    try {
+      var count = await db.update(
+        tableName,
+        {
+          'type': contactType,
+          'updated_time': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count > 0) {
+        logger.d("setContactType - type:$contactType");
+        return true;
+      }
+      logger.w("setContactType - fail:$contactType");
+    } catch (e) {
+      debugPrintStack();
     }
     return false;
   }
 
-  Future<ContactSchema> queryContactByClientAddress(String clientAddress) async {
-    var res = await db.query(
-      tableName,
-      columns: ['*'],
-      where: 'address = ?',
-      whereArgs: [clientAddress],
-    );
+  /// Profile
 
-    if (res.length > 0) {
-      return parseEntity(res.first);
+  Future<bool> setProfile(int contactId, Map newProfileInfo, {Map oldProfileInfo}) async {
+    if (contactId == null || contactId == 0 || newProfileInfo == null) return false;
+
+    Map saveDataInfo = oldProfileInfo ?? Map<String, dynamic>();
+
+    if (newProfileInfo['avatar'] != null) {
+      saveDataInfo['avatar'] = newProfileInfo['avatar'];
     }
-    return null;
+    if (newProfileInfo['first_name'] != null) {
+      saveDataInfo['first_name'] = newProfileInfo['first_name'];
+    }
+    if (newProfileInfo['last_name'] != null) {
+      saveDataInfo['last_name'] = newProfileInfo['last_name'];
+    }
+    if (newProfileInfo['profile_expires_at'] != null) {
+      saveDataInfo['profile_expires_at'] = newProfileInfo['profile_expires_at'];
+    }
+    saveDataInfo['profile_version'] = uuid.v4();
+    saveDataInfo['updated_time'] = DateTime.now().millisecondsSinceEpoch;
+
+    try {
+      var count = await db.update(
+        tableName,
+        saveDataInfo,
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count > 0) {
+        logger.d("updateProfile - profile:$newProfileInfo");
+        return true;
+      }
+      logger.w("updateProfile - fail:$newProfileInfo");
+    } catch (e) {
+      debugPrintStack();
+    }
+    return false;
+  }
+
+  Future<bool> setAvatar(ContactSchema schema, String path) async {
+    if (schema == null || path == null || path.isEmpty) return false;
+    return await setProfile(schema.id, {'avatar': path}, oldProfileInfo: {'avatar': schema.avatar});
+  }
+
+  Future<bool> setName(ContactSchema schema, String name) async {
+    if (schema == null || name == null || name.isEmpty) return false;
+    return await setProfile(schema.id, {'first_name': name}, oldProfileInfo: {'first_name': schema.firstName});
+  }
+
+  Future<bool> setProfileVersion(int contactId, String profileVersion) async {
+    if (contactId == null || contactId == 0 || profileVersion == null) return false;
+    try {
+      var count = await db.update(
+        tableName,
+        {
+          'profile_version': profileVersion,
+        },
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count > 0) {
+        logger.d("setProfileVersion - profile_version:$profileVersion");
+        return true;
+      }
+      logger.d("setProfileVersion - fail:$profileVersion");
+    } catch (e) {
+      debugPrintStack();
+    }
+    return false;
+  }
+
+  Future<bool> setProfileExpiresAt(int contactId, int expiresAt) async {
+    if (contactId == null || contactId == 0 || expiresAt == null) return false;
+    try {
+      var count = await db.update(
+        tableName,
+        {
+          'profile_expires_at': expiresAt,
+        },
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count > 0) {
+        logger.d("setProfileExpiresAt - expiresAt:$expiresAt");
+        return true;
+      }
+      logger.d("setProfileExpiresAt - fail:$expiresAt");
+    } catch (e) {
+      debugPrintStack();
+    }
+    return false;
+  }
+
+  /// RemarkProfile(Data)
+
+  Future<bool> setRemarkProfile(int contactId, Map newExtraInfo, {Map oldExtraInfo}) async {
+    if (contactId == null || contactId == 0 || newExtraInfo == null) return false;
+
+    Map dataInfo = oldExtraInfo ?? Map<String, dynamic>();
+    if (newExtraInfo['first_name'] != null) {
+      dataInfo['remark_name'] = newExtraInfo['first_name'];
+    }
+    if (newExtraInfo['avatar'] != null) {
+      dataInfo['remark_avatar'] = newExtraInfo['avatar'];
+    }
+
+    Map saveDataInfo = Map<String, dynamic>();
+    saveDataInfo['data'] = jsonEncode(dataInfo);
+
+    try {
+      var count = await db.update(
+        tableName,
+        saveDataInfo,
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count > 0) {
+        logger.d("updateRemarkProfile - profile:$newExtraInfo");
+        return true;
+      }
+      logger.w("updateRemarkProfile - fail:$newExtraInfo");
+    } catch (e) {
+      debugPrintStack();
+    }
+    return false;
+  }
+
+  // TODO:GG setOrUpdateExtraProfile need??
+
+  /// notes(Data)
+
+  Future<bool> setNotes(int contactId, String notes, {Map oldExtraInfo}) async {
+    try {
+      Map<String, dynamic> data = oldExtraInfo ?? Map();
+      data['notes'] = notes;
+      var count = await db.update(
+        tableName,
+        {
+          'data': jsonEncode(data),
+          'updated_time': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count > 0) {
+        logger.d("setNotes - notes:$notes");
+        return true;
+      }
+      logger.w("setNotes - fail:$notes");
+    } catch (e) {
+      debugPrintStack();
+    }
+    return false;
+  }
+
+  /// Options
+
+  Future<bool> setOptionsColors(int contactId, {OptionsSchema old}) async {
+    if (contactId == null || contactId == 0) return false;
+
+    int random = Random().nextInt(application.theme.randomBackgroundColorList.length);
+    Color backgroundColor = application.theme.randomBackgroundColorList[random];
+    Color color = application.theme.randomColorList[random];
+
+    OptionsSchema options = old ?? OptionsSchema(backgroundColor: backgroundColor, color: color);
+    options.backgroundColor = backgroundColor;
+    options.color = color;
+
+    try {
+      var count = await db.update(
+        tableName,
+        {
+          'options': jsonEncode(options),
+          'updated_time': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count > 0) {
+        logger.d("setOptionsColors - profile:$options");
+        return true;
+      }
+      logger.w("setOptionsColors - fail:$options");
+      return false;
+    } catch (e) {
+      debugPrintStack();
+    }
+    return false;
+  }
+
+  Future<bool> setOptionsBurn(int contactId, int seconds, {OptionsSchema old}) async {
+    if (contactId == null || contactId == 0) return false;
+    OptionsSchema options = old ?? OptionsSchema();
+
+    if (seconds != null && seconds > 0) {
+      options.deleteAfterSeconds = seconds;
+    } else {
+      options.deleteAfterSeconds = null;
+    }
+
+    int currentTimeStamp = DateTime.now().millisecondsSinceEpoch;
+    options.updateBurnAfterTime = currentTimeStamp;
+
+    try {
+      var count = await db.update(
+        tableName,
+        {
+          'options': jsonEncode(options),
+          'updated_time': currentTimeStamp,
+        },
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count > 0) {
+        logger.d("setOptionsBurn - profile:$options");
+        return true;
+      }
+      logger.w("setOptionsBurn - fail:$options");
+      return false;
+    } catch (e) {
+      debugPrintStack();
+    }
+    return false;
+  }
+
+  /// Top
+
+  Future<int> setTop(String clientAddress, bool top) async {
+    if (clientAddress == null || clientAddress.isEmpty) return 0;
+    try {
+      return await db.update(
+        tableName,
+        {'is_top': top ? 1 : 0},
+        where: 'address = ?',
+        whereArgs: [clientAddress],
+      );
+    } catch (e) {
+      debugPrintStack();
+    }
+    return 0;
+  }
+
+  Future<bool> isTop(String clientAddress) async {
+    if (clientAddress == null || clientAddress.isEmpty) return false;
+    try {
+      var res = await db.query(
+        tableName,
+        columns: ['is_top'],
+        where: 'address = ?',
+        whereArgs: [clientAddress],
+      );
+      return res.length > 0 && ((res[0]['is_top'] as int) == 1);
+    } catch (e) {
+      debugPrintStack();
+    }
+    return false;
+  }
+
+  /// DeviceToken
+
+  Future<bool> setDeviceToken(int contactId, String deviceToken) async {
+    if (contactId == null || contactId == 0 || deviceToken == null || deviceToken.isEmpty) return false;
+    try {
+      var count = await db.update(
+        tableName,
+        {
+          'device_token': deviceToken,
+          'updated_time': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count > 0) {
+        logger.d("setDeviceToken - success - deviceToken:$deviceToken");
+        return true;
+      }
+      logger.w("setDeviceToken - fail - deviceToken:$deviceToken");
+      return false;
+    } catch (e) {
+      debugPrintStack();
+    }
+    return false;
+  }
+
+  /// NotificationOpen
+
+  Future<bool> setNotificationOpen(int contactId, bool open) async {
+    if (contactId == null || contactId == 0 || open == null) return false;
+    try {
+      var count = await db.update(
+        tableName,
+        {
+          'notification_open': open ? 1 : 0,
+          'updated_time': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count > 0) {
+        logger.d("setNotificationOpen - success - open:$open");
+        return true;
+      }
+      logger.w("setNotificationOpen - fail - open:$open");
+      return false;
+    } catch (e) {
+      debugPrintStack();
+    }
+    return false;
   }
 }
