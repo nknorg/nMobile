@@ -154,20 +154,23 @@ class ContactSchema {
     return map;
   }
 
+  static getDefaultName(String clientAddress) {
+    if (clientAddress == null || clientAddress.isEmpty) return null;
+    String defaultName;
+    var index = clientAddress.lastIndexOf('.');
+    if (index < 0) {
+      defaultName = clientAddress.substring(0, 6);
+    } else {
+      defaultName = clientAddress.substring(0, index + 7);
+    }
+    return defaultName;
+  }
+
   bool get isMe {
-    if (type == ContactType.me) {
+    if (type != null && type == ContactType.me) {
       return true;
     } else {
       return false;
-    }
-  }
-
-  String get publicKey {
-    int n = clientAddress.lastIndexOf('.');
-    if (n < 0) {
-      return clientAddress;
-    } else {
-      return clientAddress.substring(n + 1);
     }
   }
 
@@ -175,34 +178,26 @@ class ContactSchema {
     String displayName;
 
     if (extraInfo != null && extraInfo.isNotEmpty) {
-      if (extraInfo['notes'] != null && extraInfo['notes'].isNotEmpty) {
-        displayName = extraInfo['notes'];
-      } else if (extraInfo['remark_name'] != null && extraInfo['remark_name'].isNotEmpty) {
+      if (extraInfo['remark_name'] != null && extraInfo['remark_name'].isNotEmpty) {
         displayName = extraInfo['remark_name'];
       }
       // SUPPORT:START
       else if (extraInfo['firstName'] != null && extraInfo['firstName'].isNotEmpty) {
         displayName = extraInfo['firstName'];
+      } else if (extraInfo['notes'] != null && extraInfo['notes'].isNotEmpty) {
+        displayName = extraInfo['notes'];
       }
       // SUPPORT:END
     }
 
     if (displayName == null || displayName.isEmpty) {
       if (firstName != null && firstName.isNotEmpty) {
-        String sourceName = firstName;
-        if (sourceName != null && sourceName.isNotEmpty) {
-          displayName = sourceName;
-        }
+        displayName = firstName;
       }
     }
 
     if (displayName == null || displayName.isEmpty) {
-      var index = clientAddress.lastIndexOf('.');
-      if (index < 0) {
-        displayName = clientAddress.substring(0, 6);
-      } else {
-        displayName = clientAddress.substring(0, index + 7);
-      }
+      displayName = getDefaultName(clientAddress);
     }
     return displayName;
   }
