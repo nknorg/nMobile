@@ -50,7 +50,7 @@ class ContactSchema {
     this.profileExpiresAt,
     this.isTop = false,
     this.deviceToken,
-    this.notificationOpen,
+    this.notificationOpen = false,
   }) {
     if (options == null) {
       options = OptionsSchema();
@@ -74,7 +74,7 @@ class ContactSchema {
       profileExpiresAt: e['profile_expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['profile_expires_at']) : DateTime.now(),
       isTop: e['is_top'] == 1 ? true : false,
       deviceToken: e['device_token'],
-      notificationOpen: (e['notification_open'] && e['notification_open'].toString() == '1') ? true : false,
+      notificationOpen: (e['notification_open'] != null && e['notification_open'].toString() == '1') ? true : false,
     );
 
     if (e['data'] != null) {
@@ -142,15 +142,15 @@ class ContactSchema {
       'first_name': firstName ?? getDefaultName(clientAddress),
       'last_name': lastName,
       'data': extraInfo != null ? jsonEncode(extraInfo) : '{}',
-      'options': jsonEncode(options),
+      'options': jsonEncode(options.toMap()),
       'avatar': avatar != null ? Path.getLocalContactAvatar(chat.id, Path.getFileName(avatar)) : null,
-      'created_time': createdTime?.millisecondsSinceEpoch ?? DateTime.now(),
-      'updated_time': updatedTime?.millisecondsSinceEpoch ?? DateTime.now(),
+      'created_time': createdTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'updated_time': updatedTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'profile_version': profileVersion,
       'profile_expires_at': profileExpiresAt?.millisecondsSinceEpoch,
       'is_top': isTop ? 1 : 0,
       'device_token': deviceToken,
-      'notification_open': notificationOpen,
+      'notification_open': notificationOpen ? 1 : 0,
     };
     return map;
   }
