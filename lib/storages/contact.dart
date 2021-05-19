@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/option.dart';
@@ -53,25 +54,25 @@ class ContactStorage {
     try {
       ContactSchema exist = await queryContactByClientAddress(schema?.clientAddress);
       if (exist != null) {
-        logger.d("insertContact - exist:$exist");
+        logger.d("insertContact - exist:$exist - add:$schema");
         return exist;
       }
       Map entity = await schema.toMap();
       int id = await db.insert(tableName, entity);
       if (id != 0) {
         ContactSchema schema = await ContactSchema.fromMap(entity);
-        logger.d("insertContact - schema:$schema");
+        logger.d("insertContact - success - schema:$schema");
         return schema;
       }
-      logger.w("insertContact - fail:$schema");
+      logger.w("insertContact - fail - scheme:$schema");
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return null;
   }
 
-  Future<int> deleteContact(int contactId) async {
-    if (contactId == null || contactId == 0) return 0;
+  Future<bool> deleteContact(int contactId) async {
+    if (contactId == null || contactId == 0) return false;
     try {
       var count = await db.delete(
         tableName,
@@ -80,13 +81,13 @@ class ContactStorage {
       );
       if (count > 0) {
         logger.d("deleteContact - success - contactId:$contactId");
-        return count;
+        return true;
       }
-      logger.d("deleteContact - fail - contactId:$contactId");
+      logger.w("deleteContact - fail - contactId:$contactId");
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
-    return 0;
+    return false;
   }
 
   /// Query
@@ -102,12 +103,12 @@ class ContactStorage {
       );
       if (res.length > 0) {
         ContactSchema schema = await ContactSchema.fromMap(res.first);
-        logger.d("queryContactByClientAddress - schema:$schema");
+        logger.d("queryContactByClientAddress - success - address:$clientAddress - schema:$schema");
         return schema;
       }
-      logger.w("queryContactByClientAddress - fail");
+      logger.d("queryContactByClientAddress - empty - address:$clientAddress");
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return null;
   }
@@ -122,10 +123,10 @@ class ContactStorage {
         whereArgs: [clientAddress],
       );
       int count = Sqflite.firstIntValue(res);
-      logger.d("queryCountByClientAddress - count:$count");
+      logger.d("queryCountByClientAddress - address:$clientAddress - count:$count");
       return count ?? 0;
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return 0;
   }
@@ -142,17 +143,17 @@ class ContactStorage {
         offset: offset,
       );
       if (res == null || res.isEmpty) {
-        logger.d("queryContacts - empty");
+        logger.d("queryContacts - empty - contactType:$contactType");
         return [];
       }
       List<Future<ContactSchema>> futures = <Future<ContactSchema>>[];
       res.forEach((map) {
-        logger.d("queryContacts - map:$map");
+        logger.d("queryContacts - item:$map");
         futures.add(ContactSchema.fromMap(map));
       });
       return await Future.wait(futures);
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return [];
   }
@@ -172,12 +173,12 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count > 0) {
-        logger.d("setContactType - type:$contactType");
+        logger.d("setContactType - success - contactId:$contactId - type:$contactType");
         return true;
       }
-      logger.w("setContactType - fail:$contactType");
+      logger.w("setContactType - fail - contactId:$contactId - type:$contactType");
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return false;
   }
@@ -212,12 +213,12 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count > 0) {
-        logger.d("updateProfile - profile:$newProfileInfo");
+        logger.d("setProfile - success - contactId:$contactId - new:$newProfileInfo - old:$oldProfileInfo");
         return true;
       }
-      logger.w("updateProfile - fail:$newProfileInfo");
+      logger.w("setProfile - fail - contactId:$contactId - new:$newProfileInfo - old:$oldProfileInfo");
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return false;
   }
@@ -244,12 +245,12 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count > 0) {
-        logger.d("setProfileVersion - profile_version:$profileVersion");
+        logger.d("setProfileVersion - success - contactId:$contactId - version:$profileVersion");
         return true;
       }
-      logger.d("setProfileVersion - fail:$profileVersion");
+      logger.w("setProfileVersion - fail - contactId:$contactId - version:$profileVersion");
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return false;
   }
@@ -266,12 +267,12 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count > 0) {
-        logger.d("setProfileExpiresAt - expiresAt:$expiresAt");
+        logger.d("setProfileExpiresAt - success - contactId:$contactId - expiresAt:$expiresAt");
         return true;
       }
-      logger.d("setProfileExpiresAt - fail:$expiresAt");
+      logger.w("setProfileExpiresAt - fail - contactId:$contactId - expiresAt:$expiresAt");
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return false;
   }
@@ -300,12 +301,12 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count > 0) {
-        logger.d("updateRemarkProfile - profile:$newExtraInfo");
+        logger.d("setRemarkProfile - success - contactId:$contactId - new:$newExtraInfo - old:$oldExtraInfo");
         return true;
       }
-      logger.w("updateRemarkProfile - fail:$newExtraInfo");
+      logger.w("setRemarkProfile - fail - contactId:$contactId - new:$newExtraInfo - old:$oldExtraInfo");
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return false;
   }
@@ -328,12 +329,12 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count > 0) {
-        logger.d("setNotes - notes:$notes");
+        logger.d("setNotes - success - contactId:$contactId - new:$notes - old:$oldExtraInfo");
         return true;
       }
-      logger.w("setNotes - fail:$notes");
+      logger.w("setNotes - fail - contactId:$contactId - new:$notes - old:$oldExtraInfo");
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return false;
   }
@@ -362,13 +363,12 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count > 0) {
-        logger.d("setOptionsColors - profile:$options");
+        logger.d("setOptionsColors - success - contactId:$contactId - options:$options");
         return true;
       }
-      logger.w("setOptionsColors - fail:$options");
-      return false;
+      logger.w("setOptionsColors - fail - contactId:$contactId - options:$options");
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return false;
   }
@@ -397,32 +397,36 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count > 0) {
-        logger.d("setOptionsBurn - profile:$options");
+        logger.d("setOptionsBurn - success - contactId:$contactId - options:$options");
         return true;
       }
-      logger.w("setOptionsBurn - fail:$options");
-      return false;
+      logger.w("setOptionsBurn - fail - contactId:$contactId - options:$options");
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return false;
   }
 
   /// Top
 
-  Future<int> setTop(String clientAddress, bool top) async {
-    if (clientAddress == null || clientAddress.isEmpty) return 0;
+  Future<bool> setTop(String clientAddress, bool top) async {
+    if (clientAddress == null || clientAddress.isEmpty) return false;
     try {
-      return await db.update(
+      var count = await db.update(
         tableName,
         {'is_top': top ? 1 : 0},
         where: 'address = ?',
         whereArgs: [clientAddress],
       );
+      if (count > 0) {
+        logger.d("setTop - success - clientAddress:$clientAddress - top:$top");
+        return true;
+      }
+      logger.w("setTop - fail - clientAddress:$clientAddress - top:$top");
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
-    return 0;
+    return false;
   }
 
   Future<bool> isTop(String clientAddress) async {
@@ -436,7 +440,7 @@ class ContactStorage {
       );
       return res.length > 0 && ((res[0]['is_top'] as int) == 1);
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return false;
   }
@@ -456,13 +460,13 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count > 0) {
-        logger.d("setDeviceToken - success - deviceToken:$deviceToken");
+        logger.d("setDeviceToken - success - contactId:$contactId - deviceToken:$deviceToken");
         return true;
       }
-      logger.w("setDeviceToken - fail - deviceToken:$deviceToken");
+      logger.w("setDeviceToken - fail - contactId:$contactId - deviceToken:$deviceToken");
       return false;
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return false;
   }
@@ -482,13 +486,13 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count > 0) {
-        logger.d("setNotificationOpen - success - open:$open");
+        logger.d("setNotificationOpen - success - contactId:$contactId - open:$open");
         return true;
       }
-      logger.w("setNotificationOpen - fail - open:$open");
+      logger.w("setNotificationOpen - fail - contactId:$contactId - open:$open");
       return false;
     } catch (e) {
-      debugPrintStack();
+      handleError(e);
     }
     return false;
   }
