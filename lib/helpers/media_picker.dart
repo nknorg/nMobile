@@ -108,9 +108,17 @@ class MediaPicker {
     // return
     File returnFile;
     if (returnPath != null && returnPath.isNotEmpty) {
-      returnFile = returnFile.copySync(returnPath);
+      returnFile = File(returnPath);
+      if (!await returnFile.exists()) {
+        returnFile.createSync(recursive: true);
+      }
+      returnFile = compressFile.copySync(returnPath);
     } else {
       String randomPath = await Path.getCacheFile(null, ext: fileExt);
+      returnFile = File(randomPath);
+      if (!await returnFile.exists()) {
+        returnFile.createSync(recursive: true);
+      }
       returnFile = compressFile.copySync(randomPath);
     }
     logger.d('media_pick - return - path:${returnFile.path}');

@@ -12,6 +12,7 @@ void handleError(
   StackTrace stackTrace,
   String toast,
 }) {
+  logger.e(error);
   debugPrintStack();
   if (error == null) return;
   String show = getErrorShow(error);
@@ -21,7 +22,6 @@ void handleError(
     if (toast != null && toast.isNotEmpty) {
       Toast.show(toast);
     }
-    logger.e(error);
   }
 }
 
