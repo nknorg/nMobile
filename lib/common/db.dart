@@ -1,4 +1,5 @@
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/storages/contact.dart';
@@ -10,7 +11,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'contact/contact.dart';
 
 class DB {
-  static const String CHAT_DATABASE_NAME = 'nkn';
+  static const String NKN_DATABASE_NAME = 'nkn';
   static int currentDatabaseVersion = 3;
   static Database currentDatabase;
 
@@ -20,32 +21,38 @@ class DB {
 
   static Future<Database> _openDB(String publicKey, String password) async {
     var databasesPath = await getDatabasesPath();
-    String path = join(databasesPath, '${CHAT_DATABASE_NAME}_$publicKey.db');
+    String path = join(databasesPath, '${NKN_DATABASE_NAME}_$publicKey.db');
     var db = await openDatabase(
       path,
       password: password,
       version: currentDatabaseVersion,
       onCreate: (Database db, int version) async {
+        logger.i("database tables create");
         await MessageStorage.create(db, version);
         await ContactStorage.create(db, version);
         // await TopicRepo.create(db, version);
         // await SubscriberRepo.create(db, version);
 
-        // create me
-        var now = DateTime.now();
-        var walletAddress = await Wallet.pubKeyToWalletAddr(publicKey);
-        await db.insert(
-            ContactStorage.tableName,
-            await ContactSchema(
-              type: ContactType.me,
-              clientAddress: publicKey,
-              nknWalletAddress: walletAddress,
-              createdTime: now,
-              updatedTime: now,
-              profileVersion: uuid.v4(),
-            ).toMap());
+        // create contact me
+        try {
+          var now = DateTime.now();
+          var walletAddress = await Wallet.pubKeyToWalletAddr(publicKey);
+          Map me = await ContactSchema(
+            type: ContactType.me,
+            clientAddress: publicKey,
+            nknWalletAddress: walletAddress,
+            createdTime: now,
+            updatedTime: now,
+            profileVersion: uuid.v4(),
+          ).toMap();
+          var count = await db.insert(ContactStorage.tableName, me);
+          logger.i("contact me insert scheme:${count > 0 ? me : null}");
+        } catch (e) {
+          handleError(e);
+        }
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
+        logger.i("database tables upgrade");
         // if (newVersion >= dataBaseVersionV2) {
         //   await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
         //   await NKNDataManager.upgradeContactSchema2V3(db, dataBaseVersionV3);
@@ -64,9 +71,7 @@ class DB {
   }
 
   static open(String publicKey, String password) async {
-    if (currentDatabase != null) {
-      return;
-    }
+    if (currentDatabase != null) return;
     currentDatabase = await _openDB(publicKey, password);
   }
 
@@ -77,7 +82,7 @@ class DB {
 
   delete() async {
     var databasesPath = await getDatabasesPath();
-    String path = join(databasesPath, '${CHAT_DATABASE_NAME}_$publicKey.db');
+    String path = join(databasesPath, '${NKN_DATABASE_NAME}_$publicKey.db');
     try {
       await deleteDatabase(path);
     } catch (e) {
