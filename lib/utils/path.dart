@@ -44,14 +44,14 @@ class Path {
     }
   }
 
-  /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/
-  static Future<String> getDir(String mPubKey, String dirType) async {
+  /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mClientAddress}/{dirType}/
+  static Future<String> getDir(String mClientAddress, String dirType) async {
     String dirPath = Global.applicationRootDirectory?.path;
     if (dirPath == null || dirPath.isEmpty) {
       return null;
     }
-    if (mPubKey != null && mPubKey.isNotEmpty) {
-      dirPath = join(dirPath, mPubKey);
+    if (mClientAddress != null && mClientAddress.isNotEmpty) {
+      dirPath = join(dirPath, mClientAddress);
     }
     if (dirType != null && dirType.isNotEmpty) {
       dirPath = join(dirPath, dirType);
@@ -64,9 +64,9 @@ class Path {
     return dir?.path;
   }
 
-  /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/{fileName}.{fileExt}
-  static Future<String> getFile(String mPubKey, String dirType, String fileName, {String fileExt}) async {
-    String dirPath = await getDir(mPubKey, dirType);
+  /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mClientAddress}/{dirType}/{fileName}.{fileExt}
+  static Future<String> getFile(String mClientAddress, String dirType, String fileName, {String fileExt}) async {
+    String dirPath = await getDir(mClientAddress, dirType);
     if (dirPath == null || dirPath.isEmpty) {
       logger.w('getFile - dirPath == null');
       return null;
@@ -88,24 +88,24 @@ class Path {
   //   return path;
   // }
 
-  /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/{fileName}.{fileExt}
-  static Future<String> getCacheFile(String mPubKey, {String ext}) async {
+  /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mClientAddress}/{dirType}/{fileName}.{fileExt}
+  static Future<String> getCacheFile(String mClientAddress, {String ext}) async {
     String fileName = new DateTime.now().second.toString() + "_" + uuid.v4() + '_temp';
     if (ext != null && ext.isNotEmpty) {
       fileName += ".$ext";
     }
-    String path = await getFile(mPubKey, SubDirType.cache, fileName, fileExt: ext);
+    String path = await getFile(mClientAddress, SubDirType.cache, fileName, fileExt: ext);
     logger.d("getCacheFile - path:$path");
     return path;
   }
 
-  /// {mPubKey}/{dirType}/{fileName}
-  static String getLocalFile(String mPubKey, String dirType, String filePath) {
-    return join(mPubKey, dirType, Path.getFileName(filePath));
+  /// {mClientAddress}/{dirType}/{fileName}
+  static String getLocalFile(String mClientAddress, String dirType, String filePath) {
+    return join(mClientAddress, dirType, Path.getFileName(filePath));
   }
 
-  /// {mPubKey}/contact/{fileName}
-  static String getLocalContactAvatar(String mPubKey, String fileName) {
-    return Path.getLocalFile(mPubKey, SubDirType.contact, fileName);
+  /// {mClientAddress}/contact/{fileName}
+  static String getLocalContactAvatar(String mClientAddress, String fileName) {
+    return Path.getLocalFile(mClientAddress, SubDirType.contact, fileName);
   }
 }
