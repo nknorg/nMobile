@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/contact/contact.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -16,10 +17,13 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
+import 'package:path/path.dart';
 
 class ContactAddScreen extends StatefulWidget {
   static final String routeName = "contact/add";
@@ -53,11 +57,13 @@ class ContactAddScreenState extends State<ContactAddScreen> {
       mediaType: MediaType.image,
       source: ImageSource.gallery,
       crop: true,
+      returnPath: join(Global.applicationRootDirectory.path, Path.getLocalContactAvatar(chat.id, "${uuid.v4()}.jpeg")),
     );
     if (picked == null) {
       // Toast.show("Open camera or MediaLibrary for nMobile to update your profile");
       return;
     }
+
     if (mounted) {
       setState(() {
         _headImage = picked;
@@ -81,33 +87,33 @@ class ContactAddScreenState extends State<ContactAddScreen> {
     });
   }
 
-  // TODO:GG
   _saveContact(BuildContext context) async {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
       Loading.show();
 
-      String name = _nameController.text;
-      String pubKey = _clientAddressController.text;
-      String address = _walletAddressController.text;
+      String clientAddress = _clientAddressController.text;
+      String walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
       String note = _notesController.text;
-      logger.d("name:$name, pubKey:$pubKey, address:$address, note:$note");
 
-      // String saveImagePath = 'remark_' + pubKey; // TODO:GG need??
+      String remarkName = _nameController.text;
+      String defaultName = ContactSchema.getDefaultName(clientAddress);
 
-      // String remarkPath = 'remark_' + profile.clientAddress;
-      // String filePath = getLocalContactPath(remarkPath, profileInfo['avatar']);
+      String remarkAvatar = _headImage == null ? null : Path.getLocalContactAvatar(chat.id, Path.getFileName(_headImage?.path));
 
-      // REMOVE:GG
-      // File avatarSaveFile = Path.getFilePathByOriginal(firstDirName, secondDirName, file)
+      logger.d("_saveContact -\n clientAddress:$clientAddress,\n walletAddress:$walletAddress,\n note:$note,\n firstName:$defaultName,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
 
       ContactSchema scheme = ContactSchema(
-        // avatar: ,
-        firstName: name,
-        clientAddress: pubKey,
-        nknWalletAddress: address,
+        clientAddress: clientAddress,
+        nknWalletAddress: walletAddress,
         type: ContactType.friend,
         notes: note,
+        // avatar: defaultAvatar,
+        firstName: defaultName,
+        extraInfo: {
+          'remark_name': remarkName,
+          'remark_avatar': remarkAvatar,
+        },
       );
 
       ContactSchema added = await contact.add(scheme);
@@ -116,22 +122,6 @@ class ContactAddScreenState extends State<ContactAddScreen> {
         return;
       }
 
-      // TODO:GG need??
-      // Map dataInfo = Map<String, dynamic>();
-      // if (_headImage != null) {
-      //   dataInfo['avatar'] = _headImage.path;
-      // }
-      // if (name != null && name.length > 0) {
-      //   if (name != _scanNickName) {
-      //     dataInfo['first_name'] = name;
-      //   }
-      // }
-      // if (note != null && note.length > 0) {
-      //   dataInfo['notes'] = note;
-      // }
-      // await ContactDataCenter.saveRemarkProfile(scheme, dataInfo);
-
-      // eventBus.fire(AddContactEvent()); // TODO:GG update home_list
       Navigator.pop(context);
     }
   }
@@ -139,7 +129,6 @@ class ContactAddScreenState extends State<ContactAddScreen> {
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
-
     double avatarSize = 80;
 
     return Layout(
@@ -244,7 +233,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
                         FormText(
                           controller: _clientAddressController,
                           focusNode: _clientAddressFocusNode,
-                          hintText: _localizations.input_pubKey,
+                          hintText: _localizations.input_d_chat_address,
                           validator: Validator.of(context).pubKey(),
                           textInputAction: TextInputAction.next,
                           onFieldSubmitted: (_) {
