@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:ui';
+
 import 'package:nmobile/common/locator.dart';
 
 class OptionsSchema {
@@ -26,23 +27,30 @@ class OptionsSchema {
     }
   }
 
-  String toJson() {
-    Map<String, dynamic> map = {};
-    if (deleteAfterSeconds != null) map['deleteAfterSeconds'] = deleteAfterSeconds;
-    if (backgroundColor != null) map['backgroundColor'] = backgroundColor.value;
-    if (color != null) map['color'] = color.value;
-    if (updateBurnAfterTime != null) map['updateTime'] = updateBurnAfterTime;
-    map['notificationEnabled'] = notificationEnabled ? true : false;
-    return jsonEncode(map);
+  OptionsSchema.fromMap(Map map) {
+    this.deleteAfterSeconds = map['deleteAfterSeconds'];
+    this.updateBurnAfterTime = map['updateTime'];
+    this.backgroundColor = Color(map['backgroundColor']);
+    this.color = Color(map['color']);
+    this.notificationEnabled = map['notificationEnabled'] ? true : false;
   }
 
-  static OptionsSchema parseEntity(Map<String, dynamic> map) {
-    return OptionsSchema(
-      deleteAfterSeconds: map['deleteAfterSeconds'],
-      updateBurnAfterTime: map['updateTime'],
-      backgroundColor: Color(map['backgroundColor']),
-      color: Color(map['color']),
-      notificationEnabled: map['notificationEnabled'] ? true : false,
-    );
+  Map<String, dynamic> toMap() {
+    Map<String, dynamic> map = {};
+    map['deleteAfterSeconds'] = deleteAfterSeconds;
+    map['backgroundColor'] = backgroundColor.value;
+    map['color'] = color.value;
+    map['updateTime'] = updateBurnAfterTime;
+    map['notificationEnabled'] = notificationEnabled ? true : false;
+    return map;
+  }
+
+  String toJson() {
+    return jsonEncode(toMap() ?? {});
+  }
+
+  @override
+  String toString() {
+    return 'OptionsSchema{deleteAfterSeconds: $deleteAfterSeconds, updateBurnAfterTime: $updateBurnAfterTime, backgroundColor: $backgroundColor, color: $color, notificationEnabled: $notificationEnabled}';
   }
 }

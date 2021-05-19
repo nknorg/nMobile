@@ -5,8 +5,8 @@ import 'package:crypto/crypto.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/helpers/logger.dart';
+import 'package:nmobile/schema/message.dart';
 import 'package:path/path.dart';
-import 'package:uuid/uuid.dart';
 
 class SubDirType {
   static const String cache = "cache";
@@ -90,7 +90,7 @@ class Path {
 
   /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/{fileName}.{fileExt}
   static Future<String> getCacheFile(String mPubKey, {String ext}) async {
-    String fileName = new DateTime.now().second.toString() + "_" + Uuid().v1() + '_temp';
+    String fileName = new DateTime.now().second.toString() + "_" + uuid.v4() + '_temp';
     if (ext != null && ext.isNotEmpty) {
       fileName += ".$ext";
     }
