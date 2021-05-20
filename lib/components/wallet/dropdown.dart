@@ -12,12 +12,14 @@ class WalletDropdown extends StatefulWidget {
   final String selectTitle;
   final Function(WalletSchema) onSelected;
   final Color bgColor;
+  final bool onTapWave;
 
   WalletDropdown({
     this.schema,
     this.selectTitle,
     this.onSelected,
     this.bgColor,
+    this.onTapWave = true,
   });
 
   @override
@@ -30,11 +32,12 @@ class _WalletDropdownState extends State<WalletDropdown> {
     S _localizations = S.of(context);
 
     return WalletItem(
-      type: widget.schema?.type ?? WalletType.nkn,
-      schema: widget.schema,
+      walletType: widget.schema?.type ?? WalletType.nkn,
+      wallet: widget.schema,
       radius: BorderRadius.circular(8),
       padding: EdgeInsets.all(0),
       bgColor: Colors.transparent,
+      onTapWave: widget.onTapWave,
       tail: Padding(
         padding: const EdgeInsets.only(left: 16),
         child: Asset.iconSvg('down2', width: 24),

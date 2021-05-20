@@ -368,6 +368,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                   WalletDropdown(
                                     selectTitle: _localizations.select_asset_to_receive,
                                     schema: _wallet,
+                                    onTapWave: false,
                                     onSelected: (picked) {
                                       logger.d("wallet picked - $picked");
                                       if (picked == null) return;

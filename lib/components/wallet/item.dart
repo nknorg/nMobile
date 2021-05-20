@@ -8,18 +8,20 @@ import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/format.dart';
 
 class WalletItem extends StatefulWidget {
-  final String type;
-  final WalletSchema schema;
+  final String walletType;
+  final WalletSchema wallet;
   final GestureTapCallback onTap;
+  final bool onTapWave;
   final Color bgColor;
   final BorderRadius radius;
   final EdgeInsetsGeometry padding;
   final Widget tail;
 
   WalletItem({
-    this.type,
-    this.schema,
+    this.walletType,
+    this.wallet,
     this.onTap,
+    this.onTapWave = true,
     this.bgColor,
     this.radius,
     this.padding,
@@ -34,16 +36,22 @@ class _WalletItemState extends State<WalletItem> {
   @override
   Widget build(BuildContext context) {
     return widget.onTap != null
-        ? Material(
-            color: widget.bgColor,
-            elevation: 0,
-            borderRadius: widget.radius,
-            child: InkWell(
-              borderRadius: widget.radius,
-              onTap: widget.onTap,
-              child: _getItemBody(),
-            ),
-          )
+        ? widget.onTapWave
+            ? Material(
+                color: widget.bgColor,
+                elevation: 0,
+                borderRadius: widget.radius,
+                child: InkWell(
+                  borderRadius: widget.radius,
+                  onTap: widget.onTap,
+                  child: _getItemBody(),
+                ),
+              )
+            : InkWell(
+                borderRadius: widget.radius,
+                onTap: widget.onTap,
+                child: _getItemBody(),
+              )
         : _getItemBody();
   }
 
@@ -53,18 +61,18 @@ class _WalletItemState extends State<WalletItem> {
 
     return Container(
       decoration: BoxDecoration(
-        color: widget.onTap != null ? null : widget.bgColor,
+        color: (widget.onTap != null && widget.onTapWave) ? null : widget.bgColor,
         borderRadius: widget.radius,
       ),
       padding: widget.padding ?? EdgeInsets.only(left: 16, right: 16),
       child: Row(
         children: [
           Hero(
-            tag: 'avatar:${widget.schema?.address}',
+            tag: 'avatar:${widget.wallet?.address}',
             child: WalletAvatar(
               width: 48,
               height: 48,
-              walletType: widget.type,
+              walletType: widget.walletType,
               padding: EdgeInsets.only(right: 20, top: 16, bottom: 16),
             ),
           ),
@@ -75,11 +83,11 @@ class _WalletItemState extends State<WalletItem> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Label(
-                  widget.schema?.name ?? "",
+                  widget.wallet?.name ?? "",
                   type: LabelType.h3,
                 ),
                 Label(
-                  nknFormat(widget.schema?.balance ?? 0, decimalDigits: 4, symbol: 'NKN'),
+                  nknFormat(widget.wallet?.balance ?? 0, decimalDigits: 4, symbol: 'NKN'),
                   type: LabelType.bodySmall,
                 ),
               ],
@@ -96,23 +104,23 @@ class _WalletItemState extends State<WalletItem> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(9)),
-                  color: widget.type == WalletType.eth ? theme.ethLogoBackground.withAlpha(25) : theme.successColor.withAlpha(25),
+                  color: widget.walletType == WalletType.eth ? theme.ethLogoBackground.withAlpha(25) : theme.successColor.withAlpha(25),
                 ),
                 child: Text(
-                  widget.type == WalletType.eth ? _localizations.ERC_20 : _localizations.mainnet,
+                  widget.walletType == WalletType.eth ? _localizations.ERC_20 : _localizations.mainnet,
                   style: TextStyle(
-                    color: widget.type == WalletType.eth ? theme.ethLogoBackground : theme.successColor,
+                    color: widget.walletType == WalletType.eth ? theme.ethLogoBackground : theme.successColor,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                     height: 1.2,
                   ),
                 ),
               ),
-              widget.type == WalletType.eth
+              widget.walletType == WalletType.eth
                   ? Padding(
                       padding: EdgeInsets.only(right: 4, top: 4),
                       child: Label(
-                        nknFormat(widget.schema?.balanceEth, symbol: 'ETH'),
+                        nknFormat(widget.wallet?.balanceEth, symbol: 'ETH'),
                         type: LabelType.bodySmall,
                       ),
                     )
