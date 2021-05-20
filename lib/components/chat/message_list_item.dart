@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/components/contact/contact_item.dart';
+import 'package:nmobile/components/contact/item.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/message_list_item.dart';
