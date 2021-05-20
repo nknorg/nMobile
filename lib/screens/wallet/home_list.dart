@@ -170,8 +170,8 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
                 return Padding(
                   padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
                   child: WalletItem(
-                    schema: wallet,
-                    type: wallet.type,
+                    wallet: wallet,
+                    walletType: wallet.type,
                     onTap: () {
                       WalletDetailScreen.go(context, wallet, listIndex: index);
                     },
