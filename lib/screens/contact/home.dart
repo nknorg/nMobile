@@ -11,7 +11,6 @@ import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -19,6 +18,8 @@ import 'package:nmobile/screens/contact/add.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+
+import 'home_empty.dart';
 
 class ContactHomeScreen extends StatefulWidget {
   static const String routeName = '/contact/home';
@@ -40,10 +41,13 @@ class ContactHomeScreen extends StatefulWidget {
 }
 
 class _ContactHomeScreenState extends State<ContactHomeScreen> {
-  bool _isSelect = false;
+  bool _isSelect = false; // TODO:GG select
 
   bool _pageLoaded = false;
   StreamSubscription _addContactSubscription;
+  StreamSubscription _deleteContactSubscription;
+
+  TextEditingController _searchController = TextEditingController();
 
   List<ContactSchema> _allFriends = <ContactSchema>[];
   List<ContactSchema> _allStrangers = <ContactSchema>[];
@@ -66,6 +70,11 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
       } else if (scheme.type == ContactType.friend) {
         _allStrangers.insert(0, scheme);
       }
+      _searchAction(_searchController.text);
+    });
+    _deleteContactSubscription = contact.deleteStream.listen((int contactId) {
+      _allFriends = _allFriends.where((element) => element?.id != contactId);
+      _searchAction(_searchController.text);
     });
 
     // init
@@ -76,6 +85,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
   void dispose() {
     super.dispose();
     _addContactSubscription.cancel();
+    _deleteContactSubscription.cancel();
   }
 
   _initData() async {
@@ -132,6 +142,15 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
 
+    int totalFriendDataCount = _allFriends.length ?? 0;
+    int totalTopicDataCount = _allTopics.length ?? 0;
+    int totalStrangerDataCount = _allStrangers.length ?? 0;
+
+    int totalDataCount = totalFriendDataCount + totalTopicDataCount + totalStrangerDataCount;
+    if (totalDataCount <= 0 && _pageLoaded) {
+      return ContactHomeEmptyLayout();
+    }
+
     int searchFriendDataCount = _searchFriends.length ?? 0;
     int searchFriendViewCount = (searchFriendDataCount > 0 ? 1 : 0) + searchFriendDataCount;
     int searchTopicDataCount = _searchTopics.length ?? 0;
@@ -187,6 +206,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
                     Expanded(
                       flex: 1,
                       child: TextField(
+                        controller: _searchController,
                         onChanged: (val) {
                           _searchAction(val);
                         },
@@ -243,7 +263,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
                         ),
                       );
                     }
-                    return SizedBox.shrink(); // TODO:GG topicIte
+                    return SizedBox.shrink(); // TODO:GG topic
                   }
                   return SizedBox.shrink();
                 },
@@ -292,15 +312,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
       },
       onDismissed: (direction) async {
         if (direction == DismissDirection.endToStart) {
-          // TODO:GG delete
-          Toast.show("执行删除");
-          // item.deleteContact().then((count) {
-          //   if (count > 0) {
-          //     setState(() {
-          //       _searchFriends.remove(item);
-          //     });
-          //   }
-          // });
+          await contact.delete(item?.id);
         }
       },
       background: Container(
