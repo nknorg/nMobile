@@ -93,6 +93,54 @@ class ContactStorage {
 
   /// Query
 
+  Future<List<ContactSchema>> queryContacts({String contactType, int limit = 20, int offset = 0}) async {
+    try {
+      var res = await db.query(
+        tableName,
+        columns: ['*'],
+        orderBy: 'updated_time desc', // TODO: GG top
+        where: contactType != null ? 'type = ?' : '',
+        whereArgs: contactType != null ? [contactType] : [],
+        limit: limit,
+        offset: offset,
+      );
+      if (res == null || res.isEmpty) {
+        logger.d("queryContacts - empty - contactType:$contactType");
+        return [];
+      }
+      List<Future<ContactSchema>> futures = <Future<ContactSchema>>[];
+      res.forEach((map) {
+        logger.d("queryContacts - item:$map");
+        futures.add(ContactSchema.fromMap(map));
+      });
+      return await Future.wait(futures);
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
+  }
+
+  Future<ContactSchema> queryContact(int contactId) async {
+    if (contactId == null || contactId == 0) return null;
+    try {
+      var res = await db.query(
+        tableName,
+        columns: ['*'],
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (res.length > 0) {
+        ContactSchema schema = await ContactSchema.fromMap(res.first);
+        logger.d("queryContact - success - contactId:$contactId - schema:$schema");
+        return schema;
+      }
+      logger.d("queryContact - empty - contactId:$contactId");
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+  }
+
   Future<ContactSchema> queryContactByClientAddress(String clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     try {
@@ -130,33 +178,6 @@ class ContactStorage {
       handleError(e);
     }
     return 0;
-  }
-
-  Future<List<ContactSchema>> queryContacts({String contactType, int limit = 20, int offset = 0}) async {
-    try {
-      var res = await db.query(
-        tableName,
-        columns: ['*'],
-        orderBy: 'updated_time desc', // TODO: GG top
-        where: contactType != null ? 'type = ?' : '',
-        whereArgs: contactType != null ? [contactType] : [],
-        limit: limit,
-        offset: offset,
-      );
-      if (res == null || res.isEmpty) {
-        logger.d("queryContacts - empty - contactType:$contactType");
-        return [];
-      }
-      List<Future<ContactSchema>> futures = <Future<ContactSchema>>[];
-      res.forEach((map) {
-        logger.d("queryContacts - item:$map");
-        futures.add(ContactSchema.fromMap(map));
-      });
-      return await Future.wait(futures);
-    } catch (e) {
-      handleError(e);
-    }
-    return [];
   }
 
   /// Type
@@ -312,11 +333,10 @@ class ContactStorage {
     return false;
   }
 
-  // TODO:GG setOrUpdateExtraProfile need??
-
   /// notes(Data)
 
   Future<bool> setNotes(int contactId, String notes, {Map oldExtraInfo}) async {
+    if (contactId == null || contactId == 0) return null;
     try {
       Map<String, dynamic> data = oldExtraInfo ?? Map();
       data['notes'] = notes;

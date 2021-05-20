@@ -403,7 +403,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                         alignment: Alignment.centerRight,
                                         child: Label(
                                           useETH ? _localizations.eth : _localizations.nkn,
-                                          type: LabelType.label,
+                                          type: LabelType.bodyRegular,
                                         ),
                                       ),
                                       onTap: () {
