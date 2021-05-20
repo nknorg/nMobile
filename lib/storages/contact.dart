@@ -93,16 +93,16 @@ class ContactStorage {
 
   /// Query
 
-  Future<List<ContactSchema>> queryContacts({String contactType, int limit = 20, int offset = 0}) async {
+  Future<List<ContactSchema>> queryContacts({String contactType, String orderBy, int limit, int offset}) async {
     try {
       var res = await db.query(
         tableName,
         columns: ['*'],
-        orderBy: 'updated_time desc', // TODO: GG top
-        where: contactType != null ? 'type = ?' : '',
-        whereArgs: contactType != null ? [contactType] : [],
-        limit: limit,
-        offset: offset,
+        orderBy: orderBy ?? 'updated_time desc',
+        where: contactType != null ? 'type = ?' : null,
+        whereArgs: contactType != null ? [contactType] : null,
+        limit: limit ?? null,
+        offset: offset ?? null,
       );
       if (res == null || res.isEmpty) {
         logger.d("queryContacts - empty - contactType:$contactType");
