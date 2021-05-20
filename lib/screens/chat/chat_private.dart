@@ -5,7 +5,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/chat/bottom_menu.dart';
 import 'package:nmobile/components/chat/message.dart';
 import 'package:nmobile/components/chat/send_bar.dart';
-import 'package:nmobile/components/contact/contact_header.dart';
+import 'package:nmobile/components/contact/header.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
