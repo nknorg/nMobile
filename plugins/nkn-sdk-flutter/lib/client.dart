@@ -33,10 +33,8 @@ class ClientConfig {
 }
 
 class Client {
-  static const MethodChannel _methodChannel =
-      MethodChannel('org.nkn.sdk/client');
-  static const EventChannel _eventChannel =
-      EventChannel('org.nkn.sdk/client/event');
+  static const MethodChannel _methodChannel = MethodChannel('org.nkn.sdk/client');
+  static const EventChannel _eventChannel = EventChannel('org.nkn.sdk/client/event');
 
   static Stream _stream;
 
@@ -50,24 +48,19 @@ class Client {
 
   ClientConfig clientConfig;
 
-  StreamController<OnConnect> _onConnectStreamController =
-      StreamController<OnConnect>.broadcast();
+  StreamController<OnConnect> _onConnectStreamController = StreamController<OnConnect>.broadcast();
 
-  StreamSink<OnConnect> get _onConnectStreamSink =>
-      _onConnectStreamController.sink;
+  StreamSink<OnConnect> get _onConnectStreamSink => _onConnectStreamController.sink;
 
   Stream<OnConnect> get onConnect => _onConnectStreamController.stream;
 
-  StreamController<OnMessage> _onMessageStreamController =
-      StreamController<OnMessage>.broadcast();
+  StreamController<OnMessage> _onMessageStreamController = StreamController<OnMessage>.broadcast();
 
-  StreamSink<OnMessage> get _onMessageStreamSink =>
-      _onMessageStreamController.sink;
+  StreamSink<OnMessage> get _onMessageStreamSink => _onMessageStreamController.sink;
 
   Stream<OnMessage> get onMessage => _onMessageStreamController.stream;
 
-  StreamController<dynamic> _onErrorStreamController =
-      StreamController<dynamic>.broadcast();
+  StreamController<dynamic> _onErrorStreamController = StreamController<dynamic>.broadcast();
 
   StreamSink<dynamic> get _onErrorStreamSink => _onErrorStreamController.sink;
 
@@ -77,23 +70,19 @@ class Client {
 
   Client({this.clientConfig});
 
-  static Future<Client> create(Uint8List seed,
-      {String identifier = '', ClientConfig config}) async {
+  static Future<Client> create(Uint8List seed, {String identifier = '', ClientConfig config}) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('create', {
         'identifier': identifier,
         'seed': seed,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true
-            ? config.seedRPCServerAddr
-            : null,
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config.seedRPCServerAddr : null,
       });
       Client client = Client();
       client.address = resp['address'];
       client.publicKey = resp['publicKey'];
       client.seed = resp['seed'];
 
-      client.eventChannelStreamSubscription =
-          _stream.where((res) => res['_id'] == client.address).listen((res) {
+      client.eventChannelStreamSubscription = _stream.where((res) => res['_id'] == client.address).listen((res) {
         Map data = res['data'];
         if (res['_id'] != client.address) {
           return;
@@ -137,8 +126,7 @@ class Client {
     eventChannelStreamSubscription?.cancel();
   }
 
-  Future<OnMessage> sendText(List<String> dests, String data,
-      {int maxHoldingSeconds = 8640000, noReply = true}) async {
+  Future<OnMessage> sendText(List<String> dests, String data, {int maxHoldingSeconds = 8640000, noReply = true}) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('sendText', {
         '_id': this.address,
@@ -160,8 +148,7 @@ class Client {
     }
   }
 
-  Future<OnMessage> publishText(String topic, String data,
-      {int maxHoldingSeconds = 8640000}) async {
+  Future<OnMessage> publishText(String topic, String data, {int maxHoldingSeconds = 8640000}) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('publishText', {
         '_id': this.address,
@@ -204,8 +191,7 @@ class Client {
     }
   }
 
-  Future<String> unsubscribe(
-      {String identifier = '', String topic, String fee = '0'}) async {
+  Future<String> unsubscribe({String identifier = '', String topic, String fee = '0'}) async {
     try {
       String hash = await _methodChannel.invokeMethod('unsubscribe', {
         '_id': this.address,
@@ -219,11 +205,12 @@ class Client {
     }
   }
 
-  Future<int> getSubscribersCount({String topic}) async {
+  Future<int> getSubscribersCount({String topic, Uint8List subscriberHashPrefix}) async {
     try {
       int count = await _methodChannel.invokeMethod('getSubscribersCount', {
         '_id': this.address,
         'topic': topic,
+        'subscriberHashPrefix': subscriberHashPrefix,
       });
       return count;
     } catch (e) {
@@ -231,8 +218,7 @@ class Client {
     }
   }
 
-  Future<Map<String, dynamic>> getSubscription(
-      {String topic, String subscriber}) async {
+  Future<Map<String, dynamic>> getSubscription({String topic, String subscriber}) async {
     try {
       Map resp = await _methodChannel.invokeMethod('getSubscription', {
         '_id': this.address,
@@ -254,6 +240,7 @@ class Client {
     int limit = 10000,
     bool meta = true,
     bool txPool = true,
+    Uint8List subscriberHashPrefix,
   }) async {
     try {
       Map resp = await _methodChannel.invokeMethod('getSubscribers', {
@@ -263,6 +250,7 @@ class Client {
         'limit': limit,
         'meta': meta,
         'txPool': txPool,
+        'subscriberHashPrefix': subscriberHashPrefix,
       });
       if (resp == null) {
         return null;

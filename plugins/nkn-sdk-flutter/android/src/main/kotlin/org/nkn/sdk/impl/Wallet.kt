@@ -188,6 +188,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val meta = call.argument<Boolean>("meta") ?: true
         val txPool = call.argument<Boolean>("txPool") ?: false
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
+        val subscriberHashPrefix = call.argument<ByteArray>("subscriberHashPrefix")
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -198,8 +199,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                         config.seedRPCServerAddr.append(addr)
                     }
                 }
-                val subscribers =
-                    Nkn.getSubscribers(topic, offset.toLong(), limit.toLong(), meta, txPool, config)
+                val subscribers = Nkn.getSubscribers(topic, offset.toLong(), limit.toLong(), meta, txPool, subscriberHashPrefix, config)
 
                 val resp = hashMapOf<String, String>()
 
@@ -248,6 +248,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     private fun getSubscribersCount(call: MethodCall, result: MethodChannel.Result) {
         val topic = call.argument<String>("topic")!!
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
+        val subscriberHashPrefix = call.argument<ByteArray>("subscriberHashPrefix")
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -258,7 +259,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                         config.seedRPCServerAddr.append(addr)
                     }
                 }
-                val count = Nkn.getSubscribersCount(topic, config)
+                val count = Nkn.getSubscribersCount(topic, subscriberHashPrefix, config)
                 resultSuccess(result, count)
                 return@launch
             } catch (e: Exception) {
