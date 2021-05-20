@@ -263,10 +263,10 @@ class BottomDialog extends StatefulWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     WalletItem(
-                      type: wallet?.type,
-                      schema: wallet,
+                      walletType: wallet?.type,
+                      wallet: wallet,
                       bgColor: application.theme.backgroundLightColor,
-                      radius: BorderRadius.circular(8),
+                      radius: BorderRadius.circular(0),
                       onTap: () {
                         close(result: wallet);
                       },
