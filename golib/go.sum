@@ -239,12 +239,17 @@ github.com/nknorg/nkn-sdk-go v1.3.5 h1:jQ7d0UkXj3DWNLcKGfctO6pI8pdiccBpTSlb00TvZ
 github.com/nknorg/nkn-sdk-go v1.3.5/go.mod h1:JSksFP+VQ0S54Ztiht6WHC3tNZklcGg+JaxENuFnqRc=
 github.com/nknorg/nkn-sdk-go v1.3.6 h1:Wbudbjz0eGCO0PqC8s2MumbO4h8zo5M5VzqKbQbvwXQ=
 github.com/nknorg/nkn-sdk-go v1.3.6/go.mod h1:JSksFP+VQ0S54Ztiht6WHC3tNZklcGg+JaxENuFnqRc=
+github.com/nknorg/nkn-sdk-go v1.3.7-0.20210511205358-bb3d31ae8c0f h1:fjqF9tk3ANfsp2IpN8oSVgKm0IWDjhh2PfyhSdEN1Kg=
+github.com/nknorg/nkn-sdk-go v1.3.7-0.20210511205358-bb3d31ae8c0f/go.mod h1:JSksFP+VQ0S54Ztiht6WHC3tNZklcGg+JaxENuFnqRc=
 github.com/nknorg/nkn/v2 v2.0.6/go.mod h1:cXl2WTv72trEXKJiNH0dCMygMtL8nJne07dWajDlRIo=
 github.com/nknorg/nkn/v2 v2.0.7 h1:ftxBC+vEcSb9dWV4t8SJBPCar2p8GOa2fKOo5wyPfnU=
 github.com/nknorg/nkn/v2 v2.0.7/go.mod h1:udtukzz01ZSDEyUE+8kYTVEvNFAsgZi3Yd6HvXTYC/s=
 github.com/nknorg/nkn/v2 v2.1.2 h1:5fZa0c/wbNWuRgezd1KEH7RYKBqrOVavTvwA+/4BWVk=
 github.com/nknorg/nkn/v2 v2.1.2/go.mod h1:Vp018AEBg/tzrrkA4yvS4X/UUWuIdv4SorDK/HnO6F8=
+github.com/nknorg/nkn/v2 v2.1.4 h1:P8JdsJ73fbQv8OOTD79JXhQ/o4blbrjWDoiVHZTSDwU=
+github.com/nknorg/nkn/v2 v2.1.4/go.mod h1:LdWRe9TmhWMZnp+9pyc4IlGFGqQCV9Tee1HeLy2Culg=
 github.com/nknorg/nnet v0.0.0-20200521002812-357d1b11179f/go.mod h1:4DHEQEMhlRGIKGSyhATdjeusdqaHafDatadtpeHBpvI=
+github.com/nknorg/nnet v0.0.0-20210516000534-f80d3763d1bd/go.mod h1:4DHEQEMhlRGIKGSyhATdjeusdqaHafDatadtpeHBpvI=
 github.com/nknorg/portmapper v0.0.0-20200114081049-1c03cdccc283/go.mod h1:dL4PQJ4670oTO6LqvkjrBQEkD+iMiOYjlKRBBw55Csg=
 github.com/nknorg/reedsolomon v1.9.12-0.20210315025804-a0c1b6031ab4 h1:Ug3GGTsny4ZcPsDeqOqoiBMts/yA8PBX1TJmMOeyc9Q=
 github.com/nknorg/reedsolomon v1.9.12-0.20210315025804-a0c1b6031ab4/go.mod h1:+1q8J9XjxoaTznvlnfAkOlYfWwxfONSZj1aP2A/49MI=
