@@ -65,8 +65,8 @@ class Contact {
     return deleted;
   }
 
-  Future<List<ContactSchema>> queryContacts({String contactType, int limit = 20, int offset = 0}) {
-    return _contactStorage.queryContacts(contactType: contactType, limit: limit, offset: offset);
+  Future<List<ContactSchema>> queryContacts({String contactType, String orderBy, int limit, int offset}) {
+    return _contactStorage.queryContacts(contactType: contactType, orderBy: orderBy, limit: limit, offset: offset);
   }
 
   Future<ContactSchema> queryContactByClientAddress(String clientAddress) {
