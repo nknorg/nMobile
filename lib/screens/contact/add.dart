@@ -28,6 +28,10 @@ import 'package:uuid/uuid.dart';
 class ContactAddScreen extends StatefulWidget {
   static final String routeName = "contact/add";
 
+  static Future go(BuildContext context) {
+    return Navigator.pushNamed(context, routeName);
+  }
+
   @override
   ContactAddScreenState createState() => new ContactAddScreenState();
 }
