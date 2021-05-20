@@ -344,6 +344,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val limit = call.argument<Int>("limit") ?: 0
         val meta = call.argument<Boolean>("meta") ?: true
         val txPool = call.argument<Boolean>("txPool") ?: false
+        val subscriberHashPrefix = call.argument<ByteArray>("subscriberHashPrefix")
 
         if (!clientMap.containsKey(_id)) {
             result.error("", "client is null", "")
@@ -353,7 +354,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val subscribers = client!!.getSubscribers(topic, offset.toLong(), limit.toLong(), meta, txPool)
+                val subscribers = client!!.getSubscribers(topic, offset.toLong(), limit.toLong(), meta, txPool, subscriberHashPrefix)
 
                 val resp = hashMapOf<String, String>()
 
@@ -401,6 +402,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     private fun getSubscribersCount(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id")!!
         val topic = call.argument<String>("topic")!!
+        val subscriberHashPrefix = call.argument<ByteArray>("subscriberHashPrefix")
 
         if (!clientMap.containsKey(_id)) {
             result.error("", "client is null", "")
@@ -410,7 +412,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val count = client!!.getSubscribersCount(topic)
+                val count = client!!.getSubscribersCount(topic, subscriberHashPrefix)
                 resultSuccess(result, count)
                 return@launch
             } catch (e: Exception) {

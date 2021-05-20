@@ -1,3 +1,7 @@
+## 0.0.12
+
+* Update NKN SDK getSubscribers with params subscriberHashPrefix
+
 ## 0.0.11
 
 * Fix create wallet bug

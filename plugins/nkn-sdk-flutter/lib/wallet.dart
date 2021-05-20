@@ -17,8 +17,7 @@ class RpcConfig {
 }
 
 class Wallet {
-  static const MethodChannel _methodChannel =
-      MethodChannel('org.nkn.sdk/wallet');
+  static const MethodChannel _methodChannel = MethodChannel('org.nkn.sdk/wallet');
 
   static install() {}
 
@@ -65,14 +64,11 @@ class Wallet {
     }
   }
 
-  static Future<double> getBalanceByAddr(String address,
-      {WalletConfig config}) async {
+  static Future<double> getBalanceByAddr(String address, {WalletConfig config}) async {
     try {
       return await _methodChannel.invokeMethod('getBalance', {
         'address': address,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true
-            ? config.seedRPCServerAddr
-            : null,
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config.seedRPCServerAddr : null,
       });
     } catch (e) {
       throw e;
@@ -83,8 +79,7 @@ class Wallet {
     return getBalanceByAddr(this.address, config: this.walletConfig);
   }
 
-  Future<String> transfer(String address, String amount,
-      {String fee = '0', int nonce, Uint8List attributes}) async {
+  Future<String> transfer(String address, String amount, {String fee = '0', int nonce, Uint8List attributes}) async {
     try {
       return await _methodChannel.invokeMethod('transfer', {
         'seed': this.seed,
@@ -102,8 +97,7 @@ class Wallet {
 
   static Future<String> pubKeyToWalletAddr(String publicKey) async {
     try {
-      final String address =
-          await _methodChannel.invokeMethod('pubKeyToWalletAddr', {
+      final String address = await _methodChannel.invokeMethod('pubKeyToWalletAddr', {
         'publicKey': publicKey,
       });
       return address;
@@ -112,14 +106,12 @@ class Wallet {
     }
   }
 
-  static Future<int> getSubscribersCount(String topic,
-      {RpcConfig config}) async {
+  static Future<int> getSubscribersCount(String topic, Uint8List subscriberHashPrefix, {RpcConfig config}) async {
     try {
       int count = await _methodChannel.invokeMethod('getSubscribersCount', {
         'topic': topic,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true
-            ? config.seedRPCServerAddr
-            : null,
+        'subscriberHashPrefix': subscriberHashPrefix,
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config.seedRPCServerAddr : null,
       });
       return count;
     } catch (e) {
@@ -127,16 +119,12 @@ class Wallet {
     }
   }
 
-  static Future<Map<String, dynamic>> getSubscription(
-      String topic, String subscriber,
-      {RpcConfig config}) async {
+  static Future<Map<String, dynamic>> getSubscription(String topic, String subscriber, {RpcConfig config}) async {
     try {
       Map resp = await _methodChannel.invokeMethod('getSubscription', {
         'topic': topic,
         'subscriber': subscriber,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true
-            ? config.seedRPCServerAddr
-            : null,
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config.seedRPCServerAddr : null,
       });
       if (resp == null) {
         return null;
@@ -147,13 +135,15 @@ class Wallet {
     }
   }
 
-  static Future<Map<String, dynamic>> getSubscribers(
-      {String topic,
-      int offset = 0,
-      int limit = 10000,
-      bool meta = true,
-      bool txPool = true,
-      RpcConfig config}) async {
+  static Future<Map<String, dynamic>> getSubscribers({
+    String topic,
+    int offset = 0,
+    int limit = 10000,
+    bool meta = true,
+    bool txPool = true,
+    Uint8List subscriberHashPrefix,
+    RpcConfig config,
+  }) async {
     try {
       Map resp = await _methodChannel.invokeMethod('getSubscribers', {
         'topic': topic,
@@ -161,9 +151,8 @@ class Wallet {
         'limit': limit,
         'meta': meta,
         'txPool': txPool,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true
-            ? config.seedRPCServerAddr
-            : null,
+        'subscriberHashPrefix': subscriberHashPrefix,
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config.seedRPCServerAddr : null,
       });
       if (resp == null) {
         return null;
