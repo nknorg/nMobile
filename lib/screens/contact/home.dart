@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nmobile/helpers/logger.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/schema/contact.dart';
 
 class ContactHomeScreen extends StatefulWidget {

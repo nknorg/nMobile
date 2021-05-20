@@ -338,7 +338,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let limit = args["limit"] as? Int ?? 0
         let meta = args["meta"] as? Bool ?? true
         let txPool = args["txPool"] as? Bool ?? true
-        
+        let subscriberHashPrefix = args["subscriberHashPrefix"] as? FlutterStandardTypedData
+
         guard (clientMap.keys.contains(_id)) else {
             result(FlutterError(code: "", message: "client is null", details: ""))
             return
@@ -346,10 +347,10 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         guard let client = clientMap[_id] else{
             return
         }
-        
+
         clientTransferQueue.async {
             do {
-                let res: NknSubscribers? = try client.getSubscribers(topic, offset: offset, limit: limit, meta: meta, txPool: txPool)
+                let res: NknSubscribers? = try client.getSubscribers(topic, offset: offset, limit: limit, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix?.data)
                 let mapPro = MapProtocol()
                 res?.subscribers?.range(mapPro)
                 self.resultSuccess(result: result, resp: mapPro.result)
@@ -360,12 +361,13 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             }
         }
     }
-    
+
     private func getSubscribersCount(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let _id = args["_id"] as! String
         let topic = args["topic"] as! String
-        
+        let subscriberHashPrefix = args["subscriberHashPrefix"] as? FlutterStandardTypedData
+
         guard (clientMap.keys.contains(_id)) else {
             result(FlutterError(code: "", message: "client is null", details: ""))
             return
@@ -373,11 +375,11 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         guard let client = clientMap[_id] else{
             return
         }
-        
+
         clientTransferQueue.async {
             do {
                 var count: Int = 0
-                try client.getSubscribersCount(topic, ret0_: &count)
+                try client.getSubscribersCount(topic, subscriberHashPrefix: subscriberHashPrefix?.data, ret0_: &count)
                 self.resultSuccess(result: result, resp: count)
                 return
             } catch let error {
