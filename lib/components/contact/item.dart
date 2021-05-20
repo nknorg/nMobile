@@ -72,29 +72,29 @@ class _ContactItemState extends State<ContactItem> {
               contact: widget.contact,
             ),
           ),
-          widget.body != null
-              ? Expanded(
-                  flex: 1,
-                  child: widget.body,
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Label(
-                      widget.bodyTitle ?? "",
-                      type: LabelType.h3,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    SizedBox(height: 6),
-                    Label(
-                      widget.bodyDesc ?? "",
-                      maxLines: 1,
-                      type: LabelType.bodyRegular,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+          Expanded(
+            flex: 1,
+            child: widget.body != null
+                ? widget.body
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Label(
+                        widget.bodyTitle ?? "",
+                        type: LabelType.h3,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      SizedBox(height: 6),
+                      Label(
+                        widget.bodyDesc ?? "",
+                        maxLines: 1,
+                        type: LabelType.bodyRegular,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+          ),
           widget.tail != null ? widget.tail : SizedBox(),
         ],
       ),
