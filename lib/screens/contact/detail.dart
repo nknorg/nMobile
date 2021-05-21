@@ -9,6 +9,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/contact/avatar_editable.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -44,29 +45,74 @@ class ContactDetailScreen extends StatefulWidget {
 }
 
 class _ContactDetailScreenState extends State<ContactDetailScreen> {
+  static List<Duration> burnValueArray = [
+    Duration(seconds: 5),
+    Duration(seconds: 10),
+    Duration(seconds: 30),
+    Duration(minutes: 1),
+    Duration(minutes: 5),
+    Duration(minutes: 10),
+    Duration(minutes: 30),
+    Duration(hours: 1),
+    Duration(hours: 6),
+    Duration(hours: 12),
+    Duration(days: 1),
+    Duration(days: 7),
+  ];
+
+  static List<String> burnTextArray(BuildContext context) {
+    return [
+      S.of(context).burn_5_seconds,
+      S.of(context).burn_10_seconds,
+      S.of(context).burn_30_seconds,
+      S.of(context).burn_1_minute,
+      S.of(context).burn_5_minutes,
+      S.of(context).burn_10_minutes,
+      S.of(context).burn_30_minutes,
+      S.of(context).burn_1_hour,
+      S.of(context).burn_6_hour,
+      S.of(context).burn_12_hour,
+      S.of(context).burn_1_day,
+      S.of(context).burn_1_week,
+    ];
+  }
+
+  static String getStringFromSeconds(context, int seconds) {
+    int currentIndex = -1;
+    for (int index = 0; index < burnValueArray.length; index++) {
+      Duration duration = burnValueArray[index];
+      if (seconds == duration.inSeconds) {
+        currentIndex = index;
+        break;
+      }
+    }
+    if (currentIndex == -1) {
+      return '';
+    } else {
+      return burnTextArray(context)[currentIndex];
+    }
+  }
+
   ContactSchema _contactSchema;
 
   StreamSubscription _updateContactSubscription;
 
-  // TextEditingController _firstNameController = TextEditingController();
-  // TextEditingController _notesController = TextEditingController();
+  bool _initBurnOpen = false;
+  int _initBurnProgress = -1;
+  bool _burnOpen = false;
+  int _burnProgress = -1;
+
+  // bool _acceptNotification = false;
+
   // FocusNode _firstNameFocusNode = FocusNode();
   // GlobalKey _nameFormKey = new GlobalKey<FormState>();
-  // GlobalKey _notesFormKey = new GlobalKey<FormState>();
   // bool _nameFormValid = false;
-  // bool _notesFormValid = false;
-  // bool _burnSelected = false;
-  // bool _initBurnSelected = false;
-  // int _burnIndex = -1;
-  // int _initBurnIndex = -1;
   // WalletSchema _walletDefault;
-  //
-  // bool _acceptNotification = false;
-  //
+
   // String nickName;
   // String chatAddress;
   // String walletAddress;
-  //
+
   // static const fcmGapString = '__FCMToken__:';
 
   // AuthBloc _authBloc;
@@ -78,6 +124,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   initState() {
     super.initState();
 
+    // listen
     _updateContactSubscription = contact.updateStream.listen((List<ContactSchema> list) {
       if (list == null || list.isEmpty) return;
       List result = list.where((element) => (element != null) && (element?.id == _contactSchema?.id)).toList();
@@ -90,6 +137,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       }
     });
 
+    // init
     _refreshContactSchema();
 
     // _authBloc = BlocProvider.of<AuthBloc>(context);
@@ -98,7 +146,6 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     // _contactBloc = BlocProvider.of<ContactBloc>(context);
     // _clientBloc.aBloc = _authBloc;
 
-    // int burnAfterSeconds = currentUser?.options?.deleteAfterSeconds;
     //
     // if (currentUser.isMe == false) {
     //   _acceptNotification = false;
@@ -107,30 +154,18 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     //   }
     // }
     //
-    // _burnSelected = burnAfterSeconds != null;
-    // if (_burnSelected) {
-    //   _burnIndex = BurnViewUtil.burnValueArray.indexWhere((x) => x.inSeconds == burnAfterSeconds);
-    //   if (burnAfterSeconds > BurnViewUtil.burnValueArray.last.inSeconds) {
-    //     _burnIndex = BurnViewUtil.burnValueArray.length - 1;
-    //   }
-    // }
-    // if (_burnIndex < 0) _burnIndex = 0;
-    // _initBurnSelected = _burnSelected;
-    // _initBurnIndex = _burnIndex;
-    //
+
     // this.nickName = currentUser.getShowName;
     //
     // this.chatAddress = currentUser.clientAddress;
     // this.walletAddress = currentUser.nknWalletAddress;
-    //
-    // _notesController.text = currentUser.notes;
   }
 
   @override
   void dispose() {
+    _updateBurnIfNeed();
     super.dispose();
     _updateContactSubscription?.cancel();
-    // _saveAndSendBurnMessage();
   }
 
   _refreshContactSchema() async {
@@ -142,9 +177,21 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       this._contactSchema = await contact.queryContact(contactId);
     }
     if (this._contactSchema == null) return;
-  }
 
-  _refreshSettings() {}
+    // burn
+    int burnAfterSeconds = _contactSchema?.options?.deleteAfterSeconds;
+    _burnOpen = burnAfterSeconds != null && burnAfterSeconds != 0;
+    if (_burnOpen) {
+      _burnProgress = burnValueArray.indexWhere((x) => x.inSeconds == burnAfterSeconds);
+      if (burnAfterSeconds > burnValueArray.last.inSeconds) {
+        _burnProgress = burnValueArray.length - 1;
+      }
+    }
+    if (_burnProgress < 0) _burnProgress = 0;
+
+    _initBurnOpen = _burnOpen;
+    _initBurnProgress = _burnProgress;
+  }
 
   _selectAvatarPicture() async {
     String remarkAvatarLocalPath = Path.getLocalContactAvatar(hexEncode(chat.publicKey), "${Uuid().v4()}.jpeg");
@@ -165,7 +212,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     // _updateUserInfo(null, savedImg);
   }
 
-  String _clientAddress() {
+  String _getClientAddress() {
     if (_contactSchema?.clientAddress != null) {
       if (_contactSchema.clientAddress.length > 10) {
         return _contactSchema.clientAddress.substring(0, 10) + '...';
@@ -190,6 +237,27 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     // TODO:GG
     // _updateUserInfo(nName, null);
     // _chatBloc.add(RefreshMessageListEvent());
+  }
+
+  _updateBurnIfNeed() async {
+    if (_burnOpen == _initBurnOpen && _burnProgress == _initBurnProgress) return;
+    var _burnValue;
+    if (!_burnOpen || _burnProgress < 0) {
+      _burnValue = null;
+    } else {
+      _burnValue = burnValueArray[_burnProgress].inSeconds;
+    }
+    await contact.setOptionsBurn(_contactSchema, _burnValue, notify: true);
+
+    // var sendMsg = MessageSchema.formSendMessage(
+    //   from: NKNClientCaller.currentChatId,
+    //   to: currentUser.clientAddress,
+    //   contentType: ContentType.eventContactOptions,
+    // );
+    // sendMsg.burnAfterSeconds = _burnValue;
+    // sendMsg.content = sendMsg.toContactBurnOptionData();
+    //
+    // _chatBloc.add(SendMessageEvent(sendMsg));
   }
 
   @override
@@ -240,11 +308,8 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             padding: EdgeInsets.all(0),
-            margin: EdgeInsets.symmetric(horizontal: 12),
+            margin: EdgeInsets.symmetric(horizontal: 16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 TextButton(
                   style: ButtonStyle(
@@ -278,7 +343,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                         'right',
                         width: 24,
                         color: application.theme.fontColor2,
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -288,7 +353,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                     shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)))),
                   ),
                   onPressed: () {
-                    // TODO:GG
+                    // TODO:GG chat_id detail
                     //   Navigator.pushNamed(context, ChatProfile.routeName, arguments: currentUser);
                   },
                   child: Row(
@@ -304,7 +369,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                       SizedBox(width: 20),
                       Expanded(
                         child: Label(
-                          _clientAddress(),
+                          _getClientAddress(),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor2,
                           overflow: TextOverflow.fade,
@@ -315,102 +380,119 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                         'right',
                         width: 24,
                         color: application.theme.fontColor2,
-                      )
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-//           Container(
-//             decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
-//             margin: EdgeInsets.only(left: 16, right: 16, top: 10),
-//             child: FlatButton(
-//               onPressed: () async {
-//                 setState(() {
-//                   _burnSelected = !_burnSelected;
-//                 });
-//               },
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
-//               child: Container(
-//                 width: double.infinity,
-//                 padding: _burnSelected ? 0.symm(v: 5.5) : 0.pad(),
-//                 child: Column(
-//                   mainAxisAlignment: _burnSelected ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
-//                   children: <Widget>[
-//                     Row(
-//                       children: [
-//                         loadAssetWalletImage('xiaohui', color: DefaultTheme.primaryColor, width: 24),
-//                         SizedBox(width: 10),
-//                         Label(
-//                           NL10ns.of(context).burn_after_reading,
-//                           type: LabelType.bodyRegular,
-//                           color: DefaultTheme.fontColor1,
-//                           textAlign: TextAlign.start,
-//                         ),
-//                         Spacer(),
-//                         CupertinoSwitch(
-//                           value: _burnSelected,
-//                           activeColor: DefaultTheme.primaryColor,
-//                           onChanged: (value) {
-//                             setState(() {
-//                               _burnSelected = value;
-//                             });
-//                           },
-//                         ),
-//                       ],
-//                     ),
-//                     _burnSelected
-//                         ? Row(
-//                             mainAxisSize: MainAxisSize.max,
-//                             crossAxisAlignment: CrossAxisAlignment.start,
-//                             children: [
-//                               Icon(Icons.alarm_on, size: 24, color: Colours.blue_0f).pad(r: 10),
-//                               Expanded(
-//                                 child: Column(
-//                                   crossAxisAlignment: CrossAxisAlignment.start,
-//                                   children: [
-//                                     Label(
-//                                       (!_burnSelected || _burnIndex < 0) ? NL10ns.of(context).off : BurnViewUtil.getStringFromSeconds(context, BurnViewUtil.burnValueArray[_burnIndex].inSeconds),
-//                                       type: LabelType.bodyRegular,
-//                                       color: Colours.gray_81,
-//                                       fontWeight: FontWeight.w700,
-//                                       maxLines: 1,
-//                                       overflow: TextOverflow.ellipsis,
-//                                     ),
-//                                     Slider(
-//                                       value: _burnIndex.d,
-//                                       min: 0,
-//                                       max: (BurnViewUtil.burnValueArray.length - 1).d,
-//                                       activeColor: Colours.blue_0f,
-//                                       inactiveColor: Colours.gray_81,
-//                                       divisions: BurnViewUtil.burnValueArray.length - 1,
-//                                       label: BurnViewUtil.burnTextArray(context)[_burnIndex],
-//                                       onChanged: (value) {
-//                                         setState(() {
-//                                           _burnIndex = value.round();
-//                                           if (_burnIndex > BurnViewUtil.burnValueArray.length - 1) {
-//                                             _burnIndex = BurnViewUtil.burnValueArray.length - 1;
-//                                           }
-//                                         });
-//                                       },
-//                                     )
-//                                   ],
-//                                 ),
-//                               ),
-//                             ],
-//                           )
-//                         : Space.empty,
-//                   ],
-//                 ),
-//               ),
-//             ).sized(h: _burnSelected ? 112 : 50, w: double.infinity),
-//           ),
+          SizedBox(height: 36),
+
+          /// burn
+          Container(
+            decoration: BoxDecoration(
+              color: application.theme.backgroundLightColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: EdgeInsets.symmetric(horizontal: 16),
+            child: TextButton(
+              style: ButtonStyle(
+                padding: MaterialStateProperty.all(EdgeInsets.only(left: 16, right: 16, top: 10, bottom: 10)),
+                shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12)))),
+              ),
+              onPressed: () {
+                setState(() {
+                  _burnOpen = !_burnOpen;
+                });
+              },
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: <Widget>[
+                      Asset.image('contact/xiaohui.png', color: application.theme.primaryColor, width: 24),
+                      SizedBox(width: 10),
+                      Label(
+                        _localizations.burn_after_reading,
+                        type: LabelType.bodyRegular,
+                        color: application.theme.fontColor1,
+                        height: 1,
+                      ),
+                      SizedBox(width: 20),
+                      Expanded(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            CupertinoSwitch(
+                              value: _burnOpen,
+                              activeColor: application.theme.primaryColor,
+                              onChanged: (value) {
+                                setState(() {
+                                  _burnOpen = value;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  ExpansionLayout(
+                    isExpanded: _burnOpen,
+                    child: Container(
+                      padding: EdgeInsets.only(top: 10),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Icon(Icons.alarm_on, size: 24, color: application.theme.primaryColor),
+                          Expanded(
+                            flex: 1,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 16),
+                                  child: Label(
+                                    (!_burnOpen || _burnProgress < 0) ? _localizations.off : getStringFromSeconds(context, burnValueArray[_burnProgress].inSeconds),
+                                    type: LabelType.bodyRegular,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Slider(
+                                  value: _burnProgress >= 0 ? _burnProgress.roundToDouble() : 0,
+                                  min: 0,
+                                  max: (burnValueArray.length - 1).roundToDouble(),
+                                  activeColor: application.theme.primaryColor,
+                                  inactiveColor: application.theme.fontColor2,
+                                  divisions: burnValueArray.length - 1,
+                                  label: burnTextArray(context)[_burnProgress],
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _burnProgress = value.round();
+                                      if (_burnProgress > burnValueArray.length - 1) {
+                                        _burnProgress = burnValueArray.length - 1;
+                                      }
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
 //           Label(
-//             (!_burnSelected || _burnIndex < 0)
-//                 ? NL10ns.of(context).burn_after_reading_desc
-//                 : NL10ns.of(context).burn_after_reading_desc_disappear(
-//                     BurnViewUtil.burnTextArray(context)[_burnIndex],
+//             (!_burnOpen || _burnProgress < 0)
+//                 ? _localizations.burn_after_reading_desc
+//                 : _localizations.burn_after_reading_desc_disappear(
+//                     BurnViewUtil.burnTextArray(context)[_burnProgress],
 //                   ),
 //             type: LabelType.bodySmall,
 //             color: Colours.gray_81,
@@ -418,7 +500,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //             softWrap: true,
 //           ).pad(t: 6, b: 8, l: 20, r: 20),
 //           Container(
-//             decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
+//             decoration: BoxDecoration(color: application.theme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
 //             margin: EdgeInsets.only(left: 16, right: 16, top: 10),
 //             child: FlatButton(
 //               onPressed: () async {
@@ -437,18 +519,18 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //                   children: <Widget>[
 //                     Row(
 //                       children: [
-//                         loadAssetIconsImage('notification_bell', color: DefaultTheme.primaryColor, width: 24),
+//                         loadAssetIconsImage('notification_bell', color: application.theme.primaryColor, width: 24),
 //                         SizedBox(width: 10),
 //                         Label(
-//                           NL10ns.of(context).remote_notification,
+//                           _localizations.remote_notification,
 //                           type: LabelType.bodyRegular,
-//                           color: DefaultTheme.fontColor1,
+//                           color: application.theme.fontColor1,
 //                           textAlign: TextAlign.start,
 //                         ),
 //                         Spacer(),
 //                         CupertinoSwitch(
 //                           value: _acceptNotification,
-//                           activeColor: DefaultTheme.primaryColor,
+//                           activeColor: application.theme.primaryColor,
 //                           onChanged: (value) {
 //                             setState(() {
 //                               _acceptNotification = value;
@@ -465,9 +547,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //           ),
 //           Label(
 //             // (_acceptNotification)
-//             //     ? NL10ns.of(context).setting_accept_notification
-//             //     : NL10ns.of(context).setting_deny_notification,
-//             NL10ns.of(context).accept_notification,
+//             //     ? _localizations.setting_accept_notification
+//             //     : _localizations.setting_deny_notification,
+//             _localizations.accept_notification,
 //             type: LabelType.bodySmall,
 //             color: Colours.gray_81,
 //             fontWeight: FontWeight.w600,
@@ -482,12 +564,12 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //                 width: double.infinity,
 //                 child: Row(
 //                   children: <Widget>[
-//                     SvgPicture.asset('assets/icons/chat.svg', width: 24, color: DefaultTheme.primaryColor),
+//                     SvgPicture.asset('assets/icons/chat.svg', width: 24, color: application.theme.primaryColor),
 // //                                      loadAssetChatPng('send_message', width: 22),
 //                     SizedBox(width: 10),
-//                     Label(NL10ns.of(context).send_message, type: LabelType.bodyRegular, color: DefaultTheme.fontColor1),
+//                     Label(_localizations.send_message, type: LabelType.bodyRegular, color: application.theme.fontColor1),
 //                     Spacer(),
-//                     SvgPicture.asset('assets/icons/right.svg', width: 24, color: DefaultTheme.fontColor2)
+//                     SvgPicture.asset('assets/icons/right.svg', width: 24, color: application.theme.fontColor2)
 //                   ],
 //                 ),
 //               ),
@@ -502,26 +584,6 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     );
   }
 
-// _saveAndSendBurnMessage() async {
-//   if (_burnSelected == _initBurnSelected && _burnIndex == _initBurnIndex) return;
-//   var _burnValue;
-//   if (!_burnSelected || _burnIndex < 0) {
-//     await currentUser.setBurnOptions(null);
-//   } else {
-//     _burnValue = BurnViewUtil.burnValueArray[_burnIndex].inSeconds;
-//     await currentUser.setBurnOptions(_burnValue);
-//   }
-//   var sendMsg = MessageSchema.formSendMessage(
-//     from: NKNClientCaller.currentChatId,
-//     to: currentUser.clientAddress,
-//     contentType: ContentType.eventContactOptions,
-//   );
-//   sendMsg.burnAfterSeconds = _burnValue;
-//   sendMsg.content = sendMsg.toContactBurnOptionData();
-//
-//   _chatBloc.add(SendMessageEvent(sendMsg));
-// }
-
 // _saveAndSendDeviceToken() async {
 //   String deviceToken = '';
 //   widget.contactInfo.notificationOpen = _acceptNotification;
@@ -534,7 +596,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //       }
 //     }
 //     if (Platform.isAndroid && deviceToken.length == 0) {
-//       showToast(NL10ns.of(context).unavailable_device);
+//       showToast(_localizations.unavailable_device);
 //       setState(() {
 //         widget.contactInfo.notificationOpen = false;
 //         _acceptNotification = false;
@@ -544,7 +606,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //     }
 //   } else {
 //     deviceToken = '';
-//     showToast(NL10ns.of(context).close);
+//     showToast(_localizations.close);
 //   }
 //   currentUser.setNotificationOpen(_acceptNotification);
 //
@@ -572,7 +634,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //   _firstNameController.text = currentUser.firstName;
 //
 //   BottomDialog.of(context).showBottomDialog(
-//     title: NL10ns.of(context).edit_nickname,
+//     title: _localizations.edit_nickname,
 //     child: Form(
 //       key: _nameFormKey,
 //       autovalidate: true,
@@ -592,7 +654,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //                   Textbox(
 //                     controller: _firstNameController,
 //                     focusNode: _firstNameFocusNode,
-//                     hintText: NL10ns.of(context).input_nickname,
+//                     hintText: _localizations.input_nickname,
 //                     maxLength: 20,
 //                   ),
 //                 ],
@@ -605,7 +667,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //     action: Padding(
 //       padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
 //       child: Button(
-//         text: NL10ns.of(context).save,
+//         text: _localizations.save,
 //         width: double.infinity,
 //         onPressed: () async {
 //           _nameFormValid = (_nameFormKey.currentState as FormState).validate();
@@ -663,9 +725,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //       mainAxisAlignment: MainAxisAlignment.center,
 //       children: <Widget>[
 //         Label(
-//           NL10ns.of(context).scan_show_me_desc,
+//           _localizations.scan_show_me_desc,
 //           type: LabelType.bodyRegular,
-//           color: DefaultTheme.fontColor2,
+//           color: application.theme.fontColor2,
 //           overflow: TextOverflow.fade,
 //           textAlign: TextAlign.left,
 //           height: 1,
@@ -675,7 +737,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //         Center(
 //           child: QrImage(
 //             data: qrContent,
-//             backgroundColor: DefaultTheme.backgroundLightColor,
+//             backgroundColor: application.theme.backgroundLightColor,
 //             version: QrVersions.auto,
 //             size: 240.0,
 //           ),
@@ -685,7 +747,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //     action: Padding(
 //       padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
 //       child: Button(
-//         text: NL10ns.of(context).close,
+//         text: _localizations.close,
 //         width: double.infinity,
 //         onPressed: () async {
 //           _popWithInformation();
@@ -700,8 +762,8 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //     //delete
 //     SimpleConfirm(
 //         context: context,
-//         content: NL10ns.of(context).delete_friend_confirm_title,
-//         buttonText: NL10ns.of(context).delete,
+//         content: _localizations.delete_friend_confirm_title,
+//         buttonText: _localizations.delete,
 //         buttonColor: Colors.red,
 //         callback: (v) {
 //           if (v) {
@@ -712,7 +774,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //   } else {
 //     currentUser.setFriend(b);
 //     setState(() {});
-//     showToast(NL10ns.of(context).success);
+//     showToast(_localizations.success);
 //   }
 // }
 
@@ -729,10 +791,10 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //             children: <Widget>[
 //               Icon(
 //                 Icons.person_add,
-//                 color: DefaultTheme.primaryColor,
+//                 color: application.theme.primaryColor,
 //               ),
 //               SizedBox(width: 10),
-//               Label(NL10ns.of(context).add_contact, type: LabelType.bodyRegular, color: DefaultTheme.primaryColor),
+//               Label(_localizations.add_contact, type: LabelType.bodyRegular, color: application.theme.primaryColor),
 //               Spacer(),
 //             ],
 //           ),
@@ -758,7 +820,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //                 color: Colors.red,
 //               ),
 //               SizedBox(width: 10),
-//               Label(NL10ns.of(context).delete, type: LabelType.bodyRegular, color: Colors.red),
+//               Label(_localizations.delete, type: LabelType.bodyRegular, color: Colors.red),
 //               Spacer(),
 //             ],
 //           ),
@@ -773,7 +835,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 
 // _selectWallets() {
 //   BottomDialog.of(context).showSelectWalletDialog(
-//     title: NL10ns.of(context).select_another_wallet,
+//     title: _localizations.select_another_wallet,
 //     onlyNkn: true,
 //     callback: (wallet) async {
 //       Timer(Duration(milliseconds: 30), () {
@@ -835,7 +897,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //   Timer(Duration(milliseconds: 200), () async {
 //     _contactBloc.add(UpdateUserInfoEvent(currentUser));
 //     EasyLoading.dismiss();
-//     showToast(NL10ns.of(context).tip_switch_success);
+//     showToast(_localizations.tip_switch_success);
 //   });
 // }
 
@@ -848,11 +910,11 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //       if (w['address'] == wallet.address) {
 //         onGetPassword(wallet, password);
 //       } else {
-//         showToast(NL10ns.of(context).tip_password_error);
+//         showToast(_localizations.tip_password_error);
 //       }
 //     } catch (e) {
 //       if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-//         showToast(NL10ns.of(context).tip_password_error);
+//         showToast(_localizations.tip_password_error);
 //       }
 //     }
 //   }
@@ -860,8 +922,8 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 
 // getSelfView() {
 //   return Scaffold(
-//     backgroundColor: DefaultTheme.backgroundColor4,
-//     appBar: Header(title: '', backgroundColor: DefaultTheme.backgroundColor4),
+//     backgroundColor: application.theme.backgroundColor4,
+//     appBar: Header(title: '', backgroundColor: application.theme.backgroundColor4),
 //     body: Container(
 //       child: Column(
 //         children: <Widget>[
@@ -892,7 +954,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //                         padding: const EdgeInsets.all(0),
 //                         width: 24,
 //                         height: 24,
-//                         backgroundColor: DefaultTheme.primaryColor,
+//                         backgroundColor: application.theme.primaryColor,
 //                         child: SvgPicture.asset('assets/icons/camera.svg', width: 16),
 //                         onPressed: () async {
 //                           updatePic();
@@ -908,7 +970,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //           Expanded(
 //             child: Container(
 //               width: double.infinity,
-//               decoration: BoxDecoration(color: DefaultTheme.backgroundColor4),
+//               decoration: BoxDecoration(color: application.theme.backgroundColor4),
 //               child: BodyBox(
 //                 padding: EdgeInsets.only(
 //                   top: 0,
@@ -920,12 +982,12 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //                       Padding(
 //                         padding: EdgeInsets.fromLTRB(20.w, 20.h, 0, 16.h),
 //                         child: Label(
-//                           NL10ns.of(context).my_profile,
+//                           _localizations.my_profile,
 //                           type: LabelType.h3,
 //                         ),
 //                       ),
 //                       Container(
-//                         decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
+//                         decoration: BoxDecoration(color: application.theme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
 //                         margin: EdgeInsets.symmetric(horizontal: 12),
 //                         child: Column(
 //                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -937,12 +999,12 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //                               onPressed: showChangeSelfNameDialog,
 //                               child: Row(
 //                                 children: <Widget>[
-//                                   loadAssetIconsImage('user', color: DefaultTheme.primaryColor, width: 24),
+//                                   loadAssetIconsImage('user', color: application.theme.primaryColor, width: 24),
 //                                   SizedBox(width: 10),
 //                                   Label(
-//                                     NL10ns.of(context).nickname,
+//                                     _localizations.nickname,
 //                                     type: LabelType.bodyRegular,
-//                                     color: DefaultTheme.fontColor1,
+//                                     color: application.theme.fontColor1,
 //                                     height: 1,
 //                                   ),
 //                                   SizedBox(width: 20),
@@ -950,13 +1012,13 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //                                     child: Label(
 //                                       nickName ?? '',
 //                                       type: LabelType.bodyRegular,
-//                                       color: DefaultTheme.fontColor2,
+//                                       color: application.theme.fontColor2,
 //                                       overflow: TextOverflow.fade,
 //                                       textAlign: TextAlign.right,
 //                                       height: 1,
 //                                     ),
 //                                   ),
-//                                   SvgPicture.asset('assets/icons/right.svg', width: 24, color: DefaultTheme.fontColor2)
+//                                   SvgPicture.asset('assets/icons/right.svg', width: 24, color: application.theme.fontColor2)
 //                                 ],
 //                               ),
 //                             ).sized(h: 48),
@@ -969,12 +1031,12 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
 //                                 crossAxisAlignment: CrossAxisAlignment.center,
 //                                 children: <Widget>[
-//                                   loadAssetChatPng('chat_id', color: DefaultTheme.primaryColor, width: 22),
+//                                   loadAssetChatPng('chat_id', color: application.theme.primaryColor, width: 22),
 //                                   SizedBox(width: 10),
 //                                   Label(
-//                                     NL10ns.of(context).d_chat_address,
+//                                     _localizations.d_chat_address,
 //                                     type: LabelType.bodyRegular,
-//                                     color: DefaultTheme.fontColor1,
+//                                     color: application.theme.fontColor1,
 //                                     height: 1,
 //                                   ),
 //                                   SizedBox(width: 20),
@@ -983,14 +1045,14 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //                                       _chatAddress(),
 //                                       type: LabelType.bodyRegular,
 //                                       textAlign: TextAlign.right,
-//                                       color: DefaultTheme.fontColor2,
+//                                       color: application.theme.fontColor2,
 //                                       maxLines: 1,
 //                                     ),
 //                                   ),
 //                                   SvgPicture.asset(
 //                                     'assets/icons/right.svg',
 //                                     width: 24,
-//                                     color: DefaultTheme.fontColor2,
+//                                     color: application.theme.fontColor2,
 //                                   )
 //                                 ],
 //                               ),
@@ -1002,7 +1064,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //                               child: Row(
 //                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
 //                                 children: <Widget>[
-//                                   loadAssetIconsImage('wallet', color: DefaultTheme.primaryColor, width: 24),
+//                                   loadAssetIconsImage('wallet', color: application.theme.primaryColor, width: 24),
 //                                   _walletDefault == null
 //                                       ? BlocBuilder<WalletsBloc, WalletsState>(
 //                                           builder: (ctx, state) {
@@ -1017,7 +1079,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //                                             return Label(
 //                                               _walletDefault?.name ?? '--',
 //                                               type: LabelType.bodyRegular,
-//                                               color: DefaultTheme.fontColor1,
+//                                               color: application.theme.fontColor1,
 //                                               height: 1,
 //                                             ).pad(l: 10);
 //                                           },
@@ -1025,12 +1087,12 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //                                       : Label(
 //                                           _walletDefault?.name ?? '--',
 //                                           type: LabelType.bodyRegular,
-//                                           color: DefaultTheme.fontColor1,
+//                                           color: application.theme.fontColor1,
 //                                           height: 1,
 //                                         ).pad(l: 10),
 //                                   Expanded(
 //                                     child: Label(
-//                                       NL10ns.of(context).change_default_chat_wallet,
+//                                       _localizations.change_default_chat_wallet,
 //                                       type: LabelType.bodyRegular,
 //                                       color: Colours.blue_0f,
 //                                       textAlign: TextAlign.right,
