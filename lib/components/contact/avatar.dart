@@ -22,6 +22,24 @@ class ContactAvatar extends StatefulWidget {
 }
 
 class _ContactAvatarState extends State<ContactAvatar> {
+  bool _avatarFileExits = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAvatarFileExists();
+  }
+
+  _checkAvatarFileExists() async {
+    String avatarPath = widget.contact?.getDisplayAvatarPath;
+    bool exists = await File(avatarPath).exists();
+    if (_avatarFileExits != exists) {
+      setState(() {
+        _avatarFileExits = exists;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double radius = this.widget.radius ?? 24;
@@ -30,7 +48,7 @@ class _ContactAvatarState extends State<ContactAvatar> {
 
     if (avatarPath != null && avatarPath.isNotEmpty) {
       File avatarFile = File(avatarPath);
-      if (avatarFile != null && avatarFile.existsSync()) {
+      if (_avatarFileExits) {
         return CircleAvatar(
           radius: radius,
           backgroundImage: FileImage(avatarFile),
@@ -45,6 +63,7 @@ class _ContactAvatarState extends State<ContactAvatar> {
           name.length > 2 ? name.substring(0, 2).toUpperCase() : name,
           color: widget.contact?.options?.color ?? application.theme.fontLightColor,
           type: LabelType.h3,
+          fontSize: radius / 3 * 2,
         ),
       );
     }
