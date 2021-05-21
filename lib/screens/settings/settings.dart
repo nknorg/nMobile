@@ -103,7 +103,9 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     S _localizations = S.of(context);
+
     return Layout(
       header: Header(
         titleChild: Padding(
