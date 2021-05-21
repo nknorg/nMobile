@@ -89,16 +89,17 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
   }
 
   _initData() async {
-    var friends = await contact.queryContacts(contactType: ContactType.friend);
-    var strangers = await contact.queryContacts(contactType: ContactType.stranger, limit: 20);
-    var topics = []; // widget.arguments ? <TopicSchema>[] : await TopicRepo().getAllTopics(); // TODO:GG topic
+    List<ContactSchema> friends = await contact.queryContacts(contactType: ContactType.friend);
+    List<ContactSchema> strangers = await contact.queryContacts(contactType: ContactType.stranger, limit: 20);
+    List<TopicSchema> topics = []; // widget.arguments ? <TopicSchema>[] : await TopicRepo().getAllTopics(); // TODO:GG topic下面这个也得重写
+    topics = (this._isSelect == true) ? [] : topics;
 
     setState(() {
       _pageLoaded = true;
       // total
       _allFriends = friends ?? [];
       _allStrangers = strangers ?? [];
-      _allTopics = this._isSelect ? [] : (topics ?? []);
+      _allTopics = topics ?? [];
       // search
       _searchFriends = _allFriends;
       _searchStrangers = _allStrangers;
@@ -107,7 +108,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
   }
 
   _searchAction(String val) {
-    if (val == null || val.length == 0) {
+    if (val == null || val.isEmpty) {
       setState(() {
         _searchFriends = _allFriends;
         _searchStrangers = _allStrangers;
