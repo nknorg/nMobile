@@ -9,6 +9,7 @@ class Layout extends StatefulWidget {
   final Widget body;
   final Widget floatingActionButton;
   final FloatingActionButtonLocation floatingActionButtonLocation;
+  final BorderRadiusGeometry borderRadius;
 
   Layout({
     this.key,
@@ -18,6 +19,7 @@ class Layout extends StatefulWidget {
     this.bodyColor,
     this.floatingActionButton,
     this.floatingActionButtonLocation,
+    this.borderRadius = const BorderRadius.vertical(top: Radius.circular(32)),
   });
 
   @override
@@ -36,12 +38,12 @@ class _LayoutState extends State<Layout> {
       body: Container(
         constraints: BoxConstraints.expand(),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius: widget.borderRadius ?? BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: PhysicalModel(
           color: widget.bodyColor ?? application.theme.backgroundColor,
           clipBehavior: Clip.antiAlias,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius: widget.borderRadius ?? BorderRadius.vertical(top: Radius.circular(32)),
           child: Column(
             children: <Widget>[
               Expanded(
