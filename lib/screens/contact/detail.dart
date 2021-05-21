@@ -102,7 +102,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   bool _burnOpen = false;
   int _burnProgress = -1;
 
-  // bool _acceptNotification = false;
+  bool _notificationOpen = false;
 
   // FocusNode _firstNameFocusNode = FocusNode();
   // GlobalKey _nameFormKey = new GlobalKey<FormState>();
@@ -146,17 +146,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     // _contactBloc = BlocProvider.of<ContactBloc>(context);
     // _clientBloc.aBloc = _authBloc;
 
-    //
-    // if (currentUser.isMe == false) {
-    //   _acceptNotification = false;
-    //   if (currentUser.notificationOpen != null) {
-    //     _acceptNotification = currentUser.notificationOpen;
-    //   }
-    // }
-    //
-
     // this.nickName = currentUser.getShowName;
-    //
     // this.chatAddress = currentUser.clientAddress;
     // this.walletAddress = currentUser.nknWalletAddress;
   }
@@ -188,9 +178,17 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       }
     }
     if (_burnProgress < 0) _burnProgress = 0;
-
     _initBurnOpen = _burnOpen;
     _initBurnProgress = _burnProgress;
+
+    // notification
+    if (_contactSchema.isMe == false) {
+      if (_contactSchema.notificationOpen != null) {
+        _notificationOpen = _contactSchema.notificationOpen;
+      } else {
+        _notificationOpen = false;
+      }
+    }
   }
 
   _selectAvatarPicture() async {
@@ -257,6 +255,44 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     // sendMsg.burnAfterSeconds = _burnValue;
     // sendMsg.content = sendMsg.toContactBurnOptionData();
     //
+    // _chatBloc.add(SendMessageEvent(sendMsg));
+  }
+
+  _updateNotificationAndDeviceToken() async {
+    // TODO:GG
+    // String deviceToken = '';
+    // widget.contactInfo.notificationOpen = _notificationOpen;
+    // if (_notificationOpen == true) {
+    //   deviceToken = await NKNClientCaller.fetchDeviceToken();
+    //   if (Platform.isIOS) {
+    //     String fcmToken = await NKNClientCaller.fetchFcmToken();
+    //     if (fcmToken != null && fcmToken.length > 0) {
+    //       deviceToken = deviceToken + "$fcmGapString$fcmToken";
+    //     }
+    //   }
+    //   if (Platform.isAndroid && deviceToken.length == 0) {
+    //     showToast(_localizations.unavailable_device);
+    //     setState(() {
+    //       widget.contactInfo.notificationOpen = false;
+    //       _notificationOpen = false;
+    //       currentUser.setNotificationOpen(_notificationOpen);
+    //     });
+    //     return;
+    //   }
+    // } else {
+    //   deviceToken = '';
+    //   showToast(_localizations.close);
+    // }
+    // currentUser.setNotificationOpen(_notificationOpen);
+    //
+    // var sendMsg = MessageSchema.formSendMessage(
+    //   from: NKNClientCaller.currentChatId,
+    //   to: currentUser.clientAddress,
+    //   contentType: ContentType.eventContactOptions,
+    //   deviceToken: deviceToken,
+    // );
+    // sendMsg.deviceToken = deviceToken;
+    // sendMsg.content = sendMsg.toContactNoticeOptionData();
     // _chatBloc.add(SendMessageEvent(sendMsg));
   }
 
@@ -387,7 +423,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
               ],
             ),
           ),
-          SizedBox(height: 36),
+          SizedBox(height: 28),
 
           /// burn
           Container(
@@ -419,23 +455,15 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                         color: application.theme.fontColor1,
                         height: 1,
                       ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            CupertinoSwitch(
-                              value: _burnOpen,
-                              activeColor: application.theme.primaryColor,
-                              onChanged: (value) {
-                                setState(() {
-                                  _burnOpen = value;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
+                      Spacer(),
+                      CupertinoSwitch(
+                        value: _burnOpen,
+                        activeColor: application.theme.primaryColor,
+                        onChanged: (value) {
+                          setState(() {
+                            _burnOpen = value;
+                          });
+                        },
                       ),
                     ],
                   ),
@@ -488,73 +516,75 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
               ),
             ),
           ),
-//           Label(
-//             (!_burnOpen || _burnProgress < 0)
-//                 ? _localizations.burn_after_reading_desc
-//                 : _localizations.burn_after_reading_desc_disappear(
-//                     BurnViewUtil.burnTextArray(context)[_burnProgress],
-//                   ),
-//             type: LabelType.bodySmall,
-//             color: Colours.gray_81,
-//             fontWeight: FontWeight.w600,
-//             softWrap: true,
-//           ).pad(t: 6, b: 8, l: 20, r: 20),
-//           Container(
-//             decoration: BoxDecoration(color: application.theme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
-//             margin: EdgeInsets.only(left: 16, right: 16, top: 10),
-//             child: FlatButton(
-//               onPressed: () async {
-//                 // setState(() {
-//                 //   _acceptNotification = !_acceptNotification;
-//                 //   NLog.w('oNChanged 11111111'+_acceptNotification.toString());
-//                 //   _saveAndSendDeviceToken();
-//                 // });
-//               },
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
-//               child: Container(
-//                 width: double.infinity,
-//                 padding: _acceptNotification ? 0.symm(v: 5.5) : 0.pad(),
-//                 child: Column(
-//                   mainAxisAlignment: MainAxisAlignment.center,
-//                   children: <Widget>[
-//                     Row(
-//                       children: [
-//                         loadAssetIconsImage('notification_bell', color: application.theme.primaryColor, width: 24),
-//                         SizedBox(width: 10),
-//                         Label(
-//                           _localizations.remote_notification,
-//                           type: LabelType.bodyRegular,
-//                           color: application.theme.fontColor1,
-//                           textAlign: TextAlign.start,
-//                         ),
-//                         Spacer(),
-//                         CupertinoSwitch(
-//                           value: _acceptNotification,
-//                           activeColor: application.theme.primaryColor,
-//                           onChanged: (value) {
-//                             setState(() {
-//                               _acceptNotification = value;
-//                               _saveAndSendDeviceToken();
-//                             });
-//                           },
-//                         ),
-//                       ],
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ).sized(h: 50, w: double.infinity),
-//           ),
-//           Label(
-//             // (_acceptNotification)
-//             //     ? _localizations.setting_accept_notification
-//             //     : _localizations.setting_deny_notification,
-//             _localizations.accept_notification,
-//             type: LabelType.bodySmall,
-//             color: Colours.gray_81,
-//             fontWeight: FontWeight.w600,
-//             softWrap: true,
-//           ).pad(t: 6, b: 8, l: 20, r: 20),
+          Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20, top: 6),
+            child: Label(
+              (!_burnOpen || _burnProgress < 0)
+                  ? _localizations.burn_after_reading_desc
+                  : _localizations.burn_after_reading_desc_disappear(
+                      burnTextArray(context)[_burnProgress],
+                    ),
+              type: LabelType.bodySmall,
+              fontWeight: FontWeight.w600,
+              softWrap: true,
+            ),
+          ),
+          SizedBox(height: 28),
+
+          /// notification
+          Container(
+            decoration: BoxDecoration(
+              color: application.theme.backgroundLightColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: EdgeInsets.symmetric(horizontal: 16),
+            child: TextButton(
+              style: ButtonStyle(
+                padding: MaterialStateProperty.all(EdgeInsets.only(left: 16, right: 16, top: 10, bottom: 10)),
+                shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)))),
+              ),
+              onPressed: () {
+                // setState(() {
+                //   _notificationOpen = !_notificationOpen;
+                //   _updateNotificationAndDeviceToken();
+                // });
+              },
+              child: Row(
+                children: <Widget>[
+                  Asset.iconSvg('notification-bell', color: application.theme.primaryColor, width: 24),
+                  SizedBox(width: 10),
+                  Label(
+                    _localizations.remote_notification,
+                    type: LabelType.bodyRegular,
+                    color: application.theme.fontColor1,
+                    height: 1,
+                  ),
+                  Spacer(),
+                  CupertinoSwitch(
+                    value: _notificationOpen,
+                    activeColor: application.theme.primaryColor,
+                    onChanged: (value) {
+                      setState(() {
+                        _notificationOpen = value;
+                        _updateNotificationAndDeviceToken();
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 6, left: 20, right: 20),
+            child: Label(
+              _localizations.accept_notification,
+              type: LabelType.bodySmall,
+              fontWeight: FontWeight.w600,
+              softWrap: true,
+            ),
+          ),
+          SizedBox(height: 28),
+
 //           Container(
 //             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
 //             margin: EdgeInsets.only(left: 16, right: 16, top: 10),
@@ -583,43 +613,6 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       ),
     );
   }
-
-// _saveAndSendDeviceToken() async {
-//   String deviceToken = '';
-//   widget.contactInfo.notificationOpen = _acceptNotification;
-//   if (_acceptNotification == true) {
-//     deviceToken = await NKNClientCaller.fetchDeviceToken();
-//     if (Platform.isIOS) {
-//       String fcmToken = await NKNClientCaller.fetchFcmToken();
-//       if (fcmToken != null && fcmToken.length > 0) {
-//         deviceToken = deviceToken + "$fcmGapString$fcmToken";
-//       }
-//     }
-//     if (Platform.isAndroid && deviceToken.length == 0) {
-//       showToast(_localizations.unavailable_device);
-//       setState(() {
-//         widget.contactInfo.notificationOpen = false;
-//         _acceptNotification = false;
-//         currentUser.setNotificationOpen(_acceptNotification);
-//       });
-//       return;
-//     }
-//   } else {
-//     deviceToken = '';
-//     showToast(_localizations.close);
-//   }
-//   currentUser.setNotificationOpen(_acceptNotification);
-//
-//   var sendMsg = MessageSchema.formSendMessage(
-//     from: NKNClientCaller.currentChatId,
-//     to: currentUser.clientAddress,
-//     contentType: ContentType.eventContactOptions,
-//     deviceToken: deviceToken,
-//   );
-//   sendMsg.deviceToken = deviceToken;
-//   sendMsg.content = sendMsg.toContactNoticeOptionData();
-//   _chatBloc.add(SendMessageEvent(sendMsg));
-// }
 
 // _popWithInformation() {
 //   // _saveAndSendBurnMessage();
