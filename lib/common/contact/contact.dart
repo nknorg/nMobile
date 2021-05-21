@@ -166,7 +166,7 @@ class Contact {
   }
 
   Future<bool> setOptionsBurn(ContactSchema schema, int seconds, {bool notify = false}) async {
-    if (schema == null || schema.id == null || schema.id == 0 || seconds == null) return false;
+    if (schema == null || schema.id == null || schema.id == 0) return false;
     bool success = await _contactStorage.setOptionsBurn(schema.id, seconds, old: schema.options);
     if (success && notify) queryAndNotify(schema.id);
     return success;
