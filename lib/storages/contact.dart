@@ -235,10 +235,10 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count > 0) {
-        logger.d("setProfile - success - contactId:$contactId - new:$newProfileInfo - old:$oldProfileInfo");
+        logger.d("setProfile - success - contactId:$contactId - update:$saveDataInfo - new:$newProfileInfo - old:$oldProfileInfo");
         return true;
       }
-      logger.w("setProfile - fail - contactId:$contactId - new:$newProfileInfo - old:$oldProfileInfo");
+      logger.w("setProfile - fail - contactId:$contactId - update:$saveDataInfo - new:$newProfileInfo - old:$oldProfileInfo");
     } catch (e) {
       handleError(e);
     }
@@ -308,7 +308,7 @@ class ContactStorage {
     if (newExtraInfo['first_name'] != null) {
       dataInfo['remark_name'] = newExtraInfo['first_name'];
     }
-    if (newExtraInfo['avatar'] != null) {
+    if (newExtraInfo['remark_avatar'] != null) {
       dataInfo['remark_avatar'] = newExtraInfo['remark_avatar'];
     }
 
@@ -323,10 +323,10 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count > 0) {
-        logger.d("setRemarkProfile - success - contactId:$contactId - new:$newExtraInfo - old:$oldExtraInfo");
+        logger.d("setRemarkProfile - success - contactId:$contactId - update:$dataInfo - new:$newExtraInfo - old:$oldExtraInfo");
         return true;
       }
-      logger.w("setRemarkProfile - fail - contactId:$contactId - new:$newExtraInfo - old:$oldExtraInfo");
+      logger.w("setRemarkProfile - fail - contactId:$contactId - update:$dataInfo - new:$newExtraInfo - old:$oldExtraInfo");
     } catch (e) {
       handleError(e);
     }
@@ -350,10 +350,10 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count > 0) {
-        logger.d("setNotes - success - contactId:$contactId - new:$notes - old:$oldExtraInfo");
+        logger.d("setNotes - success - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
         return true;
       }
-      logger.w("setNotes - fail - contactId:$contactId - new:$notes - old:$oldExtraInfo");
+      logger.w("setNotes - fail - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
     } catch (e) {
       handleError(e);
     }
