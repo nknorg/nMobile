@@ -29,12 +29,15 @@ class _ContactAvatarState extends State<ContactAvatar> {
     String avatarPath = widget.contact?.getDisplayAvatarPath;
 
     if (avatarPath != null && avatarPath.isNotEmpty) {
-      return CircleAvatar(
-        radius: radius,
-        backgroundImage: FileImage(File(avatarPath)),
-      );
+      File avatarFile = File(avatarPath);
+      if (avatarFile != null && avatarFile.existsSync()) {
+        return CircleAvatar(
+          radius: radius,
+          backgroundImage: FileImage(avatarFile),
+        );
+      }
     }
-    if (widget.placeHolder == null && !widget.placeHolder) {
+    if (widget.placeHolder == null || !widget.placeHolder) {
       return CircleAvatar(
         radius: radius,
         backgroundColor: widget.contact?.options?.backgroundColor ?? application.theme.primaryColor.withAlpha(19),
