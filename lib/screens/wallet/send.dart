@@ -19,8 +19,10 @@ import 'package:nmobile/components/wallet/dropdown.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validation.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/scanner.dart';
+import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -468,15 +470,14 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                         ? SizedBox.shrink()
                                         : GestureDetector(
                                             onTap: () async {
-                                              // TODO:GG contact select
-                                              // if (NKNClientCaller.currentChatId != null) {
-                                              //   var contact = await Navigator.of(context).pushNamed(ContactHome.routeName, arguments: true);
-                                              //   if (contact is ContactSchema) {
-                                              //     _sendToController.text = contact.nknWalletAddress;
-                                              //   }
-                                              // } else {
-                                              //   Toast.show('D-Chat not login');
-                                              // }
+                                              if (contact.currentUser != null) {
+                                                var contact = await ContactHomeScreen.go(context, isSelect: true);
+                                                if (contact != null && contact is ContactSchema) {
+                                                  _sendToController.text = contact.nknWalletAddress;
+                                                }
+                                              } else {
+                                                Toast.show(_localizations.d_chat_not_login);
+                                              }
                                             },
                                             child: Container(
                                               width: 20,

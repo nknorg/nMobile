@@ -41,7 +41,7 @@ class ContactHomeScreen extends StatefulWidget {
 }
 
 class _ContactHomeScreenState extends State<ContactHomeScreen> {
-  bool _isSelect = false; // TODO:GG select
+  bool _isSelect = false;
 
   bool _pageLoaded = false;
   StreamSubscription _addContactSubscription;
@@ -91,14 +91,14 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
   _initData() async {
     var friends = await contact.queryContacts(contactType: ContactType.friend);
     var strangers = await contact.queryContacts(contactType: ContactType.stranger, limit: 20);
-    // var topic = widget.arguments ? <TopicSchema>[] : await TopicRepo().getAllTopics();
+    var topics = []; // widget.arguments ? <TopicSchema>[] : await TopicRepo().getAllTopics(); // TODO:GG topic
 
     setState(() {
       _pageLoaded = true;
       // total
       _allFriends = friends ?? [];
       _allStrangers = strangers ?? [];
-      // _allTopics = topic ?? []; // TODO:GG topic
+      _allTopics = this._isSelect ? [] : (topics ?? []);
       // search
       _searchFriends = _allFriends;
       _searchStrangers = _allStrangers;
@@ -123,19 +123,19 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
   }
 
   _onTapContactItem(ContactSchema item) async {
-    // TODO:GG detail
-    // if (widget.arguments) {
-    //   Navigator.of(context).pop(item);
-    // } else {
-    //   await Navigator.of(context)
-    //       .pushNamed(
-    //     ContactScreen.routeName,
-    //     arguments: item,
-    //   )
-    //       .then((v) {
-    //     initAsync();
-    //   });
-    // }
+    if (this._isSelect) {
+      Navigator.pop(context, item);
+    } else {
+      // TODO:GG detail
+      // await Navigator.of(context)
+      //     .pushNamed(
+      //   ContactScreen.routeName,
+      //   arguments: item,
+      // )
+      //     .then((v) {
+      //   initAsync();
+      // });
+    }
   }
 
   @override
