@@ -292,12 +292,14 @@ class BottomDialog extends StatefulWidget {
     String desc,
     String inputTip,
     String inputHint,
+    String value,
     String actionText,
     bool password = false,
     int maxLength = 10000,
   }) async {
     S _localizations = S.of(context);
     TextEditingController _passwordController = TextEditingController();
+    _passwordController.text = value ?? "";
 
     return showWithTitle<String>(
       title: title,
