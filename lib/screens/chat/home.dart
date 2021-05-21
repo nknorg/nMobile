@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/components/contact/contact_header.dart';
+import 'package:nmobile/components/contact/header.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/screens/chat/message_list.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
+import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/utils/asset.dart';
 
 class ChatHomeScreen extends StatefulWidget {
@@ -86,7 +87,9 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                   padding: const EdgeInsets.only(right: 8),
                   child: IconButton(
                     icon: Asset.iconSvg('addbook', color: Colors.white, width: 24),
-                    onPressed: () {},
+                    onPressed: () {
+                      ContactHomeScreen.go(context);
+                    },
                   ),
                 )
               ],
