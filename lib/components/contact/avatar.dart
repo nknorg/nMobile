@@ -4,14 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/utils/asset.dart';
 
 class ContactAvatar extends StatefulWidget {
   final ContactSchema contact;
   final double radius;
+  final bool placeHolder;
 
   ContactAvatar({
     this.contact,
     this.radius,
+    this.placeHolder = false,
   });
 
   @override
@@ -21,17 +24,19 @@ class ContactAvatar extends StatefulWidget {
 class _ContactAvatarState extends State<ContactAvatar> {
   @override
   Widget build(BuildContext context) {
+    double radius = this.widget.radius ?? 24;
     String name = widget.contact?.getDisplayName ?? "";
     String avatarPath = widget.contact?.getDisplayAvatarPath;
 
     if (avatarPath != null && avatarPath.isNotEmpty) {
       return CircleAvatar(
-        radius: this.widget.radius ?? 24,
+        radius: radius,
         backgroundImage: FileImage(File(avatarPath)),
       );
-    } else {
+    }
+    if (widget.placeHolder == null && !widget.placeHolder) {
       return CircleAvatar(
-        radius: this.widget.radius ?? 24,
+        radius: radius,
         backgroundColor: widget.contact?.options?.backgroundColor ?? application.theme.primaryColor.withAlpha(19),
         child: Label(
           name.length > 2 ? name.substring(0, 2).toUpperCase() : name,
@@ -40,5 +45,10 @@ class _ContactAvatarState extends State<ContactAvatar> {
         ),
       );
     }
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: application.theme.backgroundColor2,
+      child: Asset.iconSvg('user', color: application.theme.fontColor2),
+    );
   }
 }

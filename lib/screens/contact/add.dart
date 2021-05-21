@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/global.dart';
@@ -61,7 +62,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
       mediaType: MediaType.image,
       source: ImageSource.gallery,
       crop: true,
-      returnPath: join(Global.applicationRootDirectory.path, Path.getLocalContactAvatar(chat.id, "${Uuid().v4()}.jpeg")),
+      returnPath: join(Global.applicationRootDirectory.path, Path.getLocalContactAvatar(hexEncode(chat.publicKey), "${Uuid().v4()}.jpeg")),
     );
     if (picked == null) {
       // Toast.show("Open camera or MediaLibrary for nMobile to update your profile");
@@ -103,7 +104,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
       String remarkName = _nameController.text;
       String defaultName = ContactSchema.getDefaultName(clientAddress);
 
-      String remarkAvatar = _headImage == null ? null : Path.getLocalContactAvatar(chat.id, Path.getFileName(_headImage?.path));
+      String remarkAvatar = _headImage == null ? null : Path.getLocalContactAvatar(hexEncode(chat.publicKey), Path.getFileName(_headImage?.path));
 
       logger.d("_saveContact -\n clientAddress:$clientAddress,\n walletAddress:$walletAddress,\n note:$note,\n firstName:$defaultName,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
 

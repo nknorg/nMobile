@@ -13,7 +13,7 @@ class ChatBottomMenu extends StatelessWidget {
 
   _getImageFile({@required ImageSource source}) async {
     try {
-      // File image = await getCameraFile(chat.id, source: source);
+      // File image = await getCameraFile(chat.pubkey, source: source);
       // if (image != null) {
       //   // TODO
       //   // _sendImage(image);

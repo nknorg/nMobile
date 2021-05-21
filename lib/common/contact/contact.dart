@@ -69,6 +69,11 @@ class Contact {
     return _contactStorage.queryContacts(contactType: contactType, orderBy: orderBy, limit: limit, offset: offset);
   }
 
+  Future<ContactSchema> queryContact(int contactId) {
+    if (contactId == null || contactId == 0) return null;
+    return _contactStorage.queryContact(contactId);
+  }
+
   Future<ContactSchema> queryContactByClientAddress(String clientAddress) {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     return _contactStorage.queryContactByClientAddress(clientAddress);

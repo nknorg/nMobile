@@ -162,7 +162,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
 
     return Layout(
       header: Header(
-        title: _localizations.my_contact,
+        title: _localizations.contacts,
         actions: [
           IconButton(
             icon: Asset.iconSvg(
