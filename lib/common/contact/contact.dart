@@ -102,11 +102,11 @@ class Contact {
     return success;
   }
 
-  Future<bool> setAvatar(ContactSchema schema, String avatarPath, {bool notify = false}) async {
-    if (schema == null || schema.id == 0 || avatarPath == null || avatarPath.isEmpty) return false;
+  Future<bool> setAvatar(ContactSchema schema, String avatarLocalPath, {bool notify = false}) async {
+    if (schema == null || schema.id == 0 || avatarLocalPath == null || avatarLocalPath.isEmpty) return false;
     bool success = await _contactStorage.setProfile(
       schema.id,
-      {'avatar': avatarPath},
+      {'avatar': avatarLocalPath},
       oldProfileInfo: (schema.avatar == null || schema.avatar.isEmpty) ? null : {'avatar': schema.avatar},
     );
     if (success && notify) queryAndNotify(schema.id);
@@ -138,11 +138,11 @@ class Contact {
     return success;
   }
 
-  Future<bool> setRemarkAvatar(ContactSchema schema, String avatarPath, {bool notify = false}) async {
+  Future<bool> setRemarkAvatar(ContactSchema schema, String avatarLocalPath, {bool notify = false}) async {
     if (schema == null || schema.id == 0) return Future.value(false);
     bool success = await _contactStorage.setRemarkProfile(
       schema.id,
-      {'remark_avatar': avatarPath},
+      {'remark_avatar': avatarLocalPath},
       oldExtraInfo: schema.extraInfo,
     );
     if (success && notify) queryAndNotify(schema.id);
