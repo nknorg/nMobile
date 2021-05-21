@@ -15,6 +15,7 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/add.dart';
+import 'package:nmobile/screens/contact/detail.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -46,6 +47,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
   bool _pageLoaded = false;
   StreamSubscription _addContactSubscription;
   StreamSubscription _deleteContactSubscription;
+  StreamSubscription _updateContactSubscription;
 
   TextEditingController _searchController = TextEditingController();
 
@@ -62,19 +64,48 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
     super.initState();
     this._isSelect = widget.arguments != null ? (widget.arguments[ContactHomeScreen.argIsSelect] ?? false) : false;
 
-    // added
+    // listen
     _addContactSubscription = contact.addStream.listen((ContactSchema scheme) {
       if (scheme == null || scheme.type == null) return;
       if (scheme.type == ContactType.friend) {
-        _allFriends.insert(0, scheme);
+        _allFriends?.insert(0, scheme);
       } else if (scheme.type == ContactType.friend) {
-        _allStrangers.insert(0, scheme);
+        _allStrangers?.insert(0, scheme);
       }
       _searchAction(_searchController.text);
     });
     _deleteContactSubscription = contact.deleteStream.listen((int contactId) {
-      _allFriends = _allFriends.where((element) => element?.id != contactId);
+      _allFriends = _allFriends?.where((element) => element?.id != contactId);
       _searchAction(_searchController.text);
+    });
+    _updateContactSubscription = contact.updateStream.listen((List<ContactSchema> list) {
+      if (list == null || list.isEmpty) return;
+      if (list.length == 1) {
+        int friendIndex = -1;
+        _allFriends.asMap().forEach((key, value) {
+          if (value != null && value?.id == list[0]?.id) {
+            friendIndex = key;
+          }
+        });
+        if (friendIndex >= 0 && friendIndex < (_allFriends?.length ?? 0)) {
+          _allFriends[friendIndex] = list[0];
+          _searchAction(_searchController.text);
+          return;
+        }
+        int strangerIndex = -1;
+        _allStrangers.asMap().forEach((key, value) {
+          if (value != null && value?.id == list[0]?.id) {
+            strangerIndex = key;
+          }
+        });
+        if (friendIndex >= 0 && strangerIndex < (_allStrangers?.length ?? 0)) {
+          _allStrangers[strangerIndex] = list[0];
+          _searchAction(_searchController.text);
+          return;
+        }
+      } else {
+        _initData();
+      }
     });
 
     // init
@@ -86,6 +117,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
     super.dispose();
     _addContactSubscription.cancel();
     _deleteContactSubscription.cancel();
+    _updateContactSubscription.cancel();
   }
 
   _initData() async {
@@ -105,6 +137,8 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
       _searchStrangers = _allStrangers;
       _searchTopics = _allTopics;
     });
+
+    _searchAction(_searchController.text);
   }
 
   _searchAction(String val) {
@@ -127,15 +161,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
     if (this._isSelect) {
       Navigator.pop(context, item);
     } else {
-      // TODO:GG detail
-      // await Navigator.of(context)
-      //     .pushNamed(
-      //   ContactScreen.routeName,
-      //   arguments: item,
-      // )
-      //     .then((v) {
-      //   initAsync();
-      // });
+      ContactDetailScreen.go(context, schema: item);
     }
   }
 
