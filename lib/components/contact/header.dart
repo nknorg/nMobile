@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/contact.dart';
 
@@ -16,7 +15,7 @@ class ContactHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String name = contact.getDisplayName;
+    String name = contact?.getDisplayName ?? "";
     return Flex(
       direction: Axis.horizontal,
       mainAxisAlignment: MainAxisAlignment.start,

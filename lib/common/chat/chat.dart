@@ -94,7 +94,7 @@ class Chat {
     });
   }
 
-  Future signin(WalletSchema scheme) async {
+  Future signIn(WalletSchema scheme) async {
     if (scheme == null || scheme.address == null) return null;
     try {
       String keystore = await wallet.getWalletKeystoreByAddress(scheme.address);
@@ -102,10 +102,10 @@ class Chat {
 
       walletSDK.Wallet restore = await walletSDK.Wallet.restore(keystore, config: walletSDK.WalletConfig(password: pwd));
 
-      String pubkey = hexEncode(restore.publicKey);
+      String pubKey = hexEncode(restore.publicKey);
       String password = hexEncode(sha256(restore.seed));
-      await DB.open(pubkey, password);
-      await contact.fetchCurrentUser(pubkey);
+      await DB.open(pubKey, password);
+      await contact.fetchCurrentUser(pubKey);
       connect(restore);
     } catch (e) {
       handleError(e);
