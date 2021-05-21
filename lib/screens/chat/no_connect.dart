@@ -79,6 +79,7 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
                     child: Padding(
                       padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
                       child: WalletDropdown(
+                        onTapWave: false,
                         onSelected: (v) {
                           if (v != null) {
                             setState(() {
@@ -100,7 +101,7 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
                       width: double.infinity,
                       text: _localizations.connect,
                       onPressed: () async {
-                        chat.signin(this._defaultWallet);
+                        chat.signIn(this._defaultWallet);
                       },
                     ),
                   )
