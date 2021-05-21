@@ -17,6 +17,7 @@ import 'package:nmobile/utils/utils.dart';
 
 import '../common/select.dart';
 
+// TODO:GG rename
 class SettingsScreen extends StatefulWidget {
   static const String routeName = '/settings';
 

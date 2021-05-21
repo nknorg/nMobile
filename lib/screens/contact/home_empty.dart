@@ -28,7 +28,6 @@ class _ContactHomeEmptyLayoutState extends State<ContactHomeEmptyLayout> {
             onPressed: () {
               Navigator.pushNamed(context, ContactAddScreen.routeName);
             },
-            // no effect ???
             icon: Asset.iconSvg(
               'user-plus',
               // color: application.theme.backgroundLightColor,
