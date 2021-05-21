@@ -8,11 +8,14 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/contact/avatar_editable.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
+import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:path/path.dart';
@@ -158,7 +161,35 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     }
 
     await contact.setRemarkAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
-    // _updateUserInfo(null, savedImg); // TODO:GG
+    // TODO:GG
+    // _updateUserInfo(null, savedImg);
+  }
+
+  String _clientAddress() {
+    if (_contactSchema?.clientAddress != null) {
+      if (_contactSchema.clientAddress.length > 10) {
+        return _contactSchema.clientAddress.substring(0, 10) + '...';
+      }
+      return _contactSchema.clientAddress;
+    }
+    return '';
+  }
+
+  _modifyNickname(BuildContext context) async {
+    S _localizations = S.of(context);
+    String newName = await BottomDialog.of(context).showInput(
+      title: _localizations.edit_nickname,
+      inputTip: _localizations.edit_nickname,
+      inputHint: _localizations.input_nickname,
+      value: _contactSchema?.getDisplayName,
+      actionText: _localizations.save,
+      maxLength: 20,
+    );
+    if (newName == null || newName.trim().isEmpty) return;
+    await contact.setRemarkName(_contactSchema, newName.trim(), notify: true);
+    // TODO:GG
+    // _updateUserInfo(nName, null);
+    // _chatBloc.add(RefreshMessageListEvent());
   }
 
   @override
@@ -189,100 +220,108 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     return SingleChildScrollView(
       padding: EdgeInsets.only(top: 20, bottom: 30),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ContactAvatarEditable(
-            radius: 48,
-            contact: _contactSchema,
-            placeHolder: false,
-            onSelect: _selectAvatarPicture,
+          /// avatar
+          Center(
+            child: ContactAvatarEditable(
+              radius: 48,
+              contact: _contactSchema,
+              placeHolder: false,
+              onSelect: _selectAvatarPicture,
+            ),
           ),
-//           Container(
-//             decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
-//             margin: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               children: <Widget>[
-//                 FlatButton(
-//                   padding: EdgeInsets.only(left: 16, right: 16, top: 10),
-//                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
-//                   onPressed: () {
-//                     _firstNameController.text = currentUser.getShowName;
-//                     _detailChangeName(context);
-//                   },
-//                   child: Row(
-//                     children: <Widget>[
-//                       loadAssetIconsImage('user', color: DefaultTheme.primaryColor, width: 24),
-//                       SizedBox(width: 10),
-//                       Label(
-//                         NL10ns.of(context).nickname,
-//                         type: LabelType.bodyRegular,
-//                         color: DefaultTheme.fontColor1,
-//                         height: 1,
-//                       ),
-//                       SizedBox(width: 20),
-//                       Expanded(
-//                         child: Label(
-//                           currentUser.getShowName,
-//                           type: LabelType.bodyRegular,
-//                           color: DefaultTheme.fontColor2,
-//                           overflow: TextOverflow.fade,
-//                           textAlign: TextAlign.right,
-//                           height: 1,
-//                         ),
-//                       ),
-//                       SvgPicture.asset(
-//                         'assets/icons/right.svg',
-//                         width: 24,
-//                         color: DefaultTheme.fontColor2,
-//                       )
-//                     ],
-//                   ),
-//                 ).sized(h: 48),
-//                 FlatButton(
-//                   padding: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
-//                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
-//                   onPressed: () {
-//                     Navigator.pushNamed(context, ChatProfile.routeName, arguments: currentUser);
-//                   },
-//                   child: Row(
-//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                     crossAxisAlignment: CrossAxisAlignment.center,
-//                     children: <Widget>[
-//                       loadAssetChatPng(
-//                         'chat_id',
-//                         color: DefaultTheme.primaryColor,
-//                         width: 22,
-//                       ),
-//                       SizedBox(width: 10),
-//                       Label(
-//                         NL10ns.of(context).d_chat_address,
-//                         type: LabelType.bodyRegular,
-//                         color: DefaultTheme.fontColor1,
-//                         height: 1,
-//                       ),
-//                       SizedBox(width: 20),
-//                       Expanded(
-//                         child: Label(
-//                           _chatAddress(),
-//                           type: LabelType.bodyRegular,
-//                           color: DefaultTheme.fontColor2,
-//                           textAlign: TextAlign.right,
-//                           maxLines: 1,
-//                           overflow: TextOverflow.ellipsis,
-//                         ),
-//                       ),
-//                       SvgPicture.asset(
-//                         'assets/icons/right.svg',
-//                         width: 24,
-//                         color: DefaultTheme.fontColor2,
-//                       )
-//                     ],
-//                   ),
-//                 ).sized(h: 48),
-//               ],
-//             ),
-//           ),
+          SizedBox(height: 36),
+
+          /// name + address
+          Container(
+            decoration: BoxDecoration(
+              color: application.theme.backgroundLightColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: EdgeInsets.all(0),
+            margin: EdgeInsets.symmetric(horizontal: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                TextButton(
+                  style: ButtonStyle(
+                    padding: MaterialStateProperty.all(EdgeInsets.only(left: 16, right: 16, top: 15, bottom: 10)),
+                    shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12)))),
+                  ),
+                  onPressed: () {
+                    _modifyNickname(context);
+                  },
+                  child: Row(
+                    children: <Widget>[
+                      Asset.iconSvg('user', color: application.theme.primaryColor, width: 24),
+                      SizedBox(width: 10),
+                      Label(
+                        _localizations.nickname,
+                        type: LabelType.bodyRegular,
+                        color: application.theme.fontColor1,
+                        height: 1,
+                      ),
+                      SizedBox(width: 20),
+                      Expanded(
+                        child: Label(
+                          _contactSchema?.getDisplayName ?? "",
+                          type: LabelType.bodyRegular,
+                          color: application.theme.fontColor2,
+                          overflow: TextOverflow.fade,
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                      Asset.iconSvg(
+                        'right',
+                        width: 24,
+                        color: application.theme.fontColor2,
+                      )
+                    ],
+                  ),
+                ),
+                TextButton(
+                  style: ButtonStyle(
+                    padding: MaterialStateProperty.all(EdgeInsets.only(left: 16, right: 16, top: 10, bottom: 15)),
+                    shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)))),
+                  ),
+                  onPressed: () {
+                    // TODO:GG
+                    //   Navigator.pushNamed(context, ChatProfile.routeName, arguments: currentUser);
+                  },
+                  child: Row(
+                    children: <Widget>[
+                      Asset.image('chat/chat-id.png', color: application.theme.primaryColor, width: 24),
+                      SizedBox(width: 10),
+                      Label(
+                        _localizations.d_chat_address,
+                        type: LabelType.bodyRegular,
+                        color: application.theme.fontColor1,
+                        height: 1,
+                      ),
+                      SizedBox(width: 20),
+                      Expanded(
+                        child: Label(
+                          _clientAddress(),
+                          type: LabelType.bodyRegular,
+                          color: application.theme.fontColor2,
+                          overflow: TextOverflow.fade,
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                      Asset.iconSvg(
+                        'right',
+                        width: 24,
+                        color: application.theme.fontColor2,
+                      )
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
 //           Container(
 //             decoration: BoxDecoration(color: DefaultTheme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
 //             margin: EdgeInsets.only(left: 16, right: 16, top: 10),
@@ -463,18 +502,6 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     );
   }
 
-// String _chatAddress() {
-//   if (currentUser != null) {
-//     if (currentUser.clientAddress != null) {
-//       if (currentUser.clientAddress.length > 8) {
-//         return currentUser.clientAddress.substring(0, 8) + '...';
-//       }
-//       return currentUser.clientAddress;
-//     }
-//   }
-//   return '';
-// }
-
 // _saveAndSendBurnMessage() async {
 //   if (_burnSelected == _initBurnSelected && _burnIndex == _initBurnIndex) return;
 //   var _burnValue;
@@ -535,60 +562,6 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 // _popWithInformation() {
 //   // _saveAndSendBurnMessage();
 //   Navigator.of(context).pop('yes');
-// }
-
-// _detailChangeName(BuildContext context) {
-//   BottomDialog.of(context).showBottomDialog(
-//     title: NL10ns.of(context).edit_contact,
-//     child: Form(
-//       key: _nameFormKey,
-//       autovalidate: true,
-//       onChanged: () {
-//         _nameFormValid = (_nameFormKey.currentState as FormState).validate();
-//       },
-//       child: Flex(
-//         direction: Axis.horizontal,
-//         children: <Widget>[
-//           Expanded(
-//             flex: 1,
-//             child: Padding(
-//               padding: const EdgeInsets.only(right: 4),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: <Widget>[
-//                   Textbox(
-//                     controller: _firstNameController,
-//                     focusNode: _firstNameFocusNode,
-//                     maxLength: 20,
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     ),
-//     action: Padding(
-//       padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
-//       child: Button(
-//         text: NL10ns.of(context).save,
-//         width: double.infinity,
-//         onPressed: () async {
-//           _nameFormValid = (_nameFormKey.currentState as FormState).validate();
-//           if (_nameFormValid) {
-//             String nName = _firstNameController.text.trim();
-//             setState(() {
-//               nickName = nName;
-//             });
-//             _updateUserInfo(nName, null);
-//
-//             _chatBloc.add(RefreshMessageListEvent());
-//             _popWithInformation();
-//           }
-//         },
-//       ),
-//     ),
-//   );
 // }
 
 // copyAction(String content) {
