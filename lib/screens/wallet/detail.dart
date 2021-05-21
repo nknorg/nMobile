@@ -306,6 +306,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
       title: _localizations.wallet_name,
       inputTip: _localizations.hint_enter_wallet_name,
       inputHint: _localizations.hint_enter_wallet_name,
+      value: this._wallet?.name ?? "",
       actionText: _localizations.save,
       maxLength: 20,
     );
