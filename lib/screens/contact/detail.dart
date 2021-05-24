@@ -8,12 +8,15 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/avatar_editable.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -207,8 +210,8 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     }
 
     await contact.setRemarkAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
-    // TODO:GG
-    // _updateUserInfo(null, savedImg);
+    // TODO:GG notify chat
+    // _chatBloc.add(RefreshMessageListEvent());
   }
 
   String _getClientAddress() {
@@ -233,8 +236,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     );
     if (newName == null || newName.trim().isEmpty) return;
     await contact.setRemarkName(_contactSchema, newName.trim(), notify: true);
-    // TODO:GG
-    // _updateUserInfo(nName, null);
+    // TODO:GG notify chat
     // _chatBloc.add(RefreshMessageListEvent());
   }
 
@@ -248,7 +250,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     }
     await contact.setOptionsBurn(_contactSchema, _burnValue, notify: true);
 
-    // TODO:GG
+    // TODO:GG notify chat
     // var sendMsg = MessageSchema.formSendMessage(
     //   from: NKNClientCaller.currentChatId,
     //   to: currentUser.clientAddress,
@@ -261,7 +263,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   }
 
   _updateNotificationAndDeviceToken() async {
-    // TODO:GG
+    // TODO:GG deviceToken get
     // String deviceToken = '';
     // widget.contactInfo.notificationOpen = _notificationOpen;
     // if (_notificationOpen == true) {
@@ -288,6 +290,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 
     contact.setNotificationOpen(_contactSchema?.id, _notificationOpen, notify: true);
 
+    // TODO:GG notify chat
     // var sendMsg = MessageSchema.formSendMessage(
     //   from: NKNClientCaller.currentChatId,
     //   to: currentUser.clientAddress,
@@ -299,6 +302,38 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     // _chatBloc.add(SendMessageEvent(sendMsg));
   }
 
+  _addFriend(BuildContext context) {
+    S _localizations = S.of(context);
+    contact.setType(_contactSchema?.id, ContactType.friend, notify: true);
+    Toast.show(_localizations.success);
+  }
+
+  _deleteAction(BuildContext context) {
+    S _localizations = S.of(context);
+
+    ModalDialog.of(context).confirm(
+      title: _localizations.tip,
+      content: _localizations.delete_friend_confirm_title,
+      agree: Button(
+        text: _localizations.delete_contact,
+        backgroundColor: application.theme.strongColor,
+        width: double.infinity,
+        onPressed: () async {
+          contact.delete(_contactSchema?.id);
+          Navigator.pop(context);
+          Navigator.pop(context);
+        },
+      ),
+      reject: Button(
+        text: _localizations.cancel,
+        backgroundColor: application.theme.backgroundLightColor,
+        fontColor: application.theme.fontColor2,
+        width: double.infinity,
+        onPressed: () => Navigator.pop(context),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Layout(
@@ -306,12 +341,6 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       header: Header(
         backgroundColor: application.theme.backgroundColor4,
         title: _contactSchema?.getDisplayName ?? "",
-        // TODO:GG
-        // leading: BackButton(
-        //   onPressed: () {
-        //     _popWithInformation();
-        //   },
-        // ),
       ),
       body: _contactSchema?.isMe == true
           ? SizedBox.shrink() // TODO:GG getSelfView
@@ -347,6 +376,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
           /// avatar
           Center(
             child: ContactAvatarEditable(
+              key: ValueKey(_contactSchema?.getDisplayAvatarPath ?? ""), // need!
               radius: 48,
               contact: _contactSchema,
               placeHolder: false,
@@ -569,7 +599,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
           TextButton(
             style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
             onPressed: () {
-              // TODO:GG
+              // TODO:GG chat 1_to_1
               // Navigator.of(context).pushNamed(MessageChatPage.routeName, arguments: currentUser);
             },
             child: Row(
@@ -600,8 +630,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                     TextButton(
                       style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
                       onPressed: () {
-                        // TODO:GG
-                        // showAction(true);
+                        _addFriend(context);
                       },
                       child: Row(
                         children: <Widget>[
@@ -628,8 +657,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                     TextButton(
                       style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
                       onPressed: () {
-                        // TODO:GG
-                        // showAction(false);
+                        _deleteAction(context);
                       },
                       child: Row(
                         children: <Widget>[
@@ -649,13 +677,25 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     );
   }
 
-// _popWithInformation() {
-//   // _saveAndSendBurnMessage();
-//   Navigator.of(context).pop('yes');
-// }
-
-// copyAction(String content) {
-//   CopyUtils.copyAction(context, content);
+// showAction(bool b) async {
+//   if (!b) {
+//     //delete
+//     SimpleConfirm(
+//         context: context,
+//         content: _localizations.delete_friend_confirm_title,
+//         buttonText: _localizations.delete,
+//         buttonColor: Colors.red,
+//         callback: (v) {
+//           if (v) {
+//             currentUser.setFriend(false);
+//             setState(() {});
+//           }
+//         }).show();
+//   } else {
+//     currentUser.setFriend(b);
+//     setState(() {});
+//     showToast(_localizations.success);
+//   }
 // }
 
 // showChangeSelfNameDialog() {
@@ -711,99 +751,6 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //       ),
 //     ),
 //   );
-// }
-
-// _updateUserInfo(String nickName, File avatarImage) async {
-//   if (currentUser.isMe) {
-//     if (nickName != null && nickName.length > 0) {
-//       await currentUser.setName(currentUser.firstName);
-//     } else if (avatarImage != null) {
-//       await currentUser.setAvatar(avatarImage);
-//     }
-//     _contactBloc.add(UpdateUserInfoEvent(currentUser));
-//   } else {
-//     Map dataInfo = Map<String, dynamic>();
-//     if (nickName != null && nickName.length > 0) {
-//       dataInfo['first_name'] = nickName;
-//     } else if (avatarImage != null) {
-//       dataInfo['avatar'] = avatarImage.path;
-//     }
-//     await ContactDataCenter.saveRemarkProfile(currentUser, dataInfo);
-//     currentUser = await ContactSchema.fetchContactByAddress(currentUser.clientAddress);
-//     setState(() {
-//       nickName = currentUser.getShowName;
-//     });
-//   }
-//   _chatBloc.add(RefreshMessageListEvent());
-// }
-
-// showQRDialog() {
-//   String qrContent;
-//   if (currentUser.getShowName.length == 6 && currentUser.clientAddress.startsWith(currentUser.getShowName)) {
-//     qrContent = currentUser.clientAddress;
-//   } else {
-//     qrContent = currentUser.getShowName + "@" + currentUser.clientAddress;
-//   }
-//
-//   BottomDialog.of(context).showBottomDialog(
-//     title: currentUser.getShowName,
-//     height: 480,
-//     child: Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       mainAxisAlignment: MainAxisAlignment.center,
-//       children: <Widget>[
-//         Label(
-//           _localizations.scan_show_me_desc,
-//           type: LabelType.bodyRegular,
-//           color: application.theme.fontColor2,
-//           overflow: TextOverflow.fade,
-//           textAlign: TextAlign.left,
-//           height: 1,
-//           softWrap: true,
-//         ),
-//         SizedBox(height: 10),
-//         Center(
-//           child: QrImage(
-//             data: qrContent,
-//             backgroundColor: application.theme.backgroundLightColor,
-//             version: QrVersions.auto,
-//             size: 240.0,
-//           ),
-//         )
-//       ],
-//     ),
-//     action: Padding(
-//       padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
-//       child: Button(
-//         text: _localizations.close,
-//         width: double.infinity,
-//         onPressed: () async {
-//           _popWithInformation();
-//         },
-//       ),
-//     ),
-//   );
-// }
-
-// showAction(bool b) async {
-//   if (!b) {
-//     //delete
-//     SimpleConfirm(
-//         context: context,
-//         content: _localizations.delete_friend_confirm_title,
-//         buttonText: _localizations.delete,
-//         buttonColor: Colors.red,
-//         callback: (v) {
-//           if (v) {
-//             currentUser.setFriend(false);
-//             setState(() {});
-//           }
-//         }).show();
-//   } else {
-//     currentUser.setFriend(b);
-//     setState(() {});
-//     showToast(_localizations.success);
-//   }
 // }
 
 // _selectWallets() {

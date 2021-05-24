@@ -16,11 +16,12 @@ class ContactAvatarEditable extends StatefulWidget {
   final Function onSelect;
 
   ContactAvatarEditable({
+    Key key,
     this.contact,
     this.radius,
     this.placeHolder = false,
     this.onSelect,
-  });
+  }) : super(key: key);
 
   @override
   _ContactAvatarEditableState createState() => _ContactAvatarEditableState();
