@@ -69,7 +69,7 @@ class Wallet {
       }
       return false;
     }).then((bool authOk) async {
-      String pwd = await _walletStorage.getPassword(walletAddress);
+      String pwd = await getWalletPasswordNoCheck(walletAddress);
       if (!authOk || pwd == null || pwd.isEmpty) {
         return BottomDialog.of(context ?? Global.appContext).showInput(
           title: _localizations.verify_wallet_password,
@@ -81,6 +81,10 @@ class Wallet {
       }
       return pwd;
     });
+  }
+
+  Future getWalletPasswordNoCheck(String walletAddress) {
+    return _walletStorage.getPassword(walletAddress);
   }
 
   bool isBalanceSame(WalletSchema w1, WalletSchema w2) {
