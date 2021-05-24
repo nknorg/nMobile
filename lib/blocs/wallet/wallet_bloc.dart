@@ -46,7 +46,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     logger.d("wallet add - ${event.wallet}, keystore:${event.keystore}");
     if (state is WalletLoaded) {
       await _walletStorage.addWallet(event.wallet, event.keystore, password: event.password, seed: event.seed);
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
+      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets ?? []);
       int index = list?.indexWhere((x) => x?.address == event?.wallet?.address) ?? -1;
       if (index >= 0) {
         list[index] = event.wallet;
@@ -62,7 +62,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     WalletSchema wallet = event?.wallet;
     logger.d("wallet delete - $wallet");
     if (state is WalletLoaded) {
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
+      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets ?? []);
       // int index = list.indexOf(wallet);
       int index = list?.indexWhere((w) => w?.address == wallet?.address) ?? -1;
       if (index >= 0) {
@@ -78,7 +78,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     WalletSchema wallet = event?.wallet;
     logger.d("wallet update - $wallet");
     if (state is WalletLoaded) {
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
+      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets ?? []);
       // int index = list.indexOf(wallet);
       int index = list?.indexWhere((w) => w?.address == wallet?.address) ?? -1;
       if (index >= 0) {
@@ -96,7 +96,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     logger.d("wallet backup - address:${event.address}, backup:${event.backup}");
     if (state is WalletLoaded) {
       await _walletStorage.setBackup(event.address, event.backup);
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
+      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets ?? []);
       bool allBackup = await wallet.isWalletsBackup(original: list);
       logger.d("new backup list:${list.toString()}");
       yield WalletBackup(list, event.address, allBackup);
@@ -107,7 +107,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     logger.d("wallet default - address:${event.address}}");
     if (state is WalletLoaded) {
       await _walletStorage.setDefaultAddress(event.address);
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
+      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets ?? []);
       logger.d("new default list:${list.toString()}");
       yield WalletDefault(list, event.address);
     }
