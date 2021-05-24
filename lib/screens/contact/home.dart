@@ -75,7 +75,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
       _searchAction(_searchController.text);
     });
     _deleteContactSubscription = contact.deleteStream.listen((int contactId) {
-      _allFriends = _allFriends?.where((element) => element?.id != contactId);
+      _allFriends = _allFriends?.where((element) => element?.id != contactId)?.toList();
       _searchAction(_searchController.text);
     });
     _updateContactSubscription = contact.updateStream.listen((List<ContactSchema> list) {
