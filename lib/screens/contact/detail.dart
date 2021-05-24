@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/contact/avatar_editable.dart';
@@ -247,6 +248,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     }
     await contact.setOptionsBurn(_contactSchema, _burnValue, notify: true);
 
+    // TODO:GG
     // var sendMsg = MessageSchema.formSendMessage(
     //   from: NKNClientCaller.currentChatId,
     //   to: currentUser.clientAddress,
@@ -283,8 +285,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     //   deviceToken = '';
     //   showToast(_localizations.close);
     // }
-    // currentUser.setNotificationOpen(_notificationOpen);
-    //
+
+    contact.setNotificationOpen(_contactSchema?.id, _notificationOpen, notify: true);
+
     // var sendMsg = MessageSchema.formSendMessage(
     //   from: NKNClientCaller.currentChatId,
     //   to: currentUser.clientAddress,
@@ -318,11 +321,26 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     );
   }
 
+  _buttonStyle({bool topRadius = true, bool botRadius = true, double topPad = 12, double botPad = 12}) {
+    return ButtonStyle(
+      backgroundColor: MaterialStateProperty.resolveWith((state) => application.theme.backgroundLightColor),
+      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16, top: topPad, bottom: botPad)),
+      shape: MaterialStateProperty.resolveWith(
+        (states) => RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: topRadius ? Radius.circular(12) : Radius.zero,
+            bottom: botRadius ? Radius.circular(12) : Radius.zero,
+          ),
+        ),
+      ),
+    );
+  }
+
   _getPersonView(BuildContext context) {
     S _localizations = S.of(context);
 
     return SingleChildScrollView(
-      padding: EdgeInsets.only(top: 20, bottom: 30),
+      padding: EdgeInsets.only(top: 20, bottom: 30, left: 16, right: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -338,182 +356,155 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
           SizedBox(height: 36),
 
           /// name + address
-          Container(
-            decoration: BoxDecoration(
-              color: application.theme.backgroundLightColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: EdgeInsets.all(0),
-            margin: EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: <Widget>[
-                TextButton(
-                  style: ButtonStyle(
-                    padding: MaterialStateProperty.all(EdgeInsets.only(left: 16, right: 16, top: 15, bottom: 10)),
-                    shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12)))),
-                  ),
-                  onPressed: () {
-                    _modifyNickname(context);
-                  },
-                  child: Row(
-                    children: <Widget>[
-                      Asset.iconSvg('user', color: application.theme.primaryColor, width: 24),
-                      SizedBox(width: 10),
-                      Label(
-                        _localizations.nickname,
+          Column(
+            children: <Widget>[
+              TextButton(
+                style: _buttonStyle(topRadius: true, botRadius: false, topPad: 15, botPad: 10),
+                onPressed: () {
+                  _modifyNickname(context);
+                },
+                child: Row(
+                  children: <Widget>[
+                    Asset.iconSvg('user', color: application.theme.primaryColor, width: 24),
+                    SizedBox(width: 10),
+                    Label(
+                      _localizations.nickname,
+                      type: LabelType.bodyRegular,
+                      color: application.theme.fontColor1,
+                    ),
+                    SizedBox(width: 20),
+                    Expanded(
+                      child: Label(
+                        _contactSchema?.getDisplayName ?? "",
                         type: LabelType.bodyRegular,
-                        color: application.theme.fontColor1,
-                        height: 1,
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: Label(
-                          _contactSchema?.getDisplayName ?? "",
-                          type: LabelType.bodyRegular,
-                          color: application.theme.fontColor2,
-                          overflow: TextOverflow.fade,
-                          textAlign: TextAlign.right,
-                        ),
-                      ),
-                      Asset.iconSvg(
-                        'right',
-                        width: 24,
                         color: application.theme.fontColor2,
+                        overflow: TextOverflow.fade,
+                        textAlign: TextAlign.right,
                       ),
-                    ],
-                  ),
+                    ),
+                    Asset.iconSvg(
+                      'right',
+                      width: 24,
+                      color: application.theme.fontColor2,
+                    ),
+                  ],
                 ),
-                TextButton(
-                  style: ButtonStyle(
-                    padding: MaterialStateProperty.all(EdgeInsets.only(left: 16, right: 16, top: 10, bottom: 15)),
-                    shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)))),
-                  ),
-                  onPressed: () {
-                    // TODO:GG chat_id detail
-                    //   Navigator.pushNamed(context, ChatProfile.routeName, arguments: currentUser);
-                  },
-                  child: Row(
-                    children: <Widget>[
-                      Asset.image('chat/chat-id.png', color: application.theme.primaryColor, width: 24),
-                      SizedBox(width: 10),
-                      Label(
-                        _localizations.d_chat_address,
+              ),
+              TextButton(
+                style: _buttonStyle(topRadius: false, botRadius: true, topPad: 10, botPad: 15),
+                onPressed: () {
+                  // TODO:GG chat_id detail
+                  //   Navigator.pushNamed(context, ChatProfile.routeName, arguments: currentUser);
+                },
+                child: Row(
+                  children: <Widget>[
+                    Asset.image('chat/chat-id.png', color: application.theme.primaryColor, width: 24),
+                    SizedBox(width: 10),
+                    Label(
+                      _localizations.d_chat_address,
+                      type: LabelType.bodyRegular,
+                      color: application.theme.fontColor1,
+                    ),
+                    SizedBox(width: 20),
+                    Expanded(
+                      child: Label(
+                        _getClientAddress(),
                         type: LabelType.bodyRegular,
-                        color: application.theme.fontColor1,
-                        height: 1,
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: Label(
-                          _getClientAddress(),
-                          type: LabelType.bodyRegular,
-                          color: application.theme.fontColor2,
-                          overflow: TextOverflow.fade,
-                          textAlign: TextAlign.right,
-                        ),
-                      ),
-                      Asset.iconSvg(
-                        'right',
-                        width: 24,
                         color: application.theme.fontColor2,
+                        overflow: TextOverflow.fade,
+                        textAlign: TextAlign.right,
                       ),
-                    ],
-                  ),
+                    ),
+                    Asset.iconSvg(
+                      'right',
+                      width: 24,
+                      color: application.theme.fontColor2,
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           SizedBox(height: 28),
 
           /// burn
-          Container(
-            decoration: BoxDecoration(
-              color: application.theme.backgroundLightColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: EdgeInsets.symmetric(horizontal: 16),
-            child: TextButton(
-              style: ButtonStyle(
-                padding: MaterialStateProperty.all(EdgeInsets.only(left: 16, right: 16, top: 10, bottom: 10)),
-                shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12)))),
-              ),
-              onPressed: () {
-                setState(() {
-                  _burnOpen = !_burnOpen;
-                });
-              },
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.max,
-                    children: <Widget>[
-                      Asset.image('contact/xiaohui.png', color: application.theme.primaryColor, width: 24),
-                      SizedBox(width: 10),
-                      Label(
-                        _localizations.burn_after_reading,
-                        type: LabelType.bodyRegular,
-                        color: application.theme.fontColor1,
-                        height: 1,
-                      ),
-                      Spacer(),
-                      CupertinoSwitch(
-                        value: _burnOpen,
-                        activeColor: application.theme.primaryColor,
-                        onChanged: (value) {
-                          setState(() {
-                            _burnOpen = value;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  ExpansionLayout(
-                    isExpanded: _burnOpen,
-                    child: Container(
-                      padding: EdgeInsets.only(top: 10),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Icon(Icons.alarm_on, size: 24, color: application.theme.primaryColor),
-                          Expanded(
-                            flex: 1,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 16),
-                                  child: Label(
-                                    (!_burnOpen || _burnProgress < 0) ? _localizations.off : getStringFromSeconds(context, burnValueArray[_burnProgress].inSeconds),
-                                    type: LabelType.bodyRegular,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+          TextButton(
+            style: _buttonStyle(topRadius: true, botRadius: true, topPad: 8, botPad: 8),
+            onPressed: () {
+              setState(() {
+                _burnOpen = !_burnOpen;
+              });
+            },
+            child: Column(
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: <Widget>[
+                    Asset.image('contact/xiaohui.png', color: application.theme.primaryColor, width: 24),
+                    SizedBox(width: 10),
+                    Label(
+                      _localizations.burn_after_reading,
+                      type: LabelType.bodyRegular,
+                      color: application.theme.fontColor1,
+                    ),
+                    Spacer(),
+                    CupertinoSwitch(
+                      value: _burnOpen,
+                      activeColor: application.theme.primaryColor,
+                      onChanged: (value) {
+                        setState(() {
+                          _burnOpen = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                ExpansionLayout(
+                  isExpanded: _burnOpen,
+                  child: Container(
+                    padding: EdgeInsets.only(top: 10),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Icon(Icons.alarm_on, size: 24, color: application.theme.primaryColor),
+                        Expanded(
+                          flex: 1,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(left: 16),
+                                child: Label(
+                                  (!_burnOpen || _burnProgress < 0) ? _localizations.off : getStringFromSeconds(context, burnValueArray[_burnProgress].inSeconds),
+                                  type: LabelType.bodyRegular,
+                                  fontWeight: FontWeight.w700,
                                 ),
-                                Slider(
-                                  value: _burnProgress >= 0 ? _burnProgress.roundToDouble() : 0,
-                                  min: 0,
-                                  max: (burnValueArray.length - 1).roundToDouble(),
-                                  activeColor: application.theme.primaryColor,
-                                  inactiveColor: application.theme.fontColor2,
-                                  divisions: burnValueArray.length - 1,
-                                  label: burnTextArray(context)[_burnProgress],
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _burnProgress = value.round();
-                                      if (_burnProgress > burnValueArray.length - 1) {
-                                        _burnProgress = burnValueArray.length - 1;
-                                      }
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
+                              ),
+                              Slider(
+                                value: _burnProgress >= 0 ? _burnProgress.roundToDouble() : 0,
+                                min: 0,
+                                max: (burnValueArray.length - 1).roundToDouble(),
+                                activeColor: application.theme.primaryColor,
+                                inactiveColor: application.theme.fontColor2,
+                                divisions: burnValueArray.length - 1,
+                                label: burnTextArray(context)[_burnProgress],
+                                onChanged: (value) {
+                                  setState(() {
+                                    _burnProgress = value.round();
+                                    if (_burnProgress > burnValueArray.length - 1) {
+                                      _burnProgress = burnValueArray.length - 1;
+                                    }
+                                  });
+                                },
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           Padding(
@@ -532,46 +523,35 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
           SizedBox(height: 28),
 
           /// notification
-          Container(
-            decoration: BoxDecoration(
-              color: application.theme.backgroundLightColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: EdgeInsets.symmetric(horizontal: 16),
-            child: TextButton(
-              style: ButtonStyle(
-                padding: MaterialStateProperty.all(EdgeInsets.only(left: 16, right: 16, top: 10, bottom: 10)),
-                shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)))),
-              ),
-              onPressed: () {
-                // setState(() {
-                //   _notificationOpen = !_notificationOpen;
-                //   _updateNotificationAndDeviceToken();
-                // });
-              },
-              child: Row(
-                children: <Widget>[
-                  Asset.iconSvg('notification-bell', color: application.theme.primaryColor, width: 24),
-                  SizedBox(width: 10),
-                  Label(
-                    _localizations.remote_notification,
-                    type: LabelType.bodyRegular,
-                    color: application.theme.fontColor1,
-                    height: 1,
-                  ),
-                  Spacer(),
-                  CupertinoSwitch(
-                    value: _notificationOpen,
-                    activeColor: application.theme.primaryColor,
-                    onChanged: (value) {
-                      setState(() {
-                        _notificationOpen = value;
-                        _updateNotificationAndDeviceToken();
-                      });
-                    },
-                  ),
-                ],
-              ),
+          TextButton(
+            style: _buttonStyle(topRadius: true, botRadius: true, topPad: 8, botPad: 8),
+            onPressed: () {
+              // setState(() {
+              //   _notificationOpen = !_notificationOpen;
+              //   _updateNotificationAndDeviceToken();
+              // });
+            },
+            child: Row(
+              children: <Widget>[
+                Asset.iconSvg('notification-bell', color: application.theme.primaryColor, width: 24),
+                SizedBox(width: 10),
+                Label(
+                  _localizations.remote_notification,
+                  type: LabelType.bodyRegular,
+                  color: application.theme.fontColor1,
+                ),
+                Spacer(),
+                CupertinoSwitch(
+                  value: _notificationOpen,
+                  activeColor: application.theme.primaryColor,
+                  onChanged: (value) {
+                    setState(() {
+                      _notificationOpen = value;
+                      _updateNotificationAndDeviceToken();
+                    });
+                  },
+                ),
+              ],
             ),
           ),
           Padding(
@@ -585,30 +565,85 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
           ),
           SizedBox(height: 28),
 
-//           Container(
-//             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-//             margin: EdgeInsets.only(left: 16, right: 16, top: 10),
-//             child: FlatButton(
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
-//               child: Container(
-//                 width: double.infinity,
-//                 child: Row(
-//                   children: <Widget>[
-//                     SvgPicture.asset('assets/icons/chat.svg', width: 24, color: application.theme.primaryColor),
-// //                                      loadAssetChatPng('send_message', width: 22),
-//                     SizedBox(width: 10),
-//                     Label(_localizations.send_message, type: LabelType.bodyRegular, color: application.theme.fontColor1),
-//                     Spacer(),
-//                     SvgPicture.asset('assets/icons/right.svg', width: 24, color: application.theme.fontColor2)
-//                   ],
-//                 ),
-//               ),
-//               onPressed: () {
-//                 Navigator.of(context).pushNamed(MessageChatPage.routeName, arguments: currentUser);
-//               },
-//             ).sized(h: 50, w: double.infinity),
-//           ),
-          // getStatusView(), // TODO:GG
+          /// sendMsg
+          TextButton(
+            style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
+            onPressed: () {
+              // TODO:GG
+              // Navigator.of(context).pushNamed(MessageChatPage.routeName, arguments: currentUser);
+            },
+            child: Row(
+              children: <Widget>[
+                Asset.iconSvg('chat', color: application.theme.primaryColor, width: 24),
+                SizedBox(width: 10),
+                Label(
+                  _localizations.send_message,
+                  type: LabelType.bodyRegular,
+                  color: application.theme.fontColor1,
+                ),
+                Spacer(),
+                Asset.iconSvg(
+                  'right',
+                  width: 24,
+                  color: application.theme.fontColor2,
+                ),
+              ],
+            ),
+          ),
+          // SizedBox(height: 28),
+
+          /// AddContact
+          _contactSchema?.type == ContactType.stranger
+              ? Column(
+                  children: [
+                    SizedBox(height: 10),
+                    TextButton(
+                      style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
+                      onPressed: () {
+                        // TODO:GG
+                        // showAction(true);
+                      },
+                      child: Row(
+                        children: <Widget>[
+                          Icon(Icons.person_add, color: application.theme.primaryColor),
+                          SizedBox(width: 10),
+                          Label(
+                            _localizations.add_contact,
+                            type: LabelType.bodyRegular,
+                            color: application.theme.primaryColor,
+                          ),
+                          Spacer(),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              : SizedBox.shrink(),
+
+          /// delete
+          _contactSchema?.type == ContactType.friend
+              ? Column(
+                  children: [
+                    SizedBox(height: 28),
+                    TextButton(
+                      style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
+                      onPressed: () {
+                        // TODO:GG
+                        // showAction(false);
+                      },
+                      child: Row(
+                        children: <Widget>[
+                          Spacer(),
+                          Icon(Icons.delete, color: Colors.red),
+                          SizedBox(width: 10),
+                          Label(_localizations.delete, type: LabelType.bodyRegular, color: Colors.red),
+                          Spacer(),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              : SizedBox.shrink(),
         ],
       ),
     );
@@ -768,61 +803,6 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //     currentUser.setFriend(b);
 //     setState(() {});
 //     showToast(_localizations.success);
-//   }
-// }
-
-// getStatusView() {
-//   if (currentUser.type == ContactType.stranger) {
-//     return Container(
-//       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-//       margin: EdgeInsets.only(left: 16, right: 16, top: 10),
-//       child: FlatButton(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
-//         child: Container(
-//           width: double.infinity,
-//           child: Row(
-//             children: <Widget>[
-//               Icon(
-//                 Icons.person_add,
-//                 color: application.theme.primaryColor,
-//               ),
-//               SizedBox(width: 10),
-//               Label(_localizations.add_contact, type: LabelType.bodyRegular, color: application.theme.primaryColor),
-//               Spacer(),
-//             ],
-//           ),
-//         ),
-//         onPressed: () {
-//           showAction(true);
-//         },
-//       ).sized(h: 50, w: double.infinity),
-//     );
-//   } else {
-//     return Container(
-//       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-//       margin: EdgeInsets.only(left: 16, right: 16, top: 30),
-//       child: FlatButton(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12))),
-//         child: Container(
-//           width: double.infinity,
-//           child: Row(
-//             children: <Widget>[
-//               Spacer(),
-//               Icon(
-//                 Icons.delete,
-//                 color: Colors.red,
-//               ),
-//               SizedBox(width: 10),
-//               Label(_localizations.delete, type: LabelType.bodyRegular, color: Colors.red),
-//               Spacer(),
-//             ],
-//           ),
-//         ),
-//         onPressed: () {
-//           showAction(false);
-//         },
-//       ).sized(h: 50, w: double.infinity),
-//     );
 //   }
 // }
 
