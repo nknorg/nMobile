@@ -37,8 +37,8 @@ class _SelectScreenState extends State<SelectScreen> {
   @override
   void initState() {
     super.initState();
-    this.title = widget.arguments['title'];
-    this.list = widget.arguments['list'];
+    this.title = widget.arguments['title'] ?? "";
+    this.list = widget.arguments['list'] ?? [];
     this.selectedValue = widget.arguments['selectedValue'].toString();
   }
 
