@@ -55,10 +55,9 @@ class Chat {
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
   Client client;
 
+  // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
-
   StreamSink<int> get _statusStreamSink => _statusController.sink;
-
   Stream<int> get statusStream => _statusController.stream;
 
   int status;
@@ -67,22 +66,27 @@ class Chat {
 
   Uint8List get publicKey => client?.publicKey;
 
+  // ignore: close_sinks
   StreamController<OnConnect> onConnectController = StreamController<OnConnect>.broadcast();
   StreamSink<OnConnect> get onConnectStreamSink => onConnectController.sink;
   Stream<OnConnect> get onConnect => onConnectController.stream;
 
+  // ignore: close_sinks
   StreamController<OnMessage> onMessageController = StreamController<OnMessage>.broadcast();
   StreamSink<OnMessage> get onMessageStreamSink => onMessageController.sink;
   Stream<OnMessage> get onMessage => onMessageController.stream;
 
+  // ignore: close_sinks
   StreamController<dynamic> onErrorController = StreamController<dynamic>.broadcast();
   StreamSink<dynamic> get onErrorStreamSink => onErrorController.sink;
   Stream<dynamic> get onError => onErrorController.stream;
 
+  // ignore: close_sinks
   StreamController<MessageSchema> onReceivedMessageController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get onReceivedMessageStreamSink => onReceivedMessageController.sink;
   Stream<MessageSchema> get onReceivedMessage => onReceivedMessageController.stream;
 
+  // ignore: close_sinks
   StreamController<MessageSchema> onMessageSavedController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get onMessageSavedStreamSink => onMessageSavedController.sink;
   Stream<MessageSchema> get onMessageSaved => onMessageSavedController.stream;
@@ -97,8 +101,9 @@ class Chat {
   Future signIn(WalletSchema scheme) async {
     if (scheme == null || scheme.address == null) return null;
     try {
-      String keystore = await wallet.getWalletKeystoreByAddress(scheme.address);
       String pwd = await wallet.getWalletPassword(Global.appContext, scheme.address);
+      if (pwd == null || pwd.isEmpty) return;
+      String keystore = await wallet.getWalletKeystoreByAddress(scheme.address);
 
       walletSDK.Wallet restore = await walletSDK.Wallet.restore(keystore, config: walletSDK.WalletConfig(password: pwd));
 
@@ -106,7 +111,7 @@ class Chat {
       String password = hexEncode(sha256(restore.seed));
       await DB.open(pubKey, password);
       await contact.fetchCurrentUser(pubKey);
-      connect(restore);
+      await connect(restore);
     } catch (e) {
       handleError(e);
     }
@@ -132,15 +137,16 @@ class Chat {
     await completer.future;
   }
 
-  close() {
+  close() async {
     _statusStreamSink.add(ChatConnectStatus.disconnected);
-    _statusController?.close();
-    onConnectController?.close();
-    onMessageController?.close();
-    onReceivedMessageController?.close();
-    onMessageSavedController?.close();
-    onErrorController?.close();
-    client?.close();
+    // await _statusController?.close();
+    // await onConnectController?.close();
+    // await onMessageController?.close();
+    // await onReceivedMessageController?.close();
+    // await onMessageSavedController?.close();
+    // await onErrorController?.close();
+    await client?.close();
+    client = null;
   }
 
   Future sendText(String dest, String data) async {
