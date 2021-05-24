@@ -2,7 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
 
-import '../helpers/authentication.dart';
+import 'authentication.dart';
 import '../services/task_service.dart';
 import 'application.dart';
 import 'chat/chat.dart';

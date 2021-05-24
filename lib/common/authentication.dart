@@ -2,9 +2,9 @@ import 'package:local_auth/local_auth.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/utils/logger.dart';
 
-import '../common/global.dart';
+import 'global.dart';
 
-/// Biometric authentication (Face ID, Touch ID or lock code), pin coode, wallet password
+/// Biometric authentication (Face ID, Touch ID or lock code), pin code, wallet password
 class Authorization {
   /// This class provides means to perform local, on-device authentication of the user.
   /// This means referring to biometric authentication on iOS (Touch ID or lock code) and the fingerprint
