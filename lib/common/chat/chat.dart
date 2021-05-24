@@ -111,7 +111,7 @@ class Chat {
       String password = hexEncode(sha256(restore.seed));
       await DB.open(pubKey, password);
       await contact.fetchCurrentUser(pubKey);
-      await connect(restore);
+      connect(restore); // await
     } catch (e) {
       handleError(e);
     }
