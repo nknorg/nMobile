@@ -323,9 +323,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
     switch (result) {
       case 0: // export
         wallet.getWalletPassword(context, _wallet?.address).then((String password) async {
-          if (password == null || password.isEmpty) {
-            return;
-          }
+          if (password == null || password.isEmpty) return;
           String keystore = await wallet.getWalletKeystoreByAddress(_wallet.address);
 
           if (_wallet.type == WalletType.eth) {

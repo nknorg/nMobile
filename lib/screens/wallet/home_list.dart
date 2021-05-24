@@ -216,10 +216,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
     S _localizations = S.of(context);
 
     wallet.getWalletPassword(context, scheme?.address).then((String password) async {
-      if (password == null || password.isEmpty) {
-        // no toast
-        return;
-      }
+      if (password == null || password.isEmpty) return;
       String keystore = await wallet.getWalletKeystoreByAddress(scheme.address);
 
       if (scheme.type == WalletType.eth) {
