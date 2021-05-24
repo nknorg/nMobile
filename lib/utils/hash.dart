@@ -8,6 +8,7 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 
 final String ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 final base58 = BaseXCodec(ALPHABET);
+
 List<int> sha1(raw) {
   var byte;
   if (raw is List<int>)
