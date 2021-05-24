@@ -11,6 +11,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
   final Widget childTail;
   final Color backgroundColor;
   final Brightness brightness;
+  final PreferredSizeWidget bottom;
 
   Header({
     this.title,
@@ -21,6 +22,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
     this.childTail,
     this.backgroundColor,
     this.brightness = Brightness.dark,
+    this.bottom,
   }) {
     _header = AppBar(
       brightness: this.brightness,
@@ -52,6 +54,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       actions: actions,
+      bottom: this.bottom,
     );
   }
 
