@@ -4,6 +4,7 @@ import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/utils/utils.dart';
+import 'package:uuid/uuid.dart';
 
 class ContactType {
   static const String stranger = 'stranger';
@@ -48,6 +49,22 @@ class Contact {
     }
     currentUser = contact;
     return contact;
+  }
+
+  Future<ContactSchema> addMe(String clientAddress) async {
+    if (clientAddress == null || clientAddress.isEmpty) return null;
+    var walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+    ContactSchema me = ContactSchema(
+      type: ContactType.me,
+      clientAddress: clientAddress,
+      nknWalletAddress: walletAddress,
+      createdTime: DateTime.now(),
+      updatedTime: DateTime.now(),
+      profileVersion: Uuid().v4(),
+    );
+    ContactSchema added = await _contactStorage.insertContact(me);
+    if (added != null) _addSink.add(added);
+    return added;
   }
 
   Future<ContactSchema> add(ContactSchema scheme) async {
