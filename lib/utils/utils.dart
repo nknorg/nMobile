@@ -95,3 +95,8 @@ bool verifyAddress(String address) {
     return false;
   }
 }
+
+final privateTopicRegExp = RegExp(r'\.[0-9a-f]{64}$');
+bool isPrivateTopicReg(String topic) {
+  return privateTopicRegExp.hasMatch(topic);
+}
