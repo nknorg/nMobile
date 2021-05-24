@@ -372,11 +372,14 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
             onPressed: () async {
               _walletBloc.add(DeleteWallet(this._wallet));
               // client close
-              String walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact?.currentUser?.clientAddress));
-              if (this._wallet?.address == walletAddress) {
-                await chat.close();
+              try {
+                String walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact?.currentUser?.clientAddress));
+                if (this._wallet?.address == walletAddress) {
+                  await chat?.close();
+                }
+              } catch (e) {} finally {
+                AppScreen.go(context);
               }
-              AppScreen.go(context);
             },
           ),
           reject: Button(

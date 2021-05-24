@@ -62,7 +62,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
       _walletBloc.add(AddWallet(wallet, result?.keystore, password: password));
 
       Loading.dismiss();
-      AppScreen.go(context); // TODO:GG 第一次跳不过去
+      AppScreen.go(context);
     }
   }
 
