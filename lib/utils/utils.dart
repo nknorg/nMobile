@@ -45,7 +45,7 @@ jsonFormat(raw) {
 }
 
 String getPublicKeyByClientAddr(String addr) {
-  int n = addr.lastIndexOf('.');
+  int n = addr?.lastIndexOf('.');
   if (n < 0) {
     return addr;
   } else {
