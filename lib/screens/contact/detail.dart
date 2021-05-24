@@ -25,6 +25,7 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/screens/contact/chat_profile.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -494,8 +495,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                     TextButton(
                       style: _buttonStyle(topRadius: false, botRadius: false, topPad: 12, botPad: 12),
                       onPressed: () {
-                        // TODO:GG chat_id detail
-                        // Navigator.pushNamed(this.context, ShowMyChatID.routeName);
+                        ContactChatProfileScreen.go(this.context, this._contactSchema);
                       },
                       child: Row(
                         children: <Widget>[
@@ -624,8 +624,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
               TextButton(
                 style: _buttonStyle(topRadius: false, botRadius: true, topPad: 10, botPad: 15),
                 onPressed: () {
-                  // TODO:GG chat_id detail
-                  //   Navigator.pushNamed(this.context, ChatProfile.routeName, arguments: currentUser);
+                  ContactChatProfileScreen.go(this.context, this._contactSchema);
                 },
                 child: Row(
                   children: <Widget>[
