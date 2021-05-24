@@ -3,14 +3,17 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/avatar_editable.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -18,6 +21,7 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/wallet.dart';
@@ -98,10 +102,14 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     }
   }
 
-  ContactSchema _contactSchema;
-  WalletSchema _walletSchema;
+  // static const fcmGapString = '__FCMToken__:';
 
+  ContactSchema _contactSchema;
+  WalletSchema _walletDefault;
+
+  WalletBloc _walletBloc;
   StreamSubscription _updateContactSubscription;
+  StreamSubscription _changeWalletSubscription;
 
   bool _initBurnOpen = false;
   int _initBurnProgress = -1;
@@ -110,25 +118,11 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 
   bool _notificationOpen = false;
 
-  // FocusNode _firstNameFocusNode = FocusNode();
-  // GlobalKey _nameFormKey = new GlobalKey<FormState>();
-  // bool _nameFormValid = false;
-  // WalletSchema _walletDefault;
-
-  // String nickName;
-  // String chatAddress;
-  // String walletAddress;
-
-  // static const fcmGapString = '__FCMToken__:';
-
-  // AuthBloc _authBloc;
-  // NKNClientBloc _clientBloc;
-  // ChatBloc _chatBloc;
-  // ContactBloc _contactBloc;
-
   @override
   initState() {
     super.initState();
+
+    _walletBloc = BlocProvider.of<WalletBloc>(this.context);
 
     // listen
     _updateContactSubscription = contact.updateStream.listen((List<ContactSchema> list) {
@@ -142,20 +136,20 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
         }
       }
     });
+    _walletBloc.stream.listen((event) {
+      if (_contactSchema?.type == ContactType.me) {
+        if (event is WalletDefault) {
+          // List<WalletSchema> result = event?.wallets?.where((element) => element?.address == event?.walletAddress)?.toList();
+          // if(result != null && result.isNotEmpty){
+          _onDefaultWalletChange();
+          // }
+        }
+      }
+    });
 
     // init
     _refreshContactSchema();
     _refreshDefaultWallet();
-
-    // _authBloc = BlocProvider.of<AuthBloc>(context);
-    // _clientBloc = BlocProvider.of<NKNClientBloc>(context);
-    // _chatBloc = BlocProvider.of<ChatBloc>(context);
-    // _contactBloc = BlocProvider.of<ContactBloc>(context);
-    // _clientBloc.aBloc = _authBloc;
-
-    // this.nickName = currentUser.getShowName;
-    // this.chatAddress = currentUser.clientAddress;
-    // this.walletAddress = currentUser.nknWalletAddress;
   }
 
   @override
@@ -163,12 +157,15 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     _updateBurnIfNeed();
     super.dispose();
     _updateContactSubscription?.cancel();
+    _changeWalletSubscription?.cancel();
   }
 
-  _refreshContactSchema() async {
+  _refreshContactSchema({ContactSchema scheme}) async {
     ContactSchema contactSchema = widget.arguments[ContactDetailScreen.argContactSchema];
     int contactId = widget.arguments[ContactDetailScreen.argContactId];
-    if (contactSchema != null && contactSchema.id != 0) {
+    if (scheme != null) {
+      this._contactSchema = scheme;
+    } else if (contactSchema != null && contactSchema.id != 0) {
       this._contactSchema = contactSchema;
     } else if (contactId != null && contactId != 0) {
       this._contactSchema = await contact.queryContact(contactId);
@@ -196,11 +193,58 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
         _notificationOpen = false;
       }
     }
+    setState(() {});
   }
 
-  _refreshDefaultWallet() async {
-    _walletSchema = await wallet.getWalletDefault();
-    // TODO:GG listen
+  Future<WalletSchema> _refreshDefaultWallet() async {
+    WalletSchema schema = await wallet.getWalletDefault();
+    setState(() {
+      _walletDefault = schema;
+    });
+    return schema;
+  }
+
+  _onDefaultWalletChange() async {
+    WalletSchema _walletDefault = await _refreshDefaultWallet();
+    if (_walletDefault == null) return;
+
+    Loading.show();
+    try {
+      // client change
+      await chat.close();
+      await Future.delayed(Duration(seconds: 1)); // wait client close
+      await chat.signIn(_walletDefault);
+      await Future.delayed(Duration(seconds: 1)); // wait client create
+
+      // refresh state
+      _refreshContactSchema(scheme: contact.currentUser);
+
+      Toast.show(S.of(this.context).tip_switch_success);
+
+      // TimerAuth.instance.enableAuth(); // TODO:GG auth
+      //_contactBloc.add(UpdateUserInfoEvent(currentUser)); // TODO:GG notify chat
+    } catch (e) {
+      handleError(e);
+    } finally {
+      Loading.dismiss();
+    }
+  }
+
+  String _getClientAddress() {
+    if (_contactSchema?.clientAddress != null) {
+      if (_contactSchema.clientAddress.length > 10) {
+        return _contactSchema.clientAddress.substring(0, 10) + '...';
+      }
+      return _contactSchema.clientAddress;
+    }
+    return '';
+  }
+
+  _selectDefaultWallet() async {
+    S _localizations = S.of(this.context);
+    WalletSchema result = await BottomDialog.of(this.context).showWalletSelect(title: _localizations.select_another_wallet, onlyNKN: true);
+    if (result?.address == null || result?.address == _contactSchema?.nknWalletAddress) return;
+    _walletBloc.add(DefaultWallet(result?.address));
   }
 
   _selectAvatarPicture() async {
@@ -225,19 +269,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     // _chatBloc.add(RefreshMessageListEvent()); // TODO:GG notify chat
   }
 
-  String _getClientAddress() {
-    if (_contactSchema?.clientAddress != null) {
-      if (_contactSchema.clientAddress.length > 10) {
-        return _contactSchema.clientAddress.substring(0, 10) + '...';
-      }
-      return _contactSchema.clientAddress;
-    }
-    return '';
-  }
-
-  _modifyNickname(BuildContext context) async {
-    S _localizations = S.of(context);
-    String newName = await BottomDialog.of(context).showInput(
+  _modifyNickname() async {
+    S _localizations = S.of(this.context);
+    String newName = await BottomDialog.of(this.context).showInput(
       title: _localizations.edit_nickname,
       inputTip: _localizations.edit_nickname,
       inputHint: _localizations.input_nickname,
@@ -316,16 +350,16 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     // _chatBloc.add(SendMessageEvent(sendMsg));
   }
 
-  _addFriend(BuildContext context) {
-    S _localizations = S.of(context);
+  _addFriend() {
+    S _localizations = S.of(this.context);
     contact.setType(_contactSchema?.id, ContactType.friend, notify: true);
     Toast.show(_localizations.success);
   }
 
-  _deleteAction(BuildContext context) {
-    S _localizations = S.of(context);
+  _deleteAction() {
+    S _localizations = S.of(this.context);
 
-    ModalDialog.of(context).confirm(
+    ModalDialog.of(this.context).confirm(
       title: _localizations.tip,
       content: _localizations.delete_friend_confirm_title,
       agree: Button(
@@ -334,8 +368,8 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
         width: double.infinity,
         onPressed: () async {
           contact.delete(_contactSchema?.id);
-          Navigator.pop(context);
-          Navigator.pop(context);
+          Navigator.pop(this.context);
+          Navigator.pop(this.context);
         },
       ),
       reject: Button(
@@ -343,7 +377,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
         backgroundColor: application.theme.backgroundLightColor,
         fontColor: application.theme.fontColor2,
         width: double.infinity,
-        onPressed: () => Navigator.pop(context),
+        onPressed: () => Navigator.pop(this.context),
       ),
     );
   }
@@ -357,9 +391,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
         title: _contactSchema?.getDisplayName ?? "",
       ),
       body: _contactSchema?.isMe == true
-          ? _getSelfView(context)
+          ? _getSelfView()
           : _contactSchema?.isMe == false
-              ? _getPersonView(context)
+              ? _getPersonView()
               : SizedBox.shrink(),
     );
   }
@@ -379,8 +413,8 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     );
   }
 
-  _getSelfView(BuildContext context) {
-    S _localizations = S.of(context);
+  _getSelfView() {
+    S _localizations = S.of(this.context);
 
     return SingleChildScrollView(
       child: Column(
@@ -426,7 +460,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                     TextButton(
                       style: _buttonStyle(topRadius: true, botRadius: false, topPad: 15, botPad: 10),
                       onPressed: () {
-                        _modifyNickname(context);
+                        _modifyNickname();
                       },
                       child: Row(
                         children: <Widget>[
@@ -461,7 +495,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                       style: _buttonStyle(topRadius: false, botRadius: false, topPad: 12, botPad: 12),
                       onPressed: () {
                         // TODO:GG chat_id detail
-                        // Navigator.pushNamed(context, ShowMyChatID.routeName);
+                        // Navigator.pushNamed(this.context, ShowMyChatID.routeName);
                       },
                       child: Row(
                         children: <Widget>[
@@ -495,14 +529,14 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                     TextButton(
                       style: _buttonStyle(topRadius: false, botRadius: true, topPad: 10, botPad: 15),
                       onPressed: () {
-                        // _selectWallets, // TODO:GG
+                        _selectDefaultWallet();
                       },
                       child: Row(
                         children: <Widget>[
                           Asset.iconSvg('wallet', color: application.theme.primaryColor, width: 24),
                           SizedBox(width: 10),
                           Label(
-                            _walletSchema?.name ?? "--",
+                            _walletDefault?.name ?? "--",
                             type: LabelType.bodyRegular,
                             color: application.theme.fontColor1,
                           ),
@@ -530,8 +564,8 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     );
   }
 
-  _getPersonView(BuildContext context) {
-    S _localizations = S.of(context);
+  _getPersonView() {
+    S _localizations = S.of(this.context);
 
     return SingleChildScrollView(
       padding: EdgeInsets.only(top: 20, bottom: 30, left: 16, right: 16),
@@ -556,7 +590,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
               TextButton(
                 style: _buttonStyle(topRadius: true, botRadius: false, topPad: 15, botPad: 10),
                 onPressed: () {
-                  _modifyNickname(context);
+                  _modifyNickname();
                 },
                 child: Row(
                   children: <Widget>[
@@ -591,7 +625,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                 style: _buttonStyle(topRadius: false, botRadius: true, topPad: 10, botPad: 15),
                 onPressed: () {
                   // TODO:GG chat_id detail
-                  //   Navigator.pushNamed(context, ChatProfile.routeName, arguments: currentUser);
+                  //   Navigator.pushNamed(this.context, ChatProfile.routeName, arguments: currentUser);
                 },
                 child: Row(
                   children: <Widget>[
@@ -672,7 +706,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                               Padding(
                                 padding: const EdgeInsets.only(left: 16),
                                 child: Label(
-                                  (!_burnOpen || _burnProgress < 0) ? _localizations.off : getStringFromSeconds(context, burnValueArray[_burnProgress].inSeconds),
+                                  (!_burnOpen || _burnProgress < 0) ? _localizations.off : getStringFromSeconds(this.context, burnValueArray[_burnProgress].inSeconds),
                                   type: LabelType.bodyRegular,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -684,7 +718,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                                 activeColor: application.theme.primaryColor,
                                 inactiveColor: application.theme.fontColor2,
                                 divisions: burnValueArray.length - 1,
-                                label: burnTextArray(context)[_burnProgress],
+                                label: burnTextArray(this.context)[_burnProgress],
                                 onChanged: (value) {
                                   setState(() {
                                     _burnProgress = value.round();
@@ -710,7 +744,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
               (!_burnOpen || _burnProgress < 0)
                   ? _localizations.burn_after_reading_desc
                   : _localizations.burn_after_reading_desc_disappear(
-                      burnTextArray(context)[_burnProgress],
+                      burnTextArray(this.context)[_burnProgress],
                     ),
               type: LabelType.bodySmall,
               fontWeight: FontWeight.w600,
@@ -767,7 +801,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
             style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
             onPressed: () {
               // TODO:GG chat 1_to_1
-              // Navigator.of(context).pushNamed(MessageChatPage.routeName, arguments: currentUser);
+              // Navigator.of(this.context).pushNamed(MessageChatPage.routeName, arguments: currentUser);
             },
             child: Row(
               children: <Widget>[
@@ -797,7 +831,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                     TextButton(
                       style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
                       onPressed: () {
-                        _addFriend(context);
+                        _addFriend();
                       },
                       child: Row(
                         children: <Widget>[
@@ -824,7 +858,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                     TextButton(
                       style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
                       onPressed: () {
-                        _deleteAction(context);
+                        _deleteAction();
                       },
                       child: Row(
                         children: <Widget>[
@@ -843,92 +877,4 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       ),
     );
   }
-
-// _selectWallets() {
-//   BottomDialog.of(context).showSelectWalletDialog(
-//     title: _localizations.select_another_wallet,
-//     onlyNkn: true,
-//     callback: (wallet) async {
-//       Timer(Duration(milliseconds: 30), () {
-//         _changeAccount(wallet);
-//       });
-//     },
-//   );
-// }
-
-// _changeAccount(WalletSchema wallet) async {
-//   if (wallet.address == currentUser.nknWalletAddress) return;
-//   var password = await BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NL10ns.of(Global.appContext).verify_wallet_password);
-//   if (password != null) {
-//     try {
-//       var w = await wallet.exportWallet(password);
-//       if (w['address'] == wallet.address) {
-//         onGetPassword(wallet, password);
-//       } else {
-//         showToast(_localizations.tip_password_error);
-//       }
-//     } catch (e) {
-//       if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-//         showToast(_localizations.tip_password_error);
-//       }
-//     }
-//   }
-// }
-
-// void onGetPassword(WalletSchema wallet, String password) async {
-//   EasyLoading.show();
-//
-//   var eWallet = await wallet.exportWallet(password);
-//   // currentUser = await ContactSchema.fetchCurrentUser();
-//
-//   _clientBloc.add(NKNDisConnectClientEvent());
-//   if (currentUser == null) {
-//     NLog.w('Current User is____null');
-//     DateTime now = DateTime.now();
-//     currentUser = ContactSchema(
-//       type: ContactType.me,
-//       clientAddress: eWallet['publicKey'],
-//       nknWalletAddress: eWallet['address'],
-//       createdTime: now,
-//       updatedTime: now,
-//       profileVersion: uuid.v4(),
-//     );
-//     await currentUser.insertContact();
-//   }
-//
-//   TimerAuth.instance.enableAuth();
-//   await LocalStorage().set(LocalStorage.DEFAULT_D_CHAT_WALLET_ADDRESS, eWallet['address']);
-//
-//   var walletAddress = eWallet['address'];
-//   var publicKey = eWallet['publicKey'];
-//   Uint8List seedList = Uint8List.fromList(hexDecode(eWallet['seed']));
-//   if (seedList != null && seedList.isEmpty) {
-//     NLog.w('Wrong!!! seedList.isEmpty');
-//   }
-//   String _seedKey = hexEncode(sha256(hexEncode(seedList.toList(growable: false))));
-//
-//   if (NKNClientCaller.currentChatId == null || publicKey == NKNClientCaller.currentChatId || NKNClientCaller.currentChatId.length == 0) {
-//     await NKNDataManager.instance.initDataBase(publicKey, _seedKey);
-//   } else {
-//     await NKNDataManager.instance.changeDatabase(publicKey, _seedKey);
-//   }
-//   NKNClientCaller.instance.setChatId(publicKey);
-//
-//   currentUser = await ContactSchema.fetchCurrentUser();
-//   setState(() {
-//     nickName = currentUser.getShowName;
-//     chatAddress = currentUser.clientAddress;
-//     walletAddress = currentUser.nknWalletAddress;
-//   });
-//
-//   _authBloc.add(AuthToUserEvent(publicKey, walletAddress));
-//   NKNClientCaller.instance.createClient(seedList, null, publicKey);
-//
-//   Timer(Duration(milliseconds: 200), () async {
-//     _contactBloc.add(UpdateUserInfoEvent(currentUser));
-//     EasyLoading.dismiss();
-//     showToast(_localizations.tip_switch_success);
-//   });
-// }
-
 }

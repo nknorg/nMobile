@@ -42,6 +42,9 @@ class Contact {
   Future<ContactSchema> fetchCurrentUser(String clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     ContactSchema contact = await _contactStorage.queryContactByClientAddress(clientAddress);
+    if (contact == null) {
+      contact = await addMe(clientAddress);
+    }
     if (contact != null) {
       if (contact.nknWalletAddress == null || contact.nknWalletAddress.isEmpty) {
         contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress));
