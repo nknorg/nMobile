@@ -20,6 +20,7 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -98,6 +99,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   }
 
   ContactSchema _contactSchema;
+  WalletSchema _walletSchema;
 
   StreamSubscription _updateContactSubscription;
 
@@ -143,6 +145,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 
     // init
     _refreshContactSchema();
+    _refreshDefaultWallet();
 
     // _authBloc = BlocProvider.of<AuthBloc>(context);
     // _clientBloc = BlocProvider.of<NKNClientBloc>(context);
@@ -195,6 +198,11 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     }
   }
 
+  _refreshDefaultWallet() async {
+    _walletSchema = await wallet.getWalletDefault();
+    // TODO:GG listen
+  }
+
   _selectAvatarPicture() async {
     String remarkAvatarLocalPath = Path.getLocalContactAvatar(hexEncode(chat.publicKey), "${Uuid().v4()}.jpeg");
     String remarkAvatarPath = join(Global.applicationRootDirectory.path, remarkAvatarLocalPath);
@@ -209,9 +217,12 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       return;
     }
 
-    await contact.setRemarkAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
-    // TODO:GG notify chat
-    // _chatBloc.add(RefreshMessageListEvent());
+    if (_contactSchema?.type == ContactType.me) {
+      await contact.setAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
+    } else {
+      await contact.setRemarkAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
+    }
+    // _chatBloc.add(RefreshMessageListEvent()); // TODO:GG notify chat
   }
 
   String _getClientAddress() {
@@ -235,9 +246,12 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       maxLength: 20,
     );
     if (newName == null || newName.trim().isEmpty) return;
-    await contact.setRemarkName(_contactSchema, newName.trim(), notify: true);
-    // TODO:GG notify chat
-    // _chatBloc.add(RefreshMessageListEvent());
+    if (_contactSchema?.type == ContactType.me) {
+      await contact.setName(_contactSchema, newName.trim(), notify: true);
+    } else {
+      await contact.setRemarkName(_contactSchema, newName.trim(), notify: true);
+    }
+    // _chatBloc.add(RefreshMessageListEvent()); // TODO:GG notify chat
   }
 
   _updateBurnIfNeed() async {
@@ -343,7 +357,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
         title: _contactSchema?.getDisplayName ?? "",
       ),
       body: _contactSchema?.isMe == true
-          ? SizedBox.shrink() // TODO:GG getSelfView
+          ? _getSelfView(context)
           : _contactSchema?.isMe == false
               ? _getPersonView(context)
               : SizedBox.shrink(),
@@ -365,6 +379,157 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     );
   }
 
+  _getSelfView(BuildContext context) {
+    S _localizations = S.of(context);
+
+    return SingleChildScrollView(
+      child: Column(
+        children: <Widget>[
+          Container(
+            padding: EdgeInsets.only(left: 16, right: 16, bottom: 32),
+            decoration: BoxDecoration(
+              color: application.theme.backgroundColor4,
+            ),
+            child: Center(
+              /// avatar
+              child: ContactAvatarEditable(
+                key: ValueKey(_contactSchema?.getDisplayAvatarPath ?? ""),
+                radius: 48,
+                contact: _contactSchema,
+                placeHolder: false,
+                onSelect: _selectAvatarPicture,
+              ),
+            ),
+          ),
+          Stack(
+            children: [
+              Container(
+                height: 32,
+                decoration: BoxDecoration(color: application.theme.backgroundColor4),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: application.theme.backgroundColor,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                ),
+                padding: EdgeInsets.only(left: 16, right: 16, top: 26, bottom: 26),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Label(
+                      _localizations.my_profile,
+                      type: LabelType.h3,
+                    ),
+                    SizedBox(height: 24),
+
+                    /// name
+                    TextButton(
+                      style: _buttonStyle(topRadius: true, botRadius: false, topPad: 15, botPad: 10),
+                      onPressed: () {
+                        _modifyNickname(context);
+                      },
+                      child: Row(
+                        children: <Widget>[
+                          Asset.iconSvg('user', color: application.theme.primaryColor, width: 24),
+                          SizedBox(width: 10),
+                          Label(
+                            _localizations.nickname,
+                            type: LabelType.bodyRegular,
+                            color: application.theme.fontColor1,
+                          ),
+                          SizedBox(width: 20),
+                          Expanded(
+                            child: Label(
+                              _contactSchema?.getDisplayName ?? "",
+                              type: LabelType.bodyRegular,
+                              color: application.theme.fontColor2,
+                              overflow: TextOverflow.fade,
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                          Asset.iconSvg(
+                            'right',
+                            width: 24,
+                            color: application.theme.fontColor2,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    /// address
+                    TextButton(
+                      style: _buttonStyle(topRadius: false, botRadius: false, topPad: 12, botPad: 12),
+                      onPressed: () {
+                        // TODO:GG chat_id detail
+                        // Navigator.pushNamed(context, ShowMyChatID.routeName);
+                      },
+                      child: Row(
+                        children: <Widget>[
+                          Asset.image('chat/chat-id.png', color: application.theme.primaryColor, width: 24),
+                          SizedBox(width: 10),
+                          Label(
+                            _localizations.d_chat_address,
+                            type: LabelType.bodyRegular,
+                            color: application.theme.fontColor1,
+                          ),
+                          SizedBox(width: 20),
+                          Expanded(
+                            child: Label(
+                              _getClientAddress(),
+                              type: LabelType.bodyRegular,
+                              color: application.theme.fontColor2,
+                              overflow: TextOverflow.fade,
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                          Asset.iconSvg(
+                            'right',
+                            width: 24,
+                            color: application.theme.fontColor2,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    /// wallet
+                    TextButton(
+                      style: _buttonStyle(topRadius: false, botRadius: true, topPad: 10, botPad: 15),
+                      onPressed: () {
+                        // _selectWallets, // TODO:GG
+                      },
+                      child: Row(
+                        children: <Widget>[
+                          Asset.iconSvg('wallet', color: application.theme.primaryColor, width: 24),
+                          SizedBox(width: 10),
+                          Label(
+                            _walletSchema?.name ?? "--",
+                            type: LabelType.bodyRegular,
+                            color: application.theme.fontColor1,
+                          ),
+                          SizedBox(width: 20),
+                          Expanded(
+                            child: Label(
+                              _localizations.change_default_chat_wallet,
+                              type: LabelType.bodyRegular,
+                              color: application.theme.primaryColor,
+                              overflow: TextOverflow.fade,
+                              textAlign: TextAlign.right,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   _getPersonView(BuildContext context) {
     S _localizations = S.of(context);
 
@@ -376,7 +541,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
           /// avatar
           Center(
             child: ContactAvatarEditable(
-              key: ValueKey(_contactSchema?.getDisplayAvatarPath ?? ""), // need!
+              key: ValueKey(_contactSchema?.getDisplayAvatarPath ?? ""),
               radius: 48,
               contact: _contactSchema,
               placeHolder: false,
@@ -385,9 +550,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
           ),
           SizedBox(height: 36),
 
-          /// name + address
           Column(
             children: <Widget>[
+              /// name
               TextButton(
                 style: _buttonStyle(topRadius: true, botRadius: false, topPad: 15, botPad: 10),
                 onPressed: () {
@@ -420,6 +585,8 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                   ],
                 ),
               ),
+
+              /// address
               TextButton(
                 style: _buttonStyle(topRadius: false, botRadius: true, topPad: 10, botPad: 15),
                 onPressed: () {
@@ -677,82 +844,6 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     );
   }
 
-// showAction(bool b) async {
-//   if (!b) {
-//     //delete
-//     SimpleConfirm(
-//         context: context,
-//         content: _localizations.delete_friend_confirm_title,
-//         buttonText: _localizations.delete,
-//         buttonColor: Colors.red,
-//         callback: (v) {
-//           if (v) {
-//             currentUser.setFriend(false);
-//             setState(() {});
-//           }
-//         }).show();
-//   } else {
-//     currentUser.setFriend(b);
-//     setState(() {});
-//     showToast(_localizations.success);
-//   }
-// }
-
-// showChangeSelfNameDialog() {
-//   _firstNameController.text = currentUser.firstName;
-//
-//   BottomDialog.of(context).showBottomDialog(
-//     title: _localizations.edit_nickname,
-//     child: Form(
-//       key: _nameFormKey,
-//       autovalidate: true,
-//       onChanged: () {
-//         _nameFormValid = (_nameFormKey.currentState as FormState).validate();
-//       },
-//       child: Flex(
-//         direction: Axis.horizontal,
-//         children: <Widget>[
-//           Expanded(
-//             flex: 1,
-//             child: Padding(
-//               padding: const EdgeInsets.only(right: 4),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: <Widget>[
-//                   Textbox(
-//                     controller: _firstNameController,
-//                     focusNode: _firstNameFocusNode,
-//                     hintText: _localizations.input_nickname,
-//                     maxLength: 20,
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     ),
-//     action: Padding(
-//       padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
-//       child: Button(
-//         text: _localizations.save,
-//         width: double.infinity,
-//         onPressed: () async {
-//           _nameFormValid = (_nameFormKey.currentState as FormState).validate();
-//           if (_nameFormValid) {
-//             currentUser.firstName = _firstNameController.text.trim();
-//             setState(() {
-//               nickName = currentUser.getShowName;
-//             });
-//             _updateUserInfo(currentUser.firstName, null);
-//             _popWithInformation();
-//           }
-//         },
-//       ),
-//     ),
-//   );
-// }
-
 // _selectWallets() {
 //   BottomDialog.of(context).showSelectWalletDialog(
 //     title: _localizations.select_another_wallet,
@@ -763,6 +854,25 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //       });
 //     },
 //   );
+// }
+
+// _changeAccount(WalletSchema wallet) async {
+//   if (wallet.address == currentUser.nknWalletAddress) return;
+//   var password = await BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NL10ns.of(Global.appContext).verify_wallet_password);
+//   if (password != null) {
+//     try {
+//       var w = await wallet.exportWallet(password);
+//       if (w['address'] == wallet.address) {
+//         onGetPassword(wallet, password);
+//       } else {
+//         showToast(_localizations.tip_password_error);
+//       }
+//     } catch (e) {
+//       if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
+//         showToast(_localizations.tip_password_error);
+//       }
+//     }
+//   }
 // }
 
 // void onGetPassword(WalletSchema wallet, String password) async {
@@ -819,222 +929,6 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 //     EasyLoading.dismiss();
 //     showToast(_localizations.tip_switch_success);
 //   });
-// }
-
-// _changeAccount(WalletSchema wallet) async {
-//   if (wallet.address == currentUser.nknWalletAddress) return;
-//   var password = await BottomDialog.of(Global.appContext).showInputPasswordDialog(title: NL10ns.of(Global.appContext).verify_wallet_password);
-//   if (password != null) {
-//     try {
-//       var w = await wallet.exportWallet(password);
-//       if (w['address'] == wallet.address) {
-//         onGetPassword(wallet, password);
-//       } else {
-//         showToast(_localizations.tip_password_error);
-//       }
-//     } catch (e) {
-//       if (e.message == ConstUtils.WALLET_PASSWORD_ERROR) {
-//         showToast(_localizations.tip_password_error);
-//       }
-//     }
-//   }
-// }
-
-// getSelfView() {
-//   return Scaffold(
-//     backgroundColor: application.theme.backgroundColor4,
-//     appBar: Header(title: '', backgroundColor: application.theme.backgroundColor4),
-//     body: Container(
-//       child: Column(
-//         children: <Widget>[
-//           Container(
-//             width: double.infinity,
-//             child: Column(
-//               mainAxisAlignment: MainAxisAlignment.start,
-//               children: <Widget>[
-//                 Stack(
-//                   children: <Widget>[
-//                     Container(
-//                       child: GestureDetector(
-//                         onTap: () {
-//                           updatePic();
-//                         },
-//                         child: Container(
-//                           child: CommonUI.avatarWidget(
-//                             radiusSize: 48,
-//                             contact: currentUser,
-//                           ),
-//                         ),
-//                       ),
-//                     ),
-//                     Positioned(
-//                       bottom: 0,
-//                       right: 0,
-//                       child: Button(
-//                         padding: const EdgeInsets.all(0),
-//                         width: 24,
-//                         height: 24,
-//                         backgroundColor: application.theme.primaryColor,
-//                         child: SvgPicture.asset('assets/icons/camera.svg', width: 16),
-//                         onPressed: () async {
-//                           updatePic();
-//                         },
-//                       ),
-//                     )
-//                   ],
-//                 ),
-//                 SizedBox(height: 20)
-//               ],
-//             ),
-//           ),
-//           Expanded(
-//             child: Container(
-//               width: double.infinity,
-//               decoration: BoxDecoration(color: application.theme.backgroundColor4),
-//               child: BodyBox(
-//                 padding: EdgeInsets.only(
-//                   top: 0,
-//                 ),
-//                 child: SingleChildScrollView(
-//                   child: Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       Padding(
-//                         padding: EdgeInsets.fromLTRB(20.w, 20.h, 0, 16.h),
-//                         child: Label(
-//                           _localizations.my_profile,
-//                           type: LabelType.h3,
-//                         ),
-//                       ),
-//                       Container(
-//                         decoration: BoxDecoration(color: application.theme.backgroundLightColor, borderRadius: BorderRadius.circular(12)),
-//                         margin: EdgeInsets.symmetric(horizontal: 12),
-//                         child: Column(
-//                           crossAxisAlignment: CrossAxisAlignment.start,
-//                           mainAxisAlignment: MainAxisAlignment.center,
-//                           children: <Widget>[
-//                             FlatButton(
-//                               padding: const EdgeInsets.only(left: 16, right: 16, top: 10),
-//                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
-//                               onPressed: showChangeSelfNameDialog,
-//                               child: Row(
-//                                 children: <Widget>[
-//                                   loadAssetIconsImage('user', color: application.theme.primaryColor, width: 24),
-//                                   SizedBox(width: 10),
-//                                   Label(
-//                                     _localizations.nickname,
-//                                     type: LabelType.bodyRegular,
-//                                     color: application.theme.fontColor1,
-//                                     height: 1,
-//                                   ),
-//                                   SizedBox(width: 20),
-//                                   Expanded(
-//                                     child: Label(
-//                                       nickName ?? '',
-//                                       type: LabelType.bodyRegular,
-//                                       color: application.theme.fontColor2,
-//                                       overflow: TextOverflow.fade,
-//                                       textAlign: TextAlign.right,
-//                                       height: 1,
-//                                     ),
-//                                   ),
-//                                   SvgPicture.asset('assets/icons/right.svg', width: 24, color: application.theme.fontColor2)
-//                                 ],
-//                               ),
-//                             ).sized(h: 48),
-//                             FlatButton(
-//                               padding: const EdgeInsets.only(left: 16, right: 16),
-//                               onPressed: () {
-//                                 Navigator.pushNamed(context, ShowMyChatID.routeName);
-//                               },
-//                               child: Row(
-//                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                                 crossAxisAlignment: CrossAxisAlignment.center,
-//                                 children: <Widget>[
-//                                   loadAssetChatPng('chat_id', color: application.theme.primaryColor, width: 22),
-//                                   SizedBox(width: 10),
-//                                   Label(
-//                                     _localizations.d_chat_address,
-//                                     type: LabelType.bodyRegular,
-//                                     color: application.theme.fontColor1,
-//                                     height: 1,
-//                                   ),
-//                                   SizedBox(width: 20),
-//                                   Expanded(
-//                                     child: Label(
-//                                       _chatAddress(),
-//                                       type: LabelType.bodyRegular,
-//                                       textAlign: TextAlign.right,
-//                                       color: application.theme.fontColor2,
-//                                       maxLines: 1,
-//                                     ),
-//                                   ),
-//                                   SvgPicture.asset(
-//                                     'assets/icons/right.svg',
-//                                     width: 24,
-//                                     color: application.theme.fontColor2,
-//                                   )
-//                                 ],
-//                               ),
-//                             ).sized(h: 48),
-//                             FlatButton(
-//                               padding: const EdgeInsets.only(left: 16, right: 16),
-//                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(12))),
-//                               onPressed: _selectWallets,
-//                               child: Row(
-//                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                                 children: <Widget>[
-//                                   loadAssetIconsImage('wallet', color: application.theme.primaryColor, width: 24),
-//                                   _walletDefault == null
-//                                       ? BlocBuilder<WalletsBloc, WalletsState>(
-//                                           builder: (ctx, state) {
-//                                             if (state is WalletsLoaded) {
-//                                               final wallet = state.wallets.firstWhere((w) {
-//                                                 return w.address == currentUser.nknWalletAddress;
-//                                               }, orElse: null);
-//                                               if (wallet != null) {
-//                                                 _walletDefault = wallet;
-//                                               }
-//                                             }
-//                                             return Label(
-//                                               _walletDefault?.name ?? '--',
-//                                               type: LabelType.bodyRegular,
-//                                               color: application.theme.fontColor1,
-//                                               height: 1,
-//                                             ).pad(l: 10);
-//                                           },
-//                                         )
-//                                       : Label(
-//                                           _walletDefault?.name ?? '--',
-//                                           type: LabelType.bodyRegular,
-//                                           color: application.theme.fontColor1,
-//                                           height: 1,
-//                                         ).pad(l: 10),
-//                                   Expanded(
-//                                     child: Label(
-//                                       _localizations.change_default_chat_wallet,
-//                                       type: LabelType.bodyRegular,
-//                                       color: Colours.blue_0f,
-//                                       textAlign: TextAlign.right,
-//                                       maxLines: 1,
-//                                     ),
-//                                   )
-//                                 ],
-//                               ),
-//                             ).sized(h: 48),
-//                           ],
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                 ),
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     ),
-//   );
 // }
 
 }
