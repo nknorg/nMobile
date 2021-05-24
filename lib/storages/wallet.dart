@@ -148,9 +148,10 @@ class WalletStorage {
     return _localStorage.get('$KEY_BACKUP:$address');
   }
 
-  Future setDefaultAddress(String address) {
-    if (address == null || address.isEmpty) return Future.value(false);
-    return Future(() => _localStorage.set('$KEY_DEFAULT_ADDRESS', address));
+  Future<bool> setDefaultAddress(String address) async {
+    if (address == null || address.isEmpty) return false;
+    await _localStorage.set('$KEY_DEFAULT_ADDRESS', address);
+    return true;
   }
 
   Future<String> getDefaultAddress() async {
