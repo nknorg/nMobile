@@ -124,7 +124,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
     List<ContactSchema> friends = await contact.queryContacts(contactType: ContactType.friend);
     List<ContactSchema> strangers = await contact.queryContacts(contactType: ContactType.stranger, limit: 20);
     List<TopicSchema> topics = []; // widget.arguments ? <TopicSchema>[] : await TopicRepo().getAllTopics(); // TODO:GG topic下面这个也得重写
-    topics = (this._isSelect == true) ? [] : topics;
+    topics = (this._isSelect == true) ? [] : topics; // TODO:GG 此行不能写进state里
 
     setState(() {
       _pageLoaded = true;
