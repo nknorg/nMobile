@@ -10,7 +10,7 @@ class Settings {
   static String locale;
   static int notificationType;
   static bool biometricsAuthentication;
-  static bool debug = false;
+  static bool debug = true;
 
   static init() async {
     SettingsStorage settingsStorage = SettingsStorage();
