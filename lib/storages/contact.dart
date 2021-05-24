@@ -57,7 +57,7 @@ class ContactStorage {
         logger.d("insertContact - exist:$exist - add:$schema");
         return exist;
       }
-      Map entity = await schema.toMap();
+      Map<String, dynamic> entity = await schema.toMap();
       int id = await db.insert(tableName, entity);
       if (id != 0) {
         ContactSchema schema = await ContactSchema.fromMap(entity);
@@ -207,10 +207,10 @@ class ContactStorage {
 
   /// Profile
 
-  Future<bool> setProfile(int contactId, Map newProfileInfo, {Map oldProfileInfo}) async {
+  Future<bool> setProfile(int contactId, Map<String, dynamic> newProfileInfo, {Map<String, dynamic> oldProfileInfo}) async {
     if (contactId == null || contactId == 0 || newProfileInfo == null) return false;
 
-    Map saveDataInfo = oldProfileInfo ?? Map<String, dynamic>();
+    Map<String, dynamic> saveDataInfo = oldProfileInfo ?? Map<String, dynamic>();
 
     if (newProfileInfo['avatar'] != null) {
       saveDataInfo['avatar'] = newProfileInfo['avatar'];
@@ -301,10 +301,10 @@ class ContactStorage {
 
   /// RemarkProfile(Data)
 
-  Future<bool> setRemarkProfile(int contactId, Map newExtraInfo, {Map oldExtraInfo}) async {
+  Future<bool> setRemarkProfile(int contactId, Map<String, dynamic> newExtraInfo, {Map<String, dynamic> oldExtraInfo}) async {
     if (contactId == null || contactId == 0 || newExtraInfo == null) return false;
 
-    Map dataInfo = oldExtraInfo ?? Map<String, dynamic>();
+    Map<String, dynamic> dataInfo = oldExtraInfo ?? Map<String, dynamic>();
     if (newExtraInfo['first_name'] != null) {
       dataInfo['remark_name'] = newExtraInfo['first_name'];
     }
@@ -312,7 +312,7 @@ class ContactStorage {
       dataInfo['remark_avatar'] = newExtraInfo['remark_avatar'];
     }
 
-    Map saveDataInfo = Map<String, dynamic>();
+    Map<String, dynamic> saveDataInfo = Map<String, dynamic>();
     saveDataInfo['data'] = jsonEncode(dataInfo);
 
     try {
@@ -335,10 +335,10 @@ class ContactStorage {
 
   /// notes(Data)
 
-  Future<bool> setNotes(int contactId, String notes, {Map oldExtraInfo}) async {
+  Future<bool> setNotes(int contactId, String notes, {Map<String, dynamic> oldExtraInfo}) async {
     if (contactId == null || contactId == 0) return null;
     try {
-      Map<String, dynamic> data = oldExtraInfo ?? Map();
+      Map<String, dynamic> data = oldExtraInfo ?? Map<String, dynamic>();
       data['notes'] = notes;
       var count = await db.update(
         tableName,
