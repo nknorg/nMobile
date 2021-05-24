@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart' as walletSDK;
+import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
@@ -51,21 +52,18 @@ class WalletDetailScreen extends StatefulWidget {
 
 class _WalletDetailScreenState extends State<WalletDetailScreen> {
   WalletSchema _wallet;
-  // int _listIndex;
 
   WalletBloc _walletBloc;
-  // NKNClientBloc _clientBloc;
   StreamSubscription _walletSubscription;
+
   bool isDefault = false;
 
   @override
   void initState() {
     super.initState();
     this._wallet = widget.arguments[WalletDetailScreen.argWallet];
-    // this._listIndex = widget.arguments[WalletDetailScreen.argListIndex];
 
     _walletBloc = BlocProvider.of<WalletBloc>(context);
-    // _clientBloc = BlocProvider.of<NKNClientBloc>(context);
 
     // default
     _walletSubscription = _walletBloc.stream.listen((state) {
@@ -373,16 +371,11 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
             width: double.infinity,
             onPressed: () async {
               _walletBloc.add(DeleteWallet(this._wallet));
-              // TODO:GG client check (default wallet)
-              // if (NKNClientCaller.currentChatId != null) {
-              //   var walletAddr = await NknWalletPlugin.pubKeyToWalletAddr(NKNClientCaller.currentChatId);
-              //   if (walletAddr == widget.wallet.address) {
-              //     NLog.d('delete client');
-              //     _clientBloc.add(NKNDisConnectClientEvent());
-              //   } else {
-              //     NLog.d('no delete client');
-              //   }
-              // }
+
+              String walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact?.currentUser?.clientAddress));
+              if (this._wallet?.address == walletAddress) {
+                await chat.close();
+              }
               AppScreen.go(context);
             },
           ),

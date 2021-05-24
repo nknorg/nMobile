@@ -136,13 +136,10 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
         }
       }
     });
-    _walletBloc.stream.listen((event) {
-      if (_contactSchema?.type == ContactType.me) {
-        if (event is WalletDefault) {
-          // List<WalletSchema> result = event?.wallets?.where((element) => element?.address == event?.walletAddress)?.toList();
-          // if(result != null && result.isNotEmpty){
+    _changeWalletSubscription = _walletBloc.stream.listen((event) {
+      if (event is WalletDefault) {
+        if (_contactSchema?.type == ContactType.me) {
           _onDefaultWalletChange();
-          // }
         }
       }
     });
@@ -208,7 +205,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     WalletSchema _walletDefault = await _refreshDefaultWallet();
     if (_walletDefault == null) return;
 
-    Loading.show();
+    //Loading.show(); // set on func _selectDefaultWallet
     try {
       // client change
       await chat.close();
@@ -245,6 +242,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     WalletSchema result = await BottomDialog.of(this.context).showWalletSelect(title: _localizations.select_another_wallet, onlyNKN: true);
     if (result?.address == null || result?.address == _contactSchema?.nknWalletAddress) return;
     _walletBloc.add(DefaultWallet(result?.address));
+    Loading.show();
+    // no change chat immediately because wallet default maybe failure
+    // Loading.dismiss();
   }
 
   _selectAvatarPicture() async {
