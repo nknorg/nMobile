@@ -199,10 +199,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
       logger.d("amount:$_amount, sendTo:$_sendTo, fee:$_fee");
 
       wallet.getWalletPassword(context, _wallet?.address).then((String password) async {
-        if (password == null || password.isEmpty) {
-          // no toast
-          return;
-        }
+        if (password == null || password.isEmpty) return;
         String keystore = await wallet.getWalletKeystoreByAddress(_wallet?.address);
 
         if (_wallet.type == WalletType.eth) {
@@ -368,7 +365,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                 children: [
                                   /// wallet
                                   WalletDropdown(
-                                    selectTitle: _localizations.select_asset_to_receive,
+                                    selectTitle: _localizations.select_asset_to_send,
                                     schema: _wallet,
                                     onTapWave: false,
                                     onSelected: (picked) {
