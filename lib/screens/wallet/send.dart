@@ -60,25 +60,25 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
   FocusNode _sendToFocusNode = FocusNode();
   FocusNode _feeToFocusNode = FocusNode();
 
-  var _amount;
-  var _sendTo;
+  String _sendTo;
+  num _amount;
   bool _showFeeLayout = false;
 
   // nkn
-  double _sliderFeeMin = 0;
-  double _sliderFeeMax = 10;
+  final double _sliderFeeMin = 0;
+  final double _sliderFeeMax = 10;
   double _sliderFee = 0.1;
   double _fee = 0.1;
 
   // eth
   bool _ethTrueTokenFalse = false;
   int _gasPriceInGwei = 72;
-  int _sliderGasPriceMin = 10;
-  int _sliderGasPriceMax = 1000;
+  final int _sliderGasPriceMin = 10;
+  final int _sliderGasPriceMax = 1000;
   int _maxGas = 60000; // default: 90000
-  int _sliderMaxGasMinEth = 21000; // Actual: 21,000
-  int _sliderMaxGasMinNkn = 30000; // Actual: 29,561
-  int _sliderMaxGasMax = 300000;
+  final int _sliderMaxGasMinEth = 21000; // Actual: 21,000
+  final int _sliderMaxGasMinNkn = 30000; // Actual: 29,561
+  final int _sliderMaxGasMax = 300000;
 
   @override
   void initState() {
@@ -97,7 +97,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
       // _gasPriceInGwei = (gasPrice?.gwei ?? 0 * 0.8).round();
       // logger.d('gasPrice:$_gasPriceInGwei GWei');
     } else {
-      _feeController.text = _fee.toString();
+      _feeController.text = _fee?.toString() ?? _sliderFeeMin.toString();
     }
     _updateFee(eth);
   }
@@ -216,7 +216,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
   }
 
   Future<bool> _transferETH(String keystore, String password) async {
-    // TODO:GG transfer eth
+    // TODO:GG eth transfer
     // try {
     // final ethWallet = await Ethereum.restoreWalletSaved(schema: wallet, password: password);
     //   final ethClient = EthErc20Client();
@@ -248,7 +248,11 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
         Toast.show(_localizations.password_wrong);
         return false;
       }
-      final txHash = await restore?.transfer(_sendTo, _amount, fee: _fee.toString());
+      String amount = _amount?.toString() ?? '0';
+      String fee = _fee?.toString() ?? _sliderFeeMin.toString();
+      if (_sendTo == null || _sendTo.isEmpty || amount == '0') return false;
+
+      final txHash = await restore?.transfer(_sendTo, amount, fee: fee);
       if (txHash != null) {
         taskService.queryWalletBalanceTask();
         return txHash.length > 10;
@@ -579,7 +583,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                                         Slider(
                                                           value: _gasPriceInGwei.toDouble(),
                                                           onChanged: (v) {
-                                                            _updateFee(true, gweiFee: v.toInt());
+                                                            _updateFee(true, gweiFee: v?.toInt());
                                                           },
                                                           min: _sliderGasPriceMin.toDouble(),
                                                           max: _sliderGasPriceMax.toDouble(),
@@ -621,7 +625,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                                         Slider(
                                                           value: _maxGasGet,
                                                           onChanged: (v) {
-                                                            _updateFee(true, gasFee: v.round());
+                                                            _updateFee(true, gasFee: v?.round());
                                                           },
                                                           min: (_ethTrueTokenFalse ? _sliderMaxGasMinEth : _sliderMaxGasMinNkn).toDouble(),
                                                           max: _sliderMaxGasMax.toDouble(),

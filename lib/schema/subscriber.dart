@@ -1,1 +1,3 @@
-class Subscriber {}
+class Subscriber {
+  // TODO:GG Subscriber
+}
