@@ -10,11 +10,13 @@ import 'avatar.dart';
 class ContactHeader extends StatefulWidget {
   final Widget body;
   final ContactSchema contact;
+  final GestureTapCallback onTap;
   final bool syncData;
 
   ContactHeader({
     this.body,
     this.contact,
+    this.onTap,
     this.syncData = true,
   });
 
@@ -56,28 +58,32 @@ class _ContactHeaderState extends State<ContactHeader> {
   @override
   Widget build(BuildContext context) {
     String name = _contact?.getDisplayName ?? "";
-    return Flex(
-      direction: Axis.horizontal,
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: <Widget>[
-        Container(
-          margin: const EdgeInsets.only(right: 12),
-          child: ContactAvatar(
-            key: ValueKey(_contact?.getDisplayAvatarPath ?? ""),
-            contact: _contact,
+    return GestureDetector(
+      onTap: () {
+        if (widget.onTap != null) widget.onTap();
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            child: ContactAvatar(
+              key: ValueKey(_contact?.getDisplayAvatarPath ?? ""),
+              contact: _contact,
+            ),
           ),
-        ),
-        Expanded(
-          flex: 1,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Label(name, type: LabelType.h3, dark: true),
-              widget.body,
-            ],
-          ),
-        )
-      ],
+          Expanded(
+            flex: 1,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Label(name, type: LabelType.h3, dark: true),
+                widget.body,
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 }
