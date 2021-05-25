@@ -10,6 +10,7 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:path/path.dart';
+import 'package:uuid/uuid.dart';
 
 import 'option.dart';
 
@@ -154,6 +155,19 @@ class ContactSchema {
       'notification_open': notificationOpen ? 1 : 0,
     };
     return map;
+  }
+
+  static Future<ContactSchema> getByTypeMe(String clientAddress) async {
+    if (clientAddress == null || clientAddress.isEmpty) return null;
+    var walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+    return ContactSchema(
+      type: ContactType.me,
+      clientAddress: clientAddress,
+      nknWalletAddress: walletAddress,
+      createdTime: DateTime.now(),
+      updatedTime: DateTime.now(),
+      profileVersion: Uuid().v4(),
+    );
   }
 
   static getDefaultName(String clientAddress) {
