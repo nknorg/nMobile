@@ -9,6 +9,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
+import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
@@ -84,6 +85,13 @@ class ContactAddScreenState extends State<ContactAddScreen> {
     String walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
 
     logger.d("QR_DATA_DECODE - nickname:$nickName - clientAddress:$clientAddress - walletAddress:$walletAddress");
+    if (walletAddress == null || !verifyAddress(walletAddress)) {
+      ModalDialog.of(this.context).show(
+        content: S.of(this.context).error_unknown_nkn_qrcode,
+        hasCloseButton: true,
+      );
+      return;
+    }
 
     setState(() {
       _nameController.text = nickName;
