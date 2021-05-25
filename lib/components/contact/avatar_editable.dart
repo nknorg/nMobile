@@ -56,6 +56,7 @@ class _ContactAvatarEditableState extends State<ContactAvatarEditable> {
               }
             },
             child: ContactAvatar(
+              key: ValueKey(avatarPath),
               contact: widget.contact,
               radius: radius,
             ),
