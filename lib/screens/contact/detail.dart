@@ -267,7 +267,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     } else {
       await contact.setRemarkAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
     }
-    // _chatBloc.add(RefreshMessageListEvent()); // TODO:GG notify chat
+    // _chatBloc.add(RefreshSessionEvent()); // TODO:GG notify chat
   }
 
   _modifyNickname() async {
@@ -286,7 +286,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     } else {
       await contact.setRemarkName(_contactSchema, newName.trim(), notify: true);
     }
-    // _chatBloc.add(RefreshMessageListEvent()); // TODO:GG notify chat
+    // _chatBloc.add(RefreshSessionEvent()); // TODO:GG notify chat
   }
 
   _updateBurnIfNeed() async {
