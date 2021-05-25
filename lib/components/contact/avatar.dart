@@ -12,10 +12,11 @@ class ContactAvatar extends StatefulWidget {
   final bool placeHolder;
 
   ContactAvatar({
+    Key key,
     this.contact,
     this.radius,
     this.placeHolder = false,
-  });
+  }) : super(key: key);
 
   @override
   _ContactAvatarState createState() => _ContactAvatarState();

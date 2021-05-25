@@ -1,21 +1,61 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/contact.dart';
 
 import 'avatar.dart';
 
-class ContactHeader extends StatelessWidget {
+class ContactHeader extends StatefulWidget {
   final Widget body;
   final ContactSchema contact;
+  final bool syncData;
 
   ContactHeader({
     this.body,
     this.contact,
+    this.syncData = true,
   });
 
   @override
+  _ContactHeaderState createState() => _ContactHeaderState();
+}
+
+class _ContactHeaderState extends State<ContactHeader> {
+  StreamSubscription _updateContactSubscription;
+  ContactSchema _contact;
+
+  @override
+  void initState() {
+    super.initState();
+    this._contact = widget.contact;
+
+    // listen
+    if (widget.syncData != null && widget.syncData) {
+      _updateContactSubscription = contact.updateStream.listen((List<ContactSchema> list) {
+        if (list == null || list.isEmpty) return;
+        List result = list.where((element) => (element != null) && (element?.id == _contact?.id)).toList();
+        if (result != null && result.isNotEmpty) {
+          if (mounted) {
+            setState(() {
+              _contact = result[0];
+            });
+          }
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _updateContactSubscription?.cancel();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    String name = contact?.getDisplayName ?? "";
+    String name = _contact?.getDisplayName ?? "";
     return Flex(
       direction: Axis.horizontal,
       mainAxisAlignment: MainAxisAlignment.start,
@@ -23,7 +63,8 @@ class ContactHeader extends StatelessWidget {
         Container(
           margin: const EdgeInsets.only(right: 12),
           child: ContactAvatar(
-            contact: contact,
+            key: ValueKey(_contact?.getDisplayAvatarPath ?? ""),
+            contact: _contact,
           ),
         ),
         Expanded(
@@ -32,7 +73,7 @@ class ContactHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Label(name, type: LabelType.h3, dark: true),
-              body,
+              widget.body,
             ],
           ),
         )
