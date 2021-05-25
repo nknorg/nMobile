@@ -76,8 +76,10 @@ class _NotificationDialogState extends State<NotificationDialog> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(top: 10),
+                Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
                   child: (widget.headIcon ?? Asset.iconSvg('check', color: Colors.white)),
                 ),
                 Expanded(
@@ -87,7 +89,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                         child: Text(
                           widget.title,
                           style: TextStyle(
@@ -99,7 +101,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                         ),
                       ), //.pad(l: 16, t: 14),
                       Padding(
-                        padding: const EdgeInsets.only(left: 20, right: 16, bottom: 18),
+                        padding: const EdgeInsets.only(left: 8, right: 8, bottom: 18),
                         child: Text(
                           widget.content,
                           style: TextStyle(
