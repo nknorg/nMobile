@@ -15,14 +15,14 @@ import 'package:nmobile/utils/format.dart';
 
 import '../common/select.dart';
 
-class CacheScreen extends StatefulWidget {
+class SettingsCacheScreen extends StatefulWidget {
   static const String routeName = '/settings/cache';
 
   @override
-  _CacheScreenState createState() => _CacheScreenState();
+  _SettingsCacheScreenState createState() => _SettingsCacheScreenState();
 }
 
-class _CacheScreenState extends State<CacheScreen> {
+class _SettingsCacheScreenState extends State<SettingsCacheScreen> {
   String title;
   String selectedValue;
   List<SelectListItem> list;
