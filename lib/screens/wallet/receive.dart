@@ -102,7 +102,7 @@ class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
                           },
                         ),
                       ),
-                      Divider(height: 3),
+                      Divider(height: 3, indent: 20, endIndent: 20),
                       RepaintBoundary(
                         key: globalKey,
                         child: Column(
