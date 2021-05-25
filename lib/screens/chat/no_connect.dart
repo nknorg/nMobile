@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -7,6 +11,9 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/dropdown.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/screens/wallet/create_nkn.dart';
+import 'package:nmobile/screens/wallet/import.dart';
+import 'package:nmobile/utils/asset.dart';
 
 class NoConnectScreen extends StatefulWidget {
   @override
@@ -14,23 +21,49 @@ class NoConnectScreen extends StatefulWidget {
 }
 
 class _NoConnectScreenState extends State<NoConnectScreen> {
+  WalletBloc _walletBloc;
+  StreamSubscription _walletAddSubscription;
+
+  bool loaded = false;
   WalletSchema _defaultWallet;
 
   @override
   void initState() {
     super.initState();
+
+    // listen
+    _walletBloc = BlocProvider.of<WalletBloc>(this.context);
+    _walletAddSubscription = _walletBloc.stream?.listen((event) {
+      _refreshWalletDefault();
+    });
+
+    // default
+    _refreshWalletDefault();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _walletAddSubscription?.cancel();
+  }
+
+  _refreshWalletDefault() {
     wallet.getWalletDefault().then((value) {
-      if (value != null) {
-        setState(() {
+      setState(() {
+        loaded = true;
+        if (value != null) {
           _defaultWallet = value;
-        });
-      }
+        }
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
+    double headImageWidth = MediaQuery.of(context).size.width * 0.55;
+    double headImageHeight = headImageWidth / 3 * 2;
+
     return Layout(
       header: Header(
         titleChild: Padding(
@@ -42,38 +75,41 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: Flex(
-          direction: Axis.vertical,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(top: 60, bottom: 80),
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Expanded(
               flex: 0,
-              child: Image(image: AssetImage("assets/chat/messages.png"), width: 198, height: 144),
-            ),
-            Expanded(
-              flex: 0,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 30, bottom: 20),
-                child: Column(
-                  children: [
-                    Label(
-                      _localizations.chat_no_wallet_title,
-                      type: LabelType.h2,
-                      textAlign: TextAlign.center,
-                    ),
-                    Label(
-                      _localizations.click_connect,
-                      type: LabelType.bodyRegular,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+              child: Asset.image(
+                'chat/messages.png',
+                width: headImageWidth,
+                height: headImageHeight,
               ),
             ),
-            this._defaultWallet == null
-                ? SizedBox.shrink()
+            SizedBox(height: 50),
+            Expanded(
+              flex: 0,
+              child: Column(
+                children: [
+                  Label(
+                    _localizations.chat_no_wallet_title,
+                    type: LabelType.h2,
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 5),
+                  Label(
+                    _localizations.click_connect,
+                    type: LabelType.bodyRegular,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 30),
+            this._defaultWallet == null || !loaded
+                ? SizedBox(height: 30)
                 : Expanded(
                     flex: 0,
                     child: Padding(
@@ -91,23 +127,59 @@ class _NoConnectScreenState extends State<NoConnectScreen> {
                       ),
                     ),
                   ),
-            Expanded(
-              flex: 0,
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Button(
-                      width: double.infinity,
-                      text: _localizations.connect,
-                      onPressed: () async {
-                        chat.signIn(this._defaultWallet);
-                      },
-                    ),
-                  )
-                ],
-              ),
-            ),
+            SizedBox(height: 20),
+            !loaded
+                ? SizedBox.shrink()
+                : this._defaultWallet == null
+                    ? Expanded(
+                        flex: 0,
+                        child: Column(
+                          children: <Widget>[
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Button(
+                                text: _localizations.no_wallet_create,
+                                width: double.infinity,
+                                fontColor: application.theme.fontLightColor,
+                                backgroundColor: application.theme.primaryColor,
+                                onPressed: () {
+                                  WalletCreateNKNScreen.go(context);
+                                },
+                              ),
+                            ),
+                            SizedBox(height: 12),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Button(
+                                text: _localizations.no_wallet_import,
+                                width: double.infinity,
+                                fontColor: application.theme.fontLightColor,
+                                backgroundColor: application.theme.primaryColor.withAlpha(80),
+                                onPressed: () {
+                                  WalletImportScreen.go(context, WalletType.nkn);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : Expanded(
+                        flex: 0,
+                        child: Column(
+                          children: <Widget>[
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Button(
+                                width: double.infinity,
+                                text: _localizations.connect,
+                                onPressed: () async {
+                                  chat.signIn(this._defaultWallet);
+                                },
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
           ],
         ),
       ),
