@@ -25,6 +25,7 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/contact/chat_profile.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -799,8 +800,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
           TextButton(
             style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
             onPressed: () {
-              // TODO:GG chat 1_to_1
-              // Navigator.of(this.context).pushNamed(MessageChatPage.routeName, arguments: currentUser);
+              ChatMessagesScreen.go(this.context, _contactSchema);
             },
             child: Row(
               children: <Widget>[

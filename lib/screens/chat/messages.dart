@@ -1,34 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/utils/logger.dart';
 
 import 'messages_private.dart';
 
 class ChatMessagesScreen extends StatefulWidget {
   static const String routeName = '/chat/messages';
+  static final String argWho = "who";
 
-  final dynamic arguments;
-
-  ChatMessagesScreen({this.arguments}) {
-    assert(this.arguments != null);
-    assert(this.arguments is ContactSchema || this.arguments is TopicSchema);
+  static Future go(BuildContext context, dynamic who) {
+    logger.d("chat messages - $who");
+    if (who == null || !(who is ContactSchema || who is TopicSchema)) return null;
+    return Navigator.pushNamed(context, routeName, arguments: {
+      argWho: who,
+    });
   }
+
+  final Map<String, dynamic> arguments;
+
+  const ChatMessagesScreen({Key key, this.arguments}) : super(key: key);
 
   @override
   _ChatMessagesScreenState createState() => _ChatMessagesScreenState();
 }
 
 class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
-  bool _isPrivateChat = true;
-  ContactSchema _contact;
   bool loading = false;
+  ContactSchema _contact;
+  TopicSchema _topic;
 
   _bindData() {
-    if (widget.arguments is TopicSchema) {
-      _isPrivateChat = false;
-    } else if (widget.arguments is ContactSchema) {
-      _isPrivateChat = true;
-      _contact = widget.arguments;
+    dynamic who = widget.arguments[ChatMessagesScreen.argWho];
+    if (who is TopicSchema) {
+    } else if (who is ContactSchema) {
+      this._contact = widget.arguments[ChatMessagesScreen.argWho];
     }
   }
 
@@ -40,7 +46,7 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isPrivateChat) {
+    if (this._contact != null) {
       return ChatMessagesPrivateLayout(
         contact: _contact,
       );
