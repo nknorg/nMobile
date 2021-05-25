@@ -106,51 +106,49 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
             header: Header(
               titleChild: Container(
                 margin: EdgeInsets.only(left: 20),
-                child: GestureDetector(
+                child: ContactHeader(
+                  contact: contact.currentUser,
                   onTap: () {
                     ContactDetailScreen.go(context, contactId: contact?.currentUser?.id);
                   },
-                  child: ContactHeader(
-                    contact: contact.currentUser,
-                    body: StreamBuilder<int>(
-                      stream: chat.statusStream,
-                      initialData: chat.status,
-                      builder: (context, snapshot) {
-                        Widget statusWidget = Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: <Widget>[
-                            Label(_localizations.connecting, type: LabelType.h4, color: application.theme.fontLightColor.withAlpha(200)),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 2, left: 4),
-                              child: SpinKitThreeBounce(
-                                color: application.theme.fontLightColor.withAlpha(200),
-                                size: 10,
-                              ),
+                  body: StreamBuilder<int>(
+                    stream: chat.statusStream,
+                    initialData: chat.status,
+                    builder: (context, snapshot) {
+                      Widget statusWidget = Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: <Widget>[
+                          Label(_localizations.connecting, type: LabelType.h4, color: application.theme.fontLightColor.withAlpha(200)),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 2, left: 4),
+                            child: SpinKitThreeBounce(
+                              color: application.theme.fontLightColor.withAlpha(200),
+                              size: 10,
                             ),
-                          ],
-                        );
-                        switch (snapshot.data) {
-                          case ChatConnectStatus.disconnected:
-                            statusWidget = Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: <Widget>[
-                                Label(_localizations.disconnect, type: LabelType.h4, color: application.theme.strongColor),
-                              ],
-                            );
-                            break;
-                          case ChatConnectStatus.connected:
-                            statusWidget = Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: <Widget>[
-                                Label(_localizations.connected, type: LabelType.h4, color: application.theme.successColor),
-                              ],
-                            );
-                            break;
-                        }
+                          ),
+                        ],
+                      );
+                      switch (snapshot.data) {
+                        case ChatConnectStatus.disconnected:
+                          statusWidget = Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: <Widget>[
+                              Label(_localizations.disconnect, type: LabelType.h4, color: application.theme.strongColor),
+                            ],
+                          );
+                          break;
+                        case ChatConnectStatus.connected:
+                          statusWidget = Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: <Widget>[
+                              Label(_localizations.connected, type: LabelType.h4, color: application.theme.successColor),
+                            ],
+                          );
+                          break;
+                      }
 
-                        return statusWidget;
-                      },
-                    ),
+                      return statusWidget;
+                    },
                   ),
                 ),
               ),
