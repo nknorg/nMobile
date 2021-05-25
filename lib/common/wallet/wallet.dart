@@ -51,7 +51,16 @@ class Wallet {
 
   Future<WalletSchema> getWalletDefault() async {
     String address = await getWalletDefaultAddress();
-    return getWalletInStorageByAddress(address);
+    WalletSchema result = await getWalletInStorageByAddress(address);
+    if (result == null) {
+      List wallets = await _walletStorage.getWallets();
+      if (wallets != null && wallets.isNotEmpty) {
+        address = (wallets[0] as WalletSchema)?.address;
+        await _walletStorage.setDefaultAddress(address);
+        result = await getWalletInStorageByAddress(address);
+      }
+    }
+    return result;
   }
 
   Future<String> getWalletDefaultAddress() {
