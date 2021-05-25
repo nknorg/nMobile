@@ -2,23 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/topic.dart';
 
-import 'chat_private.dart';
+import 'messages_private.dart';
 
-class ChatMessagesDetailScreen extends StatefulWidget {
-  static const String routeName = '/chat/messages_detail';
+class ChatMessagesScreen extends StatefulWidget {
+  static const String routeName = '/chat/messages';
 
   final dynamic arguments;
 
-  ChatMessagesDetailScreen({this.arguments}) {
+  ChatMessagesScreen({this.arguments}) {
     assert(this.arguments != null);
     assert(this.arguments is ContactSchema || this.arguments is TopicSchema);
   }
 
   @override
-  _ChatMessagesDetailScreenState createState() => _ChatMessagesDetailScreenState();
+  _ChatMessagesScreenState createState() => _ChatMessagesScreenState();
 }
 
-class _ChatMessagesDetailScreenState extends State<ChatMessagesDetailScreen> {
+class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
   bool _isPrivateChat = true;
   ContactSchema _contact;
   bool loading = false;
@@ -41,7 +41,7 @@ class _ChatMessagesDetailScreenState extends State<ChatMessagesDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isPrivateChat) {
-      return ChatPrivateLayout(
+      return ChatMessagesPrivateLayout(
         contact: _contact,
       );
     } else {
