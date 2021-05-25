@@ -5,7 +5,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/chat/session.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/session.dart';
-import 'package:nmobile/screens/chat/messages_detail.dart';
+import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/storages/message.dart';
 
 class ChatSessionListLayout extends StatefulWidget {
@@ -322,7 +322,7 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
             children: [
               InkWell(
                 onTap: () async {
-                  await Navigator.of(context).pushNamed(ChatMessagesDetailScreen.routeName, arguments: item.contact);
+                  await Navigator.of(context).pushNamed(ChatMessagesScreen.routeName, arguments: item.contact);
                   _messageStorage.getUpdateSession(item.targetId).then((value) {
                     _updateMessage(value);
                   });
