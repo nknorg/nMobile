@@ -100,7 +100,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
       initialData: chat.status,
       builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
         if (snapshot.data == ChatConnectStatus.disconnected) {
-          return NoConnectScreen();
+          return ChatNoConnectLayout();
         } else {
           return Layout(
             header: Header(
@@ -179,13 +179,14 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                 },
               ),
             ),
-            body: SessionListLayout(),
+            body: ChatSessionListLayout(),
           );
         }
       },
     );
   }
 
+  // TODO:GG fix android position
   _showFloatActionMenu() {
     showDialog(
       context: context,

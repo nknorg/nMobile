@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
@@ -307,7 +305,7 @@ class BottomDialog extends StatefulWidget {
       title: title,
       desc: desc,
       height: 300,
-      animated: Platform.isAndroid ? false : true,
+      animated: false, // Platform.isAndroid ? false : true, // TODO:GG fixed
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(

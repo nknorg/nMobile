@@ -4,21 +4,21 @@ import 'package:nmobile/schema/topic.dart';
 
 import 'chat_private.dart';
 
-class ChatScreen extends StatefulWidget {
-  static const String routeName = '/chat';
+class ChatMessagesDetailScreen extends StatefulWidget {
+  static const String routeName = '/chat/messages_detail';
 
   final dynamic arguments;
 
-  ChatScreen({this.arguments}) {
+  ChatMessagesDetailScreen({this.arguments}) {
     assert(this.arguments != null);
     assert(this.arguments is ContactSchema || this.arguments is TopicSchema);
   }
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  _ChatMessagesDetailScreenState createState() => _ChatMessagesDetailScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatMessagesDetailScreenState extends State<ChatMessagesDetailScreen> {
   bool _isPrivateChat = true;
   ContactSchema _contact;
   bool loading = false;
@@ -41,7 +41,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isPrivateChat) {
-      return ChatPrivate(
+      return ChatPrivateLayout(
         contact: _contact,
       );
     } else {
