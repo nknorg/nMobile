@@ -7,19 +7,20 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/utils/format.dart';
 
-class ChatMessage extends StatefulWidget {
+class ChatMessagesItem extends StatefulWidget {
   MessageSchema message;
   ContactSchema contact;
   MessageSchema prveMessage;
   MessageSchema nextMessage;
   bool showTime;
-  ChatMessage({this.message, this.contact, this.prveMessage, this.nextMessage, this.showTime});
+
+  ChatMessagesItem({this.message, this.contact, this.prveMessage, this.nextMessage, this.showTime});
 
   @override
-  _ChatMessageState createState() => _ChatMessageState();
+  _ChatMessagesItemState createState() => _ChatMessagesItemState();
 }
 
-class _ChatMessageState extends State<ChatMessage> {
+class _ChatMessagesItemState extends State<ChatMessagesItem> {
   @override
   Widget build(BuildContext context) {
     String timeFormat = formatChatTime(widget.message.timestamp);
@@ -30,7 +31,7 @@ class _ChatMessageState extends State<ChatMessage> {
     );
 
     List<Widget> contentsWidget = <Widget>[];
-    if(widget.showTime) contentsWidget.add(timeWidget);
+    if (widget.showTime) contentsWidget.add(timeWidget);
 
     switch (widget.message.contentType) {
       case ContentType.text:

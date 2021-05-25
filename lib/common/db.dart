@@ -1,14 +1,10 @@
-import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
-import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-
-import 'contact/contact.dart';
 
 class DB {
   static const String NKN_DATABASE_NAME = 'nkn';
@@ -35,17 +31,10 @@ class DB {
 
         // create contact me
         try {
-          var now = DateTime.now();
-          var walletAddress = await Wallet.pubKeyToWalletAddr(publicKey);
-          Map me = await ContactSchema(
-            type: ContactType.me,
-            clientAddress: publicKey,
-            nknWalletAddress: walletAddress,
-            createdTime: now,
-            updatedTime: now,
-            profileVersion: uuid.v4(),
-          ).toMap();
-          var count = await db.insert(ContactStorage.tableName, me);
+          ContactSchema me = await ContactSchema.getByTypeMe(publicKey);
+          if (me == null) return;
+          Map<String, dynamic> add = await me.toMap();
+          var count = await db.insert(ContactStorage.tableName, add);
           logger.i("contact me insert scheme:${count > 0 ? me : null}");
         } catch (e) {
           handleError(e);
