@@ -309,6 +309,7 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return SafeArea(
       child: ListView.builder(
         padding: EdgeInsets.only(bottom: 72),
@@ -322,7 +323,7 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
             children: [
               InkWell(
                 onTap: () async {
-                  await Navigator.of(context).pushNamed(ChatMessagesScreen.routeName, arguments: item.contact);
+                  await ChatMessagesScreen.go(context, item?.contact);
                   _messageStorage.getUpdateSession(item.targetId).then((value) {
                     _updateMessage(value);
                   });
