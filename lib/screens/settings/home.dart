@@ -17,15 +17,14 @@ import 'package:nmobile/utils/utils.dart';
 
 import '../common/select.dart';
 
-// TODO:GG rename
-class SettingsScreen extends StatefulWidget {
+class SettingsHomeScreen extends StatefulWidget {
   static const String routeName = '/settings';
 
   @override
-  _SettingsScreenState createState() => _SettingsScreenState();
+  _SettingsHomeScreenState createState() => _SettingsHomeScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAliveClientMixin {
+class _SettingsHomeScreenState extends State<SettingsHomeScreen> with AutomaticKeepAliveClientMixin {
   SettingsBloc _settingsBloc;
   SettingsStorage _settingsStorage = SettingsStorage();
   String _currentLanguage;
@@ -492,7 +491,7 @@ class _SettingsScreenState extends State<SettingsScreen> with AutomaticKeepAlive
                       ],
                     ),
                     onPressed: () {
-                      Navigator.pushNamed(context, CacheScreen.routeName);
+                      Navigator.pushNamed(context, SettingsCacheScreen.routeName);
                     },
                   ),
                 ),

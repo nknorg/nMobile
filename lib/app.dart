@@ -11,7 +11,7 @@ import 'common/global.dart';
 import 'common/locator.dart';
 import 'components/layout/nav.dart';
 import 'native/common.dart';
-import 'screens/settings/settings.dart';
+import 'screens/settings/home.dart';
 
 class AppScreen extends StatefulWidget {
   static const String routeName = '/';
@@ -40,7 +40,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   List<Widget> screens = <Widget>[
     ChatHomeScreen(),
     WalletHomeScreen(),
-    SettingsScreen(),
+    SettingsHomeScreen(),
   ];
 
   @override
