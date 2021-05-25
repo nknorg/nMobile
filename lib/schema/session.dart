@@ -3,8 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'contact.dart';
 import 'topic.dart';
 
-// TODO:GG rename Session
-class MessageListItem extends Equatable {
+class SessionSchema extends Equatable {
   String targetId;
   String sender;
   String content;
@@ -15,7 +14,7 @@ class MessageListItem extends Equatable {
   TopicSchema topic;
   ContactSchema contact;
 
-  MessageListItem({
+  SessionSchema({
     this.targetId,
     this.sender,
     this.content,

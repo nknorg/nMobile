@@ -4,11 +4,11 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/contact/item.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/schema/message_list_item.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 
-Widget _unReadWidget(MessageListItem item) {
+Widget _unReadWidget(SessionSchema item) {
   String countStr = item.notReadCount.toString();
   if (item.notReadCount > 999) {
     countStr = '999+';
@@ -32,7 +32,7 @@ Widget _unReadWidget(MessageListItem item) {
   );
 }
 
-Widget createMessageListItemWidget(BuildContext context, MessageListItem model) {
+Widget createSessionWidget(BuildContext context, SessionSchema model) {
   S _localizations = S.of(context);
   Widget contentWidget;
   String draft; // TODO: draft
@@ -147,7 +147,7 @@ Widget createMessageListItemWidget(BuildContext context, MessageListItem model) 
                       model.notReadCount > 0
                           ? Padding(
                               padding: const EdgeInsets.only(right: 0),
-                              child: _unReadWidget(MessageListItem(notReadCount: model.notReadCount)),
+                              child: _unReadWidget(SessionSchema(notReadCount: model.notReadCount)),
                             )
                           : SizedBox.shrink(),
                     ],
@@ -207,7 +207,7 @@ Widget createMessageListItemWidget(BuildContext context, MessageListItem model) 
                       model.notReadCount > 0
                           ? Padding(
                               padding: const EdgeInsets.only(right: 0),
-                              child: _unReadWidget(MessageListItem(notReadCount: model.notReadCount)),
+                              child: _unReadWidget(SessionSchema(notReadCount: model.notReadCount)),
                             )
                           : SizedBox.shrink(),
                     ],
