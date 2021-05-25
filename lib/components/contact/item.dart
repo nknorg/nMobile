@@ -69,6 +69,7 @@ class _ContactItemState extends State<ContactItem> {
           Container(
             margin: const EdgeInsets.only(right: 12),
             child: ContactAvatar(
+              key: ValueKey(widget.contact?.getDisplayAvatarPath ?? ''),
               contact: widget.contact,
             ),
           ),
