@@ -5,15 +5,15 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/chat/session.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/session.dart';
-import 'package:nmobile/screens/chat/chat.dart';
+import 'package:nmobile/screens/chat/messages_detail.dart';
 import 'package:nmobile/storages/message.dart';
 
-class SessionListLayout extends StatefulWidget {
+class ChatSessionListLayout extends StatefulWidget {
   @override
-  _SessionListLayoutState createState() => _SessionListLayoutState();
+  _ChatSessionListLayoutState createState() => _ChatSessionListLayoutState();
 }
 
-class _SessionListLayoutState extends State<SessionListLayout> with AutomaticKeepAliveClientMixin {
+class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with AutomaticKeepAliveClientMixin {
   ScrollController _scrollController = ScrollController();
   StreamSubscription _statusStreamSubscription;
   StreamSubscription _onMessageStreamSubscription;
@@ -322,7 +322,7 @@ class _SessionListLayoutState extends State<SessionListLayout> with AutomaticKee
             children: [
               InkWell(
                 onTap: () async {
-                  await Navigator.of(context).pushNamed(ChatScreen.routeName, arguments: item.contact);
+                  await Navigator.of(context).pushNamed(ChatMessagesDetailScreen.routeName, arguments: item.contact);
                   _messageStorage.getUpdateSession(item.targetId).then((value) {
                     _updateMessage(value);
                   });
