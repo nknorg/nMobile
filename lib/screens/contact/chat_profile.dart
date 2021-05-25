@@ -102,6 +102,7 @@ class ContactChatProfileScreenState extends State<ContactChatProfileScreen> {
               child: Column(
                 children: <Widget>[
                   ContactAvatar(
+                    key: ValueKey(_contact?.getDisplayAvatarPath ?? ''),
                     contact: this._contactSchema,
                     radius: 24,
                   ),
