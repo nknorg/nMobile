@@ -1,30 +1,24 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/chat/chat.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/components/chat/message_list_item.dart';
-import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/chat/session.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/schema/contact.dart';
-import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/schema/message_list_item.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/screens/chat/chat.dart';
 import 'package:nmobile/storages/message.dart';
-import 'package:nmobile/utils/format.dart';
 
-class MessageListScreen extends StatefulWidget {
+class SessionListLayout extends StatefulWidget {
   @override
-  _MessageListScreenState createState() => _MessageListScreenState();
+  _SessionListLayoutState createState() => _SessionListLayoutState();
 }
 
-class _MessageListScreenState extends State<MessageListScreen> with AutomaticKeepAliveClientMixin {
+class _SessionListLayoutState extends State<SessionListLayout> with AutomaticKeepAliveClientMixin {
   ScrollController _scrollController = ScrollController();
   StreamSubscription _statusStreamSubscription;
   StreamSubscription _onMessageStreamSubscription;
   MessageStorage _messageStorage = MessageStorage();
-  List<MessageListItem> _messageList = [];
+  List<SessionSchema> _sessionList = [];
 
   bool loading = false;
   int _skip = 0;
@@ -32,32 +26,32 @@ class _MessageListScreenState extends State<MessageListScreen> with AutomaticKee
 
   _sortMessages() {
     setState(() {
-      _messageList.sort((a, b) => a.isTop ? (b.isTop ? -1 : -1) : (b.isTop ? 1 : b.lastReceiveTime.compareTo(a.lastReceiveTime)));
+      _sessionList.sort((a, b) => a.isTop ? (b.isTop ? -1 : -1) : (b.isTop ? 1 : b.lastReceiveTime.compareTo(a.lastReceiveTime)));
     });
   }
 
-  _updateMessage(MessageListItem model) {
+  _updateMessage(SessionSchema model) {
     int replaceIndex = -1;
-    for (int i = 0; i < _messageList.length; i++) {
-      MessageListItem item = _messageList[i];
+    for (int i = 0; i < _sessionList.length; i++) {
+      SessionSchema item = _sessionList[i];
       if (model.targetId == item.targetId) {
-        _messageList.removeAt(i);
-        _messageList.insert(i, model);
+        _sessionList.removeAt(i);
+        _sessionList.insert(i, model);
         replaceIndex = i;
         break;
       }
     }
     if (replaceIndex < 0) {
-      _messageList.insert(0, model);
+      _sessionList.insert(0, model);
     }
     _sortMessages();
   }
 
   _loadMore() async {
-    _skip = _messageList.length;
-    var messages = await _messageStorage.getLastMessageList(_skip, _limit);
-    if(messages != null){
-      _messageList = _messageList + messages;
+    _skip = _sessionList.length;
+    var messages = await _messageStorage.getLastSession(_skip, _limit);
+    if (messages != null) {
+      _sessionList = _sessionList + messages;
       _sortMessages();
     }
   }
@@ -72,7 +66,7 @@ class _MessageListScreenState extends State<MessageListScreen> with AutomaticKee
     initAsync();
 
     _onMessageStreamSubscription = chat.onMessageSaved.listen((event) {
-      _messageStorage.getUpdateMessageList(event.from).then((value) {
+      _messageStorage.getUpdateSession(event.from).then((value) {
         _updateMessage(value);
       });
     });
@@ -97,7 +91,7 @@ class _MessageListScreenState extends State<MessageListScreen> with AutomaticKee
   }
 
   // todo
-  // Widget getTopicItemView(MessageListModel item) {  //   ContactSchema contact = item.contact;
+  // Widget getTopicItemView(SessionSchema item) {  //   ContactSchema contact = item.contact;
   //   Widget contentWidget;
   //   LabelType bottomType = LabelType.bodySmall;
   //   String draft = '';
@@ -252,7 +246,7 @@ class _MessageListScreenState extends State<MessageListScreen> with AutomaticKee
   // }
 
   // TODO
-  _showItemMenu(MessageListItem item, int index) {
+  _showItemMenu(SessionSchema item, int index) {
     showDialog<Null>(
       context: context,
       builder: (BuildContext context) {
@@ -283,7 +277,7 @@ class _MessageListScreenState extends State<MessageListScreen> with AutomaticKee
                 // if (numChanges > 0) {
                 //   setState(() {
                 //     item.isTop = top;
-                //     _messageList.remove(item);
+                //     _sessionList.remove(item);
                 //     _messagesList.insert(0, item);
                 //   });
                 // }
@@ -298,7 +292,7 @@ class _MessageListScreenState extends State<MessageListScreen> with AutomaticKee
             //   ).pad(t: 4, b: 8),
             //   onPressed: () {
             //     Navigator.of(context).pop();
-            //     // MessageListModel.deleteTargetChat(item.targetId).then((numChanges) {
+            //     // SessionSchema.deleteTargetChat(item.targetId).then((numChanges) {
             //     //   if (numChanges > 0) {
             //     //     setState(() {
             //     //       _messagesList.remove(item);
@@ -319,17 +313,17 @@ class _MessageListScreenState extends State<MessageListScreen> with AutomaticKee
       child: ListView.builder(
         padding: EdgeInsets.only(bottom: 72),
         controller: _scrollController,
-        itemCount: _messageList.length,
+        itemCount: _sessionList.length,
         itemBuilder: (BuildContext context, int index) {
-          var item = _messageList[index];
-          Widget widget = createMessageListItemWidget(context, item);
+          var item = _sessionList[index];
+          Widget widget = createSessionWidget(context, item);
 
           return Column(
             children: [
               InkWell(
-                onTap: () async{
+                onTap: () async {
                   await Navigator.of(context).pushNamed(ChatScreen.routeName, arguments: item.contact);
-                  _messageStorage.getUpdateMessageList(item.targetId).then((value) {
+                  _messageStorage.getUpdateSession(item.targetId).then((value) {
                     _updateMessage(value);
                   });
                 },

@@ -8,8 +8,8 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/screens/chat/message_list.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
+import 'package:nmobile/screens/chat/session_list.dart';
 import 'package:nmobile/screens/contact/detail.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/utils/asset.dart';
@@ -254,7 +254,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                 },
               ),
             ),
-            body: MessageListScreen(),
+            body: SessionListLayout(),
           );
         }
       },

@@ -6,7 +6,7 @@ import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/schema/message_list_item.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -233,8 +233,8 @@ class MessageStorage {
   }
 
   /// message list
-  Future<MessageListItem> parseMessageListItem(Map e) async {
-    var res = MessageListItem(
+  Future<SessionSchema> parseSession(Map e) async {
+    var res = SessionSchema(
       targetId: e['target_id'],
       sender: e['sender'],
       content: e['content'],
@@ -266,7 +266,7 @@ class MessageStorage {
   }
 
   /// ContentType is text, textExtension, media, audio counted to not read
-  Future<List<MessageListItem>> getLastMessageList(int skip, int limit) async {
+  Future<List<SessionSchema>> getLastSession(int skip, int limit) async {
     var res = await db.query(
       '$tableName as m',
       columns: [
@@ -292,10 +292,10 @@ class MessageStorage {
       offset: skip,
     );
 
-    List<MessageListItem> list = <MessageListItem>[];
+    List<SessionSchema> list = <SessionSchema>[];
     for (var i = 0, length = res.length; i < length; i++) {
       var item = res[i];
-      MessageListItem model = await parseMessageListItem(item);
+      SessionSchema model = await parseSession(item);
       if (model != null) {
         list.add(model);
       }
@@ -306,7 +306,7 @@ class MessageStorage {
     return null;
   }
 
-  Future<MessageListItem> getUpdateMessageList(String targetId) async {
+  Future<SessionSchema> getUpdateSession(String targetId) async {
     var res = await db.query(
       '$tableName',
       where: 'target_id = ? AND is_outbound = 0 AND is_read = 0 AND (type = ? or type = ? or type = ? or type = ? or type = ?)',
@@ -323,7 +323,7 @@ class MessageStorage {
 
     if (res != null && res.length > 0) {
       Map info = res[0];
-      MessageListItem model = await parseMessageListItem(info);
+      SessionSchema model = await parseSession(info);
       model.notReadCount = res.length;
       return model;
     } else {
@@ -342,7 +342,7 @@ class MessageStorage {
       );
       if (countResult != null && countResult.length > 0) {
         Map info = countResult[0];
-        MessageListItem model = await parseMessageListItem(info);
+        SessionSchema model = await parseSession(info);
         model.notReadCount = 0;
         return model;
       }
