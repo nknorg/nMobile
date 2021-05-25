@@ -11,6 +11,7 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/message.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
@@ -80,12 +81,13 @@ class ReceiveMessage {
   }
 
   receiveTextMessage() {
-    chat.onReceivedMessage.where((event) => event.contentType == ContentType.text).listen((event) {
+    chat.onReceivedMessage.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) {
       // receipt message TODO: batch send receipt message
       chat.sendText(event.from, createReceiptMessage(event.msgId));
       // TODO: notification
       // notification.showDChatNotification();
       // TODO
+      logger.d("---> message $event");
     });
   }
 

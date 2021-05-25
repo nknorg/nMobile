@@ -160,6 +160,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                       child: Container(
                         width: 20,
                         child: Icon(
+                          // TODO:GG aligment
                           FontAwesomeIcons.paperclip,
                           size: 20,
                         ),

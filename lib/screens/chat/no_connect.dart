@@ -15,12 +15,12 @@ import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/utils/asset.dart';
 
-class NoConnectScreen extends StatefulWidget {
+class ChatNoConnectLayout extends StatefulWidget {
   @override
-  _NoConnectScreenState createState() => _NoConnectScreenState();
+  _ChatNoConnectLayoutState createState() => _ChatNoConnectLayoutState();
 }
 
-class _NoConnectScreenState extends State<NoConnectScreen> {
+class _ChatNoConnectLayoutState extends State<ChatNoConnectLayout> {
   WalletBloc _walletBloc;
   StreamSubscription _walletAddSubscription;
 
