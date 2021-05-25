@@ -16,16 +16,16 @@ import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 
-class ChatPrivateLayout extends StatefulWidget {
+class ChatMessagesPrivateLayout extends StatefulWidget {
   final ContactSchema contact;
 
-  ChatPrivateLayout({this.contact});
+  ChatMessagesPrivateLayout({this.contact});
 
   @override
-  _ChatPrivateLayoutState createState() => _ChatPrivateLayoutState();
+  _ChatMessagesPrivateLayoutState createState() => _ChatMessagesPrivateLayoutState();
 }
 
-class _ChatPrivateLayoutState extends State<ChatPrivateLayout> {
+class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
   ContactSchema _contact;
   MessageStorage _messageStorage = MessageStorage();
   List<MessageSchema> _messages = <MessageSchema>[];
