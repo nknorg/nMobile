@@ -74,7 +74,7 @@ class ReceiveMessage {
   receiveTextMessage() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) {
       // receipt message TODO: batch send receipt message
-      chat.sendText(event.from, MessageSchema.getSendReceiptData(event.msgId));
+      chat.sendText(event.from, MessageData.getSendReceipt(event.msgId));
       // TODO: notification
       // notification.showDChatNotification();
     });
