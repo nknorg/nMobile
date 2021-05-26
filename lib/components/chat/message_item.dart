@@ -23,7 +23,7 @@ class ChatMessageItem extends StatefulWidget {
 class _ChatMessageItemState extends State<ChatMessageItem> {
   @override
   Widget build(BuildContext context) {
-    String timeFormat = formatChatTime(widget.message.timestamp);
+    String timeFormat = formatChatTime(widget.message.sendTime);
     Widget timeWidget = Label(
       timeFormat,
       type: LabelType.bodySmall,

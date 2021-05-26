@@ -28,7 +28,7 @@ class ChatBubble extends StatefulWidget {
     this.onChanged,
     this.resendMessage,
   }) {
-    if (message.messageStatus == MessageStatus.MessageSendFail) {
+    if (MessageStatus.get(message) == MessageStatus.SendFail) {
       style = BubbleStyle.SendFailed;
     } else if (message.isOutbound) {
       style = BubbleStyle.SendSuccess;
@@ -80,7 +80,7 @@ class _ChatBubbleState extends State<ChatBubble> {
     BoxDecoration decoration;
     Widget timeWidget;
     Widget burnWidget = Container();
-    String timeFormat = formatChatTime(_message.timestamp);
+    String timeFormat = formatChatTime(_message.sendTime);
     List<Widget> contentsWidget = <Widget>[];
     bool dark = false;
     if (widget.style == BubbleStyle.SendSuccess) {
