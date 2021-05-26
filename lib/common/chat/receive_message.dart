@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:nkn_sdk_flutter/client.dart';
-import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/chat/send_message.dart';
 import 'package:nmobile/common/contact/contact.dart';
@@ -21,12 +20,30 @@ class ReceiveMessage {
   MessageStorage _messageStorage = MessageStorage();
   ContactStorage _contactStorage = ContactStorage();
 
-  MessageSchema createMessageSchema(OnMessage raw) {
+  startReceiveMessage() {
+    // onMessages
+    StreamSubscription subscription = chat.onMessageStream.listen((OnMessage event) async {
+      logger.i("onMessageStream -> messageId:${event.messageId} - src:${event.src} - data:${event.data} - type:${event.type} - encrypted:${event.encrypted}");
+      MessageSchema schema = _convert2MessageSchema(event);
+      if (schema != null) {
+        contactHandle(schema.from);
+        messageHandle(schema);
+      }
+    });
+    chat.onMessageStreamSubscriptions.add(subscription);
+
+    // onReceiveMessages
+    receiveTextMessage();
+    receiveReceiptMessage();
+  }
+
+  MessageSchema _convert2MessageSchema(OnMessage raw) {
     if (raw == null && raw.data != null) return null;
     Map data = jsonFormat(raw.data);
     if (data != null) {
       MessageSchema schema = MessageSchema(data['id'], raw.src, chat.id, data['contentType']);
       schema.pid = raw.messageId;
+      // raw.encrypted
       schema.isSuccess = true;
       schema.content = data['content'];
       schema.options = data['options'];
@@ -42,6 +59,7 @@ class ReceiveMessage {
       // bool isOutbound = false;
       // bool isSendError = false;
       // MessageStatus messageStatus;
+      // ContentType
 
       return schema;
     }
@@ -51,41 +69,21 @@ class ReceiveMessage {
   Future contactHandle(String clientAddress) async {
     int count = await _contactStorage.queryCountByClientAddress(clientAddress);
     if (count == 0) {
-      String walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
-      await _contactStorage.insertContact(ContactSchema(
+      await contact.add(ContactSchema(
         type: ContactType.stranger,
         clientAddress: clientAddress,
-        nknWalletAddress: walletAddress,
+        // nknWalletAddress: await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress)),
       ));
     }
   }
 
   Future messageHandle(MessageSchema schema) async {
-    bool isExists = await _messageStorage.queryCount(schema.msgId) > 0;
+    bool isExists = (await _messageStorage.queryCount(schema.msgId)) > 0;
     if (!isExists) {
       chat.onReceivedMessageSink.add(schema);
       await _messageStorage.insertReceivedMessage(schema);
       chat.onMessageSavedSink.add(schema);
     }
-  }
-
-  startReceiveMessage() {
-    // onMessages
-    StreamSubscription subscription = chat.onMessageStream.listen((OnMessage event) async {
-      MessageSchema schema = createMessageSchema(event);
-      if (schema != null) {
-        // handle contact
-        contactHandle(schema.from);
-
-        // handle message
-        messageHandle(schema);
-      }
-    });
-    chat.onMessageStreamSubscriptions.add(subscription);
-
-    // onReceiveMessages
-    receiveTextMessage();
-    receiveReceiptMessage();
   }
 
   receiveTextMessage() {

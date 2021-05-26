@@ -4,7 +4,9 @@ import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/chat/chat.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
 var uuid = Uuid();
@@ -68,6 +70,89 @@ class MessageSchema {
     if (timestamp == null) timestamp = DateTime.now();
   }
 
+  MessageSchema.fromMap(Map e) {
+    this.msgId = e['msg_id'];
+    this.from = e['sender'];
+    this.to = e['receiver'];
+    this.contentType = e['type'];
+
+    this.pid = e['pid'] != null ? hexDecode(e['pid']) : e['pid'];
+
+    this.topic = e['topic'];
+    this.options = e['options'] != null ? jsonDecode(e['options']) : null;
+
+    bool isRead = e['is_read'] == 1 ? true : false;
+    bool isSuccess = e['is_success'] == 1 ? true : false;
+    bool isOutbound = e['is_outbound'] != 0 ? true : false;
+    bool isSendError = e['is_send_error'] != 0 ? true : false;
+
+    if (isOutbound) {
+      this.messageStatus = MessageStatus.MessageSending;
+      if (isSuccess) {
+        this.messageStatus = MessageStatus.MessageSendReceipt;
+      }
+      if (isSendError) {
+        this.messageStatus = MessageStatus.MessageSendFail;
+      }
+      if (isRead) {
+        this.messageStatus = MessageStatus.MessageSendReceipt;
+      }
+    } else {
+      this.messageStatus = MessageStatus.MessageReceived;
+    }
+
+    if (e['pid'] == null) {
+      this.messageStatus = MessageStatus.MessageSendFail;
+    }
+
+    this.timestamp = DateTime.fromMillisecondsSinceEpoch(e['send_time']);
+    this.receiveTime = DateTime.fromMillisecondsSinceEpoch(e['receive_time']);
+    this.deleteTime = e['delete_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['delete_time']) : null;
+
+    // TODO: remove
+    // if (this.contentType == ContentType.textExtension ||
+    //     this.contentType == ContentType.nknImage ||
+    //     this.contentType == ContentType.media ||
+    //     this.contentType == ContentType.audio) {
+    //   if (this.options != null) {
+    //     if (this.options['deleteAfterSeconds'] != null) {
+    //       this.burnAfterSeconds = int.parse(this.options['deleteAfterSeconds'].toString());
+    //     }
+    //   }
+    // }
+
+    if (this.contentType == ContentType.nknImage || this.contentType == ContentType.media) {
+      File mediaFile = File(join(Global.applicationRootDirectory.path, e['content']));
+      this.content = mediaFile;
+    } else if (this.contentType == ContentType.audio) {
+      if (this.options != null) {
+        if (this.options['audioDuration'] != null) {
+          String audioDS = this.options['audioDuration'];
+          if (audioDS == null || audioDS.toString() == 'null') {
+          } else {
+            this.audioFileDuration = double.parse(audioDS);
+          }
+        }
+      }
+      String filePath = join(Global.applicationRootDirectory.path, e['content']);
+      this.content = File(filePath);
+    } else if (this.contentType == ContentType.nknOnePiece) {
+      if (this.options != null) {
+        this.parity = this.options['parity'];
+        this.total = this.options['total'];
+        this.index = this.options['index'];
+        this.parentType = this.options['parentType'];
+        this.bytesLength = this.options['bytesLength'];
+      }
+      String filePath = join(Global.applicationRootDirectory.path, e['content']);
+      this.content = File(filePath);
+    } else {
+      this.content = e['content'];
+    }
+
+    // TODO:GG other_contentType + burn + deviceToken + MessageReceivedRead
+  }
+
   Map<String, dynamic> toMap() {
     int rTime = DateTime.now().millisecondsSinceEpoch;
     if (receiveTime != null) {
@@ -94,21 +179,21 @@ class MessageSchema {
       'send_time': timestamp?.millisecondsSinceEpoch,
       'delete_time': deleteTime?.millisecondsSinceEpoch,
     };
-    String pubkey = hexEncode(chat.publicKey);
     if (options != null) {
       map['options'] = jsonEncode(options);
     }
+    String pubKey = hexEncode(chat.publicKey);
     if (contentType == ContentType.nknImage || contentType == ContentType.media) {
-      // map['content'] = Path.getLocalFilePath(pubkey, SubDirName.data, (content as File).path);
+      // map['content'] = Path.getLocalFile(pubKey, SubDirName.data, (content as File).path); // TODO:GG path
     } else if (contentType == ContentType.audio) {
-      // map['content'] = Path.getLocalFilePath(pubkey, SubDirName.data, (content as File).path);
+      // map['content'] = Path.getLocalFile(pubKey, SubDirName.data, (content as File).path); // TODO:GG path
     } else if (contentType == ContentType.eventContactOptions) {
       map['content'] = content;
       if (map['send_time'] == null) {
         map['send_time'] = DateTime.now().millisecondsSinceEpoch;
       }
     } else if (contentType == ContentType.nknOnePiece) {
-      // map['content'] = Path.getLocalFilePath(pubkey, SubDirName.data, (content as File).path);
+      // map['content'] = Path.getLocalFile(pubKey, SubDirName.data, (content as File).path); // TODO:GG path
     } else {
       map['content'] = content;
     }
