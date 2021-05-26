@@ -65,12 +65,12 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
     super.initState();
     initAsync();
 
-    _onMessageStreamSubscription = chat.onMessageSavedStream.listen((event) {
+    _onMessageStreamSubscription = receiveMessage.onSavedStream.listen((event) {
       _messageStorage.getUpdateSession(event.from).then((value) {
         _updateMessage(value);
       });
     });
-    chat.onMessageSavedStreamSubscriptions.add(_onMessageStreamSubscription);
+    receiveMessage.onSavedStreamSubscriptions.add(_onMessageStreamSubscription);
 
     _scrollController.addListener(() {
       double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;

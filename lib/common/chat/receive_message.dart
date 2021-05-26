@@ -1,13 +1,11 @@
 import 'dart:async';
 
-import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/message.dart';
-import 'package:nmobile/utils/logger.dart';
 
 import '../locator.dart';
 
@@ -15,24 +13,32 @@ import '../locator.dart';
 class ReceiveMessage {
   ReceiveMessage();
 
+  // ignore: close_sinks
+  StreamController<MessageSchema> _onReceiveController = StreamController<MessageSchema>.broadcast();
+  StreamSink<MessageSchema> get onReceiveSink => _onReceiveController.sink;
+  Stream<MessageSchema> get onReceiveStream => _onReceiveController.stream;
+  List<StreamSubscription> onReceiveStreamSubscriptions = <StreamSubscription>[];
+
+  // ignore: close_sinks
+  StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
+  StreamSink<MessageSchema> get onSavedSink => _onSavedController.sink;
+  Stream<MessageSchema> get onSavedStream => _onSavedController.stream;
+  List<StreamSubscription> onSavedStreamSubscriptions = <StreamSubscription>[];
+
   MessageStorage _messageStorage = MessageStorage();
   ContactStorage _contactStorage = ContactStorage();
 
-  startReceiveMessage() {
-    // onMessages
-    StreamSubscription subscription = chat.onMessageStream.listen((OnMessage event) async {
-      logger.i("onMessageStream -> messageId:${event.messageId} - src:${event.src} - data:${event.data} - type:${event.type} - encrypted:${event.encrypted}");
-      MessageSchema schema = MessageSchema.fromReceive(event);
-      if (schema != null) {
-        contactHandle(schema.from);
-        messageHandle(schema);
-      }
-    });
-    chat.onMessageStreamSubscriptions.add(subscription);
-
-    // onReceiveMessages
-    receiveTextMessage();
-    receiveReceiptMessage();
+  Future onClientMessage(MessageSchema schema) async {
+    if (schema == null) return;
+    // contact
+    contactHandle(schema.from);
+    bool isExists = (await _messageStorage.queryCount(schema.msgId)) > 0;
+    if (isExists) return;
+    // message
+    onReceiveSink.add(schema);
+    // sqlite
+    await _messageStorage.insertReceivedMessage(schema);
+    onSavedSink.add(schema);
   }
 
   Future contactHandle(String clientAddress) async {
@@ -46,32 +52,40 @@ class ReceiveMessage {
     }
   }
 
-  Future messageHandle(MessageSchema schema) async {
-    bool isExists = (await _messageStorage.queryCount(schema.msgId)) > 0;
-    if (!isExists) {
-      chat.onReceivedMessageSink.add(schema);
-      await _messageStorage.insertReceivedMessage(schema);
-      chat.onMessageSavedSink.add(schema);
-    }
+  startReceiveMessage() {
+    receiveTextMessage();
+    receiveReceiptMessage();
+  }
+
+  Future stopReceiveMessage() {
+    List<Future> futures = <Future>[];
+    // message
+    onReceiveStreamSubscriptions?.forEach((StreamSubscription element) {
+      futures.add(element?.cancel());
+    });
+    onSavedStreamSubscriptions?.forEach((StreamSubscription element) {
+      futures.add(element?.cancel());
+    });
+    onReceiveStreamSubscriptions?.clear();
+    onSavedStreamSubscriptions?.clear();
+    return Future.wait(futures);
   }
 
   receiveTextMessage() {
-    StreamSubscription subscription = chat.onReceivedMessageStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) {
+    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) {
       // receipt message TODO: batch send receipt message
-      chat.sendText(event.from, sendMessage.createReceiptMessage(event.msgId));
+      chat.sendText(event.from, MessageSchema.getSendReceiptData(event.msgId));
       // TODO: notification
       // notification.showDChatNotification();
-      // TODO
-      logger.d("receiveTextMessage -> $event");
     });
-    chat.onReceiveMessageStreamSubscriptions.add(subscription);
+    onReceiveStreamSubscriptions.add(subscription);
   }
 
   receiveReceiptMessage() {
-    StreamSubscription subscription = chat.onReceivedMessageStream.where((event) => event.contentType == ContentType.receipt).listen((MessageSchema event) {
+    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.receipt).listen((MessageSchema event) {
       // TODO: batch update receipt message
       _messageStorage.receiveSuccess(event.msgId);
     });
-    chat.onReceiveMessageStreamSubscriptions.add(subscription);
+    onReceiveStreamSubscriptions.add(subscription);
   }
 }
