@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:path/path.dart';
@@ -15,17 +17,8 @@ import 'package:uuid/uuid.dart';
 var uuid = Uuid();
 
 class MessageOptions {
-  // audio
   static const KEY_AUDIO_DURATION = "audioDuration";
-
-  // burn
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
-
-  static const KEY_ONE_PIECE_PARENT_TYPE = "parentType";
-  static const KEY_ONE_PIECE_PARITY = "parity";
-  static const KEY_ONE_PIECE_TOTAL = "total";
-  static const KEY_ONE_PIECE_INDEX = "index";
-  static const KEY_ONE_PIECE_BYTES_LENGTH = "bytesLength";
 
   static Map<String, dynamic> createAudio(int duration) {
     return {KEY_AUDIO_DURATION: duration};
@@ -33,16 +26,6 @@ class MessageOptions {
 
   static Map<String, dynamic> createBurn(int deleteAfterSeconds) {
     return {KEY_DELETE_AFTER_SECONDS: deleteAfterSeconds};
-  }
-
-  static Map<String, dynamic> createOnePiece(String parentType, int parity, int total, int index, int bytesLength) {
-    return {
-      KEY_ONE_PIECE_PARENT_TYPE: parentType,
-      KEY_ONE_PIECE_PARITY: parity,
-      KEY_ONE_PIECE_TOTAL: total,
-      KEY_ONE_PIECE_INDEX: index,
-      KEY_ONE_PIECE_BYTES_LENGTH: bytesLength,
-    };
   }
 }
 
@@ -115,6 +98,35 @@ class MessageStatus {
   }
 }
 
+class MessageData {
+  static String getSendReceipt(String msgId) {
+    Map map = {
+      'id': uuid.v4(),
+      'contentType': ContentType.receipt,
+      'targetID': msgId,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    };
+    return jsonEncode(map);
+  }
+
+  static String getSendText(MessageSchema schema) {
+    if (schema == null) return null;
+    Map map = {
+      'id': schema.msgId,
+      'contentType': schema.contentType ?? ContentType.text,
+      'content': schema.content,
+      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+    };
+    if (schema.options != null && schema.options.keys.length > 0) {
+      map['options'] = schema.options;
+    }
+    if (schema.topic != null) {
+      map['topic'] = schema.topic;
+    }
+    return jsonEncode(map);
+  }
+}
+
 class MessageSchema {
   Uint8List pid; // <-> pid
   String msgId; // (required) <-> msg_id
@@ -134,6 +146,12 @@ class MessageSchema {
   bool isSendError = false; // <-> is_send_error
   bool isSuccess = false; // <-> is_success
   bool isRead = false; // <-> is_read
+
+  String parentType;
+  int parity;
+  int total;
+  int index;
+  int bytesLength;
 
   MessageSchema(
     this.msgId,
@@ -165,6 +183,10 @@ class MessageSchema {
         options: data['options'],
       );
 
+      if (schema.contentType == ContentType.receipt) {
+        schema.content = data['targetID'];
+      }
+
       if (data['timestamp'] != null) {
         schema.sendTime = DateTime.fromMillisecondsSinceEpoch(data['timestamp']);
       }
@@ -172,6 +194,12 @@ class MessageSchema {
       schema.deleteTime = null;
 
       schema = MessageStatus.set(schema, MessageStatus.Received);
+
+      schema.parentType = data['parentType'];
+      schema.parity = data['parity'];
+      schema.total = data['total'];
+      schema.index = data['index'];
+      schema.bytesLength = data['bytesLength'];
 
       return schema;
     }
@@ -186,11 +214,14 @@ class MessageSchema {
     this.topic,
     this.content,
     this.options,
+    this.parentType,
+    this.parity,
+    this.total,
+    this.index,
+    this.bytesLength,
   }) {
     // pid (SDK create)
     if (msgId == null) msgId = uuid.v4();
-
-    if (options?.keys?.length == 0) options = null;
 
     sendTime = DateTime.now();
     receiveTime = null;
@@ -269,34 +300,46 @@ class MessageSchema {
     return map;
   }
 
+  Future<File> getMediaFile() async {
+    if (content == null) return null;
+    var match = RegExp(r'\(data:(.*);base64,(.*)\)').firstMatch(content);
+    var mimeType = match?.group(1) ?? "";
+    var fileBase64 = match?.group(2);
+    if (fileBase64 == null || fileBase64.isEmpty) return null;
+
+    var extension;
+    if (mimeType.indexOf('image/jpg') > -1 || mimeType.indexOf('image/jpeg') > -1) {
+      extension = 'jpg';
+    } else if (mimeType.indexOf('image/png') > -1) {
+      extension = 'png';
+    } else if (mimeType.indexOf('image/gif') > -1) {
+      extension = 'gif';
+    } else if (mimeType.indexOf('image/webp') > -1) {
+      extension = 'webp';
+    } else if (mimeType.indexOf('image/') > -1) {
+      extension = mimeType.split('/').last;
+    } else if (mimeType.indexOf('aac') > -1) {
+      extension = 'aac';
+    } else {
+      logger.w('getMediaFile - no_extension');
+    }
+
+    var bytes = base64Decode(fileBase64);
+    String name = hexEncode(md5.convert(bytes).bytes);
+    String path = Path.getLocalChatMedia(hexEncode(chat.publicKey), '$name.$extension');
+    File file = File(join(Global.applicationRootDirectory.path, path));
+
+    logger.d('getMediaFile - path:${file.absolute}');
+
+    if (!await file.exists()) {
+      logger.d('getMediaFile - write:${file.absolute}');
+      await file.writeAsBytes(bytes, flush: true);
+    }
+    return file;
+  }
+
   @override
   String toString() {
-    return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, contentType: $contentType, content: $content, options: $options, sendTime: $sendTime, receiveTime: $receiveTime, deleteTime: $deleteTime, isOutbound: $isOutbound, isSendError: $isSendError, isSuccess: $isSuccess, isRead: $isRead}';
-  }
-
-  static String getSendReceiptData(String msgId) {
-    Map map = {
-      'id': uuid.v4(),
-      'contentType': ContentType.receipt,
-      'targetID': msgId,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-    };
-    return jsonEncode(map);
-  }
-
-  String toSendTextData() {
-    Map map = {
-      'id': msgId,
-      'contentType': contentType ?? ContentType.text,
-      'content': content,
-      'timestamp': sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-    };
-    if (options != null && options.keys.length > 0) {
-      map['options'] = options;
-    }
-    if (topic != null) {
-      map['topic'] = topic;
-    }
-    return jsonEncode(map);
+    return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, contentType: $contentType, content: $content, options: $options, sendTime: $sendTime, receiveTime: $receiveTime, deleteTime: $deleteTime, isOutbound: $isOutbound, isSendError: $isSendError, isSuccess: $isSuccess, isRead: $isRead, parentType: $parentType, parity: $parity, total: $total, index: $index, bytesLength: $bytesLength}';
   }
 }
