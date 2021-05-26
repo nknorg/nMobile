@@ -1,19 +1,16 @@
-import 'dart:convert';
-import 'dart:typed_data';
+import 'dart:async';
 
-import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/chat/send_message.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
-import 'package:uuid/uuid.dart';
 
 import '../locator.dart';
 
@@ -24,20 +21,28 @@ class ReceiveMessage {
   MessageStorage _messageStorage = MessageStorage();
   ContactStorage _contactStorage = ContactStorage();
 
-  createMessageSchema(raw) {
+  MessageSchema createMessageSchema(OnMessage raw) {
+    if (raw == null && raw.data != null) return null;
     Map data = jsonFormat(raw.data);
     if (data != null) {
-      Uint8List pid = raw.messageId;
-      String to = chat.id;
-      String msgId = data['id'] ?? uuid.v4();
-      MessageSchema schema = MessageSchema(msgId, raw.src, to, data['contentType']);
-      schema.pid = pid;
+      MessageSchema schema = MessageSchema(data['id'], raw.src, chat.id, data['contentType']);
+      schema.pid = raw.messageId;
       schema.isSuccess = true;
       schema.content = data['content'];
       schema.options = data['options'];
       if (data['timestamp'] != null) {
         schema.timestamp = DateTime.fromMillisecondsSinceEpoch(data['timestamp']);
       }
+
+      // TODO:GG
+      // String topic;
+      // DateTime receiveTime;
+      // DateTime deleteTime;
+      // bool isRead = false;
+      // bool isOutbound = false;
+      // bool isSendError = false;
+      // MessageStatus messageStatus;
+
       return schema;
     }
     return null;
@@ -55,19 +60,19 @@ class ReceiveMessage {
     }
   }
 
-  Future messageHandle(MessageSchema schema)async{
+  Future messageHandle(MessageSchema schema) async {
     bool isExists = await _messageStorage.queryCount(schema.msgId) > 0;
     if (!isExists) {
-      chat.onReceivedMessageStreamSink.add(schema);
+      chat.onReceivedMessageSink.add(schema);
       await _messageStorage.insertReceivedMessage(schema);
-      chat.onMessageSavedStreamSink.add(schema);
+      chat.onMessageSavedSink.add(schema);
     }
   }
 
   startReceiveMessage() {
-    chat.onMessage.listen((event) async {
+    // onMessages
+    StreamSubscription subscription = chat.onMessageStream.listen((OnMessage event) async {
       MessageSchema schema = createMessageSchema(event);
-
       if (schema != null) {
         // handle contact
         contactHandle(schema.from);
@@ -76,25 +81,30 @@ class ReceiveMessage {
         messageHandle(schema);
       }
     });
+    chat.onMessageStreamSubscriptions.add(subscription);
+
+    // onReceiveMessages
     receiveTextMessage();
     receiveReceiptMessage();
   }
 
   receiveTextMessage() {
-    chat.onReceivedMessage.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) {
+    StreamSubscription subscription = chat.onReceivedMessageStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) {
       // receipt message TODO: batch send receipt message
       chat.sendText(event.from, createReceiptMessage(event.msgId));
       // TODO: notification
       // notification.showDChatNotification();
       // TODO
-      logger.d("---> message $event");
+      logger.d("receiveTextMessage -> $event");
     });
+    chat.onReceiveMessageStreamSubscriptions.add(subscription);
   }
 
   receiveReceiptMessage() {
-    chat.onReceivedMessage.where((event) => event.contentType == ContentType.receipt).listen((event) {
+    StreamSubscription subscription = chat.onReceivedMessageStream.where((event) => event.contentType == ContentType.receipt).listen((MessageSchema event) {
       // TODO: batch update receipt message
       _messageStorage.receiveSuccess(event.msgId);
     });
+    chat.onReceiveMessageStreamSubscriptions.add(subscription);
   }
 }

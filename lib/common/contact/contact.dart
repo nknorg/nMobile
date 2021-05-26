@@ -38,7 +38,7 @@ class Contact {
     _updateController?.close();
   }
 
-  Future<ContactSchema> fetchCurrentUser(String clientAddress) async {
+  Future<ContactSchema> refreshCurrentUser(String clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     ContactSchema contact = await _contactStorage.queryContactByClientAddress(clientAddress);
     if (contact == null) {
