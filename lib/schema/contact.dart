@@ -22,7 +22,7 @@ class ContactSchema {
   String firstName; // (required : name) <-> first_name
   String lastName; // <-> last_name
   String notes; // == extraInfo[notes] <-> data[notes]
-  Map extraInfo; // [*]<-> data[*, remark_avatar, remark_name, notes, nknWalletAddress, ..., avatar, firstName]
+  Map extraInfo; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ..., avatar, firstName]
 
   String avatar; // (local_path) <-> avatar
   OptionsSchema options; // <-> options
@@ -194,12 +194,12 @@ class ContactSchema {
     String displayName;
 
     if (extraInfo != null && extraInfo.isNotEmpty) {
-      if (extraInfo['remark_name'] != null && extraInfo['remark_name'].isNotEmpty) {
-        displayName = extraInfo['remark_name'];
+      if (extraInfo['firstName'] != null && extraInfo['firstName'].isNotEmpty) {
+        displayName = extraInfo['firstName'];
       }
       // SUPPORT:START
-      else if (extraInfo['firstName'] != null && extraInfo['firstName'].isNotEmpty) {
-        displayName = extraInfo['firstName'];
+      else if (extraInfo['remark_name'] != null && extraInfo['remark_name'].isNotEmpty) {
+        displayName = extraInfo['remark_name'];
       } else if (extraInfo['notes'] != null && extraInfo['notes'].isNotEmpty) {
         displayName = extraInfo['notes'];
       }
@@ -222,12 +222,12 @@ class ContactSchema {
     String avatarLocalPath;
 
     if (extraInfo != null && extraInfo.isNotEmpty) {
-      if (extraInfo['remark_avatar'] != null && extraInfo['remark_avatar'].isNotEmpty) {
-        avatarLocalPath = extraInfo['remark_avatar'];
-      }
-      // SUPPORT:START
       if (extraInfo['avatar'] != null && extraInfo['avatar'].isNotEmpty) {
         avatarLocalPath = extraInfo['avatar'];
+      }
+      // SUPPORT:START
+      if (extraInfo['remark_avatar'] != null && extraInfo['remark_avatar'].isNotEmpty) {
+        avatarLocalPath = extraInfo['remark_avatar'];
       }
       // SUPPORT:END
     }
