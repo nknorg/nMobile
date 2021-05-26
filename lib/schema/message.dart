@@ -175,7 +175,7 @@ class MessageSchema {
       MessageSchema schema = MessageSchema(
         data['id'],
         raw.src,
-        chat.id,
+        chatCommon.id,
         data['contentType'],
         pid: raw.messageId,
         topic: data['topic'],
@@ -326,7 +326,7 @@ class MessageSchema {
 
     var bytes = base64Decode(fileBase64);
     String name = hexEncode(md5.convert(bytes).bytes);
-    String path = Path.getLocalChatMedia(hexEncode(chat.publicKey), '$name.$extension');
+    String path = Path.getLocalChatMedia(hexEncode(chatCommon.publicKey), '$name.$extension');
     File file = File(join(Global.applicationRootDirectory.path, path));
 
     logger.d('getMediaFile - path:${file.absolute}');

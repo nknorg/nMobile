@@ -36,6 +36,7 @@ class ReceiveMessage {
     if (schema == null) return;
     // contact
     contactHandle(schema.from);
+    topicHandle(schema.topic);
     bool isExists = (await _messageStorage.queryCount(schema.msgId)) > 0;
     if (isExists) return;
     // message
@@ -90,7 +91,7 @@ class ReceiveMessage {
   receiveTextMessage() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) {
       // receipt message TODO: batch send receipt message
-      chat.sendText(event.from, MessageData.getSendReceipt(event.msgId));
+      chatCommon.sendText(event.from, MessageData.getSendReceipt(event.msgId));
       // TODO: notification
       // notification.showDChatNotification();
     });
