@@ -305,11 +305,14 @@ class ContactStorage {
     if (contactId == null || contactId == 0 || newExtraInfo == null) return false;
 
     Map<String, dynamic> dataInfo = oldExtraInfo ?? Map<String, dynamic>();
-    if (newExtraInfo['first_name'] != null) {
-      dataInfo['remark_name'] = newExtraInfo['first_name'];
+    if (newExtraInfo['firstName'] != null) {
+      dataInfo['firstName'] = newExtraInfo['firstName'];
     }
-    if (newExtraInfo['remark_avatar'] != null) {
-      dataInfo['remark_avatar'] = newExtraInfo['remark_avatar'];
+    if (newExtraInfo['lastName'] != null) {
+      dataInfo['lastName'] = newExtraInfo['lastName'];
+    }
+    if (newExtraInfo['avatar'] != null) {
+      dataInfo['avatar'] = newExtraInfo['avatar'];
     }
 
     Map<String, dynamic> saveDataInfo = Map<String, dynamic>();
