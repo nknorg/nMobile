@@ -119,8 +119,9 @@ class MessageStorage {
     for (var i = 0; i < res.length; i++) {
       MessageSchema messageItem = MessageSchema.fromMap(res[i]);
       if (!messageItem.isOutbound && messageItem.options != null) {
-        if (messageItem.deleteTime == null && messageItem.burnAfterSeconds != null) {
-          messageItem.deleteTime = DateTime.now().add(Duration(seconds: messageItem.burnAfterSeconds));
+        int burnAfterSeconds = messageItem.options[MessageOptions.KEY_DELETE_AFTER_SECONDS];
+        if (messageItem.deleteTime == null && burnAfterSeconds != null) {
+          messageItem.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
           await updateDeleteTime(messageItem.msgId, messageItem.deleteTime);
         }
       }
