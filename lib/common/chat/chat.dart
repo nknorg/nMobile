@@ -38,7 +38,7 @@ class ContentType {
   static const String channelInvitation = 'event:channelInvitation';
 }
 
-unleadingHashIt(String str) {
+unLeadingHashIt(String str) {
   return str.replaceFirst(RegExp(r'^#*'), '');
 }
 
@@ -46,7 +46,7 @@ String genTopicHash(String topic) {
   if (topic == null || topic.isEmpty) {
     return null;
   }
-  var t = unleadingHashIt(topic);
+  var t = unLeadingHashIt(topic);
   return 'dchat' + hexEncode(sha1(t));
 }
 
@@ -55,46 +55,46 @@ class Chat {
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
   Client client;
 
-  // ignore: close_sinks
-  StreamController<int> _statusController = StreamController<int>.broadcast();
-  StreamSink<int> get _statusStreamSink => _statusController.sink;
-  Stream<int> get statusStream => _statusController.stream;
+  String get id => client?.address;
+  Uint8List get publicKey => client?.publicKey;
 
   int status;
 
-  String get id => client?.address;
+  StreamController<int> _statusController = StreamController<int>.broadcast();
+  StreamSink<int> get _statusSink => _statusController.sink;
+  Stream<int> get statusStream => _statusController.stream;
 
-  Uint8List get publicKey => client?.publicKey;
+  StreamController<dynamic> _onErrorController = StreamController<dynamic>.broadcast();
+  StreamSink<dynamic> get _onErrorSink => _onErrorController.sink;
+  Stream<dynamic> get onErrorStream => _onErrorController.stream;
 
-  // ignore: close_sinks
-  StreamController<OnConnect> onConnectController = StreamController<OnConnect>.broadcast();
-  StreamSink<OnConnect> get onConnectStreamSink => onConnectController.sink;
-  Stream<OnConnect> get onConnect => onConnectController.stream;
+  StreamSubscription _onClientErrorStreamSubscription;
+  StreamSubscription _onClientConnectStreamSubscription;
+  StreamSubscription _onClientMessageStreamSubscription;
 
-  // ignore: close_sinks
   StreamController<OnMessage> onMessageController = StreamController<OnMessage>.broadcast();
-  StreamSink<OnMessage> get onMessageStreamSink => onMessageController.sink;
-  Stream<OnMessage> get onMessage => onMessageController.stream;
+  StreamSink<OnMessage> get onMessageSink => onMessageController.sink;
+  Stream<OnMessage> get onMessageStream => onMessageController.stream;
 
-  // ignore: close_sinks
-  StreamController<dynamic> onErrorController = StreamController<dynamic>.broadcast();
-  StreamSink<dynamic> get onErrorStreamSink => onErrorController.sink;
-  Stream<dynamic> get onError => onErrorController.stream;
-
-  // ignore: close_sinks
   StreamController<MessageSchema> onReceivedMessageController = StreamController<MessageSchema>.broadcast();
-  StreamSink<MessageSchema> get onReceivedMessageStreamSink => onReceivedMessageController.sink;
-  Stream<MessageSchema> get onReceivedMessage => onReceivedMessageController.stream;
+  StreamSink<MessageSchema> get onReceivedMessageSink => onReceivedMessageController.sink;
+  Stream<MessageSchema> get onReceivedMessageStream => onReceivedMessageController.stream;
 
-  // ignore: close_sinks
   StreamController<MessageSchema> onMessageSavedController = StreamController<MessageSchema>.broadcast();
-  StreamSink<MessageSchema> get onMessageSavedStreamSink => onMessageSavedController.sink;
-  Stream<MessageSchema> get onMessageSaved => onMessageSavedController.stream;
+  StreamSink<MessageSchema> get onMessageSavedSink => onMessageSavedController.sink;
+  Stream<MessageSchema> get onMessageSavedStream => onMessageSavedController.stream;
+
+  List<StreamSubscription> onMessageStreamSubscriptions = <StreamSubscription>[];
+  List<StreamSubscription> onReceiveMessageStreamSubscriptions = <StreamSubscription>[];
+  List<StreamSubscription> onMessageSavedStreamSubscriptions = <StreamSubscription>[];
 
   Chat() {
     status = ChatConnectStatus.disconnected;
-    statusStream.listen((event) {
+    statusStream.listen((int event) {
       status = event;
+    });
+    onErrorStream.listen((dynamic event) {
+      // TODO:GG client error
     });
   }
 
@@ -106,47 +106,83 @@ class Chat {
       String keystore = await wallet.getWalletKeystoreByAddress(scheme.address);
 
       walletSDK.Wallet restore = await walletSDK.Wallet.restore(keystore, config: walletSDK.WalletConfig(password: pwd));
-
       String pubKey = hexEncode(restore.publicKey);
       String password = hexEncode(sha256(restore.seed));
+
+      // toggle DB
       await DB.open(pubKey, password);
-      await contact.fetchCurrentUser(pubKey);
-      connect(restore); // await
+      // refresh currentUser
+      await contact.refreshCurrentUser(pubKey);
+      // start client connect (no await)
+      connect(restore);
     } catch (e) {
       handleError(e);
     }
   }
 
   Future connect(walletSDK.Wallet wallet) async {
+    if (client != null) await close();
+    // client create
     ClientConfig config = ClientConfig(seedRPCServerAddr: await Global.getSeedRpcList());
-    _statusStreamSink.add(ChatConnectStatus.connecting);
+    _statusSink.add(ChatConnectStatus.connecting);
     client = await Client.create(wallet.seed, config: config);
+
+    // client error
+    _onClientErrorStreamSubscription = client.onError.listen((dynamic event) {
+      _onErrorSink.add(event);
+    });
+
+    // client connect
     Completer completer = Completer();
-    client.onConnect.listen((event) {
-      _statusStreamSink.add(ChatConnectStatus.connected);
-      onConnectStreamSink.add(event);
+    _onClientConnectStreamSubscription = client.onConnect.listen((OnConnect event) {
+      _statusSink.add(ChatConnectStatus.connected);
       completer.complete();
     });
-    client.onError.listen((event) {
-      onErrorStreamSink.add(event);
-    });
-    client.onMessage.listen((event) {
-      onMessageStreamSink.add(event);
-    });
+
+    // TODO:GG client disconnect/reconnect listen (action statusSink.add)
+
+    // messages receive
     receiveMessage.startReceiveMessage();
+    _onClientMessageStreamSubscription = client.onMessage.listen((OnMessage event) {
+      onMessageSink.add(event);
+    });
+
     await completer.future;
   }
 
   close() async {
-    _statusStreamSink.add(ChatConnectStatus.disconnected);
-    // await _statusController?.close();
-    // await onConnectController?.close();
-    // await onMessageController?.close();
-    // await onReceivedMessageController?.close();
-    // await onMessageSavedController?.close();
-    // await onErrorController?.close();
-    await client?.close();
-    client = null;
+    List<Future> futures = <Future>[];
+    // status
+    _statusSink.add(ChatConnectStatus.disconnected);
+    // message
+    onMessageStreamSubscriptions?.forEach((StreamSubscription element) {
+      futures.add(element?.cancel());
+    });
+    onReceiveMessageStreamSubscriptions?.forEach((StreamSubscription element) {
+      futures.add(element?.cancel());
+    });
+    onMessageSavedStreamSubscriptions?.forEach((StreamSubscription element) {
+      futures.add(element?.cancel());
+    });
+    onMessageStreamSubscriptions?.clear();
+    onReceiveMessageStreamSubscriptions?.clear();
+    onMessageSavedStreamSubscriptions?.clear();
+    // client
+    futures.add(_onClientErrorStreamSubscription?.cancel());
+    futures.add(_onClientConnectStreamSubscription?.cancel());
+    futures.add(_onClientMessageStreamSubscription?.cancel());
+    futures.add(client?.close());
+    futures.add(Future(() => client = null));
+    return Future.wait(futures);
+  }
+
+  destroy() async {
+    await close();
+    await _statusController?.close();
+    await _onErrorController?.close();
+    await onMessageController?.close();
+    await onReceivedMessageController?.close();
+    await onMessageSavedController?.close();
   }
 
   Future sendText(String dest, String data) async {

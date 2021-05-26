@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/utils/path.dart';
 import 'package:uuid/uuid.dart';
 
 var uuid = Uuid();
@@ -20,22 +19,22 @@ enum MessageStatus {
 }
 
 class MessageSchema {
-  Uint8List pid;
-  String msgId;
-  String from;
-  String to;
-  dynamic content;
-  String contentType;
-  String topic;
+  Uint8List pid; // <-> pid
+  String msgId; // (required) <-> msg_id
+  String from; // (required) <-> sender / -> target_id
+  String to; // (required) <-> receiver / -> target_id
+  dynamic content; // <-> content
+  String contentType; // (required) <-> type
+  String topic; // <-> topic / -> target_id
   DateTime timestamp;
-  DateTime receiveTime;
-  DateTime deleteTime;
-  Map<String, dynamic> options;
+  DateTime receiveTime; // <-> receive_time
+  DateTime deleteTime; // <-> delete_time
+  Map<String, dynamic> options; // <-> options
 
-  bool isRead = false;
-  bool isSuccess = false;
-  bool isOutbound = false;
-  bool isSendError = false;
+  bool isRead = false; // <-> is_read
+  bool isSuccess = false; // <-> is_success
+  bool isOutbound = false; // <-> is_outbound
+  bool isSendError = false; // <-> is_send_error
 
   MessageStatus messageStatus;
 
@@ -69,7 +68,7 @@ class MessageSchema {
     if (timestamp == null) timestamp = DateTime.now();
   }
 
-  Map toEntity() {
+  Map<String, dynamic> toMap() {
     int rTime = DateTime.now().millisecondsSinceEpoch;
     if (receiveTime != null) {
       rTime = receiveTime.millisecondsSinceEpoch;
@@ -114,6 +113,11 @@ class MessageSchema {
       map['content'] = content;
     }
     return map;
+  }
+
+  @override
+  String toString() {
+    return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, content: $content, contentType: $contentType, topic: $topic, timestamp: $timestamp, receiveTime: $receiveTime, deleteTime: $deleteTime, options: $options, isRead: $isRead, isSuccess: $isSuccess, isOutbound: $isOutbound, isSendError: $isSendError, messageStatus: $messageStatus, burnAfterSeconds: $burnAfterSeconds, showBurnAfterSeconds: $showBurnAfterSeconds, deviceToken: $deviceToken, audioFileDuration: $audioFileDuration, parentType: $parentType, parity: $parity, total: $total, index: $index, bytesLength: $bytesLength}';
   }
 
   String toSendTextData() {

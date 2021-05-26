@@ -216,7 +216,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       await Future.delayed(Duration(seconds: 1)); // wait client create
 
       // refresh state
-      _refreshContactSchema(scheme: contact.currentUser);
+      await _refreshContactSchema(scheme: contact.currentUser);
 
       Toast.show(S.of(this.context).tip_switch_success);
 
