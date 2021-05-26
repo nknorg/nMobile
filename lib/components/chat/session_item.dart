@@ -3,8 +3,10 @@ import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/contact/item.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/topic/item.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/session.dart';
+import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 
@@ -14,19 +16,18 @@ Widget _unReadWidget(SessionSchema item) {
     countStr = '999+';
   }
   return Container(
-    child: ClipRRect(
+    padding: const EdgeInsets.only(left: 4, right: 4),
+    constraints: BoxConstraints(minWidth: 25),
+    decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(12.5),
-      child: Container(
-        padding: const EdgeInsets.only(left: 10, right: 10),
-        color: application.theme.badgeColor,
-        height: 25,
-        child: Center(
-          child: Label(
-            countStr,
-            type: LabelType.bodySmall,
-            dark: true,
-          ),
-        ),
+      color: application.theme.badgeColor,
+    ),
+    height: 25,
+    child: Center(
+      child: Label(
+        countStr,
+        type: LabelType.bodySmall,
+        dark: true,
       ),
     ),
   );
@@ -94,45 +95,49 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
     );
   }
   if (model.topic != null) {
+    List<Widget> topicNameWidget = [
+      Label(
+        model.topic.topicName,
+        type: LabelType.h3,
+        fontWeight: FontWeight.bold,
+      ),
+    ];
+    
+    if(model.topic.topicType == TopicType.privateTopic) {
+      topicNameWidget.insert(0, Asset.iconSvg('lock', width: 18, color: application.theme.primaryColor));
+    }
+    
     return Container(
       color: Colors.transparent,
       padding: const EdgeInsets.only(left: 12, right: 12),
       height: 72,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Flex(
+        direction: Axis.horizontal,
         children: [
-          Container(
-            margin: const EdgeInsets.only(right: 12),
-            child: CircleAvatar(
-              // TODO: create contact avatar
-              radius: 24,
-              backgroundColor: Colors.red,
-              child: Label(
-                'HR',
-                type: LabelType.bodyLarge,
-                color: Colors.yellow,
+          Expanded(
+            flex: 1,
+            child: TopicItem(
+              topic: model.topic,
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    children: topicNameWidget,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: contentWidget,
+                  ),
+                ],
               ),
             ),
           ),
           Expanded(
+            flex: 0,
             child: Container(
-              decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 1, color: application.theme.dividerColor))),
               child: Row(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Row(
-                          children: [
-                            //TODO: create topic widget
-                          ],
-                        ),
-                        contentWidget,
-                      ],
-                    ),
-                  ),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -141,14 +146,14 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
                         padding: const EdgeInsets.only(right: 0, bottom: 6),
                         child: Label(
                           timeFormat(model.lastReceiveTime),
-                          type: LabelType.bodySmall,
+                          type: LabelType.bodyRegular,
                         ),
                       ),
                       model.notReadCount > 0
                           ? Padding(
-                              padding: const EdgeInsets.only(right: 0),
-                              child: _unReadWidget(SessionSchema(notReadCount: model.notReadCount)),
-                            )
+                        padding: const EdgeInsets.only(right: 0),
+                        child: _unReadWidget(SessionSchema(notReadCount: model.notReadCount)),
+                      )
                           : SizedBox.shrink(),
                     ],
                   ),
@@ -176,7 +181,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Label(
-                    model.contact.getDisplayName,
+                    model.contact?.getDisplayName ?? '',
                     type: LabelType.h3,
                     fontWeight: FontWeight.bold,
                   ),

@@ -17,23 +17,33 @@ TaskService taskService;
 Notification notification;
 Authorization authorization;
 
-Chat chat;
+ChatCommon chatCommon;
 ReceiveMessage receiveMessage;
 SendMessage sendMessage;
-Contact contact;
-Wallet wallet;
+ContactCommon contactCommon;
+WalletCommon walletCommon;
+
 
 void setupLocator() {
-  locator..registerSingleton(Application())..registerSingleton(TaskService())..registerSingleton(Notification())..registerSingleton(Authorization())..registerSingleton(Chat())..registerSingleton(ReceiveMessage())..registerSingleton(SendMessage())..registerSingleton(Contact())..registerSingleton(Wallet());
+  locator
+    ..registerSingleton(Application())
+    ..registerSingleton(TaskService())
+    ..registerSingleton(Notification())
+    ..registerSingleton(Authorization())
+    ..registerSingleton(ChatCommon())
+    ..registerSingleton(ReceiveMessage())
+    ..registerSingleton(SendMessage())
+    ..registerSingleton(ContactCommon())
+    ..registerSingleton(WalletCommon());
 
   application = locator.get<Application>();
   taskService = locator.get<TaskService>();
   notification = locator.get<Notification>();
   authorization = locator.get<Authorization>();
 
-  chat = locator.get<Chat>();
+  chatCommon = locator.get<ChatCommon>();
   receiveMessage = locator.get<ReceiveMessage>();
   sendMessage = locator.get<SendMessage>();
-  contact = locator.get<Contact>();
-  wallet = locator.get<Wallet>();
+  contactCommon = locator.get<ContactCommon>();
+  walletCommon = locator.get<WalletCommon>();
 }

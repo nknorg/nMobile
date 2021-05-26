@@ -145,7 +145,7 @@ class ContactSchema {
       'last_name': lastName,
       'data': extraInfo != null ? jsonEncode(extraInfo) : '{}',
       'options': jsonEncode(options.toMap()),
-      'avatar': avatar != null ? Path.getLocalContactAvatar(hexEncode(chat.publicKey), Path.getFileName(avatar)) : null,
+      'avatar': avatar != null ? Path.getLocalContactAvatar(hexEncode(chatCommon.publicKey), Path.getFileName(avatar)) : null,
       'created_time': createdTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'updated_time': updatedTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'profile_version': profileVersion,
