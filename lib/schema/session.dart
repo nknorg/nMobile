@@ -39,19 +39,10 @@ class SessionSchema extends Equatable {
       notReadCount: e['not_read'] as int,
     );
 
-    // todo
     if (e['topic'] != null) {
       res.contact = await ContactStorage().queryContactByClientAddress(res.targetId);
       res.isTop = res.contact?.isTop ?? false;
       res.topic = await TopicStorage().queryTopicByTopicName(e['topic']);
-      // final repoTopic = TopicRepo();
-      // res.topic = await repoTopic.getTopicByName(e['topic']);
-
-      //
-      // if (res.topic == null){
-      //   res.isTop = await ContactSchema.getIsTop(res.targetId);
-      //   res.contact = await ContactSchema.fetchContactByAddress(res.targetId);
-      // }
     } else {
       if (res.targetId == null) {
         return null;

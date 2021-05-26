@@ -67,7 +67,8 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
     initAsync();
 
     _onMessageStreamSubscription = receiveMessage.onSavedStream.listen((event) {
-      _messageStorage.getUpdateSession(event.from).then((value) {
+      String targetId = event.topic ?? event.from;
+      _messageStorage.getUpdateSession(targetId).then((value) {
         _updateMessage(value);
       });
     });

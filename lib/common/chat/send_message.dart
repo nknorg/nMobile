@@ -26,7 +26,7 @@ class SendMessage {
 
   sendMessage(MessageSchema schema) async {
     if (schema == null || (schema.to == null && schema.topic == null)) return;
-    await chat.sendText(schema.to ?? schema.topic, MessageData.getSendText(schema));
+    await chatCommon.sendText(schema.to ?? schema.topic, MessageData.getSendText(schema));
     onSendSink?.add(schema);
   }
 }

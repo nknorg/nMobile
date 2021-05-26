@@ -100,7 +100,7 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
   // TODO:GG
   _send(String content) async {
     MessageSchema send = MessageSchema.fromSend(
-      chat.id,
+      chatCommon.id,
       ContentType.text,
       to: _contact?.clientAddress,
       content: content,
