@@ -175,7 +175,7 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
                       } else {
                         if (index + 1 < _messages.length) {
                           var targetMessage = _messages[index + 1];
-                          if (message.timestamp.isAfter(targetMessage.timestamp.add(Duration(minutes: 3)))) {
+                          if (message.sendTime.isAfter(targetMessage.sendTime.add(Duration(minutes: 3)))) {
                             showTime = true;
                           }
                         }
