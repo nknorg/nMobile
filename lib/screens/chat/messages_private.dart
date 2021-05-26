@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/chat/bottom_menu.dart';
 import 'package:nmobile/components/chat/message_item.dart';
@@ -46,14 +47,14 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
     this._contact = widget.contact;
 
     // onReceive + OnSaveSqlite
-    _onMessageStreamSubscription = chat.onMessageSavedStream?.where((event) => event.from == _contact.clientAddress)?.listen((MessageSchema event) {
+    _onMessageStreamSubscription = receiveMessage.onSavedStream?.where((event) => event.from == _contact.clientAddress)?.listen((MessageSchema event) {
       if (event == null) return;
       _messageStorage.markMessageRead(event?.msgId);
       setState(() {
         _messages?.insert(0, event);
       });
     });
-    chat.onMessageSavedStreamSubscriptions.add(_onMessageStreamSubscription);
+    receiveMessage.onSavedStreamSubscriptions.add(_onMessageStreamSubscription);
 
     // loadMore
     _scrollController.addListener(() {
@@ -94,6 +95,17 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
     setState(() {
       _showBottomMenu = !_showBottomMenu;
     });
+  }
+
+  // TODO:GG
+  _send(String content) async {
+    MessageSchema send = MessageSchema.fromSend(
+      chat.id,
+      ContentType.text,
+      to: _contact?.clientAddress,
+      content: content,
+    );
+    await sendMessage.sendMessage(send);
   }
 
   _hideAll() {
@@ -197,6 +209,9 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
               ChatSendBar(
                 onMenuPressed: () {
                   _toggleBottomMenu();
+                },
+                onSendPress: (String content) {
+                  _send(content);
                 },
               ),
               ChatBottomMenu(show: _showBottomMenu),

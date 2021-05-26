@@ -153,10 +153,10 @@ class Chat {
   }
 
   Future sendText(String dest, String data) async {
-    return this.client.sendText([dest], data);
+    return this.client?.sendText([dest], data);
   }
 
   Future publishText(String topic, String data) async {
-    return this.client.publishText(topic, data);
+    return this.client?.publishText(topic, data);
   }
 }
