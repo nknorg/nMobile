@@ -41,6 +41,7 @@ dependencies:
   vibration: ^1.7.3
   mime_type: ^1.0.0
   permission_handler: ^7.1.0
+  crypto: ^3.0.1
 
   # data
   base_x: ^1.0.1
