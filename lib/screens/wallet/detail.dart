@@ -73,7 +73,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
         });
       }
     });
-    wallet.getWalletDefaultAddress().then((value) {
+    walletCommon.getWalletDefaultAddress().then((value) {
       if (mounted) {
         setState(() {
           isDefault = value == _wallet?.address;
@@ -160,7 +160,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
             BlocBuilder<WalletBloc, WalletState>(
               builder: (context, state) {
                 if (state is WalletLoaded) {
-                  this._wallet = wallet.getWalletInOriginalByAddress(state.wallets, this._wallet?.address);
+                  this._wallet = walletCommon.getWalletInOriginalByAddress(state.wallets, this._wallet?.address);
                 }
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -320,9 +320,9 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
 
     switch (result) {
       case 0: // export
-        wallet.getWalletPassword(context, _wallet?.address).then((String password) async {
+        walletCommon.getWalletPassword(context, _wallet?.address).then((String password) async {
           if (password == null || password.isEmpty) return;
-          String keystore = await wallet.getWalletKeystoreByAddress(_wallet.address);
+          String keystore = await walletCommon.getWalletKeystoreByAddress(_wallet.address);
 
           if (_wallet.type == WalletType.eth) {
             // TODO:GG eth export
@@ -373,9 +373,9 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
               _walletBloc.add(DeleteWallet(this._wallet));
               // client close
               try {
-                String walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact?.currentUser?.clientAddress));
+                String walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contactCommon?.currentUser?.clientAddress));
                 if (this._wallet?.address == walletAddress) {
-                  await chat?.close();
+                  await chatCommon?.close();
                 }
               } catch (e) {} finally {
                 AppScreen.go(context);

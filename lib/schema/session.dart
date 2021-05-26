@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:nmobile/storages/contact.dart';
+import 'package:nmobile/storages/topic.dart';
 
 import 'contact.dart';
 import 'topic.dart';
@@ -40,10 +41,12 @@ class SessionSchema extends Equatable {
 
     // todo
     if (e['topic'] != null) {
+      res.contact = await ContactStorage().queryContactByClientAddress(res.targetId);
+      res.isTop = res.contact?.isTop ?? false;
+      res.topic = await TopicStorage().queryTopicByTopicName(e['topic']);
       // final repoTopic = TopicRepo();
       // res.topic = await repoTopic.getTopicByName(e['topic']);
-      // res.contact = await ContactSchema.fetchContactByAddress(res.sender);
-      // res.isTop = res.topic?.isTop ?? false;
+
       //
       // if (res.topic == null){
       //   res.isTop = await ContactSchema.getIsTop(res.targetId);

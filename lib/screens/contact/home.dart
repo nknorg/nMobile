@@ -65,7 +65,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
     this._isSelect = widget.arguments != null ? (widget.arguments[ContactHomeScreen.argIsSelect] ?? false) : false;
 
     // listen
-    _addContactSubscription = contact.addStream.listen((ContactSchema scheme) {
+    _addContactSubscription = contactCommon.addStream.listen((ContactSchema scheme) {
       if (scheme == null || scheme.type == null) return;
       if (scheme.type == ContactType.friend) {
         _allFriends?.insert(0, scheme);
@@ -74,11 +74,11 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
       }
       _searchAction(_searchController.text);
     });
-    _deleteContactSubscription = contact.deleteStream.listen((int contactId) {
+    _deleteContactSubscription = contactCommon.deleteStream.listen((int contactId) {
       _allFriends = _allFriends?.where((element) => element?.id != contactId)?.toList();
       _searchAction(_searchController.text);
     });
-    _updateContactSubscription = contact.updateStream.listen((List<ContactSchema> list) {
+    _updateContactSubscription = contactCommon.updateStream.listen((List<ContactSchema> list) {
       if (list == null || list.isEmpty) return;
       if (list.length == 1) {
         int friendIndex = -1;
@@ -121,8 +121,8 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
   }
 
   _initData() async {
-    List<ContactSchema> friends = await contact.queryContacts(contactType: ContactType.friend);
-    List<ContactSchema> strangers = await contact.queryContacts(contactType: ContactType.stranger, limit: 20);
+    List<ContactSchema> friends = await contactCommon.queryContacts(contactType: ContactType.friend);
+    List<ContactSchema> strangers = await contactCommon.queryContacts(contactType: ContactType.stranger, limit: 20);
     List<TopicSchema> topics = []; // widget.arguments ? <TopicSchema>[] : await TopicRepo().getAllTopics(); // TODO:GG topic
     topics = (this._isSelect == true) ? [] : topics; // TODO:GG can not write this line in state
 
@@ -339,7 +339,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
       },
       onDismissed: (direction) async {
         if (direction == DismissDirection.endToStart) {
-          await contact.delete(item?.id);
+          await contactCommon.delete(item?.id);
         }
       },
       background: Container(

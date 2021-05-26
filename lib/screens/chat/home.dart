@@ -96,8 +96,8 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     // _firstAutoShowAuth() TODO:GG auth
 
     return StreamBuilder<int>(
-      stream: chat.statusStream,
-      initialData: chat.status,
+      stream: chatCommon.statusStream,
+      initialData: chatCommon.status,
       builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
         if (snapshot.data == ChatConnectStatus.disconnected) {
           return ChatNoConnectLayout();
@@ -107,13 +107,13 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
               titleChild: Container(
                 margin: EdgeInsets.only(left: 20),
                 child: ContactHeader(
-                  contact: contact.currentUser,
+                  contact: contactCommon.currentUser,
                   onTap: () {
-                    ContactDetailScreen.go(context, contactId: contact?.currentUser?.id);
+                    ContactDetailScreen.go(context, contactId: contactCommon?.currentUser?.id);
                   },
                   body: StreamBuilder<int>(
-                    stream: chat.statusStream,
-                    initialData: chat.status,
+                    stream: chatCommon.statusStream,
+                    initialData: chatCommon.status,
                     builder: (context, snapshot) {
                       Widget statusWidget = Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -166,7 +166,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
             ),
             floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
             floatingActionButton: Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 20, right: 4),
+              padding: EdgeInsets.only(bottom: 60, right: 4),
               child: FloatingActionButton(
                 key: _floatingActionKey,
                 elevation: 12,
@@ -196,7 +196,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
           child: Scaffold(
             backgroundColor: Colors.transparent,
             body: Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 60, right: 16),
+              padding: EdgeInsets.only(bottom: 67, right: 16),
               child: Align(
                 alignment: Alignment.bottomRight,
                 child: Container(

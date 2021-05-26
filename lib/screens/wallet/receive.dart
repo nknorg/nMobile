@@ -83,7 +83,7 @@ class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
               child: BlocBuilder<WalletBloc, WalletState>(
                 builder: (context, state) {
                   if (state is WalletLoaded) {
-                    _wallet = wallet.getWalletInOriginalByAddress(state.wallets, _wallet?.address);
+                    _wallet = walletCommon.getWalletInOriginalByAddress(state.wallets, _wallet?.address);
                   }
                   return Column(
                     children: <Widget>[

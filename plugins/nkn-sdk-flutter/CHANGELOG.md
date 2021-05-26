@@ -1,3 +1,11 @@
+## 0.0.14
+
+* Add OnConnect filed rpcServers
+
+## 0.0.13
+
+* Create client, on connect add rpcServers 
+
 ## 0.0.12
 
 * Update NKN SDK getSubscribers with params subscriberHashPrefix

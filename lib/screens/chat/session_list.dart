@@ -31,6 +31,7 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
   }
 
   _updateMessage(SessionSchema model) {
+    if (model == null) return;
     int replaceIndex = -1;
     for (int i = 0; i < _sessionList.length; i++) {
       SessionSchema item = _sessionList[i];

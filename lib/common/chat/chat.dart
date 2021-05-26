@@ -3,12 +3,13 @@ import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nkn_sdk_flutter/wallet.dart' as walletSDK;
+import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -51,7 +52,7 @@ String genTopicHash(String topic) {
   return 'dchat' + hexEncode(sha1(t));
 }
 
-class Chat {
+class ChatCommon {
   /// nkn-sdk-flutter
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
   Client client;
@@ -75,7 +76,7 @@ class Chat {
   StreamSubscription _onConnectStreamSubscription;
   StreamSubscription _onMessageStreamSubscription;
 
-  Chat() {
+  ChatCommon() {
     status = ChatConnectStatus.disconnected;
     statusStream.listen((int event) {
       status = event;
@@ -88,26 +89,26 @@ class Chat {
   Future signIn(WalletSchema scheme) async {
     if (scheme == null || scheme.address == null) return null;
     try {
-      String pwd = await wallet.getWalletPassword(Global.appContext, scheme.address);
+      String pwd = await walletCommon.getWalletPassword(Global.appContext, scheme.address);
       if (pwd == null || pwd.isEmpty) return;
-      String keystore = await wallet.getWalletKeystoreByAddress(scheme.address);
+      String keystore = await walletCommon.getWalletKeystoreByAddress(scheme.address);
 
-      walletSDK.Wallet restore = await walletSDK.Wallet.restore(keystore, config: walletSDK.WalletConfig(password: pwd));
-      String pubKey = hexEncode(restore.publicKey);
-      String password = hexEncode(sha256(restore.seed));
+      Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd));
+      String pubKey = hexEncode(wallet.publicKey);
+      String password = hexEncode(sha256(wallet.seed));
 
       // toggle DB
       await DB.open(pubKey, password);
       // refresh currentUser
-      await contact.refreshCurrentUser(pubKey);
+      await contactCommon.refreshCurrentUser(pubKey);
       // start client connect (no await)
-      connect(restore);
+      connect(wallet);
     } catch (e) {
       handleError(e);
     }
   }
 
-  Future connect(walletSDK.Wallet wallet) async {
+  Future connect(Wallet wallet) async {
     if (client != null) await close();
     // client create
     ClientConfig config = ClientConfig(seedRPCServerAddr: await Global.getSeedRpcList());
@@ -125,6 +126,7 @@ class Chat {
     _onConnectStreamSubscription = client.onConnect?.listen((OnConnect event) {
       logger.i("onConnectStream -> event:$event");
       _statusSink.add(ChatConnectStatus.connected);
+      SettingsStorage().addSeedRpcServers(event.rpcServers);
       completer.complete();
     });
 

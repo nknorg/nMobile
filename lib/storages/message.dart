@@ -4,6 +4,9 @@ import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
+import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/storages/contact.dart';
+import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class MessageStorage {

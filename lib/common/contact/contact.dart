@@ -16,7 +16,7 @@ class RequestType {
   static const String full = 'full';
 }
 
-class Contact {
+class ContactCommon {
   ContactSchema currentUser;
   ContactStorage _contactStorage = ContactStorage();
 

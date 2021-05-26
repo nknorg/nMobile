@@ -282,7 +282,7 @@ class MessageSchema {
       'is_success': (isSuccess != null && isSuccess) ? 1 : 0,
       'is_send_error': (isSendError != null && isSendError) ? 1 : 0,
     };
-    String pubKey = hexEncode(chat.publicKey);
+    String pubKey = hexEncode(chatCommon.publicKey);
     if (contentType == ContentType.nknImage || contentType == ContentType.media) {
       map['content'] = Path.getLocalChatMedia(pubKey, Path.getFileName((content as File)?.path));
     } else if (contentType == ContentType.audio) {

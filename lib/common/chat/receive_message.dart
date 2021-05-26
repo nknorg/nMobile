@@ -4,8 +4,11 @@ import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/message.dart';
+import 'package:nmobile/storages/topic.dart';
+import 'package:nmobile/utils/logger.dart';
 
 import '../locator.dart';
 
@@ -27,6 +30,7 @@ class ReceiveMessage {
 
   MessageStorage _messageStorage = MessageStorage();
   ContactStorage _contactStorage = ContactStorage();
+  TopicStorage _topicStorage = TopicStorage();
 
   Future onClientMessage(MessageSchema schema) async {
     if (schema == null) return;
@@ -44,10 +48,22 @@ class ReceiveMessage {
   Future contactHandle(String clientAddress) async {
     int count = await _contactStorage.queryCountByClientAddress(clientAddress);
     if (count == 0) {
-      await contact.add(ContactSchema(
+      await contactCommon.add(ContactSchema(
         type: ContactType.stranger,
         clientAddress: clientAddress,
-        // nknWalletAddress: await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress)),
+      ));
+    }
+  }
+
+  Future topicHandle(String topic) async {
+    if (topic?.isNotEmpty != true) return;
+    int count = await _topicStorage.queryCountByTopic(topic);
+    if (count == 0) {
+      await _topicStorage.insertTopic(TopicSchema(
+        // TODO: get topic info
+        // expireAt:
+        // joined:
+        topic: topic,
       ));
     }
   }

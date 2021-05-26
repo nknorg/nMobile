@@ -97,7 +97,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     if (state is WalletLoaded) {
       await _walletStorage.setBackup(event.address, event.backup);
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets ?? []);
-      bool allBackup = await wallet.isWalletsBackup(original: list);
+      bool allBackup = await walletCommon.isWalletsBackup(original: list);
       logger.d("new backup list:${list.toString()}");
       yield WalletBackup(list, event.address, allBackup);
     }

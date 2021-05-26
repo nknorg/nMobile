@@ -54,11 +54,11 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
       //   });
       // }
       if (state is WalletLoaded) {
-        _allBackedUp = await wallet.isWalletsBackup();
+        _allBackedUp = await walletCommon.isWalletsBackup();
         setState(() {});
       }
     });
-    wallet.isWalletsBackup().then((value) {
+    walletCommon.isWalletsBackup().then((value) {
       if (mounted) {
         setState(() {
           _allBackedUp = value ?? false;
@@ -215,9 +215,9 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
     if (scheme == null || scheme.address == null || scheme.address.isEmpty) return;
     S _localizations = S.of(context);
 
-    wallet.getWalletPassword(context, scheme?.address).then((String password) async {
+    walletCommon.getWalletPassword(context, scheme?.address).then((String password) async {
       if (password == null || password.isEmpty) return;
-      String keystore = await wallet.getWalletKeystoreByAddress(scheme.address);
+      String keystore = await walletCommon.getWalletKeystoreByAddress(scheme.address);
 
       if (scheme.type == WalletType.eth) {
         // TODO:GG eth export

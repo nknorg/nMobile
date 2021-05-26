@@ -127,7 +127,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     _walletBloc = BlocProvider.of<WalletBloc>(this.context);
 
     // listen
-    _updateContactSubscription = contact.updateStream.listen((List<ContactSchema> list) {
+    _updateContactSubscription = contactCommon.updateStream.listen((List<ContactSchema> list) {
       if (list == null || list.isEmpty) return;
       List result = list.where((element) => (element != null) && (element?.id == _contactSchema?.id)).toList();
       if (result != null && result.isNotEmpty) {
@@ -167,7 +167,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     } else if (contactSchema != null && contactSchema.id != 0) {
       this._contactSchema = contactSchema;
     } else if (contactId != null && contactId != 0) {
-      this._contactSchema = await contact.queryContact(contactId);
+      this._contactSchema = await contactCommon.queryContact(contactId);
     }
     if (this._contactSchema == null) return;
 
@@ -196,7 +196,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   }
 
   Future<WalletSchema> _refreshDefaultWallet() async {
-    WalletSchema schema = await wallet.getWalletDefault();
+    WalletSchema schema = await walletCommon.getWalletDefault();
     setState(() {
       _walletDefault = schema;
     });
@@ -210,13 +210,13 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     //Loading.show(); // set on func _selectDefaultWallet
     try {
       // client change
-      await chat.close();
+      await chatCommon.close();
       await Future.delayed(Duration(seconds: 1)); // wait client close
-      await chat.signIn(_walletDefault);
+      await chatCommon.signIn(_walletDefault);
       await Future.delayed(Duration(seconds: 1)); // wait client create
 
       // refresh state
-      await _refreshContactSchema(scheme: contact.currentUser);
+      await _refreshContactSchema(scheme: contactCommon.currentUser);
 
       Toast.show(S.of(this.context).tip_switch_success);
 
@@ -250,7 +250,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   }
 
   _selectAvatarPicture() async {
-    String remarkAvatarLocalPath = Path.getLocalContactAvatar(hexEncode(chat.publicKey), "${Uuid().v4()}.jpeg");
+    String remarkAvatarLocalPath = Path.getLocalContactAvatar(hexEncode(chatCommon.publicKey), "${Uuid().v4()}.jpeg");
     String remarkAvatarPath = join(Global.applicationRootDirectory.path, remarkAvatarLocalPath);
     File picked = await MediaPicker.pick(
       mediaType: MediaType.image,
@@ -264,9 +264,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     }
 
     if (_contactSchema?.type == ContactType.me) {
-      await contact.setAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
+      await contactCommon.setAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
     } else {
-      await contact.setRemarkAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
+      await contactCommon.setRemarkAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
     }
     // _chatBloc.add(RefreshSessionEvent()); // TODO:GG notify chat
   }
@@ -283,9 +283,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     );
     if (newName == null || newName.trim().isEmpty) return;
     if (_contactSchema?.type == ContactType.me) {
-      await contact.setName(_contactSchema, newName.trim(), notify: true);
+      await contactCommon.setName(_contactSchema, newName.trim(), notify: true);
     } else {
-      await contact.setRemarkName(_contactSchema, newName.trim(), notify: true);
+      await contactCommon.setRemarkName(_contactSchema, newName.trim(), notify: true);
     }
     // _chatBloc.add(RefreshSessionEvent()); // TODO:GG notify chat
   }
@@ -298,7 +298,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     } else {
       _burnValue = burnValueArray[_burnProgress].inSeconds;
     }
-    await contact.setOptionsBurn(_contactSchema, _burnValue, notify: true);
+    await contactCommon.setOptionsBurn(_contactSchema, _burnValue, notify: true);
 
     // TODO:GG notify chat
     // var sendMsg = MessageSchema.formSendMessage(
@@ -338,7 +338,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     //   showToast(_localizations.close);
     // }
 
-    contact.setNotificationOpen(_contactSchema?.id, _notificationOpen, notify: true);
+    contactCommon.setNotificationOpen(_contactSchema?.id, _notificationOpen, notify: true);
 
     // TODO:GG notify chat
     // var sendMsg = MessageSchema.formSendMessage(
@@ -354,7 +354,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 
   _addFriend() {
     S _localizations = S.of(this.context);
-    contact.setType(_contactSchema?.id, ContactType.friend, notify: true);
+    contactCommon.setType(_contactSchema?.id, ContactType.friend, notify: true);
     Toast.show(_localizations.success);
   }
 
@@ -369,7 +369,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
         backgroundColor: application.theme.strongColor,
         width: double.infinity,
         onPressed: () async {
-          contact.delete(_contactSchema?.id);
+          contactCommon.delete(_contactSchema?.id);
           Navigator.pop(this.context);
           Navigator.pop(this.context);
         },

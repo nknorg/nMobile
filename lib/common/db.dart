@@ -2,6 +2,7 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/message.dart';
+import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -26,7 +27,7 @@ class DB {
         logger.i("database tables create");
         await MessageStorage.create(db, version);
         await ContactStorage.create(db, version);
-        // await TopicRepo.create(db, version);
+        await TopicStorage.create(db, version);
         // await SubscriberRepo.create(db, version);
 
         // create contact me

@@ -198,9 +198,9 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
       (_formKey.currentState as FormState).save();
       logger.d("amount:$_amount, sendTo:$_sendTo, fee:$_fee");
 
-      wallet.getWalletPassword(context, _wallet?.address).then((String password) async {
+      walletCommon.getWalletPassword(context, _wallet?.address).then((String password) async {
         if (password == null || password.isEmpty) return;
-        String keystore = await wallet.getWalletKeystoreByAddress(_wallet?.address);
+        String keystore = await walletCommon.getWalletKeystoreByAddress(_wallet?.address);
 
         if (_wallet.type == WalletType.eth) {
           final result = _transferETH(keystore, password);
@@ -344,7 +344,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                 child: BlocBuilder<WalletBloc, WalletState>(
                   builder: (context, state) {
                     if (state is WalletLoaded) {
-                      _wallet = wallet.getWalletInOriginalByAddress(state.wallets, _wallet?.address);
+                      _wallet = walletCommon.getWalletInOriginalByAddress(state.wallets, _wallet?.address);
                       if (_wallet.type == WalletType.nkn) {
                         _ethTrueTokenFalse = false;
                       }
@@ -471,7 +471,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                         ? SizedBox.shrink()
                                         : GestureDetector(
                                             onTap: () async {
-                                              if (contact.currentUser != null) {
+                                              if (contactCommon.currentUser != null) {
                                                 var contact = await ContactHomeScreen.go(context, isSelect: true);
                                                 if (contact != null && contact is ContactSchema) {
                                                   _sendToController.text = contact.nknWalletAddress;
