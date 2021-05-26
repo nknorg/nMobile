@@ -160,7 +160,7 @@ class MessageSchema {
         chat.id,
         data['contentType'],
         pid: raw.messageId,
-        // topic:  // TODO:GG
+        topic: data['topic'],
         content: data['content'],
         options: data['options'],
       );
@@ -169,7 +169,7 @@ class MessageSchema {
         schema.sendTime = DateTime.fromMillisecondsSinceEpoch(data['timestamp']);
       }
       schema.receiveTime = DateTime.now();
-      schema.deleteTime = null; // TODO:GG set when looked
+      schema.deleteTime = null;
 
       schema = MessageStatus.set(schema, MessageStatus.Received);
 
@@ -190,7 +190,7 @@ class MessageSchema {
     // pid (SDK create)
     if (msgId == null) msgId = uuid.v4();
 
-    if (options.keys.length == 0) options = null;
+    if (options?.keys?.length == 0) options = null;
 
     sendTime = DateTime.now();
     receiveTime = null;
@@ -274,19 +274,29 @@ class MessageSchema {
     return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, contentType: $contentType, content: $content, options: $options, sendTime: $sendTime, receiveTime: $receiveTime, deleteTime: $deleteTime, isOutbound: $isOutbound, isSendError: $isSendError, isSuccess: $isSuccess, isRead: $isRead}';
   }
 
+  static String getSendReceiptData(String msgId) {
+    Map map = {
+      'id': uuid.v4(),
+      'contentType': ContentType.receipt,
+      'targetID': msgId,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    };
+    return jsonEncode(map);
+  }
+
   String toSendTextData() {
-    Map data = {
+    Map map = {
       'id': msgId,
       'contentType': contentType ?? ContentType.text,
       'content': content,
       'timestamp': sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     if (options != null && options.keys.length > 0) {
-      data['options'] = options;
+      map['options'] = options;
     }
     if (topic != null) {
-      data['topic'] = topic;
+      map['topic'] = topic;
     }
-    return jsonEncode(data);
+    return jsonEncode(map);
   }
 }
