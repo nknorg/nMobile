@@ -10,6 +10,7 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/hash.dart';
+import 'package:nmobile/utils/logger.dart';
 
 import '../global.dart';
 
@@ -60,33 +61,19 @@ class Chat {
 
   int status;
 
+  // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
   StreamSink<int> get _statusSink => _statusController.sink;
   Stream<int> get statusStream => _statusController.stream;
 
+  // ignore: close_sinks
   StreamController<dynamic> _onErrorController = StreamController<dynamic>.broadcast();
   StreamSink<dynamic> get _onErrorSink => _onErrorController.sink;
   Stream<dynamic> get onErrorStream => _onErrorController.stream;
 
-  StreamSubscription _onClientErrorStreamSubscription;
-  StreamSubscription _onClientConnectStreamSubscription;
-  StreamSubscription _onClientMessageStreamSubscription;
-
-  StreamController<OnMessage> onMessageController = StreamController<OnMessage>.broadcast();
-  StreamSink<OnMessage> get onMessageSink => onMessageController.sink;
-  Stream<OnMessage> get onMessageStream => onMessageController.stream;
-
-  StreamController<MessageSchema> onReceivedMessageController = StreamController<MessageSchema>.broadcast();
-  StreamSink<MessageSchema> get onReceivedMessageSink => onReceivedMessageController.sink;
-  Stream<MessageSchema> get onReceivedMessageStream => onReceivedMessageController.stream;
-
-  StreamController<MessageSchema> onMessageSavedController = StreamController<MessageSchema>.broadcast();
-  StreamSink<MessageSchema> get onMessageSavedSink => onMessageSavedController.sink;
-  Stream<MessageSchema> get onMessageSavedStream => onMessageSavedController.stream;
-
-  List<StreamSubscription> onMessageStreamSubscriptions = <StreamSubscription>[];
-  List<StreamSubscription> onReceiveMessageStreamSubscriptions = <StreamSubscription>[];
-  List<StreamSubscription> onMessageSavedStreamSubscriptions = <StreamSubscription>[];
+  StreamSubscription _onErrorStreamSubscription;
+  StreamSubscription _onConnectStreamSubscription;
+  StreamSubscription _onMessageStreamSubscription;
 
   Chat() {
     status = ChatConnectStatus.disconnected;
@@ -128,61 +115,41 @@ class Chat {
     client = await Client.create(wallet.seed, config: config);
 
     // client error
-    _onClientErrorStreamSubscription = client.onError.listen((dynamic event) {
+    _onErrorStreamSubscription = client.onError?.listen((dynamic event) {
+      logger.e("onErrorStream -> event:$event");
       _onErrorSink.add(event);
     });
 
     // client connect
     Completer completer = Completer();
-    _onClientConnectStreamSubscription = client.onConnect.listen((OnConnect event) {
+    _onConnectStreamSubscription = client.onConnect?.listen((OnConnect event) {
+      logger.i("onConnectStream -> event:$event");
       _statusSink.add(ChatConnectStatus.connected);
       completer.complete();
     });
 
     // TODO:GG client disconnect/reconnect listen (action statusSink.add)
 
-    // messages receive
-    receiveMessage.startReceiveMessage();
-    _onClientMessageStreamSubscription = client.onMessage.listen((OnMessage event) {
-      onMessageSink.add(event);
+    // client messages_receive
+    _onMessageStreamSubscription = client.onMessage?.listen((OnMessage event) async {
+      logger.i("onMessageStream -> messageId:${event.messageId} - src:${event.src} - data:${event.data} - type:${event.type} - encrypted:${event.encrypted}");
+      await receiveMessage.onClientMessage(MessageSchema.fromReceive(event));
     });
-
+    receiveMessage.startReceiveMessage();
     await completer.future;
   }
 
   close() async {
-    List<Future> futures = <Future>[];
     // status
     _statusSink.add(ChatConnectStatus.disconnected);
     // message
-    onMessageStreamSubscriptions?.forEach((StreamSubscription element) {
-      futures.add(element?.cancel());
-    });
-    onReceiveMessageStreamSubscriptions?.forEach((StreamSubscription element) {
-      futures.add(element?.cancel());
-    });
-    onMessageSavedStreamSubscriptions?.forEach((StreamSubscription element) {
-      futures.add(element?.cancel());
-    });
-    onMessageStreamSubscriptions?.clear();
-    onReceiveMessageStreamSubscriptions?.clear();
-    onMessageSavedStreamSubscriptions?.clear();
+    await receiveMessage.stopReceiveMessage();
     // client
-    futures.add(_onClientErrorStreamSubscription?.cancel());
-    futures.add(_onClientConnectStreamSubscription?.cancel());
-    futures.add(_onClientMessageStreamSubscription?.cancel());
-    futures.add(client?.close());
-    futures.add(Future(() => client = null));
-    return Future.wait(futures);
-  }
-
-  destroy() async {
-    await close();
-    await _statusController?.close();
-    await _onErrorController?.close();
-    await onMessageController?.close();
-    await onReceivedMessageController?.close();
-    await onMessageSavedController?.close();
+    await _onErrorStreamSubscription?.cancel();
+    await _onConnectStreamSubscription?.cancel();
+    await _onMessageStreamSubscription?.cancel();
+    await client?.close();
+    client = null;
   }
 
   Future sendText(String dest, String data) async {
