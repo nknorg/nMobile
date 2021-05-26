@@ -2,14 +2,12 @@ import 'dart:async';
 
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/chat/chat.dart';
-import 'package:nmobile/common/chat/send_message.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/utils.dart';
 
 import '../locator.dart';
 
@@ -24,7 +22,7 @@ class ReceiveMessage {
     // onMessages
     StreamSubscription subscription = chat.onMessageStream.listen((OnMessage event) async {
       logger.i("onMessageStream -> messageId:${event.messageId} - src:${event.src} - data:${event.data} - type:${event.type} - encrypted:${event.encrypted}");
-      MessageSchema schema = _convert2MessageSchema(event);
+      MessageSchema schema = MessageSchema.fromReceive(event);
       if (schema != null) {
         contactHandle(schema.from);
         messageHandle(schema);
@@ -35,35 +33,6 @@ class ReceiveMessage {
     // onReceiveMessages
     receiveTextMessage();
     receiveReceiptMessage();
-  }
-
-  MessageSchema _convert2MessageSchema(OnMessage raw) {
-    if (raw == null && raw.data != null) return null;
-    Map data = jsonFormat(raw.data);
-    if (data != null) {
-      MessageSchema schema = MessageSchema(data['id'], raw.src, chat.id, data['contentType']);
-      schema.pid = raw.messageId;
-      // raw.encrypted
-      schema.isSuccess = true;
-      schema.content = data['content'];
-      schema.options = data['options'];
-      if (data['timestamp'] != null) {
-        schema.timestamp = DateTime.fromMillisecondsSinceEpoch(data['timestamp']);
-      }
-
-      // TODO:GG
-      // String topic;
-      // DateTime receiveTime;
-      // DateTime deleteTime;
-      // bool isRead = false;
-      // bool isOutbound = false;
-      // bool isSendError = false;
-      // MessageStatus messageStatus;
-      // ContentType
-
-      return schema;
-    }
-    return null;
   }
 
   Future contactHandle(String clientAddress) async {
@@ -89,7 +58,7 @@ class ReceiveMessage {
   receiveTextMessage() {
     StreamSubscription subscription = chat.onReceivedMessageStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) {
       // receipt message TODO: batch send receipt message
-      chat.sendText(event.from, createReceiptMessage(event.msgId));
+      chat.sendText(event.from, sendMessage.createReceiptMessage(event.msgId));
       // TODO: notification
       // notification.showDChatNotification();
       // TODO
