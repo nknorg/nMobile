@@ -48,7 +48,7 @@ class _ChatNoConnectLayoutState extends State<ChatNoConnectLayout> {
   }
 
   _refreshWalletDefault() {
-    wallet.getWalletDefault().then((value) {
+    walletCommon.getWalletDefault().then((value) {
       setState(() {
         loaded = true;
         if (value != null) {
@@ -173,7 +173,7 @@ class _ChatNoConnectLayoutState extends State<ChatNoConnectLayout> {
                                 width: double.infinity,
                                 text: _localizations.connect,
                                 onPressed: () async {
-                                  chat.signIn(this._defaultWallet);
+                                  chatCommon.signIn(this._defaultWallet);
                                 },
                               ),
                             )

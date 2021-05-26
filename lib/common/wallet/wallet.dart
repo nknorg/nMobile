@@ -9,7 +9,7 @@ import 'package:nmobile/utils/logger.dart';
 
 import '../locator.dart';
 
-class Wallet {
+class WalletCommon {
   WalletStorage _walletStorage = WalletStorage();
 
   Future<WalletSchema> getWalletInStorageByAddress(String address) async {

@@ -12,8 +12,9 @@ class MessageType {
 
 class OnConnect {
   Map node;
+  List<String> rpcServers;
 
-  OnConnect({this.node});
+  OnConnect({this.node, this.rpcServers});
 }
 
 class OnMessage {
@@ -89,7 +90,7 @@ class Client {
         }
         switch (res['event']) {
           case 'onConnect':
-            client._onConnectStreamSink.add(OnConnect(node: res['node']));
+            client._onConnectStreamSink.add(OnConnect(node: res['node'], rpcServers: res['rpcServers']?.cast<String>()));
             break;
           case 'onMessage':
             client._onMessageStreamSink.add(OnMessage(

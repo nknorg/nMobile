@@ -35,7 +35,7 @@ class _ContactHeaderState extends State<ContactHeader> {
 
     // listen
     if (widget.syncData != null && widget.syncData) {
-      _updateContactSubscription = contact.updateStream.listen((List<ContactSchema> list) {
+      _updateContactSubscription = contactCommon.updateStream.listen((List<ContactSchema> list) {
         if (list == null || list.isEmpty) return;
         List result = list.where((element) => (element != null) && (element?.id == _contact?.id)).toList();
         if (result != null && result.isNotEmpty) {
