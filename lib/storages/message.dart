@@ -57,7 +57,7 @@ class MessageStorage {
   }
 
   Future<bool> insertReceivedMessage(MessageSchema schema) async {
-    Map insertMessageInfo = schema.toEntity();
+    Map insertMessageInfo = schema.toMap();
     int n = await db.insert(tableName, insertMessageInfo);
     if (n > 0) {
       return true;

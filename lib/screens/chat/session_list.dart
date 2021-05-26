@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/components/chat/session.dart';
+import 'package:nmobile/components/chat/session_item.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/screens/chat/messages.dart';
@@ -65,11 +65,12 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
     super.initState();
     initAsync();
 
-    _onMessageStreamSubscription = chat.onMessageSaved.listen((event) {
+    _onMessageStreamSubscription = chat.onMessageSavedStream.listen((event) {
       _messageStorage.getUpdateSession(event.from).then((value) {
         _updateMessage(value);
       });
     });
+    chat.onMessageSavedStreamSubscriptions.add(_onMessageStreamSubscription);
 
     _scrollController.addListener(() {
       double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
