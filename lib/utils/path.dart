@@ -76,18 +76,6 @@ class Path {
     return path;
   }
 
-  // static Future<String> getFilePathByOriginal(String firstDirName, String secondDirName, File file) async {
-  //   if (file == null) {
-  //     logger.w('Wrong!!!!! getFilePathByOriginal file is null');
-  //     return null;
-  //   }
-  //   String name = await getFileMD5(file);
-  //   String fileExt = getFileExt(file);
-  //   String path = await getFilePath(firstDirName, secondDirName, joinFileExt(name, fileExt));
-  //   logger.d("getFilePathByOriginal - path:$path");
-  //   return path;
-  // }
-
   /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/{fileName}.{fileExt}
   static Future<String> getCacheFile(String mPubKey, {String ext}) async {
     String fileName = new DateTime.now().second.toString() + "_" + Uuid().v4() + '_temp';
