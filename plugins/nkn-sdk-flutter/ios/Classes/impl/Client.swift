@@ -11,6 +11,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     let CHANNEL_NAME = "org.nkn.sdk/client"
     let EVENT_NAME = "org.nkn.sdk/client/event"
     
+    let numSubClients = 3
     var clientMap: [String:NknMultiClient] = [String:NknMultiClient]()
     
     func install(binaryMessenger: FlutterBinaryMessenger) {
@@ -49,7 +50,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         if (clientMap.keys.contains(id)) {
             closeClient(id: id)
         }
-        let client = NknMultiClient(account, baseIdentifier: identifier, numSubClients: 3, originalClient: true, config: config)
+        let client = NknMultiClient(account, baseIdentifier: identifier, numSubClients: numSubClients, originalClient: true, config: config)
         if (client == nil) {
             return nil
         }
@@ -79,6 +80,19 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         resp["event"] = "onConnect"
         resp["node"] = ["address": node.addr, "publicKey": node.pubKey]
         resp["client"] = ["address": client.address()]
+        var rpcServers = [String]()
+        for i in 0...numSubClients {
+            let c = client.getClient(i)
+            let rpcNode = c?.getNode()
+            var rpcAddr = rpcNode?.rpcAddr ?? ""
+            if (rpcAddr.count > 0) {
+                rpcAddr = "http://" + rpcAddr
+                if(!rpcServers.contains(rpcAddr)) {
+                    rpcServers.append(rpcAddr)
+                }
+            }
+        }
+        resp["rpcServers"] = rpcServers
         NSLog("%@", resp)
         self.eventSinkSuccess(eventSink: eventSink!, resp: resp)
     }

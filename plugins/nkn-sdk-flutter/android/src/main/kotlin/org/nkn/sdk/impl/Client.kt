@@ -19,6 +19,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val EVENT_NAME = "org.nkn.sdk/client/event"
     }
 
+    private val numSubClients = 3L
     private var clientMap: HashMap<String, MultiClient?> = hashMapOf()
 
     lateinit var methodChannel: MethodChannel
@@ -51,7 +52,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         if (clientMap.containsKey(id)) {
             closeClient(id)
         }
-        val client = MultiClient(account, identifier, 3, true, config)
+        val client = MultiClient(account, identifier, numSubClients, true, config)
         clientMap[client.address()] = client
         client
     }
@@ -72,11 +73,24 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     private suspend fun onConnect(client: MultiClient) = withContext(Dispatchers.IO) {
         try {
             val node = client.onConnect.next()
+            val rpcServers = ArrayList<String>()
+            for (i in 0..numSubClients) {
+                val c = client?.getClient(i)
+                val rpcNode = c?.node
+                var rpcAddr = rpcNode?.rpcAddr ?: ""
+                if (rpcAddr.isNotEmpty()) {
+                    rpcAddr = "http://$rpcAddr"
+                    if(!rpcServers.contains(rpcAddr)) {
+                        rpcServers.add(rpcAddr)
+                    }
+                }
+            }
             val resp = hashMapOf(
                 "_id" to client.address(),
                 "event" to "onConnect",
                 "node" to hashMapOf("address" to node.addr, "publicKey" to node.pubKey),
-                "client" to hashMapOf("address" to client.address())
+                "client" to hashMapOf("address" to client.address()),
+                "rpcServers" to rpcServers
             )
             Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
             eventSinkSuccess(eventSink, resp)
@@ -149,7 +163,6 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val identifier = call.argument<String>("identifier") ?: ""
         val seed = call.argument<ByteArray>("seed")
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
-
         val config = ClientConfig()
         if (seedRpc != null) {
             config.seedRPCServerAddr = StringArray(null)
@@ -158,7 +171,6 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             }
         }
         val account = Nkn.newAccount(seed)
-
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val client = createClient(account, identifier, config)

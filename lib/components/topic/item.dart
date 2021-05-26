@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/topic.dart';
 
 import 'avatar.dart';
 
-class ContactItem extends StatefulWidget {
-  final ContactSchema contact;
+class TopicItem extends StatefulWidget {
+  final TopicSchema topic;
   final Widget body;
   final String bodyTitle;
   final String bodyDesc;
@@ -16,8 +16,8 @@ class ContactItem extends StatefulWidget {
   final EdgeInsetsGeometry padding;
   final Widget tail;
 
-  ContactItem({
-    this.contact,
+  TopicItem({
+    this.topic,
     this.body,
     this.bodyTitle,
     this.bodyDesc,
@@ -30,10 +30,10 @@ class ContactItem extends StatefulWidget {
   });
 
   @override
-  _ContactItemState createState() => _ContactItemState();
+  _TopicItemState createState() => _TopicItemState();
 }
 
-class _ContactItemState extends State<ContactItem> {
+class _TopicItemState extends State<TopicItem> {
   @override
   Widget build(BuildContext context) {
     return widget.onTap != null
@@ -68,9 +68,9 @@ class _ContactItemState extends State<ContactItem> {
         children: <Widget>[
           Container(
             margin: const EdgeInsets.only(right: 12),
-            child: ContactAvatar(
-              key: ValueKey(widget.contact?.getDisplayAvatarPath ?? ''),
-              contact: widget.contact,
+            child: TopicAvatar(
+              key: ValueKey(widget.topic.avatar?.path ?? ''),
+              topic: widget.topic,
             ),
           ),
           Expanded(

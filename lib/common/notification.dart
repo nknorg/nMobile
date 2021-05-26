@@ -11,7 +11,7 @@ class Notification {
   int _notificationId = 0;
 
   init() async {
-    var initializationSettingsAndroid = new AndroidInitializationSettings('@drawable/ic_launcher_round');
+    var initializationSettingsAndroid = new AndroidInitializationSettings('@mipmap/ic_launcher_round');
 
     var initializationSettingsIOS = IOSInitializationSettings(
       requestSoundPermission: true,
