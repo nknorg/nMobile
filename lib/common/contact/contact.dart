@@ -142,7 +142,7 @@ class Contact {
     if (schema == null || schema.id == 0) return false;
     bool success = await _contactStorage.setRemarkProfile(
       schema.id,
-      {'first_name': name},
+      {'firstName': name},
       oldExtraInfo: schema.extraInfo,
     );
     if (success && notify) queryAndNotify(schema.id);
@@ -153,7 +153,7 @@ class Contact {
     if (schema == null || schema.id == 0) return Future.value(false);
     bool success = await _contactStorage.setRemarkProfile(
       schema.id,
-      {'remark_avatar': avatarLocalPath},
+      {'avatar': avatarLocalPath},
       oldExtraInfo: schema.extraInfo,
     );
     if (success && notify) queryAndNotify(schema.id);

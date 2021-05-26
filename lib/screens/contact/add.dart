@@ -124,8 +124,8 @@ class ContactAddScreenState extends State<ContactAddScreen> {
         // avatar: defaultAvatar,
         firstName: defaultName,
         extraInfo: {
-          'remark_name': remarkName,
-          'remark_avatar': remarkAvatar,
+          'firstName': remarkName,
+          'avatar': remarkAvatar,
         },
       );
 
