@@ -69,10 +69,10 @@ class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTick
                 _tabController.index = 1;
               }
 
-              String? qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
+              var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
               logger.d("QR_DATA:$qrData");
               if (qrData != null) {
-                _qrController.sink.add(qrData);
+                _qrController.sink.add(qrData.toString());
               }
             },
           )
