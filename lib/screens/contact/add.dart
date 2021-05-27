@@ -51,7 +51,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
   FocusNode _walletAddressFocusNode = FocusNode();
   FocusNode _notesFocusNode = FocusNode();
 
-  File _headImage;
+  File? _headImage;
 
   @override
   void initState() {
@@ -59,7 +59,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
   }
 
   _selectAvatarPicture() async {
-    File picked = await MediaPicker.pick(
+    File? picked = await MediaPicker.pick(
       mediaType: MediaType.image,
       source: ImageSource.gallery,
       crop: true,
@@ -77,12 +77,12 @@ class ContactAddScreenState extends State<ContactAddScreen> {
     }
   }
 
-  formatQrDate(String clientAddress) async {
+  formatQrDate(String? clientAddress) async {
     logger.d("QR_DATA - $clientAddress");
     if (clientAddress == null || clientAddress.isEmpty) return;
 
     String nickName = ContactSchema.getDefaultName(clientAddress);
-    String walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+    String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
 
     logger.d("QR_DATA_DECODE - nickname:$nickName - clientAddress:$clientAddress - walletAddress:$walletAddress");
     if (walletAddress == null || !verifyAddress(walletAddress)) {
@@ -106,13 +106,13 @@ class ContactAddScreenState extends State<ContactAddScreen> {
       Loading.show();
 
       String clientAddress = _clientAddressController.text;
-      String walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+      String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
       String note = _notesController.text;
 
       String remarkName = _nameController.text;
       String defaultName = ContactSchema.getDefaultName(clientAddress);
 
-      String remarkAvatar = _headImage == null ? null : Path.getLocalContactAvatar(hexEncode(chatCommon.publicKey), Path.getFileName(_headImage?.path));
+      String? remarkAvatar = _headImage == null ? null : Path.getLocalContactAvatar(hexEncode(chatCommon.publicKey), Path.getFileName(_headImage!.path));
 
       logger.d("_saveContact -\n clientAddress:$clientAddress,\n walletAddress:$walletAddress,\n note:$note,\n firstName:$defaultName,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
 
@@ -129,7 +129,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
         },
       );
 
-      ContactSchema added = await contactCommon.add(scheme);
+      ContactSchema? added = await contactCommon.add(scheme);
       if (added == null) {
         Toast.show(S.of(context).failure);
         return;
@@ -159,7 +159,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
             ),
             onPressed: () async {
               Navigator.pushNamed(context, ScannerScreen.routeName).then((value) {
-                formatQrDate(value);
+                formatQrDate(value?.toString());
               });
             },
           ),
@@ -197,7 +197,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
                                     )
                                   : CircleAvatar(
                                       radius: avatarSize / 2,
-                                      backgroundImage: FileImage(_headImage),
+                                      backgroundImage: FileImage(_headImage!),
                                     ),
                               InkWell(
                                 onTap: _selectAvatarPicture,

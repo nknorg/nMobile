@@ -3,19 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 
 class Button extends StatefulWidget {
-  final Widget child;
-  final String text;
-  final double fontSize;
-  final Color fontColor;
-  final FontWeight fontWeight;
+  final Widget? child;
+  final String? text;
+  final double? fontSize;
+  final Color? fontColor;
+  final FontWeight? fontWeight;
   final bool outline;
   final bool disabled;
-  final VoidCallback onPressed;
-  final EdgeInsets padding;
-  final Color backgroundColor;
-  final Color borderColor;
-  final double width;
-  final double height;
+  final VoidCallback? onPressed;
+  final EdgeInsets? padding;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final double? width;
+  final double? height;
 
   Button({
     this.child,
@@ -39,10 +39,10 @@ class Button extends StatefulWidget {
 
 class _ButtonState extends State<Button> {
   Widget _getButton() {
-    var child = widget.child != null
-        ? widget.child
+    Widget child = widget.child != null
+        ? widget.child!
         : Text(
-            widget.text,
+            widget.text ?? "",
             style: TextStyle(
               fontSize: widget.fontSize ?? application.theme.buttonFontSize,
               color: widget.disabled ? application.theme.fontColor2 : (widget.fontColor ?? application.theme.fontLightColor),
@@ -62,7 +62,8 @@ class _ButtonState extends State<Button> {
     );
 
     if (widget.borderColor != null) {
-      btnStyle = btnStyle.copyWith(side: MaterialStateProperty.resolveWith((state) => BorderSide(color: widget.disabled ? application.theme.backgroundColor2 : widget.borderColor)));
+      Color color = widget.disabled ? application.theme.backgroundColor2 : widget.borderColor!;
+      btnStyle = btnStyle.copyWith(side: MaterialStateProperty.resolveWith((state) => BorderSide(color: color)));
     }
 
     return widget.outline

@@ -4,20 +4,20 @@ import 'package:flutter/widgets.dart';
 const Duration _kExpand = Duration(milliseconds: 200);
 
 class ExpansionLayout extends StatefulWidget {
-  final ValueChanged<bool> onExpansionChanged;
   final Widget child;
-  final Color backgroundColor;
   final bool isExpanded;
-  final Widget trailing;
+  final Color? backgroundColor;
+  final Widget? trailing;
+  final ValueChanged<bool>? onExpansionChanged;
+
   const ExpansionLayout({
-    Key key,
+    Key? key,
+    required this.child,
+    this.isExpanded = false,
     this.backgroundColor,
     this.onExpansionChanged,
-    this.child,
     this.trailing,
-    this.isExpanded,
   }) : super(key: key);
-
 
   @override
   _ExpansionLayoutState createState() => _ExpansionLayoutState();
@@ -25,10 +25,10 @@ class ExpansionLayout extends StatefulWidget {
 
 class _ExpansionLayoutState extends State<ExpansionLayout> with SingleTickerProviderStateMixin {
   static final Animatable<double> _easeInTween = CurveTween(curve: Curves.easeIn);
-  AnimationController _controller;
-  Animation<double> _heightFactor;
+  late AnimationController _controller;
+  late Animation<double> _heightFactor;
 
-  bool _isExpanded;
+  bool _isExpanded = false;
 
   @override
   void initState() {
@@ -57,10 +57,10 @@ class _ExpansionLayoutState extends State<ExpansionLayout> with SingleTickerProv
       }
       PageStorage.of(context)?.writeState(context, _isExpanded);
     });
-    if (widget.onExpansionChanged != null) widget.onExpansionChanged(_isExpanded);
+    if (widget.onExpansionChanged != null) widget.onExpansionChanged!(_isExpanded);
   }
 
-  Widget _buildChildren(BuildContext context, Widget child) {
+  Widget _buildChildren(BuildContext context, Widget? child) {
     return Container(
       child: ClipRect(
         child: Align(

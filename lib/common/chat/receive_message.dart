@@ -8,11 +8,9 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/topic.dart';
-import 'package:nmobile/utils/logger.dart';
 
 import '../locator.dart';
 
-/// Receive messages service
 class ReceiveMessage {
   ReceiveMessage();
 
@@ -32,21 +30,23 @@ class ReceiveMessage {
   ContactStorage _contactStorage = ContactStorage();
   TopicStorage _topicStorage = TopicStorage();
 
-  Future onClientMessage(MessageSchema schema) async {
+  Future onClientMessage(MessageSchema? schema) async {
     if (schema == null) return;
-    // contact
+    // stranger
     contactHandle(schema.from);
     topicHandle(schema.topic);
+    // exists
     bool isExists = (await _messageStorage.queryCount(schema.msgId)) > 0;
     if (isExists) return;
-    // message
+    // receive
     onReceiveSink.add(schema);
-    // sqlite
+    // db_insert
     await _messageStorage.insertReceivedMessage(schema);
     onSavedSink.add(schema);
   }
 
-  Future contactHandle(String clientAddress) async {
+  Future contactHandle(String? clientAddress) async {
+    if (clientAddress == null || clientAddress.isEmpty) return;
     int count = await _contactStorage.queryCountByClientAddress(clientAddress);
     if (count == 0) {
       await contactCommon.add(ContactSchema(
@@ -56,7 +56,7 @@ class ReceiveMessage {
     }
   }
 
-  Future topicHandle(String topic) async {
+  Future topicHandle(String? topic) async {
     if (topic?.isNotEmpty != true) return;
     int count = await _topicStorage.queryCountByTopic(topic);
     if (count == 0) {
@@ -64,7 +64,7 @@ class ReceiveMessage {
         // TODO: get topic info
         // expireAt:
         // joined:
-        topic: topic,
+        topic: topic!,
       ));
     }
   }
@@ -77,21 +77,21 @@ class ReceiveMessage {
   Future stopReceiveMessage() {
     List<Future> futures = <Future>[];
     // message
-    onReceiveStreamSubscriptions?.forEach((StreamSubscription element) {
-      futures.add(element?.cancel());
+    onReceiveStreamSubscriptions.forEach((StreamSubscription element) {
+      futures.add(element.cancel());
     });
-    onSavedStreamSubscriptions?.forEach((StreamSubscription element) {
-      futures.add(element?.cancel());
+    onSavedStreamSubscriptions.forEach((StreamSubscription element) {
+      futures.add(element.cancel());
     });
-    onReceiveStreamSubscriptions?.clear();
-    onSavedStreamSubscriptions?.clear();
+    onReceiveStreamSubscriptions.clear();
+    onSavedStreamSubscriptions.clear();
     return Future.wait(futures);
   }
 
   receiveTextMessage() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) {
       // receipt message TODO: batch send receipt message
-      chatCommon.sendText(event.from, MessageData.getSendReceipt(event.msgId));
+      chatCommon.sendText(event.from, MessageData.getReceipt(event.msgId));
       // TODO: notification
       // notification.showDChatNotification();
     });

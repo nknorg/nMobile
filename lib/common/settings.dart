@@ -7,9 +7,9 @@ class NotificationType {
 }
 
 class Settings {
-  static String locale;
-  static int notificationType;
-  static bool biometricsAuthentication;
+  static late String locale;
+  static late int notificationType;
+  static late bool biometricsAuthentication;
   static bool debug = true;
 
   static init() async {

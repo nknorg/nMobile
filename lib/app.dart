@@ -24,9 +24,9 @@ class AppScreen extends StatefulWidget {
     Navigator.popUntil(context, ModalRoute.withName(routeName));
   }
 
-  final Map<String, dynamic> arguments;
+  final Map<String, dynamic>? arguments;
 
-  const AppScreen({Key key, this.arguments}) : super(key: key);
+  const AppScreen({Key? key, this.arguments}) : super(key: key);
 
   @override
   _AppScreenState createState() => _AppScreenState();
@@ -34,9 +34,9 @@ class AppScreen extends StatefulWidget {
 
 class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   GetIt locator = GetIt.instance;
-  Application app;
+  late Application app;
   int _currentIndex = 0;
-  PageController _pageController;
+  late PageController _pageController;
   List<Widget> screens = <Widget>[
     ChatHomeScreen(),
     WalletHomeScreen(),
@@ -47,7 +47,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     app = locator.get<Application>();
-    this._currentIndex = widget.arguments != null ? (widget.arguments[AppScreen.argIndex] ?? 0) : 0;
+    this._currentIndex = widget.arguments![AppScreen.argIndex] ?? 0;
     _pageController = PageController(initialPage: this._currentIndex);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -56,7 +56,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    _pageController?.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 

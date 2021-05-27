@@ -16,12 +16,12 @@ class Authorization {
 
   Future<List<BiometricType>> get availableBiometrics async => await _localAuth.getAvailableBiometrics();
 
-  Future<bool> authentication([String localizedReason]) async {
+  Future<bool> authentication([String? localizedReason]) async {
     if (localizedReason?.isNotEmpty != true) {
       localizedReason = S.of(Global.appContext).authenticate_to_access;
     }
     try {
-      bool success = await _localAuth.authenticate(localizedReason: localizedReason);
+      bool success = await _localAuth.authenticate(localizedReason: localizedReason ?? "");
       return success;
     } catch (e) {
       logger.e(e);
@@ -30,7 +30,7 @@ class Authorization {
     return false;
   }
 
-  Future<bool> authenticationIfCan([String localizedReason]) async {
+  Future<bool> authenticationIfCan([String? localizedReason]) async {
     if (await canCheckBiometrics) {
       return authentication(localizedReason);
     }

@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -17,12 +16,12 @@ class MediaType {
 }
 
 class MediaPicker {
-  static Future<File> pick({
+  static Future<File?> pick({
     ImageSource source = ImageSource.gallery,
     int mediaType = MediaType.image,
     bool crop = false,
     int compressQuality = 100,
-    String returnPath,
+    String? returnPath,
   }) async {
     // permission
     Permission permission;
@@ -30,22 +29,21 @@ class MediaPicker {
       permission = Permission.camera;
     } else if (source == ImageSource.gallery) {
       permission = Permission.mediaLibrary;
+    } else {
+      return null;
     }
-    PermissionStatus permissionStatus = await permission?.request();
-    if (permissionStatus == null || permissionStatus != PermissionStatus.granted) {
+    PermissionStatus permissionStatus = await permission.request();
+    if (permissionStatus != PermissionStatus.granted) {
       return null;
     }
     // pick
-    PickedFile pickedResult = await ImagePicker().getImage(source: source);
-    if (pickedResult == null || pickedResult.path == null || pickedResult.path.isEmpty) {
+    PickedFile? pickedResult = await ImagePicker().getImage(source: source);
+    if (pickedResult == null || pickedResult.path.isEmpty) {
       return null;
     }
     File pickedFile = File(pickedResult.path);
-    logger.d("media_pick - picked - path:${pickedFile?.path}"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
-    if (pickedFile == null) {
-      return null;
-    }
-    String fileExt = Path.getFileExt(pickedFile);
+    logger.d("media_pick - picked - path:${pickedFile.path}"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
+    String? fileExt = Path.getFileExt(pickedFile);
     if (fileExt == null || fileExt.isEmpty) {
       switch (mediaType) {
         case MediaType.image:
@@ -60,7 +58,7 @@ class MediaPicker {
       }
     }
     // crop
-    File croppedFile;
+    File? croppedFile;
     if (!crop) {
       croppedFile = pickedFile;
     } else {
@@ -81,14 +79,16 @@ class MediaPicker {
           lockAspectRatio: false,
         ),
       );
-      logger.d('media_pick - crop - path:${croppedFile.path}');
+      logger.d('media_pick - crop - path:${croppedFile?.path}');
     }
+    if (croppedFile == null) return null;
+
     // compress
-    File compressFile;
+    File? compressFile;
     if (compressQuality >= 100) {
       compressFile = croppedFile;
     } else if (compressQuality < 100) {
-      String compressPath = await Path.getCacheFile(null, ext: fileExt);
+      String compressPath = await Path.getCacheFile(null, fileExt: fileExt);
       if (mediaType == MediaType.image) {
         compressFile = await FlutterImageCompress.compressAndGetFile(
           croppedFile.path,
@@ -103,8 +103,10 @@ class MediaPicker {
       } else {
         compressFile = croppedFile;
       }
-      logger.d('media_pick - compress - path:${compressFile.path}');
+      logger.d('media_pick - compress - path:${compressFile?.path}');
     }
+    if (compressFile == null) return null;
+
     // return
     File returnFile;
     if (returnPath != null && returnPath.isNotEmpty) {
@@ -114,7 +116,7 @@ class MediaPicker {
       }
       returnFile = compressFile.copySync(returnPath);
     } else {
-      String randomPath = await Path.getCacheFile(null, ext: fileExt);
+      String randomPath = await Path.getCacheFile(null, fileExt: fileExt);
       returnFile = File(randomPath);
       if (!await returnFile.exists()) {
         returnFile.createSync(recursive: true);

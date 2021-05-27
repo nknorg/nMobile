@@ -5,8 +5,8 @@ import 'dart:ui';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/utils.dart';
 import 'package:nmobile/utils/path.dart';
+import 'package:nmobile/utils/utils.dart';
 import 'package:path/path.dart';
 
 import 'option.dart';
@@ -17,23 +17,23 @@ class TopicType {
 }
 
 class TopicSchema {
-  int id;
+  int? id;
   String topic;
-  File avatar;
-  int count;
-  DateTime lastUpdatedTime;
-  int expireAt;
-  bool isTop;
-  int topicType;
-  bool joined;
-  OptionsSchema options;
-  String topicName;
-  String owner;
-  String topicShort;
+  File? avatar;
+  int? count;
+  DateTime? lastUpdatedTime;
+  int? expireAt;
+  bool isTop = false;
+  int? topicType;
+  bool? joined;
+  OptionsSchema? options;
+  String? topicName;
+  String? owner;
+  String? topicShort;
 
   TopicSchema({
     this.id,
-    this.topic,
+    required this.topic,
     this.avatar,
     this.count,
     this.lastUpdatedTime,
@@ -42,7 +42,7 @@ class TopicSchema {
     this.isTop = false,
     this.joined = false,
     this.options,
-  }) : assert(topic != null && topic.isNotEmpty) {
+  }) : assert(topic.isNotEmpty) {
     topicType = isPrivateTopicReg(topic) ? TopicType.privateTopic : TopicType.publicTopic;
     if (options == null) {
       options = OptionsSchema();
@@ -52,7 +52,7 @@ class TopicSchema {
       topicName = topic.substring(0, index);
       owner = topic.substring(index + 1);
 
-      topicShort = topicName + '.' + owner.substring(0, 8);
+      topicShort = '$topicName.${owner?.substring(0, 8)}';
     } else {
       topicName = topic;
       owner = null;
@@ -61,7 +61,7 @@ class TopicSchema {
     }
   }
 
-  static TopicSchema fromMap(Map<String, dynamic> e) {
+  static TopicSchema? fromMap(Map<String, dynamic>? e) {
     if (e == null) {
       return null;
     }
@@ -81,12 +81,12 @@ class TopicSchema {
     }
     if (e['options'] != null) {
       try {
-        Map<String, dynamic> options = jsonDecode(e['options']);
+        Map<String, dynamic>? options = jsonFormat(e['options']);
         topicSchema.options = OptionsSchema(
-          updateBurnAfterTime: options['updateBurnAfterTime'],
-          deleteAfterSeconds: options['deleteAfterSeconds'],
-          backgroundColor: Color(options['backgroundColor']),
-          color: Color(options['color']),
+          updateBurnAfterTime: options?['updateBurnAfterTime'],
+          deleteAfterSeconds: options?['deleteAfterSeconds'],
+          backgroundColor: Color(options?['backgroundColor']),
+          color: Color(options?['color']),
         );
       } on FormatException catch (e) {
         logger.e(e);
@@ -107,8 +107,8 @@ class TopicSchema {
       'id': id,
       'topic': topic,
       'count': count,
-      'avatar': avatar != null ? Path.getLocalContactAvatar(chatCommon.id, avatar.path) : null,
-      'options': jsonEncode(options.toMap()),
+      'avatar': avatar != null ? Path.getLocalContactAvatar(chatCommon.id, avatar!.path) : null,
+      'options': options != null ? jsonEncode(options!.toMap()) : null,
       'last_updated_time': lastUpdatedTime?.millisecondsSinceEpoch,
       'is_top': isTop ? 1 : 0,
       'expire_at': expireAt,
@@ -117,5 +117,4 @@ class TopicSchema {
     };
     return map;
   }
-
 }

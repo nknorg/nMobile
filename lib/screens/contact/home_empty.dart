@@ -21,6 +21,7 @@ class _ContactHomeEmptyLayoutState extends State<ContactHomeEmptyLayout> {
     double imgSize = MediaQuery.of(context).size.width / 2;
 
     return Layout(
+      headerColor: application.theme.primaryColor,
       header: Header(
         title: _localizations.my_contact,
         actions: [

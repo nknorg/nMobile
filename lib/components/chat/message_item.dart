@@ -10,11 +10,11 @@ import 'package:nmobile/utils/format.dart';
 class ChatMessageItem extends StatefulWidget {
   final MessageSchema message;
   final ContactSchema contact;
-  final MessageSchema prevMessage;
-  final MessageSchema nextMessage;
+  final MessageSchema? prevMessage;
+  final MessageSchema? nextMessage;
   final bool showTime;
 
-  ChatMessageItem({this.message, this.contact, this.prevMessage, this.nextMessage, this.showTime});
+  ChatMessageItem({required this.message, required this.contact, this.prevMessage, this.nextMessage, this.showTime = false});
 
   @override
   _ChatMessageItemState createState() => _ChatMessageItemState();
@@ -27,7 +27,7 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
     Widget timeWidget = Label(
       timeFormat,
       type: LabelType.bodySmall,
-      fontSize: application.theme.bodyText2.fontSize,
+      fontSize: application.theme.bodyText2.fontSize ?? 14,
     );
 
     List<Widget> contentsWidget = <Widget>[];
