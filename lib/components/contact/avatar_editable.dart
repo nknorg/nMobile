@@ -11,13 +11,13 @@ import 'avatar.dart';
 
 class ContactAvatarEditable extends StatefulWidget {
   final ContactSchema contact;
-  final double radius;
-  final bool placeHolder;
-  final Function onSelect;
+  final double? radius;
+  final bool? placeHolder;
+  final Function? onSelect;
 
   ContactAvatarEditable({
-    Key key,
-    this.contact,
+    required Key key,
+    required this.contact,
     this.radius,
     this.placeHolder = false,
     this.onSelect,
@@ -29,18 +29,18 @@ class ContactAvatarEditable extends StatefulWidget {
 
 class _ContactAvatarEditableState extends State<ContactAvatarEditable> {
   _updateAvatar() async {
-    if (widget.onSelect != null) widget.onSelect();
+    if (widget.onSelect != null) widget.onSelect!();
   }
 
   _photoShow(BuildContext context) {
-    String avatarPath = join(Global.applicationRootDirectory.path, widget.contact?.getDisplayAvatarPath);
+    String avatarPath = join(Global.applicationRootDirectory.path, widget.contact.getDisplayAvatarPath);
     PhotoScreen.go(context, filePath: avatarPath);
   }
 
   @override
   Widget build(BuildContext context) {
     double radius = this.widget.radius ?? 24;
-    String avatarPath = this.widget.contact?.getDisplayAvatarPath ?? "";
+    String avatarPath = this.widget.contact.getDisplayAvatarPath ?? "";
 
     return SizedBox(
       width: radius * 2,

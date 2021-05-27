@@ -11,15 +11,15 @@ class ChatMessagesScreen extends StatefulWidget {
 
   static Future go(BuildContext context, dynamic who) {
     logger.d("chat messages - $who");
-    if (who == null || !(who is ContactSchema || who is TopicSchema)) return null;
+    if (who == null || !(who is ContactSchema || who is TopicSchema)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argWho: who,
     });
   }
 
-  final Map<String, dynamic> arguments;
+  final Map<String, dynamic>? arguments;
 
-  const ChatMessagesScreen({Key key, this.arguments}) : super(key: key);
+  const ChatMessagesScreen({Key? key, this.arguments}) : super(key: key);
 
   @override
   _ChatMessagesScreenState createState() => _ChatMessagesScreenState();
@@ -27,14 +27,14 @@ class ChatMessagesScreen extends StatefulWidget {
 
 class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
   bool loading = false;
-  ContactSchema _contact;
-  TopicSchema _topic;
+  ContactSchema? _contact;
+  TopicSchema? _topic;
 
   _bindData() {
-    dynamic who = widget.arguments[ChatMessagesScreen.argWho];
+    dynamic who = widget.arguments![ChatMessagesScreen.argWho];
     if (who is TopicSchema) {
     } else if (who is ContactSchema) {
-      this._contact = widget.arguments[ChatMessagesScreen.argWho];
+      this._contact = widget.arguments![ChatMessagesScreen.argWho];
     }
   }
 
@@ -48,7 +48,7 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
   Widget build(BuildContext context) {
     if (this._contact != null) {
       return ChatMessagesPrivateLayout(
-        contact: _contact,
+        contact: _contact!,
       );
     } else {
       return Container();

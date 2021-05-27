@@ -13,7 +13,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/screens/contact/detail.dart';
+import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
@@ -21,7 +21,7 @@ import 'package:nmobile/utils/asset.dart';
 class ChatMessagesPrivateLayout extends StatefulWidget {
   final ContactSchema contact;
 
-  ChatMessagesPrivateLayout({this.contact});
+  ChatMessagesPrivateLayout({required this.contact});
 
   @override
   _ChatMessagesPrivateLayoutState createState() => _ChatMessagesPrivateLayoutState();
@@ -32,9 +32,9 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
   ScrollController _scrollController = ScrollController();
   bool _moreLoading = false;
 
-  ContactSchema _contact;
+  late ContactSchema _contact;
 
-  StreamSubscription _onMessageStreamSubscription;
+  late StreamSubscription _onMessageStreamSubscription;
   MessageStorage _messageStorage = MessageStorage();
 
   List<MessageSchema> _messages = <MessageSchema>[];
@@ -47,11 +47,10 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
     this._contact = widget.contact;
 
     // onReceive + OnSaveSqlite
-    _onMessageStreamSubscription = receiveMessage.onSavedStream?.where((event) => event.from == _contact.clientAddress)?.listen((MessageSchema event) {
-      if (event == null) return;
-      _messageStorage.markMessageRead(event?.msgId);
+    _onMessageStreamSubscription = receiveMessage.onSavedStream.where((event) => event.from == _contact.clientAddress).listen((MessageSchema event) {
+      _messageStorage.markMessageRead(event.msgId);
       setState(() {
-        _messages?.insert(0, event);
+        _messages.insert(0, event);
       });
     });
     receiveMessage.onSavedStreamSubscriptions.add(_onMessageStreamSubscription);
@@ -74,7 +73,7 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
   @override
   void dispose() {
     super.dispose();
-    _onMessageStreamSubscription?.cancel();
+    _onMessageStreamSubscription.cancel();
   }
 
   initDataAsync() async {
@@ -84,11 +83,9 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
   _loadMore() async {
     int _skip = _messages.length;
     var messages = await _messageStorage.getAndReadTargetMessages(_contact.clientAddress, skip: _skip, limit: _messagesLimit);
-    if (messages != null) {
-      setState(() {
-        _messages = _messages + messages;
-      });
-    }
+    setState(() {
+      _messages = _messages + messages;
+    });
   }
 
   _toggleBottomMenu() async {
@@ -99,10 +96,12 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
 
   // TODO:GG
   _send(String content) async {
+    if (chatCommon.id == null) return;
     MessageSchema send = MessageSchema.fromSend(
-      chatCommon.id,
+      uuid.v4(),
+      chatCommon.id!,
       ContentType.text,
-      to: _contact?.clientAddress,
+      to: _contact.clientAddress,
       content: content,
     );
     await sendMessage.sendMessage(send);
@@ -128,7 +127,7 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
           child: ContactHeader(
             contact: _contact,
             onTap: () {
-              ContactDetailScreen.go(context, contactId: _contact?.id);
+              ContactProfileScreen.go(context, contactId: _contact.id);
             },
             body: Label(
               _localizations.click_to_settings,
@@ -152,7 +151,7 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
             child: IconButton(
               icon: Asset.iconSvg('more', color: Colors.white, width: 24),
               onPressed: () {
-                ContactDetailScreen.go(context, contactId: _contact?.id);
+                ContactProfileScreen.go(context, contactId: _contact.id);
               },
             ),
           ),
@@ -172,7 +171,7 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
                   padding: const EdgeInsets.only(left: 12, right: 16),
                   child: ListView.builder(
                     controller: _scrollController,
-                    itemCount: _messages?.length ?? 0,
+                    itemCount: _messages.length,
                     reverse: true,
                     padding: const EdgeInsets.only(bottom: 8, top: 16),
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -186,10 +185,11 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
                         showTime = true;
                       } else {
                         if (index + 1 < _messages.length) {
+                          // TODO:GG
                           var targetMessage = _messages[index + 1];
-                          if (message.sendTime.isAfter(targetMessage.sendTime.add(Duration(minutes: 3)))) {
-                            showTime = true;
-                          }
+                          // if (message.sendTime.isAfter(targetMessage.sendTime?.add(Duration(minutes: 3)))) {
+                          //   showTime = true;
+                          // }
                         }
                       }
 

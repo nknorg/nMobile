@@ -10,16 +10,16 @@ import 'package:nmobile/utils/format.dart';
 class WalletItem extends StatefulWidget {
   final String walletType;
   final WalletSchema wallet;
-  final GestureTapCallback onTap;
+  final GestureTapCallback? onTap;
   final bool onTapWave;
-  final Color bgColor;
-  final BorderRadius radius;
-  final EdgeInsetsGeometry padding;
-  final Widget tail;
+  final Color? bgColor;
+  final BorderRadius? radius;
+  final EdgeInsetsGeometry? padding;
+  final Widget? tail;
 
   WalletItem({
-    this.walletType,
-    this.wallet,
+    required this.walletType,
+    required this.wallet,
     this.onTap,
     this.onTapWave = true,
     this.bgColor,
@@ -68,7 +68,7 @@ class _WalletItemState extends State<WalletItem> {
       child: Row(
         children: [
           Hero(
-            tag: 'avatar:${widget.wallet?.address}',
+            tag: 'avatar:${widget.wallet.address}',
             child: WalletAvatar(
               width: 48,
               height: 48,
@@ -83,11 +83,11 @@ class _WalletItemState extends State<WalletItem> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Label(
-                  widget.wallet?.name ?? "",
+                  widget.wallet.name ?? "",
                   type: LabelType.h3,
                 ),
                 Label(
-                  nknFormat(widget.wallet?.balance ?? 0, decimalDigits: 4, symbol: 'NKN'),
+                  nknFormat(widget.wallet.balance ?? 0, decimalDigits: 4, symbol: 'NKN'),
                   type: LabelType.bodySmall,
                 ),
               ],
@@ -120,7 +120,7 @@ class _WalletItemState extends State<WalletItem> {
                   ? Padding(
                       padding: EdgeInsets.only(right: 4, top: 4),
                       child: Label(
-                        nknFormat(widget.wallet?.balanceEth, symbol: 'ETH'),
+                        nknFormat(widget.wallet.balanceEth, symbol: 'ETH'),
                         type: LabelType.bodySmall,
                       ),
                     )

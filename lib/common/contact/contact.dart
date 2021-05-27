@@ -17,7 +17,7 @@ class RequestType {
 }
 
 class ContactCommon {
-  ContactSchema currentUser;
+  ContactSchema? currentUser;
   ContactStorage _contactStorage = ContactStorage();
 
   StreamController<ContactSchema> _addController = StreamController<ContactSchema>.broadcast();
@@ -33,19 +33,19 @@ class ContactCommon {
   Stream<List<ContactSchema>> get updateStream => _updateController.stream;
 
   close() {
-    _addController?.close();
-    _deleteController?.close();
-    _updateController?.close();
+    _addController.close();
+    _deleteController.close();
+    _updateController.close();
   }
 
-  Future<ContactSchema> refreshCurrentUser(String clientAddress) async {
+  Future<ContactSchema?> refreshCurrentUser(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    ContactSchema contact = await _contactStorage.queryContactByClientAddress(clientAddress);
+    ContactSchema? contact = await _contactStorage.queryContactByClientAddress(clientAddress);
     if (contact == null) {
       contact = await addMe(clientAddress);
     }
     if (contact != null) {
-      if (contact.nknWalletAddress == null || contact.nknWalletAddress.isEmpty) {
+      if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
         contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress));
       }
     }
@@ -53,92 +53,92 @@ class ContactCommon {
     return contact;
   }
 
-  Future<ContactSchema> addMe(String clientAddress) async {
+  Future<ContactSchema?> addMe(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    ContactSchema me = await ContactSchema.getByTypeMe(clientAddress);
-    ContactSchema added = await _contactStorage.insertContact(me);
+    ContactSchema? me = await ContactSchema.getByTypeMe(clientAddress);
+    ContactSchema? added = await _contactStorage.insertContact(me);
     if (added != null) _addSink.add(added);
     return added;
   }
 
-  Future<ContactSchema> add(ContactSchema scheme) async {
-    if (scheme == null || scheme.clientAddress == null || scheme.clientAddress.isEmpty) return null;
+  Future<ContactSchema?> add(ContactSchema? scheme) async {
+    if (scheme == null || scheme.clientAddress.isEmpty) return null;
     scheme.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(scheme.clientAddress));
-    ContactSchema added = await _contactStorage.insertContact(scheme);
+    ContactSchema? added = await _contactStorage.insertContact(scheme);
     if (added != null) _addSink.add(added);
     return added;
   }
 
-  Future<bool> delete(int contactId) async {
+  Future<bool> delete(int? contactId) async {
     if (contactId == null || contactId == 0) return false;
     bool deleted = await _contactStorage.deleteContact(contactId);
     if (deleted) _deleteSink.add(contactId);
     return deleted;
   }
 
-  Future<List<ContactSchema>> queryContacts({String contactType, String orderBy, int limit, int offset}) {
+  Future<List<ContactSchema>> queryContacts({String? contactType, String? orderBy, int? limit, int? offset}) {
     return _contactStorage.queryContacts(contactType: contactType, orderBy: orderBy, limit: limit, offset: offset);
   }
 
-  Future<ContactSchema> queryContact(int contactId) {
+  Future<ContactSchema?> queryContact(int? contactId) async {
     if (contactId == null || contactId == 0) return null;
-    return _contactStorage.queryContact(contactId);
+    return await _contactStorage.queryContact(contactId);
   }
 
-  Future<ContactSchema> queryContactByClientAddress(String clientAddress) {
+  Future<ContactSchema?> queryContactByClientAddress(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    return _contactStorage.queryContactByClientAddress(clientAddress);
+    return await _contactStorage.queryContactByClientAddress(clientAddress);
   }
 
-  Future<int> queryCountByClientAddress(String clientAddress) {
+  Future<int> queryCountByClientAddress(String? clientAddress) {
     if (clientAddress == null || clientAddress.isEmpty) return Future.value(0);
     return _contactStorage.queryCountByClientAddress(clientAddress);
   }
 
-  Future<bool> setType(int contactId, String contactType, {bool notify = false}) async {
+  Future<bool> setType(int? contactId, String? contactType, {bool notify = false}) async {
     if (contactType == null || contactType == ContactType.me) return false;
     bool success = await _contactStorage.setType(contactId, contactType);
     if (success && notify) queryAndNotify(contactId);
     return success;
   }
 
-  Future<bool> setName(ContactSchema schema, String name, {bool notify = false}) async {
+  Future<bool> setName(ContactSchema? schema, String? name, {bool notify = false}) async {
     if (schema == null || schema.id == 0 || name == null || name.isEmpty) return false;
     bool success = await _contactStorage.setProfile(
       schema.id,
       {'first_name': name},
-      oldProfileInfo: (schema.firstName == null || schema.firstName.isEmpty) ? null : {'first_name': schema.firstName},
+      oldProfileInfo: (schema.firstName == null || schema.firstName!.isEmpty) ? null : {'first_name': schema.firstName},
     );
     if (success && notify) queryAndNotify(schema.id);
     return success;
   }
 
-  Future<bool> setAvatar(ContactSchema schema, String avatarLocalPath, {bool notify = false}) async {
+  Future<bool> setAvatar(ContactSchema? schema, String? avatarLocalPath, {bool notify = false}) async {
     if (schema == null || schema.id == 0 || avatarLocalPath == null || avatarLocalPath.isEmpty) return false;
     bool success = await _contactStorage.setProfile(
       schema.id,
       {'avatar': avatarLocalPath},
-      oldProfileInfo: (schema.avatar == null || schema.avatar.isEmpty) ? null : {'avatar': schema.avatar},
+      oldProfileInfo: (schema.avatar == null || schema.avatar!.isEmpty) ? null : {'avatar': schema.avatar},
     );
     if (success && notify) queryAndNotify(schema.id);
     return success;
   }
 
-  Future<bool> setProfileVersion(int contactId, String profileVersion, {bool notify = false}) async {
+  Future<bool> setProfileVersion(int? contactId, String? profileVersion, {bool notify = false}) async {
     if (contactId == null || contactId == 0 || profileVersion == null) return false;
     bool success = await _contactStorage.setProfileVersion(contactId, profileVersion);
     if (success && notify) queryAndNotify(contactId);
     return success;
   }
 
-  Future<bool> setProfileExpiresAt(int contactId, int expiresAt, {bool notify = false}) async {
+  Future<bool> setProfileExpiresAt(int? contactId, int? expiresAt, {bool notify = false}) async {
     if (contactId == null || contactId == 0 || expiresAt == null) return false;
     bool success = await _contactStorage.setProfileExpiresAt(contactId, expiresAt);
     if (success && notify) queryAndNotify(contactId);
     return success;
   }
 
-  Future<bool> setRemarkName(ContactSchema schema, String name, {bool notify = false}) async {
+  Future<bool> setRemarkName(ContactSchema? schema, String? name, {bool notify = false}) async {
     if (schema == null || schema.id == 0) return false;
     bool success = await _contactStorage.setRemarkProfile(
       schema.id,
@@ -149,7 +149,7 @@ class ContactCommon {
     return success;
   }
 
-  Future<bool> setRemarkAvatar(ContactSchema schema, String avatarLocalPath, {bool notify = false}) async {
+  Future<bool> setRemarkAvatar(ContactSchema? schema, String? avatarLocalPath, {bool notify = false}) async {
     if (schema == null || schema.id == 0) return Future.value(false);
     bool success = await _contactStorage.setRemarkProfile(
       schema.id,
@@ -162,60 +162,66 @@ class ContactCommon {
 
   // TODO:GG setOrUpdateExtraProfile need??
 
-  Future<bool> setNotes(ContactSchema schema, String notes, {bool notify = false}) async {
-    if (schema == null || schema.id == null || schema.id == 0) return null;
+  Future<bool> setNotes(ContactSchema? schema, String? notes, {bool notify = false}) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
     bool success = await _contactStorage.setNotes(schema.id, notes, oldExtraInfo: schema.extraInfo);
     if (success && notify) queryAndNotify(schema.id);
     return success;
   }
 
-  Future<bool> toggleOptionsColors(ContactSchema schema, {bool notify = false}) async {
+  Future<bool> toggleOptionsColors(ContactSchema? schema, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
     bool success = await _contactStorage.setOptionsColors(schema.id, old: schema.options);
     if (success && notify) queryAndNotify(schema.id);
     return success;
   }
 
-  Future<bool> setOptionsBurn(ContactSchema schema, int seconds, {bool notify = false}) async {
+  Future<bool> setOptionsBurn(ContactSchema? schema, int? seconds, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
     bool success = await _contactStorage.setOptionsBurn(schema.id, seconds, old: schema.options);
     if (success && notify) queryAndNotify(schema.id);
     return success;
   }
 
-  Future<bool> setTop(String clientAddress, bool top, {bool notify = false}) async {
+  Future<bool> setTop(String? clientAddress, bool top, {bool notify = false}) async {
     if (clientAddress == null || clientAddress.isEmpty) return false;
     bool success = await _contactStorage.setTop(clientAddress, top);
     if (success && notify) queryAndNotifyVyClientAddress(clientAddress);
     return success;
   }
 
-  Future<bool> isTop(String clientAddress) {
+  Future<bool> isTop(String? clientAddress) {
     if (clientAddress == null || clientAddress.isEmpty) return Future.value(false);
     return _contactStorage.isTop(clientAddress);
   }
 
-  Future<bool> setDeviceToken(int contactId, String deviceToken, {bool notify = false}) async {
+  Future<bool> setDeviceToken(int? contactId, String? deviceToken, {bool notify = false}) async {
     if (contactId == null || contactId == 0 || deviceToken == null || deviceToken.isEmpty) return false;
     bool success = await _contactStorage.setDeviceToken(contactId, deviceToken);
     if (success && notify) queryAndNotify(contactId);
     return success;
   }
 
-  Future<bool> setNotificationOpen(int contactId, bool open, {bool notify = false}) async {
-    if (contactId == null || contactId == 0 || open == null) return false;
+  Future<bool> setNotificationOpen(int? contactId, bool open, {bool notify = false}) async {
+    if (contactId == null || contactId == 0) return false;
     bool success = await _contactStorage.setNotificationOpen(contactId, open);
     if (success && notify) queryAndNotify(contactId);
     return success;
   }
 
-  queryAndNotify(int contactId) async {
-    ContactSchema updated = await _contactStorage.queryContact(contactId);
-    _updateSink.add([updated]);
+  queryAndNotify(int? contactId) async {
+    if (contactId == null || contactId == 0) return;
+    ContactSchema? updated = await _contactStorage.queryContact(contactId);
+    if (updated != null) {
+      _updateSink.add([updated]);
+    }
   }
 
-  queryAndNotifyVyClientAddress(String clientAddress) async {
-    ContactSchema updated = await _contactStorage.queryContactByClientAddress(clientAddress);
-    _updateSink.add([updated]);
+  queryAndNotifyVyClientAddress(String? clientAddress) async {
+    if (clientAddress == null || clientAddress.isEmpty) return;
+    ContactSchema? updated = await _contactStorage.queryContactByClientAddress(clientAddress);
+    if (updated != null) {
+      _updateSink.add([updated]);
+    }
   }
 }

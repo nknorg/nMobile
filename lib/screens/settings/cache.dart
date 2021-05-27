@@ -23,12 +23,12 @@ class SettingsCacheScreen extends StatefulWidget {
 }
 
 class _SettingsCacheScreenState extends State<SettingsCacheScreen> {
-  String title;
-  String selectedValue;
-  List<SelectListItem> list;
+  String? title;
+  String? selectedValue;
+  List<SelectListItem>? list;
 
-  String _cacheSize;
-  String _dbSize;
+  String? _cacheSize;
+  String? _dbSize;
 
   @override
   void initState() {
