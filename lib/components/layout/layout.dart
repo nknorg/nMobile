@@ -42,7 +42,7 @@ class _LayoutState extends State<Layout> {
         ),
         child: PhysicalModel(
           elevation: 0,
-          // clipBehavior: Clip.antiAlias,
+          clipBehavior: Clip.antiAlias,
           color: widget.bodyColor ?? application.theme.backgroundColor,
           borderRadius: widget.borderRadius ?? BorderRadius.vertical(top: Radius.circular(32)),
           child: Column(
