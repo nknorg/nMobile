@@ -47,7 +47,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     app = locator.get<Application>();
-    this._currentIndex = widget.arguments![AppScreen.argIndex] ?? 0;
+    this._currentIndex = widget.arguments != null ? (widget.arguments![AppScreen.argIndex] ?? 0) : 0;
     _pageController = PageController(initialPage: this._currentIndex);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
