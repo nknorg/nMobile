@@ -41,8 +41,10 @@ class SecureStorage {
     return int.parse(val);
   }
 
-  Future<Map<String, dynamic>> getItem(String key, int n) async {
-    return jsonDecode(await _storage.read(key: '$key:$n'));
+  Future<Map<String, dynamic>?> getItem(String key, int n) async {
+    String? item = await _storage.read(key: '$key:$n');
+    if (item == null) return null;
+    return jsonDecode(item);
   }
 
   Future<List<Map<String, dynamic>>> getArray(String key) async {
@@ -50,7 +52,10 @@ class SecureStorage {
 
     List<Map<String, dynamic>> res = [];
     for (var i = 0; i < length; i++) {
-      res.add(await getItem(key, i));
+      Map<String, dynamic>? item = await getItem(key, i);
+      if (item != null) {
+        res.add(item);
+      }
     }
     return res;
   }

@@ -25,8 +25,8 @@ class WalletExportScreen extends StatefulWidget {
 
   static Future go(
     BuildContext context,
-    String walletType,
-    String name,
+    String? walletType,
+    String? name,
     String address,
     String publicKey,
     String seed,
@@ -36,48 +36,50 @@ class WalletExportScreen extends StatefulWidget {
     return Navigator.pushNamed(context, routeName, arguments: {
       argWalletType: walletType ?? WalletType.nkn,
       argName: name ?? "",
-      argAddress: address ?? "",
+      argAddress: address,
       argPublicKey: publicKey,
       argSeed: seed,
-      argKeystore: keystore ?? "",
+      argKeystore: keystore,
     });
   }
 
-  final Map<String, dynamic> arguments;
+  final Map<String, dynamic>? arguments;
 
-  WalletExportScreen({Key key, this.arguments}) : super(key: key);
+  WalletExportScreen({Key? key, this.arguments}) : super(key: key);
 
   @override
   _WalletExportScreenState createState() => _WalletExportScreenState();
 }
 
 class _WalletExportScreenState extends State<WalletExportScreen> {
-  String _walletType;
-  String _name;
-  String _address;
-  String _publicKey;
-  String _seed;
-  String _keystore;
-  WalletBloc _walletBloc;
+  String? _walletType;
+  String? _name;
+  String? _address;
+  String? _publicKey;
+  String? _seed;
+  String? _keystore;
+  WalletBloc? _walletBloc;
 
   @override
   void initState() {
     super.initState();
-    _name = widget.arguments[WalletExportScreen.argName];
-    _walletType = widget.arguments[WalletExportScreen.argWalletType];
-    _address = widget.arguments[WalletExportScreen.argAddress];
-    _publicKey = widget.arguments[WalletExportScreen.argPublicKey];
-    _seed = widget.arguments[WalletExportScreen.argSeed];
-    _keystore = widget.arguments[WalletExportScreen.argKeystore];
+    _name = widget.arguments![WalletExportScreen.argName];
+    _walletType = widget.arguments![WalletExportScreen.argWalletType];
+    _address = widget.arguments![WalletExportScreen.argAddress];
+    _publicKey = widget.arguments![WalletExportScreen.argPublicKey];
+    _seed = widget.arguments![WalletExportScreen.argSeed];
+    _keystore = widget.arguments![WalletExportScreen.argKeystore];
 
     _walletBloc = BlocProvider.of<WalletBloc>(context);
   }
 
   _setBackupFlag() {
-    _walletBloc.add(BackupWallet(_address, true));
+    if (_address != null) {
+      _walletBloc?.add(BackupWallet(_address!, true));
+    }
   }
 
-  _getItemWidgets(String icon, String title, String value, {bool backupOk = false}) {
+  _getItemWidgets(String icon, String title, String? value, {bool backupOk = false}) {
     if (value == null || value.isEmpty) return SizedBox.shrink();
     S _localizations = S.of(context);
 
@@ -171,7 +173,7 @@ class _WalletExportScreenState extends State<WalletExportScreen> {
                               child: WalletAvatar(
                                 width: 48,
                                 height: 48,
-                                walletType: this._walletType,
+                                walletType: this._walletType ?? WalletType.nkn,
                               ),
                             ),
                             Padding(
@@ -207,7 +209,7 @@ class _WalletExportScreenState extends State<WalletExportScreen> {
               ),
             ),
           ),
-          _seed == null || _seed.isEmpty
+          _seed == null || _seed!.isEmpty
               ? SizedBox.shrink()
               : Expanded(
                   flex: 0,
@@ -231,7 +233,7 @@ class _WalletExportScreenState extends State<WalletExportScreen> {
                                 BottomDialog.of(context).showQrcode(
                                   title: _localizations.seed + _localizations.qrcode,
                                   desc: _localizations.seed_qrcode_dec,
-                                  data: _seed,
+                                  data: _seed!,
                                 );
                                 _setBackupFlag();
                               },

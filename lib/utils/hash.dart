@@ -9,7 +9,7 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 final String ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 final base58 = BaseXCodec(ALPHABET);
 
-List<int> sha1(raw) {
+List<int> sha1(dynamic raw) {
   var byte;
   if (raw is List<int>)
     byte = raw;
@@ -17,7 +17,7 @@ List<int> sha1(raw) {
   return crypto.sha1.convert(byte).bytes;
 }
 
-List<int> sha1Hex(raw) {
+List<int> sha1Hex(dynamic raw) {
   var byte;
   if (raw is List<int>)
     byte = raw;
@@ -33,7 +33,7 @@ Future<String> sha1File(File f) async {
   return hex.encode(buffer);
 }
 
-List<int> sha256(raw) {
+List<int> sha256(dynamic raw) {
   var byte;
   if (raw is List<int>)
     byte = raw;
@@ -41,7 +41,7 @@ List<int> sha256(raw) {
   return crypto.sha256.convert(byte).bytes;
 }
 
-List<int> sha256Hex(raw) {
+List<int> sha256Hex(dynamic raw) {
   var byte;
   if (raw is List<int>)
     byte = raw;
@@ -49,7 +49,7 @@ List<int> sha256Hex(raw) {
   return crypto.sha256.convert(byte).bytes;
 }
 
-List<int> doubleSha256(raw) {
+List<int> doubleSha256(dynamic raw) {
   return sha256(sha256(raw));
 }
 

@@ -16,7 +16,7 @@ import 'package:uuid/uuid.dart';
 class ContactStorage {
   static String get tableName => 'Contact';
 
-  Database get db => DB.currentDatabase;
+  Database? get db => DB.currentDatabase;
 
   static create(Database db, int version) async {
     final createSql = '''
@@ -49,17 +49,17 @@ class ContactStorage {
     await db.execute('CREATE INDEX index_contact_updated_time ON $tableName (updated_time)');
   }
 
-  Future<ContactSchema> insertContact(ContactSchema schema) async {
+  Future<ContactSchema?> insertContact(ContactSchema? schema) async {
     if (schema == null) return null;
     try {
-      ContactSchema exist = await queryContactByClientAddress(schema?.clientAddress);
+      ContactSchema? exist = await queryContactByClientAddress(schema.clientAddress);
       if (exist != null) {
         logger.d("insertContact - exist:$exist - add:$schema");
         return exist;
       }
       Map<String, dynamic> entity = await schema.toMap();
-      int id = await db.insert(tableName, entity);
-      if (id != 0) {
+      int? id = await db?.insert(tableName, entity);
+      if (id != null && id != 0) {
         ContactSchema schema = await ContactSchema.fromMap(entity);
         schema.id = id;
         logger.d("insertContact - success - schema:$schema");
@@ -72,15 +72,15 @@ class ContactStorage {
     return null;
   }
 
-  Future<bool> deleteContact(int contactId) async {
+  Future<bool> deleteContact(int? contactId) async {
     if (contactId == null || contactId == 0) return false;
     try {
-      var count = await db.delete(
+      int? count = await db?.delete(
         tableName,
         where: 'id = ?',
         whereArgs: [contactId],
       );
-      if (count > 0) {
+      if (count != null && count > 0) {
         logger.d("deleteContact - success - contactId:$contactId");
         return true;
       }
@@ -93,9 +93,9 @@ class ContactStorage {
 
   /// Query
 
-  Future<List<ContactSchema>> queryContacts({String contactType, String orderBy, int limit, int offset}) async {
+  Future<List<ContactSchema>> queryContacts({String? contactType, String? orderBy, int? limit, int? offset}) async {
     try {
-      var res = await db.query(
+      List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
         orderBy: orderBy ?? 'updated_time desc',
@@ -120,16 +120,16 @@ class ContactStorage {
     return [];
   }
 
-  Future<ContactSchema> queryContact(int contactId) async {
+  Future<ContactSchema?> queryContact(int? contactId) async {
     if (contactId == null || contactId == 0) return null;
     try {
-      var res = await db.query(
+      List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
         where: 'id = ?',
         whereArgs: [contactId],
       );
-      if (res.length > 0) {
+      if (res != null && res.length > 0) {
         ContactSchema schema = await ContactSchema.fromMap(res.first);
         logger.d("queryContact - success - contactId:$contactId - schema:$schema");
         return schema;
@@ -141,16 +141,16 @@ class ContactStorage {
     return null;
   }
 
-  Future<ContactSchema> queryContactByClientAddress(String clientAddress) async {
+  Future<ContactSchema?> queryContactByClientAddress(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     try {
-      var res = await db.query(
+      List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
         where: 'address = ?',
         whereArgs: [clientAddress],
       );
-      if (res.length > 0) {
+      if (res != null && res.length > 0) {
         ContactSchema schema = await ContactSchema.fromMap(res.first);
         logger.d("queryContactByClientAddress - success - address:$clientAddress - schema:$schema");
         return schema;
@@ -162,16 +162,16 @@ class ContactStorage {
     return null;
   }
 
-  Future<int> queryCountByClientAddress(String clientAddress) async {
+  Future<int> queryCountByClientAddress(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return 0;
     try {
-      var res = await db.query(
+      List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
         where: 'address = ?',
         whereArgs: [clientAddress],
       );
-      int count = Sqflite.firstIntValue(res);
+      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.d("queryCountByClientAddress - address:$clientAddress - count:$count");
       return count ?? 0;
     } catch (e) {
@@ -182,10 +182,10 @@ class ContactStorage {
 
   /// Type
 
-  Future<bool> setType(int contactId, String contactType) async {
-    if (contactType == null || contactType == ContactType.me) return false;
+  Future<bool> setType(int? contactId, String? contactType) async {
+    if (contactId == null || contactId == 0 || contactType == null || contactType == ContactType.me) return false;
     try {
-      var count = await db.update(
+      int? count = await db?.update(
         tableName,
         {
           'type': contactType,
@@ -194,7 +194,7 @@ class ContactStorage {
         where: 'id = ?',
         whereArgs: [contactId],
       );
-      if (count > 0) {
+      if (count != null && count > 0) {
         logger.d("setContactType - success - contactId:$contactId - type:$contactType");
         return true;
       }
@@ -207,7 +207,7 @@ class ContactStorage {
 
   /// Profile
 
-  Future<bool> setProfile(int contactId, Map<String, dynamic> newProfileInfo, {Map<String, dynamic> oldProfileInfo}) async {
+  Future<bool> setProfile(int? contactId, Map<String, dynamic>? newProfileInfo, {Map<String, dynamic>? oldProfileInfo}) async {
     if (contactId == null || contactId == 0 || newProfileInfo == null) return false;
 
     Map<String, dynamic> saveDataInfo = oldProfileInfo ?? Map<String, dynamic>();
@@ -228,13 +228,13 @@ class ContactStorage {
     saveDataInfo['updated_time'] = DateTime.now().millisecondsSinceEpoch;
 
     try {
-      var count = await db.update(
+      int? count = await db?.update(
         tableName,
         saveDataInfo,
         where: 'id = ?',
         whereArgs: [contactId],
       );
-      if (count > 0) {
+      if (count != null && count > 0) {
         logger.d("setProfile - success - contactId:$contactId - update:$saveDataInfo - new:$newProfileInfo - old:$oldProfileInfo");
         return true;
       }
@@ -245,20 +245,20 @@ class ContactStorage {
     return false;
   }
 
-  Future<bool> setAvatar(ContactSchema schema, String path) async {
+  Future<bool> setAvatar(ContactSchema? schema, String? path) async {
     if (schema == null || path == null || path.isEmpty) return false;
     return await setProfile(schema.id, {'avatar': path}, oldProfileInfo: {'avatar': schema.avatar});
   }
 
-  Future<bool> setName(ContactSchema schema, String name) async {
+  Future<bool> setName(ContactSchema? schema, String? name) async {
     if (schema == null || name == null || name.isEmpty) return false;
     return await setProfile(schema.id, {'first_name': name}, oldProfileInfo: {'first_name': schema.firstName});
   }
 
-  Future<bool> setProfileVersion(int contactId, String profileVersion) async {
+  Future<bool> setProfileVersion(int? contactId, String? profileVersion) async {
     if (contactId == null || contactId == 0 || profileVersion == null) return false;
     try {
-      var count = await db.update(
+      int? count = await db?.update(
         tableName,
         {
           'profile_version': profileVersion,
@@ -266,7 +266,7 @@ class ContactStorage {
         where: 'id = ?',
         whereArgs: [contactId],
       );
-      if (count > 0) {
+      if (count != null && count > 0) {
         logger.d("setProfileVersion - success - contactId:$contactId - version:$profileVersion");
         return true;
       }
@@ -277,10 +277,10 @@ class ContactStorage {
     return false;
   }
 
-  Future<bool> setProfileExpiresAt(int contactId, int expiresAt) async {
+  Future<bool> setProfileExpiresAt(int? contactId, int? expiresAt) async {
     if (contactId == null || contactId == 0 || expiresAt == null) return false;
     try {
-      var count = await db.update(
+      int? count = await db?.update(
         tableName,
         {
           'profile_expires_at': expiresAt,
@@ -288,7 +288,7 @@ class ContactStorage {
         where: 'id = ?',
         whereArgs: [contactId],
       );
-      if (count > 0) {
+      if (count != null && count > 0) {
         logger.d("setProfileExpiresAt - success - contactId:$contactId - expiresAt:$expiresAt");
         return true;
       }
@@ -301,7 +301,7 @@ class ContactStorage {
 
   /// RemarkProfile(Data)
 
-  Future<bool> setRemarkProfile(int contactId, Map<String, dynamic> newExtraInfo, {Map<String, dynamic> oldExtraInfo}) async {
+  Future<bool> setRemarkProfile(int? contactId, Map<String, dynamic>? newExtraInfo, {Map<String, dynamic>? oldExtraInfo}) async {
     if (contactId == null || contactId == 0 || newExtraInfo == null) return false;
 
     Map<String, dynamic> dataInfo = oldExtraInfo ?? Map<String, dynamic>();
@@ -319,13 +319,13 @@ class ContactStorage {
     saveDataInfo['data'] = jsonEncode(dataInfo);
 
     try {
-      var count = await db.update(
+      int? count = await db?.update(
         tableName,
         saveDataInfo,
         where: 'id = ?',
         whereArgs: [contactId],
       );
-      if (count > 0) {
+      if (count != null && count > 0) {
         logger.d("setRemarkProfile - success - contactId:$contactId - update:$dataInfo - new:$newExtraInfo - old:$oldExtraInfo");
         return true;
       }
@@ -338,12 +338,12 @@ class ContactStorage {
 
   /// notes(Data)
 
-  Future<bool> setNotes(int contactId, String notes, {Map<String, dynamic> oldExtraInfo}) async {
-    if (contactId == null || contactId == 0) return null;
+  Future<bool> setNotes(int? contactId, String? notes, {Map<String, dynamic>? oldExtraInfo}) async {
+    if (contactId == null || contactId == 0) return false;
     try {
       Map<String, dynamic> data = oldExtraInfo ?? Map<String, dynamic>();
       data['notes'] = notes;
-      var count = await db.update(
+      int? count = await db?.update(
         tableName,
         {
           'data': jsonEncode(data),
@@ -352,7 +352,7 @@ class ContactStorage {
         where: 'id = ?',
         whereArgs: [contactId],
       );
-      if (count > 0) {
+      if (count != null && count > 0) {
         logger.d("setNotes - success - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
         return true;
       }
@@ -365,7 +365,7 @@ class ContactStorage {
 
   /// Options
 
-  Future<bool> setOptionsColors(int contactId, {OptionsSchema old}) async {
+  Future<bool> setOptionsColors(int? contactId, {OptionsSchema? old}) async {
     if (contactId == null || contactId == 0) return false;
 
     int random = Random().nextInt(application.theme.randomBackgroundColorList.length);
@@ -377,7 +377,7 @@ class ContactStorage {
     options.color = color;
 
     try {
-      var count = await db.update(
+      int? count = await db?.update(
         tableName,
         {
           'options': jsonEncode(options.toMap()),
@@ -386,7 +386,7 @@ class ContactStorage {
         where: 'id = ?',
         whereArgs: [contactId],
       );
-      if (count > 0) {
+      if (count != null && count > 0) {
         logger.d("setOptionsColors - success - contactId:$contactId - options:$options");
         return true;
       }
@@ -397,7 +397,7 @@ class ContactStorage {
     return false;
   }
 
-  Future<bool> setOptionsBurn(int contactId, int seconds, {OptionsSchema old}) async {
+  Future<bool> setOptionsBurn(int? contactId, int? seconds, {OptionsSchema? old}) async {
     if (contactId == null || contactId == 0) return false;
     OptionsSchema options = old ?? OptionsSchema();
 
@@ -411,7 +411,7 @@ class ContactStorage {
     options.updateBurnAfterTime = currentTimeStamp;
 
     try {
-      var count = await db.update(
+      int? count = await db?.update(
         tableName,
         {
           'options': jsonEncode(options.toMap()),
@@ -420,7 +420,7 @@ class ContactStorage {
         where: 'id = ?',
         whereArgs: [contactId],
       );
-      if (count > 0) {
+      if (count != null && count > 0) {
         logger.d("setOptionsBurn - success - contactId:$contactId - options:$options");
         return true;
       }
@@ -433,16 +433,16 @@ class ContactStorage {
 
   /// Top
 
-  Future<bool> setTop(String clientAddress, bool top) async {
+  Future<bool> setTop(String? clientAddress, bool top) async {
     if (clientAddress == null || clientAddress.isEmpty) return false;
     try {
-      var count = await db.update(
+      int? count = await db?.update(
         tableName,
         {'is_top': top ? 1 : 0},
         where: 'address = ?',
         whereArgs: [clientAddress],
       );
-      if (count > 0) {
+      if (count != null && count > 0) {
         logger.d("setTop - success - clientAddress:$clientAddress - top:$top");
         return true;
       }
@@ -453,16 +453,16 @@ class ContactStorage {
     return false;
   }
 
-  Future<bool> isTop(String clientAddress) async {
+  Future<bool> isTop(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return false;
     try {
-      var res = await db.query(
+      List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['is_top'],
         where: 'address = ?',
         whereArgs: [clientAddress],
       );
-      return res.length > 0 && ((res[0]['is_top'] as int) == 1);
+      return (res?.length ?? 0) > 0 && ((res![0]['is_top'] as int) == 1);
     } catch (e) {
       handleError(e);
     }
@@ -471,10 +471,10 @@ class ContactStorage {
 
   /// DeviceToken
 
-  Future<bool> setDeviceToken(int contactId, String deviceToken) async {
+  Future<bool> setDeviceToken(int? contactId, String? deviceToken) async {
     if (contactId == null || contactId == 0 || deviceToken == null || deviceToken.isEmpty) return false;
     try {
-      var count = await db.update(
+      int? count = await db?.update(
         tableName,
         {
           'device_token': deviceToken,
@@ -483,7 +483,7 @@ class ContactStorage {
         where: 'id = ?',
         whereArgs: [contactId],
       );
-      if (count > 0) {
+      if (count != null && count > 0) {
         logger.d("setDeviceToken - success - contactId:$contactId - deviceToken:$deviceToken");
         return true;
       }
@@ -497,10 +497,10 @@ class ContactStorage {
 
   /// NotificationOpen
 
-  Future<bool> setNotificationOpen(int contactId, bool open) async {
-    if (contactId == null || contactId == 0 || open == null) return false;
+  Future<bool> setNotificationOpen(int? contactId, bool open) async {
+    if (contactId == null || contactId == 0) return false;
     try {
-      var count = await db.update(
+      int? count = await db?.update(
         tableName,
         {
           'notification_open': open ? 1 : 0,
@@ -509,7 +509,7 @@ class ContactStorage {
         where: 'id = ?',
         whereArgs: [contactId],
       );
-      if (count > 0) {
+      if (count != null && count > 0) {
         logger.d("setNotificationOpen - success - contactId:$contactId - open:$open");
         return true;
       }

@@ -10,7 +10,7 @@ class Validator {
 
   Validator.of(context) : this(context);
 
-  S _localizations;
+  S? _localizations;
 
   Validator(this.context) {
     _localizations = S.of(context);
@@ -18,46 +18,46 @@ class Validator {
 
   walletName() {
     return (value) {
-      return value.trim().length > 0 ? null : _localizations.error_required;
+      return value.trim().length > 0 ? null : _localizations?.error_required;
     };
   }
 
   pubKey() {
     return (value) {
-      return value.trim().length > 0 ? null : _localizations.error_required;
+      return value.trim().length > 0 ? null : _localizations?.error_required;
     };
   }
 
   contactName() {
     return (value) {
-      return value.trim().length > 0 ? null : _localizations.error_required;
+      return value.trim().length > 0 ? null : _localizations?.error_required;
     };
   }
 
   amount() {
     return (value) {
-      return value.trim().length > 0 ? null : _localizations.error_required;
+      return value.trim().length > 0 ? null : _localizations?.error_required;
     };
   }
 
   required() {
     return (value) {
-      return value.trim().length > 0 ? null : _localizations.error_required;
+      return value.trim().length > 0 ? null : _localizations?.error_required;
     };
   }
 
   password() {
     return (value) {
-      return value.trim().length > 0 ? null : _localizations.error_required;
+      return value.trim().length > 0 ? null : _localizations?.error_required;
     };
   }
 
   confirmPassword(password) {
     return (value) {
       return value.trim().length == 0
-          ? _localizations.error_required
+          ? _localizations?.error_required
           : value != password
-              ? _localizations.error_confirm_password
+              ? _localizations?.error_confirm_password
               : null;
     };
   }
@@ -65,9 +65,9 @@ class Validator {
   seed() {
     return (value) {
       return value.trim().length == 0
-          ? _localizations.error_required
+          ? _localizations?.error_required
           : value.trim().length != 64 || !RegExp(r'^[0-9a-f]{64}$').hasMatch(value)
-              ? _localizations.error_seed_format
+              ? _localizations?.error_seed_format
               : null;
     };
   }
@@ -75,27 +75,27 @@ class Validator {
   identifierNKN() {
     return (value) {
       return value.trim().length == 0
-          ? _localizations.error_required
+          ? _localizations?.error_required
           : !RegExp(r'^[^.]*.?[0-9a-f]{64}$').hasMatch(value)
-              ? _localizations.error_client_address_format
+              ? _localizations?.error_client_address_format
               : null;
     };
   }
 
   keystoreNKN() {
     return (value) {
-      var jsonFormat;
+      var jsonOk;
       try {
         jsonDecode(value.trim());
-        jsonFormat = true;
+        jsonOk = true;
       } on FormatException catch (e) {
-        jsonFormat = false;
+        jsonOk = false;
       }
 
       return value.trim().length == 0
-          ? _localizations.error_required
-          : !jsonFormat
-              ? _localizations.error_keystore_format
+          ? _localizations?.error_required
+          : !jsonOk
+              ? _localizations?.error_keystore_format
               : null;
     };
   }
@@ -108,9 +108,9 @@ class Validator {
         // isValid = Ethereum.isKeystoreValid(value.trim());
       } catch (e) {}
       return value.trim().length == 0
-          ? _localizations.error_required
+          ? _localizations?.error_required
           : !isValid
-              ? _localizations.error_keystore_format
+              ? _localizations?.error_keystore_format
               : null;
     };
   }
@@ -121,12 +121,12 @@ class Validator {
       try {
         addressFormat = verifyAddress(value.trim());
       } catch (e) {
-        debugPrintStack(label: e?.toString());
+        debugPrintStack(label: e.toString());
       }
       return value.trim().length == 0
-          ? _localizations.error_required
+          ? _localizations?.error_required
           : !addressFormat
-              ? _localizations.error_nkn_address_format
+              ? _localizations?.error_nkn_address_format
               : null;
     };
   }
@@ -141,9 +141,9 @@ class Validator {
         //debugPrintStack(label: e?.toString());
       }
       return value.trim().length == 0
-          ? _localizations.error_required
+          ? _localizations?.error_required
           : !addressFormat
-              ? _localizations.error_nkn_address_format
+              ? _localizations?.error_nkn_address_format
               : null;
     };
   }

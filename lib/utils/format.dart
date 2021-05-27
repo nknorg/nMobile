@@ -4,19 +4,19 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/generated/l10n.dart';
 
-String nknFormat(n, {String symbol, int decimalDigits = 4}) {
+String nknFormat(n, {String? symbol, int decimalDigits = 4}) {
   if (n == null) return symbol != null ? '- $symbol' : '-';
   var digit = '#' * decimalDigits;
   var nknPattern = NumberFormat('#,##0.$digit');
   return nknPattern.format(n) + ' ${symbol != null ? symbol : ''}';
 }
 
-String formatFlowSize(double value, {List<String> unitArr, int decimalDigits = 2}) {
-  if (null == value) {
+String formatFlowSize(double? value, {required List<String> unitArr, int decimalDigits = 2}) {
+  if (value == null) {
     return '0 ${unitArr[0]}';
   }
   int index = 0;
-  while (value > 1024) {
+  while (value! > 1024) {
     if (index == unitArr.length - 1) {
       break;
     }
@@ -27,11 +27,13 @@ String formatFlowSize(double value, {List<String> unitArr, int decimalDigits = 2
   return '$size ${unitArr[index]}';
 }
 
-String dateFormat(DateTime time) {
+String dateFormat(DateTime? time) {
+  if (time == null) return "";
   return DateFormat("EEE, MM dd yyyy", Settings.locale == 'zh' ? 'zh' : 'en').format(time);
 }
 
-String timeFormat(DateTime time) {
+String timeFormat(DateTime? time) {
+  if (time == null) return "";
   var now = DateTime.now();
   var localizations = Localizations.localeOf(Global.appContext).toString();
   if (now.difference(time).inDays == 0 && time.day == now.day) {
@@ -45,7 +47,7 @@ String timeFormat(DateTime time) {
   }
 }
 
-String formatChatTime(DateTime timestamp) {
+String formatChatTime(DateTime? timestamp) {
   var now = DateTime.now();
   var localizations = Localizations.localeOf(Global.appContext).toString();
   DateTime time = timestamp ?? now;
@@ -53,17 +55,18 @@ String formatChatTime(DateTime timestamp) {
   if (now.difference(time).inDays == 0 && time.day == now.day) {
     timeFormat = DateFormat.Hm(localizations).format(time);
   } else if (now.difference(time).inDays <= 7 && time.weekday <= now.weekday) {
-    timeFormat = DateFormat.E(localizations).format(time) + ' ' + DateFormat.Hm(localizations).format(timestamp);
+    timeFormat = DateFormat.E(localizations).format(time) + ' ' + DateFormat.Hm(localizations).format(time);
   } else if (now.difference(time).inDays <= 31 && time.month == time.month) {
-    timeFormat = DateFormat.Md(localizations).format(time) + ' ' + DateFormat.Hm(localizations).format(timestamp);
+    timeFormat = DateFormat.Md(localizations).format(time) + ' ' + DateFormat.Hm(localizations).format(time);
   } else {
-    timeFormat = DateFormat.yMd(localizations).format(time) + ' ' + DateFormat.Hm(localizations).format(timestamp);
+    timeFormat = DateFormat.yMd(localizations).format(time) + ' ' + DateFormat.Hm(localizations).format(time);
   }
 
   return timeFormat;
 }
 
-String timeFromNowFormat(DateTime time) {
+String timeFromNowFormat(DateTime? time) {
+  if (time == null) return "";
   var now = DateTime.now();
   var diff = time.difference(now);
 

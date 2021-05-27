@@ -7,31 +7,31 @@ import 'package:nmobile/common/locator.dart';
 class FormText extends StatefulWidget {
   dynamic value;
   final double fontSize;
-  final Color fontColor;
+  final Color? fontColor;
   final EdgeInsetsGeometry padding;
   final bool password;
-  TextEditingController controller;
+  TextEditingController? controller;
   final bool enabled;
   final bool readOnly;
   final bool autofocus;
-  final FocusNode focusNode;
+  final FocusNode? focusNode;
   final int minLines;
   final int maxLines;
-  FormFieldValidator<String> validator;
-  final TextInputType keyboardType;
-  final int maxLength;
+  FormFieldValidator<String>? validator;
+  final TextInputType? keyboardType;
+  final int? maxLength;
   final bool maxLengthEnforced;
-  List<TextInputFormatter> inputFormatters;
-  final TextInputAction textInputAction;
-  ValueChanged<String> onChanged;
-  ValueChanged<String> onFieldSubmitted;
-  FormFieldSetter<String> onSaved;
+  List<TextInputFormatter>? inputFormatters;
+  final TextInputAction? textInputAction;
+  ValueChanged<String>? onChanged;
+  ValueChanged<String>? onFieldSubmitted;
+  FormFieldSetter<String>? onSaved;
   // decoration
-  String hintText;
-  String helperText;
+  String? hintText;
+  String? helperText;
   final bool showErrorMessage;
-  Widget suffixIcon;
-  final Color borderColor;
+  Widget? suffixIcon;
+  final Color? borderColor;
 
   FormText({
     this.value,

@@ -1,6 +1,5 @@
 import 'dart:collection';
 
-import '../helpers/secure_storage.dart';
 import '../helpers/local_storage.dart';
 
 class SettingsStorage {
@@ -24,7 +23,7 @@ class SettingsStorage {
     List<String> list = val;
     list = LinkedHashSet<String>.from(list).toList();
     if (list.length > 10) {
-      list = list.skip(list.length - 10).take(10);
+      list = list.skip(list.length - 10).take(10).toList();
     }
     return await _localStorage.set('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY', list);
   }
@@ -34,16 +33,16 @@ class SettingsStorage {
     list.addAll(val);
     list = LinkedHashSet<String>.from(list).toList();
     if (list.length > 10) {
-      list = list.skip(list.length - 10).take(10);
+      list = list.skip(list.length - 10).take(10).toList();
     }
     return await _localStorage.set('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY', list);
   }
 
   Future<List<String>> getSeedRpcServers() async {
     List<String> results = [];
-    List list = (await _localStorage.get('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY'));
+    List? list = (await _localStorage.get('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY'));
     if (list?.isNotEmpty == true) {
-      for (var i in list) {
+      for (var i in list!) {
         results.add(i.toString());
       }
     }

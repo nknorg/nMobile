@@ -16,18 +16,18 @@ enum LabelType {
 class Label extends StatelessWidget {
   String text;
   final LabelType type;
-  final Color color;
-  final double fontSize;
-  final FontWeight fontWeight;
-  final TextAlign textAlign;
-  final int maxLines;
+  final Color? color;
+  final double? fontSize;
+  final FontWeight? fontWeight;
+  final TextAlign? textAlign;
+  final int? maxLines;
   final bool softWrap;
-  TextOverflow overflow;
+  TextOverflow? overflow;
   final bool dark;
-  final double height;
-  final TextDecoration decoration;
-  final FontStyle fontStyle;
-  final double textScaleFactor;
+  final double? height;
+  final TextDecoration? decoration;
+  final FontStyle? fontStyle;
+  final double? textScaleFactor;
 
   Label(
     this.text, {

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nkn_sdk_flutter/wallet.dart' as walletSDK;
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
@@ -33,35 +32,34 @@ class WalletDetailScreen extends StatefulWidget {
   static final String argWallet = "wallet";
   static final String argListIndex = "list_index";
 
-  static Future go(BuildContext context, WalletSchema wallet, {int listIndex}) {
+  static Future go(BuildContext context, WalletSchema wallet, {int? listIndex}) {
     logger.d("wallet detail - $wallet");
-    if (wallet == null) return null;
     return Navigator.pushNamed(context, routeName, arguments: {
       argWallet: wallet,
       argListIndex: listIndex,
     });
   }
 
-  final Map<String, dynamic> arguments;
+  final Map<String, dynamic>? arguments;
 
-  const WalletDetailScreen({Key key, this.arguments}) : super(key: key);
+  const WalletDetailScreen({Key? key, this.arguments}) : super(key: key);
 
   @override
   _WalletDetailScreenState createState() => _WalletDetailScreenState();
 }
 
 class _WalletDetailScreenState extends State<WalletDetailScreen> {
-  WalletSchema _wallet;
+  WalletSchema? _wallet;
 
-  WalletBloc _walletBloc;
-  StreamSubscription _walletSubscription;
+  late WalletBloc _walletBloc;
+  late StreamSubscription _walletSubscription;
 
   bool isDefault = false;
 
   @override
   void initState() {
     super.initState();
-    this._wallet = widget.arguments[WalletDetailScreen.argWallet];
+    this._wallet = widget.arguments![WalletDetailScreen.argWallet];
 
     _walletBloc = BlocProvider.of<WalletBloc>(context);
 
@@ -69,7 +67,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
     _walletSubscription = _walletBloc.stream.listen((state) {
       if (state is WalletDefault) {
         setState(() {
-          isDefault = state?.walletAddress == _wallet?.address;
+          isDefault = state.walletAddress == _wallet?.address;
         });
       }
     });
@@ -87,17 +85,18 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
   @override
   void dispose() {
     super.dispose();
-    _walletSubscription?.cancel();
+    _walletSubscription.cancel();
     // TimerAuth.onOtherPage = false; // TODO:GG wallet unlock
   }
 
   _receive() {
-    WalletReceiveScreen.go(context, _wallet);
+    if (_wallet == null) return;
+    WalletReceiveScreen.go(context, _wallet!);
   }
 
   _send() {
-    if (_wallet == null || _wallet.type == null) return;
-    WalletSendScreen.go(context, _wallet).then((FutureOr success) async {
+    if (_wallet == null) return;
+    WalletSendScreen.go(context, _wallet!).then((FutureOr success) async {
       if (success != null && await success) {
         S _localizations = S.of(context);
         NotificationDialog.of(context).show(
@@ -151,7 +150,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
               child: WalletAvatar(
                 width: 60,
                 height: 60,
-                walletType: this._wallet?.type,
+                walletType: this._wallet?.type ?? WalletType.nkn,
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                 ethTop: 16,
                 ethRight: 12,
@@ -181,7 +180,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Label(nknFormat(_wallet.balanceEth ?? 0, decimalDigits: 4), type: LabelType.bodySmall),
+                                Label(nknFormat(_wallet?.balanceEth ?? 0, decimalDigits: 4), type: LabelType.bodySmall),
                                 Padding(
                                   padding: const EdgeInsets.only(left: 6, right: 2),
                                   child: Label('ETH', type: LabelType.bodySmall, color: application.theme.fontColor1),
@@ -300,7 +299,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
 
   _showChangeNameDialog() async {
     S _localizations = S.of(context);
-    String newName = await BottomDialog.of(context).showInput(
+    String? newName = await BottomDialog.of(context).showInput(
       title: _localizations.wallet_name,
       inputTip: _localizations.hint_enter_wallet_name,
       inputHint: _localizations.hint_enter_wallet_name,
@@ -310,9 +309,11 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
     );
     if (newName == null || newName.isEmpty) return;
     setState(() {
-      this._wallet.name = newName; // update appBar title
+      this._wallet?.name = newName; // update appBar title
     });
-    _walletBloc?.add(UpdateWallet(this._wallet));
+    if (this._wallet != null) {
+      _walletBloc.add(UpdateWallet(this._wallet!));
+    }
   }
 
   _onAppBarActionSelected(int result) async {
@@ -320,11 +321,11 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
 
     switch (result) {
       case 0: // export
-        walletCommon.getWalletPassword(context, _wallet?.address).then((String password) async {
+        walletCommon.getWalletPassword(context, _wallet?.address).then((String? password) async {
           if (password == null || password.isEmpty) return;
-          String keystore = await walletCommon.getWalletKeystoreByAddress(_wallet.address);
+          String keystore = await walletCommon.getWalletKeystoreByAddress(_wallet?.address);
 
-          if (_wallet.type == WalletType.eth) {
+          if (_wallet?.type == WalletType.eth) {
             // TODO:GG eth export
             // final ethWallet = await Ethereum.restoreWalletSaved(
             //     schema: widget.wallet, password: password);
@@ -339,21 +340,22 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
             //   'name': ethWallet.name,
             // });
           } else {
-            walletSDK.Wallet restore = await walletSDK.Wallet.restore(keystore, config: walletSDK.WalletConfig(password: password));
-            if (restore == null || restore.address != _wallet.address) {
+            Wallet? restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
+            if (restore == null || restore.address != _wallet?.address) {
               Toast.show(_localizations.password_wrong);
               return;
             }
 
             // TimerAuth.instance.enableAuth(); // TODO:GG auth?
 
+            if (_wallet == null) return;
             WalletExportScreen.go(
               context,
               WalletType.nkn,
-              _wallet.name,
+              _wallet?.name ?? "",
               restore.address,
-              hexEncode(restore.publicKey ?? ""),
-              hexEncode(restore.seed ?? ""),
+              hexEncode(restore.publicKey),
+              hexEncode(restore.seed),
               restore.keystore,
             );
           }
@@ -362,6 +364,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
         });
         break;
       case 1: // delete
+        if (_wallet == null) return;
         ModalDialog.of(context).confirm(
           title: _localizations.delete_wallet_confirm_title,
           content: _localizations.delete_wallet_confirm_text,
@@ -370,12 +373,14 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
             backgroundColor: application.theme.strongColor,
             width: double.infinity,
             onPressed: () async {
-              _walletBloc.add(DeleteWallet(this._wallet));
+              _walletBloc.add(DeleteWallet(this._wallet!));
               // client close
               try {
-                String walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contactCommon?.currentUser?.clientAddress));
+                String? clientAddress = contactCommon.currentUser?.clientAddress;
+                if (clientAddress == null || clientAddress.isEmpty) return;
+                String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
                 if (this._wallet?.address == walletAddress) {
-                  await chatCommon?.close();
+                  await chatCommon.close();
                 }
               } catch (e) {} finally {
                 AppScreen.go(context);

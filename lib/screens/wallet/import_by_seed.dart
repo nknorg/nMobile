@@ -11,15 +11,16 @@ import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class WalletImportBySeedLayout extends StatefulWidget {
   final String walletType;
-  final Stream<String> qrStream;
+  final Stream<String>? qrStream;
 
-  const WalletImportBySeedLayout({this.walletType, this.qrStream});
+  const WalletImportBySeedLayout({required this.walletType, this.qrStream});
 
   @override
   _WalletImportBySeedLayoutState createState() => _WalletImportBySeedLayoutState();
@@ -28,8 +29,8 @@ class WalletImportBySeedLayout extends StatefulWidget {
 class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> with SingleTickerProviderStateMixin {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
-  WalletBloc _walletBloc;
-  StreamSubscription _qrSubscription;
+  late WalletBloc _walletBloc;
+  StreamSubscription? _qrSubscription;
 
   bool _formValid = false;
   TextEditingController _seedController = TextEditingController();
@@ -53,7 +54,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
   @override
   void dispose() {
     super.dispose();
-    _qrSubscription.cancel();
+    _qrSubscription?.cancel();
   }
 
   _import() async {
@@ -63,18 +64,20 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
       (_formKey.currentState as FormState).save();
       Loading.show();
 
-      String seed = _seedController?.text;
-      String name = _nameController?.text;
-      String password = _passwordController?.text;
+      String seed = _seedController.text;
+      String name = _nameController.text;
+      String password = _passwordController.text;
       logger.d("seed:$seed, name:$name, password:$password");
 
       try {
         if (widget.walletType == WalletType.nkn) {
-          Wallet result = await Wallet.create(hexDecode(seed), config: WalletConfig(password: password));
-          WalletSchema wallet = WalletSchema(name: name, address: result?.address, type: WalletType.nkn);
+          Wallet? result = await Wallet.create(hexDecode(seed), config: WalletConfig(password: password));
+          if (result == null || result.address == null || result.keystore == null) return;
+
+          WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);
           logger.d("import_nkn - ${wallet.toString()}");
 
-          _walletBloc.add(AddWallet(wallet, result?.keystore, password: password));
+          _walletBloc.add(AddWallet(wallet, result.keystore, password: password));
         } else {
           // TODO:GG import eth by seed
           // final ethWallet = Ethereum.restoreWalletFromPrivateKey(name: _name, privateKey: _seed, password: _password);
@@ -86,7 +89,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
         Navigator.pop(context);
       } catch (e) {
         Loading.dismiss();
-        Toast.show(e.message);
+        handleError(e);
       }
     }
   }

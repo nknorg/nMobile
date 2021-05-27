@@ -13,6 +13,7 @@ import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -20,7 +21,7 @@ import 'package:nmobile/utils/logger.dart';
 class WalletImportByKeystoreLayout extends StatefulWidget {
   final String walletType;
 
-  const WalletImportByKeystoreLayout({this.walletType});
+  const WalletImportByKeystoreLayout({required this.walletType});
 
   @override
   _WalletImportByKeystoreLayoutState createState() => _WalletImportByKeystoreLayoutState();
@@ -29,7 +30,7 @@ class WalletImportByKeystoreLayout extends StatefulWidget {
 class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLayout> with SingleTickerProviderStateMixin {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
-  WalletBloc _walletBloc;
+  late WalletBloc _walletBloc;
 
   bool _formValid = false;
   TextEditingController _keystoreController = TextEditingController();
@@ -60,18 +61,20 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
       (_formKey.currentState as FormState).save();
       Loading.show();
 
-      String keystore = _keystoreController?.text;
-      String name = _nameController?.text;
-      String password = _passwordController?.text;
+      String keystore = _keystoreController.text;
+      String name = _nameController.text;
+      String password = _passwordController.text;
       logger.d("keystore:$keystore, name:$name, password:$password");
 
       try {
         if (widget.walletType == WalletType.nkn) {
-          Wallet result = await Wallet.restore(keystore, config: WalletConfig(password: password));
-          WalletSchema wallet = WalletSchema(name: name, address: result?.address, type: WalletType.nkn);
+          Wallet? result = await Wallet.restore(keystore, config: WalletConfig(password: password));
+          if (result == null || result.address == null || result.keystore == null) return;
+
+          WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);
           logger.d("import_nkn - ${wallet.toString()}");
 
-          _walletBloc.add(AddWallet(wallet, result?.keystore, password: password));
+          _walletBloc.add(AddWallet(wallet, result.keystore, password: password));
         } else {
           // TODO:GG import eth by keystore
           // final ethWallet = Ethereum.restoreWallet(name: _name, keystore: _keystore, password: _password);
@@ -83,7 +86,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
         Navigator.pop(context);
       } catch (e) {
         Loading.dismiss();
-        Toast.show(e.message);
+        handleError(e);
       }
     }
   }
@@ -143,13 +146,14 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                     maxLines: 20,
                     suffixIcon: GestureDetector(
                       onTap: () async {
-                        FilePickerResult result = await FilePicker.platform.pickFiles(
+                        FilePickerResult? result = await FilePicker.platform.pickFiles(
                           allowMultiple: false,
                           type: FileType.any,
                         );
                         logger.d("result:$result");
                         if (result != null && result.files != null && result.files.isNotEmpty) {
-                          String path = result.files?.first?.path;
+                          String? path = result.files.first.path;
+                          if (path == null) return;
                           File picked = File(path);
                           String keystore = picked.readAsStringSync();
                           logger.d("picked:$keystore");

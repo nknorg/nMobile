@@ -1,10 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:nkn_sdk_flutter/wallet.dart' as WalletSDK;
+import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -34,15 +32,14 @@ class WalletSendScreen extends StatefulWidget {
 
   static Future go(BuildContext context, WalletSchema wallet) {
     logger.d("wallet send NKN - $wallet");
-    if (wallet == null) return null;
     return Navigator.pushNamed(context, routeName, arguments: {
       argWallet: wallet,
     });
   }
 
-  final Map<String, dynamic> arguments;
+  final Map<String, dynamic>? arguments;
 
-  WalletSendScreen({Key key, this.arguments}) : super(key: key);
+  WalletSendScreen({Key? key, this.arguments}) : super(key: key);
 
   @override
   _WalletSendScreenState createState() => _WalletSendScreenState();
@@ -50,7 +47,7 @@ class WalletSendScreen extends StatefulWidget {
 
 class _WalletSendScreenState extends State<WalletSendScreen> {
   GlobalKey _formKey = new GlobalKey<FormState>();
-  WalletSchema _wallet;
+  late WalletSchema _wallet;
 
   bool _formValid = false;
   TextEditingController _amountController = TextEditingController();
@@ -60,8 +57,8 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
   FocusNode _sendToFocusNode = FocusNode();
   FocusNode _feeToFocusNode = FocusNode();
 
-  String _sendTo;
-  num _amount;
+  String? _sendTo;
+  num? _amount;
   bool _showFeeLayout = false;
 
   // nkn
@@ -83,11 +80,11 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
   @override
   void initState() {
     super.initState();
-    this._wallet = widget.arguments[WalletSendScreen.argWallet];
+    this._wallet = widget.arguments![WalletSendScreen.argWallet];
     // balance query
     taskService.queryWalletBalanceTask();
     // init
-    _init(this._wallet?.type == WalletType.eth);
+    _init(this._wallet.type == WalletType.eth);
   }
 
   _init(bool eth) async {
@@ -97,16 +94,12 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
       // _gasPriceInGwei = (gasPrice?.gwei ?? 0 * 0.8).round();
       // logger.d('gasPrice:$_gasPriceInGwei GWei');
     } else {
-      _feeController.text = _fee?.toString() ?? _sliderFeeMin.toString();
+      _feeController.text = _fee.toString();
     }
     _updateFee(eth);
   }
 
   _updateFee(bool eth, {gweiFee, gasFee, nknFee}) {
-    if (_wallet == null) {
-      _amountController.text = '';
-      return;
-    }
     if (eth) {
       // TODO:GG eth fee
       // _feeController.text = nknFormat(
@@ -138,7 +131,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
   }
 
   _checkFeeForm(bool eth, value) {
-    if (_wallet?.type == WalletType.eth) {
+    if (_wallet.type == WalletType.eth) {
       // TODO:GG eth fee form
       // int gasPrice = (num.parse(value).ETH.gwei / _maxGas).round();
       // if (gasPrice < _sliderGasPriceMin) {
@@ -166,10 +159,6 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
   }
 
   _setAmountToMax(bool eth) {
-    if (_wallet == null) {
-      _amountController.text = '';
-      return;
-    }
     if (eth) {
       // TODO:GG eth amount
       // _amountController.text = nknFormat(
@@ -177,7 +166,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
       //   decimalDigits: 8,
       // ).trim();
     } else {
-      _amountController.text = (_wallet?.balance ?? 0).toString();
+      _amountController.text = (_wallet.balance ?? 0).toString();
     }
   }
 
@@ -192,15 +181,13 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
   }
 
   _readyTransfer() async {
-    if (_wallet == null || _wallet.address == null || _wallet.address.isEmpty) return;
-
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
       logger.d("amount:$_amount, sendTo:$_sendTo, fee:$_fee");
 
-      walletCommon.getWalletPassword(context, _wallet?.address).then((String password) async {
+      walletCommon.getWalletPassword(context, _wallet.address).then((String? password) async {
         if (password == null || password.isEmpty) return;
-        String keystore = await walletCommon.getWalletKeystoreByAddress(_wallet?.address);
+        String keystore = await walletCommon.getWalletKeystoreByAddress(_wallet.address);
 
         if (_wallet.type == WalletType.eth) {
           final result = _transferETH(keystore, password);
@@ -215,7 +202,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
     }
   }
 
-  Future<bool> _transferETH(String keystore, String password) async {
+  Future<bool> _transferETH(String? keystore, String? password) async {
     // TODO:GG eth transfer
     // try {
     // final ethWallet = await Ethereum.restoreWalletSaved(schema: wallet, password: password);
@@ -239,20 +226,20 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
     return false;
   }
 
-  Future<bool> _transferNKN(String keystore, String password) async {
+  Future<bool> _transferNKN(String? keystore, String? password) async {
     if (keystore == null || password == null) return false;
     S _localizations = S.of(context);
     try {
-      WalletSDK.Wallet restore = await WalletSDK.Wallet.restore(keystore, config: WalletSDK.WalletConfig(password: password));
-      if (restore == null || restore?.address != _wallet?.address) {
+      Wallet? restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
+      if (restore == null || restore.address != _wallet.address) {
         Toast.show(_localizations.password_wrong);
         return false;
       }
       String amount = _amount?.toString() ?? '0';
-      String fee = _fee?.toString() ?? _sliderFeeMin.toString();
-      if (_sendTo == null || _sendTo.isEmpty || amount == '0') return false;
+      String fee = _fee.toString();
+      if (_sendTo == null || _sendTo!.isEmpty || amount == '0') return false;
 
-      final txHash = await restore?.transfer(_sendTo, amount, fee: fee);
+      String? txHash = await restore.transfer(_sendTo, amount, fee: fee);
       if (txHash != null) {
         taskService.queryWalletBalanceTask();
         return txHash.length > 10;
@@ -272,7 +259,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
     return Layout(
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: _wallet?.type == WalletType.eth ? _localizations.send_eth : _localizations.send_nkn,
+        title: _wallet.type == WalletType.eth ? _localizations.send_eth : _localizations.send_nkn,
         backgroundColor: application.theme.backgroundColor4,
         actions: [
           IconButton(
@@ -282,13 +269,14 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
               color: application.theme.backgroundLightColor,
             ),
             onPressed: () async {
-              var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
+              String? qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
               logger.d("QR_DATA:$qrData");
+              if (qrData == null) return;
               // json
               var jsonFormat;
               var jsonData;
               try {
-                jsonData = jsonDecode(qrData);
+                jsonData = jsonFormat(qrData);
                 jsonFormat = true;
               } catch (e) {
                 jsonFormat = false;
@@ -298,10 +286,10 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                 logger.d("wallet send scan - address:${jsonData['address']} amount:${jsonData['amount']}");
                 _sendToController.text = jsonData['address'];
                 _amountController.text = jsonData['amount'].toString();
-              } else if (_wallet?.type == WalletType.nkn && verifyAddress(qrData)) {
+              } else if (_wallet.type == WalletType.nkn && verifyAddress(qrData)) {
                 logger.d("wallet send scan NKN - address:$qrData");
                 _sendToController.text = qrData;
-              } else if (_wallet?.type == WalletType.eth) {
+              } else if (_wallet.type == WalletType.eth) {
                 // && verifyEthAddress(qrData) TODO:GG eth address
                 logger.d("wallet send scan ETH - address:$qrData");
                 _sendToController.text = qrData;
@@ -344,12 +332,15 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                 child: BlocBuilder<WalletBloc, WalletState>(
                   builder: (context, state) {
                     if (state is WalletLoaded) {
-                      _wallet = walletCommon.getWalletInOriginalByAddress(state.wallets, _wallet?.address);
+                      WalletSchema? find = walletCommon.getWalletInOriginalByAddress(state.wallets, _wallet.address);
+                      if (find != null) {
+                        _wallet = find;
+                      }
                       if (_wallet.type == WalletType.nkn) {
                         _ethTrueTokenFalse = false;
                       }
                     }
-                    bool useETH = _wallet?.type == WalletType.eth && _ethTrueTokenFalse;
+                    bool useETH = _wallet.type == WalletType.eth && _ethTrueTokenFalse;
                     return Form(
                       key: _formKey,
                       onChanged: () {
@@ -372,13 +363,12 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                     selectTitle: _localizations.select_asset_to_send,
                                     schema: _wallet,
                                     onTapWave: false,
-                                    onSelected: (picked) {
+                                    onSelected: (WalletSchema picked) {
                                       logger.d("wallet picked - $picked");
-                                      if (picked == null) return;
                                       setState(() {
                                         _wallet = picked;
                                       });
-                                      _init(_wallet?.type == WalletType.eth);
+                                      _init(_wallet.type == WalletType.eth);
                                     },
                                   ),
                                   Divider(height: 3),
@@ -398,7 +388,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                     keyboardType: TextInputType.numberWithOptions(decimal: true),
                                     textInputAction: TextInputAction.next,
                                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_sendToFocusNode),
-                                    onSaved: (v) => _amount = num.parse(v),
+                                    onSaved: (String? v) => _amount = num.parse(v ?? "0"),
                                     inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
                                     showErrorMessage: false,
                                     suffixIcon: GestureDetector(
@@ -411,7 +401,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                         ),
                                       ),
                                       onTap: () {
-                                        if (_wallet?.type == WalletType.eth) {
+                                        if (_wallet.type == WalletType.eth) {
                                           _amountController.text = '';
                                           setState(() {
                                             _ethTrueTokenFalse = !_ethTrueTokenFalse;
@@ -431,7 +421,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                           Label(_localizations.available + ': '),
                                           Label(
                                             nknFormat(
-                                              (useETH ? _wallet?.balanceEth : _wallet?.balance) ?? 0,
+                                              (useETH ? _wallet.balanceEth : _wallet.balance) ?? 0,
                                               decimalDigits: 8,
                                               symbol: useETH ? 'ETH' : 'NKN',
                                             ),
@@ -446,7 +436,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                           type: LabelType.bodyRegular,
                                         ),
                                         onTap: () {
-                                          _setAmountToMax(_wallet?.type == WalletType.eth);
+                                          _setAmountToMax(_wallet.type == WalletType.eth);
                                         },
                                       )
                                     ],
@@ -463,18 +453,18 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                     controller: _sendToController,
                                     focusNode: _sendToFocusNode,
                                     hintText: _localizations.enter_receive_address,
-                                    validator: _wallet?.type == WalletType.eth ? Validator.of(context).addressETH() : Validator.of(context).addressNKN(),
+                                    validator: _wallet.type == WalletType.eth ? Validator.of(context).addressETH() : Validator.of(context).addressNKN(),
                                     textInputAction: TextInputAction.next,
                                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_feeToFocusNode),
                                     onSaved: (v) => _sendTo = v,
-                                    suffixIcon: _wallet?.type == WalletType.eth
+                                    suffixIcon: _wallet.type == WalletType.eth
                                         ? SizedBox.shrink()
                                         : GestureDetector(
                                             onTap: () async {
                                               if (contactCommon.currentUser != null) {
                                                 var contact = await ContactHomeScreen.go(context, isSelect: true);
                                                 if (contact != null && contact is ContactSchema) {
-                                                  _sendToController.text = contact.nknWalletAddress;
+                                                  _sendToController.text = contact.nknWalletAddress ?? "";
                                                 }
                                               } else {
                                                 Toast.show(_localizations.d_chat_not_login);
@@ -521,11 +511,11 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                           padding: EdgeInsets.only(top: 10),
                                           controller: _feeController,
                                           focusNode: _feeToFocusNode,
-                                          onSaved: (v) => _fee = double.parse(v ?? 0),
+                                          onSaved: (v) => _fee = double.parse(v ?? "0"),
                                           textInputAction: TextInputAction.done,
                                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
                                           onChanged: (v) {
-                                            _checkFeeForm(_wallet?.type == WalletType.eth, v);
+                                            _checkFeeForm(_wallet.type == WalletType.eth, v);
                                           },
                                           keyboardType: TextInputType.numberWithOptions(decimal: true),
                                           inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
@@ -546,7 +536,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                   SizedBox(height: 20),
 
                                   /// fee slider
-                                  _wallet?.type == WalletType.eth
+                                  _wallet.type == WalletType.eth
                                       ? ExpansionLayout(
                                           isExpanded: _showFeeLayout,
                                           child: Column(
@@ -583,7 +573,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                                         Slider(
                                                           value: _gasPriceInGwei.toDouble(),
                                                           onChanged: (v) {
-                                                            _updateFee(true, gweiFee: v?.toInt());
+                                                            _updateFee(true, gweiFee: v.toInt());
                                                           },
                                                           min: _sliderGasPriceMin.toDouble(),
                                                           max: _sliderGasPriceMax.toDouble(),
@@ -625,7 +615,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                                                         Slider(
                                                           value: _maxGasGet,
                                                           onChanged: (v) {
-                                                            _updateFee(true, gasFee: v?.round());
+                                                            _updateFee(true, gasFee: v.round());
                                                           },
                                                           min: (_ethTrueTokenFalse ? _sliderMaxGasMinEth : _sliderMaxGasMinNkn).toDouble(),
                                                           max: _sliderMaxGasMax.toDouble(),
