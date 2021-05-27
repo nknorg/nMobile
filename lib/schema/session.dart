@@ -40,8 +40,8 @@ class SessionSchema extends Equatable {
     );
 
     if (e['topic'] != null) {
-      res.contact = await ContactStorage().queryContactByClientAddress(res.targetId);
-      res.isTop = res.contact?.isTop ?? false;
+      res.topic = await TopicStorage().queryTopicByTopicName(res.targetId);
+      res.isTop = res.topic?.isTop ?? false;
       res.topic = await TopicStorage().queryTopicByTopicName(e['topic']);
     } else {
       if (res.targetId == null) {
