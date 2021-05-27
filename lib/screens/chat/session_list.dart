@@ -10,7 +10,6 @@ import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/topic.dart';
-import 'package:nmobile/utils/asset.dart';
 
 class ChatSessionListLayout extends StatefulWidget {
   @override
@@ -21,8 +20,8 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
   ContactStorage _contactStorage = ContactStorage();
   TopicStorage _topicStorage = TopicStorage();
   ScrollController _scrollController = ScrollController();
-  StreamSubscription _statusStreamSubscription;
-  StreamSubscription _onMessageStreamSubscription;
+  // StreamSubscription? _statusStreamSubscription;
+  late StreamSubscription _onMessageStreamSubscription;
   MessageStorage _messageStorage = MessageStorage();
   List<SessionSchema> _sessionList = [];
 
@@ -32,11 +31,11 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
 
   _sortMessages() {
     setState(() {
-      _sessionList.sort((a, b) => a.isTop ? (b.isTop ? -1 : -1) : (b.isTop ? 1 : b.lastReceiveTime.compareTo(a.lastReceiveTime)));
+      _sessionList.sort((a, b) => a.isTop ? (b.isTop ? -1 : -1) : (b.isTop ? 1 : (b.lastReceiveTime ?? DateTime.now()).compareTo((a.lastReceiveTime ?? DateTime.now()))));
     });
   }
 
-  _updateMessage(SessionSchema model) {
+  _updateMessage(SessionSchema? model) {
     if (model == null) return;
     int replaceIndex = -1;
     for (int i = 0; i < _sessionList.length; i++) {
@@ -57,10 +56,8 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
   _loadMore() async {
     _skip = _sessionList.length;
     var messages = await _messageStorage.getLastSession(_skip, _limit);
-    if (messages != null) {
-      _sessionList = _sessionList + messages;
-      _sortMessages();
-    }
+    _sessionList = _sessionList + messages;
+    _sortMessages();
   }
 
   initAsync() async {
@@ -94,8 +91,8 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
 
   @override
   void dispose() {
-    _onMessageStreamSubscription?.cancel();
-    _statusStreamSubscription?.cancel();
+    _onMessageStreamSubscription.cancel();
+    // _statusStreamSubscription?.cancel();
     super.dispose();
   }
 
@@ -124,7 +121,7 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
                 Navigator.of(context).pop();
                 bool top = !item.isTop;
                 if (item.topic != null) {
-                  bool flag = await _topicStorage.setTop(item.targetId, top);
+                  bool flag = await _topicStorage.setTop(item.targetId!, top);
                   if (flag) {
                     item.isTop = top;
                     _sortMessages();
@@ -153,7 +150,8 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
               ),
               onPressed: () async {
                 Navigator.of(context).pop();
-                int delCount = await _messageStorage.deleteTargetChat(item.targetId);
+                if (item.targetId == null) return;
+                int delCount = await _messageStorage.deleteTargetChat(item.targetId!);
                 if (delCount > 0) {
                   _sessionList.remove(item);
                   _sortMessages();
@@ -181,7 +179,7 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
           children: [
             InkWell(
               onTap: () async {
-                await ChatMessagesScreen.go(context, item?.contact);
+                await ChatMessagesScreen.go(context, item.contact);
                 _messageStorage.getUpdateSession(item.targetId).then((value) {
                   _updateMessage(value);
                 });

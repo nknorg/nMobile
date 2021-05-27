@@ -4,8 +4,6 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/message.dart';
 
-import '../locator.dart';
-
 class SendMessage {
   SendMessage();
 
@@ -24,9 +22,9 @@ class SendMessage {
   MessageStorage _messageStorage = MessageStorage();
   ContactStorage _contactStorage = ContactStorage();
 
-  sendMessage(MessageSchema schema) async {
+  sendMessage(MessageSchema? schema) async {
     if (schema == null || (schema.to == null && schema.topic == null)) return;
-    await chatCommon.sendText(schema.to ?? schema.topic, MessageData.getSendText(schema));
-    onSendSink?.add(schema);
+    // await chatCommon.sendText(schema.to ?? schema.topic, MessageData.getText(schema));
+    onSendSink.add(schema);
   }
 }

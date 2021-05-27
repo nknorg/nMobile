@@ -18,22 +18,22 @@ class WalletStorage {
   final LocalStorage _localStorage = LocalStorage();
   final SecureStorage _secureStorage = SecureStorage();
 
-  Future<List> getWallets() async {
+  Future<List<WalletSchema>> getWallets() async {
     var wallets = await _localStorage.getArray(KEY_WALLET);
-    if (wallets != null && wallets.isNotEmpty) {
+    if (wallets.isNotEmpty) {
       final list = wallets.map((e) {
         WalletSchema walletSchema = WalletSchema.fromMap(e);
         return walletSchema;
       }).toList();
       return list;
     }
-    return null;
+    return [];
   }
 
-  Future addWallet(WalletSchema walletSchema, String keystore, {String password, String seed}) async {
+  Future addWallet(WalletSchema? walletSchema, String? keystore, {String? password, String? seed}) async {
     List<Future> futures = <Future>[];
     var wallets = await _localStorage.getArray(KEY_WALLET);
-    int index = wallets?.indexWhere((x) => x['address'] == walletSchema?.address) ?? -1;
+    int index = wallets.indexWhere((x) => x['address'] == walletSchema?.address);
     if (index < 0) {
       futures.add(_localStorage.addItem(KEY_WALLET, walletSchema?.toMap()));
     } else {
@@ -55,7 +55,7 @@ class WalletStorage {
     return Future.wait(futures);
   }
 
-  Future deleteWallet(int n, WalletSchema walletSchema) async {
+  Future deleteWallet(int n, WalletSchema? walletSchema) async {
     List<Future> futures = <Future>[];
     if (n >= 0) {
       futures.add(_localStorage.removeItem(KEY_WALLET, n));
@@ -74,7 +74,7 @@ class WalletStorage {
     return Future.wait(futures);
   }
 
-  Future updateWallet(int n, WalletSchema walletSchema, {String keystore, String password, String seed}) {
+  Future updateWallet(int n, WalletSchema? walletSchema, {String? keystore, String? password, String? seed}) {
     List<Future> futures = <Future>[];
     if (n >= 0) {
       futures.add(_localStorage.setItem(KEY_WALLET, n, walletSchema?.toMap()));
@@ -95,7 +95,7 @@ class WalletStorage {
     return Future.wait(futures);
   }
 
-  Future getKeystore(String address) async {
+  Future getKeystore(String? address) async {
     if (address == null || address.isEmpty) {
       return null;
     }
@@ -126,46 +126,43 @@ class WalletStorage {
     return keystore;
   }
 
-  Future getPassword(String address) async {
-    if (address == null || address.isEmpty) {
-      return null;
-    }
+  Future getPassword(String? address) async {
+    if (address == null || address.isEmpty) return null;
     return _secureStorage.get('$KEY_PASSWORD:$address');
   }
 
-  Future getSeed(String address) {
-    if (address == null || address.isEmpty) {
-      return null;
-    }
+  Future getSeed(String? address) async {
+    if (address == null || address.isEmpty) return null;
     return _localStorage.get('$KEY_SEED:$address');
   }
 
-  Future setBackup(String address, bool backup) {
+  Future setBackup(String? address, bool backup) async {
+    if (address == null || address.isEmpty) return null;
     return Future(() => _localStorage.set('$KEY_BACKUP:$address', backup));
   }
 
-  Future isBackupByAddress(String address) {
+  Future isBackupByAddress(String? address) async {
+    if (address == null || address.isEmpty) return null;
     return _localStorage.get('$KEY_BACKUP:$address');
   }
 
-  Future<bool> setDefaultAddress(String address) async {
-    if (address == null || address.isEmpty) return false;
-    await _localStorage.set('$KEY_DEFAULT_ADDRESS', address);
-    return true;
+  Future setDefaultAddress(String? address) async {
+    if (address == null || address.isEmpty) return null;
+    return _localStorage.set('$KEY_DEFAULT_ADDRESS', address);
   }
 
-  Future<String> getDefaultAddress() async {
-    String address = await _localStorage.get('$KEY_DEFAULT_ADDRESS');
+  Future<String?> getDefaultAddress() async {
+    String? address = await _localStorage.get('$KEY_DEFAULT_ADDRESS');
     if (address == null || !verifyAddress(address)) {
       List<WalletSchema> wallets = await getWallets();
-      if (wallets == null || wallets.isEmpty) {
+      if (wallets.isEmpty) {
         return null;
       }
-      String firstAddress = wallets[0]?.address;
-      if (firstAddress == null && !verifyAddress(address)) {
+      String? firstAddress = wallets[0].address;
+      if (!verifyAddress(firstAddress)) {
         return null;
       }
-      await setDefaultAddress(firstAddress ?? "");
+      await setDefaultAddress(firstAddress);
       return firstAddress;
     }
     return address;

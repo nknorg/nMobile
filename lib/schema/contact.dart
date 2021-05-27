@@ -6,7 +6,6 @@ import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:path/path.dart';
@@ -15,30 +14,30 @@ import 'package:uuid/uuid.dart';
 import 'option.dart';
 
 class ContactSchema {
-  int id; // <- id
+  int? id; // <- id
   String type; // (required) <-> type
   String clientAddress; // (required : (ID).PubKey) <-> address
-  String nknWalletAddress; // == extraInfo[nknWalletAddress] <-> data[nknWalletAddress]
-  String firstName; // (required : name) <-> first_name
-  String lastName; // <-> last_name
-  String notes; // == extraInfo[notes] <-> data[notes]
-  Map extraInfo; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ..., avatar, firstName]
+  String? nknWalletAddress; // == extraInfo[nknWalletAddress] <-> data[nknWalletAddress]
+  String? firstName; // (required : name) <-> first_name
+  String? lastName; // <-> last_name
+  String? notes; // == extraInfo[notes] <-> data[notes]
+  Map<String, dynamic>? extraInfo; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ..., avatar, firstName]
 
-  String avatar; // (local_path) <-> avatar
-  OptionsSchema options; // <-> options
-  DateTime createdTime; // <-> created_time
-  DateTime updatedTime; // <-> updated_time
-  String profileVersion; // <-> profile_version
-  DateTime profileExpiresAt; // <-> profile_expires_at(long)
+  String? avatar; // (local_path) <-> avatar // TODO:GG
+  OptionsSchema? options; // <-> options
+  DateTime? createdTime; // <-> created_time
+  DateTime? updatedTime; // <-> updated_time
+  String? profileVersion; // <-> profile_version
+  DateTime? profileExpiresAt; // <-> profile_expires_at(long)
 
-  bool isTop; // <-> is_top
-  String deviceToken; // <-> device_token
-  bool notificationOpen; // <-> notification_open
+  bool isTop = false; // <-> is_top
+  String? deviceToken; // <-> device_token
+  bool notificationOpen = false; // <-> notification_open
 
   ContactSchema({
     this.id,
-    this.type,
-    this.clientAddress,
+    required this.type,
+    required this.clientAddress,
     this.nknWalletAddress,
     this.firstName,
     this.lastName,
@@ -60,9 +59,6 @@ class ContactSchema {
   }
 
   static Future<ContactSchema> fromMap(Map e) async {
-    if (e == null) {
-      return null;
-    }
     var contact = ContactSchema(
       id: e['id'],
       type: e['type'],
@@ -80,37 +76,29 @@ class ContactSchema {
     );
 
     if (e['data'] != null) {
-      try {
-        Map<String, dynamic> data = jsonDecode(e['data']);
+      Map<String, dynamic>? data = jsonFormat(e['data']);
 
-        if (contact.extraInfo == null) {
-          contact.extraInfo = new Map<String, dynamic>();
-        }
-        contact.extraInfo.addAll(data);
-
-        contact.nknWalletAddress = data['nknWalletAddress'];
-        if (contact.nknWalletAddress == null || contact.nknWalletAddress.isEmpty) {
-          contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress));
-        }
-
-        contact.notes = data['notes'];
-      } on FormatException catch (e) {
-        logger.e(e);
+      if (contact.extraInfo == null) {
+        contact.extraInfo = new Map<String, dynamic>();
       }
+      if (data != null) {
+        contact.extraInfo?.addAll(data);
+      }
+      contact.nknWalletAddress = data?['nknWalletAddress'];
+      if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
+        contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress));
+      }
+      contact.notes = data?['notes'];
     }
 
     if (e['options'] != null) {
-      try {
-        Map<String, dynamic> options = jsonDecode(e['options']);
-        contact.options = OptionsSchema(
-          updateBurnAfterTime: options['updateBurnAfterTime'],
-          deleteAfterSeconds: options['deleteAfterSeconds'],
-          backgroundColor: Color(options['backgroundColor']),
-          color: Color(options['color']),
-        );
-      } on FormatException catch (e) {
-        logger.e(e);
-      }
+      Map<String, dynamic>? options = jsonFormat(e['options']);
+      contact.options = OptionsSchema(
+        updateBurnAfterTime: options?['updateBurnAfterTime'],
+        deleteAfterSeconds: options?['deleteAfterSeconds'],
+        backgroundColor: Color(options?['backgroundColor']),
+        color: Color(options?['color']),
+      );
     }
     if (contact.options == null) {
       contact.options = OptionsSchema();
@@ -123,14 +111,14 @@ class ContactSchema {
       extraInfo = new Map<String, dynamic>();
     }
     if (nknWalletAddress != null) {
-      extraInfo['nknWalletAddress'] = nknWalletAddress;
-    } else if (clientAddress != null) {
-      extraInfo['nknWalletAddress'] = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+      extraInfo?['nknWalletAddress'] = nknWalletAddress;
+    } else {
+      extraInfo?['nknWalletAddress'] = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
     }
     if (notes != null) {
-      extraInfo['notes'] = notes;
+      extraInfo?['notes'] = notes;
     }
-    if (extraInfo.keys.length == 0) {
+    if (extraInfo?.keys.length == 0) {
       extraInfo = null;
     }
 
@@ -144,8 +132,8 @@ class ContactSchema {
       'first_name': firstName ?? getDefaultName(clientAddress),
       'last_name': lastName,
       'data': extraInfo != null ? jsonEncode(extraInfo) : '{}',
-      'options': jsonEncode(options.toMap()),
-      'avatar': avatar != null ? Path.getLocalContactAvatar(hexEncode(chatCommon.publicKey), Path.getFileName(avatar)) : null,
+      'options': options != null ? jsonEncode(options!.toMap()) : null,
+      'avatar': avatar != null ? Path.getLocalContactAvatar(hexEncode(chatCommon.publicKey), Path.getFileName(avatar!)) : null,
       'created_time': createdTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'updated_time': updatedTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'profile_version': profileVersion,
@@ -157,9 +145,9 @@ class ContactSchema {
     return map;
   }
 
-  static Future<ContactSchema> getByTypeMe(String clientAddress) async {
+  static Future<ContactSchema?> getByTypeMe(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    var walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+    String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
     return ContactSchema(
       type: ContactType.me,
       clientAddress: clientAddress,
@@ -170,7 +158,7 @@ class ContactSchema {
     );
   }
 
-  static getDefaultName(String clientAddress) {
+  static getDefaultName(String? clientAddress) {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     String defaultName;
     var index = clientAddress.lastIndexOf('.');
@@ -183,7 +171,7 @@ class ContactSchema {
   }
 
   bool get isMe {
-    if (type != null && type == ContactType.me) {
+    if (type == ContactType.me) {
       return true;
     } else {
       return false;
@@ -191,23 +179,23 @@ class ContactSchema {
   }
 
   String get getDisplayName {
-    String displayName;
+    String? displayName;
 
-    if (extraInfo != null && extraInfo.isNotEmpty) {
-      if (extraInfo['firstName'] != null && extraInfo['firstName'].isNotEmpty) {
-        displayName = extraInfo['firstName'];
+    if (extraInfo != null && extraInfo!.isNotEmpty) {
+      if (extraInfo!['firstName'] != null && extraInfo!['firstName'].isNotEmpty) {
+        displayName = extraInfo!['firstName'];
       }
       // SUPPORT:START
-      else if (extraInfo['remark_name'] != null && extraInfo['remark_name'].isNotEmpty) {
-        displayName = extraInfo['remark_name'];
-      } else if (extraInfo['notes'] != null && extraInfo['notes'].isNotEmpty) {
-        displayName = extraInfo['notes'];
+      else if (extraInfo!['remark_name'] != null && extraInfo!['remark_name'].isNotEmpty) {
+        displayName = extraInfo!['remark_name'];
+      } else if (extraInfo!['notes'] != null && extraInfo!['notes'].isNotEmpty) {
+        displayName = extraInfo!['notes'];
       }
       // SUPPORT:END
     }
 
     if (displayName == null || displayName.isEmpty) {
-      if (firstName != null && firstName.isNotEmpty) {
+      if (firstName != null && firstName!.isNotEmpty) {
         displayName = firstName;
       }
     }
@@ -215,25 +203,25 @@ class ContactSchema {
     if (displayName == null || displayName.isEmpty) {
       displayName = getDefaultName(clientAddress);
     }
-    return displayName;
+    return displayName ?? "";
   }
 
-  String get getDisplayAvatarPath {
-    String avatarLocalPath;
+  String? get getDisplayAvatarPath {
+    String? avatarLocalPath;
 
-    if (extraInfo != null && extraInfo.isNotEmpty) {
-      if (extraInfo['avatar'] != null && extraInfo['avatar'].isNotEmpty) {
-        avatarLocalPath = extraInfo['avatar'];
+    if (extraInfo != null && extraInfo!.isNotEmpty) {
+      if (extraInfo!['avatar'] != null && extraInfo!['avatar'].isNotEmpty) {
+        avatarLocalPath = extraInfo!['avatar'];
       }
       // SUPPORT:START
-      if (extraInfo['remark_avatar'] != null && extraInfo['remark_avatar'].isNotEmpty) {
-        avatarLocalPath = extraInfo['remark_avatar'];
+      if (extraInfo!['remark_avatar'] != null && extraInfo!['remark_avatar'].isNotEmpty) {
+        avatarLocalPath = extraInfo!['remark_avatar'];
       }
       // SUPPORT:END
     }
 
     if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
-      if (avatar != null && avatar.isNotEmpty) {
+      if (avatar != null && avatar!.isNotEmpty) {
         avatarLocalPath = avatar;
       }
     }

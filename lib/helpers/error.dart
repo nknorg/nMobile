@@ -9,13 +9,13 @@ import '../utils/logger.dart';
 
 void handleError(
   error, {
-  StackTrace stackTrace,
-  String toast,
+  StackTrace? stackTrace,
+  String? toast,
 }) {
   logger.e(error);
   debugPrintStack(maxFrames: 20);
   if (error == null) return;
-  String show = getErrorShow(error);
+  String? show = getErrorShow(error);
   if (show != null && show.isNotEmpty) {
     Toast.show(show);
   } else {
@@ -25,7 +25,7 @@ void handleError(
   }
 }
 
-String getErrorShow(error) {
+String? getErrorShow(error) {
   if (error == null) return null;
   S _localizations = S.of(Global.appContext);
 

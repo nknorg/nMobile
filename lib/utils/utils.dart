@@ -1,14 +1,15 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'hash.dart';
-import 'logger.dart';
 
 const ADDRESS_GEN_PREFIX = '02b825';
 const ADDRESS_GEN_PREFIX_LEN = ADDRESS_GEN_PREFIX.length ~/ 2;
@@ -17,7 +18,7 @@ const CHECKSUM_LEN = 4;
 const SEED_LENGTH = 32;
 const ADDRESS_LEN = ADDRESS_GEN_PREFIX_LEN + UINT160_LEN + CHECKSUM_LEN;
 
-copyText(String content, {BuildContext context}) {
+copyText(String? content, {BuildContext? context}) {
   Clipboard.setData(ClipboardData(text: content));
   if (context != null) {
     S _localizations = S.of(context);
@@ -25,7 +26,8 @@ copyText(String content, {BuildContext context}) {
   }
 }
 
-launchUrl(String url) async {
+launchUrl(String? url) async {
+  if (url == null || url.isEmpty) return;
   try {
     await launch(url, forceSafariVC: false);
   } catch (e) {
@@ -33,19 +35,19 @@ launchUrl(String url) async {
   }
 }
 
-jsonFormat(raw) {
-  Map jsonData;
+Map<String, dynamic>? jsonFormat(raw) {
+  Map<String, dynamic> jsonData;
   try {
     jsonData = jsonDecode(raw);
     return jsonData;
   } on Exception catch (e) {
-    logger.e(e);
+    handleError(e);
   }
   return null;
 }
 
 String getPublicKeyByClientAddr(String addr) {
-  int n = addr?.lastIndexOf('.');
+  int n = addr.lastIndexOf('.');
   if (n < 0) {
     return addr;
   } else {
@@ -73,17 +75,17 @@ List<int> genAddressVerifyBytesFromProgramHash(String programHash) {
 
 String genAddressVerifyCodeFromProgramHash(String programHash) {
   var verifyBytes = genAddressVerifyBytesFromProgramHash(programHash);
-  return hexEncode(verifyBytes);
+  return hexEncode(Uint8List.fromList(verifyBytes));
 }
 
 bool verifyAddress(String address) {
   try {
-    List addressBytes = base58.decode(address);
+    Uint8List addressBytes = base58.decode(address);
     if (addressBytes.length != ADDRESS_LEN) {
       return false;
     }
     var addressPrefixBytes = addressBytes.sublist(0, ADDRESS_GEN_PREFIX_LEN);
-    var addressPrefix = hexEncode(addressPrefixBytes);
+    var addressPrefix = hexEncode(Uint8List.fromList(addressPrefixBytes));
     if (addressPrefix != ADDRESS_GEN_PREFIX) {
       return false;
     }

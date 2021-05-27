@@ -4,10 +4,10 @@ import 'dart:ui';
 import 'package:nmobile/common/locator.dart';
 
 class OptionsSchema {
-  int deleteAfterSeconds;
-  int updateBurnAfterTime;
-  Color backgroundColor;
-  Color color;
+  int? deleteAfterSeconds;
+  int? updateBurnAfterTime;
+  Color? backgroundColor;
+  Color? color;
 
   OptionsSchema({
     this.deleteAfterSeconds,
@@ -34,8 +34,8 @@ class OptionsSchema {
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {};
     map['deleteAfterSeconds'] = deleteAfterSeconds;
-    map['backgroundColor'] = backgroundColor.value;
-    map['color'] = color.value;
+    map['backgroundColor'] = backgroundColor?.value;
+    map['color'] = color?.value;
     map['updateTime'] = updateBurnAfterTime;
     return map;
   }

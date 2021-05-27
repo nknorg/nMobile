@@ -19,33 +19,30 @@ class WalletImportScreen extends StatefulWidget {
   static final String argWalletType = "wallet_type";
 
   static Future go(BuildContext context, String walletType) {
-    if (walletType == null || walletType.isEmpty) {
-      walletType = WalletType.nkn;
-    }
     return Navigator.pushNamed(context, routeName, arguments: {
       argWalletType: walletType,
     });
   }
 
-  final Map<String, dynamic> arguments;
+  final Map<String, dynamic>? arguments;
 
-  const WalletImportScreen({Key key, this.arguments}) : super(key: key);
+  const WalletImportScreen({Key? key, this.arguments}) : super(key: key);
 
   @override
   _ImportWalletScreenState createState() => _ImportWalletScreenState();
 }
 
 class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTickerProviderStateMixin {
-  String _walletType;
-  TabController _tabController;
+  late TabController _tabController;
+  late String _walletType;
 
   StreamController<String> _qrController = StreamController<String>.broadcast();
 
   @override
   void initState() {
     super.initState();
-    this._walletType = widget.arguments[WalletImportScreen.argWalletType];
     _tabController = TabController(length: 2, vsync: this);
+    this._walletType = widget.arguments![WalletImportScreen.argWalletType] ?? WalletType.nkn;
   }
 
   @override
@@ -72,9 +69,11 @@ class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTick
                 _tabController.index = 1;
               }
 
-              var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
+              String? qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
               logger.d("QR_DATA:$qrData");
-              _qrController.sink?.add(qrData);
+              if (qrData != null) {
+                _qrController.sink.add(qrData);
+              }
             },
           )
         ],

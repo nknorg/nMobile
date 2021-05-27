@@ -6,8 +6,8 @@ import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 
 class ChatSendBar extends StatefulWidget {
-  final VoidCallback onMenuPressed;
-  final Function(String) onSendPress;
+  final VoidCallback? onMenuPressed;
+  final Function(String)? onSendPress;
 
   ChatSendBar({this.onMenuPressed, this.onSendPress});
 
@@ -105,7 +105,7 @@ class _ChatSendBarState extends State<ChatSendBar> {
                 ),
                 onPressed: () async {
                   // TODO:GG
-                  String content = _sendController.text ?? '';
+                  String content = _sendController.text;
                   if (content.isEmpty) return;
                   _canSend = false;
                   _sendController.clear();

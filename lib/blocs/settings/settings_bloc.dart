@@ -6,7 +6,7 @@ import 'settings_event.dart';
 import 'settings_state.dart';
 
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
-  SettingsBloc() : super(null);
+  SettingsBloc() : super(SettingsInitial());
 
   SettingsStorage _settingsStorage = SettingsStorage();
   @override

@@ -9,9 +9,9 @@ import 'package:nmobile/utils/logger.dart';
 
 class TaskService {
   bool _isInit = false;
-  WalletBloc _walletBloc;
+  WalletBloc? _walletBloc;
   // EthErc20Client _erc20client;
-  Timer _queryWalletBalanceTask;
+  Timer? _queryWalletBalanceTask;
 
   install() {
     if (!_isInit) {
@@ -30,12 +30,12 @@ class TaskService {
   }
 
   queryWalletBalanceTask() {
-    var state = _walletBloc.state;
+    var state = _walletBloc?.state;
     if (state is WalletLoaded) {
       logger.d("wallets balance query begin !!!!!");
       List<Future> futures = <Future>[];
-      state.wallets?.forEach((w) {
-        if (w?.type == WalletType.eth) {
+      state.wallets.forEach((w) {
+        if (w.type == WalletType.eth) {
           // TODO:GG eth balance query
           // futures.add(_erc20client.getBalance(address: w.address).then((balance) {
           //   NLog.w('Get Wallet:${w.name} | balance: ${balance.ether}');
@@ -51,11 +51,11 @@ class TaskService {
           //       }
           //     }));
         } else {
-          Wallet.getBalanceByAddr(w?.address).then((balance) {
-            logger.d("wallet balance - balance_old:${w?.balance} - balance_new:$balance - address:${w?.address}");
-            if (w?.balance != balance) {
-              w?.balance = balance;
-              _walletBloc.add(UpdateWallet(w));
+          Wallet.getBalanceByAddr(w.address).then((balance) {
+            logger.d("wallet balance - balance_old:${w.balance} - balance_new:$balance - address:${w.address}");
+            if (w.balance != balance) {
+              w.balance = balance;
+              _walletBloc?.add(UpdateWallet(w));
             }
           }).catchError((e) {
             logger.e(e);

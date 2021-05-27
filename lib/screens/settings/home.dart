@@ -25,12 +25,12 @@ class SettingsHomeScreen extends StatefulWidget {
 }
 
 class _SettingsHomeScreenState extends State<SettingsHomeScreen> with AutomaticKeepAliveClientMixin {
-  SettingsBloc _settingsBloc;
+  SettingsBloc? _settingsBloc;
   SettingsStorage _settingsStorage = SettingsStorage();
-  String _currentLanguage;
-  String _currentNotificationType;
-  List<SelectListItem> _languageList;
-  List<SelectListItem> _notificationTypeList;
+  String? _currentLanguage;
+  String? _currentNotificationType;
+  List<SelectListItem> _languageList = [];
+  List<SelectListItem> _notificationTypeList = [];
   bool _biometricsSelected = false;
 
   _buttonStyle({bool top = false, bool bottom = false}) {
@@ -78,16 +78,20 @@ class _SettingsHomeScreenState extends State<SettingsHomeScreen> with AutomaticK
     _changeNotificationType();
   }
 
-  _getLanguageText(String lang) {
+  String _getLanguageText(String lang) {
     if (lang == 'auto') {
       return S.of(Global.appContext).language_auto;
     }
-    return _languageList.firstWhere((x) => x.value == lang, orElse: () => null)?.text ?? S.of(Global.appContext).language_auto;
+    try {
+      return _languageList.firstWhere((x) => x.value == lang).text;
+    } catch (e) {
+      return S.of(Global.appContext).language_auto;
+    }
   }
 
   _changeNotificationType() {
     setState(() {
-      _currentNotificationType = _notificationTypeList?.firstWhere((x) => x.value == Settings.notificationType)?.text;
+      _currentNotificationType = _notificationTypeList.firstWhere((x) => x.value == Settings.notificationType).text;
     });
   }
 
@@ -106,6 +110,7 @@ class _SettingsHomeScreenState extends State<SettingsHomeScreen> with AutomaticK
     S _localizations = S.of(context);
 
     return Layout(
+      headerColor: application.theme.primaryColor,
       header: Header(
         titleChild: Padding(
           padding: const EdgeInsets.only(left: 20),
@@ -148,13 +153,13 @@ class _SettingsHomeScreenState extends State<SettingsHomeScreen> with AutomaticK
                     onPressed: () async {
                       Navigator.pushNamed(context, SelectScreen.routeName, arguments: {
                         SelectScreen.title: _localizations.change_language,
-                        SelectScreen.selectedValue: Settings.locale ?? 'auto',
+                        SelectScreen.selectedValue: Settings.locale,
                         SelectScreen.list: _languageList,
                       }).then((lang) {
                         if (lang != null) {
-                          _settingsBloc.add(UpdateLanguage(lang));
+                          _settingsBloc?.add(UpdateLanguage(lang as String));
                           setState(() {
-                            _currentLanguage = _getLanguageText(lang);
+                            _currentLanguage = _getLanguageText(lang as String);
                           });
                         }
                       });
@@ -172,7 +177,7 @@ class _SettingsHomeScreenState extends State<SettingsHomeScreen> with AutomaticK
                         Row(
                           children: <Widget>[
                             Label(
-                              _currentLanguage,
+                              _currentLanguage ?? "",
                               type: LabelType.bodyRegular,
                               color: application.theme.fontColor2,
                               height: 1,
@@ -291,7 +296,7 @@ class _SettingsHomeScreenState extends State<SettingsHomeScreen> with AutomaticK
                         Row(
                           children: <Widget>[
                             Label(
-                              _currentNotificationType,
+                              _currentNotificationType ?? "",
                               type: LabelType.bodyRegular,
                               color: application.theme.fontColor2,
                               height: 1,
@@ -312,10 +317,10 @@ class _SettingsHomeScreenState extends State<SettingsHomeScreen> with AutomaticK
                         SelectScreen.list: _notificationTypeList,
                       }).then((type) {
                         if (type != null) {
-                          Settings.notificationType = type;
+                          Settings.notificationType = type as int;
                           _settingsStorage.setSettings('${SettingsStorage.NOTIFICATION_TYPE_KEY}', type);
                           setState(() {
-                            _currentNotificationType = _notificationTypeList?.firstWhere((x) => x.value == Settings.notificationType)?.text;
+                            _currentNotificationType = _notificationTypeList.firstWhere((x) => x.value == Settings.notificationType).text;
                           });
                         }
                       });

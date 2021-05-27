@@ -6,18 +6,18 @@ import 'avatar.dart';
 
 class ContactItem extends StatefulWidget {
   final ContactSchema contact;
-  final Widget body;
-  final String bodyTitle;
-  final String bodyDesc;
-  final GestureTapCallback onTap;
+  final Widget? body;
+  final String? bodyTitle;
+  final String? bodyDesc;
+  final GestureTapCallback? onTap;
   final bool onTapWave;
-  final Color bgColor;
-  final BorderRadius radius;
-  final EdgeInsetsGeometry padding;
-  final Widget tail;
+  final Color? bgColor;
+  final BorderRadius? radius;
+  final EdgeInsetsGeometry? padding;
+  final Widget? tail;
 
   ContactItem({
-    this.contact,
+    required this.contact,
     this.body,
     this.bodyTitle,
     this.bodyDesc,
@@ -69,14 +69,14 @@ class _ContactItemState extends State<ContactItem> {
           Container(
             margin: const EdgeInsets.only(right: 12),
             child: ContactAvatar(
-              key: ValueKey(widget.contact?.getDisplayAvatarPath ?? ''),
+              key: ValueKey(widget.contact.getDisplayAvatarPath ?? ''),
               contact: widget.contact,
             ),
           ),
           Expanded(
             flex: 1,
             child: widget.body != null
-                ? widget.body
+                ? widget.body!
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -96,7 +96,7 @@ class _ContactItemState extends State<ContactItem> {
                     ],
                   ),
           ),
-          widget.tail != null ? widget.tail : SizedBox(),
+          widget.tail != null ? widget.tail! : SizedBox(),
         ],
       ),
     );

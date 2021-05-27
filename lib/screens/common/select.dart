@@ -10,36 +10,35 @@ class SelectListItem {
   final String text;
   final dynamic value;
 
-  SelectListItem({this.text, this.value});
+  SelectListItem({required this.text, this.value});
 }
 
 // ignore: must_be_immutable
 class SelectScreen extends StatefulWidget {
   static const String routeName = '/select';
-  final Map arguments;
-  BuildContext context;
+  final Map? arguments;
 
   static final String title = "title";
   static final String list = "list";
   static final String selectedValue = "selectedValue";
 
-  SelectScreen({Key key, this.arguments}) : super(key: key);
+  SelectScreen({Key? key, this.arguments}) : super(key: key);
 
   @override
   _SelectScreenState createState() => _SelectScreenState();
 }
 
 class _SelectScreenState extends State<SelectScreen> {
-  String title;
-  String selectedValue;
-  List<SelectListItem> list;
+  String? title;
+  List<SelectListItem> list = [];
+  String? selectedValue;
 
   @override
   void initState() {
     super.initState();
-    this.title = widget.arguments['title'] ?? "";
-    this.list = widget.arguments['list'] ?? [];
-    this.selectedValue = widget.arguments['selectedValue'].toString();
+    this.title = widget.arguments!['title'] ?? "";
+    this.list = widget.arguments!['list'] ?? [];
+    this.selectedValue = widget.arguments!['selectedValue'].toString();
   }
 
   @override
@@ -118,16 +117,16 @@ class _SelectScreenState extends State<SelectScreen> {
     );
   }
 
-  searchAction(String val) {
-    if (val.length == 0) {
-      setState(() {
-        this.list = widget.arguments['list'];
-      });
-    } else {
-      List<SelectListItem> data = widget.arguments['list'];
-      setState(() {
-        this.list = data.where((item) => item.text.contains(val)).toList();
-      });
-    }
-  }
+  // searchAction(String val) {
+  //   if (val.length == 0) {
+  //     setState(() {
+  //       this.list = widget.arguments['list'];
+  //     });
+  //   } else {
+  //     List<SelectListItem> data = widget.arguments['list'];
+  //     setState(() {
+  //       this.list = data.where((item) => item.text.contains(val)).toList();
+  //     });
+  //   }
+  // }
 }

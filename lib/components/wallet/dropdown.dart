@@ -9,13 +9,13 @@ import 'item.dart';
 
 class WalletDropdown extends StatefulWidget {
   final WalletSchema schema;
-  final String selectTitle;
-  final Function(WalletSchema) onSelected;
-  final Color bgColor;
+  final String? selectTitle;
+  final Function(WalletSchema)? onSelected;
+  final Color? bgColor;
   final bool onTapWave;
 
   WalletDropdown({
-    this.schema,
+    required this.schema,
     this.selectTitle,
     this.onSelected,
     this.bgColor,
@@ -32,7 +32,7 @@ class _WalletDropdownState extends State<WalletDropdown> {
     S _localizations = S.of(context);
 
     return WalletItem(
-      walletType: widget.schema?.type ?? WalletType.nkn,
+      walletType: widget.schema.type,
       wallet: widget.schema,
       radius: BorderRadius.circular(8),
       padding: EdgeInsets.all(0),
@@ -43,11 +43,13 @@ class _WalletDropdownState extends State<WalletDropdown> {
         child: Asset.iconSvg('down2', width: 24),
       ),
       onTap: () async {
-        WalletSchema result = await BottomDialog.of(context).showWalletSelect(
+        WalletSchema? result = await BottomDialog.of(context).showWalletSelect(
           title: widget.selectTitle ?? _localizations.select_another_wallet,
         );
         logger.d("wallet dropdown select - $result");
-        widget.onSelected?.call(result);
+        if (result != null) {
+          widget.onSelected?.call(result);
+        }
       },
     );
   }

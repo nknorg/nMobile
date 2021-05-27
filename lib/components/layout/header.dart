@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 class Header extends StatelessWidget implements PreferredSizeWidget {
   static double height = 68;
 
-  final String title;
-  final Widget titleChild;
-  final Widget leading;
-  final List<Widget> actions;
-  final Widget childLead;
-  final Widget childTail;
-  final Color backgroundColor;
-  final Brightness brightness;
-  final PreferredSizeWidget bottom;
+  final String? title;
+  final Widget? titleChild;
+  final Widget? leading;
+  final List<Widget>? actions;
+  final Widget? childLead;
+  final Widget? childTail;
+  final Color? backgroundColor;
+  final Brightness? brightness;
+  final PreferredSizeWidget? bottom;
 
   Header({
     this.title,
@@ -58,7 +58,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  AppBar _header;
+  late AppBar _header;
 
   @override
   Widget build(BuildContext context) {

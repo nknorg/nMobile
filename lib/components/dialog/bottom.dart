@@ -18,23 +18,21 @@ class BottomDialog extends StatefulWidget {
 
   BuildContext context;
 
-  BottomDialog();
-
   BottomDialog.of(this.context);
 
-  WidgetBuilder builder;
-  Widget action;
-  double height;
-  Function updateHeight;
+  late WidgetBuilder builder;
+  Widget? action;
+  double? height;
+  Function? updateHeight;
 
   close({result}) {
     Navigator.of(context).pop(result);
   }
 
-  Future<T> show<T>({
-    @required WidgetBuilder builder,
-    Widget action,
-    double height,
+  Future<T?> show<T>({
+    required WidgetBuilder builder,
+    Widget? action,
+    double? height,
     bool animated = true,
   }) {
     this.builder = builder;
@@ -57,12 +55,12 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  Future<T> showWithTitle<T>({
-    @required Widget child,
-    @required String title,
-    Widget action,
-    String desc = "",
-    double height = 300,
+  Future<T?> showWithTitle<T>({
+    Widget? child,
+    String? title,
+    Widget? action,
+    String? desc = "",
+    double? height = 300,
     bool animated = true,
   }) {
     return show<T>(
@@ -80,7 +78,7 @@ class BottomDialog extends StatefulWidget {
             Padding(
               padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 12),
               child: Label(
-                title,
+                title ?? "",
                 type: LabelType.h2,
               ),
             ),
@@ -99,7 +97,7 @@ class BottomDialog extends StatefulWidget {
             }),
             Expanded(
               flex: 1,
-              child: child,
+              child: child ?? SizedBox.shrink(),
             ),
           ],
         ),
@@ -107,10 +105,10 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  Future<String> showWalletTypeSelect({
-    @required String title,
-    String desc,
-    Widget action,
+  Future<String?> showWalletTypeSelect({
+    String? title,
+    String? desc,
+    Widget? action,
   }) {
     S _localizations = S.of(context);
     final walletTypeNkn = WalletType.nkn;
@@ -240,10 +238,10 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  Future<WalletSchema> showWalletSelect({
-    @required String title,
-    String desc,
-    Widget action,
+  Future<WalletSchema?> showWalletSelect({
+    String? title,
+    String? desc,
+    Widget? action,
     bool onlyNKN = false,
   }) {
     return showWithTitle<WalletSchema>(
@@ -254,16 +252,16 @@ class BottomDialog extends StatefulWidget {
       child: BlocBuilder<WalletBloc, WalletState>(
         builder: (context, state) {
           if (state is WalletLoaded) {
-            final wallets = onlyNKN ? state.wallets.where((w) => w.type == WalletType.nkn).toList() : state.wallets;
+            List<WalletSchema> wallets = onlyNKN ? state.wallets.where((w) => w.type == WalletType.nkn).toList() : state.wallets;
             return ListView.builder(
-              itemCount: wallets?.length ?? 0,
+              itemCount: wallets.length,
               itemBuilder: (BuildContext context, int index) {
                 WalletSchema wallet = wallets[index];
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     WalletItem(
-                      walletType: wallet?.type,
+                      walletType: wallet.type,
                       wallet: wallet,
                       bgColor: application.theme.backgroundLightColor,
                       radius: BorderRadius.circular(0),
@@ -287,13 +285,13 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  Future<String> showInput({
-    @required String title,
-    String desc,
-    String inputTip,
-    String inputHint,
-    String value,
-    String actionText,
+  Future<String?> showInput({
+    String? title,
+    String? desc,
+    String? inputTip,
+    String? inputHint,
+    String? value,
+    String? actionText,
     bool password = false,
     int maxLength = 10000,
   }) async {
@@ -339,7 +337,11 @@ class BottomDialog extends StatefulWidget {
     );
   }
 
-  showQrcode({@required String title, String desc, String data}) {
+  showQrcode({
+    String? title,
+    String? desc,
+    required String data,
+  }) {
     S _localizations = S.of(context);
 
     return showWithTitle<String>(
@@ -376,12 +378,12 @@ class _BottomDialogState extends State<BottomDialog> with SingleTickerProviderSt
   double _dy = 0;
   double _height = 300;
   double _dragHeight = 24;
-  double _currentHeight;
-  double _minHeight;
+  late double _currentHeight;
+  late double _minHeight;
   double _maxHeight = 686;
   double _tweenHeight = 0;
   double _minFlingVelocity = 700;
-  AnimationController _animationController;
+  late AnimationController _animationController;
   Color _dragColor = application.theme.backgroundColor2;
   GlobalKey _contentKey = GlobalKey();
 
@@ -477,7 +479,7 @@ class _BottomDialogState extends State<BottomDialog> with SingleTickerProviderSt
     if (widget.action != null) {
       body.add(Expanded(
         flex: 0,
-        child: widget.action,
+        child: widget.action!,
       ));
     }
 

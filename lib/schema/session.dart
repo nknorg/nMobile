@@ -6,15 +6,15 @@ import 'contact.dart';
 import 'topic.dart';
 
 class SessionSchema extends Equatable {
-  String targetId;
-  String sender;
-  String content;
-  String contentType;
-  DateTime lastReceiveTime;
-  int notReadCount;
-  bool isTop;
-  TopicSchema topic;
-  ContactSchema contact;
+  String? targetId;
+  String? sender;
+  String? content;
+  String? contentType;
+  DateTime? lastReceiveTime;
+  int? notReadCount;
+  bool isTop = false;
+  TopicSchema? topic;
+  ContactSchema? contact;
 
   SessionSchema({
     this.targetId,
@@ -27,9 +27,9 @@ class SessionSchema extends Equatable {
   });
 
   @override
-  List<Object> get props => [targetId];
+  List<Object> get props => [targetId ?? ""];
 
-  static Future<SessionSchema> fromMap(Map e) async {
+  static Future<SessionSchema?> fromMap(Map e) async {
     var res = SessionSchema(
       targetId: e['target_id'],
       sender: e['sender'],
@@ -38,17 +38,14 @@ class SessionSchema extends Equatable {
       lastReceiveTime: DateTime.fromMillisecondsSinceEpoch(e['receive_time']),
       notReadCount: e['not_read'] as int,
     );
-
+    if (res.targetId == null) {
+      return null;
+    }
     if (e['topic'] != null) {
       res.topic = await TopicStorage().queryTopicByTopicName(res.targetId);
       res.isTop = res.topic?.isTop ?? false;
-      res.topic = await TopicStorage().queryTopicByTopicName(e['topic']);
     } else {
-      if (res.targetId == null) {
-        return null;
-      }
-
-      res.contact = await ContactStorage().queryContactByClientAddress(res.targetId);
+      res.contact = await ContactStorage().queryContactByClientAddress(res.targetId!);
       res.isTop = res.contact?.isTop ?? false;
     }
     return res;

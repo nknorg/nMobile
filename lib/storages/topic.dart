@@ -7,7 +7,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 class TopicStorage {
   static String get tableName => 'Topic';
 
-  Database get db => DB.currentDatabase;
+  Database? get db => DB.currentDatabase;
 
   static create(Database db, int version) async {
     // create table
@@ -28,16 +28,16 @@ class TopicStorage {
     await db.execute('CREATE UNIQUE INDEX unique_index_topic_topic ON $tableName (topic);');
   }
 
-  Future<int> queryCountByTopic(String topic) async {
+  Future<int> queryCountByTopic(String? topic) async {
     if (topic == null || topic.isEmpty) return 0;
     try {
-      var res = await db.query(
+      List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
         where: 'topic = ?',
         whereArgs: [topic],
       );
-      int count = Sqflite.firstIntValue(res);
+      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.d("queryCountByTopic - topic:$topic - count:$count");
       return count ?? 0;
     } catch (e) {
@@ -46,17 +46,17 @@ class TopicStorage {
     return 0;
   }
 
-  Future<TopicSchema> queryTopicByTopicName(String topic) async {
+  Future<TopicSchema?> queryTopicByTopicName(String? topic) async {
     if (topic == null || topic.isEmpty) return null;
     try {
-      var res = await db.query(
+      List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
         where: 'topic = ?',
         whereArgs: [topic],
       );
-      if (res.length > 0) {
-        TopicSchema schema = TopicSchema.fromMap(res.first);
+      if (res != null && res.length > 0) {
+        TopicSchema? schema = TopicSchema.fromMap(res.first);
         logger.d("queryTopicByTopicName - success - topic:$topic - schema:$schema");
         return schema;
       }
@@ -67,19 +67,19 @@ class TopicStorage {
     return null;
   }
 
-  Future<TopicSchema> insertTopic(TopicSchema schema) async {
+  Future<TopicSchema?> insertTopic(TopicSchema? schema) async {
     if (schema == null) return null;
     try {
-      TopicSchema exist = await queryTopicByTopicName(schema?.topic);
+      TopicSchema? exist = await queryTopicByTopicName(schema.topic);
       if (exist != null) {
         logger.d("insertTopic - exist:$exist - add:$schema");
         return exist;
       }
       Map<String, dynamic> entity = schema.toMap();
-      int id = await db.insert(tableName, entity);
-      if (id != 0) {
-        TopicSchema schema = TopicSchema.fromMap(entity);
-        schema.id = id;
+      int? id = await db?.insert(tableName, entity);
+      if (id != null && id != 0) {
+        TopicSchema? schema = TopicSchema.fromMap(entity);
+        schema?.id = id;
         logger.d("insertTopic - success - schema:$schema");
         return schema;
       }
@@ -90,16 +90,16 @@ class TopicStorage {
     return null;
   }
 
-  Future<bool> setTop(String topic, bool top) async {
+  Future<bool> setTop(String? topic, bool top) async {
     if (topic == null || topic.isEmpty) return false;
     try {
-      var count = await db.update(
+      int? count = await db?.update(
         tableName,
         {'is_top': top ? 1 : 0},
         where: 'topic = ?',
         whereArgs: [topic],
       );
-      if (count > 0) {
+      if (count != null && count > 0) {
         logger.d("setTop - success - topic:$topic - top:$top");
         return true;
       }

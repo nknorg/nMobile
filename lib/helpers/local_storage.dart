@@ -45,28 +45,29 @@ class LocalStorage {
 
   Future<int> getArrayLength(String key) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    var val = prefs.get('$key:$LENGTH_SUFFIX');
-    if (val == null) {
-      return 0;
-    }
-    return val;
+    int? val = prefs.getInt('$key:$LENGTH_SUFFIX');
+    return val ?? 0;
   }
 
-  Future<Map<String, dynamic>> getItem(String key, int n) async {
+  Future<Map<String, dynamic>?> getItem(String key, int n) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var result = prefs.get('$key:$n');
     if (result == null) return null;
-    return jsonDecode(prefs.get('$key:$n'));
+    String? item = prefs.getString('$key:$n');
+    return item != null ? jsonDecode(item) : null;
   }
 
   Future<List<Map<String, dynamic>>> getArray(String key) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    var length = prefs.get('$key:$LENGTH_SUFFIX');
-    if (length == null) return null;
+    int? length = prefs.getInt('$key:$LENGTH_SUFFIX');
+    if (length == null) return <Map<String, dynamic>>[];
 
     List<Map<String, dynamic>> res = [];
     for (var i = 0; i < length; i++) {
-      res.add(await getItem(key, i));
+      Map<String, dynamic>? item = await getItem(key, i);
+      if (item != null) {
+        res.add(item);
+      }
     }
     return res;
   }
@@ -113,7 +114,7 @@ class LocalStorage {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String log = "";
     Set<String> keys = prefs.getKeys();
-    keys?.forEach((key) {
+    keys.forEach((key) {
       log += "K:::$key --- V:::${prefs.get(key)}\n";
     });
     logger.i("local_storage_debug_info ---> $log");

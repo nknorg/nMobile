@@ -23,15 +23,14 @@ class WalletReceiveScreen extends StatefulWidget {
 
   static Future go(BuildContext context, WalletSchema wallet) {
     logger.d("wallet receive NKN - $wallet");
-    if (wallet == null) return null;
     return Navigator.pushNamed(context, routeName, arguments: {
       argWallet: wallet,
     });
   }
 
-  final Map<String, dynamic> arguments;
+  final Map<String, dynamic>? arguments;
 
-  WalletReceiveScreen({Key key, this.arguments}) : super(key: key);
+  WalletReceiveScreen({Key? key, this.arguments}) : super(key: key);
 
   @override
   _WalletReceiveScreenState createState() => _WalletReceiveScreenState();
@@ -39,12 +38,12 @@ class WalletReceiveScreen extends StatefulWidget {
 
 class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
   GlobalKey globalKey = new GlobalKey();
-  WalletSchema _wallet;
+  late WalletSchema _wallet;
 
   @override
   void initState() {
     super.initState();
-    this._wallet = widget.arguments[WalletReceiveScreen.argWallet];
+    this._wallet = widget.arguments![WalletReceiveScreen.argWallet];
     // balance query
     // taskService.queryWalletBalanceTask();
   }
@@ -83,7 +82,10 @@ class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
               child: BlocBuilder<WalletBloc, WalletState>(
                 builder: (context, state) {
                   if (state is WalletLoaded) {
-                    _wallet = walletCommon.getWalletInOriginalByAddress(state.wallets, _wallet?.address);
+                    WalletSchema? schema = walletCommon.getWalletInOriginalByAddress(state.wallets, _wallet.address);
+                    if (schema != null) {
+                      _wallet = schema;
+                    }
                   }
                   return Column(
                     children: <Widget>[
@@ -93,9 +95,8 @@ class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
                           selectTitle: _localizations.select_asset_to_receive,
                           schema: _wallet,
                           onTapWave: false,
-                          onSelected: (picked) {
+                          onSelected: (WalletSchema picked) {
                             logger.d("wallet picked - $picked");
-                            if (picked == null) return;
                             setState(() {
                               _wallet = picked;
                             });
@@ -116,7 +117,7 @@ class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
                                 child: InkWell(
                                   borderRadius: BorderRadius.all(Radius.circular(8)),
                                   onTap: () {
-                                    copyText(_wallet?.address, context: context);
+                                    copyText(_wallet.address, context: context);
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
@@ -134,7 +135,7 @@ class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
                                         Padding(
                                           padding: EdgeInsets.symmetric(vertical: 8),
                                           child: Label(
-                                            _wallet?.address ?? "--",
+                                            _wallet.address,
                                             type: LabelType.bodyRegular,
                                             textAlign: TextAlign.start,
                                             maxLines: 10,
@@ -167,7 +168,7 @@ class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
                             Container(
                               padding: const EdgeInsets.only(top: 24),
                               child: QrImage(
-                                data: _wallet?.address,
+                                data: _wallet.address,
                                 version: QrVersions.auto,
                                 size: MediaQuery.of(context).size.width * 0.57,
                               ),

@@ -8,12 +8,11 @@ Future<double> getTotalSizeOfCacheFile(final FileSystemEntity file) async {
   if (file is Directory) {
     final List<FileSystemEntity> children = file.listSync();
     double total = 0;
-    if (children != null)
-      for (final FileSystemEntity child in children) {
-        if (RegExp(r'[0-9a-f]{64}(/[^/]+)?$').hasMatch(child.path)) {
-          total += await getTotalSizeOfCacheFile(child);
-        }
+    for (final FileSystemEntity child in children) {
+      if (RegExp(r'[0-9a-f]{64}(/[^/]+)?$').hasMatch(child.path)) {
+        total += await getTotalSizeOfCacheFile(child);
       }
+    }
     return total;
   }
   return 0;
@@ -27,12 +26,11 @@ Future<double> getTotalSizeOfDbFile(final FileSystemEntity file) async {
   if (file is Directory) {
     final List<FileSystemEntity> children = file.listSync();
     double total = 0;
-    if (children != null)
-      for (final FileSystemEntity child in children) {
-        if (RegExp(r'.*\.db$').hasMatch(child.path)) {
-          total += await getTotalSizeOfCacheFile(child);
-        }
+    for (final FileSystemEntity child in children) {
+      if (RegExp(r'.*\.db$').hasMatch(child.path)) {
+        total += await getTotalSizeOfCacheFile(child);
       }
+    }
     return total;
   }
   return 0;
@@ -44,12 +42,11 @@ Future<void> clearCacheFile(final FileSystemEntity file) async {
   }
   if (file is Directory) {
     final List<FileSystemEntity> children = file.listSync();
-    if (children != null)
-      for (final FileSystemEntity child in children) {
-        if (RegExp(r'[0-9a-f]{64}(/[^/]+)?$').hasMatch(child.path)) {
-          await clearCacheFile(child);
-        }
+    for (final FileSystemEntity child in children) {
+      if (RegExp(r'[0-9a-f]{64}(/[^/]+)?$').hasMatch(child.path)) {
+        await clearCacheFile(child);
       }
+    }
   }
 }
 
@@ -60,11 +57,10 @@ Future<void> clearDbFile(final FileSystemEntity file) async {
 
   if (file is Directory) {
     final List<FileSystemEntity> children = file.listSync();
-    if (children != null)
-      for (final FileSystemEntity child in children) {
-        if (RegExp(r'.*\.db$').hasMatch(child.path)) {
-          await clearDbFile(child);
-        }
+    for (final FileSystemEntity child in children) {
+      if (RegExp(r'.*\.db$').hasMatch(child.path)) {
+        await clearDbFile(child);
       }
+    }
   }
 }

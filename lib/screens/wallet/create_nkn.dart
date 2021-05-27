@@ -31,7 +31,7 @@ class WalletCreateNKNScreen extends StatefulWidget {
 class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
-  WalletBloc _walletBloc;
+  late WalletBloc _walletBloc;
 
   bool _formValid = false;
   TextEditingController _nameController = TextEditingController();
@@ -51,15 +51,19 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
       (_formKey.currentState as FormState).save();
       Loading.show();
 
-      String name = _nameController?.text;
-      String password = _passwordController?.text;
+      String name = _nameController.text;
+      String password = _passwordController.text;
       logger.d("name:$name, password:$password");
 
-      Wallet result = await Wallet.create(null, config: WalletConfig(password: password));
-      WalletSchema wallet = WalletSchema(name: name, address: result?.address, type: WalletType.nkn);
+      Wallet? result = await Wallet.create(null, config: WalletConfig(password: password));
+      if (result == null || result.address == null || result.keystore == null) {
+        Loading.dismiss();
+        return;
+      }
+      WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);
       logger.d("wallet create - ${wallet.toString()}");
 
-      _walletBloc.add(AddWallet(wallet, result?.keystore, password: password));
+      _walletBloc.add(AddWallet(wallet, result.keystore, password: password));
 
       Loading.dismiss();
       AppScreen.go(context);

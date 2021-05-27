@@ -11,8 +11,8 @@ class LoadWallet extends WalletEvent {}
 class AddWallet extends WalletEvent {
   final WalletSchema wallet;
   final String keystore;
-  final String password;
-  final String seed;
+  final String? password;
+  final String? seed;
 
   AddWallet(this.wallet, this.keystore, {this.password, this.seed});
 }

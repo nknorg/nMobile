@@ -2,28 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/theme/popup_menu.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/format.dart';
-import 'package:nmobile/utils/utils.dart';
 
 import '../markdown.dart';
 
 enum BubbleStyle { SendSuccess, SendFailed, Received }
 
 class ChatBubble extends StatefulWidget {
-  BubbleStyle style;
   MessageSchema message;
   ContactSchema contact;
-  ValueChanged<String> onChanged;
-  ValueChanged<String> resendMessage;
+  BubbleStyle? style;
+  ValueChanged<String>? onChanged;
+  ValueChanged<String>? resendMessage;
 
   ChatBubble({
-    this.message,
-    this.contact,
+    required this.message,
+    required this.contact,
     this.style,
     this.onChanged,
     this.resendMessage,
@@ -43,32 +40,32 @@ class ChatBubble extends StatefulWidget {
 
 class _ChatBubbleState extends State<ChatBubble> {
   GlobalKey popupMenuKey = GlobalKey();
-  MessageSchema _message;
-  ContactSchema _contact;
+  late MessageSchema _message;
+  late ContactSchema _contact;
 
   // TODO
-  _textPopupMenuShow() {
-    PopupMenu popupMenu = PopupMenu(
-      context: context,
-      maxColumn: 4,
-      items: [
-        MenuItem(
-          userInfo: 0,
-          title: S.of(context).copy,
-          textStyle: TextStyle(color: application.theme.fontLightColor, fontSize: 12),
-        ),
-      ],
-      onClickMenu: (MenuItemProvider item) {
-        var index = (item as MenuItem).userInfo;
-        switch (index) {
-          case 0:
-            copyText(_message.content, context: context);
-            break;
-        }
-      },
-    );
-    popupMenu.show(widgetKey: popupMenuKey);
-  }
+  // _textPopupMenuShow() {
+  //   PopupMenu popupMenu = PopupMenu(
+  //     context: context,
+  //     maxColumn: 4,
+  //     items: [
+  //       MenuItem(
+  //         userInfo: 0,
+  //         title: S.of(context).copy,
+  //         textStyle: TextStyle(color: application.theme.fontLightColor, fontSize: 12),
+  //       ),
+  //     ],
+  //     onClickMenu: (MenuItemProvider item) {
+  //       var index = (item as MenuItem).userInfo;
+  //       switch (index) {
+  //         case 0:
+  //           copyText(_message.content, context: context);
+  //           break;
+  //       }
+  //     },
+  //   );
+  //   popupMenu.show(widgetKey: popupMenuKey);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +130,7 @@ class _ChatBubbleState extends State<ChatBubble> {
             child: Container(
               margin: const EdgeInsets.only(right: 8),
               child: ContactAvatar(
-                key: ValueKey(_contact?.getDisplayAvatarPath ?? ''),
+                key: ValueKey(_contact.getDisplayAvatarPath ?? ''),
                 contact: _contact,
               ),
             ),

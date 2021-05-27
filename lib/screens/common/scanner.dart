@@ -12,7 +12,7 @@ const back_camera = "BACK CAMERA";
 class ScannerScreen extends StatefulWidget {
   static const String routeName = '/scanner';
 
-  ScannerScreen({Key key}) : super(key: key);
+  ScannerScreen({Key? key}) : super(key: key);
 
   @override
   ScannerScreenState createState() => ScannerScreenState();
@@ -22,7 +22,7 @@ class ScannerScreenState extends State<ScannerScreen> {
   var _data;
   var flashState = flash_on;
   var cameraState = front_camera;
-  QRViewController controller;
+  QRViewController? controller;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
 
   @override
@@ -43,7 +43,7 @@ class ScannerScreenState extends State<ScannerScreen> {
 
     controller.scannedDataStream.listen((Barcode scanData) {
       Navigator.of(context).pop(scanData.code);
-      controller?.dispose();
+      controller.dispose();
     });
   }
 
@@ -99,7 +99,7 @@ class ScannerScreenState extends State<ScannerScreen> {
                   color: application.theme.primaryColor,
                 ),
                 onPressed: () {
-                  controller.toggleFlash();
+                  controller?.toggleFlash();
                   if (_isFlashOn(flashState)) {
                     setState(() {
                       flashState = flash_off;

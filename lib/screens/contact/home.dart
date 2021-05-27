@@ -15,7 +15,7 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/add.dart';
-import 'package:nmobile/screens/contact/detail.dart';
+import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -29,13 +29,13 @@ class ContactHomeScreen extends StatefulWidget {
   static Future go(BuildContext context, {bool isSelect = false}) {
     logger.d("contact home - isSelect:$isSelect");
     return Navigator.pushNamed(context, routeName, arguments: {
-      argIsSelect: isSelect ?? false,
+      argIsSelect: isSelect,
     });
   }
 
-  final Map<String, dynamic> arguments;
+  final Map<String, dynamic>? arguments;
 
-  ContactHomeScreen({Key key, this.arguments}) : super(key: key);
+  ContactHomeScreen({Key? key, this.arguments}) : super(key: key);
 
   @override
   _ContactHomeScreenState createState() => _ContactHomeScreenState();
@@ -45,9 +45,9 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
   bool _isSelect = false;
 
   bool _pageLoaded = false;
-  StreamSubscription _addContactSubscription;
-  StreamSubscription _deleteContactSubscription;
-  StreamSubscription _updateContactSubscription;
+  late StreamSubscription _addContactSubscription;
+  late StreamSubscription _deleteContactSubscription;
+  late StreamSubscription _updateContactSubscription;
 
   TextEditingController _searchController = TextEditingController();
 
@@ -62,43 +62,42 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
   @override
   void initState() {
     super.initState();
-    this._isSelect = widget.arguments != null ? (widget.arguments[ContactHomeScreen.argIsSelect] ?? false) : false;
+    this._isSelect = widget.arguments![ContactHomeScreen.argIsSelect] ?? false;
 
     // listen
     _addContactSubscription = contactCommon.addStream.listen((ContactSchema scheme) {
-      if (scheme == null || scheme.type == null) return;
       if (scheme.type == ContactType.friend) {
-        _allFriends?.insert(0, scheme);
+        _allFriends.insert(0, scheme);
       } else if (scheme.type == ContactType.friend) {
-        _allStrangers?.insert(0, scheme);
+        _allStrangers.insert(0, scheme);
       }
       _searchAction(_searchController.text);
     });
     _deleteContactSubscription = contactCommon.deleteStream.listen((int contactId) {
-      _allFriends = _allFriends?.where((element) => element?.id != contactId)?.toList();
+      _allFriends = _allFriends.where((element) => element.id != contactId).toList();
       _searchAction(_searchController.text);
     });
     _updateContactSubscription = contactCommon.updateStream.listen((List<ContactSchema> list) {
-      if (list == null || list.isEmpty) return;
+      if (list.isEmpty) return;
       if (list.length == 1) {
         int friendIndex = -1;
         _allFriends.asMap().forEach((key, value) {
-          if (value != null && value?.id == list[0]?.id) {
+          if (value.id == list[0].id) {
             friendIndex = key;
           }
         });
-        if (friendIndex >= 0 && friendIndex < (_allFriends?.length ?? 0)) {
+        if (friendIndex >= 0 && friendIndex < (_allFriends.length)) {
           _allFriends[friendIndex] = list[0];
           _searchAction(_searchController.text);
           return;
         }
         int strangerIndex = -1;
         _allStrangers.asMap().forEach((key, value) {
-          if (value != null && value?.id == list[0]?.id) {
+          if (value.id == list[0].id) {
             strangerIndex = key;
           }
         });
-        if (friendIndex >= 0 && strangerIndex < (_allStrangers?.length ?? 0)) {
+        if (friendIndex >= 0 && strangerIndex < (_allStrangers.length)) {
           _allStrangers[strangerIndex] = list[0];
           _searchAction(_searchController.text);
           return;
@@ -129,9 +128,9 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
     setState(() {
       _pageLoaded = true;
       // total
-      _allFriends = friends ?? [];
-      _allStrangers = strangers ?? [];
-      _allTopics = topics ?? [];
+      _allFriends = friends;
+      _allStrangers = strangers;
+      _allTopics = topics;
       // search
       _searchFriends = _allFriends;
       _searchStrangers = _allStrangers;
@@ -141,7 +140,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
     _searchAction(_searchController.text);
   }
 
-  _searchAction(String val) {
+  _searchAction(String? val) {
     if (val == null || val.isEmpty) {
       setState(() {
         _searchFriends = _allFriends;
@@ -150,8 +149,8 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
       });
     } else {
       setState(() {
-        _searchStrangers = _allStrangers.where((ContactSchema e) => e.getDisplayName?.toLowerCase()?.contains(val.toLowerCase())).toList();
-        _searchFriends = _allFriends.where((ContactSchema e) => e.getDisplayName?.toLowerCase()?.contains(val.toLowerCase())).toList();
+        _searchStrangers = _allStrangers.where((ContactSchema e) => e.getDisplayName.toLowerCase().contains(val.toLowerCase())).toList();
+        _searchFriends = _allFriends.where((ContactSchema e) => e.getDisplayName.toLowerCase().contains(val.toLowerCase())).toList();
         // _searchTopics = _allTopics.where((Topic e) => e.topic.contains(val)).toList(); // TODO:GG topic
       });
     }
@@ -161,7 +160,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
     if (this._isSelect) {
       Navigator.pop(context, item);
     } else {
-      ContactDetailScreen.go(context, schema: item);
+      ContactProfileScreen.go(context, schema: item);
     }
   }
 
@@ -169,25 +168,26 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
 
-    int totalFriendDataCount = _allFriends.length ?? 0;
-    int totalTopicDataCount = _allTopics.length ?? 0;
-    int totalStrangerDataCount = _allStrangers.length ?? 0;
+    int totalFriendDataCount = _allFriends.length;
+    int totalTopicDataCount = _allTopics.length;
+    int totalStrangerDataCount = _allStrangers.length;
 
     int totalDataCount = totalFriendDataCount + totalTopicDataCount + totalStrangerDataCount;
     if (totalDataCount <= 0 && _pageLoaded) {
       return ContactHomeEmptyLayout();
     }
 
-    int searchFriendDataCount = _searchFriends.length ?? 0;
+    int searchFriendDataCount = _searchFriends.length;
     int searchFriendViewCount = (searchFriendDataCount > 0 ? 1 : 0) + searchFriendDataCount;
-    int searchTopicDataCount = _searchTopics.length ?? 0;
+    int searchTopicDataCount = _searchTopics.length;
     int searchTopicViewCount = searchTopicDataCount + (searchTopicDataCount > 0 ? 1 : 0);
-    int searchStrangerDataCount = _searchStrangers.length ?? 0;
+    int searchStrangerDataCount = _searchStrangers.length;
     int searchStrangerViewCount = (searchStrangerDataCount > 0 ? 1 : 0) + searchStrangerDataCount;
 
     int listItemViewCount = searchFriendViewCount + searchTopicViewCount + (searchStrangerViewCount > 0 ? 1 : 0) + searchStrangerViewCount;
 
     return Layout(
+      headerColor: application.theme.primaryColor,
       header: Header(
         title: _localizations.contacts,
         actions: [
@@ -315,8 +315,8 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
             contentWidget: ContactItem(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               contact: item,
-              bodyTitle: item?.getDisplayName,
-              bodyDesc: item?.clientAddress,
+              bodyTitle: item.getDisplayName,
+              bodyDesc: item.clientAddress,
             ),
             agree: Button(
               text: _localizations.delete_contact,
@@ -339,7 +339,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
       },
       onDismissed: (direction) async {
         if (direction == DismissDirection.endToStart) {
-          await contactCommon.delete(item?.id);
+          await contactCommon.delete(item.id);
         }
       },
       background: Container(
@@ -370,8 +370,8 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
               _onTapContactItem(item);
             },
             bgColor: Colors.transparent,
-            bodyTitle: item?.getDisplayName ?? "",
-            bodyDesc: timeFormat(item?.updatedTime),
+            bodyTitle: item.getDisplayName,
+            bodyDesc: timeFormat(item.updatedTime),
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             tail: Padding(
               padding: const EdgeInsets.only(right: 8, left: 16),
@@ -401,8 +401,8 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
             _onTapContactItem(item);
           },
           bgColor: Colors.transparent,
-          bodyTitle: item?.clientAddress ?? "",
-          bodyDesc: timeFormat(item?.updatedTime),
+          bodyTitle: item.clientAddress,
+          bodyDesc: timeFormat(item.updatedTime),
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           tail: Padding(
             padding: const EdgeInsets.only(right: 8, left: 16),

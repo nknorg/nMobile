@@ -33,29 +33,29 @@ import 'package:nmobile/utils/path.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
-class ContactDetailScreen extends StatefulWidget {
-  static const String routeName = '/contact/detail';
+class ContactProfileScreen extends StatefulWidget {
+  static const String routeName = '/contact/profile';
   static final String argContactSchema = "contact_schema";
   static final String argContactId = "contact_id";
 
-  static Future go(BuildContext context, {ContactSchema schema, int contactId}) {
+  static Future go(BuildContext context, {ContactSchema? schema, int? contactId}) {
     logger.d("contact detail - id:$contactId - schema:$schema");
-    if (schema == null && (contactId == null || contactId == 0)) return null;
+    if (schema == null && (contactId == null || contactId == 0)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argContactSchema: schema,
       argContactId: contactId,
     });
   }
 
-  final Map<String, dynamic> arguments;
+  final Map<String, dynamic>? arguments;
 
-  ContactDetailScreen({Key key, this.arguments}) : super(key: key);
+  ContactProfileScreen({Key? key, this.arguments}) : super(key: key);
 
   @override
-  _ContactDetailScreenState createState() => _ContactDetailScreenState();
+  _ContactProfileScreenState createState() => _ContactProfileScreenState();
 }
 
-class _ContactDetailScreenState extends State<ContactDetailScreen> {
+class _ContactProfileScreenState extends State<ContactProfileScreen> {
   static List<Duration> burnValueArray = [
     Duration(seconds: 5),
     Duration(seconds: 10),
@@ -106,12 +106,12 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 
   // static const fcmGapString = '__FCMToken__:';
 
-  ContactSchema _contactSchema;
-  WalletSchema _walletDefault;
+  ContactSchema? _contactSchema;
+  WalletSchema? _walletDefault;
 
-  WalletBloc _walletBloc;
-  StreamSubscription _updateContactSubscription;
-  StreamSubscription _changeWalletSubscription;
+  late WalletBloc _walletBloc;
+  late StreamSubscription _updateContactSubscription;
+  late StreamSubscription _changeWalletSubscription;
 
   bool _initBurnOpen = false;
   int _initBurnProgress = -1;
@@ -128,9 +128,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 
     // listen
     _updateContactSubscription = contactCommon.updateStream.listen((List<ContactSchema> list) {
-      if (list == null || list.isEmpty) return;
-      List result = list.where((element) => (element != null) && (element?.id == _contactSchema?.id)).toList();
-      if (result != null && result.isNotEmpty) {
+      if (list.isEmpty) return;
+      List result = list.where((element) => element.id == _contactSchema?.id).toList();
+      if (result.isNotEmpty) {
         if (mounted) {
           setState(() {
             _contactSchema = result[0];
@@ -155,13 +155,13 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   void dispose() {
     _updateBurnIfNeed();
     super.dispose();
-    _updateContactSubscription?.cancel();
-    _changeWalletSubscription?.cancel();
+    _updateContactSubscription.cancel();
+    _changeWalletSubscription.cancel();
   }
 
-  _refreshContactSchema({ContactSchema scheme}) async {
-    ContactSchema contactSchema = widget.arguments[ContactDetailScreen.argContactSchema];
-    int contactId = widget.arguments[ContactDetailScreen.argContactId];
+  _refreshContactSchema({ContactSchema? scheme}) async {
+    ContactSchema? contactSchema = widget.arguments![ContactProfileScreen.argContactSchema];
+    int? contactId = widget.arguments![ContactProfileScreen.argContactId];
     if (scheme != null) {
       this._contactSchema = scheme;
     } else if (contactSchema != null && contactSchema.id != 0) {
@@ -172,11 +172,11 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     if (this._contactSchema == null) return;
 
     // burn
-    int burnAfterSeconds = _contactSchema?.options?.deleteAfterSeconds;
+    int? burnAfterSeconds = _contactSchema?.options?.deleteAfterSeconds;
     _burnOpen = burnAfterSeconds != null && burnAfterSeconds != 0;
     if (_burnOpen) {
       _burnProgress = burnValueArray.indexWhere((x) => x.inSeconds == burnAfterSeconds);
-      if (burnAfterSeconds > burnValueArray.last.inSeconds) {
+      if (burnAfterSeconds != null && burnAfterSeconds > burnValueArray.last.inSeconds) {
         _burnProgress = burnValueArray.length - 1;
       }
     }
@@ -185,9 +185,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     _initBurnProgress = _burnProgress;
 
     // notification
-    if (_contactSchema.isMe == false) {
-      if (_contactSchema.notificationOpen != null) {
-        _notificationOpen = _contactSchema.notificationOpen;
+    if (_contactSchema?.isMe == false) {
+      if (_contactSchema?.notificationOpen != null) {
+        _notificationOpen = _contactSchema!.notificationOpen;
       } else {
         _notificationOpen = false;
       }
@@ -195,8 +195,8 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     setState(() {});
   }
 
-  Future<WalletSchema> _refreshDefaultWallet() async {
-    WalletSchema schema = await walletCommon.getWalletDefault();
+  Future<WalletSchema?> _refreshDefaultWallet() async {
+    WalletSchema? schema = await walletCommon.getWalletDefault();
     setState(() {
       _walletDefault = schema;
     });
@@ -204,7 +204,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   }
 
   _onDefaultWalletChange() async {
-    WalletSchema _walletDefault = await _refreshDefaultWallet();
+    WalletSchema? _walletDefault = await _refreshDefaultWallet();
     if (_walletDefault == null) return;
 
     //Loading.show(); // set on func _selectDefaultWallet
@@ -231,19 +231,19 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 
   String _getClientAddress() {
     if (_contactSchema?.clientAddress != null) {
-      if (_contactSchema.clientAddress.length > 10) {
-        return _contactSchema.clientAddress.substring(0, 10) + '...';
+      if (_contactSchema!.clientAddress.length > 10) {
+        return _contactSchema!.clientAddress.substring(0, 10) + '...';
       }
-      return _contactSchema.clientAddress;
+      return _contactSchema!.clientAddress;
     }
     return '';
   }
 
   _selectDefaultWallet() async {
     S _localizations = S.of(this.context);
-    WalletSchema result = await BottomDialog.of(this.context).showWalletSelect(title: _localizations.select_another_wallet, onlyNKN: true);
-    if (result?.address == null || result?.address == _contactSchema?.nknWalletAddress) return;
-    _walletBloc.add(DefaultWallet(result?.address));
+    WalletSchema? result = await BottomDialog.of(this.context).showWalletSelect(title: _localizations.select_another_wallet, onlyNKN: true);
+    if (result == null || result.address == _contactSchema?.nknWalletAddress) return;
+    _walletBloc.add(DefaultWallet(result.address));
     Loading.show();
     // no change chat immediately because wallet default maybe failure
     // Loading.dismiss();
@@ -252,7 +252,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   _selectAvatarPicture() async {
     String remarkAvatarLocalPath = Path.getLocalContactAvatar(hexEncode(chatCommon.publicKey), "${Uuid().v4()}.jpeg");
     String remarkAvatarPath = join(Global.applicationRootDirectory.path, remarkAvatarLocalPath);
-    File picked = await MediaPicker.pick(
+    File? picked = await MediaPicker.pick(
       mediaType: MediaType.image,
       source: ImageSource.gallery,
       crop: true,
@@ -273,7 +273,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 
   _modifyNickname() async {
     S _localizations = S.of(this.context);
-    String newName = await BottomDialog.of(this.context).showInput(
+    String? newName = await BottomDialog.of(this.context).showInput(
       title: _localizations.edit_nickname,
       inputTip: _localizations.edit_nickname,
       inputHint: _localizations.input_nickname,
@@ -428,13 +428,15 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
             ),
             child: Center(
               /// avatar
-              child: ContactAvatarEditable(
-                key: ValueKey(_contactSchema?.getDisplayAvatarPath ?? ""),
-                radius: 48,
-                contact: _contactSchema,
-                placeHolder: false,
-                onSelect: _selectAvatarPicture,
-              ),
+              child: _contactSchema != null
+                  ? ContactAvatarEditable(
+                      key: ValueKey(_contactSchema?.getDisplayAvatarPath ?? ""),
+                      radius: 48,
+                      contact: _contactSchema!,
+                      placeHolder: false,
+                      onSelect: _selectAvatarPicture,
+                    )
+                  : SizedBox.shrink(),
             ),
           ),
           Stack(
@@ -496,7 +498,8 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                     TextButton(
                       style: _buttonStyle(topRadius: false, botRadius: false, topPad: 12, botPad: 12),
                       onPressed: () {
-                        ContactChatProfileScreen.go(this.context, this._contactSchema);
+                        if (this._contactSchema == null) return;
+                        ContactChatProfileScreen.go(this.context, this._contactSchema!);
                       },
                       child: Row(
                         children: <Widget>[
@@ -575,13 +578,15 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
         children: [
           /// avatar
           Center(
-            child: ContactAvatarEditable(
-              key: ValueKey(_contactSchema?.getDisplayAvatarPath ?? ""),
-              radius: 48,
-              contact: _contactSchema,
-              placeHolder: false,
-              onSelect: _selectAvatarPicture,
-            ),
+            child: _contactSchema != null
+                ? ContactAvatarEditable(
+                    key: ValueKey(_contactSchema?.getDisplayAvatarPath ?? ""),
+                    radius: 48,
+                    contact: _contactSchema!,
+                    placeHolder: false,
+                    onSelect: _selectAvatarPicture,
+                  )
+                : SizedBox.shrink(),
           ),
           SizedBox(height: 36),
 
@@ -625,7 +630,8 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
               TextButton(
                 style: _buttonStyle(topRadius: false, botRadius: true, topPad: 10, botPad: 15),
                 onPressed: () {
-                  ContactChatProfileScreen.go(this.context, this._contactSchema);
+                  if (this._contactSchema != null) return;
+                  ContactChatProfileScreen.go(this.context, this._contactSchema!);
                 },
                 child: Row(
                   children: <Widget>[

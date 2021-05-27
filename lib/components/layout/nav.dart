@@ -11,9 +11,9 @@ class Nav extends StatefulWidget {
   int currentIndex = 0;
 
   Nav({
-    this.screens,
-    this.controller,
-    this.currentIndex,
+    required this.screens,
+    required this.controller,
+    this.currentIndex = 0,
   });
 
   @override

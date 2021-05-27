@@ -11,8 +11,8 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
 import 'package:nmobile/screens/chat/session_list.dart';
-import 'package:nmobile/screens/contact/detail.dart';
 import 'package:nmobile/screens/contact/home.dart';
+import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/asset.dart';
 
 class ChatHomeScreen extends StatefulWidget {
@@ -25,7 +25,7 @@ class ChatHomeScreen extends StatefulWidget {
 class _ChatHomeScreenState extends State<ChatHomeScreen> {
   GlobalKey _floatingActionKey = GlobalKey();
 
-  ContactSchema currentUser;
+  ContactSchema? _currentUser;
 
   // NKNClientBloc _clientBloc;
   // AuthBloc _authBloc;
@@ -103,55 +103,58 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
           return ChatNoConnectLayout();
         } else {
           return Layout(
+            headerColor: application.theme.primaryColor,
             bodyColor: application.theme.backgroundLightColor,
             header: Header(
               titleChild: Container(
                 margin: EdgeInsets.only(left: 20),
-                child: ContactHeader(
-                  contact: contactCommon.currentUser,
-                  onTap: () {
-                    ContactDetailScreen.go(context, contactId: contactCommon?.currentUser?.id);
-                  },
-                  body: StreamBuilder<int>(
-                    stream: chatCommon.statusStream,
-                    initialData: chatCommon.status,
-                    builder: (context, snapshot) {
-                      Widget statusWidget = Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          Label(_localizations.connecting, type: LabelType.h4, color: application.theme.fontLightColor.withAlpha(200)),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 2, left: 4),
-                            child: SpinKitThreeBounce(
-                              color: application.theme.fontLightColor.withAlpha(200),
-                              size: 10,
-                            ),
-                          ),
-                        ],
-                      );
-                      switch (snapshot.data) {
-                        case ChatConnectStatus.disconnected:
-                          statusWidget = Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: <Widget>[
-                              Label(_localizations.disconnect, type: LabelType.h4, color: application.theme.strongColor),
-                            ],
-                          );
-                          break;
-                        case ChatConnectStatus.connected:
-                          statusWidget = Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: <Widget>[
-                              Label(_localizations.connected, type: LabelType.h4, color: application.theme.successColor),
-                            ],
-                          );
-                          break;
-                      }
+                child: contactCommon.currentUser != null
+                    ? ContactHeader(
+                        contact: contactCommon.currentUser!,
+                        onTap: () {
+                          ContactProfileScreen.go(context, contactId: contactCommon.currentUser?.id);
+                        },
+                        body: StreamBuilder<int>(
+                          stream: chatCommon.statusStream,
+                          initialData: chatCommon.status,
+                          builder: (context, snapshot) {
+                            Widget statusWidget = Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: <Widget>[
+                                Label(_localizations.connecting, type: LabelType.h4, color: application.theme.fontLightColor.withAlpha(200)),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 2, left: 4),
+                                  child: SpinKitThreeBounce(
+                                    color: application.theme.fontLightColor.withAlpha(200),
+                                    size: 10,
+                                  ),
+                                ),
+                              ],
+                            );
+                            switch (snapshot.data) {
+                              case ChatConnectStatus.disconnected:
+                                statusWidget = Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: <Widget>[
+                                    Label(_localizations.disconnect, type: LabelType.h4, color: application.theme.strongColor),
+                                  ],
+                                );
+                                break;
+                              case ChatConnectStatus.connected:
+                                statusWidget = Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: <Widget>[
+                                    Label(_localizations.connected, type: LabelType.h4, color: application.theme.successColor),
+                                  ],
+                                );
+                                break;
+                            }
 
-                      return statusWidget;
-                    },
-                  ),
-                ),
+                            return statusWidget;
+                          },
+                        ),
+                      )
+                    : SizedBox.shrink(),
               ),
               actions: [
                 Padding(

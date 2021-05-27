@@ -4,9 +4,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 class Asset {
   static SvgPicture svg(
     String path, {
-    double width,
-    double height,
-    Color color,
+    double? width,
+    double? height,
+    Color? color,
     BoxFit fit = BoxFit.contain,
     AlignmentGeometry align = Alignment.center,
     Clip clip = Clip.none,
@@ -24,9 +24,9 @@ class Asset {
 
   static SvgPicture iconSvg(
     String name, {
-    double width,
-    double height,
-    Color color,
+    double? width,
+    double? height,
+    Color? color,
     BoxFit fit = BoxFit.contain,
     AlignmentGeometry align = Alignment.center,
     Clip clip = Clip.none,
@@ -44,9 +44,9 @@ class Asset {
 
   static Image image(
     String path, {
-    double width,
-    double height,
-    Color color,
+    double? width,
+    double? height,
+    Color? color,
     double scale = 1,
     BoxFit fit = BoxFit.contain,
     AlignmentGeometry align = Alignment.center,

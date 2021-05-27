@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 
 class Layout extends StatefulWidget {
-  final Key key;
+  final Key? key;
   final Color headerColor;
-  final PreferredSizeWidget header;
-  final Color bodyColor;
+  final PreferredSizeWidget? header;
+  final Color? bodyColor;
   final Widget body;
-  final Widget floatingActionButton;
-  final FloatingActionButtonLocation floatingActionButtonLocation;
-  final BorderRadiusGeometry borderRadius;
+  final Widget? floatingActionButton;
+  final FloatingActionButtonLocation? floatingActionButtonLocation;
+  final BorderRadius? borderRadius;
 
   Layout({
     this.key,
+    required this.headerColor,
     this.header,
-    this.body,
-    this.headerColor,
     this.bodyColor,
+    required this.body,
     this.floatingActionButton,
     this.floatingActionButtonLocation,
     this.borderRadius = const BorderRadius.vertical(top: Radius.circular(32)),
@@ -31,7 +31,7 @@ class _LayoutState extends State<Layout> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: widget.key,
-      backgroundColor: widget.headerColor ?? application.theme.headBarColor1,
+      backgroundColor: widget.headerColor,
       appBar: widget.header,
       floatingActionButton: widget.floatingActionButton,
       floatingActionButtonLocation: widget.floatingActionButtonLocation,

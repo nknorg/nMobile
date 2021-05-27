@@ -23,6 +23,7 @@ class ChatConnectStatus {
 }
 
 class ContentType {
+  // TODO:GG 作用
   static const String system = 'system';
   static const String text = 'text';
   static const String textExtension = 'textExtension';
@@ -44,23 +45,23 @@ unLeadingHashIt(String str) {
   return str.replaceFirst(RegExp(r'^#*'), '');
 }
 
-String genTopicHash(String topic) {
+String? genTopicHash(String? topic) {
   if (topic == null || topic.isEmpty) {
     return null;
   }
   var t = unLeadingHashIt(topic);
-  return 'dchat' + hexEncode(sha1(t));
+  return 'dchat' + hexEncode(Uint8List.fromList(sha1(t)));
 }
 
 class ChatCommon {
   /// nkn-sdk-flutter
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
-  Client client;
+  Client? client;
 
-  String get id => client?.address;
-  Uint8List get publicKey => client?.publicKey;
+  String? get id => client?.address;
+  Uint8List? get publicKey => client?.publicKey;
 
-  int status;
+  late int status;
 
   // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
@@ -72,9 +73,9 @@ class ChatCommon {
   StreamSink<dynamic> get _onErrorSink => _onErrorController.sink;
   Stream<dynamic> get onErrorStream => _onErrorController.stream;
 
-  StreamSubscription _onErrorStreamSubscription;
-  StreamSubscription _onConnectStreamSubscription;
-  StreamSubscription _onMessageStreamSubscription;
+  StreamSubscription? _onErrorStreamSubscription;
+  StreamSubscription? _onConnectStreamSubscription;
+  StreamSubscription? _onMessageStreamSubscription;
 
   ChatCommon() {
     status = ChatConnectStatus.disconnected;
@@ -86,16 +87,18 @@ class ChatCommon {
     });
   }
 
-  Future signIn(WalletSchema scheme) async {
-    if (scheme == null || scheme.address == null) return null;
+  Future signIn(WalletSchema? scheme) async {
+    if (scheme == null) return null;
     try {
-      String pwd = await walletCommon.getWalletPassword(Global.appContext, scheme.address);
+      String? pwd = await walletCommon.getWalletPassword(Global.appContext, scheme.address);
       if (pwd == null || pwd.isEmpty) return;
       String keystore = await walletCommon.getWalletKeystoreByAddress(scheme.address);
 
-      Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd));
+      Wallet? wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd));
+      if (wallet == null || wallet.publicKey == null || wallet.seed == null) return;
+
       String pubKey = hexEncode(wallet.publicKey);
-      String password = hexEncode(sha256(wallet.seed));
+      String password = hexEncode(Uint8List.fromList(sha256(wallet.seed)));
 
       // toggle DB
       await DB.open(pubKey, password);
@@ -108,7 +111,8 @@ class ChatCommon {
     }
   }
 
-  Future connect(Wallet wallet) async {
+  Future connect(Wallet? wallet) async {
+    if (wallet == null || wallet.seed.isEmpty) return;
     if (client != null) await close();
     // client create
     ClientConfig config = ClientConfig(seedRPCServerAddr: await Global.getSeedRpcList());
@@ -116,14 +120,14 @@ class ChatCommon {
     client = await Client.create(wallet.seed, config: config);
 
     // client error
-    _onErrorStreamSubscription = client.onError?.listen((dynamic event) {
+    _onErrorStreamSubscription = client?.onError?.listen((dynamic event) {
       logger.e("onErrorStream -> event:$event");
       _onErrorSink.add(event);
     });
 
     // client connect
     Completer completer = Completer();
-    _onConnectStreamSubscription = client.onConnect?.listen((OnConnect event) {
+    _onConnectStreamSubscription = client?.onConnect?.listen((OnConnect event) {
       logger.i("onConnectStream -> event:$event");
       _statusSink.add(ChatConnectStatus.connected);
       SettingsStorage().addSeedRpcServers(event.rpcServers);
@@ -133,7 +137,7 @@ class ChatCommon {
     // TODO:GG client disconnect/reconnect listen (action statusSink.add)
 
     // client messages_receive
-    _onMessageStreamSubscription = client.onMessage?.listen((OnMessage event) async {
+    _onMessageStreamSubscription = client?.onMessage?.listen((OnMessage event) async {
       logger.i("onMessageStream -> messageId:${event.messageId} - src:${event.src} - data:${event.data} - type:${event.type} - encrypted:${event.encrypted}");
       await receiveMessage.onClientMessage(MessageSchema.fromReceive(event));
     });

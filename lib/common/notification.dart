@@ -27,8 +27,8 @@ class Notification {
     });
   }
 
-  showDChatNotification(String title, String content, {int badgeNumber}) async {
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(badgeNumber: badgeNumber);
+  showDChatNotification(String title, String content, {int? badgeNumber}) async {
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails(badgeNumber: badgeNumber ?? 0);
     var androidNotificationDetails = AndroidNotificationDetails(
       'nmobile_d_chat',
       'D-Chat',

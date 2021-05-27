@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 
 class ButtonIcon extends StatefulWidget {
-  final double width;
-  final double height;
+  final double? width;
+  final double? height;
   final Widget icon;
-  final String text;
-  final EdgeInsets padding;
-  final VoidCallback onPressed;
-  final Color fontColor;
+  final String? text;
+  final EdgeInsets? padding;
+  final VoidCallback? onPressed;
+  final Color? fontColor;
 
   ButtonIcon({
     this.width,
     this.height,
-    this.icon,
+    required this.icon,
     this.text,
     this.padding,
     this.onPressed,
@@ -39,7 +39,7 @@ class _ButtonIconState extends State<ButtonIcon> {
               : [
                   widget.icon,
                   Text(
-                    widget.text,
+                    widget.text ?? "",
                     softWrap: false,
                     style: TextStyle(fontSize: application.theme.iconTextFontSize, color: widget.fontColor),
                   )

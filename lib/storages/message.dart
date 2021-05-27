@@ -1,18 +1,13 @@
-import 'dart:io';
-
 import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
-import 'package:nmobile/schema/topic.dart';
-import 'package:nmobile/storages/contact.dart';
-import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class MessageStorage {
   static String get tableName => 'Messages';
 
-  Database get db => DB.currentDatabase;
+  Database? get db => DB.currentDatabase;
 
   MessageStorage();
 
@@ -52,42 +47,46 @@ class MessageStorage {
     await db.execute('CREATE INDEX index_messages_target_id_type ON Messages (target_id, type)');
   }
 
-  Future<bool> insertReceivedMessage(MessageSchema schema) async {
-    Map insertMessageInfo = schema.toMap();
-    int n = await db.insert(tableName, insertMessageInfo);
-    if (n > 0) {
+  Future<bool> insertReceivedMessage(MessageSchema? schema) async {
+    if (schema == null) return false;
+    Map<String, dynamic> insertMessageInfo = schema.toMap();
+    int? n = await db?.insert(tableName, insertMessageInfo);
+    if (n != null && n > 0) {
       return true;
     }
-
     return false;
   }
 
-  Future<int> queryCount(String msgId) async {
-    var query = await db.query(
+  Future<int> queryCount(String? msgId) async {
+    if (msgId == null || msgId.isEmpty) return 0;
+    List<Map<String, dynamic>>? query = await db?.query(
       tableName,
       columns: ['COUNT(id)'],
       where: 'msg_id = ?',
       whereArgs: [msgId],
     );
-    return Sqflite.firstIntValue(query);
+    return Sqflite.firstIntValue(query ?? <Map<String, dynamic>>[]) ?? 0;
   }
 
-  Future<List<Map>> queryByMsgId(String msgId) async {
-    var list = await db.query(
+  Future<List<Map<String, dynamic>>> queryByMsgId(String? msgId) async {
+    if (msgId == null || msgId.isEmpty) return [];
+    List<Map<String, dynamic>>? list = await db?.query(
       tableName,
       where: 'msg_id = ?',
       whereArgs: [msgId],
     );
-    return list;
+    return list ?? [];
   }
 
-  Future<bool> receiveSuccess(String msgId) async {
-    int result = await db.update(tableName, {'is_success': 1});
-    return result > 0;
+  Future<bool> receiveSuccess(String? msgId) async {
+    if (msgId == null || msgId.isEmpty) return false;
+    int? result = await db?.update(tableName, {'is_success': 1});
+    return result != null ? result > 0 : false;
   }
 
-  Future<int> updateDeleteTime(String msgId, DateTime deleteTime) async {
-    var count = await db.update(
+  Future<int> updateDeleteTime(String? msgId, DateTime? deleteTime) async {
+    if (msgId == null || msgId.isEmpty) return 0;
+    int? count = await db?.update(
       tableName,
       {
         'delete_time': deleteTime?.millisecondsSinceEpoch,
@@ -95,11 +94,12 @@ class MessageStorage {
       where: 'msg_id = ?',
       whereArgs: [msgId],
     );
-    return count;
+    return count ?? 0;
   }
 
-  Future<List<MessageSchema>> getAndReadTargetMessages(String targetId, {int skip = 0, int limit = 20}) async {
-    await db.update(
+  Future<List<MessageSchema>> getAndReadTargetMessages(String? targetId, {int skip = 0, int limit = 20}) async {
+    if (targetId == null || targetId.isEmpty) return [];
+    await db?.update(
       tableName,
       {
         'is_read': 1,
@@ -107,7 +107,7 @@ class MessageStorage {
       where: 'target_id = ? AND is_outbound = 0',
       whereArgs: [targetId],
     );
-    var res = await db.query(
+    List<Map<String, dynamic>>? res = await db?.query(
       tableName,
       columns: ['*'],
       orderBy: 'send_time desc',
@@ -119,22 +119,25 @@ class MessageStorage {
 
     List<MessageSchema> messages = <MessageSchema>[];
 
-    for (var i = 0; i < res.length; i++) {
-      MessageSchema messageItem = MessageSchema.fromMap(res[i]);
-      if (!messageItem.isOutbound && messageItem.options != null) {
-        int burnAfterSeconds = int.parse(messageItem.options[MessageOptions.KEY_DELETE_AFTER_SECONDS]);
-        if (messageItem.deleteTime == null && burnAfterSeconds != null) {
-          messageItem.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
-          await updateDeleteTime(messageItem.msgId, messageItem.deleteTime);
+    if (res != null && res.length > 0) {
+      for (var i = 0; i < res.length; i++) {
+        MessageSchema messageItem = MessageSchema.fromMap(res[i]);
+        if (!messageItem.isOutbound && messageItem.options != null) {
+          int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(messageItem);
+          if (messageItem.deleteTime == null && burnAfterSeconds != null) {
+            messageItem.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
+            await updateDeleteTime(messageItem.msgId, messageItem.deleteTime);
+          }
         }
+        messages.add(messageItem);
       }
-      messages.add(messageItem);
     }
     return messages;
   }
 
-  Future<int> markMessageRead(String msgId) async {
-    var count = await db.update(
+  Future<int> markMessageRead(String? msgId) async {
+    if (msgId == null || msgId.isEmpty) return 0;
+    int? count = await db?.update(
       tableName,
       {
         'is_read': 1,
@@ -142,12 +145,12 @@ class MessageStorage {
       where: 'msg_id = ?',
       whereArgs: [msgId],
     );
-    return count;
+    return count ?? 0;
   }
 
   /// ContentType is text, textExtension, media, audio counted to not read
   Future<List<SessionSchema>> getLastSession(int skip, int limit) async {
-    var res = await db.query(
+    List<Map<String, dynamic>>? res = await db?.query(
       '$tableName as m',
       columns: [
         'm.*',
@@ -173,21 +176,24 @@ class MessageStorage {
     );
 
     List<SessionSchema> list = <SessionSchema>[];
-    for (var i = 0, length = res.length; i < length; i++) {
-      var item = res[i];
-      SessionSchema model = await SessionSchema.fromMap(item);
-      if (model != null) {
-        list.add(model);
+    if (res != null && res.length > 0) {
+      for (var i = 0, length = res.length; i < length; i++) {
+        var item = res[i];
+        SessionSchema? model = await SessionSchema.fromMap(item);
+        if (model != null) {
+          list.add(model);
+        }
       }
     }
     if (list.length > 0) {
       return list;
     }
-    return null;
+    return [];
   }
 
-  Future<SessionSchema> getUpdateSession(String targetId) async {
-    var res = await db.query(
+  Future<SessionSchema?> getUpdateSession(String? targetId) async {
+    if (targetId == null || targetId.isEmpty) return null;
+    List<Map<String, dynamic>>? res = await db?.query(
       '$tableName',
       where: 'target_id = ? AND is_outbound = 0 AND is_read = 0 AND (type = ? or type = ? or type = ? or type = ? or type = ?)',
       whereArgs: [
@@ -203,11 +209,11 @@ class MessageStorage {
 
     if (res != null && res.length > 0) {
       Map info = res[0];
-      SessionSchema model = await SessionSchema.fromMap(info);
-      model.notReadCount = res.length;
+      SessionSchema? model = await SessionSchema.fromMap(info);
+      model?.notReadCount = res.length;
       return model;
     } else {
-      var countResult = await db.query(
+      List<Map<String, dynamic>>? countResult = await db?.query(
         '$tableName',
         where: 'target_id = ? AND (type = ? or type = ? or type = ? or type = ? or type = ?)',
         whereArgs: [
@@ -222,8 +228,8 @@ class MessageStorage {
       );
       if (countResult != null && countResult.length > 0) {
         Map info = countResult[0];
-        SessionSchema model = await SessionSchema.fromMap(info);
-        model.notReadCount = 0;
+        SessionSchema? model = await SessionSchema.fromMap(info);
+        model?.notReadCount = 0;
         return model;
       }
     }
@@ -231,6 +237,6 @@ class MessageStorage {
   }
 
   Future<int> deleteTargetChat(String targetId) async {
-    return await db.delete(tableName, where: 'target_id = ?', whereArgs: [targetId]);
+    return await db?.delete(tableName, where: 'target_id = ?', whereArgs: [targetId]) ?? 0;
   }
 }

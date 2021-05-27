@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 abstract class SkinTheme {
-  Brightness brightness;
-  Color primaryColor;
-  Color fontColor1;
-  Color fontColor2;
-  Color fontColor3;
-  Color fontColor4;
-  Color fontLightColor;
+  late Brightness brightness;
+  late Color primaryColor;
+  late Color fontColor1;
+  late Color fontColor2;
+  late Color fontColor3;
+  late Color fontColor4;
+  late Color fontLightColor;
 
   TextStyle get headline1;
   TextStyle get headline2;
@@ -24,26 +24,26 @@ abstract class SkinTheme {
   Color get headBarColor2 => backgroundColor4;
   Color get unselectedWidgetColor => fontColor2;
   Color get disabledColor => backgroundColor2;
-  Color dividerColor;
-  Color backgroundLightColor;
-  Color backgroundColor1;
-  Color backgroundColor2;
-  Color backgroundColor3;
-  Color backgroundColor4;
-  Color backgroundColor5;
-  Color backgroundColor6;
-  Color strongColor;
-  Color lineColor;
-  Color logoBackground;
-  Color nknLogoColor;
-  Color ethLogoBackground;
-  Color ethLogoColor;
-  Color successColor;
-  Color notificationBackgroundColor;
-  Color badgeColor;
+  late Color dividerColor;
+  late Color backgroundLightColor;
+  late Color backgroundColor1;
+  late Color backgroundColor2;
+  late Color backgroundColor3;
+  late Color backgroundColor4;
+  late Color backgroundColor5;
+  late Color backgroundColor6;
+  late Color strongColor;
+  late Color lineColor;
+  late Color logoBackground;
+  late Color nknLogoColor;
+  late Color ethLogoBackground;
+  late Color ethLogoColor;
+  late Color successColor;
+  late Color notificationBackgroundColor;
+  late Color badgeColor;
 
-  double iconTextFontSize;
-  double buttonFontSize;
+  late double iconTextFontSize;
+  late double buttonFontSize;
 
   double headerHeight = 114;
   double bottomNavHeight = 70;
@@ -51,6 +51,6 @@ abstract class SkinTheme {
   Color riseColor = Color(0xFF00CC96);
   Color fallColor = Color(0xFFFC5D68);
 
-  List<Color> randomBackgroundColorList;
-  List<Color> randomColorList;
+  late List<Color> randomBackgroundColorList;
+  late List<Color> randomColorList;
 }

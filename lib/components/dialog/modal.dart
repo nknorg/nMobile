@@ -12,32 +12,30 @@ class ModalDialog extends StatefulWidget {
 
   BuildContext context;
 
-  ModalDialog();
-
   ModalDialog.of(this.context);
 
-  String title;
-  Widget titleWidget;
-  String content;
-  Widget contentWidget;
-  bool hasCloseIcon;
-  bool hasCloseButton;
-  double height;
-  List<Widget> actions;
+  String? title;
+  Widget? titleWidget;
+  String? content;
+  Widget? contentWidget;
+  bool hasCloseIcon = false;
+  bool hasCloseButton = true;
+  double? height;
+  List<Widget>? actions;
 
   close() {
     Navigator.of(context).pop();
   }
 
   show({
-    String title,
-    Widget titleWidget,
-    String content,
-    Widget contentWidget,
+    String? title,
+    Widget? titleWidget,
+    String? content,
+    Widget? contentWidget,
     bool hasCloseIcon = false,
     bool hasCloseButton = true,
-    double height,
-    List<Widget> actions,
+    double? height,
+    List<Widget>? actions,
   }) {
     this.title = title;
     this.titleWidget = titleWidget;
@@ -59,15 +57,15 @@ class ModalDialog extends StatefulWidget {
   }
 
   confirm({
-    String title,
-    Widget titleWidget,
-    String content,
-    Widget contentWidget,
+    String? title,
+    Widget? titleWidget,
+    String? content,
+    Widget? contentWidget,
     bool hasCloseIcon = true,
     bool hasCloseButton = false,
-    double height,
-    Widget agree,
-    Widget reject,
+    double? height,
+    Widget? agree,
+    Widget? reject,
   }) {
     this.title = title;
     this.titleWidget = titleWidget;
@@ -76,7 +74,9 @@ class ModalDialog extends StatefulWidget {
     this.hasCloseIcon = hasCloseIcon;
     this.hasCloseButton = hasCloseButton;
     this.height = height;
-    this.actions = <Widget>[agree, reject];
+    this.actions = <Widget>[];
+    if (agree != null) this.actions?.add(agree);
+    if (reject != null) this.actions?.add(reject);
     return showDialog(
       context: context,
       builder: (ctx) {
@@ -93,7 +93,7 @@ class _ModalDialogState extends State<ModalDialog> {
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
-    List<Widget> actions = List.of(widget.actions);
+    List<Widget> actions = List.of(widget.actions ?? []);
 
     if (widget.hasCloseButton) {
       actions.add(Button(

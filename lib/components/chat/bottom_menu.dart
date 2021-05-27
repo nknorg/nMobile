@@ -9,9 +9,9 @@ import 'package:nmobile/utils/asset.dart';
 class ChatBottomMenu extends StatelessWidget {
   bool show;
 
-  ChatBottomMenu({this.show});
+  ChatBottomMenu({this.show = false});
 
-  _getImageFile({@required ImageSource source}) async {
+  _getImageFile({required ImageSource source}) async {
     try {
       // File image = await getCameraFile(chat.pubkey, source: source);
       // if (image != null) {

@@ -6,18 +6,18 @@ import 'avatar.dart';
 
 class TopicItem extends StatefulWidget {
   final TopicSchema topic;
-  final Widget body;
-  final String bodyTitle;
-  final String bodyDesc;
-  final GestureTapCallback onTap;
+  final Widget? body;
+  final String? bodyTitle;
+  final String? bodyDesc;
+  final GestureTapCallback? onTap;
   final bool onTapWave;
-  final Color bgColor;
-  final BorderRadius radius;
-  final EdgeInsetsGeometry padding;
-  final Widget tail;
+  final Color? bgColor;
+  final BorderRadius? radius;
+  final EdgeInsetsGeometry? padding;
+  final Widget? tail;
 
   TopicItem({
-    this.topic,
+    required this.topic,
     this.body,
     this.bodyTitle,
     this.bodyDesc,
@@ -76,7 +76,7 @@ class _TopicItemState extends State<TopicItem> {
           Expanded(
             flex: 1,
             child: widget.body != null
-                ? widget.body
+                ? widget.body!
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -96,7 +96,7 @@ class _TopicItemState extends State<TopicItem> {
                     ],
                   ),
           ),
-          widget.tail != null ? widget.tail : SizedBox(),
+          widget.tail != null ? widget.tail! : SizedBox(),
         ],
       ),
     );

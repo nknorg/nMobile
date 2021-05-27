@@ -16,27 +16,26 @@ class ContactChatProfileScreen extends StatefulWidget {
 
   static Future go(BuildContext context, ContactSchema schema) {
     logger.d("contact chat profile - schema:$schema");
-    if (schema == null) return null;
     return Navigator.pushNamed(context, routeName, arguments: {
       argContactSchema: schema,
     });
   }
 
-  final Map<String, dynamic> arguments;
+  final Map<String, dynamic>? arguments;
 
-  ContactChatProfileScreen({Key key, this.arguments}) : super(key: key);
+  ContactChatProfileScreen({Key? key, this.arguments}) : super(key: key);
 
   @override
   ContactChatProfileScreenState createState() => new ContactChatProfileScreenState();
 }
 
 class ContactChatProfileScreenState extends State<ContactChatProfileScreen> {
-  ContactSchema _contactSchema;
+  late ContactSchema _contactSchema;
 
   @override
   void initState() {
     super.initState();
-    _contactSchema = widget.arguments[ContactChatProfileScreen.argContactSchema];
+    _contactSchema = widget.arguments![ContactChatProfileScreen.argContactSchema];
   }
 
   @override
@@ -62,7 +61,7 @@ class ContactChatProfileScreenState extends State<ContactChatProfileScreen> {
                 ),
               ),
               onPressed: () {
-                copyText(this._contactSchema?.clientAddress, context: context);
+                copyText(this._contactSchema.clientAddress, context: context);
               },
               child: Column(
                 children: <Widget>[
@@ -84,7 +83,7 @@ class ContactChatProfileScreenState extends State<ContactChatProfileScreen> {
                   ),
                   SizedBox(height: 10),
                   Label(
-                    this._contactSchema?.clientAddress ?? "--",
+                    this._contactSchema.clientAddress,
                     type: LabelType.bodyRegular,
                     color: application.theme.fontColor2,
                     softWrap: true,
@@ -102,15 +101,15 @@ class ContactChatProfileScreenState extends State<ContactChatProfileScreen> {
               child: Column(
                 children: <Widget>[
                   ContactAvatar(
-                    key: ValueKey(this._contactSchema?.getDisplayAvatarPath ?? ''),
+                    key: ValueKey(this._contactSchema.getDisplayAvatarPath ?? ''),
                     contact: this._contactSchema,
                     radius: 24,
                   ),
                   SizedBox(height: 20),
-                  this._contactSchema?.clientAddress != null
+                  this._contactSchema.clientAddress.isNotEmpty
                       ? Center(
                           child: QrImage(
-                            data: this._contactSchema?.clientAddress ?? "--",
+                            data: this._contactSchema.clientAddress,
                             backgroundColor: application.theme.backgroundLightColor,
                             foregroundColor: application.theme.primaryColor,
                             version: QrVersions.auto,

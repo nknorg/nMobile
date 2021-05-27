@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:photo_view/photo_view.dart';
 
 class PhotoScreen extends StatefulWidget {
@@ -11,17 +10,17 @@ class PhotoScreen extends StatefulWidget {
   static final String argFilePath = "file_path";
   static final String argNetUrl = "net_url";
 
-  static Future go(BuildContext context, {String filePath, String netUrl}) {
-    if ((filePath == null || filePath.isEmpty) && (netUrl == null || netUrl.isEmpty)) return null;
+  static Future go(BuildContext context, {String? filePath, String? netUrl}) {
+    if ((filePath == null || filePath.isEmpty) && (netUrl == null || netUrl.isEmpty)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argFilePath: filePath,
       argNetUrl: netUrl,
     });
   }
 
-  final Map<String, dynamic> arguments;
+  final Map<String, dynamic>? arguments;
 
-  PhotoScreen({Key key, this.arguments}) : super(key: key);
+  PhotoScreen({Key? key, this.arguments}) : super(key: key);
 
   @override
   _PhotoScreenState createState() => _PhotoScreenState();
@@ -31,14 +30,14 @@ class _PhotoScreenState extends State<PhotoScreen> with SingleTickerProviderStat
   static const int TYPE_FILE = 1;
   static const int TYPE_NET = 2;
 
-  int _contentType;
-  String _content;
+  int? _contentType;
+  String? _content;
 
   @override
   void initState() {
     super.initState();
-    String filePath = widget.arguments[PhotoScreen.argFilePath];
-    String netUrl = widget.arguments[PhotoScreen.argNetUrl];
+    String? filePath = widget.arguments![PhotoScreen.argFilePath];
+    String? netUrl = widget.arguments![PhotoScreen.argNetUrl];
     if (filePath != null && filePath.isNotEmpty) {
       _contentType = TYPE_FILE;
       _content = filePath;
@@ -50,7 +49,12 @@ class _PhotoScreenState extends State<PhotoScreen> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    ImageProvider? provider;
+    if (this._contentType == TYPE_FILE) {
+      provider = FileImage(File(this._content ?? ""));
+    } else if (this._contentType == TYPE_NET) {
+      provider = NetworkImage(this._content ?? "");
+    }
 
     return Layout(
       headerColor: Colors.black,
@@ -104,11 +108,7 @@ class _PhotoScreenState extends State<PhotoScreen> with SingleTickerProviderStat
             Navigator.pop(context);
           },
           child: PhotoView(
-            imageProvider: this._contentType == TYPE_FILE
-                ? FileImage(File(this._content))
-                : this._contentType == TYPE_NET
-                    ? Image.network(this._content)
-                    : null,
+            imageProvider: provider,
           )),
     );
   }

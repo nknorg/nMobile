@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 
 class Tabs extends StatefulWidget {
-  final List<String> titles;
-  TabController controller;
+  List<String> titles;
+  TabController? controller;
 
-  Tabs({this.titles, this.controller});
+  Tabs({
+    required this.titles,
+    this.controller,
+  });
 
   @override
   _TabsState createState() => _TabsState();

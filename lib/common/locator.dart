@@ -12,29 +12,19 @@ import 'notification.dart';
 
 GetIt locator = GetIt.instance;
 
-Application application;
-TaskService taskService;
-Notification notification;
-Authorization authorization;
+late Application application;
+late TaskService taskService;
+late Notification notification;
+late Authorization authorization;
 
-ChatCommon chatCommon;
-ReceiveMessage receiveMessage;
-SendMessage sendMessage;
-ContactCommon contactCommon;
-WalletCommon walletCommon;
-
+late ChatCommon chatCommon;
+late ReceiveMessage receiveMessage;
+late SendMessage sendMessage;
+late ContactCommon contactCommon;
+late WalletCommon walletCommon;
 
 void setupLocator() {
-  locator
-    ..registerSingleton(Application())
-    ..registerSingleton(TaskService())
-    ..registerSingleton(Notification())
-    ..registerSingleton(Authorization())
-    ..registerSingleton(ChatCommon())
-    ..registerSingleton(ReceiveMessage())
-    ..registerSingleton(SendMessage())
-    ..registerSingleton(ContactCommon())
-    ..registerSingleton(WalletCommon());
+  locator..registerSingleton(Application())..registerSingleton(TaskService())..registerSingleton(Notification())..registerSingleton(Authorization())..registerSingleton(ChatCommon())..registerSingleton(ReceiveMessage())..registerSingleton(SendMessage())..registerSingleton(ContactCommon())..registerSingleton(WalletCommon());
 
   application = locator.get<Application>();
   taskService = locator.get<TaskService>();

@@ -21,11 +21,11 @@ class ChatNoConnectLayout extends StatefulWidget {
 }
 
 class _ChatNoConnectLayoutState extends State<ChatNoConnectLayout> {
-  WalletBloc _walletBloc;
-  StreamSubscription _walletAddSubscription;
+  late WalletBloc _walletBloc;
+  late StreamSubscription _walletAddSubscription;
 
   bool loaded = false;
-  WalletSchema _defaultWallet;
+  WalletSchema? _defaultWallet;
 
   @override
   void initState() {
@@ -33,7 +33,7 @@ class _ChatNoConnectLayoutState extends State<ChatNoConnectLayout> {
 
     // listen
     _walletBloc = BlocProvider.of<WalletBloc>(this.context);
-    _walletAddSubscription = _walletBloc.stream?.listen((event) {
+    _walletAddSubscription = _walletBloc.stream.listen((event) {
       _refreshWalletDefault();
     });
 
@@ -44,7 +44,7 @@ class _ChatNoConnectLayoutState extends State<ChatNoConnectLayout> {
   @override
   void dispose() {
     super.dispose();
-    _walletAddSubscription?.cancel();
+    _walletAddSubscription.cancel();
   }
 
   _refreshWalletDefault() {
@@ -65,6 +65,7 @@ class _ChatNoConnectLayoutState extends State<ChatNoConnectLayout> {
     double headImageHeight = headImageWidth / 3 * 2;
 
     return Layout(
+      headerColor: application.theme.primaryColor,
       header: Header(
         titleChild: Padding(
           padding: const EdgeInsets.only(left: 20),
@@ -117,13 +118,11 @@ class _ChatNoConnectLayoutState extends State<ChatNoConnectLayout> {
                       child: WalletDropdown(
                         onTapWave: false,
                         onSelected: (v) {
-                          if (v != null) {
-                            setState(() {
-                              _defaultWallet = v;
-                            });
-                          }
+                          setState(() {
+                            _defaultWallet = v;
+                          });
                         },
-                        schema: this._defaultWallet,
+                        schema: this._defaultWallet!,
                       ),
                     ),
                   ),

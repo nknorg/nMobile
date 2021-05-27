@@ -12,7 +12,7 @@ import 'package:nmobile/utils/format.dart';
 
 Widget _unReadWidget(SessionSchema item) {
   String countStr = item.notReadCount.toString();
-  if (item.notReadCount > 999) {
+  if ((item.notReadCount ?? 0) > 999) {
     countStr = '999+';
   }
   return Container(
@@ -36,7 +36,7 @@ Widget _unReadWidget(SessionSchema item) {
 Widget createSessionWidget(BuildContext context, SessionSchema model) {
   S _localizations = S.of(context);
   Widget contentWidget;
-  String draft; // TODO: draft
+  String? draft; // TODO: draft
   if (draft != null && draft.length > 0) {
     contentWidget = Row(
       children: <Widget>[
@@ -88,7 +88,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
     );
   } else {
     contentWidget = Label(
-      model.content,
+      model.content ?? "",
       type: LabelType.bodyRegular,
       overflow: TextOverflow.ellipsis,
       maxLines: 1,
@@ -97,16 +97,16 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
   if (model.topic != null) {
     List<Widget> topicNameWidget = [
       Label(
-        model.topic.topicName,
+        model.topic!.topicName ?? "",
         type: LabelType.h3,
         fontWeight: FontWeight.bold,
       ),
     ];
-    
-    if(model.topic.topicType == TopicType.privateTopic) {
+
+    if (model.topic!.topicType == TopicType.privateTopic) {
       topicNameWidget.insert(0, Asset.iconSvg('lock', width: 18, color: application.theme.primaryColor));
     }
-    
+
     return Container(
       color: model.isTop ? application.theme.backgroundColor1:Colors.transparent,
       padding: const EdgeInsets.only(left: 12, right: 12),
@@ -117,7 +117,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
           Expanded(
             flex: 1,
             child: TopicItem(
-              topic: model.topic,
+              topic: model.topic!,
               body: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -149,11 +149,11 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
                           type: LabelType.bodyRegular,
                         ),
                       ),
-                      model.notReadCount > 0
+                      (model.notReadCount ?? 0) > 0
                           ? Padding(
-                        padding: const EdgeInsets.only(right: 0),
-                        child: _unReadWidget(SessionSchema(notReadCount: model.notReadCount)),
-                      )
+                              padding: const EdgeInsets.only(right: 0),
+                              child: _unReadWidget(SessionSchema(notReadCount: model.notReadCount)),
+                            )
                           : SizedBox.shrink(),
                     ],
                   ),
@@ -174,24 +174,26 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
         children: [
           Expanded(
             flex: 1,
-            child: ContactItem(
-              contact: model.contact,
-              body: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Label(
-                    model.contact?.getDisplayName ?? '',
-                    type: LabelType.h3,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: contentWidget,
-                  ),
-                ],
-              ),
-            ),
+            child: model.contact != null
+                ? ContactItem(
+                    contact: model.contact!,
+                    body: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Label(
+                          model.contact?.getDisplayName ?? '',
+                          type: LabelType.h3,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: contentWidget,
+                        ),
+                      ],
+                    ),
+                  )
+                : SizedBox.shrink(),
           ),
           Expanded(
             flex: 0,
@@ -209,7 +211,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
                           type: LabelType.bodyRegular,
                         ),
                       ),
-                      model.notReadCount > 0
+                      (model.notReadCount ?? 0) > 0
                           ? Padding(
                               padding: const EdgeInsets.only(right: 0),
                               child: _unReadWidget(SessionSchema(notReadCount: model.notReadCount)),

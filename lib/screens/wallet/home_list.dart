@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nkn_sdk_flutter/wallet.dart' as WalletSDK;
+import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -33,8 +33,8 @@ class WalletHomeListLayout extends StatefulWidget {
 }
 
 class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
-  WalletBloc _walletBloc;
-  StreamSubscription _walletSubscription;
+  late WalletBloc _walletBloc;
+  late StreamSubscription _walletSubscription;
 
   bool _allBackedUp = false;
 
@@ -61,7 +61,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
     walletCommon.isWalletsBackup().then((value) {
       if (mounted) {
         setState(() {
-          _allBackedUp = value ?? false;
+          _allBackedUp = value;
         });
       }
     });
@@ -70,7 +70,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
   @override
   void dispose() {
     super.dispose();
-    _walletSubscription?.cancel();
+    _walletSubscription.cancel();
   }
 
   @override
@@ -80,6 +80,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
     return Layout(
       // floatingActionButton: FloatingActionButton(onPressed: () => LocalStorage().debugInfo()), // test
       // floatingActionButtonLocation: FloatingActionButtonLocation.centerTop, // test
+      headerColor: application.theme.primaryColor,
       header: Header(
         titleChild: Padding(
           padding: EdgeInsets.only(left: 20),
@@ -118,7 +119,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
             icon: Asset.iconSvg('more', width: 24),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             onSelected: (int result) async {
-              final walletType = await BottomDialog.of(context).showWalletTypeSelect(
+              String? walletType = await BottomDialog.of(context).showWalletTypeSelect(
                 title: _localizations.select_wallet_type,
                 desc: _localizations.select_wallet_type_desc,
               );
@@ -134,7 +135,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
                 case 1:
                   // import
                   if (walletType == WalletType.nkn || walletType == WalletType.eth) {
-                    WalletImportScreen.go(context, walletType);
+                    WalletImportScreen.go(context, walletType!);
                   }
                   break;
               }
@@ -163,7 +164,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
           if (state is WalletLoaded) {
             return ListView.builder(
               padding: EdgeInsets.only(top: 22, bottom: 86),
-              itemCount: state.wallets?.length ?? 0,
+              itemCount: state.wallets.length,
               itemBuilder: (context, index) {
                 WalletSchema wallet = state.wallets[index];
                 // if (index == 1) wallet.type = WalletType.eth; // test
@@ -202,7 +203,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
           width: double.infinity,
           onPressed: () async {
             await dialog.close();
-            WalletSchema result = await BottomDialog.of(context).showWalletSelect(title: _localizations.select_asset_to_backup);
+            WalletSchema? result = await BottomDialog.of(context).showWalletSelect(title: _localizations.select_asset_to_backup);
             _readyExport(result);
           },
         ),
@@ -210,12 +211,12 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
     );
   }
 
-  _readyExport(WalletSchema scheme) {
+  _readyExport(WalletSchema? scheme) {
     logger.d("backup picked - $scheme");
-    if (scheme == null || scheme.address == null || scheme.address.isEmpty) return;
+    if (scheme == null || scheme.address.isEmpty) return;
     S _localizations = S.of(context);
 
-    walletCommon.getWalletPassword(context, scheme?.address).then((String password) async {
+    walletCommon.getWalletPassword(context, scheme.address).then((String? password) async {
       if (password == null || password.isEmpty) return;
       String keystore = await walletCommon.getWalletKeystoreByAddress(scheme.address);
 
@@ -234,7 +235,7 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
         //   'name': ethWallet.name,
         // });
       } else {
-        WalletSDK.Wallet restore = await WalletSDK.Wallet.restore(keystore, config: WalletSDK.WalletConfig(password: password));
+        Wallet? restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
         if (restore == null || restore.address != scheme.address) {
           Toast.show(_localizations.password_wrong);
           return;
@@ -245,8 +246,8 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
           WalletType.nkn,
           scheme.name,
           restore.address,
-          hexEncode(restore.publicKey ?? ""),
-          hexEncode(restore.seed ?? ""),
+          hexEncode(restore.publicKey),
+          hexEncode(restore.seed),
           restore.keystore,
         );
       }

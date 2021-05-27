@@ -14,7 +14,7 @@ class WalletLoaded extends WalletState {
   WalletLoaded(this.wallets);
 
   bool isWalletsEmpty() {
-    return wallets == null || wallets.isEmpty;
+    return wallets.isEmpty;
   }
 }
 

@@ -9,11 +9,11 @@ import '../storages/settings.dart';
 
 class Global {
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
-  static BuildContext appContext;
+  static late BuildContext appContext;
 
-  static Directory applicationRootDirectory; // eg:/data/user/0/org.nkn.mobile.app/app_flutter
-  static String version;
-  static String build;
+  static late Directory applicationRootDirectory; // eg:/data/user/0/org.nkn.mobile.app/app_flutter
+  static String version = '';
+  static String build = '';
 
   static String get versionFormat => '${Global.version} + (Build ${Global.build})';
 
@@ -24,7 +24,6 @@ class Global {
     'http://mainnet-seed-0008.nkn.org:30003',
     'http://mainnet-seed-0009.nkn.org:30003',
   ];
-  static List<String> seedRpcList;
 
   static Future<List<String>> getSeedRpcList() async {
     SettingsStorage settingsStorage = SettingsStorage();

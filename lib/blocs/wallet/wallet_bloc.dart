@@ -13,7 +13,7 @@ part 'wallet_state.dart';
 class WalletBloc extends Bloc<WalletEvent, WalletState> {
   WalletStorage _walletStorage = WalletStorage();
 
-  WalletBloc() : super(null);
+  WalletBloc() : super(WalletLoading());
 
   static WalletBloc get(context) {
     return BlocProvider.of<WalletBloc>(context);
@@ -37,7 +37,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
   }
 
   Stream<WalletState> _mapLoadWalletsToState() async* {
-    var wallets = await _walletStorage.getWallets();
+    List<WalletSchema> wallets = await _walletStorage.getWallets();
     logger.d("wallets get - ${wallets.toString()}");
     yield WalletLoaded(wallets);
   }
@@ -46,8 +46,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     logger.d("wallet add - ${event.wallet}, keystore:${event.keystore}");
     if (state is WalletLoaded) {
       await _walletStorage.addWallet(event.wallet, event.keystore, password: event.password, seed: event.seed);
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets ?? []);
-      int index = list?.indexWhere((x) => x?.address == event?.wallet?.address) ?? -1;
+      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
+      int index = list.indexWhere((x) => x.address == event.wallet.address);
       if (index >= 0) {
         list[index] = event.wallet;
       } else {
@@ -59,12 +59,12 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
   }
 
   Stream<WalletState> _mapDeleteWalletToState(DeleteWallet event) async* {
-    WalletSchema wallet = event?.wallet;
+    WalletSchema wallet = event.wallet;
     logger.d("wallet delete - $wallet");
     if (state is WalletLoaded) {
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets ?? []);
+      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
       // int index = list.indexOf(wallet);
-      int index = list?.indexWhere((w) => w?.address == wallet?.address) ?? -1;
+      int index = list.indexWhere((w) => w.address == wallet.address);
       if (index >= 0) {
         list.removeAt(index);
         await _walletStorage.deleteWallet(index, wallet);
@@ -75,12 +75,12 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
   }
 
   Stream<WalletState> _mapUpdateWalletToState(UpdateWallet event) async* {
-    WalletSchema wallet = event?.wallet;
+    WalletSchema wallet = event.wallet;
     logger.d("wallet update - $wallet");
     if (state is WalletLoaded) {
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets ?? []);
+      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
       // int index = list.indexOf(wallet);
-      int index = list?.indexWhere((w) => w?.address == wallet?.address) ?? -1;
+      int index = list.indexWhere((w) => w.address == wallet.address);
       if (index >= 0) {
         list[index] = wallet;
         await _walletStorage.updateWallet(index, wallet);
@@ -96,7 +96,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     logger.d("wallet backup - address:${event.address}, backup:${event.backup}");
     if (state is WalletLoaded) {
       await _walletStorage.setBackup(event.address, event.backup);
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets ?? []);
+      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
       bool allBackup = await walletCommon.isWalletsBackup(original: list);
       logger.d("new backup list:${list.toString()}");
       yield WalletBackup(list, event.address, allBackup);
@@ -107,7 +107,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     logger.d("wallet default - address:${event.address}}");
     if (state is WalletLoaded) {
       await _walletStorage.setDefaultAddress(event.address);
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets ?? []);
+      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
       logger.d("new default list:${list.toString()}");
       yield WalletDefault(list, event.address);
     }

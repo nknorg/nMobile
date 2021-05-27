@@ -10,11 +10,11 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 class DB {
   static const String NKN_DATABASE_NAME = 'nkn';
   static int currentDatabaseVersion = 3;
-  static Database currentDatabase;
+  static Database? currentDatabase;
 
   String publicKey;
 
-  DB({this.publicKey});
+  DB({required this.publicKey});
 
   static Future<Database> _openDB(String publicKey, String password) async {
     var databasesPath = await getDatabasesPath();
@@ -32,7 +32,7 @@ class DB {
 
         // create contact me
         try {
-          ContactSchema me = await ContactSchema.getByTypeMe(publicKey);
+          ContactSchema? me = await ContactSchema.getByTypeMe(publicKey);
           if (me == null) return;
           Map<String, dynamic> add = await me.toMap();
           var count = await db.insert(ContactStorage.tableName, add);
@@ -66,7 +66,7 @@ class DB {
   }
 
   close() async {
-    await currentDatabase.close();
+    await currentDatabase?.close();
     currentDatabase = null;
   }
 

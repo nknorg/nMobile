@@ -39,9 +39,9 @@ class Application {
     _routes.addAll(routes);
   }
 
-  Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    final String name = settings.name;
-    final Function pageContentBuilder = _routes[name];
+  Route<dynamic>? onGenerateRoute(RouteSettings settings) {
+    final String? name = settings.name;
+    final Function? pageContentBuilder = _routes[name];
     if (pageContentBuilder != null) {
       if (settings.arguments != null) {
         return MaterialPageRoute(

@@ -10,17 +10,17 @@ class NotificationDialog extends StatefulWidget {
 
   NotificationDialog.of(this.context);
 
-  String title;
-  String content;
-  Widget headIcon;
-  Color bgColor;
-  CancelFunc cancelFunc;
+  String? title;
+  String? content;
+  Widget? headIcon;
+  Color? bgColor;
+  CancelFunc? cancelFunc;
 
   CancelFunc show({
-    String title,
-    String content,
-    Widget headIcon,
-    Color bgColor,
+    String? title,
+    String? content,
+    Widget? headIcon,
+    Color? bgColor,
   }) {
     this.bgColor = bgColor;
     this.headIcon = headIcon;
@@ -91,7 +91,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                         child: Text(
-                          widget.title,
+                          widget.title ?? "",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -103,7 +103,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                       Padding(
                         padding: const EdgeInsets.only(left: 8, right: 8, bottom: 18),
                         child: Text(
-                          widget.content,
+                          widget.content ?? "",
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.white,
