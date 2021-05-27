@@ -56,7 +56,7 @@ class TopicStorage {
         whereArgs: [topic],
       );
       if (res.length > 0) {
-        TopicSchema schema =  TopicSchema.fromMap(res.first);
+        TopicSchema schema = TopicSchema.fromMap(res.first);
         logger.d("queryTopicByTopicName - success - topic:$topic - schema:$schema");
         return schema;
       }
@@ -88,5 +88,25 @@ class TopicStorage {
       logger.e(e);
     }
     return null;
+  }
+
+  Future<bool> setTop(String topic, bool top) async {
+    if (topic == null || topic.isEmpty) return false;
+    try {
+      var count = await db.update(
+        tableName,
+        {'is_top': top ? 1 : 0},
+        where: 'topic = ?',
+        whereArgs: [topic],
+      );
+      if (count > 0) {
+        logger.d("setTop - success - topic:$topic - top:$top");
+        return true;
+      }
+      logger.w("setTop - fail - topic:$topic - top:$top");
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
   }
 }

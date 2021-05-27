@@ -229,4 +229,8 @@ class MessageStorage {
     }
     return null;
   }
+
+  Future<int> deleteTargetChat(String targetId) async {
+    return await db.delete(tableName, where: 'target_id = ?', whereArgs: [targetId]);
+  }
 }

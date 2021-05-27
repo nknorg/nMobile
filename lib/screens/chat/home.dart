@@ -103,6 +103,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
           return ChatNoConnectLayout();
         } else {
           return Layout(
+            bodyColor: application.theme.backgroundLightColor,
             header: Header(
               titleChild: Container(
                 margin: EdgeInsets.only(left: 20),
