@@ -269,7 +269,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
               color: application.theme.backgroundLightColor,
             ),
             onPressed: () async {
-              String? qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
+              var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
               logger.d("QR_DATA:$qrData");
               if (qrData == null) return;
               // json
@@ -286,13 +286,13 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                 logger.d("wallet send scan - address:${jsonData['address']} amount:${jsonData['amount']}");
                 _sendToController.text = jsonData['address'];
                 _amountController.text = jsonData['amount'].toString();
-              } else if (_wallet.type == WalletType.nkn && verifyAddress(qrData)) {
+              } else if (_wallet.type == WalletType.nkn && verifyAddress(qrData.toString())) {
                 logger.d("wallet send scan NKN - address:$qrData");
-                _sendToController.text = qrData;
+                _sendToController.text = qrData.toString();
               } else if (_wallet.type == WalletType.eth) {
                 // && verifyEthAddress(qrData) TODO:GG eth address
                 logger.d("wallet send scan ETH - address:$qrData");
-                _sendToController.text = qrData;
+                _sendToController.text = qrData.toString();
               } else {
                 ModalDialog.of(context).show(
                   content: _localizations.error_unknown_nkn_qrcode,
