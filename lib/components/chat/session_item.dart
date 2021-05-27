@@ -108,7 +108,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
     }
     
     return Container(
-      color: Colors.transparent,
+      color: model.isTop ? application.theme.backgroundColor1:Colors.transparent,
       padding: const EdgeInsets.only(left: 12, right: 12),
       height: 72,
       child: Flex(
@@ -166,7 +166,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
     );
   } else {
     return Container(
-      color: Colors.transparent,
+      color: model.isTop ? application.theme.backgroundColor1:Colors.transparent,
       padding: const EdgeInsets.only(left: 12, right: 12),
       height: 72,
       child: Flex(
