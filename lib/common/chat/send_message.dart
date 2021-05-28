@@ -66,11 +66,12 @@ class SendMessage {
   Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
     if (tryCount > 3) return;
     try {
-      await chatCommon.sendText(received.from, MessageData.getReceipt(received.msgId));
-      logger.i("send_messages - sendReceipt:success target:$received");
+      String receipt = MessageData.getReceipt(received.msgId);
+      await chatCommon.sendText(received.from, receipt);
+      logger.d("send_messages - sendReceipt:success receipt:$receipt");
     } catch (e) {
       handleError(e);
-      logger.i("send_messages - sendReceipt:fail tryCount:$tryCount");
+      logger.d("send_messages - sendReceipt:fail tryCount:$tryCount");
       Future.delayed(Duration(seconds: 1), () {
         sendReceipt(received, tryCount: tryCount++);
       });
