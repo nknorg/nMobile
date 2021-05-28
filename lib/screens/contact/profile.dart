@@ -167,7 +167,7 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
     } else if (contactSchema != null && contactSchema.id != 0) {
       this._contactSchema = contactSchema;
     } else if (contactId != null && contactId != 0) {
-      this._contactSchema = await contactCommon.queryContact(contactId);
+      this._contactSchema = await contactCommon.query(contactId);
     }
     if (this._contactSchema == null) return;
 
@@ -196,7 +196,7 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
   }
 
   Future<WalletSchema?> _refreshDefaultWallet() async {
-    WalletSchema? schema = await walletCommon.getWalletDefault();
+    WalletSchema? schema = await walletCommon.getDefault();
     setState(() {
       _walletDefault = schema;
     });

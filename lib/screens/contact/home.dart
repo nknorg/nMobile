@@ -120,8 +120,8 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
   }
 
   _initData() async {
-    List<ContactSchema> friends = await contactCommon.queryContacts(contactType: ContactType.friend);
-    List<ContactSchema> strangers = await contactCommon.queryContacts(contactType: ContactType.stranger, limit: 20);
+    List<ContactSchema> friends = await contactCommon.queryList(contactType: ContactType.friend);
+    List<ContactSchema> strangers = await contactCommon.queryList(contactType: ContactType.stranger, limit: 20);
     List<TopicSchema> topics = []; // widget.arguments ? <TopicSchema>[] : await TopicRepo().getAllTopics(); // TODO:GG contact topic
     topics = (this._isSelect == true) ? [] : topics; // TODO:GG contact (can not write this line in state)
 

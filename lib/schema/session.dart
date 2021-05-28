@@ -45,7 +45,7 @@ class SessionSchema extends Equatable {
       res.topic = await TopicStorage().queryTopicByTopicName(res.targetId);
       res.isTop = res.topic?.isTop ?? false;
     } else {
-      res.contact = await ContactStorage().queryContactByClientAddress(res.targetId!);
+      res.contact = await ContactStorage().queryByClientAddress(res.targetId!);
       res.isTop = res.contact?.isTop ?? false;
     }
     return res;
