@@ -48,7 +48,7 @@ class _ChatNoConnectLayoutState extends State<ChatNoConnectLayout> {
   }
 
   _refreshWalletDefault() {
-    walletCommon.getWalletDefault().then((value) {
+    walletCommon.getDefault().then((value) {
       setState(() {
         loaded = true;
         if (value != null) {
