@@ -185,9 +185,9 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
       (_formKey.currentState as FormState).save();
       logger.d("amount:$_amount, sendTo:$_sendTo, fee:$_fee");
 
-      walletCommon.getWalletPassword(context, _wallet.address).then((String? password) async {
+      walletCommon.getPassword(context, _wallet.address).then((String? password) async {
         if (password == null || password.isEmpty) return;
-        String keystore = await walletCommon.getWalletKeystoreByAddress(_wallet.address);
+        String keystore = await walletCommon.getKeystoreByAddress(_wallet.address);
 
         if (_wallet.type == WalletType.eth) {
           final result = _transferETH(keystore, password);
@@ -332,7 +332,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
                 child: BlocBuilder<WalletBloc, WalletState>(
                   builder: (context, state) {
                     if (state is WalletLoaded) {
-                      WalletSchema? find = walletCommon.getWalletInOriginalByAddress(state.wallets, _wallet.address);
+                      WalletSchema? find = walletCommon.getInOriginalByAddress(state.wallets, _wallet.address);
                       if (find != null) {
                         _wallet = find;
                       }

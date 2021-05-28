@@ -71,7 +71,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
         });
       }
     });
-    walletCommon.getWalletDefaultAddress().then((value) {
+    walletCommon.getDefaultAddress().then((value) {
       if (mounted) {
         setState(() {
           isDefault = value == _wallet?.address;
@@ -159,7 +159,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
             BlocBuilder<WalletBloc, WalletState>(
               builder: (context, state) {
                 if (state is WalletLoaded) {
-                  this._wallet = walletCommon.getWalletInOriginalByAddress(state.wallets, this._wallet?.address);
+                  this._wallet = walletCommon.getInOriginalByAddress(state.wallets, this._wallet?.address);
                 }
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -321,9 +321,9 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
 
     switch (result) {
       case 0: // export
-        walletCommon.getWalletPassword(context, _wallet?.address).then((String? password) async {
+        walletCommon.getPassword(context, _wallet?.address).then((String? password) async {
           if (password == null || password.isEmpty) return;
-          String keystore = await walletCommon.getWalletKeystoreByAddress(_wallet?.address);
+          String keystore = await walletCommon.getKeystoreByAddress(_wallet?.address);
 
           if (_wallet?.type == WalletType.eth) {
             // TODO:GG eth export

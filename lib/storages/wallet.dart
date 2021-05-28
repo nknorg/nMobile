@@ -30,7 +30,7 @@ class WalletStorage {
     return [];
   }
 
-  Future addWallet(WalletSchema? walletSchema, String? keystore, {String? password, String? seed}) async {
+  Future add(WalletSchema? walletSchema, String? keystore, {String? password, String? seed}) async {
     List<Future> futures = <Future>[];
     var wallets = await _localStorage.getArray(KEY_WALLET);
     int index = wallets.indexWhere((x) => x['address'] == walletSchema?.address);
@@ -55,7 +55,7 @@ class WalletStorage {
     return Future.wait(futures);
   }
 
-  Future deleteWallet(int n, WalletSchema? walletSchema) async {
+  Future delete(int n, WalletSchema? walletSchema) async {
     List<Future> futures = <Future>[];
     if (n >= 0) {
       futures.add(_localStorage.removeItem(KEY_WALLET, n));
@@ -74,7 +74,7 @@ class WalletStorage {
     return Future.wait(futures);
   }
 
-  Future updateWallet(int n, WalletSchema? walletSchema, {String? keystore, String? password, String? seed}) {
+  Future update(int n, WalletSchema? walletSchema, {String? keystore, String? password, String? seed}) {
     List<Future> futures = <Future>[];
     if (n >= 0) {
       futures.add(_localStorage.setItem(KEY_WALLET, n, walletSchema?.toMap()));

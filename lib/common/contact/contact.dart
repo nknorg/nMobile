@@ -40,7 +40,7 @@ class ContactCommon {
 
   Future<ContactSchema?> refreshCurrentUser(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    ContactSchema? contact = await _contactStorage.queryContactByClientAddress(clientAddress);
+    ContactSchema? contact = await _contactStorage.queryByClientAddress(clientAddress);
     if (contact == null) {
       contact = await addByType(clientAddress, ContactType.me);
     }
@@ -64,30 +64,30 @@ class ContactCommon {
     if (scheme.nknWalletAddress == null || scheme.nknWalletAddress!.isEmpty) {
       scheme.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(scheme.clientAddress));
     }
-    ContactSchema? added = await _contactStorage.insertContact(scheme);
+    ContactSchema? added = await _contactStorage.insert(scheme);
     if (added != null) _addSink.add(added);
     return added;
   }
 
   Future<bool> delete(int? contactId) async {
     if (contactId == null || contactId == 0) return false;
-    bool deleted = await _contactStorage.deleteContact(contactId);
+    bool deleted = await _contactStorage.delete(contactId);
     if (deleted) _deleteSink.add(contactId);
     return deleted;
   }
 
-  Future<List<ContactSchema>> queryContacts({String? contactType, String? orderBy, int? limit, int? offset}) {
-    return _contactStorage.queryContacts(contactType: contactType, orderBy: orderBy, limit: limit, offset: offset);
+  Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? limit, int? offset}) {
+    return _contactStorage.queryList(contactType: contactType, orderBy: orderBy, limit: limit, offset: offset);
   }
 
-  Future<ContactSchema?> queryContact(int? contactId) async {
+  Future<ContactSchema?> query(int? contactId) async {
     if (contactId == null || contactId == 0) return null;
-    return await _contactStorage.queryContact(contactId);
+    return await _contactStorage.query(contactId);
   }
 
-  Future<ContactSchema?> queryContactByClientAddress(String? clientAddress) async {
+  Future<ContactSchema?> queryByClientAddress(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    return await _contactStorage.queryContactByClientAddress(clientAddress);
+    return await _contactStorage.queryByClientAddress(clientAddress);
   }
 
   Future<int> queryCountByClientAddress(String? clientAddress) {
@@ -211,7 +211,7 @@ class ContactCommon {
 
   queryAndNotify(int? contactId) async {
     if (contactId == null || contactId == 0) return;
-    ContactSchema? updated = await _contactStorage.queryContact(contactId);
+    ContactSchema? updated = await _contactStorage.query(contactId);
     if (updated != null) {
       _updateSink.add([updated]);
     }
@@ -219,7 +219,7 @@ class ContactCommon {
 
   queryAndNotifyVyClientAddress(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
-    ContactSchema? updated = await _contactStorage.queryContactByClientAddress(clientAddress);
+    ContactSchema? updated = await _contactStorage.queryByClientAddress(clientAddress);
     if (updated != null) {
       _updateSink.add([updated]);
     }

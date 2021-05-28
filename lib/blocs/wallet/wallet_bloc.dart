@@ -45,7 +45,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
   Stream<WalletState> _mapAddWalletToState(AddWallet event) async* {
     logger.d("wallet add - ${event.wallet}, keystore:${event.keystore}");
     if (state is WalletLoaded) {
-      await _walletStorage.addWallet(event.wallet, event.keystore, password: event.password, seed: event.seed);
+      await _walletStorage.add(event.wallet, event.keystore, password: event.password, seed: event.seed);
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
       int index = list.indexWhere((x) => x.address == event.wallet.address);
       if (index >= 0) {
@@ -67,7 +67,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       int index = list.indexWhere((w) => w.address == wallet.address);
       if (index >= 0) {
         list.removeAt(index);
-        await _walletStorage.deleteWallet(index, wallet);
+        await _walletStorage.delete(index, wallet);
       }
       logger.d("new delete list:${list.toString()}");
       yield WalletLoaded(list);
@@ -83,7 +83,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       int index = list.indexWhere((w) => w.address == wallet.address);
       if (index >= 0) {
         list[index] = wallet;
-        await _walletStorage.updateWallet(index, wallet);
+        await _walletStorage.update(index, wallet);
       } else {
         logger.e("no find $wallet");
       }
@@ -97,7 +97,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     if (state is WalletLoaded) {
       await _walletStorage.setBackup(event.address, event.backup);
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
-      bool allBackup = await walletCommon.isWalletsBackup(original: list);
+      bool allBackup = await walletCommon.isBackup(original: list);
       logger.d("new backup list:${list.toString()}");
       yield WalletBackup(list, event.address, allBackup);
     }

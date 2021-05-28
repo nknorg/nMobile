@@ -12,7 +12,7 @@ import '../locator.dart';
 class WalletCommon {
   WalletStorage _walletStorage = WalletStorage();
 
-  Future<WalletSchema?> getWalletInStorageByAddress(String? address) async {
+  Future<WalletSchema?> getInStorageByAddress(String? address) async {
     if (address == null || address.length == 0) return null;
     List<WalletSchema> wallets = await _walletStorage.getWallets();
     if (wallets.isEmpty) return null;
@@ -23,7 +23,7 @@ class WalletCommon {
     }
   }
 
-  WalletSchema? getWalletInOriginalByAddress(List<WalletSchema>? wallets, String? address) {
+  WalletSchema? getInOriginalByAddress(List<WalletSchema>? wallets, String? address) {
     if (address == null || address.length == 0) return null;
     if (wallets == null || wallets.isEmpty) return null;
     try {
@@ -33,7 +33,7 @@ class WalletCommon {
     }
   }
 
-  Future<String> getWalletKeystoreByAddress(String? address) async {
+  Future<String> getKeystoreByAddress(String? address) async {
     String? keystore = await _walletStorage.getKeystore(address);
     if (keystore == null || keystore.isEmpty) {
       throw new Exception("keystore not exits");
@@ -41,7 +41,7 @@ class WalletCommon {
     return keystore;
   }
 
-  Future<bool> isWalletsBackup({List? original}) async {
+  Future<bool> isBackup({List? original}) async {
     List wallets = original ?? await _walletStorage.getWallets();
     // backups
     List<Future> futures = <Future>[];
@@ -57,25 +57,25 @@ class WalletCommon {
     return allBackup;
   }
 
-  Future<WalletSchema?> getWalletDefault() async {
-    String? address = await getWalletDefaultAddress();
-    WalletSchema? result = await getWalletInStorageByAddress(address);
+  Future<WalletSchema?> getDefault() async {
+    String? address = await getDefaultAddress();
+    WalletSchema? result = await getInStorageByAddress(address);
     if (result == null) {
       List<WalletSchema> wallets = await _walletStorage.getWallets();
       if (wallets.isNotEmpty) {
         address = wallets[0].address;
         await _walletStorage.setDefaultAddress(address);
-        result = await getWalletInStorageByAddress(address);
+        result = await getInStorageByAddress(address);
       }
     }
     return result;
   }
 
-  Future<String?> getWalletDefaultAddress() {
+  Future<String?> getDefaultAddress() {
     return _walletStorage.getDefaultAddress();
   }
 
-  Future<String?> getWalletPassword(BuildContext? context, String? walletAddress) {
+  Future<String?> getPassword(BuildContext? context, String? walletAddress) {
     if (walletAddress == null || walletAddress.isEmpty) {
       return Future.value(null);
     }
@@ -86,7 +86,7 @@ class WalletCommon {
       }
       return false;
     }).then((bool authOk) async {
-      String? pwd = await getWalletPasswordNoCheck(walletAddress);
+      String? pwd = await getPasswordNoCheck(walletAddress);
       if (!authOk || pwd == null || pwd.isEmpty) {
         return BottomDialog.of(context ?? Global.appContext).showInput(
           title: _localizations.verify_wallet_password,
@@ -100,7 +100,7 @@ class WalletCommon {
     });
   }
 
-  Future getWalletPasswordNoCheck(String walletAddress) {
+  Future getPasswordNoCheck(String walletAddress) {
     return _walletStorage.getPassword(walletAddress);
   }
 

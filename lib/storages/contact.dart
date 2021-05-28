@@ -49,10 +49,10 @@ class ContactStorage {
     await db.execute('CREATE INDEX index_contact_updated_time ON $tableName (updated_time)');
   }
 
-  Future<ContactSchema?> insertContact(ContactSchema? schema) async {
+  Future<ContactSchema?> insert(ContactSchema? schema) async {
     if (schema == null) return null;
     try {
-      ContactSchema? exist = await queryContactByClientAddress(schema.clientAddress);
+      ContactSchema? exist = await queryByClientAddress(schema.clientAddress);
       if (exist != null) {
         logger.d("insertContact - exist:$exist - add:$schema");
         return exist;
@@ -72,7 +72,7 @@ class ContactStorage {
     return null;
   }
 
-  Future<bool> deleteContact(int? contactId) async {
+  Future<bool> delete(int? contactId) async {
     if (contactId == null || contactId == 0) return false;
     try {
       int? count = await db?.delete(
@@ -93,7 +93,7 @@ class ContactStorage {
 
   /// Query
 
-  Future<List<ContactSchema>> queryContacts({String? contactType, String? orderBy, int? limit, int? offset}) async {
+  Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? limit, int? offset}) async {
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
@@ -109,9 +109,13 @@ class ContactStorage {
         return [];
       }
       List<Future<ContactSchema>> futures = <Future<ContactSchema>>[];
-      res.forEach((map) => futures.add(ContactSchema.fromMap(map)));
+      String logText = '';
+      res.forEach((map) {
+        logText += "\n$map";
+        futures.add(ContactSchema.fromMap(map));
+      });
       List<ContactSchema> results = await Future.wait(futures);
-      logger.d("queryContacts - items:$results");
+      logger.d("queryContacts - items:$logText");
       return results;
     } catch (e) {
       handleError(e);
@@ -119,7 +123,7 @@ class ContactStorage {
     return [];
   }
 
-  Future<ContactSchema?> queryContact(int? contactId) async {
+  Future<ContactSchema?> query(int? contactId) async {
     if (contactId == null || contactId == 0) return null;
     try {
       List<Map<String, dynamic>>? res = await db?.query(
@@ -140,7 +144,7 @@ class ContactStorage {
     return null;
   }
 
-  Future<ContactSchema?> queryContactByClientAddress(String? clientAddress) async {
+  Future<ContactSchema?> queryByClientAddress(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     try {
       List<Map<String, dynamic>>? res = await db?.query(
