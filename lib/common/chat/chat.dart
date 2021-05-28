@@ -94,8 +94,7 @@ class ChatCommon {
       if (pwd == null || pwd.isEmpty) return;
       String keystore = await walletCommon.getWalletKeystoreByAddress(scheme.address);
 
-      Wallet? wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd));
-      if (wallet == null || wallet.publicKey == null || wallet.seed == null) return;
+      Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd));
 
       String pubKey = hexEncode(wallet.publicKey);
       String password = hexEncode(Uint8List.fromList(sha256(wallet.seed)));
@@ -120,24 +119,24 @@ class ChatCommon {
     client = await Client.create(wallet.seed, config: config);
 
     // client error
-    _onErrorStreamSubscription = client?.onError?.listen((dynamic event) {
+    _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
       logger.e("onErrorStream -> event:$event");
       _onErrorSink.add(event);
     });
 
     // client connect
     Completer completer = Completer();
-    _onConnectStreamSubscription = client?.onConnect?.listen((OnConnect event) {
+    _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
       logger.i("onConnectStream -> event:$event");
       _statusSink.add(ChatConnectStatus.connected);
-      SettingsStorage().addSeedRpcServers(event.rpcServers);
+      SettingsStorage().addSeedRpcServers(event.rpcServers!);
       completer.complete();
     });
 
     // TODO:GG client disconnect/reconnect listen (action statusSink.add)
 
     // client messages_receive
-    _onMessageStreamSubscription = client?.onMessage?.listen((OnMessage event) async {
+    _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) async {
       logger.i("onMessageStream -> messageId:${event.messageId} - src:${event.src} - data:${event.data} - type:${event.type} - encrypted:${event.encrypted}");
       await receiveMessage.onClientMessage(MessageSchema.fromReceive(event));
     });

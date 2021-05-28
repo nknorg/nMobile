@@ -55,11 +55,8 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
       String password = _passwordController.text;
       logger.d("name:$name, password:$password");
 
-      Wallet? result = await Wallet.create(null, config: WalletConfig(password: password));
-      if (result == null || result.address == null || result.keystore == null) {
-        Loading.dismiss();
-        return;
-      }
+      Wallet result = await Wallet.create(null, config: WalletConfig(password: password));
+
       WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);
       logger.d("wallet create - ${wallet.toString()}");
 
@@ -137,7 +134,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                 hintText: _localizations.hint_enter_wallet_name,
                                 textInputAction: TextInputAction.next,
                                 validator: Validator.of(context).walletName(),
-                                onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
+                                onEditingComplete: () => FocusScope.of(context).requestFocus(_passwordFocusNode),
                               ),
                             ),
                             SizedBox(height: 14),
@@ -157,7 +154,7 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
                                 hintText: _localizations.input_password,
                                 textInputAction: TextInputAction.next,
                                 validator: Validator.of(context).password(),
-                                onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_confirmPasswordFocusNode),
+                                onEditingComplete: () => FocusScope.of(context).requestFocus(_confirmPasswordFocusNode),
                                 password: true,
                               ),
                             ),
