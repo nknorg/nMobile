@@ -86,7 +86,7 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
   _insertMessage(MessageSchema? schema) {
     if (schema == null) return;
     if (!schema.isOutbound) {
-      _messageStorage.readByMsgId(schema.msgId);
+      receiveMessage.read(schema);
     }
     setState(() {
       logger.i("messages insert 0:$schema");
