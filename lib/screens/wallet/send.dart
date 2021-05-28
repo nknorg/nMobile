@@ -239,7 +239,7 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
       String fee = _fee.toString();
       if (_sendTo == null || _sendTo!.isEmpty || amount == '0') return false;
 
-      String? txHash = await restore.transfer(_sendTo, amount, fee: fee);
+      String? txHash = await restore.transfer(_sendTo!, amount, fee: fee);
       if (txHash != null) {
         taskService.queryWalletBalanceTask();
         return txHash.length > 10;
