@@ -42,7 +42,7 @@ class ContactCommon {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     ContactSchema? contact = await _contactStorage.queryContactByClientAddress(clientAddress);
     if (contact == null) {
-      contact = await addMe(clientAddress);
+      contact = await addByType(clientAddress, ContactType.me);
     }
     if (contact != null) {
       if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
@@ -53,17 +53,17 @@ class ContactCommon {
     return contact;
   }
 
-  Future<ContactSchema?> addMe(String? clientAddress) async {
+  Future<ContactSchema?> addByType(String? clientAddress, String contactType) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    ContactSchema? me = await ContactSchema.getByTypeMe(clientAddress);
-    ContactSchema? added = await _contactStorage.insertContact(me);
-    if (added != null) _addSink.add(added);
-    return added;
+    ContactSchema? schema = await ContactSchema.createByType(clientAddress, contactType);
+    return add(schema);
   }
 
   Future<ContactSchema?> add(ContactSchema? scheme) async {
     if (scheme == null || scheme.clientAddress.isEmpty) return null;
-    scheme.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(scheme.clientAddress));
+    if (scheme.nknWalletAddress == null || scheme.nknWalletAddress!.isEmpty) {
+      scheme.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(scheme.clientAddress));
+    }
     ContactSchema? added = await _contactStorage.insertContact(scheme);
     if (added != null) _addSink.add(added);
     return added;

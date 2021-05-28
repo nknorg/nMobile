@@ -109,11 +109,10 @@ class ContactStorage {
         return [];
       }
       List<Future<ContactSchema>> futures = <Future<ContactSchema>>[];
-      res.forEach((map) {
-        logger.d("queryContacts - item:$map");
-        futures.add(ContactSchema.fromMap(map));
-      });
-      return await Future.wait(futures);
+      res.forEach((map) => futures.add(ContactSchema.fromMap(map)));
+      List<ContactSchema> results = await Future.wait(futures);
+      logger.d("queryContacts - items:$results");
+      return results;
     } catch (e) {
       handleError(e);
     }

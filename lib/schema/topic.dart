@@ -107,7 +107,7 @@ class TopicSchema {
       'id': id,
       'topic': topic,
       'count': count,
-      'avatar': avatar != null ? Path.getLocalContactAvatar(chatCommon.id, avatar!.path) : null,
+      'avatar': avatar != null ? Path.getLocalContact(chatCommon.id, avatar!.path) : null,
       'options': options != null ? jsonEncode(options!.toMap()) : null,
       'last_updated_time': lastUpdatedTime?.millisecondsSinceEpoch,
       'is_top': isTop ? 1 : 0,

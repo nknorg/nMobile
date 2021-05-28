@@ -133,7 +133,7 @@ class ContactSchema {
       'last_name': lastName,
       'data': extraInfo != null ? jsonEncode(extraInfo) : '{}',
       'options': options != null ? jsonEncode(options!.toMap()) : null,
-      'avatar': avatar != null ? Path.getLocalContactAvatar(hexEncode(chatCommon.publicKey!), Path.getFileName(avatar!)) : null,
+      'avatar': avatar != null ? Path.getLocalContact(hexEncode(chatCommon.publicKey), Path.getFileName(avatar!)) : null,
       'created_time': createdTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'updated_time': updatedTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'profile_version': profileVersion,
@@ -145,11 +145,11 @@ class ContactSchema {
     return map;
   }
 
-  static Future<ContactSchema?> getByTypeMe(String? clientAddress) async {
+  static Future<ContactSchema?> createByType(String? clientAddress, String contactType) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
     return ContactSchema(
-      type: ContactType.me,
+      type: contactType,
       clientAddress: clientAddress,
       nknWalletAddress: walletAddress,
       createdTime: DateTime.now(),
