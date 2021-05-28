@@ -22,6 +22,7 @@ var uuid = Uuid();
 class ContentType {
   static const String system = 'system'; // TODO:GG
   static const String receipt = 'receipt';
+  static const String piece = 'nknOnePiece';
 
   static const String text = 'text';
   static const String textExtension = 'textExtension'; // TODO:GG
@@ -31,8 +32,6 @@ class ContentType {
   // static const String video = 'video';
 
   static const String contact = 'contact';
-  static const String piece = 'nknOnePiece';
-
   static const String eventContactOptions = 'event:contactOptions';
   static const String eventSubscribe = 'event:subscribe';
   static const String eventUnsubscribe = 'event:unsubscribe';
@@ -58,7 +57,7 @@ class MessageOptions {
     return {KEY_DELETE_AFTER_SECONDS: deleteAfterSeconds};
   }
 
-  static Map<String, dynamic> createOnePiece(MessageSchema schema) {
+  static Map<String, dynamic> createPiece(MessageSchema schema) {
     return {
       KEY_PARENT_TYPE: schema.parentType,
       KEY_PARITY: schema.parity,
@@ -84,9 +83,9 @@ class MessageOptions {
 
 class MessageStatus {
   static const int Sending = 100;
-  static const int SendSuccess = 110;
-  static const int SendFail = 120;
-  static const int SendReceipt = 130;
+  static const int SendFail = 110;
+  static const int SendSuccess = 120;
+  static const int SendByReplyReceipt = 130;
   static const int Received = 200;
   static const int ReceivedRead = 210;
 
@@ -96,17 +95,17 @@ class MessageStatus {
       schema.isSendError = false;
       schema.isSuccess = false;
       schema.isRead = false;
-    } else if (status == SendSuccess) {
-      schema.isOutbound = true;
-      schema.isSendError = false;
-      schema.isSuccess = false;
-      schema.isRead = true;
     } else if (status == SendFail) {
       schema.isOutbound = true;
       schema.isSendError = true;
       schema.isSuccess = false;
-      schema.isRead = true;
-    } else if (status == SendReceipt) {
+      schema.isRead = false;
+    } else if (status == SendSuccess) {
+      schema.isOutbound = true;
+      schema.isSendError = false;
+      schema.isSuccess = true;
+      schema.isRead = false;
+    } else if (status == SendByReplyReceipt) {
       schema.isOutbound = true;
       schema.isSendError = false;
       schema.isSuccess = true;
@@ -129,7 +128,7 @@ class MessageStatus {
   static int get(MessageSchema schema) {
     if (schema.isOutbound) {
       if (schema.isSuccess) {
-        return SendReceipt;
+        return SendByReplyReceipt;
       } else if (schema.isSendError || schema.pid == null) {
         return SendFail;
       } else if (schema.isSendError) {
@@ -158,6 +157,27 @@ class MessageData {
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(map);
+  }
+
+  static String getPiece(MessageSchema schema) {
+    Map data = {
+      'id': schema.msgId,
+      'contentType': ContentType.piece,
+      'content': schema.content,
+      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'parentType': schema.parentType,
+      'parity': schema.parity,
+      'total': schema.total,
+      'index': schema.index,
+      'bytesLength': schema.bytesLength,
+    };
+    if (schema.options != null && schema.options!.keys.length > 0) {
+      data['options'] = schema.options;
+    }
+    if (schema.topic != null) {
+      data['topic'] = schema.topic;
+    }
+    return jsonEncode(data);
   }
 
   static String getText(MessageSchema schema) {
@@ -241,27 +261,6 @@ class MessageData {
       'version': other.profileVersion,
       'expiresAt': 0, // TODO:GG expiresAt
     };
-    return jsonEncode(data);
-  }
-
-  static String getOnePiece(MessageSchema schema) {
-    Map data = {
-      'id': schema.msgId,
-      'contentType': ContentType.piece,
-      'content': schema.content,
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'parentType': schema.parentType,
-      'parity': schema.parity,
-      'total': schema.total,
-      'index': schema.index,
-      'bytesLength': schema.bytesLength,
-    };
-    if (schema.options != null && schema.options!.keys.length > 0) {
-      data['options'] = schema.options;
-    }
-    if (schema.topic != null) {
-      data['topic'] = schema.topic;
-    }
     return jsonEncode(data);
   }
 
@@ -349,7 +348,7 @@ class MessageSchema extends Equatable {
     this.options,
     this.sendTime,
   }) {
-    if (msgId.isEmpty) msgId = uuid.v4();
+    if (msgId == null || msgId.isEmpty) msgId = uuid.v4();
     if (sendTime == null) sendTime = DateTime.now();
   }
 
@@ -502,8 +501,8 @@ class MessageSchema extends Equatable {
       if (options == null) {
         options = Map<String, dynamic>();
       }
-      Map<String, dynamic> onePiece = MessageOptions.createOnePiece(this);
-      options?.addAll(onePiece);
+      Map<String, dynamic> piece = MessageOptions.createPiece(this);
+      options?.addAll(piece);
     }
     map['options'] = options != null ? jsonEncode(options) : null;
 
