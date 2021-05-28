@@ -173,7 +173,7 @@ class MessageStorage {
     return (count ?? 0) > 0;
   }
 
-  Future<int> unReadCountByNotSender(String? senderId) async {
+  Future<int> unReadCount(String? senderId) async {
     if (senderId == null || senderId.isEmpty) return 0;
     var res = await db?.query(
       tableName,
@@ -186,28 +186,28 @@ class MessageStorage {
     return count ?? 0;
   }
 
-  Future<int> unReadCountByTargetId(String? targetId) async {
-    if (targetId == null || targetId.isEmpty) return 0;
+  Future<int> unReadCountByTargetId(String? senderId, String? targetId) async {
+    if (senderId == null || senderId.isEmpty || targetId == null || targetId.isEmpty) return 0;
     var res = await db?.query(
       tableName,
       columns: ['COUNT(id)'],
-      where: 'target_id = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
-      whereArgs: [targetId, 0, ContentType.piece, ContentType.receipt],
+      where: 'sender != ? AND target_id = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
+      whereArgs: [senderId, targetId, 0, ContentType.piece, ContentType.receipt],
     );
     int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
     logger.d("unReadCountByTargetId - count:$count");
     return count ?? 0;
   }
 
-  Future<bool> readByTargetId(String? targetId) async {
-    if (targetId == null || targetId.isEmpty) return false;
+  Future<bool> readByTargetId(String? senderId, String? targetId) async {
+    if (senderId == null || senderId.isEmpty || targetId == null || targetId.isEmpty) return false;
     int? count = await db?.update(
       tableName,
       {
         'is_read': 1,
       },
-      where: 'target_id = ?',
-      whereArgs: [targetId],
+      where: 'sender != ? AND target_id = ?',
+      whereArgs: [senderId, targetId],
     );
     logger.d("readByTargetId - count:$count");
     return (count ?? 0) > 0;

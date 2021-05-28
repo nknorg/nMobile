@@ -20,22 +20,22 @@ import 'contact.dart';
 var uuid = Uuid();
 
 class ContentType {
-  static const String system = 'system'; // TODO:GG
+  static const String system = 'system'; // TODO:GG wait data
   static const String receipt = 'receipt';
-  static const String piece = 'nknOnePiece';
+  static const String piece = 'nknOnePiece'; // TODO:GG wait handle
 
   static const String text = 'text';
-  static const String textExtension = 'textExtension'; // TODO:GG
+  static const String textExtension = 'textExtension'; // TODO:GG wait handle
   static const String media = 'media'; // TODO:GG remove?
   static const String image = 'nknImage'; // TODO:GG remove?
-  static const String audio = 'audio';
+  static const String audio = 'audio'; // TODO:GG wait handle
   // static const String video = 'video';
 
-  static const String contact = 'contact';
-  static const String eventContactOptions = 'event:contactOptions';
-  static const String eventSubscribe = 'event:subscribe';
-  static const String eventUnsubscribe = 'event:unsubscribe';
-  static const String eventChannelInvitation = 'event:channelInvitation'; // TODO:GG
+  static const String contact = 'contact'; // TODO:GG wait handle
+  static const String eventContactOptions = 'event:contactOptions'; // TODO:GG wait handle
+  static const String eventSubscribe = 'event:subscribe'; // TODO:GG wait handle
+  static const String eventUnsubscribe = 'event:unsubscribe'; // TODO:GG wait handle
+  static const String eventChannelInvitation = 'event:channelInvitation'; // TODO:GG wait data
 }
 
 class MessageOptions {
@@ -127,13 +127,12 @@ class MessageStatus {
 
   static int get(MessageSchema schema) {
     if (schema.isOutbound) {
-      if (schema.isSuccess) {
+      if (schema.isSendError) {
+        // || schema.pid == null
+        return SendFail;
+      } else if (schema.isSuccess && schema.isRead) {
         return SendByReplyReceipt;
-      } else if (schema.isSendError || schema.pid == null) {
-        return SendFail;
-      } else if (schema.isSendError) {
-        return SendFail;
-      } else if (schema.isRead) {
+      } else if (schema.isSuccess) {
         return SendSuccess;
       } else {
         return Sending;
@@ -378,7 +377,7 @@ class MessageSchema extends Equatable {
       schema.receiveTime = DateTime.now();
       schema.deleteTime = null;
 
-      // TODO:GG set in success
+      // set in messages screen
       // int? deleteTime = MessageOptions.getDeleteAfterSeconds(schema);
       // schema.deleteTime = deleteTime != null ? DateTime.fromMillisecondsSinceEpoch(deleteTime) : null;
 
@@ -417,7 +416,7 @@ class MessageSchema extends Equatable {
     receiveTime = null;
     deleteTime = null;
 
-    // TODO:GG set in success
+    // set in messages screen
     // int? dt = MessageOptions.getDeleteAfterSeconds(this);
     // deleteTime = dt != null ? DateTime.fromMillisecondsSinceEpoch(dt) : null;
 

@@ -143,21 +143,27 @@ class ChatCommon {
     client = null;
   }
 
-  Future<List<MessageSchema>> queryListAndReadByTargetId(String? targetId, {int offset = 0, int limit = 20, int? unread}) async {
+  Future<List<MessageSchema>> queryListAndReadByTargetId(
+    String? targetId, {
+    int offset = 0,
+    int limit = 20,
+    int? unread,
+    bool handleBurn = true,
+  }) async {
     List<MessageSchema> list = await _messageStorage.queryListCanReadByTargetId(targetId, offset: offset, limit: limit);
     // unread
     if (offset == 0) {
-      int unreadCount = unread ?? await _messageStorage.unReadCountByTargetId(list[0].getTargetId);
+      int unreadCount = unread ?? await _messageStorage.unReadCountByTargetId(id, list[0].getTargetId);
       if (unreadCount > 0) {
-        _messageStorage.readByTargetId(list[0].getTargetId); // await
+        _messageStorage.readByTargetId(id, list[0].getTargetId); // await
         list.map((e) {
           e.isRead = true;
           return e;
         });
       }
     }
-    // deleteTime
-    if (list.isNotEmpty) {
+    // burn
+    if (handleBurn && list.isNotEmpty) {
       for (var i = 0; i < list.length; i++) {
         MessageSchema messageItem = list[i];
         int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(messageItem);
