@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/contact/item.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/topic/item.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/asset.dart';
@@ -54,7 +54,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
         ),
       ],
     );
-  } else if (model.contentType == ContentType.nknImage || model.contentType == ContentType.media) {
+  } else if (model.contentType == ContentType.image || model.contentType == ContentType.media) {
     contentWidget = Padding(
       padding: const EdgeInsets.only(top: 0),
       child: Row(
@@ -72,7 +72,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
         ],
       ),
     );
-  } else if (model.contentType == ContentType.channelInvitation) {
+  } else if (model.contentType == ContentType.eventChannelInvitation) {
     contentWidget = Label(
       _localizations.channel_invitation,
       maxLines: 1,
@@ -108,7 +108,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
     }
 
     return Container(
-      color: model.isTop ? application.theme.backgroundColor1:Colors.transparent,
+      color: model.isTop ? application.theme.backgroundColor1 : Colors.transparent,
       padding: const EdgeInsets.only(left: 12, right: 12),
       height: 72,
       child: Flex(
@@ -166,7 +166,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
     );
   } else {
     return Container(
-      color: model.isTop ? application.theme.backgroundColor1:Colors.transparent,
+      color: model.isTop ? application.theme.backgroundColor1 : Colors.transparent,
       padding: const EdgeInsets.only(left: 12, right: 12),
       height: 72,
       child: Flex(

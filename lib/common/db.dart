@@ -1,3 +1,4 @@
+import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
@@ -32,7 +33,7 @@ class DB {
 
         // create contact me
         try {
-          ContactSchema? me = await ContactSchema.getByTypeMe(publicKey);
+          ContactSchema? me = await ContactSchema.createByType(publicKey, ContactType.me);
           if (me == null) return;
           Map<String, dynamic> add = await me.toMap();
           var count = await db.insert(ContactStorage.tableName, add);
