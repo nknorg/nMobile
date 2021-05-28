@@ -7,5 +7,5 @@ String hexEncode(Uint8List raw) {
 }
 
 Uint8List hexDecode(String s) {
-  return hex.decode(s);
+  return Uint8List.fromList(hex.decode(s));
 }
