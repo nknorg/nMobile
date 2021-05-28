@@ -3,10 +3,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:equatable/equatable.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -15,11 +15,40 @@ import 'package:nmobile/utils/utils.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
+import 'contact.dart';
+
 var uuid = Uuid();
+
+class ContentType {
+  static const String system = 'system'; // TODO:GG
+  static const String receipt = 'receipt';
+
+  static const String text = 'text';
+  static const String textExtension = 'textExtension'; // TODO:GG
+  static const String media = 'media'; // TODO:GG remove?
+  static const String image = 'nknImage'; // TODO:GG remove?
+  static const String audio = 'audio';
+  // static const String video = 'video';
+
+  static const String contact = 'contact';
+  static const String piece = 'nknOnePiece';
+
+  static const String eventContactOptions = 'event:contactOptions';
+  static const String eventSubscribe = 'event:subscribe';
+  static const String eventUnsubscribe = 'event:unsubscribe';
+  static const String eventChannelInvitation = 'event:channelInvitation'; // TODO:GG
+}
 
 class MessageOptions {
   static const KEY_AUDIO_DURATION = "audioDuration";
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
+  static const KEY_DEVICE_TOKEN = "deviceToken";
+
+  static const KEY_PARENT_TYPE = "parentType";
+  static const KEY_PARITY = "parity";
+  static const KEY_TOTAL = "total";
+  static const KEY_INDEX = "index";
+  static const KEY_BYTES_LENGTH = "bytesLength";
 
   static Map<String, dynamic> createAudio(int duration) {
     return {KEY_AUDIO_DURATION: duration};
@@ -29,11 +58,27 @@ class MessageOptions {
     return {KEY_DELETE_AFTER_SECONDS: deleteAfterSeconds};
   }
 
+  static Map<String, dynamic> createOnePiece(MessageSchema schema) {
+    return {
+      KEY_PARENT_TYPE: schema.parentType,
+      KEY_PARITY: schema.parity,
+      KEY_TOTAL: schema.total,
+      KEY_INDEX: schema.index,
+      KEY_BYTES_LENGTH: schema.bytesLength,
+    };
+  }
+
   static int? getDeleteAfterSeconds(MessageSchema? schema) {
     if (schema == null || schema.options == null || schema.options!.keys.length == 0) return null;
-    var seconds = schema.options?[MessageOptions.KEY_DELETE_AFTER_SECONDS];
+    var seconds = schema.options![MessageOptions.KEY_DELETE_AFTER_SECONDS];
     if (seconds == null) return null;
     return int.parse(seconds);
+  }
+
+  static String? getDeviceToken(MessageSchema? schema) {
+    if (schema == null || schema.options == null || schema.options!.keys.length == 0) return null;
+    var deviceToken = schema.options![MessageOptions.KEY_DEVICE_TOKEN];
+    return deviceToken;
   }
 }
 
@@ -131,13 +176,30 @@ class MessageData {
     return jsonEncode(map);
   }
 
-  static Future<String> getImage(MessageSchema schema) async {
+  static Future<String> getDChatMedia(MessageSchema schema) async {
     File file = schema.content as File;
-    String content = '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
-
+    String content = '![media](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     Map data = {
       'id': schema.msgId,
       'contentType': ContentType.media,
+      'content': content,
+      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+    };
+    if (schema.options != null && schema.options!.keys.length > 0) {
+      data['options'] = schema.options;
+    }
+    if (schema.topic != null) {
+      data['topic'] = schema.topic;
+    }
+    return jsonEncode(data);
+  }
+
+  static Future<String> getImage(MessageSchema schema) async {
+    File file = schema.content as File;
+    String content = '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
+    Map data = {
+      'id': schema.msgId,
+      'contentType': ContentType.image,
       'content': content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -152,36 +214,13 @@ class MessageData {
 
   static Future<String> getAudio(MessageSchema schema) async {
     File file = schema.content as File;
-    String transContent = "";
-    var mimeType = mime(file.path) ?? "";
-    if (mimeType.split('aac').length > 1) {
-      transContent = '![audio](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
-    } else {
-      logger.w('Wrong audio Extension!!!' + mimeType);
-    }
-
+    // var mimeType = mime(file.path) ?? "";
+    // if (mimeType.split('aac').length > 1) {
+    String content = '![audio](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
+    // }
     Map data = {
       'id': schema.msgId,
       'contentType': ContentType.audio,
-      'content': transContent,
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-    };
-    if (schema.options != null && schema.options!.keys.length > 0) {
-      data['options'] = schema.options;
-    }
-    if (schema.topic != null) {
-      data['topic'] = schema.topic;
-    }
-    return jsonEncode(data);
-  }
-
-  static Future<String> getDChatMedia(MessageSchema schema) async {
-    File file = schema.content as File;
-    String content = '![media](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
-
-    Map data = {
-      'id': schema.msgId,
-      'contentType': ContentType.media,
       'content': content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -194,10 +233,21 @@ class MessageData {
     return jsonEncode(data);
   }
 
+  static String getContact(MessageSchema schema, ContactSchema other, String requestType) {
+    Map data = {
+      'id': schema.msgId,
+      'contentType': ContentType.contact,
+      'requestType': requestType,
+      'version': other.profileVersion,
+      'expiresAt': 0, // TODO:GG expiresAt
+    };
+    return jsonEncode(data);
+  }
+
   static String getOnePiece(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.nknOnePiece,
+      'contentType': ContentType.piece,
       'content': schema.content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'parentType': schema.parentType,
@@ -215,9 +265,8 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getContactBurnOptions(MessageSchema schema) {
-    int? deleteAfterSeconds = MessageOptions.getDeleteAfterSeconds(schema);
-
+  static String getEventContactOptionsBurn(MessageSchema schema, {int? seconds}) {
+    int? deleteAfterSeconds = seconds ?? MessageOptions.getDeleteAfterSeconds(schema);
     Map data = {
       'id': schema.msgId,
       'contentType': ContentType.eventContactOptions,
@@ -228,29 +277,47 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  // static String getContactNoticeOptions(MessageSchema schema) {
-  //   if (schema == null) return null;
-  //   if (schema.options == null || schema.options.keys.length == 0) return null;
-  //   int deleteAfterSeconds = int.parse(schema.options[MessageOptions.KEY_DELETE_AFTER_SECONDS]);
-  //
-  //   Map data = {
-  //     'id': schema.msgId,
-  //     'contentType': ContentType.eventContactOptions,
-  //     'content': {'deviceToken': schema.deviceToken},
-  //     'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-  //   };
-  //   data['optionType'] = '1';
-  //   return jsonEncode(data);
-  // }
+  static String getEventContactOptionsNotice(MessageSchema schema, {String? token}) {
+    String? deviceToken = token ?? MessageOptions.getDeviceToken(schema);
+    Map data = {
+      'id': schema.msgId,
+      'contentType': ContentType.eventContactOptions,
+      'content': {'deviceToken': deviceToken},
+      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+    };
+    data['optionType'] = '1';
+    return jsonEncode(data);
+  }
 
+  String getEventSubscribe(MessageSchema schema) {
+    Map data = {
+      'id': schema.msgId,
+      'contentType': ContentType.eventSubscribe,
+      'content': schema.content,
+      'topic': schema.topic,
+      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+    };
+    return jsonEncode(data);
+  }
+
+  String getEventUnSubscribe(MessageSchema schema) {
+    Map data = {
+      'id': schema.msgId,
+      'contentType': ContentType.eventUnsubscribe,
+      'content': schema.content,
+      'topic': schema.topic,
+      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+    };
+    return jsonEncode(data);
+  }
 }
 
-class MessageSchema {
+class MessageSchema extends Equatable {
   Uint8List? pid; // <-> pid
   String msgId; // (required) <-> msg_id
-  String from; // (required) <-> sender / -> target_id
-  String? to; // <-> receiver / -> target_id
-  String? topic; // <-> topic / -> target_id
+  String from; // (required) <-> sender / -> target_id(session_id)
+  String? to; // <-> receiver / -> target_id(session_id)
+  String? topic; // <-> topic / -> target_id(session_id)
 
   String contentType; // (required) <-> type
   dynamic content; // <-> content
@@ -286,6 +353,7 @@ class MessageSchema {
     if (sendTime == null) sendTime = DateTime.now();
   }
 
+  /// from receive
   static MessageSchema? fromReceive(OnMessage? raw) {
     if (raw == null || raw.data == null) return null;
     Map<String, dynamic>? data = jsonFormat(raw.data);
@@ -311,6 +379,10 @@ class MessageSchema {
       schema.receiveTime = DateTime.now();
       schema.deleteTime = null;
 
+      // TODO:GG set in success
+      // int? deleteTime = MessageOptions.getDeleteAfterSeconds(schema);
+      // schema.deleteTime = deleteTime != null ? DateTime.fromMillisecondsSinceEpoch(deleteTime) : null;
+
       schema = MessageStatus.set(schema, MessageStatus.Received);
 
       schema.parentType = data['parentType'];
@@ -324,6 +396,7 @@ class MessageSchema {
     return null;
   }
 
+  /// to send
   MessageSchema.fromSend(
     this.msgId,
     this.from,
@@ -345,21 +418,32 @@ class MessageSchema {
     receiveTime = null;
     deleteTime = null;
 
+    // TODO:GG set in success
+    // int? dt = MessageOptions.getDeleteAfterSeconds(this);
+    // deleteTime = dt != null ? DateTime.fromMillisecondsSinceEpoch(dt) : null;
+
     MessageStatus.set(this, MessageStatus.Sending);
   }
 
+  /// from sqlite
   static MessageSchema fromMap(Map<String, dynamic> e) {
     MessageSchema schema = MessageSchema(
       e['msg_id'],
       e['sender'],
       e['type'],
-      pid: e['pid'] != null ? hexDecode(e['pid']) : e['pid'],
+      pid: e['pid'] != null ? hexDecode(e['pid']) : null,
       to: e['receiver'],
       topic: e['topic'],
       options: e['options'] != null ? jsonFormat(e['options']) : null,
     );
 
-    if (schema.contentType == ContentType.nknImage || schema.contentType == ContentType.media || schema.contentType == ContentType.audio || schema.contentType == ContentType.nknOnePiece) {
+    if (schema.contentType == ContentType.image || schema.contentType == ContentType.media) {
+      String filePath = join(Global.applicationRootDirectory.path, e['content']);
+      schema.content = File(filePath);
+    } else if (schema.contentType == ContentType.audio) {
+      String filePath = join(Global.applicationRootDirectory.path, e['content']);
+      schema.content = File(filePath);
+    } else if (schema.contentType == ContentType.piece) {
       String filePath = join(Global.applicationRootDirectory.path, e['content']);
       schema.content = File(filePath);
     } else {
@@ -374,50 +458,55 @@ class MessageSchema {
     schema.isSendError = (e['is_send_error'] != null && e['is_send_error'] == 1) ? true : false;
     schema.isSuccess = (e['is_success'] != null && e['is_success'] == 1) ? true : false;
     schema.isRead = (e['is_read'] != null && e['is_read'] == 1) ? true : false;
+
+    Map<String, dynamic> options = schema.options ?? Map<String, dynamic>();
+    schema.parentType = options[MessageOptions.KEY_PARENT_TYPE];
+    schema.parity = options[MessageOptions.KEY_PARITY];
+    schema.total = options[MessageOptions.KEY_TOTAL];
+    schema.index = options[MessageOptions.KEY_INDEX];
+    schema.bytesLength = options[MessageOptions.KEY_BYTES_LENGTH];
+
     return schema;
   }
 
+  /// to sqlite
   Map<String, dynamic> toMap() {
-    int rTime = DateTime.now().millisecondsSinceEpoch;
-    if (receiveTime != null) {
-      rTime = receiveTime!.millisecondsSinceEpoch;
-    }
     Map<String, dynamic> map = {
-      'pid': pid != null ? hexEncode(pid!) : null,
+      'pid': pid != null ? hexEncode(pid) : null,
       'msg_id': msgId,
       'sender': from,
       'receiver': to,
       'topic': topic,
-      'target_id': topic != null
-          ? topic
-          : isOutbound
-              ? to
-              : from,
+      'target_id': getTargetId,
       'type': contentType,
-      'options': options != null ? jsonEncode(options) : null,
       'send_time': sendTime?.millisecondsSinceEpoch,
-      'receive_time': rTime,
+      'receive_time': receiveTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'delete_time': deleteTime?.millisecondsSinceEpoch,
       'is_read': isRead ? 1 : 0,
       'is_outbound': isOutbound ? 1 : 0,
       'is_success': isSuccess ? 1 : 0,
       'is_send_error': isSendError ? 1 : 0,
     };
-    String pubKey = hexEncode(chatCommon.publicKey!);
-    if (contentType == ContentType.nknImage || contentType == ContentType.media) {
-      map['content'] = Path.getLocalChatMedia(pubKey, Path.getFileName((content as File).path));
+    String pubKey = hexEncode(chatCommon.publicKey);
+    if (contentType == ContentType.image || contentType == ContentType.media) {
+      map['content'] = Path.getLocalChat(pubKey, Path.getFileName((content as File).path));
     } else if (contentType == ContentType.audio) {
-      map['content'] = Path.getLocalChatAudio(pubKey, Path.getFileName((content as File).path));
-    } else if (contentType == ContentType.eventContactOptions) {
-      map['content'] = content;
-      if (map['send_time'] == null) {
-        map['send_time'] = DateTime.now().millisecondsSinceEpoch;
-      }
-    } else if (contentType == ContentType.nknOnePiece) {
-      map['content'] = Path.getLocalChatPiece(pubKey, Path.getFileName((content as File).path));
+      map['content'] = Path.getLocalChat(pubKey, Path.getFileName((content as File).path));
+    } else if (contentType == ContentType.piece) {
+      map['content'] = Path.getLocalChat(pubKey, Path.getFileName((content as File).path));
     } else {
       map['content'] = content;
     }
+
+    if (contentType == ContentType.piece) {
+      if (options == null) {
+        options = Map<String, dynamic>();
+      }
+      Map<String, dynamic> onePiece = MessageOptions.createOnePiece(this);
+      options?.addAll(onePiece);
+    }
+    map['options'] = options != null ? jsonEncode(options) : null;
+
     return map;
   }
 
@@ -447,7 +536,7 @@ class MessageSchema {
 
     var bytes = base64Decode(fileBase64);
     String name = hexEncode(Uint8List.fromList(md5.convert(bytes).bytes));
-    String path = Path.getLocalChatMedia(hexEncode(chatCommon.publicKey!), '$name.$extension');
+    String path = Path.getLocalChat(hexEncode(chatCommon.publicKey), '$name.$extension');
     File file = File(join(Global.applicationRootDirectory.path, path));
 
     logger.d('getMediaFile - path:${file.absolute}');
@@ -459,8 +548,19 @@ class MessageSchema {
     return file;
   }
 
+  String? get getTargetId {
+    return topic != null
+        ? topic
+        : isOutbound
+            ? to
+            : from;
+  }
+
   @override
   String toString() {
     return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, contentType: $contentType, content: $content, options: $options, sendTime: $sendTime, receiveTime: $receiveTime, deleteTime: $deleteTime, isOutbound: $isOutbound, isSendError: $isSendError, isSuccess: $isSuccess, isRead: $isRead, parentType: $parentType, parity: $parity, total: $total, index: $index, bytesLength: $bytesLength}';
   }
+
+  @override
+  List<Object?> get props => [pid];
 }

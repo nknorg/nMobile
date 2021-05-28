@@ -9,7 +9,9 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/settings.dart';
+import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -58,6 +60,9 @@ class ChatCommon {
   StreamSubscription? _onConnectStreamSubscription;
   StreamSubscription? _onMessageStreamSubscription;
 
+  MessageStorage _messageStorage = MessageStorage();
+  TopicStorage _topicStorage = TopicStorage();
+
   ChatCommon() {
     status = ChatConnectStatus.disconnected;
     statusStream.listen((int event) {
@@ -71,9 +76,9 @@ class ChatCommon {
   Future signIn(WalletSchema? scheme) async {
     if (scheme == null) return null;
     try {
-      String? pwd = await walletCommon.getWalletPassword(Global.appContext, scheme.address);
+      String? pwd = await walletCommon.getPassword(Global.appContext, scheme.address);
       if (pwd == null || pwd.isEmpty) return;
-      String keystore = await walletCommon.getWalletKeystoreByAddress(scheme.address);
+      String keystore = await walletCommon.getKeystoreByAddress(scheme.address);
 
       Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd));
 
@@ -136,6 +141,31 @@ class ChatCommon {
     await _onMessageStreamSubscription?.cancel();
     await client?.close();
     client = null;
+  }
+
+  Future<List<MessageSchema>> queryListAndReadByTargetId(String? targetId, {int offset = 0, int limit = 20}) async {
+    List<MessageSchema> list = await _messageStorage.queryListCanReadByTargetId(targetId, offset: offset, limit: limit);
+    // unread
+    int unreadCount = await _messageStorage.unReadCountByTargetId(list[0].getTargetId);
+    if (unreadCount > 0) {
+      _messageStorage.readByTargetId(list[0].getTargetId); // await
+      list.map((e) {
+        e.isRead = true;
+        return e;
+      });
+    }
+    // deleteTime
+    if (list.isNotEmpty) {
+      for (var i = 0; i < list.length; i++) {
+        MessageSchema messageItem = list[i];
+        int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(list[i]);
+        if (messageItem.deleteTime == null && burnAfterSeconds != null) {
+          messageItem.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
+          _messageStorage.updateDeleteTime(messageItem.msgId, messageItem.deleteTime); // await
+        }
+      }
+    }
+    return list;
   }
 
   Future sendText(String dest, String data) async {
