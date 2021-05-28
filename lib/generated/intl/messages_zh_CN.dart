@@ -369,6 +369,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "slow": MessageLookupByLibrary.simpleMessage("慢"),
         "something_went_wrong":
             MessageLookupByLibrary.simpleMessage("啊哦~哪里出错了！请稍后重试。"),
+        "start_chat": MessageLookupByLibrary.simpleMessage("开始聊天"),
         "storage_text": MessageLookupByLibrary.simpleMessage("存储"),
         "stranger": MessageLookupByLibrary.simpleMessage("陌生人"),
         "subscribe": MessageLookupByLibrary.simpleMessage("加入"),

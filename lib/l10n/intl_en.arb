@@ -84,6 +84,7 @@
   "channel_invitation": "group invitation",
   "accept_invitation": "Accept Invitation",
   "joined_channel": "Joined group",
+  "start_chat": "Start Chat",
 
   "wallet_name": "Account Name",
   "hint_enter_wallet_name": "Enter wallet name",
