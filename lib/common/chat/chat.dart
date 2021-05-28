@@ -143,22 +143,24 @@ class ChatCommon {
     client = null;
   }
 
-  Future<List<MessageSchema>> queryListAndReadByTargetId(String? targetId, {int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListAndReadByTargetId(String? targetId, {int offset = 0, int limit = 20, int? unread}) async {
     List<MessageSchema> list = await _messageStorage.queryListCanReadByTargetId(targetId, offset: offset, limit: limit);
     // unread
-    int unreadCount = await _messageStorage.unReadCountByTargetId(list[0].getTargetId);
-    if (unreadCount > 0) {
-      _messageStorage.readByTargetId(list[0].getTargetId); // await
-      list.map((e) {
-        e.isRead = true;
-        return e;
-      });
+    if (offset == 0) {
+      int unreadCount = unread ?? await _messageStorage.unReadCountByTargetId(list[0].getTargetId);
+      if (unreadCount > 0) {
+        _messageStorage.readByTargetId(list[0].getTargetId); // await
+        list.map((e) {
+          e.isRead = true;
+          return e;
+        });
+      }
     }
     // deleteTime
     if (list.isNotEmpty) {
       for (var i = 0; i < list.length; i++) {
         MessageSchema messageItem = list[i];
-        int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(list[i]);
+        int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(messageItem);
         if (messageItem.deleteTime == null && burnAfterSeconds != null) {
           messageItem.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
           _messageStorage.updateDeleteTime(messageItem.msgId, messageItem.deleteTime); // await
@@ -168,11 +170,11 @@ class ChatCommon {
     return list;
   }
 
-  Future sendText(String dest, String data) async {
-    return this.client?.sendText([dest], data);
+  Future<OnMessage?> sendText(String dest, String data) async {
+    return await this.client?.sendText([dest], data);
   }
 
-  Future publishText(String topic, String data) async {
-    return this.client?.publishText(topic, data);
+  Future<OnMessage?> publishText(String topic, String data) async {
+    return await this.client?.publishText(topic, data);
   }
 }

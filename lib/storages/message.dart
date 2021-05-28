@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/message.dart';
@@ -52,7 +55,7 @@ class MessageStorage {
     if (schema == null) return null;
     // duplicated
     if (schema.contentType != ContentType.piece) {
-      List<MessageSchema> exists = await queryListByMsgIdType(schema.msgId, schema.contentType);
+      List<MessageSchema> exists = await queryListByType(schema.msgId, schema.contentType);
       if (exists.isNotEmpty) {
         logger.d("insertMessage - exists:$exists");
         return exists[0];
@@ -70,7 +73,7 @@ class MessageStorage {
     return null;
   }
 
-  Future<List<MessageSchema>> queryListByMsgIdType(String? msgId, String? type) async {
+  Future<List<MessageSchema>> queryListByType(String? msgId, String? type) async {
     if (msgId == null || msgId.isEmpty || type == null || type.isEmpty) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.query(
@@ -80,12 +83,12 @@ class MessageStorage {
         whereArgs: [msgId, type],
       );
       if (res == null || res.isEmpty) {
-        logger.d("queryMessagesByMsgIdType - empty - msgId:$msgId - type:$type");
+        logger.d("queryListByType - empty - msgId:$msgId - type:$type");
         return [];
       }
       List<MessageSchema> result = <MessageSchema>[];
       res.forEach((map) => result.add(MessageSchema.fromMap(map)));
-      logger.d("queryMessagesByMsgIdType - success - msgId:$msgId - type:$type - length:${result.length} - items:$result");
+      logger.d("queryListByType - success - msgId:$msgId - type:$type - length:${result.length} - items:$result");
       return result;
     } catch (e) {
       handleError(e);
@@ -93,7 +96,7 @@ class MessageStorage {
     return [];
   }
 
-  Future<int> queryCountByMsgId(String? msgId) async {
+  Future<int> queryCount(String? msgId) async {
     if (msgId == null || msgId.isEmpty) return 0;
     try {
       List<Map<String, dynamic>>? res = await db?.query(
@@ -103,7 +106,7 @@ class MessageStorage {
         whereArgs: [msgId],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.d("queryCountByMsgId - msgId:$msgId - count:$count");
+      logger.d("queryCount - msgId:$msgId - count:$count");
       return count ?? 0;
     } catch (e) {
       handleError(e);
@@ -142,8 +145,22 @@ class MessageStorage {
     return [];
   }
 
-  Future<int> updateDeleteTime(String? msgId, DateTime? deleteTime) async {
-    if (msgId == null || msgId.isEmpty) return 0;
+  Future<bool> updatePid(String? msgId, Uint8List? pid) async {
+    if (msgId == null || msgId.isEmpty) return false;
+    int? count = await db?.update(
+      tableName,
+      {
+        'pid': hexEncode(pid),
+      },
+      where: 'msg_id = ?',
+      whereArgs: [msgId],
+    );
+    logger.d("updatePid - count:$count - msgId:$msgId - pid:$pid}");
+    return (count ?? 0) > 0;
+  }
+
+  Future<bool> updateDeleteTime(String? msgId, DateTime? deleteTime) async {
+    if (msgId == null || msgId.isEmpty) return false;
     int? count = await db?.update(
       tableName,
       {
@@ -153,7 +170,7 @@ class MessageStorage {
       whereArgs: [msgId],
     );
     logger.d("updateDeleteTime - count:$count - msgId:$msgId - deleteTime:$deleteTime}");
-    return count ?? 0;
+    return (count ?? 0) > 0;
   }
 
   Future<int> unReadCountByNotSender(String? senderId) async {
@@ -182,21 +199,8 @@ class MessageStorage {
     return count ?? 0;
   }
 
-  Future<int> readByMsgId(String? msgId) async {
-    if (msgId == null || msgId.isEmpty) return 0;
-    int? count = await db?.update(
-      tableName,
-      {
-        'is_read': 1,
-      },
-      where: 'msg_id = ?',
-      whereArgs: [msgId],
-    );
-    return count ?? 0;
-  }
-
-  Future<int> readByTargetId(String? targetId) async {
-    if (targetId == null || targetId.isEmpty) return 0;
+  Future<bool> readByTargetId(String? targetId) async {
+    if (targetId == null || targetId.isEmpty) return false;
     int? count = await db?.update(
       tableName,
       {
@@ -205,16 +209,33 @@ class MessageStorage {
       where: 'target_id = ?',
       whereArgs: [targetId],
     );
-    return count ?? 0;
+    return (count ?? 0) > 0;
+  }
+
+  Future<bool> updateByMessageStatus(String? msgId, int messageStatus) {
+    if (msgId == null || msgId.isEmpty) return Future.value(false);
+    MessageSchema schema = MessageStatus.set(MessageSchema.fromMap(Map()), messageStatus);
+    schema.msgId = msgId;
+    return updateMessageStatus(schema);
+  }
+
+  Future<bool> updateMessageStatus(MessageSchema? schema) async {
+    if (schema == null) return false;
+    int? count = await db?.update(
+      tableName,
+      {
+        'is_outbound': schema.isOutbound ? 1 : 0,
+        'is_send_error': schema.isSendError ? 1 : 0,
+        'is_success': schema.isSuccess ? 1 : 0,
+        'is_read': schema.isRead ? 1 : 0,
+      },
+      where: 'msg_id = ?',
+      whereArgs: [schema.msgId],
+    );
+    return (count ?? 0) > 0;
   }
 
   /// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-
-  Future<bool> receiveSuccess(String? msgId) async {
-    if (msgId == null || msgId.isEmpty) return false;
-    int? result = await db?.update(tableName, {'is_success': 1});
-    return result != null ? result > 0 : false;
-  }
 
   /// ContentType is text, textExtension, media, audio counted to not read
   Future<List<SessionSchema>> getLastSession(int skip, int limit) async {

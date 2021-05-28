@@ -29,16 +29,11 @@ class ReceiveMessage {
   Future onClientMessage(MessageSchema? schema) async {
     if (schema == null) return;
     // contact
-    contactCommon.addByType(schema.from, ContactType.stranger);
+    contactCommon.addByType(schema.from, ContactType.stranger); // wait
     // topic
-    topicHandle(schema.topic);
+    topicHandle(schema.topic); // wait
     // receive
     onReceiveSink.add(schema);
-    // sqlite
-    schema = await _messageStorage.insert(schema);
-    if (schema != null) {
-      onSavedSink.add(schema);
-    }
   }
 
   Future topicHandle(String? topic) async {
@@ -74,9 +69,13 @@ class ReceiveMessage {
   }
 
   receiveTextMessage() {
-    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) {
-      // receipt message TODO: batch send receipt message
-      sendMessage.sendReceipt(event);
+    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) async {
+      // sqlite
+      MessageSchema? schema = await _messageStorage.insert(event);
+      if (schema == null) return;
+      // receipt message
+      sendMessage.sendReceipt(event); // wait
+      onSavedSink.add(schema);
       // TODO: notification
       // notification.showDChatNotification();
     });
@@ -85,9 +84,13 @@ class ReceiveMessage {
 
   receiveReceiptMessage() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.receipt).listen((MessageSchema event) {
-      // TODO: batch update receipt message
-      _messageStorage.receiveSuccess(event.msgId);
+      // update send by receipt
+      _messageStorage.updateByMessageStatus(event.content, MessageStatus.SendByReplyReceipt); // wait
     });
     onReceiveStreamSubscriptions.add(subscription);
+  }
+
+  Future<bool> read(MessageSchema schema) {
+    return _messageStorage.updateByMessageStatus(schema.msgId, MessageStatus.ReceivedRead);
   }
 }

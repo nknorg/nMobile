@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:typed_data';
 
+import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/message.dart';
@@ -15,14 +17,12 @@ class SendMessage {
   // ignore: close_sinks
   StreamController<MessageSchema> onSavedController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get onSavedSink => onSavedController.sink;
-  Stream<MessageSchema> get onSavedStream => onSavedController.stream; // TODO:GG
-  List<StreamSubscription> onSavedStreamSubscriptions = <StreamSubscription>[];
+  Stream<MessageSchema> get onSavedStream => onSavedController.stream;
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onSendController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get onSendSink => _onSendController.sink;
   Stream<MessageSchema> get onSendStream => _onSendController.stream; // TODO:GG
-  List<StreamSubscription> onSendSubscriptions = <StreamSubscription>[];
 
   MessageStorage _messageStorage = MessageStorage();
   TopicStorage _topicStorage = TopicStorage();
@@ -30,25 +30,37 @@ class SendMessage {
   Future<MessageSchema?> sendMessage(MessageSchema? schema) async {
     if (schema == null) return null;
     // contact
-    contactCommon.addByType(schema.from, ContactType.stranger);
-    // TODO:GG topic
+    contactCommon.addByType(schema.from, ContactType.stranger); // wait
+    // TODO:GG topicHandle
     // sqlite
     schema = await _messageStorage.insert(schema);
     if (schema == null) return null;
     onSavedSink.add(schema);
-    // send
+    // sdk send
+    Uint8List? pid;
     try {
       if (schema.topic != null) {
-        await chatCommon.publishText(schema.topic!, MessageData.getText(schema));
+        OnMessage? onResult = await chatCommon.publishText(schema.topic!, MessageData.getText(schema));
+        pid = onResult?.messageId;
       } else if (schema.to != null) {
-        await chatCommon.sendText(schema.to!, MessageData.getText(schema));
-        onSendSink.add(schema);
-        return schema;
+        OnMessage? onResult = await chatCommon.sendText(schema.to!, MessageData.getText(schema));
+        pid = onResult?.messageId;
       }
     } catch (e) {
       handleError(e);
+      return null;
     }
-    return null;
+    // result pid
+    if (pid != null) {
+      schema.pid = pid;
+      _messageStorage.updatePid(schema.msgId, pid);
+    }
+    // update status
+    schema = MessageStatus.set(schema, MessageStatus.SendSuccess);
+    _messageStorage.updateMessageStatus(schema);
+    // wait receipt
+    onSendSink.add(schema);
+    return schema;
   }
 
   Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
