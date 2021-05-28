@@ -250,7 +250,7 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
   }
 
   _selectAvatarPicture() async {
-    String remarkAvatarLocalPath = Path.getLocalContactAvatar(hexEncode(chatCommon.publicKey), "${Uuid().v4()}.jpeg");
+    String remarkAvatarLocalPath = Path.getLocalContactAvatar(hexEncode(chatCommon.publicKey!), "${Uuid().v4()}.jpeg");
     String remarkAvatarPath = join(Global.applicationRootDirectory.path, remarkAvatarLocalPath);
     File? picked = await MediaPicker.pick(
       mediaType: MediaType.image,

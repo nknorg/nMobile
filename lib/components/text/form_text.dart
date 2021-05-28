@@ -24,6 +24,7 @@ class FormText extends StatefulWidget {
   List<TextInputFormatter>? inputFormatters;
   final TextInputAction? textInputAction;
   ValueChanged<String>? onChanged;
+  VoidCallback? onEditingComplete;
   ValueChanged<String>? onFieldSubmitted;
   FormFieldSetter<String>? onSaved;
   // decoration
@@ -53,6 +54,7 @@ class FormText extends StatefulWidget {
     this.inputFormatters,
     this.textInputAction,
     this.onChanged,
+    this.onEditingComplete,
     this.onFieldSubmitted,
     this.onSaved,
     // decoration
@@ -103,6 +105,7 @@ class _FormTextState extends State<FormText> {
           inputFormatters: widget.inputFormatters,
           textInputAction: widget.textInputAction,
           onChanged: widget.onChanged,
+          onEditingComplete: widget.onEditingComplete,
           onFieldSubmitted: widget.onFieldSubmitted,
           onSaved: widget.onSaved,
           decoration: InputDecoration(
@@ -140,6 +143,7 @@ class _FormTextState extends State<FormText> {
           inputFormatters: widget.inputFormatters,
           textInputAction: widget.textInputAction,
           onChanged: widget.onChanged,
+          onEditingComplete: widget.onEditingComplete,
           onFieldSubmitted: widget.onFieldSubmitted,
           onSaved: widget.onSaved,
           decoration: InputDecoration(

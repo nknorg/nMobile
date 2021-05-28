@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -14,6 +16,8 @@ import 'package:nmobile/screens/chat/session_list.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/asset.dart';
+
+import 'no_wallet.dart';
 
 class ChatHomeScreen extends StatefulWidget {
   static const String routeName = '/chat/home';
@@ -95,97 +99,107 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
 
     // _firstAutoShowAuth() TODO:GG auth
 
-    return StreamBuilder<int>(
-      stream: chatCommon.statusStream,
-      initialData: chatCommon.status,
-      builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
-        if (snapshot.data == ChatConnectStatus.disconnected) {
-          return ChatNoConnectLayout();
-        } else {
-          return Layout(
-            headerColor: application.theme.primaryColor,
-            bodyColor: application.theme.backgroundLightColor,
-            header: Header(
-              titleChild: Container(
-                margin: EdgeInsets.only(left: 20),
-                child: contactCommon.currentUser != null
-                    ? ContactHeader(
-                        contact: contactCommon.currentUser!,
-                        onTap: () {
-                          ContactProfileScreen.go(context, contactId: contactCommon.currentUser?.id);
-                        },
-                        body: StreamBuilder<int>(
-                          stream: chatCommon.statusStream,
-                          initialData: chatCommon.status,
-                          builder: (context, snapshot) {
-                            Widget statusWidget = Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: <Widget>[
-                                Label(_localizations.connecting, type: LabelType.h4, color: application.theme.fontLightColor.withAlpha(200)),
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 2, left: 4),
-                                  child: SpinKitThreeBounce(
-                                    color: application.theme.fontLightColor.withAlpha(200),
-                                    size: 10,
-                                  ),
+    return BlocBuilder<WalletBloc, WalletState>(
+      builder: (context, state) {
+        if (state is WalletLoaded) {
+          if(state.isWalletsEmpty()){
+            return ChatNoWalletLayout();
+          }
+        }
+        return StreamBuilder<int>(
+          stream: chatCommon.statusStream,
+          initialData: chatCommon.status,
+          builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+            if (snapshot.data == ChatConnectStatus.disconnected) {
+              return ChatNoConnectLayout();
+            } else {
+              return Layout(
+                headerColor: application.theme.primaryColor,
+                bodyColor: application.theme.backgroundLightColor,
+                header: Header(
+                  titleChild: Container(
+                    margin: EdgeInsets.only(left: 20),
+                    child: contactCommon.currentUser != null
+                        ? ContactHeader(
+                      contact: contactCommon.currentUser!,
+                      onTap: () {
+                        ContactProfileScreen.go(context, contactId: contactCommon.currentUser?.id);
+                      },
+                      body: StreamBuilder<int>(
+                        stream: chatCommon.statusStream,
+                        initialData: chatCommon.status,
+                        builder: (context, snapshot) {
+                          Widget statusWidget = Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: <Widget>[
+                              Label(_localizations.connecting, type: LabelType.h4, color: application.theme.fontLightColor.withAlpha(200)),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 2, left: 4),
+                                child: SpinKitThreeBounce(
+                                  color: application.theme.fontLightColor.withAlpha(200),
+                                  size: 10,
                                 ),
-                              ],
-                            );
-                            switch (snapshot.data) {
-                              case ChatConnectStatus.disconnected:
-                                statusWidget = Row(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: <Widget>[
-                                    Label(_localizations.disconnect, type: LabelType.h4, color: application.theme.strongColor),
-                                  ],
-                                );
-                                break;
-                              case ChatConnectStatus.connected:
-                                statusWidget = Row(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: <Widget>[
-                                    Label(_localizations.connected, type: LabelType.h4, color: application.theme.successColor),
-                                  ],
-                                );
-                                break;
-                            }
+                              ),
+                            ],
+                          );
+                          switch (snapshot.data) {
+                            case ChatConnectStatus.disconnected:
+                              statusWidget = Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: <Widget>[
+                                  Label(_localizations.disconnect, type: LabelType.h4, color: application.theme.strongColor),
+                                ],
+                              );
+                              break;
+                            case ChatConnectStatus.connected:
+                              statusWidget = Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: <Widget>[
+                                  Label(_localizations.connected, type: LabelType.h4, color: application.theme.successColor),
+                                ],
+                              );
+                              break;
+                          }
 
-                            return statusWidget;
-                          },
-                        ),
-                      )
-                    : SizedBox.shrink(),
-              ),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: IconButton(
-                    icon: Asset.iconSvg('addbook', color: Colors.white, width: 24),
+                          return statusWidget;
+                        },
+                      ),
+                    )
+                        : SizedBox.shrink(),
+                  ),
+                  actions: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: IconButton(
+                        icon: Asset.iconSvg('addbook', color: Colors.white, width: 24),
+                        onPressed: () {
+                          ContactHomeScreen.go(context);
+                        },
+                      ),
+                    )
+                  ],
+                ),
+                floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+                floatingActionButton: Padding(
+                  padding: EdgeInsets.only(bottom: 60, right: 4),
+                  child: FloatingActionButton(
+                    key: _floatingActionKey,
+                    elevation: 12,
+                    backgroundColor: application.theme.primaryColor,
+                    child: Asset.iconSvg('pencil', width: 24),
                     onPressed: () {
-                      ContactHomeScreen.go(context);
+                      _showFloatActionMenu();
                     },
                   ),
-                )
-              ],
-            ),
-            floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-            floatingActionButton: Padding(
-              padding: EdgeInsets.only(bottom: 60, right: 4),
-              child: FloatingActionButton(
-                key: _floatingActionKey,
-                elevation: 12,
-                backgroundColor: application.theme.primaryColor,
-                child: Asset.iconSvg('pencil', width: 24),
-                onPressed: () {
-                  _showFloatActionMenu();
-                },
-              ),
-            ),
-            body: ChatSessionListLayout(),
-          );
-        }
+                ),
+                body: ChatSessionListLayout(),
+              );
+            }
+          },
+        );
       },
     );
+
   }
 
   // TODO:GG fix android position
