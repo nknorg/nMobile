@@ -22,25 +22,6 @@ class ChatConnectStatus {
   static const int stopping = 3;
 }
 
-class ContentType {
-  // TODO:GG 作用
-  static const String system = 'system';
-  static const String text = 'text';
-  static const String textExtension = 'textExtension';
-  static const String receipt = 'receipt';
-  static const String media = 'media';
-
-  static const String nknImage = 'nknImage'; // todo, remove this, or rename image
-  static const String audio = 'audio';
-
-  static const String contact = 'contact';
-  static const String nknOnePiece = 'nknOnePiece';
-  static const String eventContactOptions = 'event:contactOptions';
-  static const String eventSubscribe = 'event:subscribe';
-  static const String eventUnsubscribe = 'event:unsubscribe';
-  static const String channelInvitation = 'event:channelInvitation';
-}
-
 unLeadingHashIt(String str) {
   return str.replaceFirst(RegExp(r'^#*'), '');
 }

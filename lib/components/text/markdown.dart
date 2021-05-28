@@ -8,7 +8,10 @@ class Markdown extends StatelessWidget {
   final String data;
   final bool dark;
 
-  Markdown({required this.data, this.dark = false});
+  Markdown({
+    required this.data,
+    this.dark = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +31,18 @@ class Markdown extends StatelessWidget {
     return MarkdownBody(
       data: data,
       onTapLink: (text, href, title) => launchUrl(href),
-      styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(code: textStyle, p: textStyle.copyWith(fontSize: _theme.bodyText1.fontSize), a: linkStyle, h1: textStyle.copyWith(fontSize: _theme.headline1.fontSize), h2: textStyle.copyWith(fontSize: _theme.headline2.fontSize), h3: textStyle.copyWith(fontSize: _theme.headline3.fontSize), h4: textStyle.copyWith(fontSize: _theme.headline4.fontSize), h5: textStyle.copyWith(fontSize: _theme.headline4.fontSize), em: textStyle, listBullet: TextStyle(height: 1.25)),
+      styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+        code: textStyle,
+        p: textStyle.copyWith(fontSize: _theme.bodyText1.fontSize),
+        a: linkStyle,
+        h1: textStyle.copyWith(fontSize: _theme.headline1.fontSize),
+        h2: textStyle.copyWith(fontSize: _theme.headline2.fontSize),
+        h3: textStyle.copyWith(fontSize: _theme.headline3.fontSize),
+        h4: textStyle.copyWith(fontSize: _theme.headline4.fontSize),
+        h5: textStyle.copyWith(fontSize: _theme.headline4.fontSize),
+        em: textStyle,
+        listBullet: TextStyle(height: 1.25),
+      ),
     );
   }
 }

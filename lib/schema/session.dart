@@ -27,7 +27,7 @@ class SessionSchema extends Equatable {
   });
 
   @override
-  List<Object> get props => [targetId ?? ""];
+  List<Object?> get props => [targetId];
 
   static Future<SessionSchema?> fromMap(Map e) async {
     var res = SessionSchema(
