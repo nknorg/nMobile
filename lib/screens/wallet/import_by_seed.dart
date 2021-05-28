@@ -145,7 +145,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                     hintText: _localizations.input_seed,
                     validator: Validator.of(context).seed(),
                     textInputAction: TextInputAction.next,
-                    onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_nameFocusNode),
+                    onEditingComplete: () => FocusScope.of(context).requestFocus(_nameFocusNode),
                     maxLines: 10,
                   ),
                 ),
@@ -165,7 +165,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
                     hintText: _localizations.hint_enter_wallet_name,
                     validator: Validator.of(context).walletName(),
                     textInputAction: TextInputAction.next,
-                    onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
+                    onEditingComplete: () => FocusScope.of(context).requestFocus(_passwordFocusNode),
                   ),
                 ),
                 Padding(

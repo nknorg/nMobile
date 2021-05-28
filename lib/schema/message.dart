@@ -383,7 +383,7 @@ class MessageSchema {
       rTime = receiveTime!.millisecondsSinceEpoch;
     }
     Map<String, dynamic> map = {
-      'pid': pid != null ? hexEncode(pid) : null,
+      'pid': pid != null ? hexEncode(pid!) : null,
       'msg_id': msgId,
       'sender': from,
       'receiver': to,
@@ -403,7 +403,7 @@ class MessageSchema {
       'is_success': isSuccess ? 1 : 0,
       'is_send_error': isSendError ? 1 : 0,
     };
-    String pubKey = hexEncode(chatCommon.publicKey);
+    String pubKey = hexEncode(chatCommon.publicKey!);
     if (contentType == ContentType.nknImage || contentType == ContentType.media) {
       map['content'] = Path.getLocalChatMedia(pubKey, Path.getFileName((content as File).path));
     } else if (contentType == ContentType.audio) {
@@ -447,7 +447,7 @@ class MessageSchema {
 
     var bytes = base64Decode(fileBase64);
     String name = hexEncode(Uint8List.fromList(md5.convert(bytes).bytes));
-    String path = Path.getLocalChatMedia(hexEncode(chatCommon.publicKey), '$name.$extension');
+    String path = Path.getLocalChatMedia(hexEncode(chatCommon.publicKey!), '$name.$extension');
     File file = File(join(Global.applicationRootDirectory.path, path));
 
     logger.d('getMediaFile - path:${file.absolute}');

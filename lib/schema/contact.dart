@@ -133,7 +133,7 @@ class ContactSchema {
       'last_name': lastName,
       'data': extraInfo != null ? jsonEncode(extraInfo) : '{}',
       'options': options != null ? jsonEncode(options!.toMap()) : null,
-      'avatar': avatar != null ? Path.getLocalContactAvatar(hexEncode(chatCommon.publicKey), Path.getFileName(avatar!)) : null,
+      'avatar': avatar != null ? Path.getLocalContactAvatar(hexEncode(chatCommon.publicKey!), Path.getFileName(avatar!)) : null,
       'created_time': createdTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'updated_time': updatedTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'profile_version': profileVersion,

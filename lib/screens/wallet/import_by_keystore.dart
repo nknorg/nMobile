@@ -142,7 +142,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                     hintText: _localizations.input_keystore,
                     validator: widget.walletType == WalletType.nkn ? Validator.of(context).keystoreNKN() : Validator.of(context).keystoreETH(),
                     textInputAction: TextInputAction.next,
-                    onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_nameFocusNode),
+                    onEditingComplete: () => FocusScope.of(context).requestFocus(_nameFocusNode),
                     maxLines: 20,
                     suffixIcon: GestureDetector(
                       onTap: () async {
@@ -188,7 +188,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
                     hintText: _localizations.hint_enter_wallet_name,
                     validator: Validator.of(context).walletName(),
                     textInputAction: TextInputAction.next,
-                    onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
+                    onEditingComplete: () => FocusScope.of(context).requestFocus(_passwordFocusNode),
                   ),
                 ),
                 Padding(
