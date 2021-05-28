@@ -11,8 +11,8 @@ class MessageType {
 }
 
 class OnConnect {
-  Map node;
-  List<String> rpcServers;
+  Map? node;
+  List<String>? rpcServers;
 
   OnConnect({this.node, this.rpcServers});
 }
@@ -24,11 +24,17 @@ class OnMessage {
   int type;
   bool encrypted;
 
-  OnMessage({this.messageId, this.data, this.src, this.type, this.encrypted});
+  OnMessage({
+    required this.messageId,
+    required this.data,
+    required this.src,
+    required this.type,
+    required this.encrypted,
+  });
 }
 
 class ClientConfig {
-  final List<String> seedRPCServerAddr;
+  final List<String>? seedRPCServerAddr;
 
   ClientConfig({this.seedRPCServerAddr});
 }
@@ -37,17 +43,17 @@ class Client {
   static const MethodChannel _methodChannel = MethodChannel('org.nkn.sdk/client');
   static const EventChannel _eventChannel = EventChannel('org.nkn.sdk/client/event');
 
-  static Stream _stream;
+  static Stream? _stream;
 
   static install() {
     _stream = _eventChannel.receiveBroadcastStream();
   }
 
-  String address;
-  Uint8List seed;
-  Uint8List publicKey;
+  late String address;
+  late Uint8List seed;
+  late Uint8List publicKey;
 
-  ClientConfig clientConfig;
+  ClientConfig? clientConfig;
 
   StreamController<OnConnect> _onConnectStreamController = StreamController<OnConnect>.broadcast();
 
@@ -67,23 +73,23 @@ class Client {
 
   Stream<dynamic> get onError => _onErrorStreamController.stream;
 
-  StreamSubscription eventChannelStreamSubscription;
+  late StreamSubscription eventChannelStreamSubscription;
 
   Client({this.clientConfig});
 
-  static Future<Client> create(Uint8List seed, {String identifier = '', ClientConfig config}) async {
+  static Future<Client> create(Uint8List seed, {String identifier = '', ClientConfig? config}) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('create', {
         'identifier': identifier,
         'seed': seed,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config.seedRPCServerAddr : null,
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : null,
       });
       Client client = Client();
       client.address = resp['address'];
       client.publicKey = resp['publicKey'];
       client.seed = resp['seed'];
 
-      client.eventChannelStreamSubscription = _stream.where((res) => res['_id'] == client.address).listen((res) {
+      client.eventChannelStreamSubscription = _stream!.where((res) => res['_id'] == client.address).listen((res) {
         Map data = res['data'];
         if (res['_id'] != client.address) {
           return;
@@ -117,14 +123,14 @@ class Client {
   }
 
   Future<void> close() async {
-    if (!(this.address?.isNotEmpty == true)) {
+    if (!(this.address.isNotEmpty == true)) {
       return;
     }
     await _methodChannel.invokeMethod('close', {'_id': this.address});
-    _onConnectStreamController?.close();
-    _onMessageStreamController?.close();
-    _onErrorStreamController?.close();
-    eventChannelStreamSubscription?.cancel();
+    _onConnectStreamController.close();
+    _onMessageStreamController.close();
+    _onErrorStreamController.close();
+    eventChannelStreamSubscription.cancel();
   }
 
   Future<OnMessage> sendText(List<String> dests, String data, {int maxHoldingSeconds = 8640000, noReply = true}) async {
@@ -172,7 +178,7 @@ class Client {
 
   Future<String> subscribe({
     String identifier = '',
-    String topic,
+    required String topic,
     int duration = 400000,
     String fee = '0',
     String meta = '',
@@ -192,7 +198,7 @@ class Client {
     }
   }
 
-  Future<String> unsubscribe({String identifier = '', String topic, String fee = '0'}) async {
+  Future<String> unsubscribe({String identifier = '', required String topic, String fee = '0'}) async {
     try {
       String hash = await _methodChannel.invokeMethod('unsubscribe', {
         '_id': this.address,
@@ -206,7 +212,7 @@ class Client {
     }
   }
 
-  Future<int> getSubscribersCount({String topic, Uint8List subscriberHashPrefix}) async {
+  Future<int> getSubscribersCount({required String topic, Uint8List? subscriberHashPrefix}) async {
     try {
       int count = await _methodChannel.invokeMethod('getSubscribersCount', {
         '_id': this.address,
@@ -219,9 +225,9 @@ class Client {
     }
   }
 
-  Future<Map<String, dynamic>> getSubscription({String topic, String subscriber}) async {
+  Future<Map<String, dynamic>?> getSubscription({required String topic, required String subscriber}) async {
     try {
-      Map resp = await _methodChannel.invokeMethod('getSubscription', {
+      Map? resp = await _methodChannel.invokeMethod('getSubscription', {
         '_id': this.address,
         'topic': topic,
         'subscriber': subscriber,
@@ -235,16 +241,16 @@ class Client {
     }
   }
 
-  Future<Map<String, dynamic>> getSubscribers({
-    String topic,
+  Future<Map<String, dynamic>?> getSubscribers({
+    required String topic,
     int offset = 0,
     int limit = 10000,
     bool meta = true,
     bool txPool = true,
-    Uint8List subscriberHashPrefix,
+    Uint8List? subscriberHashPrefix,
   }) async {
     try {
-      Map resp = await _methodChannel.invokeMethod('getSubscribers', {
+      Map? resp = await _methodChannel.invokeMethod('getSubscribers', {
         '_id': this.address,
         'topic': topic,
         'offset': offset,
