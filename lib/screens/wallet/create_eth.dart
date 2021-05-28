@@ -40,7 +40,7 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
   }
 
   _create() async {
-    // TODO:GG create eth
+    // TODO:GG eth create
     // if ((_formKey.currentState as FormState).validate()) {
     //   (_formKey.currentState as FormState).save();
     //   final eth = Ethereum.createWallet(name: _name, password: _password);

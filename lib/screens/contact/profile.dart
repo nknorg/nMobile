@@ -220,8 +220,8 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
 
       Toast.show(S.of(this.context).tip_switch_success);
 
-      // TimerAuth.instance.enableAuth(); // TODO:GG auth
-      //_contactBloc.add(UpdateUserInfoEvent(currentUser)); // TODO:GG notify chat
+      // TimerAuth.instance.enableAuth(); // TODO:GG contact auth
+      //_contactBloc.add(UpdateUserInfoEvent(currentUser)); // TODO:GG contact notify chat
     } catch (e) {
       handleError(e);
     } finally {
@@ -268,7 +268,7 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
     } else {
       await contactCommon.setRemarkAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
     }
-    // _chatBloc.add(RefreshSessionEvent()); // TODO:GG notify chat
+    // _chatBloc.add(RefreshSessionEvent()); // TODO:GG contact notify chat
   }
 
   _modifyNickname() async {
@@ -287,7 +287,7 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
     } else {
       await contactCommon.setRemarkName(_contactSchema, newName.trim(), notify: true);
     }
-    // _chatBloc.add(RefreshSessionEvent()); // TODO:GG notify chat
+    // _chatBloc.add(RefreshSessionEvent()); // TODO:GG contact notify chat
   }
 
   _updateBurnIfNeed() async {
@@ -300,7 +300,7 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
     }
     await contactCommon.setOptionsBurn(_contactSchema, _burnValue, notify: true);
 
-    // TODO:GG notify chat
+    // TODO:GG contact notify chat
     // var sendMsg = MessageSchema.formSendMessage(
     //   from: NKNClientCaller.currentChatId,
     //   to: currentUser.clientAddress,
@@ -313,7 +313,7 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
   }
 
   _updateNotificationAndDeviceToken() async {
-    // TODO:GG deviceToken get
+    // TODO:GG contact deviceToken get
     // String deviceToken = '';
     // widget.contactInfo.notificationOpen = _notificationOpen;
     // if (_notificationOpen == true) {
@@ -340,7 +340,7 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
 
     contactCommon.setNotificationOpen(_contactSchema?.id, _notificationOpen, notify: true);
 
-    // TODO:GG notify chat
+    // TODO:GG contact notify chat
     // var sendMsg = MessageSchema.formSendMessage(
     //   from: NKNClientCaller.currentChatId,
     //   to: currentUser.clientAddress,
