@@ -9,6 +9,7 @@ class SettingsStorage {
   static const String BIOMETRICS_AUTHENTICATION = 'biometrics_authentication';
   static const String SEED_RPC_SERVERS_KEY = 'seed_rpc_servers';
 
+  static const String CHAT_TIP_STATUS = 'CHAT_TIP_STATUS';
   final LocalStorage _localStorage = LocalStorage();
 
   Future getSettings(String key) async {

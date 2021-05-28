@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -303,7 +304,8 @@ class BottomDialog extends StatefulWidget {
       title: title,
       desc: desc,
       height: 300,
-      animated: false, // Platform.isAndroid ? false : true, // TODO:GG fixed
+      animated: true,
+      // Platform.isAndroid ? false : true, // TODO:GG fixed
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
@@ -332,6 +334,91 @@ class BottomDialog extends StatefulWidget {
               maxLength: maxLength,
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Future<String?> showInputAddressDialog({String? title, String? hint}) async {
+    TextEditingController _addressController = TextEditingController();
+    double height = 300;
+    GlobalKey formKey = new GlobalKey<FormState>();
+    bool formValid = false;
+
+    if (hint == null) {
+      hint = S.of(context).enter_users_address;
+    }
+
+    return showWithTitle<String>(
+      height: height,
+      animated: true,
+      title: title,
+      action: Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
+        child: Button(
+          text: S.of(context).continue_text,
+          width: double.infinity,
+          onPressed: () {
+            if (formValid) {
+              Navigator.of(context).pop(_addressController.text);
+            }
+          },
+        ),
+      ),
+      child: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).requestFocus(FocusNode());
+        },
+        child: Container(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Form(
+            key: formKey,
+            autovalidateMode: AutovalidateMode.always,
+            onChanged: () {
+              formValid = (formKey.currentState as FormState).validate();
+            },
+            child: Flex(
+              direction: Axis.vertical,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Expanded(
+                  flex: 0,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Label(
+                        S.of(context).send_to,
+                        type: LabelType.bodyRegular,
+                        color: application.theme.fontColor1,
+                        textAlign: TextAlign.start,
+                      ),
+                      FormText(
+                        controller: _addressController,
+                        validator: Validator.of(context).identifierNKN(),
+                        hintText: hint,
+                        suffixIcon: GestureDetector(
+                          onTap: () async {
+                            // TODO: select contact
+                            // var contact = await Navigator.of(context).pushNamed(
+                            //     ContactHome.routeName,
+                            //     arguments: true);
+                            // if (contact is ContactSchema) {
+                            //   _addressController.text = contact.clientAddress;
+                            // }
+                          },
+                          child: Container(
+                            width: 20,
+                            alignment: Alignment.centerRight,
+                            child: Icon(FontAwesomeIcons.solidAddressBook),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

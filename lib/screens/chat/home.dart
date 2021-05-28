@@ -3,18 +3,23 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/chat/chat.dart';
+import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/header.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/create_group.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
 import 'package:nmobile/screens/chat/session_list.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/contact/profile.dart';
+import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/utils/asset.dart';
 
 import 'no_wallet.dart';
@@ -102,7 +107,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     return BlocBuilder<WalletBloc, WalletState>(
       builder: (context, state) {
         if (state is WalletLoaded) {
-          if(state.isWalletsEmpty()){
+          if (state.isWalletsEmpty()) {
             return ChatNoWalletLayout();
           }
         }
@@ -121,50 +126,50 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                     margin: EdgeInsets.only(left: 20),
                     child: contactCommon.currentUser != null
                         ? ContactHeader(
-                      contact: contactCommon.currentUser!,
-                      onTap: () {
-                        ContactProfileScreen.go(context, contactId: contactCommon.currentUser?.id);
-                      },
-                      body: StreamBuilder<int>(
-                        stream: chatCommon.statusStream,
-                        initialData: chatCommon.status,
-                        builder: (context, snapshot) {
-                          Widget statusWidget = Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: <Widget>[
-                              Label(_localizations.connecting, type: LabelType.h4, color: application.theme.fontLightColor.withAlpha(200)),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 2, left: 4),
-                                child: SpinKitThreeBounce(
-                                  color: application.theme.fontLightColor.withAlpha(200),
-                                  size: 10,
-                                ),
-                              ),
-                            ],
-                          );
-                          switch (snapshot.data) {
-                            case ChatConnectStatus.disconnected:
-                              statusWidget = Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: <Widget>[
-                                  Label(_localizations.disconnect, type: LabelType.h4, color: application.theme.strongColor),
-                                ],
-                              );
-                              break;
-                            case ChatConnectStatus.connected:
-                              statusWidget = Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: <Widget>[
-                                  Label(_localizations.connected, type: LabelType.h4, color: application.theme.successColor),
-                                ],
-                              );
-                              break;
-                          }
+                            contact: contactCommon.currentUser!,
+                            onTap: () {
+                              ContactProfileScreen.go(context, contactId: contactCommon.currentUser?.id);
+                            },
+                            body: StreamBuilder<int>(
+                              stream: chatCommon.statusStream,
+                              initialData: chatCommon.status,
+                              builder: (context, snapshot) {
+                                Widget statusWidget = Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: <Widget>[
+                                    Label(_localizations.connecting, type: LabelType.h4, color: application.theme.fontLightColor.withAlpha(200)),
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 2, left: 4),
+                                      child: SpinKitThreeBounce(
+                                        color: application.theme.fontLightColor.withAlpha(200),
+                                        size: 10,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                                switch (snapshot.data) {
+                                  case ChatConnectStatus.disconnected:
+                                    statusWidget = Row(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: <Widget>[
+                                        Label(_localizations.disconnect, type: LabelType.h4, color: application.theme.strongColor),
+                                      ],
+                                    );
+                                    break;
+                                  case ChatConnectStatus.connected:
+                                    statusWidget = Row(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: <Widget>[
+                                        Label(_localizations.connected, type: LabelType.h4, color: application.theme.successColor),
+                                      ],
+                                    );
+                                    break;
+                                }
 
-                          return statusWidget;
-                        },
-                      ),
-                    )
+                                return statusWidget;
+                              },
+                            ),
+                          )
                         : SizedBox.shrink(),
                   ),
                   actions: [
@@ -199,7 +204,6 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
         );
       },
     );
-
   }
 
   // TODO:GG fix android position
@@ -291,6 +295,11 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                 height: 48,
                                 onPressed: () async {
                                   Navigator.of(context).pop();
+                                  BottomDialog.of(context).showWithTitle(
+                                    height: 650,
+                                    title: S.of(context).create_channel,
+                                    child: CreateGroupDialog(),
+                                  );
                                   // TODO:GG chat 1t9
                                   // showModalBottomSheet(
                                   //     context: context,
@@ -309,22 +318,22 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                 width: 48,
                                 height: 48,
                                 onPressed: () async {
-                                  Navigator.of(context).pop();
-                                  // TODO:GG chat 1t1
-                                  // var address = await BottomDialog.of(context)
-                                  //     .showInputAddressDialog(title: NL10ns.of(context).new_whisper, hint: NL10ns.of(context).enter_or_select_a_user_pubkey);
-                                  // if (address != null) {
-                                  //   ContactSchema contact = ContactSchema(type: ContactType.stranger, clientAddress: address);
-                                  //   await contact.insertContact();
-                                  //   var c = await ContactSchema.fetchContactByAddress(address);
-                                  //   if (c != null) {
-                                  //     _pushToSingleChat(c);
-                                  //   } else {
-                                  //     _pushToSingleChat(contact);
-                                  //   }
-                                  // } else {
-                                  //   Navigator.of(context).pop();
-                                  // }
+                                  String? address =
+                                      await BottomDialog.of(context).showInputAddressDialog(title: S.of(context).new_whisper, hint: S.of(context).enter_or_select_a_user_pubkey);
+                                  if (address != null) {
+                                    Navigator.of(context).pop();
+                                    int count = await ContactStorage().queryCountByClientAddress(address);
+                                    var contact = ContactSchema(
+                                      type: ContactType.stranger,
+                                      clientAddress: address,
+                                    );
+                                    if (count == 0) {
+                                      await contactCommon.add(contact);
+                                    }
+                                    await ChatMessagesScreen.go(context, contact);
+                                  } else {
+                                    Navigator.of(context).pop();
+                                  }
                                 },
                               ),
                             ],

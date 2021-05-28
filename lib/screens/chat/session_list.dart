@@ -7,9 +7,12 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/screens/chat/messages.dart';
+import 'package:nmobile/screens/chat/no_message.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/message.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/storages/topic.dart';
+import 'package:nmobile/utils/asset.dart';
 
 class ChatSessionListLayout extends StatefulWidget {
   @override
@@ -20,14 +23,16 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
   ContactStorage _contactStorage = ContactStorage();
   TopicStorage _topicStorage = TopicStorage();
   ScrollController _scrollController = ScrollController();
-  // StreamSubscription? _statusStreamSubscription;
   late StreamSubscription _onMessageStreamSubscription;
   MessageStorage _messageStorage = MessageStorage();
   List<SessionSchema> _sessionList = [];
 
+  SettingsStorage _settingsStorage= SettingsStorage();
+
   bool loading = false;
   int _skip = 0;
   int _limit = 20;
+  bool _isShowTip = true;
 
   _sortMessages() {
     setState(() {
@@ -62,6 +67,11 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
 
   initAsync() async {
     _loadMore();
+    _settingsStorage.getSettings(SettingsStorage.CHAT_TIP_STATUS).then((value) {
+      setState(() {
+        _isShowTip = !value;
+      });
+    });
   }
 
   @override
@@ -92,7 +102,6 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
   @override
   void dispose() {
     _onMessageStreamSubscription.cancel();
-    // _statusStreamSubscription?.cancel();
     super.dispose();
   }
 
@@ -164,35 +173,132 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
     );
   }
 
+  _createTipView(){
+    if(_isShowTip) {
+      return Expanded(
+        flex: 0,
+        child: Container(
+          margin: const EdgeInsets.only(top: 25, bottom: 8, left: 20, right: 20),
+          padding: const EdgeInsets.only(bottom: 16),
+          width: double.infinity,
+          decoration: BoxDecoration(color: application.theme.backgroundColor2, borderRadius: BorderRadius.circular(8)),
+          child: Stack(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                    width: 48,
+                    height: 48,
+                    margin: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(color: Color(0x190F6EFF), borderRadius: BorderRadius.circular(8)),
+                    child: Center(child: Asset.iconSvg('lock', width: 24, color: application.theme.primaryColor)),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: Label(
+                            S
+                                .of(context)
+                                .private_messages,
+                            type: LabelType.h3,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Label(
+                            S
+                                .of(context)
+                                .private_messages_desc,
+                            type: LabelType.bodyRegular,
+                            softWrap: true,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Label(
+                            S
+                                .of(context)
+                                .learn_more,
+                            type: LabelType.bodySmall,
+                            color: application.theme.primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              Positioned(
+                  right: 10,
+                  top: 10,
+                  child: InkWell(
+                    onTap: () {
+                      _settingsStorage.setSettings(SettingsStorage.CHAT_TIP_STATUS, true);
+                      setState(() {
+                        _isShowTip = false;
+                      });
+                    },
+                    child: Asset.iconSvg(
+                      'close',
+                      width: 16,
+                    ),
+                  )),
+            ],
+          ),
+        ),
+      );
+    }else {
+      return SizedBox.shrink();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return ListView.builder(
-      padding: EdgeInsets.only(bottom: 72),
-      controller: _scrollController,
-      itemCount: _sessionList.length,
-      itemBuilder: (BuildContext context, int index) {
-        var item = _sessionList[index];
-        Widget widget = createSessionWidget(context, item);
+    if(_sessionList.isEmpty) {
+      return ChatNoMessageLayout();
+    }
+    return Flex(
+      direction: Axis.vertical,
+      children: [
+        _createTipView(),
+        Expanded(
+          flex: 1,
+          child: ListView.builder(
+            padding: EdgeInsets.only(bottom: 72),
+            controller: _scrollController,
+            itemCount: _sessionList.length,
+            itemBuilder: (BuildContext context, int index) {
+              var item = _sessionList[index];
+              Widget widget = createSessionWidget(context, item);
 
-        return Column(
-          children: [
-            InkWell(
-              onTap: () async {
-                await ChatMessagesScreen.go(context, item.contact);
-                _messageStorage.getUpdateSession(item.targetId).then((value) {
-                  _updateMessage(value);
-                });
-              },
-              onLongPress: () {
-                _showItemMenu(item, index);
-              },
-              child: widget,
-            ),
-            Divider(color: item.isTop ? application.theme.backgroundColor3 : application.theme.dividerColor, height: 0, indent: 70, endIndent: 12),
-          ],
-        );
-      },
+              return Column(
+                children: [
+                  InkWell(
+                    onTap: () async {
+                      await ChatMessagesScreen.go(context, item.contact);
+                      _messageStorage.getUpdateSession(item.targetId).then((value) {
+                        _updateMessage(value);
+                      });
+                    },
+                    onLongPress: () {
+                      _showItemMenu(item, index);
+                    },
+                    child: widget,
+                  ),
+                  Divider(color: item.isTop ? application.theme.backgroundColor3 : application.theme.dividerColor, height: 0, indent: 70, endIndent: 12),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

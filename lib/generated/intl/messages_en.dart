@@ -426,6 +426,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "slow": MessageLookupByLibrary.simpleMessage("Slow"),
         "something_went_wrong": MessageLookupByLibrary.simpleMessage(
             "Oops, something went wrong! Please try again later."),
+        "start_chat": MessageLookupByLibrary.simpleMessage("Start Chat"),
         "storage_text": MessageLookupByLibrary.simpleMessage("Storage"),
         "stranger": MessageLookupByLibrary.simpleMessage("Stranger"),
         "subscribe": MessageLookupByLibrary.simpleMessage("Subscribe"),
