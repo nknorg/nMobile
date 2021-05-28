@@ -84,6 +84,7 @@
   "channel_invitation": "群聊邀請",
   "accept_invitation": "接受邀請",
   "joined_channel": "加入群聊",
+  "start_chat": "開始聊天",
 
   "wallet_name": "賬戶名稱",
   "hint_enter_wallet_name": "賬戶名稱",

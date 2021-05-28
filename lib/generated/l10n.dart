@@ -850,6 +850,16 @@ class S {
     );
   }
 
+  /// `Start Chat`
+  String get start_chat {
+    return Intl.message(
+      'Start Chat',
+      name: 'start_chat',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Account Name`
   String get wallet_name {
     return Intl.message(
