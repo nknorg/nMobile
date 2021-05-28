@@ -209,6 +209,7 @@ class MessageStorage {
       where: 'target_id = ?',
       whereArgs: [targetId],
     );
+    logger.d("readByTargetId - count:$count");
     return (count ?? 0) > 0;
   }
 
@@ -232,6 +233,7 @@ class MessageStorage {
       where: 'msg_id = ?',
       whereArgs: [schema.msgId],
     );
+    logger.d("updateMessageStatus - schema:$schema");
     return (count ?? 0) > 0;
   }
 
