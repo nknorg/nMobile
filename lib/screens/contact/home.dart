@@ -122,8 +122,8 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
   _initData() async {
     List<ContactSchema> friends = await contactCommon.queryContacts(contactType: ContactType.friend);
     List<ContactSchema> strangers = await contactCommon.queryContacts(contactType: ContactType.stranger, limit: 20);
-    List<TopicSchema> topics = []; // widget.arguments ? <TopicSchema>[] : await TopicRepo().getAllTopics(); // TODO:GG topic
-    topics = (this._isSelect == true) ? [] : topics; // TODO:GG can not write this line in state
+    List<TopicSchema> topics = []; // widget.arguments ? <TopicSchema>[] : await TopicRepo().getAllTopics(); // TODO:GG contact topic
+    topics = (this._isSelect == true) ? [] : topics; // TODO:GG contact (can not write this line in state)
 
     setState(() {
       _pageLoaded = true;
@@ -151,7 +151,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
       setState(() {
         _searchStrangers = _allStrangers.where((ContactSchema e) => e.getDisplayName.toLowerCase().contains(val.toLowerCase())).toList();
         _searchFriends = _allFriends.where((ContactSchema e) => e.getDisplayName.toLowerCase().contains(val.toLowerCase())).toList();
-        // _searchTopics = _allTopics.where((Topic e) => e.topic.contains(val)).toList(); // TODO:GG topic
+        // _searchTopics = _allTopics.where((Topic e) => e.topic.contains(val)).toList(); // TODO:GG contact topic
       });
     }
   }
@@ -290,7 +290,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
                         ),
                       );
                     }
-                    return SizedBox.shrink(); // TODO:GG topic
+                    return SizedBox.shrink(); // TODO:GG contact topic
                   }
                   return SizedBox.shrink();
                 },

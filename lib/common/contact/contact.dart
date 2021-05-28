@@ -160,7 +160,7 @@ class ContactCommon {
     return success;
   }
 
-  // TODO:GG setOrUpdateExtraProfile need??
+  // TODO:GG contact setOrUpdateExtraProfile need??
 
   Future<bool> setNotes(ContactSchema? schema, String? notes, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
