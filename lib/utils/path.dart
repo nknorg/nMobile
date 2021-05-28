@@ -9,8 +9,7 @@ import 'package:uuid/uuid.dart';
 
 class SubDirType {
   static const String cache = "cache";
-  static const String data = "data";
-  static const String chat = "chat";
+  static const String chat = "";
   static const String contact = "contact";
 }
 
@@ -84,23 +83,13 @@ class Path {
     return join(mPubKey ?? "", dirType, Path.getFileName(filePath));
   }
 
+  /// {mPubKey}/{fileName}
+  static String getLocalChat(String? mPubKey, String fileName) {
+    return Path.getLocalFile(mPubKey, SubDirType.chat, fileName);
+  }
+
   /// {mPubKey}/contact/{fileName}
-  static String getLocalContactAvatar(String? mPubKey, String fileName) {
+  static String getLocalContact(String? mPubKey, String fileName) {
     return Path.getLocalFile(mPubKey, SubDirType.contact, fileName);
-  }
-
-  /// {mPubKey}/???/{fileName} TODO:GG support
-  static String getLocalChatMedia(String? mPubKey, String fileName) {
-    return Path.getLocalFile(mPubKey, 'media', fileName);
-  }
-
-  /// {mPubKey}/???/{fileName} TODO:GG support
-  static String getLocalChatAudio(String? mPubKey, String fileName) {
-    return Path.getLocalFile(mPubKey, 'audio', fileName);
-  }
-
-  /// {mPubKey}/???/{fileName} TODO:GG support
-  static String getLocalChatPiece(String? mPubKey, String fileName) {
-    return Path.getLocalFile(mPubKey, 'piece', fileName);
   }
 }
