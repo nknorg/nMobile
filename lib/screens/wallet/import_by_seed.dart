@@ -79,7 +79,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
 
           _walletBloc.add(AddWallet(wallet, result.keystore, password: password));
         } else {
-          // TODO:GG import eth by seed
+          // TODO:GG eth import by seed
           // final ethWallet = Ethereum.restoreWalletFromPrivateKey(name: _name, privateKey: _seed, password: _password);
           // Ethereum.saveWallet(ethWallet: ethWallet, walletsBloc: _walletsBloc);
         }

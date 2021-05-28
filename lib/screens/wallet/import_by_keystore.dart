@@ -76,7 +76,7 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
 
           _walletBloc.add(AddWallet(wallet, result.keystore, password: password));
         } else {
-          // TODO:GG import eth by keystore
+          // TODO:GG eth import by keystore
           // final ethWallet = Ethereum.restoreWallet(name: _name, keystore: _keystore, password: _password);
           // Ethereum.saveWallet(ethWallet: ethWallet, walletsBloc: _walletsBloc);
         }
