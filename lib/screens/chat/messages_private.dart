@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/chat/bottom_menu.dart';
 import 'package:nmobile/components/chat/message_item.dart';
@@ -17,6 +16,7 @@ import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
+import 'package:nmobile/utils/logger.dart';
 
 class ChatMessagesPrivateLayout extends StatefulWidget {
   final ContactSchema contact;
@@ -34,7 +34,8 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
 
   late ContactSchema _contact;
 
-  late StreamSubscription _onMessageStreamSubscription;
+  late StreamSubscription _onReceiveStreamSubscription;
+  late StreamSubscription _onSendStreamSubscription;
   MessageStorage _messageStorage = MessageStorage();
 
   List<MessageSchema> _messages = <MessageSchema>[];
@@ -47,13 +48,14 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
     this._contact = widget.contact;
 
     // onReceive + OnSaveSqlite
-    _onMessageStreamSubscription = receiveMessage.onSavedStream.where((event) => event.from == _contact.clientAddress).listen((MessageSchema event) {
-      _messageStorage.markMessageRead(event.msgId);
-      setState(() {
-        _messages.insert(0, event);
-      });
+    _onReceiveStreamSubscription = receiveMessage.onSavedStream.where((MessageSchema event) => event.from == _contact.clientAddress).listen((MessageSchema event) {
+      _insertMessage(event);
     });
-    receiveMessage.onSavedStreamSubscriptions.add(_onMessageStreamSubscription);
+    receiveMessage.onSavedStreamSubscriptions.add(_onReceiveStreamSubscription);
+    // OnSaveSqlite (on_send_out)
+    _onSendStreamSubscription = sendMessage.onSavedStream.where((MessageSchema event) => event.to == _contact.clientAddress).listen((event) {
+      _insertMessage(event);
+    });
 
     // loadMore
     _scrollController.addListener(() {
@@ -73,16 +75,28 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
   @override
   void dispose() {
     super.dispose();
-    _onMessageStreamSubscription.cancel();
+    _onReceiveStreamSubscription.cancel();
+    _onSendStreamSubscription.cancel();
   }
 
   initDataAsync() async {
     await _loadMore();
   }
 
+  _insertMessage(MessageSchema? schema) {
+    if (schema == null) return;
+    if (!schema.isOutbound) {
+      _messageStorage.readByMsgId(schema.msgId);
+    }
+    setState(() {
+      logger.i("messages insert 0:$schema");
+      _messages.insert(0, schema);
+    });
+  }
+
   _loadMore() async {
-    int _skip = _messages.length;
-    var messages = await _messageStorage.getAndReadTargetMessages(_contact.clientAddress, skip: _skip, limit: _messagesLimit);
+    int _offset = _messages.length;
+    var messages = await chatCommon.queryListAndReadByTargetId(_contact.clientAddress, offset: _offset, limit: _messagesLimit);
     setState(() {
       _messages = _messages + messages;
     });
