@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:crypto/crypto.dart' as crypto;
 import 'hex.dart';
 
@@ -47,9 +48,6 @@ unleadingHashIt(String str) {
 }
 
 genChannelId(String topic) {
-  if (topic == null || topic.isEmpty) {
-    return null;
-  }
   var t = unleadingHashIt(topic);
-  return 'dchat' + hexEncode(sha1(t));
+  return 'dchat' + hexEncode(Uint8List.fromList(sha1(t)));
 }
