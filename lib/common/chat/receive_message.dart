@@ -1,11 +1,8 @@
 import 'dart:async';
 
-import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/contact/contact.dart';
-import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/topic.dart';
-import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/topic.dart';
 
@@ -27,32 +24,20 @@ class ReceiveMessage {
   List<StreamSubscription> onSavedStreamSubscriptions = <StreamSubscription>[];
 
   MessageStorage _messageStorage = MessageStorage();
-  ContactStorage _contactStorage = ContactStorage();
   TopicStorage _topicStorage = TopicStorage();
 
   Future onClientMessage(MessageSchema? schema) async {
     if (schema == null) return;
-    // stranger
-    contactHandle(schema.from);
+    // contact
+    contactCommon.addByType(schema.from, ContactType.stranger);
+    // topic
     topicHandle(schema.topic);
-    // exists
-    bool isExists = (await _messageStorage.queryCount(schema.msgId)) > 0;
-    if (isExists) return;
     // receive
     onReceiveSink.add(schema);
-    // db_insert
-    await _messageStorage.insertReceivedMessage(schema);
-    onSavedSink.add(schema);
-  }
-
-  Future contactHandle(String? clientAddress) async {
-    if (clientAddress == null || clientAddress.isEmpty) return;
-    int count = await _contactStorage.queryCountByClientAddress(clientAddress);
-    if (count == 0) {
-      await contactCommon.add(ContactSchema(
-        type: ContactType.stranger,
-        clientAddress: clientAddress,
-      ));
+    // sqlite
+    schema = await _messageStorage.insert(schema);
+    if (schema != null) {
+      onSavedSink.add(schema);
     }
   }
 
@@ -91,7 +76,7 @@ class ReceiveMessage {
   receiveTextMessage() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) {
       // receipt message TODO: batch send receipt message
-      chatCommon.sendText(event.from, MessageData.getReceipt(event.msgId));
+      sendMessage.sendReceipt(event);
       // TODO: notification
       // notification.showDChatNotification();
     });
