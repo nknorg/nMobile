@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/utils/hex.dart';
@@ -62,15 +63,38 @@ class MessageStorage {
       }
     }
     // insert
-    Map<String, dynamic> map = schema.toMap();
-    int? id = await db?.insert(tableName, map);
-    if (id != null && id > 0) {
-      schema = MessageSchema.fromMap(map);
-      logger.d("insertMessage - success - schema:$schema");
-      return schema;
+    try {
+      Map<String, dynamic> map = schema.toMap();
+      int? id = await db?.insert(tableName, map);
+      if (id != null && id > 0) {
+        schema = MessageSchema.fromMap(map);
+        logger.d("insertMessage - success - schema:$schema");
+        return schema;
+      }
+    } catch (e) {
+      handleError(e);
     }
     logger.w("insertMessage - fail - schema:$schema");
     return null;
+  }
+
+  Future<bool> delete(MessageSchema? schema) async {
+    if (schema == null) return false;
+    try {
+      int? result = await db?.delete(
+        tableName,
+        where: 'msg_id = ?',
+        whereArgs: [schema.msgId],
+      );
+      if (result != null && result > 0) {
+        logger.d("deleteMessage - success - schema:$schema");
+        return true;
+      }
+    } catch (e) {
+      handleError(e);
+    }
+    logger.w("deleteMessage - fail - schema:$schema");
+    return false;
   }
 
   Future<List<MessageSchema>> queryListByType(String? msgId, String? type) async {
@@ -203,56 +227,95 @@ class MessageStorage {
 
   Future<bool> updatePid(String? msgId, Uint8List? pid) async {
     if (msgId == null || msgId.isEmpty) return false;
-    int? count = await db?.update(
-      tableName,
-      {
-        'pid': hexEncode(pid),
-      },
-      where: 'msg_id = ?',
-      whereArgs: [msgId],
-    );
-    logger.d("updatePid - count:$count - msgId:$msgId - pid:$pid}");
-    return (count ?? 0) > 0;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'pid': hexEncode(pid),
+        },
+        where: 'msg_id = ?',
+        whereArgs: [msgId],
+      );
+      logger.d("updatePid - count:$count - msgId:$msgId - pid:$pid}");
+      return (count ?? 0) > 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
+  Future<bool> updateOptions(String? msgId, Map<String, dynamic>? options) async {
+    if (msgId == null || msgId.isEmpty) return false;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'options': options != null ? jsonEncode(options) : null,
+        },
+        where: 'msg_id = ?',
+        whereArgs: [msgId],
+      );
+      logger.d("updateOptions - count:$count - msgId:$msgId - options:$options}");
+      return (count ?? 0) > 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
   }
 
   Future<bool> updateDeleteTime(String? msgId, DateTime? deleteTime) async {
     if (msgId == null || msgId.isEmpty) return false;
-    int? count = await db?.update(
-      tableName,
-      {
-        'delete_time': deleteTime?.millisecondsSinceEpoch,
-      },
-      where: 'msg_id = ?',
-      whereArgs: [msgId],
-    );
-    logger.d("updateDeleteTime - count:$count - msgId:$msgId - deleteTime:$deleteTime}");
-    return (count ?? 0) > 0;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'delete_time': deleteTime?.millisecondsSinceEpoch,
+        },
+        where: 'msg_id = ?',
+        whereArgs: [msgId],
+      );
+      logger.d("updateDeleteTime - count:$count - msgId:$msgId - deleteTime:$deleteTime}");
+      return (count ?? 0) > 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
   }
 
   Future<int> unReadCount(String? senderId) async {
     if (senderId == null || senderId.isEmpty) return 0;
-    var res = await db?.query(
-      tableName,
-      columns: ['COUNT(id)'],
-      where: 'sender != ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
-      whereArgs: [senderId, 0, ContentType.piece, ContentType.receipt],
-    );
-    int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-    logger.d("unReadCountByNotSender - count:$count");
-    return count ?? 0;
+    try {
+      var res = await db?.query(
+        tableName,
+        columns: ['COUNT(id)'],
+        where: 'sender != ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
+        whereArgs: [senderId, 0, ContentType.piece, ContentType.receipt],
+      );
+      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+      logger.d("unReadCountByNotSender - count:$count");
+      return count ?? 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return 0;
   }
 
   Future<int> unReadCountByTargetId(String? senderId, String? targetId) async {
     if (senderId == null || senderId.isEmpty || targetId == null || targetId.isEmpty) return 0;
-    var res = await db?.query(
-      tableName,
-      columns: ['COUNT(id)'],
-      where: 'sender != ? AND target_id = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
-      whereArgs: [senderId, targetId, 0, ContentType.piece, ContentType.receipt],
-    );
-    int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-    logger.d("unReadCountByTargetId - count:$count");
-    return count ?? 0;
+    try {
+      var res = await db?.query(
+        tableName,
+        columns: ['COUNT(id)'],
+        where: 'sender != ? AND target_id = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
+        whereArgs: [senderId, targetId, 0, ContentType.piece, ContentType.receipt],
+      );
+      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+      logger.d("unReadCountByTargetId - count:$count");
+      return count ?? 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return 0;
   }
 
   Future<bool> updateByMessageStatus(String? msgId, int messageStatus) {
@@ -264,19 +327,24 @@ class MessageStorage {
 
   Future<bool> updateMessageStatus(MessageSchema? schema) async {
     if (schema == null) return false;
-    int? count = await db?.update(
-      tableName,
-      {
-        'is_outbound': schema.isOutbound ? 1 : 0,
-        'is_send_error': schema.isSendError ? 1 : 0,
-        'is_success': schema.isSuccess ? 1 : 0,
-        'is_read': schema.isRead ? 1 : 0,
-      },
-      where: 'msg_id = ?',
-      whereArgs: [schema.msgId],
-    );
-    logger.d("updateMessageStatus - schema:$schema");
-    return (count ?? 0) > 0;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'is_outbound': schema.isOutbound ? 1 : 0,
+          'is_send_error': schema.isSendError ? 1 : 0,
+          'is_success': schema.isSuccess ? 1 : 0,
+          'is_read': schema.isRead ? 1 : 0,
+        },
+        where: 'msg_id = ?',
+        whereArgs: [schema.msgId],
+      );
+      logger.d("updateMessageStatus - schema:$schema");
+      return (count ?? 0) > 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
   }
 
   /// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
