@@ -57,7 +57,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
   }
 
   _selectAvatarPicture() async {
-    String returnPath = Path.getCompleteFile(Path.createLocalContactFile(hexEncode(chatCommon.publicKey), "${Uuid().v4()}.jpeg"));
+    String returnPath = Path.getCompleteFile(Path.createLocalContactFile(hexEncode(chatCommon.publicKey!), "${Uuid().v4()}.jpeg"));
     File? picked = await MediaPicker.pick(
       mediaType: MediaType.image,
       source: ImageSource.gallery,
