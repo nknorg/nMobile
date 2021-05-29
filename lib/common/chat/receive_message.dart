@@ -21,7 +21,6 @@ class ReceiveMessage {
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get onSavedSink => _onSavedController.sink;
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream;
-  List<StreamSubscription> onSavedStreamSubscriptions = <StreamSubscription>[];
 
   MessageStorage _messageStorage = MessageStorage();
   TopicStorage _topicStorage = TopicStorage();
@@ -61,11 +60,7 @@ class ReceiveMessage {
     onReceiveStreamSubscriptions.forEach((StreamSubscription element) {
       futures.add(element.cancel());
     });
-    onSavedStreamSubscriptions.forEach((StreamSubscription element) {
-      futures.add(element.cancel());
-    });
     onReceiveStreamSubscriptions.clear();
-    onSavedStreamSubscriptions.clear();
     return Future.wait(futures);
   }
 
@@ -75,7 +70,7 @@ class ReceiveMessage {
       MessageSchema? schema = await _messageStorage.insert(event);
       if (schema == null) return;
       // receipt message
-      sendMessage.sendReceipt(event); // wait
+      sendMessage.sendReceipt(schema); // wait
       onSavedSink.add(schema);
       // TODO: notification
       // notification.showDChatNotification();
@@ -84,9 +79,16 @@ class ReceiveMessage {
   }
 
   receiveReceiptMessage() {
-    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.receipt).listen((MessageSchema event) {
+    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.receipt).listen((MessageSchema event) async {
       // update send by receipt
-      _messageStorage.updateByMessageStatus(event.content, MessageStatus.SendByReplyReceipt); // wait
+      List<MessageSchema> _schemaList = await _messageStorage.queryList(event.content);
+      _schemaList.forEach((MessageSchema element) async {
+        element = MessageStatus.set(element, MessageStatus.SendWithReceipt);
+        bool updated = await _messageStorage.updateMessageStatus(element);
+        if (updated) {
+          sendMessage.onUpdateSink.add(element);
+        }
+      });
     });
     onReceiveStreamSubscriptions.add(subscription);
   }
@@ -108,7 +110,9 @@ class ReceiveMessage {
     onReceiveStreamSubscriptions.add(subscription);
   }
 
-  Future<bool> read(MessageSchema schema) {
-    return _messageStorage.updateByMessageStatus(schema.msgId, MessageStatus.ReceivedRead);
+  Future<MessageSchema> read(MessageSchema schema) async {
+    schema = MessageStatus.set(schema, MessageStatus.ReceivedRead);
+    await _messageStorage.updateMessageStatus(schema);
+    return schema;
   }
 }

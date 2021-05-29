@@ -152,13 +152,13 @@ class ChatCommon {
   }) async {
     List<MessageSchema> list = await _messageStorage.queryListCanReadByTargetId(targetId, offset: offset, limit: limit);
     // unread
-    if (offset == 0 && (unread == null || unread <= 0)) {
+    if (offset == 0 && (unread == null || unread > 0)) {
       List<MessageSchema> unreadList = await _messageStorage.queryListUnReadByTargetId(id, targetId);
       unreadList.forEach((MessageSchema element) {
         element = MessageStatus.set(element, MessageStatus.ReceivedRead);
         _messageStorage.updateMessageStatus(element); // wait
       });
-      list = list.map((e) => e..isRead = true).toList(); // just is_read ok, not message_status
+      list = list.map((e) => MessageStatus.set(e, MessageStatus.ReceivedRead)).toList(); // read
     }
     // burn
     if (list.isNotEmpty && handleBurn) {
