@@ -10,41 +10,48 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/format.dart';
 
-enum BubbleStyle { SendSuccess, SendFailed, Received }
+import '../text/markdown.dart';
 
 class ChatBubble extends StatefulWidget {
-  MessageSchema message;
-  ContactSchema contact;
-  BubbleStyle? style;
-  ValueChanged<String>? onChanged;
-  ValueChanged<String>? resendMessage;
+  final MessageSchema message;
+  final ContactSchema contact;
+  final bool showTime;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? resendMessage;
 
   ChatBubble({
     required this.message,
     required this.contact,
-    this.style,
+    this.showTime = false,
     this.onChanged,
     this.resendMessage,
-  }) {
-    if (MessageStatus.get(message) == MessageStatus.SendFail) {
-      style = BubbleStyle.SendFailed;
-    } else if (message.isOutbound) {
-      style = BubbleStyle.SendSuccess;
-    } else {
-      style = BubbleStyle.Received;
-    }
-  }
+  });
 
   @override
   _ChatBubbleState createState() => _ChatBubbleState();
 }
 
 class _ChatBubbleState extends State<ChatBubble> {
-  GlobalKey popupMenuKey = GlobalKey();
+  GlobalKey _popupMenuKey = GlobalKey();
+
   late MessageSchema _message;
   late ContactSchema _contact;
 
-  // TODO
+  @override
+  void initState() {
+    super.initState();
+    _message = widget.message;
+    _contact = widget.contact;
+  }
+
+  @override
+  void didUpdateWidget(covariant ChatBubble oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _message = widget.message;
+    _contact = widget.contact;
+  }
+
+  // TODO:GG popMenu
   // _textPopupMenuShow() {
   //   PopupMenu popupMenu = PopupMenu(
   //     context: context,
@@ -72,16 +79,28 @@ class _ChatBubbleState extends State<ChatBubble> {
   Widget build(BuildContext context) {
     SkinTheme _theme = application.theme;
 
-    _message = widget.message;
-    _contact = widget.contact;
+    int msgStatus = MessageStatus.get(_message);
 
+    // TODO:GG refactor
     BoxDecoration decoration;
     Widget timeWidget;
     Widget burnWidget = Container();
     String timeFormat = formatChatTime(_message.sendTime);
     List<Widget> contentsWidget = <Widget>[];
+
     bool dark = false;
-    if (widget.style == BubbleStyle.SendSuccess) {
+    if (msgStatus == MessageStatus.Sending || msgStatus == MessageStatus.SendSuccess) {
+      decoration = BoxDecoration(
+        color: _theme.primaryColor.withAlpha(50),
+        borderRadius: BorderRadius.only(
+          topLeft: const Radius.circular(12),
+          topRight: const Radius.circular(12),
+          bottomLeft: const Radius.circular(12),
+          bottomRight: const Radius.circular(2),
+        ),
+      );
+      dark = true;
+    } else if (msgStatus == MessageStatus.SendWithReceipt) {
       decoration = BoxDecoration(
         color: _theme.primaryColor,
         borderRadius: BorderRadius.only(
@@ -92,7 +111,7 @@ class _ChatBubbleState extends State<ChatBubble> {
         ),
       );
       dark = true;
-    } else if (widget.style == BubbleStyle.SendFailed) {
+    } else if (msgStatus == MessageStatus.SendFail) {
       decoration = BoxDecoration(
         color: _theme.fallColor.withAlpha(178),
         borderRadius: BorderRadius.only(
@@ -114,26 +133,14 @@ class _ChatBubbleState extends State<ChatBubble> {
         ),
       );
     }
-    switch (_message.contentType) {
-      case ContentType.text:
-      case ContentType.textExtension:
-        contentsWidget.add(
-          Markdown(
-            data: _message.content,
-            dark: dark,
-          ),
-        );
-        break;
-      case ContentType.media:
-        contentsWidget.add(
-          Image.file(_message.content as File),
-        );
-    }
+
+    contentsWidget.add(
+      Markdown(data: _message.content, dark: dark),
+    );
 
     return Padding(
       padding: const EdgeInsets.only(top: 12, bottom: 12),
-      child: Flex(
-        direction: Axis.horizontal,
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(

@@ -13,7 +13,6 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/contact/profile.dart';
-import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -34,9 +33,10 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
 
   late ContactSchema _contact;
 
-  late StreamSubscription _onReceiveStreamSubscription;
-  late StreamSubscription _onSendStreamSubscription;
-  MessageStorage _messageStorage = MessageStorage();
+  late StreamSubscription _onContactUpdateStreamSubscription;
+  late StreamSubscription _onMessageReceiveStreamSubscription;
+  late StreamSubscription _onMessageSendStreamSubscription;
+  late StreamSubscription _onMessageUpdateStreamSubscription;
 
   List<MessageSchema> _messages = <MessageSchema>[];
 
@@ -47,14 +47,33 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
     super.initState();
     this._contact = widget.contact;
 
+    // contact
+    _onContactUpdateStreamSubscription = contactCommon.updateStream.listen((List<ContactSchema> list) {
+      if (list.isEmpty) return;
+      List result = list.where((element) => element.id == _contact.id).toList();
+      if (result.isNotEmpty) {
+        if (mounted) {
+          setState(() {
+            _contact = result[0];
+          });
+        }
+      }
+    });
     // onReceive + OnSaveSqlite
-    _onReceiveStreamSubscription = receiveMessage.onSavedStream.where((MessageSchema event) => event.from == _contact.clientAddress).listen((MessageSchema event) {
+    _onMessageReceiveStreamSubscription = receiveMessage.onSavedStream.where((MessageSchema event) => event.getTargetId == _contact.clientAddress).listen((MessageSchema event) {
       _insertMessage(event);
     });
-    receiveMessage.onSavedStreamSubscriptions.add(_onReceiveStreamSubscription);
-    // OnSaveSqlite (on_send_out)
-    _onSendStreamSubscription = sendMessage.onSavedStream.where((MessageSchema event) => event.to == _contact.clientAddress).listen((event) {
+    // onSaveSqlite (no_send_success)
+    _onMessageSendStreamSubscription = sendMessage.onSavedStream.where((MessageSchema event) => event.getTargetId == _contact.clientAddress).listen((MessageSchema event) {
       _insertMessage(event);
+    });
+    // onStatusUpdate (success + fail + receipt)
+    _onMessageUpdateStreamSubscription = sendMessage.onUpdateStream.where((MessageSchema event) => event.getTargetId == _contact.clientAddress).listen((MessageSchema event) {
+      if (mounted) {
+        setState(() {
+          _messages = _messages.map((MessageSchema e) => (e.msgId == event.msgId) ? event : e).toList();
+        });
+      }
     });
 
     // loadMore
@@ -75,23 +94,28 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
   @override
   void dispose() {
     super.dispose();
-    _onReceiveStreamSubscription.cancel();
-    _onSendStreamSubscription.cancel();
+    _onContactUpdateStreamSubscription.cancel();
+    _onMessageReceiveStreamSubscription.cancel();
+    _onMessageSendStreamSubscription.cancel();
+    _onMessageUpdateStreamSubscription.cancel();
   }
 
   initDataAsync() async {
     await _loadMore();
   }
 
-  _insertMessage(MessageSchema? schema) {
+  _insertMessage(MessageSchema? schema) async {
     if (schema == null) return;
     if (!schema.isOutbound) {
-      receiveMessage.read(schema);
+      // read
+      schema = await receiveMessage.read(schema);
     }
-    setState(() {
-      logger.i("messages insert 0:$schema");
-      _messages.insert(0, schema);
-    });
+    if (mounted) {
+      setState(() {
+        logger.i("messages insert 0:$schema");
+        _messages.insert(0, schema!);
+      });
+    }
   }
 
   _loadMore() async {
@@ -108,7 +132,7 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
     });
   }
 
-  // TODO:GG
+  // TODO:GG refactor
   _send(String content) async {
     if (chatCommon.id == null) return;
     MessageSchema send = MessageSchema.fromSend(
@@ -199,7 +223,7 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
                         showTime = true;
                       } else {
                         if (index + 1 < _messages.length) {
-                          // TODO:GG
+                          // TODO:GG refactor
                           var targetMessage = _messages[index + 1];
                           // if (message.sendTime.isAfter(targetMessage.sendTime?.add(Duration(minutes: 3)))) {
                           //   showTime = true;

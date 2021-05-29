@@ -80,7 +80,7 @@ class ReceiveMessage {
 
   receiveReceiptMessage() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.receipt).listen((MessageSchema event) async {
-      // update send by receipt
+      // update send by receipt TODO:GG piece????
       List<MessageSchema> _schemaList = await _messageStorage.queryList(event.content);
       _schemaList.forEach((MessageSchema element) async {
         element = MessageStatus.set(element, MessageStatus.SendWithReceipt);
