@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:base_x/base_x.dart';
 import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+
+import 'base_x.dart';
 
 final String ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 final base58 = BaseXCodec(ALPHABET);

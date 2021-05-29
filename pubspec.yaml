@@ -43,7 +43,6 @@ dependencies:
   permission_handler: ^8.0.0+2
   crypto: ^3.0.1
   # data
-  base_x: ^1.0.1
   uuid: ^3.0.4
 
   # locale
