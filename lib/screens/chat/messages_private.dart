@@ -205,39 +205,36 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
             children: [
               Expanded(
                 flex: 1,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 12, right: 16),
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    itemCount: _messages.length,
-                    reverse: true,
-                    padding: const EdgeInsets.only(bottom: 8, top: 16),
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemBuilder: (BuildContext context, int index) {
-                      MessageSchema message = _messages[index];
-                      ContactSchema contact = _contact;
+                child: ListView.builder(
+                  controller: _scrollController,
+                  itemCount: _messages.length,
+                  reverse: true,
+                  padding: const EdgeInsets.only(bottom: 8, top: 16),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemBuilder: (BuildContext context, int index) {
+                    MessageSchema message = _messages[index];
+                    ContactSchema contact = _contact;
 
-                      // Fixme: show time
-                      bool showTime = false;
-                      if (index >= _messages.length - 1) {
-                        showTime = true;
-                      } else {
-                        if (index + 1 < _messages.length) {
-                          // TODO:GG refactor
-                          var targetMessage = _messages[index + 1];
-                          // if (message.sendTime.isAfter(targetMessage.sendTime?.add(Duration(minutes: 3)))) {
-                          //   showTime = true;
-                          // }
-                        }
+                    // Fixme: show time
+                    bool showTime = false;
+                    if (index >= _messages.length - 1) {
+                      showTime = true;
+                    } else {
+                      if (index + 1 < _messages.length) {
+                        // TODO:GG refactor
+                        var targetMessage = _messages[index + 1];
+                        // if (message.sendTime.isAfter(targetMessage.sendTime?.add(Duration(minutes: 3)))) {
+                        //   showTime = true;
+                        // }
                       }
+                    }
 
-                      return ChatMessageItem(
-                        message: message,
-                        contact: contact,
-                        showTime: showTime,
-                      );
-                    },
-                  ),
+                    return ChatMessageItem(
+                      message: message,
+                      contact: contact,
+                      showTime: showTime,
+                    );
+                  },
                 ),
               ),
               Divider(
