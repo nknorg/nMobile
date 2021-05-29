@@ -56,7 +56,7 @@ class MessageStorage {
     if (schema == null) return null;
     // duplicated
     if (schema.contentType != ContentType.piece) {
-      List<MessageSchema> exists = await queryListByType(schema.msgId, schema.contentType);
+      List<MessageSchema> exists = await queryList(schema.msgId);
       if (exists.isNotEmpty) {
         logger.d("insertMessage - exists:$exists");
         return exists[0];
@@ -97,27 +97,27 @@ class MessageStorage {
     return false;
   }
 
-  Future<List<MessageSchema>> queryListByType(String? msgId, String? type) async {
-    if (msgId == null || msgId.isEmpty || type == null || type.isEmpty) return [];
+  Future<List<MessageSchema>> queryList(String? msgId) async {
+    if (msgId == null || msgId.isEmpty) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: 'msg_id = ? AND type = ?',
-        whereArgs: [msgId, type],
+        where: 'msg_id = ?',
+        whereArgs: [msgId],
       );
       if (res == null || res.isEmpty) {
-        logger.d("queryListByType - empty - msgId:$msgId - type:$type");
+        logger.d("queryList - empty - msgId:$msgId");
         return [];
       }
       List<MessageSchema> result = <MessageSchema>[];
       res.forEach((map) => result.add(MessageSchema.fromMap(map)));
-      logger.d("queryListByType - success - msgId:$msgId - type:$type - length:${result.length} - items:$result");
+      logger.d("queryList - success - msgId:$msgId - length:${result.length} - items:$result");
       return result;
     } catch (e) {
       handleError(e);
     }
-    logger.w("queryListByType - fail - msgId:$msgId - type:$type");
+    logger.w("queryList - fail - msgId:$msgId");
     return [];
   }
 
@@ -326,13 +326,6 @@ class MessageStorage {
     }
     logger.w("unReadCountByTargetId - fail - senderId:$senderId");
     return 0;
-  }
-
-  Future<bool> updateByMessageStatus(String? msgId, int messageStatus) {
-    if (msgId == null || msgId.isEmpty) return Future.value(false);
-    MessageSchema schema = MessageStatus.set(MessageSchema.fromMap(Map()), messageStatus);
-    schema.msgId = msgId;
-    return updateMessageStatus(schema);
   }
 
   Future<bool> updateMessageStatus(MessageSchema? schema) async {

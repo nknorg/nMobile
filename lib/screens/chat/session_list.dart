@@ -85,7 +85,6 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
         _updateMessage(value);
       });
     });
-    receiveMessage.onSavedStreamSubscriptions.add(_onMessageStreamSubscription);
 
     _scrollController.addListener(() {
       double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
