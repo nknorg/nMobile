@@ -12,18 +12,17 @@ class ContactAvatar extends StatefulWidget {
   final bool? placeHolder;
 
   ContactAvatar({
-    required Key key,
     required this.contact,
     this.radius,
     this.placeHolder = false,
-  }) : super(key: key);
+  });
 
   @override
   _ContactAvatarState createState() => _ContactAvatarState();
 }
 
 class _ContactAvatarState extends State<ContactAvatar> {
-  bool _avatarFileExits = false;
+  File? _avatarFile;
 
   @override
   void initState() {
@@ -31,13 +30,23 @@ class _ContactAvatarState extends State<ContactAvatar> {
     _checkAvatarFileExists();
   }
 
+  @override
+  void didUpdateWidget(covariant ContactAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _checkAvatarFileExists();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   _checkAvatarFileExists() async {
-    String? avatarPath = widget.contact.getDisplayAvatarPath;
-    if (avatarPath != null) {
-      bool exists = await File(avatarPath).exists();
-      if (_avatarFileExits != exists) {
+    File? avatarFile = await widget.contact.getDisplayAvatarFile;
+    if (mounted) {
+      if (_avatarFile?.path != avatarFile?.path) {
         setState(() {
-          _avatarFileExits = exists;
+          _avatarFile = avatarFile;
         });
       }
     }
@@ -47,16 +56,12 @@ class _ContactAvatarState extends State<ContactAvatar> {
   Widget build(BuildContext context) {
     double radius = this.widget.radius ?? 24;
     String name = widget.contact.getDisplayName;
-    String? avatarPath = widget.contact.getDisplayAvatarPath;
 
-    if (avatarPath != null && avatarPath.isNotEmpty) {
-      File avatarFile = File(avatarPath);
-      if (_avatarFileExits) {
-        return CircleAvatar(
-          radius: radius,
-          backgroundImage: FileImage(avatarFile),
-        );
-      }
+    if (_avatarFile != null) {
+      return CircleAvatar(
+        radius: radius,
+        backgroundImage: FileImage(this._avatarFile!),
+      );
     }
     if (widget.placeHolder == null || !widget.placeHolder!) {
       return CircleAvatar(

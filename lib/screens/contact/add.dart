@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/contact/contact.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -24,7 +23,6 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
-import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
 class ContactAddScreen extends StatefulWidget {
@@ -59,13 +57,14 @@ class ContactAddScreenState extends State<ContactAddScreen> {
   }
 
   _selectAvatarPicture() async {
+    String returnPath = Path.getCompleteFile(Path.createLocalContactFile(hexEncode(chatCommon.publicKey), "${Uuid().v4()}.jpeg"));
     File? picked = await MediaPicker.pick(
       mediaType: MediaType.image,
       source: ImageSource.gallery,
       crop: true,
-      returnPath: join(Global.applicationRootDirectory.path, Path.getLocalContact(hexEncode(chatCommon.publicKey), "${Uuid().v4()}.jpeg")),
+      returnPath: returnPath,
     );
-    if (picked == null) {
+    if (picked == null || !picked.existsSync()) {
       // Toast.show("Open camera or MediaLibrary for nMobile to update your profile");
       return;
     }
@@ -112,7 +111,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
       String remarkName = _nameController.text;
       String defaultName = ContactSchema.getDefaultName(clientAddress);
 
-      String? remarkAvatar = _headImage == null ? null : Path.getLocalContact(hexEncode(chatCommon.publicKey), Path.getFileName(_headImage!.path));
+      String? remarkAvatar = _headImage == null ? null : Path.getLocalFile(_headImage!.path);
 
       logger.d("_saveContact -\n clientAddress:$clientAddress,\n walletAddress:$walletAddress,\n note:$note,\n firstName:$defaultName,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
 
@@ -132,6 +131,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
       ContactSchema? added = await contactCommon.add(scheme);
       if (added == null) {
         Toast.show(S.of(context).failure);
+        Loading.dismiss();
         return;
       }
 
