@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/text/markdown.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/format.dart';
-
-import '../markdown.dart';
 
 enum BubbleStyle { SendSuccess, SendFailed, Received }
 
@@ -130,7 +129,6 @@ class _ChatBubbleState extends State<ChatBubble> {
             child: Container(
               margin: const EdgeInsets.only(right: 8),
               child: ContactAvatar(
-                key: ValueKey(_contact.getDisplayAvatarPath ?? ''),
                 contact: _contact,
               ),
             ),

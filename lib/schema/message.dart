@@ -465,7 +465,7 @@ class MessageSchema extends Equatable {
   /// to sqlite
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {
-      'pid': pid != null ? hexEncode(pid) : null,
+      'pid': pid != null ? hexEncode(pid!) : null,
       'msg_id': msgId,
       'sender': from,
       'receiver': to,
@@ -529,7 +529,7 @@ class MessageSchema extends Equatable {
 
     var bytes = base64Decode(fileBase64);
     String name = hexEncode(Uint8List.fromList(md5.convert(bytes).bytes));
-    String localPath = Path.createLocalChatFile(hexEncode(chatCommon.publicKey), '$name.$extension');
+    String localPath = Path.createLocalChatFile(hexEncode(chatCommon.publicKey!), '$name.$extension');
     File file = File(Path.getCompleteFile(localPath));
 
     logger.d('getMediaFile - path:${file.absolute}');
