@@ -52,6 +52,7 @@ class ReceiveMessage {
   startReceiveMessage() {
     receiveTextMessage();
     receiveReceiptMessage();
+    receiveMediaMessage();
   }
 
   Future stopReceiveMessage() {
@@ -86,6 +87,23 @@ class ReceiveMessage {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.receipt).listen((MessageSchema event) {
       // update send by receipt
       _messageStorage.updateByMessageStatus(event.content, MessageStatus.SendByReplyReceipt); // wait
+    });
+    onReceiveStreamSubscriptions.add(subscription);
+  }
+
+  receiveMediaMessage() {
+    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.media).listen((MessageSchema event) async {
+      print('----------------------receive media-----------------');
+      await event.LoadMediaFile();
+      // sqlite
+      MessageSchema? schema = await _messageStorage.insert(event);
+      print(schema);
+      if (schema == null) return;
+      // receipt message
+      sendMessage.sendReceipt(event); // wait
+      onSavedSink.add(schema);
+      // TODO: notification
+      // notification.showDChatNotification();
     });
     onReceiveStreamSubscriptions.add(subscription);
   }
