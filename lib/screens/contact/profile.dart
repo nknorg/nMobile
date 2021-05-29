@@ -8,7 +8,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/contact/contact.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/avatar_editable.dart';
@@ -30,7 +29,6 @@ import 'package:nmobile/screens/contact/chat_profile.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
 class ContactProfileScreen extends StatefulWidget {
@@ -250,8 +248,8 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
   }
 
   _selectAvatarPicture() async {
-    String remarkAvatarLocalPath = Path.getLocalContact(hexEncode(chatCommon.publicKey), "${Uuid().v4()}.jpeg");
-    String remarkAvatarPath = join(Global.applicationRootDirectory.path, remarkAvatarLocalPath);
+    String remarkAvatarLocalPath = Path.createLocalContactFile(hexEncode(chatCommon.publicKey), "${Uuid().v4()}.jpeg");
+    String remarkAvatarPath = Path.getCompleteFile(remarkAvatarLocalPath);
     File? picked = await MediaPicker.pick(
       mediaType: MediaType.image,
       source: ImageSource.gallery,
@@ -430,7 +428,6 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
               /// avatar
               child: _contactSchema != null
                   ? ContactAvatarEditable(
-                      key: ValueKey(_contactSchema?.getDisplayAvatarPath ?? ""),
                       radius: 48,
                       contact: _contactSchema!,
                       placeHolder: false,
@@ -580,7 +577,6 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
           Center(
             child: _contactSchema != null
                 ? ContactAvatarEditable(
-                    key: ValueKey(_contactSchema?.getDisplayAvatarPath ?? ""),
                     radius: 48,
                     contact: _contactSchema!,
                     placeHolder: false,

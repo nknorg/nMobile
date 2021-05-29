@@ -117,6 +117,7 @@ class MessageStorage {
     } catch (e) {
       handleError(e);
     }
+    logger.w("queryListByType - fail - msgId:$msgId - type:$type");
     return [];
   }
 
@@ -135,6 +136,7 @@ class MessageStorage {
     } catch (e) {
       handleError(e);
     }
+    logger.w("queryCount - fail - msgId:$msgId");
     return 0;
   }
 
@@ -166,6 +168,7 @@ class MessageStorage {
     } catch (e) {
       handleError(e);
     }
+    logger.w("queryListCanReadByTargetId - fail - targetId:$targetId");
     return [];
   }
 
@@ -194,6 +197,7 @@ class MessageStorage {
     } catch (e) {
       handleError(e);
     }
+    logger.w("queryListUnRead - fail");
     return [];
   }
 
@@ -222,6 +226,7 @@ class MessageStorage {
     } catch (e) {
       handleError(e);
     }
+    logger.w("queryListUnReadByTargetId - fail - targetId:$targetId");
     return [];
   }
 
@@ -231,7 +236,7 @@ class MessageStorage {
       int? count = await db?.update(
         tableName,
         {
-          'pid': hexEncode(pid),
+          'pid': pid != null ? hexEncode(pid) : null,
         },
         where: 'msg_id = ?',
         whereArgs: [msgId],
@@ -241,6 +246,7 @@ class MessageStorage {
     } catch (e) {
       handleError(e);
     }
+    logger.w("updatePid - fail - msgId:$msgId - pid:$pid}");
     return false;
   }
 
@@ -260,6 +266,7 @@ class MessageStorage {
     } catch (e) {
       handleError(e);
     }
+    logger.w("updateOptions - fail - msgId:$msgId");
     return false;
   }
 
@@ -279,6 +286,7 @@ class MessageStorage {
     } catch (e) {
       handleError(e);
     }
+    logger.w("updateDeleteTime - fail - msgId:$msgId");
     return false;
   }
 
@@ -297,6 +305,7 @@ class MessageStorage {
     } catch (e) {
       handleError(e);
     }
+    logger.w("unReadCountByNotSender - fail");
     return 0;
   }
 
@@ -315,6 +324,7 @@ class MessageStorage {
     } catch (e) {
       handleError(e);
     }
+    logger.w("unReadCountByTargetId - fail - senderId:$senderId");
     return 0;
   }
 
@@ -344,6 +354,7 @@ class MessageStorage {
     } catch (e) {
       handleError(e);
     }
+    logger.w("updateMessageStatus - fail - schema:$schema");
     return false;
   }
 

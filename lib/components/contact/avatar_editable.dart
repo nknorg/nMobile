@@ -1,11 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/screens/common/photo.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:path/path.dart';
 
 import 'avatar.dart';
 
@@ -16,31 +16,58 @@ class ContactAvatarEditable extends StatefulWidget {
   final Function? onSelect;
 
   ContactAvatarEditable({
-    required Key key,
     required this.contact,
     this.radius,
     this.placeHolder = false,
     this.onSelect,
-  }) : super(key: key);
+  });
 
   @override
   _ContactAvatarEditableState createState() => _ContactAvatarEditableState();
 }
 
 class _ContactAvatarEditableState extends State<ContactAvatarEditable> {
-  _updateAvatar() async {
-    if (widget.onSelect != null) widget.onSelect!();
+  File? _avatarFile;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAvatarFileExists();
+  }
+
+  @override
+  void didUpdateWidget(covariant ContactAvatarEditable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _checkAvatarFileExists();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  _checkAvatarFileExists() async {
+    File? avatarFile = await widget.contact.getDisplayAvatarFile;
+    if (mounted) {
+      if (_avatarFile?.path != avatarFile?.path) {
+        setState(() {
+          _avatarFile = avatarFile;
+        });
+      }
+    }
+  }
+
+  _selectAvatarFile() async {
+    widget.onSelect?.call();
   }
 
   _photoShow(BuildContext context) {
-    String avatarPath = join(Global.applicationRootDirectory.path, widget.contact.getDisplayAvatarPath);
-    PhotoScreen.go(context, filePath: avatarPath);
+    PhotoScreen.go(context, filePath: _avatarFile?.path);
   }
 
   @override
   Widget build(BuildContext context) {
     double radius = this.widget.radius ?? 24;
-    String avatarPath = this.widget.contact.getDisplayAvatarPath ?? "";
 
     return SizedBox(
       width: radius * 2,
@@ -49,14 +76,13 @@ class _ContactAvatarEditableState extends State<ContactAvatarEditable> {
         children: <Widget>[
           GestureDetector(
             onTap: () {
-              if (avatarPath != null && avatarPath.isNotEmpty) {
+              if (this._avatarFile != null) {
                 _photoShow(context);
               } else {
-                _updateAvatar();
+                _selectAvatarFile();
               }
             },
             child: ContactAvatar(
-              key: ValueKey(avatarPath),
               contact: widget.contact,
               radius: radius,
             ),
@@ -75,7 +101,7 @@ class _ContactAvatarEditableState extends State<ContactAvatarEditable> {
                 width: radius / 5,
               ),
               onPressed: () {
-                _updateAvatar();
+                _selectAvatarFile();
               },
             ),
           )
