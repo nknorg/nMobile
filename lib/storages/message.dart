@@ -172,14 +172,13 @@ class MessageStorage {
     return [];
   }
 
-  Future<List<MessageSchema>> queryListUnRead(String? senderId) async {
-    if (senderId == null || senderId.isEmpty) return [];
+  Future<List<MessageSchema>> queryListUnRead() async {
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: 'sender != ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
-        whereArgs: [senderId, 0, ContentType.piece, ContentType.receipt],
+        where: 'is_outbound = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
+        whereArgs: [0, 0, ContentType.piece, ContentType.receipt],
       );
       if (res == null || res.isEmpty) {
         logger.d("queryListUnRead - empty");
@@ -201,14 +200,14 @@ class MessageStorage {
     return [];
   }
 
-  Future<List<MessageSchema>> queryListUnReadByTargetId(String? senderId, String? targetId) async {
-    if (senderId == null || senderId.isEmpty || targetId == null || targetId.isEmpty) return [];
+  Future<List<MessageSchema>> queryListUnReadByTargetId(String? targetId) async {
+    if (targetId == null || targetId.isEmpty) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: 'sender != ? AND target_id = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
-        whereArgs: [senderId, targetId, 0, ContentType.piece, ContentType.receipt],
+        where: 'target_id = ? AND is_outbound = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
+        whereArgs: [targetId, 0, 0, ContentType.piece, ContentType.receipt],
       );
       if (res == null || res.isEmpty) {
         logger.d("queryListUnReadByTargetId - empty - targetId:$targetId");
@@ -290,14 +289,13 @@ class MessageStorage {
     return false;
   }
 
-  Future<int> unReadCount(String? senderId) async {
-    if (senderId == null || senderId.isEmpty) return 0;
+  Future<int> unReadCount() async {
     try {
       var res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
-        where: 'sender != ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
-        whereArgs: [senderId, 0, ContentType.piece, ContentType.receipt],
+        where: 'is_outbound = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
+        whereArgs: [0, 0, ContentType.piece, ContentType.receipt],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.d("unReadCountByNotSender - count:$count");
@@ -309,22 +307,22 @@ class MessageStorage {
     return 0;
   }
 
-  Future<int> unReadCountByTargetId(String? senderId, String? targetId) async {
-    if (senderId == null || senderId.isEmpty || targetId == null || targetId.isEmpty) return 0;
+  Future<int> unReadCountByTargetId(String? targetId) async {
+    if (targetId == null || targetId.isEmpty) return 0;
     try {
       var res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
-        where: 'sender != ? AND target_id = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
-        whereArgs: [senderId, targetId, 0, ContentType.piece, ContentType.receipt],
+        where: 'is_outbound = ? AND target_id = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
+        whereArgs: [0, targetId, 0, ContentType.piece, ContentType.receipt],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.d("unReadCountByTargetId - count:$count");
+      logger.d("unReadCountByTargetId - targetId:$targetId - count:$count");
       return count ?? 0;
     } catch (e) {
       handleError(e);
     }
-    logger.w("unReadCountByTargetId - fail - senderId:$senderId");
+    logger.w("unReadCountByTargetId - fail - targetId:$targetId");
     return 0;
   }
 
