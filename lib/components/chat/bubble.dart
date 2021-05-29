@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/contact/avatar.dart';
@@ -112,12 +114,22 @@ class _ChatBubbleState extends State<ChatBubble> {
         ),
       );
     }
-    contentsWidget.add(
-      Markdown(
-        data: _message.content,
-        dark: dark,
-      ),
-    );
+    switch (_message.contentType) {
+      case ContentType.text:
+      case ContentType.textExtension:
+        contentsWidget.add(
+          Markdown(
+            data: _message.content,
+            dark: dark,
+          ),
+        );
+        break;
+      case ContentType.media:
+        contentsWidget.add(
+          Image.file(_message.content as File),
+        );
+    }
+
     return Padding(
       padding: const EdgeInsets.only(top: 12, bottom: 12),
       child: Flex(
