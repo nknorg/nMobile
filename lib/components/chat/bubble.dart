@@ -137,29 +137,39 @@ class _ChatBubbleState extends State<ChatBubble> {
     Widget _body = SizedBox.shrink();
     switch (_message.contentType) {
       case ContentType.text:
+      case ContentType.textExtension:
         _body = _getContentTextBody(dark);
+        break;
+      case ContentType.media:
+        _body = _getContentImageBody();
         break;
       // TODO:GG contentTypeView
     }
+    // TODO:GG burn
+    Widget burnWidget = SizedBox.shrink();
 
     return Container(
       padding: EdgeInsets.all(10),
       decoration: decoration,
       child: Container(
         constraints: BoxConstraints(maxWidth: maxWidth),
-        child: _body,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _body,
+            burnWidget,
+          ],
+        ),
       ),
     );
   }
 
   Widget _getContentTextBody(bool dark) {
-    List<Widget> contentsWidget = <Widget>[];
-    contentsWidget.add(Markdown(data: _message.content, dark: dark));
-    Widget burnWidget = Container(); // TODO:GG burn
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: contentsWidget,
-    );
+    return Markdown(data: _message.content, dark: dark);
+  }
+
+  Widget _getContentImageBody() {
+    return Image.file(_message.content as File);
   }
 
   List<dynamic> _getStyles() {

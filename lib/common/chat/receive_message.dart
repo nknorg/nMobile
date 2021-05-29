@@ -49,8 +49,8 @@ class ReceiveMessage {
   }
 
   startReceiveMessage() {
-    receiveTextMessage();
     receiveReceiptMessage();
+    receiveTextMessage();
     receiveMediaMessage();
   }
 
@@ -62,20 +62,6 @@ class ReceiveMessage {
     });
     onReceiveStreamSubscriptions.clear();
     return Future.wait(futures);
-  }
-
-  receiveTextMessage() {
-    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) async {
-      // sqlite
-      MessageSchema? schema = await _messageStorage.insert(event);
-      if (schema == null) return;
-      // receipt message
-      sendMessage.sendReceipt(schema); // wait
-      onSavedSink.add(schema);
-      // TODO: notification
-      // notification.showDChatNotification();
-    });
-    onReceiveStreamSubscriptions.add(subscription);
   }
 
   receiveReceiptMessage() {
@@ -93,16 +79,29 @@ class ReceiveMessage {
     onReceiveStreamSubscriptions.add(subscription);
   }
 
+  receiveTextMessage() {
+    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) async {
+      // sqlite
+      MessageSchema? schema = await _messageStorage.insert(event);
+      if (schema == null) return;
+      // receipt message
+      sendMessage.sendReceipt(schema); // wait
+      onSavedSink.add(schema);
+      // TODO: notification
+      // notification.showDChatNotification();
+    });
+    onReceiveStreamSubscriptions.add(subscription);
+  }
+
   receiveMediaMessage() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.media).listen((MessageSchema event) async {
-      print('----------------------receive media-----------------');
-      await event.LoadMediaFile();
+      await event.loadMediaFile();
       // sqlite
       MessageSchema? schema = await _messageStorage.insert(event);
       print(schema);
       if (schema == null) return;
       // receipt message
-      sendMessage.sendReceipt(event); // wait
+      sendMessage.sendReceipt(schema); // wait
       onSavedSink.add(schema);
       // TODO: notification
       // notification.showDChatNotification();
