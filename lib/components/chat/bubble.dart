@@ -77,17 +77,96 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   @override
   Widget build(BuildContext context) {
-    SkinTheme _theme = application.theme;
+    bool isSendOut = _message.isOutbound;
 
+    List styles = _getStyles();
+    BoxDecoration decoration = styles[0];
+    bool dark = styles[1];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          isSendOut ? SizedBox.shrink() : _getAvatar(),
+          Expanded(
+            flex: 1,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: isSendOut ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 4),
+                  _getName(),
+                  SizedBox(height: 4),
+                  _getContent(decoration, dark),
+                ],
+              ),
+            ),
+          ),
+          isSendOut ? _getAvatar() : SizedBox.shrink(),
+        ],
+      ),
+    );
+  }
+
+  // TODO:GG time
+  Widget _getTime() {
+    Widget timeWidget;
+    String timeFormat = formatChatTime(_message.sendTime);
+    return SizedBox.shrink();
+  }
+
+  Widget _getAvatar() {
+    return ContactAvatar(contact: _contact, radius: 24);
+  }
+
+  Widget _getName() {
+    return Label(
+      _contact.getDisplayName,
+      type: LabelType.h3,
+      color: application.theme.primaryColor,
+    );
+  }
+
+  Widget _getContent(BoxDecoration decoration, bool dark) {
+    double maxWidth = MediaQuery.of(context).size.width - 12 * 2 * 2 - (24 * 2) * 2 - 8 * 2;
+
+    Widget _body = SizedBox.shrink();
+    switch (_message.contentType) {
+      case ContentType.text:
+        _body = _getContentTextBody(dark);
+        break;
+      // TODO:GG contentTypeView
+    }
+
+    return Container(
+      padding: EdgeInsets.all(10),
+      decoration: decoration,
+      child: Container(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: _body,
+      ),
+    );
+  }
+
+  Widget _getContentTextBody(bool dark) {
+    List<Widget> contentsWidget = <Widget>[];
+    contentsWidget.add(Markdown(data: _message.content, dark: dark));
+    Widget burnWidget = Container(); // TODO:GG burn
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: contentsWidget,
+    );
+  }
+
+  List<dynamic> _getStyles() {
+    SkinTheme _theme = application.theme;
     int msgStatus = MessageStatus.get(_message);
 
-    // TODO:GG refactor
     BoxDecoration decoration;
-    Widget timeWidget;
-    Widget burnWidget = Container();
-    String timeFormat = formatChatTime(_message.sendTime);
-    List<Widget> contentsWidget = <Widget>[];
-
     bool dark = false;
     if (msgStatus == MessageStatus.Sending || msgStatus == MessageStatus.SendSuccess) {
       decoration = BoxDecoration(
@@ -133,55 +212,6 @@ class _ChatBubbleState extends State<ChatBubble> {
         ),
       );
     }
-
-    contentsWidget.add(
-      Markdown(data: _message.content, dark: dark),
-    );
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 0,
-            child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              child: ContactAvatar(
-                contact: _contact,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, bottom: 4),
-                  child: Label(
-                    _contact.getDisplayName,
-                    type: LabelType.h3,
-                    color: application.theme.primaryColor,
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.all(10),
-                  decoration: decoration,
-                  child: Container(
-                    constraints: BoxConstraints(maxWidth: 272),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: contentsWidget,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    return [decoration, dark];
   }
 }
