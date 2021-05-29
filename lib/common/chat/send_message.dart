@@ -20,9 +20,9 @@ class SendMessage {
   Stream<MessageSchema> get onSavedStream => onSavedController.stream;
 
   // ignore: close_sinks
-  StreamController<MessageSchema> _onSendController = StreamController<MessageSchema>.broadcast();
-  StreamSink<MessageSchema> get onSendSink => _onSendController.sink;
-  Stream<MessageSchema> get onSendStream => _onSendController.stream; // TODO:GG
+  StreamController<MessageSchema> _onUpdateController = StreamController<MessageSchema>.broadcast();
+  StreamSink<MessageSchema> get onUpdateSink => _onUpdateController.sink;
+  Stream<MessageSchema> get onUpdateStream => _onUpdateController.stream;
 
   MessageStorage _messageStorage = MessageStorage();
   TopicStorage _topicStorage = TopicStorage();
@@ -64,8 +64,7 @@ class SendMessage {
     // update status
     schema = MessageStatus.set(schema, MessageStatus.SendSuccess);
     _messageStorage.updateMessageStatus(schema);
-    // wait receipt
-    onSendSink.add(schema);
+    onUpdateSink.add(schema);
     return schema;
   }
 
