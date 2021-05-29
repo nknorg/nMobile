@@ -7,12 +7,10 @@ import 'package:equatable/equatable.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
-import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
 import 'contact.dart';
@@ -436,14 +434,11 @@ class MessageSchema extends Equatable {
     );
 
     if (schema.contentType == ContentType.image || schema.contentType == ContentType.media) {
-      String filePath = join(Global.applicationRootDirectory.path, e['content']);
-      schema.content = File(filePath);
+      schema.content = File(Path.getCompleteFile(e['content']));
     } else if (schema.contentType == ContentType.audio) {
-      String filePath = join(Global.applicationRootDirectory.path, e['content']);
-      schema.content = File(filePath);
+      schema.content = File(Path.getCompleteFile(e['content']));
     } else if (schema.contentType == ContentType.piece) {
-      String filePath = join(Global.applicationRootDirectory.path, e['content']);
-      schema.content = File(filePath);
+      schema.content = File(Path.getCompleteFile(e['content']));
     } else {
       schema.content = e['content'];
     }
@@ -485,13 +480,13 @@ class MessageSchema extends Equatable {
       'is_success': isSuccess ? 1 : 0,
       'is_send_error': isSendError ? 1 : 0,
     };
-    String pubKey = hexEncode(chatCommon.publicKey);
+    // String pubKey = hexEncode(chatCommon.publicKey);
     if (contentType == ContentType.image || contentType == ContentType.media) {
-      map['content'] = Path.getLocalChat(pubKey, Path.getFileName((content as File).path));
+      map['content'] = Path.getLocalFile((content as File).path);
     } else if (contentType == ContentType.audio) {
-      map['content'] = Path.getLocalChat(pubKey, Path.getFileName((content as File).path));
+      map['content'] = Path.getLocalFile((content as File).path);
     } else if (contentType == ContentType.piece) {
-      map['content'] = Path.getLocalChat(pubKey, Path.getFileName((content as File).path));
+      map['content'] = Path.getLocalFile((content as File).path);
     } else {
       map['content'] = content;
     }
@@ -534,8 +529,8 @@ class MessageSchema extends Equatable {
 
     var bytes = base64Decode(fileBase64);
     String name = hexEncode(Uint8List.fromList(md5.convert(bytes).bytes));
-    String path = Path.getLocalChat(hexEncode(chatCommon.publicKey), '$name.$extension');
-    File file = File(join(Global.applicationRootDirectory.path, path));
+    String localPath = Path.createLocalChatFile(hexEncode(chatCommon.publicKey), '$name.$extension');
+    File file = File(Path.getCompleteFile(localPath));
 
     logger.d('getMediaFile - path:${file.absolute}');
 

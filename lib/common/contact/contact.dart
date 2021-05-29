@@ -118,7 +118,7 @@ class ContactCommon {
     bool success = await _contactStorage.setProfile(
       schema.id,
       {'avatar': avatarLocalPath},
-      oldProfileInfo: (schema.avatar == null || schema.avatar!.isEmpty) ? null : {'avatar': schema.avatar},
+      oldProfileInfo: (schema.avatar == null) ? null : {'avatar': schema.avatar?.path},
     );
     if (success && notify) queryAndNotify(schema.id);
     return success;
