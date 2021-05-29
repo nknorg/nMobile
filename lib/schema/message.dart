@@ -82,8 +82,8 @@ class MessageOptions {
 class MessageStatus {
   static const int Sending = 100;
   static const int SendFail = 110;
-  static const int SendSuccess = 120;
-  static const int SendByReplyReceipt = 130;
+  static const int SendSuccess = 120; // TODO:GG update_stream
+  static const int SendWithReceipt = 130;
   static const int Received = 200;
   static const int ReceivedRead = 210;
 
@@ -103,7 +103,7 @@ class MessageStatus {
       schema.isSendError = false;
       schema.isSuccess = true;
       schema.isRead = false;
-    } else if (status == SendByReplyReceipt) {
+    } else if (status == SendWithReceipt) {
       schema.isOutbound = true;
       schema.isSendError = false;
       schema.isSuccess = true;
@@ -129,7 +129,7 @@ class MessageStatus {
         // || schema.pid == null
         return SendFail;
       } else if (schema.isSuccess && schema.isRead) {
-        return SendByReplyReceipt;
+        return SendWithReceipt;
       } else if (schema.isSuccess) {
         return SendSuccess;
       } else {
