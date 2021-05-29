@@ -124,53 +124,64 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                 header: Header(
                   titleChild: Container(
                     margin: EdgeInsets.only(left: 20),
-                    child: contactCommon.currentUser != null
-                        ? ContactHeader(
-                            contact: contactCommon.currentUser!,
-                            onTap: () {
-                              ContactProfileScreen.go(context, contactId: contactCommon.currentUser?.id);
-                            },
-                            body: StreamBuilder<int>(
-                              stream: chatCommon.statusStream,
-                              initialData: chatCommon.status,
-                              builder: (context, snapshot) {
-                                Widget statusWidget = Row(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: <Widget>[
-                                    Label(_localizations.connecting, type: LabelType.h4, color: application.theme.fontLightColor.withAlpha(200)),
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 2, left: 4),
-                                      child: SpinKitThreeBounce(
-                                        color: application.theme.fontLightColor.withAlpha(200),
-                                        size: 10,
-                                      ),
+                    child: StreamBuilder<List<ContactSchema>>(
+                      initialData: contactCommon.currentUser == null ? [] : [contactCommon.currentUser!],
+                      stream: contactCommon.updateStream,
+                      builder: (BuildContext context, AsyncSnapshot<List<ContactSchema>> snapshot) {
+                        ContactSchema? _schema = contactCommon.currentUser;
+                        if (snapshot.data != null && snapshot.data!.isNotEmpty) {
+                          List result = snapshot.data!.where((element) => element.id == _schema?.id).toList();
+                          if (result.isNotEmpty) {
+                            _schema = result[0];
+                          }
+                        }
+                        if (_schema == null) return SizedBox.shrink();
+                        return ContactHeader(
+                          contact: _schema,
+                          onTap: () {
+                            ContactProfileScreen.go(context, contactId: _schema?.id);
+                          },
+                          body: StreamBuilder<int>(
+                            stream: chatCommon.statusStream,
+                            initialData: chatCommon.status,
+                            builder: (context, snapshot) {
+                              Widget statusWidget = Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: <Widget>[
+                                  Label(_localizations.connecting, type: LabelType.h4, color: application.theme.fontLightColor.withAlpha(200)),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2, left: 4),
+                                    child: SpinKitThreeBounce(
+                                      color: application.theme.fontLightColor.withAlpha(200),
+                                      size: 10,
                                     ),
-                                  ],
-                                );
-                                switch (snapshot.data) {
-                                  case ChatConnectStatus.disconnected:
-                                    statusWidget = Row(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: <Widget>[
-                                        Label(_localizations.disconnect, type: LabelType.h4, color: application.theme.strongColor),
-                                      ],
-                                    );
-                                    break;
-                                  case ChatConnectStatus.connected:
-                                    statusWidget = Row(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: <Widget>[
-                                        Label(_localizations.connected, type: LabelType.h4, color: application.theme.successColor),
-                                      ],
-                                    );
-                                    break;
-                                }
-
-                                return statusWidget;
-                              },
-                            ),
-                          )
-                        : SizedBox.shrink(),
+                                  ),
+                                ],
+                              );
+                              switch (snapshot.data) {
+                                case ChatConnectStatus.disconnected:
+                                  statusWidget = Row(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: <Widget>[
+                                      Label(_localizations.disconnect, type: LabelType.h4, color: application.theme.strongColor),
+                                    ],
+                                  );
+                                  break;
+                                case ChatConnectStatus.connected:
+                                  statusWidget = Row(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: <Widget>[
+                                      Label(_localizations.connected, type: LabelType.h4, color: application.theme.successColor),
+                                    ],
+                                  );
+                                  break;
+                              }
+                              return statusWidget;
+                            },
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   actions: [
                     Padding(
@@ -244,7 +255,9 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                       color: Color(0x4D051C3F),
                                     ),
                                     child: Label(
-                                      S.of(context).new_group,
+                                      S
+                                          .of(context)
+                                          .new_group,
                                       height: 1.2,
                                       type: LabelType.h4,
                                       dark: true,
@@ -263,7 +276,9 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                       color: Color(0x4D051C3F),
                                     ),
                                     child: Label(
-                                      S.of(context).new_whisper,
+                                      S
+                                          .of(context)
+                                          .new_whisper,
                                       height: 1.2,
                                       type: LabelType.h4,
                                       dark: true,
@@ -297,7 +312,9 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                   Navigator.of(context).pop();
                                   BottomDialog.of(context).showWithTitle(
                                     height: 650,
-                                    title: S.of(context).create_channel,
+                                    title: S
+                                        .of(context)
+                                        .create_channel,
                                     child: CreateGroupDialog(),
                                   );
                                   // TODO:GG chat 1t9
@@ -319,7 +336,11 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                 height: 48,
                                 onPressed: () async {
                                   String? address =
-                                      await BottomDialog.of(context).showInputAddressDialog(title: S.of(context).new_whisper, hint: S.of(context).enter_or_select_a_user_pubkey);
+                                  await BottomDialog.of(context).showInputAddressDialog(title: S
+                                      .of(context)
+                                      .new_whisper, hint: S
+                                      .of(context)
+                                      .enter_or_select_a_user_pubkey);
                                   if (address != null) {
                                     Navigator.of(context).pop();
                                     int count = await ContactStorage().queryCountByClientAddress(address);
