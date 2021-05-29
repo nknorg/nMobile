@@ -40,6 +40,16 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
           message: widget.message,
           contact: widget.contact,
         ));
+        break;
+      case ContentType.media:
+        contentsWidget.add(ChatBubble(
+          message: widget.message,
+          contact: widget.contact,
+        ));
+        break;
+      case ContentType.system:
+        // TODO
+        break;
     }
 
     return Column(
