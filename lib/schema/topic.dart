@@ -2,12 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:nmobile/common/global.dart';
-import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
-import 'package:path/path.dart';
 
 import 'option.dart';
 
@@ -77,7 +74,7 @@ class TopicSchema {
     );
 
     if (e['avatar'] != null && e['avatar'].toString().length > 0) {
-      topicSchema.avatar = File(join(Global.applicationRootDirectory.path, e['avatar']));
+      topicSchema.avatar = File(Path.getCompleteFile(e['avatar']));
     }
     if (e['options'] != null) {
       try {
@@ -107,7 +104,7 @@ class TopicSchema {
       'id': id,
       'topic': topic,
       'count': count,
-      'avatar': avatar != null ? Path.getLocalContact(chatCommon.id, avatar!.path) : null,
+      'avatar': avatar != null ? Path.getLocalFile(avatar!.path) : null,
       'options': options != null ? jsonEncode(options!.toMap()) : null,
       'last_updated_time': lastUpdatedTime?.millisecondsSinceEpoch,
       'is_top': isTop ? 1 : 0,

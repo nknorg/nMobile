@@ -68,7 +68,6 @@ class _ContactHeaderState extends State<ContactHeader> {
           Container(
             margin: const EdgeInsets.only(right: 12),
             child: ContactAvatar(
-              key: ValueKey(_contact.getDisplayAvatarPath ?? ""),
               contact: _contact,
             ),
           ),

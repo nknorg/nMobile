@@ -180,11 +180,18 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
     int searchFriendDataCount = _searchFriends.length;
     int searchFriendViewCount = (searchFriendDataCount > 0 ? 1 : 0) + searchFriendDataCount;
     int searchTopicDataCount = _searchTopics.length;
-    int searchTopicViewCount = searchTopicDataCount + (searchTopicDataCount > 0 ? 1 : 0);
+    int searchTopicViewCount = (searchTopicDataCount > 0 ? 1 : 0) + searchTopicDataCount;
     int searchStrangerDataCount = _searchStrangers.length;
     int searchStrangerViewCount = (searchStrangerDataCount > 0 ? 1 : 0) + searchStrangerDataCount;
 
-    int listItemViewCount = searchFriendViewCount + searchTopicViewCount + (searchStrangerViewCount > 0 ? 1 : 0) + searchStrangerViewCount;
+    int listItemViewCount = searchFriendViewCount + searchTopicViewCount + searchStrangerViewCount;
+
+    int friendStartIndex = 0;
+    int friendEndIndex = searchFriendViewCount - 1;
+    int topicStartIndex = friendEndIndex + 1;
+    int topicEndIndex = topicStartIndex + searchTopicViewCount - 1;
+    int strangerStartIndex = topicEndIndex + 1;
+    int strangerEndIndex = strangerStartIndex + searchStrangerViewCount - 1;
 
     return Layout(
       headerColor: application.theme.primaryColor,
@@ -258,8 +265,12 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
                 padding: EdgeInsets.only(bottom: 60),
                 itemCount: listItemViewCount,
                 itemBuilder: (context, index) {
-                  if (searchFriendViewCount > 0 && index >= 0 && index < searchFriendViewCount) {
-                    if (index == 0) {
+                  int friendItemIndex = index - 1;
+                  int topicItemIndex = index - searchFriendViewCount - 1;
+                  int strangerItemIndex = index - searchTopicViewCount - searchFriendViewCount - 1;
+
+                  if (searchFriendViewCount > 0 && index >= friendStartIndex && index <= friendEndIndex) {
+                    if (index == friendStartIndex) {
                       return Padding(
                         padding: const EdgeInsets.only(top: 12, bottom: 16, left: 16, right: 16),
                         child: Label(
@@ -268,9 +279,9 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
                         ),
                       );
                     }
-                    return _getFriendItemView(_searchFriends[index - 1]);
-                  } else if (searchTopicViewCount > 0 && index >= searchFriendViewCount && index < (searchFriendViewCount + searchTopicViewCount)) {
-                    if (index == searchFriendViewCount) {
+                    return _getFriendItemView(_searchFriends[friendItemIndex]);
+                  } else if (searchTopicViewCount > 0 && index >= topicStartIndex && index <= topicEndIndex) {
+                    if (index == topicStartIndex) {
                       return Padding(
                         padding: const EdgeInsets.only(top: 24, bottom: 16, left: 16, right: 16),
                         child: Label(
@@ -279,9 +290,9 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
                         ),
                       );
                     }
-                    return _getStrangerItemView(_searchStrangers[index - (searchFriendViewCount > 0 ? 2 : 1)]);
-                  } else if (searchStrangerViewCount > 0 && index >= (searchFriendViewCount + searchTopicViewCount) && index < (searchFriendViewCount + searchTopicViewCount + searchStrangerViewCount)) {
-                    if (index == (searchFriendViewCount + searchTopicViewCount)) {
+                    return SizedBox.shrink(); // TODO:GG contact topic
+                  } else if (searchStrangerViewCount > 0 && index >= strangerStartIndex && index <= strangerEndIndex) {
+                    if (index == strangerStartIndex) {
                       return Padding(
                         padding: const EdgeInsets.only(top: 24, bottom: 16, left: 16, right: 16),
                         child: Label(
@@ -290,7 +301,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
                         ),
                       );
                     }
-                    return SizedBox.shrink(); // TODO:GG contact topic
+                    return _getStrangerItemView(_searchStrangers[strangerItemIndex]);
                   }
                   return SizedBox.shrink();
                 },
@@ -401,7 +412,7 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
             _onTapContactItem(item);
           },
           bgColor: Colors.transparent,
-          bodyTitle: item.clientAddress,
+          bodyTitle: item.getDisplayName,
           bodyDesc: timeFormat(item.updatedTime),
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           tail: Padding(

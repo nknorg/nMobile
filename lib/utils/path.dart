@@ -7,9 +7,11 @@ import 'package:nmobile/common/global.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
+import 'logger.dart';
+
 class SubDirType {
   static const String cache = "cache";
-  static const String chat = "";
+  static const String chat = "chat";
   static const String contact = "contact";
 }
 
@@ -60,7 +62,7 @@ class Path {
   }
 
   /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/{fileName}.{fileExt}
-  static Future<String> getFile(String? mPubKey, String? dirType, String fileName, {String? fileExt}) async {
+  static Future<String> _getFile(String? mPubKey, String? dirType, String fileName, {String? fileExt}) async {
     String dirPath = await getDir(mPubKey, dirType);
     String path = join(dirPath, joinFileExt(fileName, fileExt));
     // logger.d("getFile - path:$path");
@@ -73,23 +75,35 @@ class Path {
     if (fileExt != null && fileExt.isNotEmpty) {
       fileName += ".$fileExt";
     }
-    String path = await getFile(mPubKey, SubDirType.cache, fileName, fileExt: fileExt);
-    // logger.d("getCacheFile - path:$path");
+    String path = await _getFile(mPubKey, SubDirType.cache, fileName, fileExt: fileExt);
+    logger.d("getCacheFile - path:$path");
     return path;
   }
 
-  /// {mPubKey}/{dirType}/{fileName}
-  static String getLocalFile(String? mPubKey, String? dirType, String filePath) {
+  /// eg:{rootPath}/{localPath}
+  static String getCompleteFile(String? localPath) {
+    return join(Global.applicationRootDirectory.path, localPath);
+  }
+
+  /// eg:{localPath}
+  static String? getLocalFile(String? filePath) {
+    if (filePath == null || filePath.isEmpty) return null;
+    String rootDir = Global.applicationRootDirectory.path.endsWith("/") ? Global.applicationRootDirectory.path : (Global.applicationRootDirectory.path + "/");
+    return filePath.split(rootDir).last;
+  }
+
+  /// eg:{mPubKey}/{dirType}/{fileName}
+  static String _createLocalFile(String? mPubKey, String? dirType, String filePath) {
     return join(mPubKey ?? "", dirType, Path.getFileName(filePath));
   }
 
   /// {mPubKey}/{fileName}
-  static String getLocalChat(String? mPubKey, String fileName) {
-    return Path.getLocalFile(mPubKey, SubDirType.chat, fileName);
+  static String createLocalChatFile(String? mPubKey, String filePath) {
+    return Path._createLocalFile(mPubKey, SubDirType.chat, filePath);
   }
 
   /// {mPubKey}/contact/{fileName}
-  static String getLocalContact(String? mPubKey, String fileName) {
-    return Path.getLocalFile(mPubKey, SubDirType.contact, fileName);
+  static String createLocalContactFile(String? mPubKey, String filePath) {
+    return Path._createLocalFile(mPubKey, SubDirType.contact, filePath);
   }
 }

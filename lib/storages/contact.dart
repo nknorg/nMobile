@@ -55,7 +55,7 @@ class ContactStorage {
       ContactSchema? exist = await queryByClientAddress(schema.clientAddress);
       if (exist != null) {
         logger.d("insertContact - exist:$exist - add:$schema");
-        return exist;
+        return null;
       }
       Map<String, dynamic> entity = await schema.toMap();
       int? id = await db?.insert(tableName, entity);
@@ -246,16 +246,6 @@ class ContactStorage {
       handleError(e);
     }
     return false;
-  }
-
-  Future<bool> setAvatar(ContactSchema? schema, String? path) async {
-    if (schema == null || path == null || path.isEmpty) return false;
-    return await setProfile(schema.id, {'avatar': path}, oldProfileInfo: {'avatar': schema.avatar});
-  }
-
-  Future<bool> setName(ContactSchema? schema, String? name) async {
-    if (schema == null || name == null || name.isEmpty) return false;
-    return await setProfile(schema.id, {'first_name': name}, oldProfileInfo: {'first_name': schema.firstName});
   }
 
   Future<bool> setProfileVersion(int? contactId, String? profileVersion) async {

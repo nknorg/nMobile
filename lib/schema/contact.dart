@@ -1,14 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
-import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/contact/contact.dart';
-import 'package:nmobile/common/global.dart';
-import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
-import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
 import 'option.dart';
@@ -23,7 +20,7 @@ class ContactSchema {
   String? notes; // == extraInfo[notes] <-> data[notes]
   Map<String, dynamic>? extraInfo; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ..., avatar, firstName]
 
-  String? avatar; // (local_path) <-> avatar // TODO:GG
+  File? avatar; // (local_path) <-> avatar
   OptionsSchema? options; // <-> options
   DateTime? createdTime; // <-> created_time
   DateTime? updatedTime; // <-> updated_time
@@ -65,7 +62,7 @@ class ContactSchema {
       clientAddress: e['address'],
       firstName: e['first_name'] ?? getDefaultName(e['address']),
       lastName: e['last_name'],
-      avatar: e['avatar'],
+      avatar: File(Path.getCompleteFile(e['avatar'])),
       createdTime: e['created_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['created_time']) : null,
       updatedTime: e['updated_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['updated_time']) : null,
       profileVersion: e['profile_version'],
@@ -133,7 +130,7 @@ class ContactSchema {
       'last_name': lastName,
       'data': extraInfo != null ? jsonEncode(extraInfo) : '{}',
       'options': options != null ? jsonEncode(options!.toMap()) : null,
-      'avatar': avatar != null ? Path.getLocalContact(hexEncode(chatCommon.publicKey), Path.getFileName(avatar!)) : null,
+      'avatar': avatar != null ? Path.getLocalFile(avatar?.path) : null,
       'created_time': createdTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'updated_time': updatedTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'profile_version': profileVersion,
@@ -206,7 +203,7 @@ class ContactSchema {
     return displayName ?? "";
   }
 
-  String? get getDisplayAvatarPath {
+  Future<File?> get getDisplayAvatarFile async {
     String? avatarLocalPath;
 
     if (extraInfo != null && extraInfo!.isNotEmpty) {
@@ -221,15 +218,17 @@ class ContactSchema {
     }
 
     if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
-      if (avatar != null && avatar!.isNotEmpty) {
-        avatarLocalPath = avatar;
-      }
+      avatarLocalPath = avatar?.path;
     }
     if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
-      return null;
-    } else {
-      return join(Global.applicationRootDirectory.path, avatarLocalPath);
+      return Future.value(null);
     }
+    File avatarFile = File(Path.getCompleteFile(avatarLocalPath));
+    bool exits = await avatarFile.exists();
+    if (!exits) {
+      return Future.value(null);
+    }
+    return avatarFile;
   }
 
   @override
