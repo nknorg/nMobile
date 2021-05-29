@@ -153,12 +153,12 @@ class ChatCommon {
     List<MessageSchema> list = await _messageStorage.queryListCanReadByTargetId(targetId, offset: offset, limit: limit);
     // unread
     if (offset == 0 && (unread == null || unread > 0)) {
-      List<MessageSchema> unreadList = await _messageStorage.queryListUnReadByTargetId(id, targetId);
+      List<MessageSchema> unreadList = await _messageStorage.queryListUnReadByTargetId(targetId);
       unreadList.forEach((MessageSchema element) {
         element = MessageStatus.set(element, MessageStatus.ReceivedRead);
         _messageStorage.updateMessageStatus(element); // wait
       });
-      list = list.map((e) => MessageStatus.set(e, MessageStatus.ReceivedRead)).toList(); // read
+      list = list.map((e) => e.isOutbound == false ? MessageStatus.set(e, MessageStatus.ReceivedRead) : e).toList(); // fake read
     }
     // burn
     if (list.isNotEmpty && handleBurn) {
