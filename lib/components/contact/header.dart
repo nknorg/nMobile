@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/contact.dart';
 
@@ -32,21 +31,12 @@ class _ContactHeaderState extends State<ContactHeader> {
   void initState() {
     super.initState();
     this._contact = widget.contact;
+  }
 
-    // listen
-    if (widget.syncData) {
-      _updateContactSubscription = contactCommon.updateStream.listen((List<ContactSchema>? list) {
-        if (list == null || list.isEmpty) return;
-        List result = list.where((element) => element.id == _contact.id).toList();
-        if (result.isNotEmpty) {
-          if (mounted) {
-            setState(() {
-              _contact = result[0];
-            });
-          }
-        }
-      });
-    }
+  @override
+  void didUpdateWidget(covariant ContactHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    this._contact = widget.contact;
   }
 
   @override
