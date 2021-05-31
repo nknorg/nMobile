@@ -55,7 +55,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
         ),
       ],
     );
-  } else if (model.contentType == ContentType.image || model.contentType == ContentType.media) {
+  } else if (model.contentType == ContentType.nknImage || model.contentType == ContentType.image) {
     contentWidget = Padding(
       padding: const EdgeInsets.only(top: 0),
       child: Row(
