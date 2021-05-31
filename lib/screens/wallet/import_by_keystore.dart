@@ -155,7 +155,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                           type: FileType.any,
                         );
                         logger.d("result:$result");
-                        if (result != null && result.files != null && result.files.isNotEmpty) {
+                        if (result != null && result.files.isNotEmpty) {
                           String? path = result.files.first.path;
                           if (path == null) return;
                           File picked = File(path);
@@ -168,7 +168,6 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                       child: Container(
                         width: 20,
                         child: Icon(
-                          // TODO:GG aligment
                           FontAwesomeIcons.paperclip,
                           size: 20,
                         ),

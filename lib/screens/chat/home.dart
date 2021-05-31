@@ -215,7 +215,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
     );
   }
 
-  // TODO:GG fix android position
   _showFloatActionMenu() {
     showDialog(
       context: context,

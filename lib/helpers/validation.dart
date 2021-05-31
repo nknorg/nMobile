@@ -54,31 +54,19 @@ class Validator {
 
   confirmPassword(password) {
     return (value) {
-      return value.trim().length == 0
-          ? _localizations?.error_required
-          : value != password
-              ? _localizations?.error_confirm_password
-              : null;
+      return value.trim().length == 0 ? _localizations?.error_required : (value != password ? _localizations?.error_confirm_password : null);
     };
   }
 
   seed() {
     return (value) {
-      return value.trim().length == 0
-          ? _localizations?.error_required
-          : value.trim().length != 64 || !RegExp(r'^[0-9a-f]{64}$').hasMatch(value)
-              ? _localizations?.error_seed_format
-              : null;
+      return value.trim().length == 0 ? _localizations?.error_required : (value.trim().length != 64 || !RegExp(r'^[0-9a-f]{64}$').hasMatch(value) ? _localizations?.error_seed_format : null);
     };
   }
 
   identifierNKN() {
     return (value) {
-      return value.trim().length == 0
-          ? _localizations?.error_required
-          : !RegExp(r'^[^.]*.?[0-9a-f]{64}$').hasMatch(value)
-              ? _localizations?.error_client_address_format
-              : null;
+      return value.trim().length == 0 ? _localizations?.error_required : (!RegExp(r'^[^.]*.?[0-9a-f]{64}$').hasMatch(value) ? _localizations?.error_client_address_format : null);
     };
   }
 
@@ -92,11 +80,7 @@ class Validator {
         jsonOk = false;
       }
 
-      return value.trim().length == 0
-          ? _localizations?.error_required
-          : !jsonOk
-              ? _localizations?.error_keystore_format
-              : null;
+      return value.trim().length == 0 ? _localizations?.error_required : (!jsonOk ? _localizations?.error_keystore_format : null);
     };
   }
 
@@ -104,14 +88,10 @@ class Validator {
     return (value) {
       bool isValid = false;
       try {
-        // TODO:GG keystoreEth
+        // TODO:GG eth keystore
         // isValid = Ethereum.isKeystoreValid(value.trim());
       } catch (e) {}
-      return value.trim().length == 0
-          ? _localizations?.error_required
-          : !isValid
-              ? _localizations?.error_keystore_format
-              : null;
+      return value.trim().length == 0 ? _localizations?.error_required : (!isValid ? _localizations?.error_keystore_format : null);
     };
   }
 
@@ -123,11 +103,19 @@ class Validator {
       } catch (e) {
         debugPrintStack(label: e.toString());
       }
-      return value.trim().length == 0
-          ? _localizations?.error_required
-          : !addressFormat
-              ? _localizations?.error_nkn_address_format
-              : null;
+      return value.trim().length == 0 ? _localizations?.error_required : (!addressFormat ? _localizations?.error_nkn_address_format : null);
+    };
+  }
+
+  addressNKNOrEmpty() {
+    return (value) {
+      bool addressFormat = false;
+      try {
+        addressFormat = verifyAddress(value.trim());
+      } catch (e) {
+        debugPrintStack(label: e.toString());
+      }
+      return (value.trim().length != 0 && !addressFormat) ? _localizations?.error_nkn_address_format : null;
     };
   }
 
@@ -140,11 +128,7 @@ class Validator {
       } catch (e) {
         //debugPrintStack(label: e?.toString());
       }
-      return value.trim().length == 0
-          ? _localizations?.error_required
-          : !addressFormat
-              ? _localizations?.error_nkn_address_format
-              : null;
+      return value.trim().length == 0 ? _localizations?.error_required : (!addressFormat ? _localizations?.error_nkn_address_format : null);
     };
   }
 }
