@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
@@ -14,12 +14,12 @@ import 'package:nmobile/schema/popular_channel.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 
-class CreateGroupDialog extends StatefulWidget {
+class CreateGroupDialog extends BaseStateFulWidget {
   @override
   _CreateGroupDialogState createState() => _CreateGroupDialogState();
 }
 
-class _CreateGroupDialogState extends State<CreateGroupDialog> {
+class _CreateGroupDialogState extends BaseStateFulWidgetState<CreateGroupDialog> {
   TextEditingController _topicController = TextEditingController();
   TextEditingController _feeController = TextEditingController();
   FocusNode _feeToFocusNode = FocusNode();
@@ -34,8 +34,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
   bool _privateSelected = false;
 
   @override
-  void initState() {
-    super.initState();
+  void onRefreshArguments() {
     _feeController.text = _fee.toString();
   }
 

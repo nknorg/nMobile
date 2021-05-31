@@ -75,35 +75,31 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
     });
     _deleteContactSubscription = contactCommon.deleteStream.listen((int contactId) {
       _allFriends = _allFriends.where((element) => element.id != contactId).toList();
+      _allStrangers = _allStrangers.where((element) => element.id != contactId).toList();
       _searchAction(_searchController.text);
     });
-    _updateContactSubscription = contactCommon.updateStream.listen((List<ContactSchema> list) {
-      if (list.isEmpty) return;
-      if (list.length == 1) {
-        int friendIndex = -1;
-        _allFriends.asMap().forEach((key, value) {
-          if (value.id == list[0].id) {
-            friendIndex = key;
-          }
-        });
-        if (friendIndex >= 0 && friendIndex < (_allFriends.length)) {
-          _allFriends[friendIndex] = list[0];
-          _searchAction(_searchController.text);
-          return;
+    _updateContactSubscription = contactCommon.updateStream.listen((ContactSchema event) {
+      int friendIndex = -1;
+      _allFriends.asMap().forEach((key, value) {
+        if (value.id == event.id) {
+          friendIndex = key;
         }
-        int strangerIndex = -1;
-        _allStrangers.asMap().forEach((key, value) {
-          if (value.id == list[0].id) {
-            strangerIndex = key;
-          }
-        });
-        if (friendIndex >= 0 && strangerIndex < (_allStrangers.length)) {
-          _allStrangers[strangerIndex] = list[0];
-          _searchAction(_searchController.text);
-          return;
+      });
+      if (friendIndex >= 0 && friendIndex < (_allFriends.length)) {
+        _allFriends[friendIndex] = event;
+        _searchAction(_searchController.text);
+        return;
+      }
+      int strangerIndex = -1;
+      _allStrangers.asMap().forEach((key, value) {
+        if (value.id == event.id) {
+          strangerIndex = key;
         }
-      } else {
-        _initData();
+      });
+      if (strangerIndex >= 0 && strangerIndex < (_allStrangers.length)) {
+        _allStrangers[strangerIndex] = event;
+        _searchAction(_searchController.text);
+        return;
       }
     });
 
