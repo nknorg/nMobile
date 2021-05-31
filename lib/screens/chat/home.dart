@@ -14,6 +14,7 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
@@ -326,7 +327,13 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
                                 width: 48,
                                 height: 48,
                                 onPressed: () async {
-                                  String? address = await BottomDialog.of(context).showInputAddressDialog(title: S.of(context).new_whisper, hint: S.of(context).enter_or_select_a_user_pubkey);
+                                  String? address = await BottomDialog.of(context).showInput(
+                                    title: S.of(context).new_whisper,
+                                    inputTip: S.of(context).send_to,
+                                    inputHint: S.of(context).enter_or_select_a_user_pubkey,
+                                    validator: Validator.of(context).identifierNKN(),
+                                    contactSelect: true,
+                                  );
                                   if (address != null) {
                                     Navigator.of(context).pop();
                                     int count = await ContactStorage().queryCountByClientAddress(address);

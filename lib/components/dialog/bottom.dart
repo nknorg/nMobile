@@ -7,11 +7,13 @@ import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/helpers/validation.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/screens/contact/home.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class BottomDialog extends BaseStateFulWidget {
@@ -63,12 +65,10 @@ class BottomDialog extends BaseStateFulWidget {
     Widget? action,
     String? desc = "",
     double? height = 300,
-    bool animated = true,
   }) {
     return show<T>(
       height: height,
       action: action,
-      animated: animated,
       builder: (context) => GestureDetector(
         onTap: () {
           FocusScope.of(context).requestFocus(FocusNode());
@@ -293,26 +293,28 @@ class BottomDialog extends BaseStateFulWidget {
     String? inputTip,
     String? inputHint,
     String? value,
+    FormFieldValidator<String>? validator,
     String? actionText,
     bool password = false,
+    double height = 300,
     int maxLength = 10000,
+    bool contactSelect = false,
   }) async {
     S _localizations = S.of(context);
-    TextEditingController _passwordController = TextEditingController();
-    _passwordController.text = value ?? "";
+    TextEditingController _inputController = TextEditingController();
+    _inputController.text = value ?? "";
 
     return showWithTitle<String>(
       title: title,
       desc: desc,
-      height: 300,
-      animated: true,
+      height: height,
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
           text: actionText ?? _localizations.continue_text,
           width: double.infinity,
           onPressed: () {
-            Navigator.pop(context, _passwordController.text);
+            Navigator.pop(context, _inputController.text);
           },
         ),
       ),
@@ -327,98 +329,32 @@ class BottomDialog extends BaseStateFulWidget {
               textAlign: TextAlign.start,
             ),
             FormText(
-              controller: _passwordController,
+              controller: _inputController,
               hintText: inputHint ?? "",
-              validator: Validator.of(context).password(),
+              validator: validator,
               password: password,
               maxLength: maxLength,
+              suffixIcon: contactSelect
+                  ? GestureDetector(
+                      onTap: () async {
+                        if (contactCommon.currentUser != null) {
+                          var contact = await ContactHomeScreen.go(context, isSelect: true);
+                          if (contact != null && contact is ContactSchema) {
+                            _inputController.text = contact.nknWalletAddress ?? "";
+                          }
+                        } else {
+                          Toast.show(S.of(context).d_chat_not_login);
+                        }
+                      },
+                      child: Container(
+                        width: 20,
+                        alignment: Alignment.centerRight,
+                        child: Icon(FontAwesomeIcons.solidAddressBook),
+                      ),
+                    )
+                  : SizedBox.shrink(),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Future<String?> showInputAddressDialog({String? title, String? hint}) async {
-    TextEditingController _addressController = TextEditingController();
-    double height = 300;
-    GlobalKey formKey = new GlobalKey<FormState>();
-    bool formValid = false;
-
-    if (hint == null) {
-      hint = S.of(context).enter_users_address;
-    }
-
-    return showWithTitle<String>(
-      height: height,
-      animated: true,
-      title: title,
-      action: Padding(
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
-        child: Button(
-          text: S.of(context).continue_text,
-          width: double.infinity,
-          onPressed: () {
-            if (formValid) {
-              Navigator.of(context).pop(_addressController.text);
-            }
-          },
-        ),
-      ),
-      child: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).requestFocus(FocusNode());
-        },
-        child: Container(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Form(
-            key: formKey,
-            autovalidateMode: AutovalidateMode.always,
-            onChanged: () {
-              formValid = (formKey.currentState as FormState).validate();
-            },
-            child: Flex(
-              direction: Axis.vertical,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Expanded(
-                  flex: 0,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Label(
-                        S.of(context).send_to,
-                        type: LabelType.bodyRegular,
-                        color: application.theme.fontColor1,
-                        textAlign: TextAlign.start,
-                      ),
-                      FormText(
-                        controller: _addressController,
-                        validator: Validator.of(context).identifierNKN(),
-                        hintText: hint,
-                        suffixIcon: GestureDetector(
-                          onTap: () async {
-                            // TODO: select contact
-                            // var contact = await Navigator.of(context).pushNamed(
-                            //     ContactHome.routeName,
-                            //     arguments: true);
-                            // if (contact is ContactSchema) {
-                            //   _addressController.text = contact.clientAddress;
-                            // }
-                          },
-                          child: Container(
-                            width: 20,
-                            alignment: Alignment.centerRight,
-                            child: Icon(FontAwesomeIcons.solidAddressBook),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );
