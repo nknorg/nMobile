@@ -24,7 +24,7 @@ class ExpansionLayout extends BaseStateFulWidget {
   _ExpansionLayoutState createState() => _ExpansionLayoutState();
 }
 
-class _ExpansionLayoutState extends BaseStateFulWidgetState<ExpansionLayout> with SingleTickerProviderStateMixin {
+class _ExpansionLayoutState extends BaseStateFulWidgetState<ExpansionLayout> with TickerProviderStateMixin {
   static final Animatable<double> _easeInTween = CurveTween(curve: Curves.easeIn);
   late AnimationController _controller;
   late Animation<double> _heightFactor;
@@ -32,14 +32,9 @@ class _ExpansionLayoutState extends BaseStateFulWidgetState<ExpansionLayout> wit
   bool _isExpanded = false;
 
   @override
-  void initState() {
-    super.initState();
+  void onRefreshArguments() {
     _controller = AnimationController(duration: _kExpand, vsync: this);
     _heightFactor = _controller.drive(_easeInTween);
-  }
-
-  @override
-  void onRefreshArguments() {
     _isExpanded = widget.isExpanded;
     if (_isExpanded) _controller.value = 1.0;
   }

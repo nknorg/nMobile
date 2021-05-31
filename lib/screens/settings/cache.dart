@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -15,14 +16,14 @@ import 'package:nmobile/utils/format.dart';
 
 import '../common/select.dart';
 
-class SettingsCacheScreen extends StatefulWidget {
+class SettingsCacheScreen extends BaseStateFulWidget {
   static const String routeName = '/settings/cache';
 
   @override
   _SettingsCacheScreenState createState() => _SettingsCacheScreenState();
 }
 
-class _SettingsCacheScreenState extends State<SettingsCacheScreen> {
+class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScreen> {
   String? title;
   String? selectedValue;
   List<SelectListItem>? list;
@@ -31,18 +32,12 @@ class _SettingsCacheScreenState extends State<SettingsCacheScreen> {
   String? _dbSize;
 
   @override
+  void onRefreshArguments() {}
+
+  @override
   void initState() {
     super.initState();
     initAsync();
-  }
-
-  _buttonStyle({bool top = false, bool bottom = false}) {
-    return ButtonStyle(
-      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16)),
-      shape: MaterialStateProperty.resolveWith(
-        (states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: top ? Radius.circular(12) : Radius.zero, bottom: bottom ? Radius.circular(12) : Radius.zero)),
-      ),
-    );
   }
 
   initAsync() async {
@@ -52,6 +47,15 @@ class _SettingsCacheScreenState extends State<SettingsCacheScreen> {
       _cacheSize = formatFlowSize(size, unitArr: ['B', 'KB', 'MB', 'GB']);
       _dbSize = formatFlowSize(dbs, unitArr: ['B', 'KB', 'MB', 'GB']);
     });
+  }
+
+  _buttonStyle({bool top = false, bool bottom = false}) {
+    return ButtonStyle(
+      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16)),
+      shape: MaterialStateProperty.resolveWith(
+        (states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: top ? Radius.circular(12) : Radius.zero, bottom: bottom ? Radius.circular(12) : Radius.zero)),
+      ),
+    );
   }
 
   @override

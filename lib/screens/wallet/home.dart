@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/components/base/stateful.dart';
 
 import 'home_empty.dart';
 import 'home_list.dart';
 
-class WalletHomeScreen extends StatefulWidget {
+class WalletHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/home';
 
   static go(BuildContext context) {
@@ -16,14 +17,12 @@ class WalletHomeScreen extends StatefulWidget {
   _WalletHomeScreenState createState() => _WalletHomeScreenState();
 }
 
-class _WalletHomeScreenState extends State<WalletHomeScreen> with AutomaticKeepAliveClientMixin {
+class _WalletHomeScreenState extends BaseStateFulWidgetState<WalletHomeScreen> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
   @override
-  void initState() {
-    super.initState();
-  }
+  void onRefreshArguments() {}
 
   @override
   Widget build(BuildContext context) {

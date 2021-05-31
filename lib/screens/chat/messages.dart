@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/logger.dart';
 
 import 'messages_private.dart';
 
-class ChatMessagesScreen extends StatefulWidget {
+class ChatMessagesScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/messages';
   static final String argWho = "who";
 
@@ -25,23 +26,18 @@ class ChatMessagesScreen extends StatefulWidget {
   _ChatMessagesScreenState createState() => _ChatMessagesScreenState();
 }
 
-class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
+class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScreen> {
   bool loading = false;
   ContactSchema? _contact;
   TopicSchema? _topic;
 
-  _bindData() {
+  @override
+  void onRefreshArguments() {
     dynamic who = widget.arguments![ChatMessagesScreen.argWho];
     if (who is TopicSchema) {
     } else if (who is ContactSchema) {
       this._contact = widget.arguments![ChatMessagesScreen.argWho];
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _bindData();
   }
 
   @override

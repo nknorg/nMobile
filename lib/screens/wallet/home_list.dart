@@ -7,6 +7,7 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
@@ -27,16 +28,19 @@ import 'package:nmobile/utils/logger.dart';
 
 import 'export.dart';
 
-class WalletHomeListLayout extends StatefulWidget {
+class WalletHomeListLayout extends BaseStateFulWidget {
   @override
   _WalletHomeListLayoutState createState() => _WalletHomeListLayoutState();
 }
 
-class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
+class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListLayout> {
   late WalletBloc _walletBloc;
   late StreamSubscription _walletSubscription;
 
   bool _allBackedUp = false;
+
+  @override
+  void onRefreshArguments() {}
 
   @override
   void initState() {
@@ -54,23 +58,26 @@ class _WalletHomeListLayoutState extends State<WalletHomeListLayout> {
       //   });
       // }
       if (state is WalletLoaded) {
-        _allBackedUp = await walletCommon.isBackup();
-        setState(() {});
+        bool allBackedUp = await walletCommon.isBackup();
+        if (_allBackedUp != allBackedUp) {
+          setState(() {
+            _allBackedUp = allBackedUp;
+          });
+        }
       }
     });
+    // init
     walletCommon.isBackup().then((value) {
-      if (mounted) {
-        setState(() {
-          _allBackedUp = value;
-        });
-      }
+      setState(() {
+        _allBackedUp = value;
+      });
     });
   }
 
   @override
   void dispose() {
-    super.dispose();
     _walletSubscription.cancel();
+    super.dispose();
   }
 
   @override

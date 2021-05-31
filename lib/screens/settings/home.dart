@@ -6,6 +6,7 @@ import 'package:nmobile/blocs/settings/settings_event.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -17,14 +18,14 @@ import 'package:nmobile/utils/utils.dart';
 
 import '../common/select.dart';
 
-class SettingsHomeScreen extends StatefulWidget {
+class SettingsHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/settings';
 
   @override
   _SettingsHomeScreenState createState() => _SettingsHomeScreenState();
 }
 
-class _SettingsHomeScreenState extends State<SettingsHomeScreen> with AutomaticKeepAliveClientMixin {
+class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScreen> with AutomaticKeepAliveClientMixin {
   SettingsBloc? _settingsBloc;
   SettingsStorage _settingsStorage = SettingsStorage();
   String? _currentLanguage;
@@ -32,6 +33,18 @@ class _SettingsHomeScreenState extends State<SettingsHomeScreen> with AutomaticK
   List<SelectListItem> _languageList = [];
   List<SelectListItem> _notificationTypeList = [];
   bool _biometricsSelected = false;
+
+  @override
+  void onRefreshArguments() {}
+
+  @override
+  void initState() {
+    super.initState();
+    _initData();
+    _currentLanguage = _getLanguageText(Settings.locale);
+    _settingsBloc = BlocProvider.of<SettingsBloc>(context);
+    _biometricsSelected = Settings.biometricsAuthentication;
+  }
 
   _buttonStyle({bool top = false, bool bottom = false}) {
     return ButtonStyle(
@@ -93,15 +106,6 @@ class _SettingsHomeScreenState extends State<SettingsHomeScreen> with AutomaticK
     setState(() {
       _currentNotificationType = _notificationTypeList.firstWhere((x) => x.value == Settings.notificationType).text;
     });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _initData();
-    _currentLanguage = _getLanguageText(Settings.locale);
-    _settingsBloc = BlocProvider.of<SettingsBloc>(context);
-    _biometricsSelected = Settings.biometricsAuthentication;
   }
 
   @override

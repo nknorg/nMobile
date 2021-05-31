@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button_icon.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
@@ -9,7 +10,7 @@ const flash_off = "FLASH OFF";
 const front_camera = "FRONT CAMERA";
 const back_camera = "BACK CAMERA";
 
-class ScannerScreen extends StatefulWidget {
+class ScannerScreen extends BaseStateFulWidget {
   static const String routeName = '/scanner';
 
   ScannerScreen({Key? key}) : super(key: key);
@@ -18,7 +19,7 @@ class ScannerScreen extends StatefulWidget {
   ScannerScreenState createState() => ScannerScreenState();
 }
 
-class ScannerScreenState extends State<ScannerScreen> {
+class ScannerScreenState extends BaseStateFulWidgetState<ScannerScreen> {
   var _data;
   var flashState = flash_on;
   var cameraState = front_camera;
@@ -26,8 +27,12 @@ class ScannerScreenState extends State<ScannerScreen> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
 
   @override
-  void initState() {
-    super.initState();
+  void onRefreshArguments() {}
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
   }
 
   _isFlashOn(String current) {
@@ -45,12 +50,6 @@ class ScannerScreenState extends State<ScannerScreen> {
       Navigator.of(context).pop(scanData.code);
       controller.dispose();
     });
-  }
-
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
   }
 
   @override

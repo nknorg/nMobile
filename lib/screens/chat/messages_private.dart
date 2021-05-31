@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/chat/bottom_menu.dart';
 import 'package:nmobile/components/chat/message_item.dart';
 import 'package:nmobile/components/chat/send_bar.dart';
@@ -17,7 +18,7 @@ import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 
-class ChatMessagesPrivateLayout extends StatefulWidget {
+class ChatMessagesPrivateLayout extends BaseStateFulWidget {
   final ContactSchema contact;
 
   ChatMessagesPrivateLayout({required this.contact});
@@ -26,7 +27,7 @@ class ChatMessagesPrivateLayout extends StatefulWidget {
   _ChatMessagesPrivateLayoutState createState() => _ChatMessagesPrivateLayoutState();
 }
 
-class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
+class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessagesPrivateLayout> {
   final int _messagesLimit = 20;
   ScrollController _scrollController = ScrollController();
   bool _moreLoading = false;
@@ -43,17 +44,18 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
   bool _showBottomMenu = false;
 
   @override
+  void onRefreshArguments() {}
+
+  @override
   void initState() {
     super.initState();
     this._contact = widget.contact;
 
     // contact
     _onContactUpdateStreamSubscription = contactCommon.updateStream.where((event) => event.id == _contact.id).listen((ContactSchema event) {
-      if (mounted) {
-        setState(() {
-          _contact = event;
-        });
-      }
+      setState(() {
+        _contact = event;
+      });
     });
     // onReceive + OnSaveSqlite
     _onMessageReceiveStreamSubscription = receiveMessage.onSavedStream.where((MessageSchema event) => event.getTargetId == _contact.clientAddress).listen((MessageSchema event) {
@@ -65,11 +67,9 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
     });
     // onStatusUpdate (success + fail + receipt)
     _onMessageUpdateStreamSubscription = sendMessage.onUpdateStream.where((MessageSchema event) => event.getTargetId == _contact.clientAddress).listen((MessageSchema event) {
-      if (mounted) {
-        setState(() {
-          _messages = _messages.map((MessageSchema e) => (e.msgId == event.msgId) ? event : e).toList();
-        });
-      }
+      setState(() {
+        _messages = _messages.map((MessageSchema e) => (e.msgId == event.msgId) ? event : e).toList();
+      });
     });
 
     // loadMore
@@ -89,11 +89,11 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
 
   @override
   void dispose() {
-    super.dispose();
     _onContactUpdateStreamSubscription.cancel();
     _onMessageReceiveStreamSubscription.cancel();
     _onMessageSendStreamSubscription.cancel();
     _onMessageUpdateStreamSubscription.cancel();
+    super.dispose();
   }
 
   initDataAsync() async {
@@ -106,12 +106,10 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
       // read
       schema = await receiveMessage.read(schema);
     }
-    if (mounted) {
-      setState(() {
-        logger.i("messages insert 0:$schema");
-        _messages.insert(0, schema!);
-      });
-    }
+    setState(() {
+      logger.i("messages insert 0:$schema");
+      _messages.insert(0, schema!);
+    });
   }
 
   _loadMore() async {

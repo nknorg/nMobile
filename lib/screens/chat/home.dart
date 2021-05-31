@@ -5,6 +5,7 @@ import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/header.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -24,14 +25,14 @@ import 'package:nmobile/utils/asset.dart';
 
 import 'no_wallet.dart';
 
-class ChatHomeScreen extends StatefulWidget {
+class ChatHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/home';
 
   @override
   _ChatHomeScreenState createState() => _ChatHomeScreenState();
 }
 
-class _ChatHomeScreenState extends State<ChatHomeScreen> {
+class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
   GlobalKey _floatingActionKey = GlobalKey();
 
   ContactSchema? _currentUser;
@@ -39,6 +40,9 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   // NKNClientBloc _clientBloc;
   // AuthBloc _authBloc;
   // bool firstShowAuth = false;
+
+  @override
+  void onRefreshArguments() {}
 
   @override
   void initState() {

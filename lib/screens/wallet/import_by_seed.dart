@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/form_text.dart';
@@ -16,7 +17,7 @@ import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
 
-class WalletImportBySeedLayout extends StatefulWidget {
+class WalletImportBySeedLayout extends BaseStateFulWidget {
   final String walletType;
   final Stream<String>? qrStream;
 
@@ -26,7 +27,7 @@ class WalletImportBySeedLayout extends StatefulWidget {
   _WalletImportBySeedLayoutState createState() => _WalletImportBySeedLayoutState();
 }
 
-class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> with SingleTickerProviderStateMixin {
+class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImportBySeedLayout> with SingleTickerProviderStateMixin {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
   late WalletBloc _walletBloc;
@@ -41,9 +42,7 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
   FocusNode _passwordFocusNode = FocusNode();
 
   @override
-  void initState() {
-    super.initState();
-    _walletBloc = BlocProvider.of<WalletBloc>(context);
+  void onRefreshArguments() {
     _qrSubscription = widget.qrStream?.listen((event) {
       setState(() {
         _seedController.text = event;
@@ -52,9 +51,15 @@ class _WalletImportBySeedLayoutState extends State<WalletImportBySeedLayout> wit
   }
 
   @override
+  void initState() {
+    super.initState();
+    _walletBloc = BlocProvider.of<WalletBloc>(context);
+  }
+
+  @override
   void dispose() {
-    super.dispose();
     _qrSubscription?.cancel();
+    super.dispose();
   }
 
   _import() async {

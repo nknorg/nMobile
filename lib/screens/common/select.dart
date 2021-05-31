@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -14,7 +15,7 @@ class SelectListItem {
 }
 
 // ignore: must_be_immutable
-class SelectScreen extends StatefulWidget {
+class SelectScreen extends BaseStateFulWidget {
   static const String routeName = '/select';
   final Map? arguments;
 
@@ -28,14 +29,13 @@ class SelectScreen extends StatefulWidget {
   _SelectScreenState createState() => _SelectScreenState();
 }
 
-class _SelectScreenState extends State<SelectScreen> {
+class _SelectScreenState extends BaseStateFulWidgetState<SelectScreen> {
   String? title;
   List<SelectListItem> list = [];
   String? selectedValue;
 
   @override
-  void initState() {
-    super.initState();
+  void onRefreshArguments() {
     this.title = widget.arguments!['title'] ?? "";
     this.list = widget.arguments!['list'] ?? [];
     this.selectedValue = widget.arguments!['selectedValue'].toString();

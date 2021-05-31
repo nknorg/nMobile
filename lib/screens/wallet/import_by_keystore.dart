@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/form_text.dart';
@@ -18,7 +19,7 @@ import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
 
-class WalletImportByKeystoreLayout extends StatefulWidget {
+class WalletImportByKeystoreLayout extends BaseStateFulWidget {
   final String walletType;
 
   const WalletImportByKeystoreLayout({required this.walletType});
@@ -27,7 +28,7 @@ class WalletImportByKeystoreLayout extends StatefulWidget {
   _WalletImportByKeystoreLayoutState createState() => _WalletImportByKeystoreLayoutState();
 }
 
-class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLayout> with SingleTickerProviderStateMixin {
+class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletImportByKeystoreLayout> with SingleTickerProviderStateMixin {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
   late WalletBloc _walletBloc;
@@ -41,6 +42,9 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
   FocusNode _passwordFocusNode = FocusNode();
 
   @override
+  void onRefreshArguments() {}
+
+  @override
   void initState() {
     super.initState();
     _walletBloc = BlocProvider.of<WalletBloc>(context);
@@ -50,8 +54,8 @@ class _WalletImportByKeystoreLayoutState extends State<WalletImportByKeystoreLay
 
   @override
   void dispose() {
-    super.dispose();
     // TimerAuth.onOtherPage = true; // TODO:GG wallet unlock
+    super.dispose();
   }
 
   _import() async {

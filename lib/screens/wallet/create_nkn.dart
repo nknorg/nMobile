@@ -5,6 +5,7 @@ import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -17,7 +18,7 @@ import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 
-class WalletCreateNKNScreen extends StatefulWidget {
+class WalletCreateNKNScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/create_nkn';
 
   static Future go(BuildContext context) {
@@ -28,7 +29,7 @@ class WalletCreateNKNScreen extends StatefulWidget {
   _WalletCreateNKNScreenState createState() => _WalletCreateNKNScreenState();
 }
 
-class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
+class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNKNScreen> {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
   late WalletBloc _walletBloc;
@@ -39,6 +40,9 @@ class _WalletCreateNKNScreenState extends State<WalletCreateNKNScreen> {
   FocusNode _nameFocusNode = FocusNode();
   FocusNode _passwordFocusNode = FocusNode();
   FocusNode _confirmPasswordFocusNode = FocusNode();
+
+  @override
+  void onRefreshArguments() {}
 
   @override
   void initState() {
