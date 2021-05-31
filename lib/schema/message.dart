@@ -336,45 +336,43 @@ class MessageSchema extends Equatable {
 
   /// from receive
   static MessageSchema? fromReceive(OnMessage? raw) {
-    if (raw == null || raw.data == null) return null;
+    if (raw == null || raw.data == null || raw.src == null) return null;
     Map<String, dynamic>? data = jsonFormat(raw.data);
-    if (data != null) {
-      MessageSchema schema = MessageSchema(
-        data['id'],
-        raw.src,
-        data['contentType'],
-        pid: raw.messageId,
-        to: chatCommon.id,
-        topic: data['topic'],
-        content: data['content'],
-        options: data['options'],
-      );
+    if (data == null || data['id'] == null || data['contentType'] == null) return null;
+    MessageSchema schema = MessageSchema(
+      data['id'],
+      raw.src!,
+      data['contentType'],
+      pid: raw.messageId,
+      to: chatCommon.id,
+      topic: data['topic'],
+      content: data['content'],
+      options: data['options'],
+    );
 
-      if (schema.contentType == ContentType.receipt) {
-        schema.content = data['targetID'];
-      }
-
-      if (data['timestamp'] != null) {
-        schema.sendTime = DateTime.fromMillisecondsSinceEpoch(data['timestamp']);
-      }
-      schema.receiveTime = DateTime.now();
-      schema.deleteTime = null;
-
-      // set in messages screen
-      // int? deleteTime = MessageOptions.getDeleteAfterSeconds(schema);
-      // schema.deleteTime = deleteTime != null ? DateTime.fromMillisecondsSinceEpoch(deleteTime) : null;
-
-      schema = MessageStatus.set(schema, MessageStatus.Received);
-
-      schema.parentType = data['parentType'];
-      schema.parity = data['parity'];
-      schema.total = data['total'];
-      schema.index = data['index'];
-      schema.bytesLength = data['bytesLength'];
-
-      return schema;
+    if (schema.contentType == ContentType.receipt) {
+      schema.content = data['targetID'];
     }
-    return null;
+
+    if (data['timestamp'] != null) {
+      schema.sendTime = DateTime.fromMillisecondsSinceEpoch(data['timestamp']);
+    }
+    schema.receiveTime = DateTime.now();
+    schema.deleteTime = null;
+
+    // set in messages bubble
+    // int? deleteTime = MessageOptions.getDeleteAfterSeconds(schema);
+    // schema.deleteTime = deleteTime != null ? DateTime.fromMillisecondsSinceEpoch(deleteTime) : null;
+
+    schema = MessageStatus.set(schema, MessageStatus.Received);
+
+    schema.parentType = data['parentType'];
+    schema.parity = data['parity'];
+    schema.total = data['total'];
+    schema.index = data['index'];
+    schema.bytesLength = data['bytesLength'];
+
+    return schema;
   }
 
   /// to send
@@ -399,7 +397,7 @@ class MessageSchema extends Equatable {
     receiveTime = null;
     deleteTime = null;
 
-    // set in messages screen
+    // set in messages bubble
     // int? dt = MessageOptions.getDeleteAfterSeconds(this);
     // deleteTime = dt != null ? DateTime.fromMillisecondsSinceEpoch(dt) : null;
 
