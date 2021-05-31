@@ -5,10 +5,11 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/topic.dart';
+import 'package:nmobile/utils/logger.dart';
 
 import '../locator.dart';
 
-class ReceiveMessage {
+class ReceiveMessage with Tag {
   ReceiveMessage();
 
   // ignore: close_sinks
@@ -82,11 +83,19 @@ class ReceiveMessage {
 
   receiveTextMessage() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) async {
+      // duplicated
+      List<MessageSchema> exists = await _messageStorage.queryList(event.msgId);
+      if (exists.isNotEmpty) {
+        logger.d("$TAG - receiveTextMessage - duplicated - schema:$exists");
+        _checkReceipts(exists); // wait
+        return;
+      }
       // sqlite
       MessageSchema? schema = await _messageStorage.insert(event);
       if (schema == null) return;
       // receipt message
-      sendMessage.sendMessageReceipt(schema); // wait
+      _checkReceipts([schema]); // wait
+      // view show
       onSavedSink.add(schema);
       // TODO: notification
       // notification.showDChatNotification();
@@ -96,13 +105,21 @@ class ReceiveMessage {
 
   receiveMediaMessage() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.image).listen((MessageSchema event) async {
+      // duplicated
+      List<MessageSchema> exists = await _messageStorage.queryList(event.msgId);
+      if (exists.isNotEmpty) {
+        logger.d("$TAG - receiveMediaMessage - duplicated - schema:$exists");
+        _checkReceipts(exists); // wait
+        return;
+      }
+      // content
       await event.loadMediaFile();
       // sqlite
       MessageSchema? schema = await _messageStorage.insert(event);
-      print(schema);
       if (schema == null) return;
       // receipt message
-      sendMessage.sendMessageReceipt(schema); // wait
+      _checkReceipts([schema]); // wait
+      // view show
       onSavedSink.add(schema);
       // TODO: notification
       // notification.showDChatNotification();
@@ -110,6 +127,19 @@ class ReceiveMessage {
     onReceiveStreamSubscriptions.add(subscription);
   }
 
+  // receipt(receive) != read(look)
+  Future _checkReceipts(List<MessageSchema> schemas) async {
+    List<Future> futures = <Future>[];
+    schemas.forEach((element) {
+      int msgStatus = MessageStatus.get(element);
+      if (msgStatus != MessageStatus.ReceivedRead) {
+        futures.add(sendMessage.sendMessageReceipt(element));
+      }
+    });
+    return await Future.wait(futures);
+  }
+
+  // receipt(receive) != read(look)
   Future<MessageSchema> read(MessageSchema schema) async {
     schema = MessageStatus.set(schema, MessageStatus.ReceivedRead);
     await _messageStorage.updateMessageStatus(schema);

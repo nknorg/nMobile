@@ -73,12 +73,12 @@ class ChatCommon with Tag {
     });
   }
 
-  Future signIn(WalletSchema? scheme) async {
-    if (scheme == null) return null;
+  Future signIn(WalletSchema? schema) async {
+    if (schema == null) return null;
     try {
-      String? pwd = await walletCommon.getPassword(Global.appContext, scheme.address);
+      String? pwd = await walletCommon.getPassword(Global.appContext, schema.address);
       if (pwd == null || pwd.isEmpty) return;
-      String keystore = await walletCommon.getKeystoreByAddress(scheme.address);
+      String keystore = await walletCommon.getKeystoreByAddress(schema.address);
 
       Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd));
       if (wallet.address.isEmpty || wallet.keystore.isEmpty) return;

@@ -218,16 +218,16 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
     );
   }
 
-  _readyExport(WalletSchema? scheme) {
-    logger.d("$TAG - backup picked - $scheme");
-    if (scheme == null || scheme.address.isEmpty) return;
+  _readyExport(WalletSchema? schema) {
+    logger.d("$TAG - backup picked - $schema");
+    if (schema == null || schema.address.isEmpty) return;
     S _localizations = S.of(context);
 
-    walletCommon.getPassword(context, scheme.address).then((String? password) async {
+    walletCommon.getPassword(context, schema.address).then((String? password) async {
       if (password == null || password.isEmpty) return;
-      String keystore = await walletCommon.getKeystoreByAddress(scheme.address);
+      String keystore = await walletCommon.getKeystoreByAddress(schema.address);
 
-      if (scheme.type == WalletType.eth) {
+      if (schema.type == WalletType.eth) {
         // TODO:GG eth export
         // String keyStore = await ws.getKeystore();
         // EthWallet ethWallet = Ethereum.restoreWallet(
@@ -243,7 +243,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
         // });
       } else {
         Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
-        if (restore.address.isEmpty || restore.address != scheme.address) {
+        if (restore.address.isEmpty || restore.address != schema.address) {
           Toast.show(_localizations.password_wrong);
           return;
         }
@@ -251,7 +251,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
         WalletExportScreen.go(
           context,
           WalletType.nkn,
-          scheme.name,
+          schema.name,
           restore.address,
           hexEncode(restore.publicKey),
           hexEncode(restore.seed),

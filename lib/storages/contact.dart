@@ -52,11 +52,6 @@ class ContactStorage with Tag {
   Future<ContactSchema?> insert(ContactSchema? schema) async {
     if (schema == null) return null;
     try {
-      ContactSchema? exist = await queryByClientAddress(schema.clientAddress);
-      if (exist != null) {
-        logger.d("$TAG - insert - exist - schema:$exist");
-        return null;
-      }
       Map<String, dynamic> entity = await schema.toMap();
       int? id = await db?.insert(tableName, entity);
       if (id != null && id != 0) {
@@ -65,7 +60,7 @@ class ContactStorage with Tag {
         logger.d("$TAG - insert - success - schema:$schema");
         return schema;
       }
-      logger.w("$TAG - insert - fail - scheme:$schema");
+      logger.w("$TAG - insert - fail - schema:$schema");
     } catch (e) {
       handleError(e);
     }
