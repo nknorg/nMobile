@@ -75,6 +75,7 @@ class ReceiveMessage {
           sendMessage.onUpdateSink.add(element);
         }
       });
+      // NO DB insert
     });
     onReceiveStreamSubscriptions.add(subscription);
   }
@@ -85,7 +86,7 @@ class ReceiveMessage {
       MessageSchema? schema = await _messageStorage.insert(event);
       if (schema == null) return;
       // receipt message
-      sendMessage.sendReceipt(schema); // wait
+      sendMessage.sendMessageReceipt(schema); // wait
       onSavedSink.add(schema);
       // TODO: notification
       // notification.showDChatNotification();
@@ -101,7 +102,7 @@ class ReceiveMessage {
       print(schema);
       if (schema == null) return;
       // receipt message
-      sendMessage.sendReceipt(schema); // wait
+      sendMessage.sendMessageReceipt(schema); // wait
       onSavedSink.add(schema);
       // TODO: notification
       // notification.showDChatNotification();
