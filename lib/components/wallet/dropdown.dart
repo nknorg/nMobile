@@ -7,7 +7,7 @@ import 'package:nmobile/utils/logger.dart';
 
 import 'item.dart';
 
-class WalletDropdown extends StatelessWidget {
+class WalletDropdown extends StatelessWidget with Tag {
   final WalletSchema schema;
   final String? selectTitle;
   final Function(WalletSchema)? onSelected;
@@ -41,7 +41,7 @@ class WalletDropdown extends StatelessWidget {
         WalletSchema? result = await BottomDialog.of(context).showWalletSelect(
           title: this.selectTitle ?? _localizations.select_another_wallet,
         );
-        logger.d("wallet dropdown select - $result");
+        logger.d("$TAG - wallet dropdown select - $result");
         if (result != null) {
           this.onSelected?.call(result);
         }

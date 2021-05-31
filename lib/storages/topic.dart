@@ -4,7 +4,7 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
-class TopicStorage {
+class TopicStorage with Tag {
   static String get tableName => 'Topic';
 
   Database? get db => DB.currentDatabase;
@@ -38,7 +38,7 @@ class TopicStorage {
         whereArgs: [topic],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.d("queryCountByTopic - topic:$topic - count:$count");
+      logger.d("$TAG - queryCountByTopic - topic:$topic - count:$count");
       return count ?? 0;
     } catch (e) {
       handleError(e);
@@ -57,10 +57,10 @@ class TopicStorage {
       );
       if (res != null && res.length > 0) {
         TopicSchema? schema = TopicSchema.fromMap(res.first);
-        logger.d("queryTopicByTopicName - success - topic:$topic - schema:$schema");
+        logger.d("$TAG - queryTopicByTopicName - success - topic:$topic - schema:$schema");
         return schema;
       }
-      logger.d("queryTopicByTopicName - empty - topic:$topic");
+      logger.d("$TAG - queryTopicByTopicName - empty - topic:$topic");
     } catch (e) {
       handleError(e);
     }
@@ -72,7 +72,7 @@ class TopicStorage {
     try {
       TopicSchema? exist = await queryTopicByTopicName(schema.topic);
       if (exist != null) {
-        logger.d("insertTopic - exist:$exist - add:$schema");
+        logger.d("$TAG - insertTopic - exist:$exist - add:$schema");
         return exist;
       }
       Map<String, dynamic> entity = schema.toMap();
@@ -80,10 +80,10 @@ class TopicStorage {
       if (id != null && id != 0) {
         TopicSchema? schema = TopicSchema.fromMap(entity);
         schema?.id = id;
-        logger.d("insertTopic - success - schema:$schema");
+        logger.d("$TAG - insertTopic - success - schema:$schema");
         return schema;
       }
-      logger.w("insertTopic - fail - scheme:$schema");
+      logger.w("$TAG - insertTopic - fail - scheme:$schema");
     } catch (e) {
       logger.e(e);
     }
@@ -100,10 +100,10 @@ class TopicStorage {
         whereArgs: [topic],
       );
       if (count != null && count > 0) {
-        logger.d("setTop - success - topic:$topic - top:$top");
+        logger.d("$TAG - setTop - success - topic:$topic - top:$top");
         return true;
       }
-      logger.w("setTop - fail - topic:$topic - top:$top");
+      logger.w("$TAG - setTop - fail - topic:$topic - top:$top");
     } catch (e) {
       handleError(e);
     }

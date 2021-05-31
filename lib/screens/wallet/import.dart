@@ -33,7 +33,7 @@ class WalletImportScreen extends BaseStateFulWidget {
   _ImportWalletScreenState createState() => _ImportWalletScreenState();
 }
 
-class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScreen> with SingleTickerProviderStateMixin {
+class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScreen> with SingleTickerProviderStateMixin, Tag {
   late TabController _tabController;
   late String _walletType;
 
@@ -75,7 +75,7 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
               }
 
               var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
-              logger.d("QR_DATA:$qrData");
+              logger.d("$TAG - QR_DATA:$qrData");
               if (qrData != null) {
                 _qrController.sink.add(qrData.toString());
               }

@@ -23,7 +23,7 @@ class WalletReceiveScreen extends BaseStateFulWidget {
   static final String argWallet = "wallet";
 
   static Future go(BuildContext context, WalletSchema wallet) {
-    logger.d("wallet receive NKN - $wallet");
+    logger.d("WalletReceiveScreen - go - $wallet");
     return Navigator.pushNamed(context, routeName, arguments: {
       argWallet: wallet,
     });
@@ -37,7 +37,7 @@ class WalletReceiveScreen extends BaseStateFulWidget {
   _WalletReceiveScreenState createState() => _WalletReceiveScreenState();
 }
 
-class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScreen> {
+class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScreen> with Tag {
   GlobalKey globalKey = new GlobalKey();
   late WalletSchema _wallet;
 
@@ -101,7 +101,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                           schema: _wallet,
                           onTapWave: false,
                           onSelected: (WalletSchema picked) {
-                            logger.d("wallet picked - $picked");
+                            logger.d("$TAG - wallet picked - $picked");
                             setState(() {
                               _wallet = picked;
                             });

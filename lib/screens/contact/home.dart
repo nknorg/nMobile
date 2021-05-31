@@ -28,7 +28,7 @@ class ContactHomeScreen extends BaseStateFulWidget {
   static final String argIsSelect = "is_select";
 
   static Future go(BuildContext context, {bool isSelect = false}) {
-    logger.d("contact home - isSelect:$isSelect");
+    logger.d("ContactHomeScreen - go - isSelect:$isSelect");
     return Navigator.pushNamed(context, routeName, arguments: {
       argIsSelect: isSelect,
     });

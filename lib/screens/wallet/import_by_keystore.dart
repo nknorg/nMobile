@@ -28,7 +28,7 @@ class WalletImportByKeystoreLayout extends BaseStateFulWidget {
   _WalletImportByKeystoreLayoutState createState() => _WalletImportByKeystoreLayoutState();
 }
 
-class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletImportByKeystoreLayout> with SingleTickerProviderStateMixin {
+class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletImportByKeystoreLayout> with SingleTickerProviderStateMixin, Tag {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
   late WalletBloc _walletBloc;
@@ -68,7 +68,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
       String keystore = _keystoreController.text;
       String name = _nameController.text;
       String password = _passwordController.text;
-      logger.d("keystore:$keystore, name:$name, password:$password");
+      logger.d("$TAG - keystore:$keystore, name:$name, password:$password");
 
       try {
         if (widget.walletType == WalletType.nkn) {
@@ -76,7 +76,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
           if (result.address.isEmpty || result.keystore.isEmpty) return;
 
           WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);
-          logger.d("import_nkn - ${wallet.toString()}");
+          logger.d("$TAG - import_nkn - ${wallet.toString()}");
 
           _walletBloc.add(AddWallet(wallet, result.keystore, password: password));
         } else {
@@ -154,13 +154,13 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                           allowMultiple: false,
                           type: FileType.any,
                         );
-                        logger.d("result:$result");
+                        logger.d("$TAG - result:$result");
                         if (result != null && result.files.isNotEmpty) {
                           String? path = result.files.first.path;
                           if (path == null) return;
                           File picked = File(path);
                           String keystore = picked.readAsStringSync();
-                          logger.d("picked:$keystore");
+                          logger.d("$TAG - picked:$keystore");
 
                           setState(() => _keystoreController.text = keystore);
                         }
