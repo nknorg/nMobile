@@ -368,8 +368,8 @@ class MessageStorage {
       whereArgs: [
         ContentType.text,
         ContentType.textExtension,
-        ContentType.media,
         ContentType.image,
+        ContentType.nknImage,
         ContentType.audio,
       ],
       groupBy: 'm.target_id',
@@ -403,9 +403,9 @@ class MessageStorage {
         targetId,
         ContentType.text,
         ContentType.textExtension,
-        ContentType.media,
-        ContentType.audio,
         ContentType.image,
+        ContentType.audio,
+        ContentType.nknImage,
       ],
       orderBy: 'send_time desc',
     );
@@ -423,9 +423,9 @@ class MessageStorage {
           targetId,
           ContentType.text,
           ContentType.textExtension,
-          ContentType.media,
-          ContentType.audio,
           ContentType.image,
+          ContentType.audio,
+          ContentType.nknImage,
         ],
         orderBy: 'send_time desc',
       );
