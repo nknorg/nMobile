@@ -4,7 +4,7 @@ import 'package:nmobile/schema/topic.dart';
 
 import 'avatar.dart';
 
-class TopicItem extends StatefulWidget {
+class TopicItem extends StatelessWidget {
   final TopicSchema topic;
   final Widget? body;
   final String? bodyTitle;
@@ -30,27 +30,22 @@ class TopicItem extends StatefulWidget {
   });
 
   @override
-  _TopicItemState createState() => _TopicItemState();
-}
-
-class _TopicItemState extends State<TopicItem> {
-  @override
   Widget build(BuildContext context) {
-    return widget.onTap != null
-        ? widget.onTapWave
+    return this.onTap != null
+        ? this.onTapWave
             ? Material(
-                color: widget.bgColor,
+                color: this.bgColor,
                 elevation: 0,
-                borderRadius: widget.radius,
+                borderRadius: this.radius,
                 child: InkWell(
-                  borderRadius: widget.radius,
-                  onTap: widget.onTap,
+                  borderRadius: this.radius,
+                  onTap: this.onTap,
                   child: _getItemBody(),
                 ),
               )
             : InkWell(
-                borderRadius: widget.radius,
-                onTap: widget.onTap,
+                borderRadius: this.radius,
+                onTap: this.onTap,
                 child: _getItemBody(),
               )
         : _getItemBody();
@@ -59,36 +54,36 @@ class _TopicItemState extends State<TopicItem> {
   Widget _getItemBody() {
     return Container(
       decoration: BoxDecoration(
-        color: (widget.onTap != null && widget.onTapWave) ? null : widget.bgColor,
-        borderRadius: widget.radius,
+        color: (this.onTap != null && this.onTapWave) ? null : this.bgColor,
+        borderRadius: this.radius,
       ),
-      padding: widget.padding ?? EdgeInsets.only(right: 16),
+      padding: this.padding ?? EdgeInsets.only(right: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
           Container(
             margin: const EdgeInsets.only(right: 12),
             child: TopicAvatar(
-              key: ValueKey(widget.topic.avatar?.path ?? ''),
-              topic: widget.topic,
+              key: ValueKey(this.topic.avatar?.path ?? ''),
+              topic: this.topic,
             ),
           ),
           Expanded(
             flex: 1,
-            child: widget.body != null
-                ? widget.body!
+            child: this.body != null
+                ? this.body!
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Label(
-                        widget.bodyTitle ?? "",
+                        this.bodyTitle ?? "",
                         type: LabelType.h3,
                         fontWeight: FontWeight.bold,
                       ),
                       SizedBox(height: 6),
                       Label(
-                        widget.bodyDesc ?? "",
+                        this.bodyDesc ?? "",
                         maxLines: 1,
                         type: LabelType.bodyRegular,
                         overflow: TextOverflow.ellipsis,
@@ -96,7 +91,7 @@ class _TopicItemState extends State<TopicItem> {
                     ],
                   ),
           ),
-          widget.tail != null ? widget.tail! : SizedBox(),
+          this.tail != null ? this.tail! : SizedBox(),
         ],
       ),
     );

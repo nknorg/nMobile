@@ -2,11 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/utils/asset.dart';
 
-class ContactAvatar extends StatefulWidget {
+class ContactAvatar extends BaseStateFulWidget {
   final ContactSchema contact;
   final double? radius;
   final bool? placeHolder;
@@ -21,24 +22,12 @@ class ContactAvatar extends StatefulWidget {
   _ContactAvatarState createState() => _ContactAvatarState();
 }
 
-class _ContactAvatarState extends State<ContactAvatar> {
+class _ContactAvatarState extends BaseStateFulWidgetState<ContactAvatar> {
   File? _avatarFile;
 
   @override
-  void initState() {
-    super.initState();
+  void onRefreshArguments() {
     _checkAvatarFileExists();
-  }
-
-  @override
-  void didUpdateWidget(covariant ContactAvatar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _checkAvatarFileExists();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   _checkAvatarFileExists() async {

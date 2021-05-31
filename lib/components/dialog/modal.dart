@@ -6,10 +6,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/utils/asset.dart';
 
-class ModalDialog extends StatefulWidget {
-  @override
-  _ModalDialogState createState() => _ModalDialogState();
-
+class ModalDialog extends StatelessWidget {
   BuildContext context;
 
   ModalDialog.of(this.context);
@@ -87,21 +84,19 @@ class ModalDialog extends StatefulWidget {
       },
     );
   }
-}
 
-class _ModalDialogState extends State<ModalDialog> {
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
-    List<Widget> actions = List.of(widget.actions ?? []);
+    List<Widget> actions = List.of(this.actions ?? []);
 
-    if (widget.hasCloseButton) {
+    if (this.hasCloseButton) {
       actions.add(Button(
         backgroundColor: application.theme.backgroundLightColor,
         fontColor: application.theme.fontColor2,
         text: _localizations.close,
         width: double.infinity,
-        onPressed: () => widget.close(),
+        onPressed: () => this.close(),
       ));
     }
 
@@ -113,7 +108,7 @@ class _ModalDialogState extends State<ModalDialog> {
         children: [
           Container(
             width: MediaQuery.of(context).size.width - 40,
-            height: widget.height,
+            height: this.height,
             constraints: BoxConstraints(
               minHeight: 150,
               maxHeight: MediaQuery.of(context).size.height - 180,
@@ -126,9 +121,9 @@ class _ModalDialogState extends State<ModalDialog> {
                   // title
                   Padding(
                     padding: EdgeInsets.only(left: 24, right: 24, bottom: 24, top: 36),
-                    child: widget.titleWidget ??
+                    child: this.titleWidget ??
                         Label(
-                          widget.title ?? _localizations.warning,
+                          this.title ?? _localizations.warning,
                           type: LabelType.h2,
                           maxLines: 5,
                         ),
@@ -136,9 +131,9 @@ class _ModalDialogState extends State<ModalDialog> {
                   // content
                   Container(
                     padding: EdgeInsets.only(left: 24, right: 24, bottom: 24),
-                    child: widget.contentWidget ??
+                    child: this.contentWidget ??
                         Label(
-                          widget.content ?? "",
+                          this.content ?? "",
                           type: LabelType.bodyRegular,
                           maxLines: 100,
                         ),
@@ -157,7 +152,7 @@ class _ModalDialogState extends State<ModalDialog> {
               ),
             ),
           ),
-          widget.hasCloseIcon
+          this.hasCloseIcon
               ? Positioned(
                   right: 0,
                   top: 0,
@@ -169,7 +164,7 @@ class _ModalDialogState extends State<ModalDialog> {
                         width: 50,
                         height: 50,
                         icon: Asset.iconSvg('close', width: 16),
-                        onPressed: () => widget.close(),
+                        onPressed: () => this.close(),
                       ),
                     ),
                   ),

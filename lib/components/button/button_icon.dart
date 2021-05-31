@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 
-class ButtonIcon extends StatefulWidget {
+class ButtonIcon extends StatelessWidget {
   final double? width;
   final double? height;
   final Widget icon;
@@ -21,31 +21,26 @@ class ButtonIcon extends StatefulWidget {
   });
 
   @override
-  _ButtonIconState createState() => _ButtonIconState();
-}
-
-class _ButtonIconState extends State<ButtonIcon> {
-  @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: widget.width,
-      height: widget.height,
+      width: this.width,
+      height: this.height,
       child: RawMaterialButton(
-        padding: widget.padding ?? EdgeInsets.all(8),
+        padding: this.padding ?? EdgeInsets.all(8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: widget.text == null
-              ? [widget.icon]
+          children: this.text == null
+              ? [this.icon]
               : [
-                  widget.icon,
+                  this.icon,
                   Text(
-                    widget.text ?? "",
+                    this.text ?? "",
                     softWrap: false,
-                    style: TextStyle(fontSize: application.theme.iconTextFontSize, color: widget.fontColor),
+                    style: TextStyle(fontSize: application.theme.iconTextFontSize, color: this.fontColor),
                   )
                 ],
         ),
-        onPressed: widget.onPressed,
+        onPressed: this.onPressed,
         shape: CircleBorder(),
       ),
     );

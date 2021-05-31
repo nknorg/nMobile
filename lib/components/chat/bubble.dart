@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/markdown.dart';
@@ -12,7 +13,7 @@ import 'package:nmobile/utils/format.dart';
 
 import '../text/markdown.dart';
 
-class ChatBubble extends StatefulWidget {
+class ChatBubble extends BaseStateFulWidget {
   final MessageSchema message;
   final ContactSchema contact;
   final bool showTime;
@@ -31,22 +32,14 @@ class ChatBubble extends StatefulWidget {
   _ChatBubbleState createState() => _ChatBubbleState();
 }
 
-class _ChatBubbleState extends State<ChatBubble> {
+class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
   GlobalKey _popupMenuKey = GlobalKey();
 
   late MessageSchema _message;
   late ContactSchema _contact;
 
   @override
-  void initState() {
-    super.initState();
-    _message = widget.message;
-    _contact = widget.contact;
-  }
-
-  @override
-  void didUpdateWidget(covariant ChatBubble oldWidget) {
-    super.didUpdateWidget(oldWidget);
+  void onRefreshArguments() {
     _message = widget.message;
     _contact = widget.contact;
   }
@@ -89,7 +82,7 @@ class _ChatBubbleState extends State<ChatBubble> {
         mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          isSendOut ? SizedBox.shrink() : _getAvatar(),
+          isSendOut ? SizedBox.shrink() : _getAvatar(isSendOut),
           Expanded(
             flex: 1,
             child: Container(
@@ -99,14 +92,14 @@ class _ChatBubbleState extends State<ChatBubble> {
                 crossAxisAlignment: isSendOut ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: 4),
-                  _getName(),
+                  _getName(isSendOut),
                   SizedBox(height: 4),
                   _getContent(decoration, dark),
                 ],
               ),
             ),
           ),
-          isSendOut ? _getAvatar() : SizedBox.shrink(),
+          isSendOut ? _getAvatar(isSendOut) : SizedBox.shrink(),
         ],
       ),
     );
@@ -119,13 +112,16 @@ class _ChatBubbleState extends State<ChatBubble> {
     return SizedBox.shrink();
   }
 
-  Widget _getAvatar() {
+  Widget _getAvatar(bool self) {
+    if (self) {
+      return contactCommon.currentUser != null ? ContactAvatar(contact: contactCommon.currentUser!, radius: 24) : SizedBox(width: 24 * 2);
+    }
     return ContactAvatar(contact: _contact, radius: 24);
   }
 
-  Widget _getName() {
+  Widget _getName(bool self) {
     return Label(
-      _contact.getDisplayName,
+      self ? (contactCommon.currentUser?.getDisplayName ?? "") : _contact.getDisplayName,
       type: LabelType.h3,
       color: application.theme.primaryColor,
     );
