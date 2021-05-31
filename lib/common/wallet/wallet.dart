@@ -3,6 +3,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -93,6 +94,7 @@ class WalletCommon {
           inputTip: _localizations.wallet_password,
           inputHint: _localizations.input_password,
           actionText: _localizations.continue_text,
+          validator: Validator.of(context).password(),
           password: true,
         );
       }
