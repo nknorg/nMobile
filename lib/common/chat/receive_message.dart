@@ -94,7 +94,7 @@ class ReceiveMessage {
   }
 
   receiveMediaMessage() {
-    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.media).listen((MessageSchema event) async {
+    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.image).listen((MessageSchema event) async {
       await event.loadMediaFile();
       // sqlite
       MessageSchema? schema = await _messageStorage.insert(event);

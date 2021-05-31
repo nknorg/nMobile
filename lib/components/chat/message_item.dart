@@ -30,16 +30,20 @@ class ChatMessageItem extends StatelessWidget {
     switch (this.message.contentType) {
       case ContentType.text:
       case ContentType.textExtension:
-        contentsWidget.add(ChatBubble(
-          message: this.message,
-          contact: this.contact,
-        ));
+        contentsWidget.add(
+          ChatBubble(
+            message: this.message,
+            contact: this.contact,
+          ),
+        );
         break;
-      case ContentType.media:
-        contentsWidget.add(ChatBubble(
-          message: this.message,
-          contact: this.contact,
-        ));
+      case ContentType.image:
+        contentsWidget.add(
+          ChatBubble(
+            message: this.message,
+            contact: this.contact,
+          ),
+        );
         break;
       case ContentType.system:
         // TODO
