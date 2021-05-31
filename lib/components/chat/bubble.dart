@@ -144,6 +144,22 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
     // TODO:GG burn
     Widget burnWidget = SizedBox.shrink();
 
+    // int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(schema);
+    // if (schema.deleteTime == null && burnAfterSeconds != null) {
+    //   schema.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
+    //   await _messageStorage.updateDeleteTime(schema.msgId, schema.deleteTime); // await
+    // }
+
+    // if (list.isNotEmpty && handleBurn) {
+    //   for (var i = 0; i < list.length; i++) {
+    //     MessageSchema messageItem = list[i];
+    //     int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(messageItem);
+    //     if (messageItem.deleteTime == null && burnAfterSeconds != null) {
+    //       messageItem.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
+    //       _messageStorage.updateDeleteTime(messageItem.msgId, messageItem.deleteTime); // await
+    //     }
+    //   }
+    // }
     return Container(
       padding: EdgeInsets.all(10),
       decoration: decoration,

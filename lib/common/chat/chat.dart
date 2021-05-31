@@ -160,17 +160,6 @@ class ChatCommon with Tag {
       });
       list = list.map((e) => e.isOutbound == false ? MessageStatus.set(e, MessageStatus.ReceivedRead) : e).toList(); // fake read
     }
-    // burn
-    if (list.isNotEmpty && handleBurn) {
-      for (var i = 0; i < list.length; i++) {
-        MessageSchema messageItem = list[i];
-        int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(messageItem);
-        if (messageItem.deleteTime == null && burnAfterSeconds != null) {
-          messageItem.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
-          _messageStorage.updateDeleteTime(messageItem.msgId, messageItem.deleteTime); // await
-        }
-      }
-    }
     return list;
   }
 

@@ -35,12 +35,6 @@ class SendMessage with Tag {
     // sqlite
     schema = await _messageStorage.insert(schema);
     if (schema == null) return null;
-    // burn
-    int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(schema);
-    if (schema.deleteTime == null && burnAfterSeconds != null) {
-      schema.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
-      await _messageStorage.updateDeleteTime(schema.msgId, schema.deleteTime); // await
-    }
     onSavedSink.add(schema);
     // sdk send
     Uint8List? pid;
