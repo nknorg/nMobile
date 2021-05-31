@@ -1,45 +1,22 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nkn_sdk_flutter/wallet.dart';
-import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
-import 'package:nmobile/components/dialog/loading.dart';
-import 'package:nmobile/components/layout/header.dart';
-import 'package:nmobile/components/layout/layout.dart';
-import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/components/wallet/dropdown.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/popular_channel.dart';
-import 'package:nmobile/schema/wallet.dart';
-import 'package:nmobile/screens/wallet/create_nkn.dart';
-import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/logger.dart';
 
-import '../../app.dart';
-
-class ChatNoMessageLayout extends StatefulWidget {
+class ChatNoMessageLayout extends BaseStateFulWidget {
   @override
   _ChatNoMessageLayoutState createState() => _ChatNoMessageLayoutState();
 }
 
-class _ChatNoMessageLayoutState extends State<ChatNoMessageLayout> {
+class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLayout> {
   List<PopularChannel> _populars = PopularChannel.defaultData();
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
+  void onRefreshArguments() {}
 
   Widget _createPopularItemView(int index, int length, PopularChannel model) {
     return Container(
@@ -166,7 +143,11 @@ class _ChatNoMessageLayoutState extends State<ChatNoMessageLayout> {
                         padding: const EdgeInsets.only(right: 20),
                         child: Asset.iconSvg('pencil', width: 24, color: application.theme.backgroundLightColor),
                       ),
-                      Label(_localizations.start_chat, type: LabelType.h2, dark: true,),
+                      Label(
+                        _localizations.start_chat,
+                        type: LabelType.h2,
+                        dark: true,
+                      ),
                     ],
                   ),
                   onPressed: () async {

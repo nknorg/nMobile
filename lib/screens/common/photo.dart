@@ -1,11 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:photo_view/photo_view.dart';
 
-class PhotoScreen extends StatefulWidget {
+class PhotoScreen extends BaseStateFulWidget {
   static final String routeName = "/photo";
   static final String argFilePath = "file_path";
   static final String argNetUrl = "net_url";
@@ -26,7 +27,7 @@ class PhotoScreen extends StatefulWidget {
   _PhotoScreenState createState() => _PhotoScreenState();
 }
 
-class _PhotoScreenState extends State<PhotoScreen> with SingleTickerProviderStateMixin {
+class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with SingleTickerProviderStateMixin {
   static const int TYPE_FILE = 1;
   static const int TYPE_NET = 2;
 
@@ -34,8 +35,7 @@ class _PhotoScreenState extends State<PhotoScreen> with SingleTickerProviderStat
   String? _content;
 
   @override
-  void initState() {
-    super.initState();
+  void onRefreshArguments() {
     String? filePath = widget.arguments![PhotoScreen.argFilePath];
     String? netUrl = widget.arguments![PhotoScreen.argNetUrl];
     if (filePath != null && filePath.isNotEmpty) {

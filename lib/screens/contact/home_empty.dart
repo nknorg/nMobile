@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -9,12 +10,15 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/screens/contact/add.dart';
 import 'package:nmobile/utils/asset.dart';
 
-class ContactHomeEmptyLayout extends StatefulWidget {
+class ContactHomeEmptyLayout extends BaseStateFulWidget {
   @override
   _ContactHomeEmptyLayoutState createState() => _ContactHomeEmptyLayoutState();
 }
 
-class _ContactHomeEmptyLayoutState extends State<ContactHomeEmptyLayout> {
+class _ContactHomeEmptyLayoutState extends BaseStateFulWidgetState<ContactHomeEmptyLayout> {
+  @override
+  void onRefreshArguments() {}
+
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);

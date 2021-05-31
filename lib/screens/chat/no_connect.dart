@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -15,12 +16,12 @@ import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/utils/asset.dart';
 
-class ChatNoConnectLayout extends StatefulWidget {
+class ChatNoConnectLayout extends BaseStateFulWidget {
   @override
   _ChatNoConnectLayoutState createState() => _ChatNoConnectLayoutState();
 }
 
-class _ChatNoConnectLayoutState extends State<ChatNoConnectLayout> {
+class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLayout> {
   late WalletBloc _walletBloc;
   late StreamSubscription _walletAddSubscription;
 
@@ -28,9 +29,11 @@ class _ChatNoConnectLayoutState extends State<ChatNoConnectLayout> {
   WalletSchema? _defaultWallet;
 
   @override
+  void onRefreshArguments() {}
+
+  @override
   void initState() {
     super.initState();
-
     // listen
     _walletBloc = BlocProvider.of<WalletBloc>(this.context);
     _walletAddSubscription = _walletBloc.stream.listen((event) {
@@ -43,8 +46,8 @@ class _ChatNoConnectLayoutState extends State<ChatNoConnectLayout> {
 
   @override
   void dispose() {
-    super.dispose();
     _walletAddSubscription.cancel();
+    super.dispose();
   }
 
   _refreshWalletDefault() {

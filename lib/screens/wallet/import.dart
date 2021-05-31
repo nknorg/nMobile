@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/layout/tabs.dart';
@@ -14,7 +15,7 @@ import 'package:nmobile/utils/logger.dart';
 import 'import_by_keystore.dart';
 import 'import_by_seed.dart';
 
-class WalletImportScreen extends StatefulWidget {
+class WalletImportScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/import';
   static final String argWalletType = "wallet_type";
 
@@ -32,23 +33,27 @@ class WalletImportScreen extends StatefulWidget {
   _ImportWalletScreenState createState() => _ImportWalletScreenState();
 }
 
-class _ImportWalletScreenState extends State<WalletImportScreen> with SingleTickerProviderStateMixin {
+class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late String _walletType;
 
   StreamController<String> _qrController = StreamController<String>.broadcast();
 
   @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+  void onRefreshArguments() {
     this._walletType = widget.arguments![WalletImportScreen.argWalletType] ?? WalletType.nkn;
   }
 
   @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
   void dispose() {
-    super.dispose();
     _qrController.close();
+    super.dispose();
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -10,7 +11,7 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/utils/asset.dart';
 
-class WalletCreateETHScreen extends StatefulWidget {
+class WalletCreateETHScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/create_eth';
 
   static Future go(BuildContext context) {
@@ -21,7 +22,7 @@ class WalletCreateETHScreen extends StatefulWidget {
   _WalletCreateETHScreenState createState() => _WalletCreateETHScreenState();
 }
 
-class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
+class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateETHScreen> {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
   // WalletsBloc _walletsBloc;
@@ -32,6 +33,9 @@ class _WalletCreateETHScreenState extends State<WalletCreateETHScreen> {
   FocusNode _nameFocusNode = FocusNode();
   FocusNode _passwordFocusNode = FocusNode();
   FocusNode _confirmPasswordFocusNode = FocusNode();
+
+  @override
+  void onRefreshArguments() {}
 
   @override
   void initState() {
