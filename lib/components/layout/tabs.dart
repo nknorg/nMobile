@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 
-class Tabs extends StatefulWidget {
+class Tabs extends BaseStateFulWidget {
   List<String> titles;
   TabController? controller;
 
@@ -14,11 +15,12 @@ class Tabs extends StatefulWidget {
   _TabsState createState() => _TabsState();
 }
 
-class _TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
+class _TabsState extends BaseStateFulWidgetState<Tabs> with SingleTickerProviderStateMixin {
+  late TabController _controller;
+
   @override
-  void initState() {
-    super.initState();
-    widget.controller = widget.controller ?? TabController(length: widget.titles.length, vsync: this);
+  void onRefreshArguments() {
+    this._controller = widget.controller ?? TabController(length: widget.titles.length, vsync: this);
   }
 
   @override
@@ -31,7 +33,7 @@ class _TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
       child: TabBar(
         labelStyle: TextStyle(fontWeight: FontWeight.bold),
         unselectedLabelStyle: TextStyle(fontWeight: FontWeight.bold),
-        controller: widget.controller,
+        controller: this._controller,
         labelColor: application.theme.primaryColor,
         unselectedLabelColor: application.theme.fontColor2,
         tabs: widget.titles.map((e) => Tab(text: e)).toList(),

@@ -51,8 +51,8 @@ class WalletCommon {
     List backups = await Future.wait(futures);
     // allBackup
     logger.d("wallet backup - $backups");
-    bool find = backups.firstWhere((backup) => backup == false || backup == null, orElse: () => true);
-    bool allBackup = find == true ? true : false;
+    bool? find = backups.firstWhere((backup) => backup == null || backup == false, orElse: () => true);
+    bool allBackup = (find != null && find == true) ? true : false;
     logger.d("wallet backup - allBackup:$allBackup");
     return allBackup;
   }

@@ -125,15 +125,11 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
     _walletBloc = BlocProvider.of<WalletBloc>(this.context);
 
     // listen
-    _updateContactSubscription = contactCommon.updateStream.listen((List<ContactSchema> list) {
-      if (list.isEmpty) return;
-      List result = list.where((element) => element.id == _contactSchema?.id).toList();
-      if (result.isNotEmpty) {
-        if (mounted) {
-          setState(() {
-            _contactSchema = result[0];
-          });
-        }
+    _updateContactSubscription = contactCommon.updateStream.where((event) => event.id == _contactSchema?.id).listen((ContactSchema event) {
+      if (mounted) {
+        setState(() {
+          _contactSchema = event;
+        });
       }
     });
     _changeWalletSubscription = _walletBloc.stream.listen((event) {
@@ -352,7 +348,10 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
 
   _addFriend() {
     S _localizations = S.of(this.context);
-    contactCommon.setType(_contactSchema?.id, ContactType.friend, notify: true);
+    if (_contactSchema == null) return;
+    contactCommon.setType(_contactSchema!.id, ContactType.friend, notify: true);
+    contactCommon.deleteSink.add(_contactSchema!.id ?? 0);
+    Future.delayed(Duration(milliseconds: 500), () => contactCommon.addSink.add(_contactSchema!));
     Toast.show(_localizations.success);
   }
 
@@ -626,7 +625,7 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
               TextButton(
                 style: _buttonStyle(topRadius: false, botRadius: true, topPad: 10, botPad: 15),
                 onPressed: () {
-                  if (this._contactSchema != null) return;
+                  if (this._contactSchema == null) return;
                   ContactChatProfileScreen.go(this.context, this._contactSchema!);
                 },
                 child: Row(

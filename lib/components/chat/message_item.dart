@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/chat/chat.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/chat/bubble.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -7,7 +6,7 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/utils/format.dart';
 
-class ChatMessageItem extends StatefulWidget {
+class ChatMessageItem extends StatelessWidget {
   final MessageSchema message;
   final ContactSchema contact;
   final MessageSchema? prevMessage;
@@ -17,13 +16,8 @@ class ChatMessageItem extends StatefulWidget {
   ChatMessageItem({required this.message, required this.contact, this.prevMessage, this.nextMessage, this.showTime = false});
 
   @override
-  _ChatMessageItemState createState() => _ChatMessageItemState();
-}
-
-class _ChatMessageItemState extends State<ChatMessageItem> {
-  @override
   Widget build(BuildContext context) {
-    String timeFormat = formatChatTime(widget.message.sendTime);
+    String timeFormat = formatChatTime(this.message.sendTime);
     Widget timeWidget = Label(
       timeFormat,
       type: LabelType.bodySmall,
@@ -31,20 +25,20 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
     );
 
     List<Widget> contentsWidget = <Widget>[];
-    if (widget.showTime) contentsWidget.add(timeWidget);
+    if (this.showTime) contentsWidget.add(timeWidget);
 
-    switch (widget.message.contentType) {
+    switch (this.message.contentType) {
       case ContentType.text:
       case ContentType.textExtension:
         contentsWidget.add(ChatBubble(
-          message: widget.message,
-          contact: widget.contact,
+          message: this.message,
+          contact: this.contact,
         ));
         break;
       case ContentType.media:
         contentsWidget.add(ChatBubble(
-          message: widget.message,
-          contact: widget.contact,
+          message: this.message,
+          contact: this.contact,
         ));
         break;
       case ContentType.system:

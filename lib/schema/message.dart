@@ -81,8 +81,8 @@ class MessageOptions {
 
 class MessageStatus {
   static const int Sending = 100;
-  static const int SendFail = 110;
-  static const int SendSuccess = 120; // TODO:GG update_stream
+  static const int SendFail = 110; // TODO:GG update_stream
+  static const int SendSuccess = 120;
   static const int SendWithReceipt = 130;
   static const int Received = 200;
   static const int ReceivedRead = 210;

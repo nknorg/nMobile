@@ -155,8 +155,7 @@ class ChatCommon {
     if (offset == 0 && (unread == null || unread > 0)) {
       List<MessageSchema> unreadList = await _messageStorage.queryListUnReadByTargetId(targetId);
       unreadList.forEach((MessageSchema element) {
-        element = MessageStatus.set(element, MessageStatus.ReceivedRead);
-        _messageStorage.updateMessageStatus(element); // wait
+        receiveMessage.read(element); // await
       });
       list = list.map((e) => e.isOutbound == false ? MessageStatus.set(e, MessageStatus.ReceivedRead) : e).toList(); // fake read
     }

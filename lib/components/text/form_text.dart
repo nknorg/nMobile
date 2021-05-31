@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 
-class FormText extends StatefulWidget {
+class FormText extends BaseStateFulWidget {
   dynamic value;
   final double fontSize;
   final Color? fontColor;
@@ -69,13 +70,11 @@ class FormText extends StatefulWidget {
   _FormTextState createState() => _FormTextState();
 }
 
-class _FormTextState extends State<FormText> {
+class _FormTextState extends BaseStateFulWidgetState<FormText> {
   bool _showPassword = false;
 
   @override
-  void initState() {
-    super.initState();
-  }
+  void onRefreshArguments() {}
 
   @override
   Widget build(BuildContext context) {

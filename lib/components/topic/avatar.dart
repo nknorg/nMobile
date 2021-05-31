@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/asset.dart';
 
-class TopicAvatar extends StatefulWidget {
+class TopicAvatar extends BaseStateFulWidget {
   final TopicSchema topic;
   final double? radius;
   final bool? placeHolder;
@@ -20,12 +21,11 @@ class TopicAvatar extends StatefulWidget {
   _TopicAvatarState createState() => _TopicAvatarState();
 }
 
-class _TopicAvatarState extends State<TopicAvatar> {
+class _TopicAvatarState extends BaseStateFulWidgetState<TopicAvatar> {
   bool _avatarFileExits = false;
 
   @override
-  void initState() {
-    super.initState();
+  onRefreshArguments() {
     _checkAvatarFileExists();
   }
 

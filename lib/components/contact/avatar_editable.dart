@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/screens/common/photo.dart';
@@ -9,7 +10,7 @@ import 'package:nmobile/utils/asset.dart';
 
 import 'avatar.dart';
 
-class ContactAvatarEditable extends StatefulWidget {
+class ContactAvatarEditable extends BaseStateFulWidget {
   final ContactSchema contact;
   final double? radius;
   final bool? placeHolder;
@@ -26,24 +27,12 @@ class ContactAvatarEditable extends StatefulWidget {
   _ContactAvatarEditableState createState() => _ContactAvatarEditableState();
 }
 
-class _ContactAvatarEditableState extends State<ContactAvatarEditable> {
+class _ContactAvatarEditableState extends BaseStateFulWidgetState<ContactAvatarEditable> {
   File? _avatarFile;
 
   @override
-  void initState() {
-    super.initState();
+  void onRefreshArguments() {
     _checkAvatarFileExists();
-  }
-
-  @override
-  void didUpdateWidget(covariant ContactAvatarEditable oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _checkAvatarFileExists();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   _checkAvatarFileExists() async {

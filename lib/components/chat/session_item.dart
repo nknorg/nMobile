@@ -4,6 +4,7 @@ import 'package:nmobile/components/contact/item.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/topic/item.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -164,7 +165,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
         ],
       ),
     );
-  } else {
+  } else if (model.content != null) {
     return Container(
       color: model.isTop ? application.theme.backgroundColor1 : Colors.transparent,
       padding: const EdgeInsets.only(left: 12, right: 12),
@@ -174,26 +175,32 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
         children: [
           Expanded(
             flex: 1,
-            child: model.contact != null
-                ? ContactItem(
-                    contact: model.contact!,
-                    body: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Label(
-                          model.contact?.getDisplayName ?? '',
-                          type: LabelType.h3,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: contentWidget,
-                        ),
-                      ],
-                    ),
-                  )
-                : SizedBox.shrink(),
+            child: StreamBuilder<ContactSchema?>(
+              initialData: model.contact,
+              stream: contactCommon.updateStream.where((event) => event.id == model.contact?.id),
+              builder: (BuildContext context, AsyncSnapshot<ContactSchema?> snapshot) {
+                ContactSchema? _schema = snapshot.data ?? model.contact;
+                if (_schema == null) return SizedBox.shrink();
+                return ContactItem(
+                  contact: _schema,
+                  body: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Label(
+                        _schema.getDisplayName,
+                        type: LabelType.h3,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: contentWidget,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
           Expanded(
             flex: 0,
@@ -226,5 +233,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
         ],
       ),
     );
+  } else {
+    return SizedBox.shrink();
   }
 }

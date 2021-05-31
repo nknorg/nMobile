@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -13,7 +14,7 @@ import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-class BottomDialog extends StatefulWidget {
+class BottomDialog extends BaseStateFulWidget {
   @override
   _BottomDialogState createState() => _BottomDialogState();
 
@@ -305,7 +306,6 @@ class BottomDialog extends StatefulWidget {
       desc: desc,
       height: 300,
       animated: true,
-      // Platform.isAndroid ? false : true, // TODO:GG fixed
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
@@ -461,7 +461,7 @@ class BottomDialog extends StatefulWidget {
   }
 }
 
-class _BottomDialogState extends State<BottomDialog> with SingleTickerProviderStateMixin {
+class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with SingleTickerProviderStateMixin {
   double _dy = 0;
   double _height = 300;
   double _dragHeight = 24;
@@ -475,8 +475,7 @@ class _BottomDialogState extends State<BottomDialog> with SingleTickerProviderSt
   GlobalKey _contentKey = GlobalKey();
 
   @override
-  void initState() {
-    super.initState();
+  void onRefreshArguments() {
     widget.updateHeight = (height) {
       _height = _minHeight = height;
       _animationController.reset();
@@ -490,11 +489,6 @@ class _BottomDialogState extends State<BottomDialog> with SingleTickerProviderSt
           _currentHeight = _currentHeight + _tweenHeight;
         });
       });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {

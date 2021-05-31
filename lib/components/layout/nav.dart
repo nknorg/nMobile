@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/utils/asset.dart';
 
 import '../../generated/l10n.dart';
 
-class Nav extends StatefulWidget {
+class Nav extends BaseStateFulWidget {
   PageController controller;
   List<Widget> screens;
   int currentIndex = 0;
@@ -20,8 +21,13 @@ class Nav extends StatefulWidget {
   _NavState createState() => new _NavState();
 }
 
-class _NavState extends State<Nav> {
+class _NavState extends BaseStateFulWidgetState<Nav> {
   var _theme = application.theme;
+
+  @override
+  void onRefreshArguments() {
+    _theme = application.theme;
+  }
 
   void _onItemTapped(int index) {
     setState(() {

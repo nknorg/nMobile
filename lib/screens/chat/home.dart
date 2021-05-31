@@ -124,22 +124,16 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                 header: Header(
                   titleChild: Container(
                     margin: EdgeInsets.only(left: 20),
-                    child: StreamBuilder<List<ContactSchema>>(
-                      initialData: contactCommon.currentUser == null ? [] : [contactCommon.currentUser!],
-                      stream: contactCommon.updateStream,
-                      builder: (BuildContext context, AsyncSnapshot<List<ContactSchema>> snapshot) {
-                        ContactSchema? _schema = contactCommon.currentUser;
-                        if (snapshot.data != null && snapshot.data!.isNotEmpty) {
-                          List result = snapshot.data!.where((element) => element.id == _schema?.id).toList();
-                          if (result.isNotEmpty) {
-                            _schema = result[0];
-                          }
-                        }
+                    child: StreamBuilder<ContactSchema?>(
+                      initialData: contactCommon.currentUser,
+                      stream: contactCommon.updateStream.where((event) => event.id == contactCommon.currentUser?.id),
+                      builder: (BuildContext context, AsyncSnapshot<ContactSchema?> snapshot) {
+                        ContactSchema? _schema = snapshot.data ?? contactCommon.currentUser;
                         if (_schema == null) return SizedBox.shrink();
                         return ContactHeader(
                           contact: _schema,
                           onTap: () {
-                            ContactProfileScreen.go(context, contactId: _schema?.id);
+                            ContactProfileScreen.go(context, contactId: _schema.id);
                           },
                           body: StreamBuilder<int>(
                             stream: chatCommon.statusStream,
@@ -255,9 +249,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                       color: Color(0x4D051C3F),
                                     ),
                                     child: Label(
-                                      S
-                                          .of(context)
-                                          .new_group,
+                                      S.of(context).new_group,
                                       height: 1.2,
                                       type: LabelType.h4,
                                       dark: true,
@@ -276,9 +268,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                       color: Color(0x4D051C3F),
                                     ),
                                     child: Label(
-                                      S
-                                          .of(context)
-                                          .new_whisper,
+                                      S.of(context).new_whisper,
                                       height: 1.2,
                                       type: LabelType.h4,
                                       dark: true,
@@ -312,9 +302,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                   Navigator.of(context).pop();
                                   BottomDialog.of(context).showWithTitle(
                                     height: 650,
-                                    title: S
-                                        .of(context)
-                                        .create_channel,
+                                    title: S.of(context).create_channel,
                                     child: CreateGroupDialog(),
                                   );
                                   // TODO:GG chat 1t9
@@ -335,12 +323,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                 width: 48,
                                 height: 48,
                                 onPressed: () async {
-                                  String? address =
-                                  await BottomDialog.of(context).showInputAddressDialog(title: S
-                                      .of(context)
-                                      .new_whisper, hint: S
-                                      .of(context)
-                                      .enter_or_select_a_user_pubkey);
+                                  String? address = await BottomDialog.of(context).showInputAddressDialog(title: S.of(context).new_whisper, hint: S.of(context).enter_or_select_a_user_pubkey);
                                   if (address != null) {
                                     Navigator.of(context).pop();
                                     int count = await ContactStorage().queryCountByClientAddress(address);

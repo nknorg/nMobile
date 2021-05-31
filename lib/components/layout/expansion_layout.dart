@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:nmobile/components/base/stateful.dart';
 
 const Duration _kExpand = Duration(milliseconds: 200);
 
-class ExpansionLayout extends StatefulWidget {
+class ExpansionLayout extends BaseStateFulWidget {
   final Widget child;
   final bool isExpanded;
   final Color? backgroundColor;
@@ -23,7 +24,7 @@ class ExpansionLayout extends StatefulWidget {
   _ExpansionLayoutState createState() => _ExpansionLayoutState();
 }
 
-class _ExpansionLayoutState extends State<ExpansionLayout> with SingleTickerProviderStateMixin {
+class _ExpansionLayoutState extends BaseStateFulWidgetState<ExpansionLayout> with SingleTickerProviderStateMixin {
   static final Animatable<double> _easeInTween = CurveTween(curve: Curves.easeIn);
   late AnimationController _controller;
   late Animation<double> _heightFactor;
@@ -35,6 +36,10 @@ class _ExpansionLayoutState extends State<ExpansionLayout> with SingleTickerProv
     super.initState();
     _controller = AnimationController(duration: _kExpand, vsync: this);
     _heightFactor = _controller.drive(_easeInTween);
+  }
+
+  @override
+  void onRefreshArguments() {
     _isExpanded = widget.isExpanded;
     if (_isExpanded) _controller.value = 1.0;
   }
