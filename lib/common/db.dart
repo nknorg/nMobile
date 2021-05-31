@@ -37,7 +37,7 @@ class DB {
           if (me == null) return;
           Map<String, dynamic> add = await me.toMap();
           var count = await db.insert(ContactStorage.tableName, add);
-          logger.i("DB - contact me insert scheme:${count > 0 ? me : null}");
+          logger.i("DB - contact me insert schema:${count > 0 ? me : null}");
         } catch (e) {
           handleError(e);
         }
