@@ -125,6 +125,34 @@ class MessageStorage with Tag {
     return [];
   }
 
+  Future<List<MessageSchema>> queryListByType(String? msgId, String? contentType) async {
+    if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return [];
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['*'],
+        where: 'msg_id = ? AND type = ?',
+        whereArgs: [msgId, contentType],
+      );
+      if (res == null || res.isEmpty) {
+        logger.d("$TAG - queryListByType - empty - msgId:$msgId - contentType:$contentType");
+        return [];
+      }
+      List<MessageSchema> result = <MessageSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        MessageSchema item = MessageSchema.fromMap(map);
+        logText += "\n$item";
+        result.add(item);
+      });
+      logger.d("$TAG - queryListByType - success - msgId:$msgId - contentType:$contentType - length:${result.length} - items:$logText");
+      return result;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
+  }
+
   Future<int> queryCount(String? msgId) async {
     if (msgId == null || msgId.isEmpty) return 0;
     try {
