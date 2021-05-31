@@ -64,6 +64,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
+      clipAlias: false,
       header: Header(
         title: _localizations.create_ethereum_wallet,
         backgroundColor: application.theme.backgroundColor4,
