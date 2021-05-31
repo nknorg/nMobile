@@ -136,7 +136,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
       case ContentType.textExtension:
         _body = _getContentTextBody(dark);
         break;
-      case ContentType.media:
+      case ContentType.image:
         _body = _getContentImageBody();
         break;
       // TODO:GG contentTypeView

@@ -24,8 +24,7 @@ class ContentType {
 
   static const String text = 'text';
   static const String textExtension = 'textExtension'; // TODO:GG wait handle
-  static const String media = 'media'; // TODO:GG remove?
-  static const String image = 'nknImage'; // TODO:GG remove?
+  static const String image = 'media'; // TODO:GG remove?
   static const String audio = 'audio'; // TODO:GG wait handle
   // static const String video = 'video';
 
@@ -34,6 +33,10 @@ class ContentType {
   static const String eventSubscribe = 'event:subscribe'; // TODO:GG wait handle
   static const String eventUnsubscribe = 'event:unsubscribe'; // TODO:GG wait handle
   static const String eventChannelInvitation = 'event:channelInvitation'; // TODO:GG wait data
+
+  // SUPPORT:START
+  static const String nknImage = 'nknImage';
+  // SUPPORT:END
 }
 
 class MessageOptions {
@@ -193,27 +196,9 @@ class MessageData {
     return jsonEncode(map);
   }
 
-  static Future<String> getDChatMedia(MessageSchema schema) async {
-    File file = schema.content as File;
-    String content = '![media](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
-    Map data = {
-      'id': schema.msgId,
-      'contentType': ContentType.media,
-      'content': content,
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-    };
-    if (schema.options != null && schema.options!.keys.length > 0) {
-      data['options'] = schema.options;
-    }
-    if (schema.topic != null) {
-      data['topic'] = schema.topic;
-    }
-    return jsonEncode(data);
-  }
-
   static Future<String> getImage(MessageSchema schema) async {
     File file = schema.content as File;
-    String content = '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
+    String content = '![media](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     Map data = {
       'id': schema.msgId,
       'contentType': ContentType.image,
@@ -433,7 +418,7 @@ class MessageSchema extends Equatable {
       options: e['options'] != null ? jsonFormat(e['options']) : null,
     );
 
-    if (schema.contentType == ContentType.image || schema.contentType == ContentType.media) {
+    if (schema.contentType == ContentType.nknImage || schema.contentType == ContentType.image) {
       schema.content = File(Path.getCompleteFile(e['content']));
     } else if (schema.contentType == ContentType.audio) {
       schema.content = File(Path.getCompleteFile(e['content']));
@@ -481,7 +466,7 @@ class MessageSchema extends Equatable {
       'is_send_error': isSendError ? 1 : 0,
     };
     // String pubKey = hexEncode(chatCommon.publicKey);
-    if (contentType == ContentType.image || contentType == ContentType.media) {
+    if (contentType == ContentType.nknImage || contentType == ContentType.image) {
       map['content'] = Path.getLocalFile((content as File).path);
     } else if (contentType == ContentType.audio) {
       map['content'] = Path.getLocalFile((content as File).path);
