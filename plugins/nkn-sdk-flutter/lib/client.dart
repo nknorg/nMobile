@@ -19,10 +19,10 @@ class OnConnect {
 
 class OnMessage {
   Uint8List messageId;
-  String src;
-  String data;
-  int type;
-  bool encrypted;
+  String? src;
+  String? data;
+  int? type;
+  bool? encrypted;
 
   OnMessage({
     required this.messageId,

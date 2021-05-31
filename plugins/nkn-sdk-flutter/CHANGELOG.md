@@ -1,3 +1,7 @@
+## 0.1.3
+
+* Fix send message noreply return null value
+
 ## 0.1.2
 
 * Fix null value problem onConnect
