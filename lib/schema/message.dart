@@ -24,7 +24,7 @@ class ContentType {
 
   static const String text = 'text';
   static const String textExtension = 'textExtension'; // TODO:GG wait handle
-  static const String image = 'media'; // TODO:GG remove?
+  static const String image = 'media';
   static const String audio = 'audio'; // TODO:GG wait handle
   // static const String video = 'video';
 

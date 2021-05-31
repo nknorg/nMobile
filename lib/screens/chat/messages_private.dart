@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
@@ -126,19 +127,6 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
     });
   }
 
-  // TODO:GG refactor
-  _send(String content) async {
-    if (chatCommon.id == null) return;
-    MessageSchema send = MessageSchema.fromSend(
-      uuid.v4(),
-      chatCommon.id!,
-      ContentType.text,
-      to: _contact.clientAddress,
-      content: content,
-    );
-    await sendMessage.sendMessage(send);
-  }
-
   _hideAll() {
     FocusScope.of(context).requestFocus(FocusNode());
     setState(() {
@@ -239,11 +227,16 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                 onMenuPressed: () {
                   _toggleBottomMenu();
                 },
-                onSendPress: (String content) {
-                  _send(content);
+                onSendPress: (String content) async {
+                  await sendMessage.sendMessageText(_contact.clientAddress, content);
                 },
               ),
-              ChatBottomMenu(show: _showBottomMenu),
+              ChatBottomMenu(
+                show: _showBottomMenu,
+                onPicked: (File picked) async {
+                  await sendMessage.sendMessageImage(_contact.clientAddress, picked);
+                },
+              ),
             ],
           ),
         ),
