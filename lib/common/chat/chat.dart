@@ -81,6 +81,7 @@ class ChatCommon {
       String keystore = await walletCommon.getKeystoreByAddress(scheme.address);
 
       Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd));
+      if (wallet.address.isEmpty || wallet.keystore.isEmpty) return;
 
       String pubKey = hexEncode(wallet.publicKey);
       String password = hexEncode(Uint8List.fromList(sha256(wallet.seed)));

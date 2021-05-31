@@ -235,8 +235,8 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> {
     if (keystore == null || password == null) return false;
     S _localizations = S.of(context);
     try {
-      Wallet? restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
-      if (restore == null || restore.address != _wallet.address) {
+      Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
+      if (restore.address.isEmpty || restore.address != _wallet.address) {
         Toast.show(_localizations.password_wrong);
         return false;
       }
