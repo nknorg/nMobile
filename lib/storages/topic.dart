@@ -83,7 +83,7 @@ class TopicStorage with Tag {
         logger.d("$TAG - insertTopic - success - schema:$schema");
         return schema;
       }
-      logger.w("$TAG - insertTopic - fail - scheme:$schema");
+      logger.w("$TAG - insertTopic - fail - schema:$schema");
     } catch (e) {
       logger.e(e);
     }
