@@ -272,8 +272,7 @@ class ContactAddScreenState extends State<ContactAddScreen> {
                           controller: _walletAddressController,
                           focusNode: _walletAddressFocusNode,
                           hintText: _localizations.input_wallet_address,
-                          validator: Validator.of(context).addressNKN(),
-                          // TODO:GG or empty
+                          validator: Validator.of(context).addressNKNOrEmpty(),
                           textInputAction: TextInputAction.next,
                           onFieldSubmitted: (_) {
                             FocusScope.of(context).requestFocus(_notesFocusNode);
