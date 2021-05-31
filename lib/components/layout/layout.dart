@@ -10,6 +10,7 @@ class Layout extends StatelessWidget {
   final Widget? floatingActionButton;
   final FloatingActionButtonLocation? floatingActionButtonLocation;
   final BorderRadius? borderRadius;
+  final bool clipAlias;
 
   Layout({
     this.key,
@@ -20,6 +21,7 @@ class Layout extends StatelessWidget {
     this.floatingActionButton,
     this.floatingActionButtonLocation,
     this.borderRadius = const BorderRadius.vertical(top: Radius.circular(32)),
+    this.clipAlias = true,
   });
 
   @override
@@ -37,7 +39,7 @@ class Layout extends StatelessWidget {
         ),
         child: PhysicalModel(
           elevation: 0,
-          clipBehavior: Clip.antiAlias,
+          clipBehavior: this.clipAlias ? Clip.antiAlias : Clip.none,
           color: this.bodyColor ?? application.theme.backgroundColor,
           borderRadius: this.borderRadius ?? BorderRadius.vertical(top: Radius.circular(32)),
           child: Column(

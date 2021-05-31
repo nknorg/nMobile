@@ -263,6 +263,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> {
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
+      clipAlias: false,
       header: Header(
         title: _wallet.type == WalletType.eth ? _localizations.send_eth : _localizations.send_nkn,
         backgroundColor: application.theme.backgroundColor4,

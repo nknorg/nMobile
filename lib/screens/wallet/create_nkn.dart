@@ -79,6 +79,7 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
+      clipAlias: false,
       header: Header(
         title: _localizations.create_nkn_wallet,
         backgroundColor: application.theme.backgroundColor4,
