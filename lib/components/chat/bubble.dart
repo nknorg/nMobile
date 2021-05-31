@@ -8,6 +8,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/markdown.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/screens/common/photo.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/format.dart';
 
@@ -134,10 +135,10 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
     switch (_message.contentType) {
       case ContentType.text:
       case ContentType.textExtension:
-        _body = _getContentTextBody(dark);
+        _body = _getContentBodyText(dark);
         break;
       case ContentType.image:
-        _body = _getContentImageBody();
+        _body = _getContentBodyImage(dark);
         break;
       // TODO:GG contentTypeView
     }
@@ -176,12 +177,19 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
     );
   }
 
-  Widget _getContentTextBody(bool dark) {
+  Widget _getContentBodyText(bool dark) {
     return Markdown(data: _message.content, dark: dark);
   }
 
-  Widget _getContentImageBody() {
-    return Image.file(_message.content as File);
+  Widget _getContentBodyImage(bool dark) {
+    if (!(_message.content is File)) return SizedBox.shrink();
+    File file = _message.content as File;
+    return GestureDetector(
+      onTap: () {
+        PhotoScreen.go(context, filePath: file.path);
+      },
+      child: Image.file(file),
+    );
   }
 
   List<dynamic> _getStyles() {

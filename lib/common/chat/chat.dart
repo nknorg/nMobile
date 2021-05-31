@@ -163,11 +163,11 @@ class ChatCommon with Tag {
     return list;
   }
 
-  Future<OnMessage?> sendText(String dest, String data) async {
+  Future<OnMessage?> sendMessage(String dest, String data) async {
     return await this.client?.sendText([dest], data);
   }
 
-  Future<OnMessage?> publishText(String topic, String data) async {
+  Future<OnMessage?> publishMessage(String topic, String data) async {
     return await this.client?.publishText(topic, data);
   }
 }
