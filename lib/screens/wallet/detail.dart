@@ -342,8 +342,8 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
             //   'name': ethWallet.name,
             // });
           } else {
-            Wallet? restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
-            if (restore == null || restore.address != _wallet?.address) {
+            Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
+            if (restore.address.isEmpty || restore.address != _wallet?.address) {
               Toast.show(_localizations.password_wrong);
               return;
             }
