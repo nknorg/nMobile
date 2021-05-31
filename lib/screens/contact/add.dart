@@ -13,6 +13,7 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validation.dart';
@@ -125,9 +126,16 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
         },
       );
 
+      ContactSchema? exist = await contactCommon.queryByClientAddress(schema.clientAddress);
+      if (exist != null) {
+        // TODO:GG contact toast
+        Loading.dismiss();
+        return;
+      }
+
       ContactSchema? added = await contactCommon.add(schema);
       if (added == null) {
-        // Toast.show(S.of(context).failure);
+        Toast.show(S.of(context).failure);
         Loading.dismiss();
         return;
       }
