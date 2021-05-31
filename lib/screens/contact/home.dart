@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/item.dart';
 import 'package:nmobile/components/dialog/modal.dart';
@@ -22,7 +23,7 @@ import 'package:nmobile/utils/logger.dart';
 
 import 'home_empty.dart';
 
-class ContactHomeScreen extends StatefulWidget {
+class ContactHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/contact/home';
   static final String argIsSelect = "is_select";
 
@@ -41,7 +42,7 @@ class ContactHomeScreen extends StatefulWidget {
   _ContactHomeScreenState createState() => _ContactHomeScreenState();
 }
 
-class _ContactHomeScreenState extends State<ContactHomeScreen> {
+class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen> {
   bool _isSelect = false;
 
   bool _pageLoaded = false;
@@ -60,10 +61,13 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
   List<TopicSchema> _searchTopics = <TopicSchema>[];
 
   @override
+  void onRefreshArguments() {
+    this._isSelect = widget.arguments![ContactHomeScreen.argIsSelect] ?? false;
+  }
+
+  @override
   void initState() {
     super.initState();
-    this._isSelect = widget.arguments![ContactHomeScreen.argIsSelect] ?? false;
-
     // listen
     _addContactSubscription = contactCommon.addStream.listen((ContactSchema scheme) {
       if (scheme.type == ContactType.friend) {
@@ -109,10 +113,10 @@ class _ContactHomeScreenState extends State<ContactHomeScreen> {
 
   @override
   void dispose() {
-    super.dispose();
     _addContactSubscription.cancel();
     _deleteContactSubscription.cancel();
     _updateContactSubscription.cancel();
+    super.dispose();
   }
 
   _initData() async {

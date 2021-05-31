@@ -9,6 +9,7 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/avatar_editable.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -31,7 +32,7 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:uuid/uuid.dart';
 
-class ContactProfileScreen extends StatefulWidget {
+class ContactProfileScreen extends BaseStateFulWidget {
   static const String routeName = '/contact/profile';
   static final String argContactSchema = "contact_schema";
   static final String argContactId = "contact_id";
@@ -53,7 +54,7 @@ class ContactProfileScreen extends StatefulWidget {
   _ContactProfileScreenState createState() => _ContactProfileScreenState();
 }
 
-class _ContactProfileScreenState extends State<ContactProfileScreen> {
+class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileScreen> {
   static List<Duration> burnValueArray = [
     Duration(seconds: 5),
     Duration(seconds: 10),
@@ -119,6 +120,11 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
   bool _notificationOpen = false;
 
   @override
+  void onRefreshArguments() {
+    _refreshContactSchema();
+  }
+
+  @override
   initState() {
     super.initState();
 
@@ -126,11 +132,9 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
 
     // listen
     _updateContactSubscription = contactCommon.updateStream.where((event) => event.id == _contactSchema?.id).listen((ContactSchema event) {
-      if (mounted) {
-        setState(() {
-          _contactSchema = event;
-        });
-      }
+      setState(() {
+        _contactSchema = event;
+      });
     });
     _changeWalletSubscription = _walletBloc.stream.listen((event) {
       if (event is WalletDefault) {
@@ -141,16 +145,15 @@ class _ContactProfileScreenState extends State<ContactProfileScreen> {
     });
 
     // init
-    _refreshContactSchema();
     _refreshDefaultWallet();
   }
 
   @override
   void dispose() {
     _updateBurnIfNeed();
-    super.dispose();
     _updateContactSubscription.cancel();
     _changeWalletSubscription.cancel();
+    super.dispose();
   }
 
   _refreshContactSchema({ContactSchema? scheme}) async {

@@ -7,6 +7,7 @@ import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
@@ -27,7 +28,7 @@ import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
-class WalletDetailScreen extends StatefulWidget {
+class WalletDetailScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/detail_nkn';
   static final String argWallet = "wallet";
   static final String argListIndex = "list_index";
@@ -48,7 +49,7 @@ class WalletDetailScreen extends StatefulWidget {
   _WalletDetailScreenState createState() => _WalletDetailScreenState();
 }
 
-class _WalletDetailScreenState extends State<WalletDetailScreen> {
+class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScreen> {
   WalletSchema? _wallet;
 
   late WalletBloc _walletBloc;
@@ -57,10 +58,13 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
   bool isDefault = false;
 
   @override
+  void onRefreshArguments() {
+    this._wallet = widget.arguments![WalletDetailScreen.argWallet];
+  }
+
+  @override
   void initState() {
     super.initState();
-    this._wallet = widget.arguments![WalletDetailScreen.argWallet];
-
     _walletBloc = BlocProvider.of<WalletBloc>(context);
 
     // default
@@ -72,11 +76,9 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
       }
     });
     walletCommon.getDefaultAddress().then((value) {
-      if (mounted) {
-        setState(() {
-          isDefault = value == _wallet?.address;
-        });
-      }
+      setState(() {
+        isDefault = value == _wallet?.address;
+      });
     });
 
     // TimerAuth.onOtherPage = true; // TODO:GG wallet lock
@@ -84,9 +86,9 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
 
   @override
   void dispose() {
-    super.dispose();
     _walletSubscription.cancel();
     // TimerAuth.onOtherPage = false; // TODO:GG wallet unlock
+    super.dispose();
   }
 
   _receive() {

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/chat/session_item.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
@@ -14,12 +15,12 @@ import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/asset.dart';
 
-class ChatSessionListLayout extends StatefulWidget {
+class ChatSessionListLayout extends BaseStateFulWidget {
   @override
   _ChatSessionListLayoutState createState() => _ChatSessionListLayoutState();
 }
 
-class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with AutomaticKeepAliveClientMixin {
+class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionListLayout> with AutomaticKeepAliveClientMixin {
   ContactStorage _contactStorage = ContactStorage();
   TopicStorage _topicStorage = TopicStorage();
   ScrollController _scrollController = ScrollController();
@@ -27,12 +28,45 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
   MessageStorage _messageStorage = MessageStorage();
   List<SessionSchema> _sessionList = [];
 
-  SettingsStorage _settingsStorage= SettingsStorage();
+  SettingsStorage _settingsStorage = SettingsStorage();
 
   bool loading = false;
   int _skip = 0;
   int _limit = 20;
   bool _isShowTip = true;
+
+  @override
+  void onRefreshArguments() {}
+
+  @override
+  void initState() {
+    super.initState();
+    _onMessageStreamSubscription = receiveMessage.onSavedStream.listen((event) {
+      String targetId = event.topic ?? event.from;
+      _messageStorage.getUpdateSession(targetId).then((value) {
+        _updateMessage(value);
+      });
+    });
+
+    _scrollController.addListener(() {
+      double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
+
+      if (offsetFromBottom < 50 && !loading) {
+        loading = true;
+        _loadMore().then((v) {
+          loading = false;
+        });
+      }
+    });
+
+    initAsync();
+  }
+
+  @override
+  void dispose() {
+    _onMessageStreamSubscription.cancel();
+    super.dispose();
+  }
 
   _sortMessages() {
     setState(() {
@@ -72,36 +106,6 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
         _isShowTip = !value;
       });
     });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    initAsync();
-
-    _onMessageStreamSubscription = receiveMessage.onSavedStream.listen((event) {
-      String targetId = event.topic ?? event.from;
-      _messageStorage.getUpdateSession(targetId).then((value) {
-        _updateMessage(value);
-      });
-    });
-
-    _scrollController.addListener(() {
-      double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
-
-      if (offsetFromBottom < 50 && !loading) {
-        loading = true;
-        _loadMore().then((v) {
-          loading = false;
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _onMessageStreamSubscription.cancel();
-    super.dispose();
   }
 
   _showItemMenu(SessionSchema item, int index) {
@@ -172,8 +176,8 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
     );
   }
 
-  _createTipView(){
-    if(_isShowTip) {
+  _createTipView() {
+    if (_isShowTip) {
       return Expanded(
         flex: 0,
         child: Container(
@@ -201,18 +205,14 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
                         Padding(
                           padding: const EdgeInsets.only(top: 16),
                           child: Label(
-                            S
-                                .of(context)
-                                .private_messages,
+                            S.of(context).private_messages,
                             type: LabelType.h3,
                           ),
                         ),
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Label(
-                            S
-                                .of(context)
-                                .private_messages_desc,
+                            S.of(context).private_messages_desc,
                             type: LabelType.bodyRegular,
                             softWrap: true,
                           ),
@@ -220,9 +220,7 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
                         Padding(
                           padding: const EdgeInsets.only(top: 6),
                           child: Label(
-                            S
-                                .of(context)
-                                .learn_more,
+                            S.of(context).learn_more,
                             type: LabelType.bodySmall,
                             color: application.theme.primaryColor,
                             fontWeight: FontWeight.bold,
@@ -252,7 +250,7 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
           ),
         ),
       );
-    }else {
+    } else {
       return SizedBox.shrink();
     }
   }
@@ -260,7 +258,7 @@ class _ChatSessionListLayoutState extends State<ChatSessionListLayout> with Auto
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if(_sessionList.isEmpty) {
+    if (_sessionList.isEmpty) {
       return ChatNoMessageLayout();
     }
     return Flex(

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
@@ -9,12 +10,15 @@ import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/utils/asset.dart';
 
-class WalletHomeEmptyLayout extends StatefulWidget {
+class WalletHomeEmptyLayout extends BaseStateFulWidget {
   @override
   _WalletHomeEmptyLayoutState createState() => _WalletHomeEmptyLayoutState();
 }
 
-class _WalletHomeEmptyLayoutState extends State<WalletHomeEmptyLayout> {
+class _WalletHomeEmptyLayoutState extends BaseStateFulWidgetState<WalletHomeEmptyLayout> {
+  @override
+  void onRefreshArguments() {}
+
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
