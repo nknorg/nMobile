@@ -388,6 +388,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   Widget build(BuildContext context) {
     return Layout(
       headerColor: application.theme.backgroundColor4,
+      clipAlias: false,
       header: Header(
         backgroundColor: application.theme.backgroundColor4,
         title: _contactSchema?.getDisplayName ?? "",
