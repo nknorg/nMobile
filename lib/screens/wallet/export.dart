@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -14,7 +15,7 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
-class WalletExportScreen extends StatefulWidget {
+class WalletExportScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/export_nkn';
   static final String argWalletType = "wallet_type";
   static final String argName = "name";
@@ -51,7 +52,7 @@ class WalletExportScreen extends StatefulWidget {
   _WalletExportScreenState createState() => _WalletExportScreenState();
 }
 
-class _WalletExportScreenState extends State<WalletExportScreen> {
+class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScreen> {
   String? _walletType;
   String? _name;
   String? _address;
@@ -61,15 +62,18 @@ class _WalletExportScreenState extends State<WalletExportScreen> {
   WalletBloc? _walletBloc;
 
   @override
-  void initState() {
-    super.initState();
+  void onRefreshArguments() {
     _name = widget.arguments![WalletExportScreen.argName];
     _walletType = widget.arguments![WalletExportScreen.argWalletType];
     _address = widget.arguments![WalletExportScreen.argAddress];
     _publicKey = widget.arguments![WalletExportScreen.argPublicKey];
     _seed = widget.arguments![WalletExportScreen.argSeed];
     _keystore = widget.arguments![WalletExportScreen.argKeystore];
+  }
 
+  @override
+  void initState() {
+    super.initState();
     _walletBloc = BlocProvider.of<WalletBloc>(context);
   }
 

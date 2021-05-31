@@ -1,33 +1,30 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/components/wallet/dropdown.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
-import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/screens/wallet/import.dart';
-import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 
 import '../../app.dart';
 
-class ChatNoWalletLayout extends StatefulWidget {
+// TODO:GG same with wallet dir
+class ChatNoWalletLayout extends BaseStateFulWidget {
   @override
   _ChatNoWalletLayoutState createState() => _ChatNoWalletLayoutState();
 }
 
-class _ChatNoWalletLayoutState extends State<ChatNoWalletLayout> {
+class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayout> {
   late WalletBloc _walletBloc;
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
@@ -39,14 +36,12 @@ class _ChatNoWalletLayoutState extends State<ChatNoWalletLayout> {
   FocusNode _confirmPasswordFocusNode = FocusNode();
 
   @override
+  void onRefreshArguments() {}
+
+  @override
   void initState() {
     super.initState();
     _walletBloc = BlocProvider.of<WalletBloc>(context);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   _create() async {
@@ -124,7 +119,7 @@ class _ChatNoWalletLayoutState extends State<ChatNoWalletLayout> {
                 flex: 0,
                 child: Container(
                   margin: const EdgeInsets.only(left: 20, right: 20),
-                  padding: const EdgeInsets.only( top: 24, bottom: 24),
+                  padding: const EdgeInsets.only(top: 24, bottom: 24),
                   decoration: BoxDecoration(
                     color: application.theme.backgroundColor2,
                     borderRadius: BorderRadius.all(Radius.circular(32)),

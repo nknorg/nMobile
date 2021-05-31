@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
@@ -26,7 +27,7 @@ import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
-class WalletSendScreen extends StatefulWidget {
+class WalletSendScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/send';
   static final String argWallet = "wallet";
 
@@ -45,7 +46,7 @@ class WalletSendScreen extends StatefulWidget {
   _WalletSendScreenState createState() => _WalletSendScreenState();
 }
 
-class _WalletSendScreenState extends State<WalletSendScreen> {
+class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> {
   GlobalKey _formKey = new GlobalKey<FormState>();
   late WalletSchema _wallet;
 
@@ -78,9 +79,13 @@ class _WalletSendScreenState extends State<WalletSendScreen> {
   final int _sliderMaxGasMax = 300000;
 
   @override
+  void onRefreshArguments() {
+    this._wallet = widget.arguments![WalletSendScreen.argWallet];
+  }
+
+  @override
   void initState() {
     super.initState();
-    this._wallet = widget.arguments![WalletSendScreen.argWallet];
     // balance query
     taskService.queryWalletBalanceTask();
     // init

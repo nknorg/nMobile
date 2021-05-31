@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -17,7 +18,7 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-class WalletReceiveScreen extends StatefulWidget {
+class WalletReceiveScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/receive';
   static final String argWallet = "wallet";
 
@@ -36,14 +37,18 @@ class WalletReceiveScreen extends StatefulWidget {
   _WalletReceiveScreenState createState() => _WalletReceiveScreenState();
 }
 
-class _WalletReceiveScreenState extends State<WalletReceiveScreen> {
+class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScreen> {
   GlobalKey globalKey = new GlobalKey();
   late WalletSchema _wallet;
 
   @override
+  void onRefreshArguments() {
+    this._wallet = widget.arguments![WalletReceiveScreen.argWallet];
+  }
+
+  @override
   void initState() {
     super.initState();
-    this._wallet = widget.arguments![WalletReceiveScreen.argWallet];
     // balance query
     // taskService.queryWalletBalanceTask();
   }

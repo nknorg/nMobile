@@ -71,11 +71,9 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                       focusNode: _sendFocusNode,
                       textInputAction: TextInputAction.newline,
                       onChanged: (val) {
-                        if (mounted) {
-                          setState(() {
-                            _canSend = val.isNotEmpty;
-                          });
-                        }
+                        setState(() {
+                          _canSend = val.isNotEmpty;
+                        });
                       },
                       style: TextStyle(fontSize: 14, height: 1.4),
                       decoration: InputDecoration(
