@@ -60,6 +60,7 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
       logger.d("name:$name, password:$password");
 
       Wallet result = await Wallet.create(null, config: WalletConfig(password: password));
+      if (result.address.isEmpty || result.keystore.isEmpty) return;
 
       WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);
       logger.d("wallet create - ${wallet.toString()}");
