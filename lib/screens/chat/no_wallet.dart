@@ -24,7 +24,7 @@ class ChatNoWalletLayout extends BaseStateFulWidget {
   _ChatNoWalletLayoutState createState() => _ChatNoWalletLayoutState();
 }
 
-class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayout> {
+class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayout> with Tag {
   late WalletBloc _walletBloc;
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
@@ -51,13 +51,13 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
 
       String name = _nameController.text;
       String password = _passwordController.text;
-      logger.d("name:$name, password:$password");
+      logger.d("$TAG - name:$name, password:$password");
 
       Wallet result = await Wallet.create(null, config: WalletConfig(password: password));
       if (result.address.isEmpty || result.keystore.isEmpty) return;
 
       WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);
-      logger.d("wallet create - ${wallet.toString()}");
+      logger.d("$TAG - wallet create - ${wallet.toString()}");
 
       _walletBloc.add(AddWallet(wallet, result.keystore, password: password));
 

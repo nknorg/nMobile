@@ -7,7 +7,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
 
-class TaskService {
+class TaskService with Tag {
   bool _isInit = false;
   WalletBloc? _walletBloc;
   // EthErc20Client _erc20client;
@@ -32,7 +32,7 @@ class TaskService {
   queryWalletBalanceTask() {
     var state = _walletBloc?.state;
     if (state is WalletLoaded) {
-      logger.d("wallets balance query begin !!!!!");
+      logger.d("$TAG - queryWalletBalanceTask: START");
       List<Future> futures = <Future>[];
       state.wallets.forEach((w) {
         if (w.type == WalletType.eth) {
@@ -52,7 +52,7 @@ class TaskService {
           //     }));
         } else {
           Wallet.getBalanceByAddr(w.address).then((balance) {
-            logger.d("wallet balance - balance_old:${w.balance} - balance_new:$balance - address:${w.address}");
+            logger.d("$TAG - queryWalletBalanceTask: END - balance_old:${w.balance} - balance_new:$balance - nkn_address:${w.address}");
             if (w.balance != balance) {
               w.balance = balance;
               _walletBloc?.add(UpdateWallet(w));

@@ -15,7 +15,7 @@ class ContactChatProfileScreen extends StatefulWidget {
   static final String argContactSchema = "contact_schema";
 
   static Future go(BuildContext context, ContactSchema schema) {
-    logger.d("contact chat profile - schema:$schema");
+    logger.d("ContactChatProfileScreen - go - schema:$schema");
     return Navigator.pushNamed(context, routeName, arguments: {
       argContactSchema: schema,
     });

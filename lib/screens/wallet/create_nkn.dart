@@ -29,7 +29,7 @@ class WalletCreateNKNScreen extends BaseStateFulWidget {
   _WalletCreateNKNScreenState createState() => _WalletCreateNKNScreenState();
 }
 
-class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNKNScreen> {
+class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNKNScreen> with Tag {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
   late WalletBloc _walletBloc;
@@ -57,13 +57,13 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
 
       String name = _nameController.text;
       String password = _passwordController.text;
-      logger.d("name:$name, password:$password");
+      logger.d("$TAG - name:$name, password:$password");
 
       Wallet result = await Wallet.create(null, config: WalletConfig(password: password));
       if (result.address.isEmpty || result.keystore.isEmpty) return;
 
       WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);
-      logger.d("wallet create - ${wallet.toString()}");
+      logger.d("$TAG - wallet create - ${wallet.toString()}");
 
       _walletBloc.add(AddWallet(wallet, result.keystore, password: password));
 

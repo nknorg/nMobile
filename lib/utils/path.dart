@@ -57,7 +57,7 @@ class Path {
     if (!await dir.exists()) {
       dir = await dir.create(recursive: true);
     }
-    // logger.d("getDir - path:${dir.path}");
+    // logger.d("Path - getDir - path:${dir.path}");
     return dir.path;
   }
 
@@ -65,7 +65,7 @@ class Path {
   static Future<String> _getFile(String? mPubKey, String? dirType, String fileName, {String? fileExt}) async {
     String dirPath = await getDir(mPubKey, dirType);
     String path = join(dirPath, joinFileExt(fileName, fileExt));
-    // logger.d("getFile - path:$path");
+    // logger.d("Path - getFile - path:$path");
     return path;
   }
 
@@ -76,7 +76,7 @@ class Path {
       fileName += ".$fileExt";
     }
     String path = await _getFile(mPubKey, SubDirType.cache, fileName, fileExt: fileExt);
-    logger.d("getCacheFile - path:$path");
+    logger.d("Path - getCacheFile - path:$path");
     return path;
   }
 

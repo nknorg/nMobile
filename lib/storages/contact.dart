@@ -13,7 +13,7 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
-class ContactStorage {
+class ContactStorage with Tag {
   static String get tableName => 'Contact';
 
   Database? get db => DB.currentDatabase;
@@ -54,7 +54,7 @@ class ContactStorage {
     try {
       ContactSchema? exist = await queryByClientAddress(schema.clientAddress);
       if (exist != null) {
-        logger.d("insertContact - exist:$exist - add:$schema");
+        logger.d("$TAG - insert - exist - schema:$exist");
         return null;
       }
       Map<String, dynamic> entity = await schema.toMap();
@@ -62,10 +62,10 @@ class ContactStorage {
       if (id != null && id != 0) {
         ContactSchema schema = await ContactSchema.fromMap(entity);
         schema.id = id;
-        logger.d("insertContact - success - schema:$schema");
+        logger.d("$TAG - insert - success - schema:$schema");
         return schema;
       }
-      logger.w("insertContact - fail - scheme:$schema");
+      logger.w("$TAG - insert - fail - scheme:$schema");
     } catch (e) {
       handleError(e);
     }
@@ -81,10 +81,10 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("deleteContact - success - contactId:$contactId");
+        logger.d("$TAG - delete - success - contactId:$contactId");
         return true;
       }
-      logger.w("deleteContact - fail - contactId:$contactId");
+      logger.w("$TAG - delete - fail - contactId:$contactId");
     } catch (e) {
       handleError(e);
     }
@@ -105,7 +105,7 @@ class ContactStorage {
         offset: offset ?? null,
       );
       if (res == null || res.isEmpty) {
-        logger.d("queryContacts - empty - contactType:$contactType");
+        logger.d("$TAG - queryList - empty - contactType:$contactType");
         return [];
       }
       List<Future<ContactSchema>> futures = <Future<ContactSchema>>[];
@@ -115,7 +115,7 @@ class ContactStorage {
         futures.add(ContactSchema.fromMap(map));
       });
       List<ContactSchema> results = await Future.wait(futures);
-      logger.d("queryContacts - items:$logText");
+      logger.d("$TAG - queryList - items:$logText");
       return results;
     } catch (e) {
       handleError(e);
@@ -134,10 +134,10 @@ class ContactStorage {
       );
       if (res != null && res.length > 0) {
         ContactSchema schema = await ContactSchema.fromMap(res.first);
-        logger.d("queryContact - success - contactId:$contactId - schema:$schema");
+        logger.d("$TAG - query - success - contactId:$contactId - schema:$schema");
         return schema;
       }
-      logger.d("queryContact - empty - contactId:$contactId");
+      logger.d("$TAG - query - empty - contactId:$contactId");
     } catch (e) {
       handleError(e);
     }
@@ -155,10 +155,10 @@ class ContactStorage {
       );
       if (res != null && res.length > 0) {
         ContactSchema schema = await ContactSchema.fromMap(res.first);
-        logger.d("queryContactByClientAddress - success - address:$clientAddress - schema:$schema");
+        logger.d("$TAG - queryByClientAddress - success - address:$clientAddress - schema:$schema");
         return schema;
       }
-      logger.d("queryContactByClientAddress - empty - address:$clientAddress");
+      logger.d("$TAG - queryByClientAddress - empty - address:$clientAddress");
     } catch (e) {
       handleError(e);
     }
@@ -175,7 +175,7 @@ class ContactStorage {
         whereArgs: [clientAddress],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.d("queryCountByClientAddress - address:$clientAddress - count:$count");
+      logger.d("$TAG - queryCountByClientAddress - address:$clientAddress - count:$count");
       return count ?? 0;
     } catch (e) {
       handleError(e);
@@ -198,10 +198,10 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("setContactType - success - contactId:$contactId - type:$contactType");
+        logger.d("$TAG - setType - success - contactId:$contactId - type:$contactType");
         return true;
       }
-      logger.w("setContactType - fail - contactId:$contactId - type:$contactType");
+      logger.w("$TAG - setType - fail - contactId:$contactId - type:$contactType");
     } catch (e) {
       handleError(e);
     }
@@ -238,10 +238,10 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("setProfile - success - contactId:$contactId - update:$saveDataInfo - new:$newProfileInfo - old:$oldProfileInfo");
+        logger.d("$TAG - setProfile - success - contactId:$contactId - update:$saveDataInfo - new:$newProfileInfo - old:$oldProfileInfo");
         return true;
       }
-      logger.w("setProfile - fail - contactId:$contactId - update:$saveDataInfo - new:$newProfileInfo - old:$oldProfileInfo");
+      logger.w("$TAG - setProfile - fail - contactId:$contactId - update:$saveDataInfo - new:$newProfileInfo - old:$oldProfileInfo");
     } catch (e) {
       handleError(e);
     }
@@ -260,10 +260,10 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("setProfileVersion - success - contactId:$contactId - version:$profileVersion");
+        logger.d("$TAG - setProfileVersion - success - contactId:$contactId - version:$profileVersion");
         return true;
       }
-      logger.w("setProfileVersion - fail - contactId:$contactId - version:$profileVersion");
+      logger.w("$TAG - setProfileVersion - fail - contactId:$contactId - version:$profileVersion");
     } catch (e) {
       handleError(e);
     }
@@ -282,10 +282,10 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("setProfileExpiresAt - success - contactId:$contactId - expiresAt:$expiresAt");
+        logger.d("$TAG - setProfileExpiresAt - success - contactId:$contactId - expiresAt:$expiresAt");
         return true;
       }
-      logger.w("setProfileExpiresAt - fail - contactId:$contactId - expiresAt:$expiresAt");
+      logger.w("$TAG - setProfileExpiresAt - fail - contactId:$contactId - expiresAt:$expiresAt");
     } catch (e) {
       handleError(e);
     }
@@ -319,10 +319,10 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("setRemarkProfile - success - contactId:$contactId - update:$dataInfo - new:$newExtraInfo - old:$oldExtraInfo");
+        logger.d("$TAG - setRemarkProfile - success - contactId:$contactId - update:$dataInfo - new:$newExtraInfo - old:$oldExtraInfo");
         return true;
       }
-      logger.w("setRemarkProfile - fail - contactId:$contactId - update:$dataInfo - new:$newExtraInfo - old:$oldExtraInfo");
+      logger.w("$TAG - setRemarkProfile - fail - contactId:$contactId - update:$dataInfo - new:$newExtraInfo - old:$oldExtraInfo");
     } catch (e) {
       handleError(e);
     }
@@ -346,10 +346,10 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("setNotes - success - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
+        logger.d("$TAG - setNotes - success - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
         return true;
       }
-      logger.w("setNotes - fail - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
+      logger.w("$TAG - setNotes - fail - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
     } catch (e) {
       handleError(e);
     }
@@ -380,10 +380,10 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("setOptionsColors - success - contactId:$contactId - options:$options");
+        logger.d("$TAG - setOptionsColors - success - contactId:$contactId - options:$options");
         return true;
       }
-      logger.w("setOptionsColors - fail - contactId:$contactId - options:$options");
+      logger.w("$TAG - setOptionsColors - fail - contactId:$contactId - options:$options");
     } catch (e) {
       handleError(e);
     }
@@ -414,10 +414,10 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("setOptionsBurn - success - contactId:$contactId - options:$options");
+        logger.d("$TAG - setOptionsBurn - success - contactId:$contactId - options:$options");
         return true;
       }
-      logger.w("setOptionsBurn - fail - contactId:$contactId - options:$options");
+      logger.w("$TAG - setOptionsBurn - fail - contactId:$contactId - options:$options");
     } catch (e) {
       handleError(e);
     }
@@ -436,10 +436,10 @@ class ContactStorage {
         whereArgs: [clientAddress],
       );
       if (count != null && count > 0) {
-        logger.d("setTop - success - clientAddress:$clientAddress - top:$top");
+        logger.d("$TAG - setTop - success - clientAddress:$clientAddress - top:$top");
         return true;
       }
-      logger.w("setTop - fail - clientAddress:$clientAddress - top:$top");
+      logger.w("$TAG - setTop - fail - clientAddress:$clientAddress - top:$top");
     } catch (e) {
       handleError(e);
     }
@@ -477,10 +477,10 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("setDeviceToken - success - contactId:$contactId - deviceToken:$deviceToken");
+        logger.d("$TAG - setDeviceToken - success - contactId:$contactId - deviceToken:$deviceToken");
         return true;
       }
-      logger.w("setDeviceToken - fail - contactId:$contactId - deviceToken:$deviceToken");
+      logger.w("$TAG - setDeviceToken - fail - contactId:$contactId - deviceToken:$deviceToken");
       return false;
     } catch (e) {
       handleError(e);
@@ -503,10 +503,10 @@ class ContactStorage {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("setNotificationOpen - success - contactId:$contactId - open:$open");
+        logger.d("$TAG - setNotificationOpen - success - contactId:$contactId - open:$open");
         return true;
       }
-      logger.w("setNotificationOpen - fail - contactId:$contactId - open:$open");
+      logger.w("$TAG - setNotificationOpen - fail - contactId:$contactId - open:$open");
       return false;
     } catch (e) {
       handleError(e);

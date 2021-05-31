@@ -10,7 +10,7 @@ import 'package:nmobile/utils/logger.dart';
 
 import '../locator.dart';
 
-class WalletCommon {
+class WalletCommon with Tag {
   WalletStorage _walletStorage = WalletStorage();
 
   Future<WalletSchema?> getInStorageByAddress(String? address) async {
@@ -51,10 +51,10 @@ class WalletCommon {
     });
     List backups = await Future.wait(futures);
     // allBackup
-    logger.d("wallet backup - $backups");
+    logger.d("$TAG - wallet backup - $backups");
     bool? find = backups.firstWhere((backup) => backup == null || backup == false, orElse: () => true);
     bool allBackup = (find != null && find == true) ? true : false;
-    logger.d("wallet backup - allBackup:$allBackup");
+    logger.d("$TAG - wallet backup - allBackup:$allBackup");
     return allBackup;
   }
 
