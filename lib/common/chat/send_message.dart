@@ -53,7 +53,7 @@ class SendMessage with Tag {
     // result pid
     if (pid != null) {
       schema.pid = pid;
-      _messageStorage.updatePid(schema.msgId, pid);
+      _messageStorage.updatePid(schema.msgId, schema.pid);
     }
     // update status
     schema = MessageStatus.set(schema, MessageStatus.SendSuccess);

@@ -346,23 +346,23 @@ class MessageSchema extends Equatable {
       pid: raw.messageId,
       to: chatCommon.id,
       topic: data['topic'],
-      content: data['content'],
       options: data['options'],
     );
 
-    if (schema.contentType == ContentType.receipt) {
-      schema.content = data['targetID'];
+    switch (schema.contentType) {
+      case ContentType.receipt:
+        schema.content = data['targetID'];
+        break;
+      default:
+        schema.content = data['content'];
+        break;
     }
 
     if (data['timestamp'] != null) {
       schema.sendTime = DateTime.fromMillisecondsSinceEpoch(data['timestamp']);
     }
     schema.receiveTime = DateTime.now();
-    schema.deleteTime = null;
-
-    // set in messages bubble
-    // int? deleteTime = MessageOptions.getDeleteAfterSeconds(schema);
-    // schema.deleteTime = deleteTime != null ? DateTime.fromMillisecondsSinceEpoch(deleteTime) : null;
+    schema.deleteTime = null; // set in messages bubble
 
     schema = MessageStatus.set(schema, MessageStatus.Received);
 
@@ -395,11 +395,7 @@ class MessageSchema extends Equatable {
 
     sendTime = DateTime.now();
     receiveTime = null;
-    deleteTime = null;
-
-    // set in messages bubble
-    // int? dt = MessageOptions.getDeleteAfterSeconds(this);
-    // deleteTime = dt != null ? DateTime.fromMillisecondsSinceEpoch(dt) : null;
+    deleteTime = null; // set in messages bubble
 
     MessageStatus.set(this, MessageStatus.Sending);
   }
