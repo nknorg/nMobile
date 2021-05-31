@@ -156,11 +156,11 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     super.dispose();
   }
 
-  _refreshContactSchema({ContactSchema? scheme}) async {
+  _refreshContactSchema({ContactSchema? schema}) async {
     ContactSchema? contactSchema = widget.arguments![ContactProfileScreen.argContactSchema];
     int? contactId = widget.arguments![ContactProfileScreen.argContactId];
-    if (scheme != null) {
-      this._contactSchema = scheme;
+    if (schema != null) {
+      this._contactSchema = schema;
     } else if (contactSchema != null && contactSchema.id != 0) {
       this._contactSchema = contactSchema;
     } else if (contactId != null && contactId != 0) {
@@ -213,7 +213,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       await Future.delayed(Duration(seconds: 1)); // wait client create
 
       // refresh state
-      await _refreshContactSchema(scheme: contactCommon.currentUser);
+      await _refreshContactSchema(schema: contactCommon.currentUser);
 
       Toast.show(S.of(this.context).tip_switch_success);
 
