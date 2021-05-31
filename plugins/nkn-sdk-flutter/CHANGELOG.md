@@ -1,3 +1,7 @@
+## 0.1.2
+
+* Fix null value problem onConnect
+
 ## 0.1.1
 
 * Fix wallet params
