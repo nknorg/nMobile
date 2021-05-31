@@ -54,15 +54,6 @@ class MessageStorage with Tag {
 
   Future<MessageSchema?> insert(MessageSchema? schema) async {
     if (schema == null) return null;
-    // duplicated
-    if (schema.contentType != ContentType.piece) {
-      List<MessageSchema> exists = await queryList(schema.msgId);
-      if (exists.isNotEmpty) {
-        logger.d("$TAG - insert - exists - schema:$exists");
-        return null;
-      }
-    }
-    // insert
     try {
       Map<String, dynamic> map = schema.toMap();
       int? id = await db?.insert(tableName, map);
