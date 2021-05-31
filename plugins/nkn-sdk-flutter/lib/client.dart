@@ -90,7 +90,6 @@ class Client {
       client.seed = resp['seed'];
 
       client.eventChannelStreamSubscription = _stream!.where((res) => res['_id'] == client.address).listen((res) {
-        Map data = res['data'];
         if (res['_id'] != client.address) {
           return;
         }
@@ -99,6 +98,7 @@ class Client {
             client._onConnectStreamSink.add(OnConnect(node: res['node'], rpcServers: res['rpcServers']?.cast<String>()));
             break;
           case 'onMessage':
+            Map data = res['data'];
             client._onMessageStreamSink.add(OnMessage(
               src: data['src'],
               type: data['type'],
