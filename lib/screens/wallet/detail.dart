@@ -34,7 +34,7 @@ class WalletDetailScreen extends BaseStateFulWidget {
   static final String argListIndex = "list_index";
 
   static Future go(BuildContext context, WalletSchema wallet, {int? listIndex}) {
-    logger.d("wallet detail - $wallet");
+    logger.d("WalletDetailScreen - go - $wallet");
     return Navigator.pushNamed(context, routeName, arguments: {
       argWallet: wallet,
       argListIndex: listIndex,
@@ -384,7 +384,9 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                 if (this._wallet?.address == walletAddress) {
                   await chatCommon.close();
                 }
-              } catch (e) {} finally {
+              } catch (e) {
+                handleError(e);
+              } finally {
                 AppScreen.go(context);
               }
             },

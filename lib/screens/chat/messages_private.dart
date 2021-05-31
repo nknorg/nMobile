@@ -27,7 +27,7 @@ class ChatMessagesPrivateLayout extends BaseStateFulWidget {
   _ChatMessagesPrivateLayoutState createState() => _ChatMessagesPrivateLayoutState();
 }
 
-class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessagesPrivateLayout> {
+class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessagesPrivateLayout> with Tag {
   final int _messagesLimit = 20;
   ScrollController _scrollController = ScrollController();
   bool _moreLoading = false;
@@ -107,7 +107,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
       schema = await receiveMessage.read(schema);
     }
     setState(() {
-      logger.i("messages insert 0:$schema");
+      logger.i("$TAG - messages insert 0:$schema");
       _messages.insert(0, schema!);
     });
   }

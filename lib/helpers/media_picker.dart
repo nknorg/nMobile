@@ -42,7 +42,7 @@ class MediaPicker {
       return null;
     }
     File pickedFile = File(pickedResult.path);
-    logger.d("media_pick - picked - path:${pickedFile.path}"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
+    logger.d("MediaPicker - media_pick - picked - path:${pickedFile.path}"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
     String? fileExt = Path.getFileExt(pickedFile);
     if (fileExt == null || fileExt.isEmpty) {
       switch (mediaType) {
@@ -79,7 +79,7 @@ class MediaPicker {
           lockAspectRatio: false,
         ),
       );
-      logger.d('media_pick - crop - path:${croppedFile?.path}');
+      logger.d('MediaPicker - media_pick - crop - path:${croppedFile?.path}');
     }
     if (croppedFile == null) return null;
 
@@ -103,7 +103,7 @@ class MediaPicker {
       } else {
         compressFile = croppedFile;
       }
-      logger.d('media_pick - compress - path:${compressFile?.path}');
+      logger.d('MediaPicker - media_pick - compress - path:${compressFile?.path}');
     }
     if (compressFile == null) return null;
 
@@ -123,7 +123,7 @@ class MediaPicker {
       }
       returnFile = compressFile.copySync(randomPath);
     }
-    logger.d('media_pick - return - path:${returnFile.path}');
+    logger.d('MediaPicker - media_pick - return - path:${returnFile.path}');
     return returnFile;
   }
 }

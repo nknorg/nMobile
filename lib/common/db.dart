@@ -25,7 +25,7 @@ class DB {
       password: password,
       version: currentDatabaseVersion,
       onCreate: (Database db, int version) async {
-        logger.i("database tables create");
+        logger.i("DB - database tables create");
         await MessageStorage.create(db, version);
         await ContactStorage.create(db, version);
         await TopicStorage.create(db, version);
@@ -37,13 +37,13 @@ class DB {
           if (me == null) return;
           Map<String, dynamic> add = await me.toMap();
           var count = await db.insert(ContactStorage.tableName, add);
-          logger.i("contact me insert scheme:${count > 0 ? me : null}");
+          logger.i("DB - contact me insert scheme:${count > 0 ? me : null}");
         } catch (e) {
           handleError(e);
         }
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
-        logger.i("database tables upgrade");
+        logger.i("DB - database tables upgrade");
         // if (newVersion >= dataBaseVersionV2) {
         //   await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
         //   await NKNDataManager.upgradeContactSchema2V3(db, dataBaseVersionV3);
@@ -77,7 +77,7 @@ class DB {
     try {
       await deleteDatabase(path);
     } catch (e) {
-      logger.e('Close db error', e);
+      logger.e('DB - Close db error', e);
     }
   }
 }

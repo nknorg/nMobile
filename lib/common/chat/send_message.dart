@@ -11,7 +11,7 @@ import 'package:nmobile/utils/logger.dart';
 
 import '../locator.dart';
 
-class SendMessage {
+class SendMessage with Tag {
   SendMessage();
 
   // ignore: close_sinks
@@ -73,10 +73,10 @@ class SendMessage {
     try {
       String receipt = MessageData.getReceipt(received.msgId);
       await chatCommon.sendText(received.from, receipt);
-      logger.d("send_messages - sendReceipt:success receipt:$receipt");
+      logger.d("$TAG - sendReceipt - sendReceipt:success receipt:$receipt");
     } catch (e) {
       handleError(e);
-      logger.d("send_messages - sendReceipt:fail tryCount:$tryCount");
+      logger.d("$TAG - sendReceipt - sendReceipt:fail tryCount:$tryCount");
       Future.delayed(Duration(seconds: 1), () {
         sendReceipt(received, tryCount: tryCount++);
       });

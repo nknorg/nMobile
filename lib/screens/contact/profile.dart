@@ -38,7 +38,7 @@ class ContactProfileScreen extends BaseStateFulWidget {
   static final String argContactId = "contact_id";
 
   static Future go(BuildContext context, {ContactSchema? schema, int? contactId}) {
-    logger.d("contact detail - id:$contactId - schema:$schema");
+    logger.d("ContactProfileScreen - go - id:$contactId - schema:$schema");
     if (schema == null && (contactId == null || contactId == 0)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argContactSchema: schema,

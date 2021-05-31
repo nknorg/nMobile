@@ -4,6 +4,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/asset.dart';
 
 class ChatBottomMenu extends StatelessWidget {
@@ -18,7 +19,9 @@ class ChatBottomMenu extends StatelessWidget {
       //   // TODO
       //   // _sendImage(image);
       // }
-    } catch (e) {}
+    } catch (e) {
+      handleError(e);
+    }
   }
 
   @override

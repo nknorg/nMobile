@@ -33,7 +33,7 @@ class WalletHomeListLayout extends BaseStateFulWidget {
   _WalletHomeListLayoutState createState() => _WalletHomeListLayoutState();
 }
 
-class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListLayout> {
+class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListLayout> with Tag {
   late WalletBloc _walletBloc;
   late StreamSubscription _walletSubscription;
 
@@ -219,7 +219,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
   }
 
   _readyExport(WalletSchema? scheme) {
-    logger.d("backup picked - $scheme");
+    logger.d("$TAG - backup picked - $scheme");
     if (scheme == null || scheme.address.isEmpty) return;
     S _localizations = S.of(context);
 

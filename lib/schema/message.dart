@@ -509,7 +509,7 @@ class MessageSchema extends Equatable {
     } else if (mimeType.indexOf('aac') > -1) {
       extension = 'aac';
     } else {
-      logger.w('loadMediaFile - no_extension');
+      logger.w('MessageSchema - loadMediaFile - no_extension');
     }
 
     var bytes = base64Decode(fileBase64);
@@ -517,11 +517,11 @@ class MessageSchema extends Equatable {
     String localPath = Path.createLocalChatFile(hexEncode(chatCommon.publicKey!), '$name.$extension');
     File file = File(Path.getCompleteFile(localPath));
 
-    logger.d('loadMediaFile - path:${file.absolute}');
+    logger.d('MessageSchema - loadMediaFile - path:${file.absolute}');
 
     if (!await file.exists()) {
       file.createSync(recursive: true);
-      logger.d('loadMediaFile - write:${file.absolute}');
+      logger.d('MessageSchema - loadMediaFile - write:${file.absolute}');
       await file.writeAsBytes(bytes, flush: true);
       content = file;
     }
