@@ -36,7 +36,7 @@ String? genTopicHash(String? topic) {
   return 'dchat' + hexEncode(Uint8List.fromList(sha1(t)));
 }
 
-class ChatCommon {
+class ChatCommon with Tag {
   /// nkn-sdk-flutter
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
   Client? client;
@@ -107,14 +107,14 @@ class ChatCommon {
 
     // client error
     _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
-      logger.e("onErrorStream -> event:$event");
+      logger.e("$TAG - onError -> event:$event");
       _onErrorSink.add(event);
     });
 
     // client connect
     Completer completer = Completer();
     _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
-      logger.i("onConnectStream -> event:$event");
+      logger.i("$TAG - onConnect -> event:$event");
       _statusSink.add(ChatConnectStatus.connected);
       SettingsStorage().addSeedRpcServers(event.rpcServers!);
       completer.complete();
@@ -124,7 +124,7 @@ class ChatCommon {
 
     // client messages_receive
     _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) async {
-      logger.i("onMessageStream -> messageId:${event.messageId} - src:${event.src} - data:${event.data} - type:${event.type} - encrypted:${event.encrypted}");
+      logger.i("$TAG - onMessage -> messageId:${event.messageId} - src:${event.src} - data:${event.data} - type:${event.type} - encrypted:${event.encrypted}");
       await receiveMessage.onClientMessage(MessageSchema.fromReceive(event));
     });
     receiveMessage.startReceiveMessage();

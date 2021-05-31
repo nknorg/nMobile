@@ -32,7 +32,7 @@ class WalletSendScreen extends BaseStateFulWidget {
   static final String argWallet = "wallet";
 
   static Future go(BuildContext context, WalletSchema wallet) {
-    logger.d("wallet send NKN - $wallet");
+    logger.d("WalletSendScreen - go - $wallet");
     return Navigator.pushNamed(context, routeName, arguments: {
       argWallet: wallet,
     });
@@ -46,7 +46,7 @@ class WalletSendScreen extends BaseStateFulWidget {
   _WalletSendScreenState createState() => _WalletSendScreenState();
 }
 
-class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> {
+class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> with Tag {
   GlobalKey _formKey = new GlobalKey<FormState>();
   late WalletSchema _wallet;
 
@@ -97,7 +97,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> {
       // TODO:GG eth gasPrice
       // final gasPrice = await EthErc20Client().getGasPrice;
       // _gasPriceInGwei = (gasPrice?.gwei ?? 0 * 0.8).round();
-      // logger.d('gasPrice:$_gasPriceInGwei GWei');
+      // logger.d('$TAG - gasPrice:$_gasPriceInGwei GWei');
     } else {
       _feeController.text = _fee.toString();
     }
@@ -145,7 +145,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> {
       // if (gasPrice > _sliderGasPriceMax) {
       //   gasPrice = _sliderGasPriceMax;
       // }
-      // logger.d('fee field | gasPrice:$gasPrice');
+      // logger.d('$TAG - fee field | gasPrice:$gasPrice');
       // if (_gasPriceInGwei != gasPrice) {
       //   _gasPriceInGwei = gasPrice;
       //   _updateFee(true);
@@ -188,7 +188,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> {
   _readyTransfer() async {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
-      logger.d("amount:$_amount, sendTo:$_sendTo, fee:$_fee");
+      logger.d("$TAG - amount:$_amount, sendTo:$_sendTo, fee:$_fee");
 
       walletCommon.getPassword(context, _wallet.address).then((String? password) async {
         if (password == null || password.isEmpty) return;
@@ -276,7 +276,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> {
             ),
             onPressed: () async {
               var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
-              logger.d("QR_DATA:$qrData");
+              logger.d("$TAG - QR_DATA:$qrData");
               if (qrData == null) return;
               // json
               var jsonFormat;
@@ -289,15 +289,15 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> {
               }
               // data
               if (jsonFormat) {
-                logger.d("wallet send scan - address:${jsonData['address']} amount:${jsonData['amount']}");
+                logger.d("$TAG - wallet send scan - address:${jsonData['address']} amount:${jsonData['amount']}");
                 _sendToController.text = jsonData['address'];
                 _amountController.text = jsonData['amount'].toString();
               } else if (_wallet.type == WalletType.nkn && verifyAddress(qrData.toString())) {
-                logger.d("wallet send scan NKN - address:$qrData");
+                logger.d("$TAG - wallet send scan NKN - address:$qrData");
                 _sendToController.text = qrData.toString();
               } else if (_wallet.type == WalletType.eth) {
                 // && verifyEthAddress(qrData) TODO:GG eth address
-                logger.d("wallet send scan ETH - address:$qrData");
+                logger.d("$TAG - wallet send scan ETH - address:$qrData");
                 _sendToController.text = qrData.toString();
               } else {
                 ModalDialog.of(context).show(
@@ -370,7 +370,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> {
                                     schema: _wallet,
                                     onTapWave: false,
                                     onSelected: (WalletSchema picked) {
-                                      logger.d("wallet picked - $picked");
+                                      logger.d("$TAG - wallet picked - $picked");
                                       setState(() {
                                         _wallet = picked;
                                       });

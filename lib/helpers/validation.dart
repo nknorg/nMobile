@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:web3dart/credentials.dart';
 
@@ -90,7 +91,9 @@ class Validator {
       try {
         // TODO:GG eth keystore
         // isValid = Ethereum.isKeystoreValid(value.trim());
-      } catch (e) {}
+      } catch (e) {
+        handleError(e);
+      }
       return value.trim().length == 0 ? _localizations?.error_required : (!isValid ? _localizations?.error_keystore_format : null);
     };
   }

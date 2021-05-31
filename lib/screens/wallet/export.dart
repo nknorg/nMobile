@@ -33,7 +33,7 @@ class WalletExportScreen extends BaseStateFulWidget {
     String seed,
     String keystore,
   ) {
-    logger.d("wallet export - type:$walletType  name:$name \n address:$address \n publicKey:$publicKey \n seed:$seed \n keystore:$keystore");
+    logger.d("WalletExportScreen - go - type:$walletType  name:$name \n address:$address \n publicKey:$publicKey \n seed:$seed \n keystore:$keystore");
     return Navigator.pushNamed(context, routeName, arguments: {
       argWalletType: walletType ?? WalletType.nkn,
       argName: name ?? "",
