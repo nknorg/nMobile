@@ -39,6 +39,7 @@ class SendMessage with Tag {
     // sqlite
     schema = await _messageStorage.insert(schema);
     if (schema == null) return null;
+    // view show
     onSavedSink.add(schema);
     // sdk send
     Uint8List? pid;
@@ -72,10 +73,10 @@ class SendMessage with Tag {
     try {
       String receipt = MessageData.getReceipt(received.msgId);
       await chatCommon.sendMessage(received.from, receipt);
-      logger.d("$TAG - sendReceipt - sendReceipt:success receipt:$receipt");
+      logger.d("$TAG - sendMessageReceipt - success receipt:$receipt");
     } catch (e) {
       handleError(e);
-      logger.d("$TAG - sendReceipt - sendReceipt:fail tryCount:$tryCount");
+      logger.d("$TAG - sendMessageReceipt - fail tryCount:$tryCount");
       Future.delayed(Duration(seconds: 1), () {
         sendMessageReceipt(received, tryCount: tryCount++);
       });

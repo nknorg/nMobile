@@ -69,11 +69,11 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   void initState() {
     super.initState();
     // listen
-    _addContactSubscription = contactCommon.addStream.listen((ContactSchema scheme) {
-      if (scheme.type == ContactType.friend) {
-        _allFriends.insert(0, scheme);
-      } else if (scheme.type == ContactType.friend) {
-        _allStrangers.insert(0, scheme);
+    _addContactSubscription = contactCommon.addStream.listen((ContactSchema schema) {
+      if (schema.type == ContactType.friend) {
+        _allFriends.insert(0, schema);
+      } else if (schema.type == ContactType.friend) {
+        _allStrangers.insert(0, schema);
       }
       _searchAction(_searchController.text);
     });

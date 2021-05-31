@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class ContactType {
@@ -16,7 +17,7 @@ class RequestType {
   static const String full = 'full';
 }
 
-class ContactCommon {
+class ContactCommon with Tag {
   ContactSchema? currentUser;
   ContactStorage _contactStorage = ContactStorage();
 
@@ -59,12 +60,17 @@ class ContactCommon {
     return add(schema);
   }
 
-  Future<ContactSchema?> add(ContactSchema? scheme) async {
-    if (scheme == null || scheme.clientAddress.isEmpty) return null;
-    if (scheme.nknWalletAddress == null || scheme.nknWalletAddress!.isEmpty) {
-      scheme.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(scheme.clientAddress));
+  Future<ContactSchema?> add(ContactSchema? schema) async {
+    if (schema == null || schema.clientAddress.isEmpty) return null;
+    if (schema.nknWalletAddress == null || schema.nknWalletAddress!.isEmpty) {
+      schema.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(schema.clientAddress));
     }
-    ContactSchema? added = await _contactStorage.insert(scheme);
+    ContactSchema? exist = await queryByClientAddress(schema.clientAddress);
+    if (exist != null) {
+      logger.d("$TAG - add - duplicated - schema:$exist");
+      return null;
+    }
+    ContactSchema? added = await _contactStorage.insert(schema);
     if (added != null) addSink.add(added);
     return added;
   }

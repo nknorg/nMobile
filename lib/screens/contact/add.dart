@@ -13,7 +13,6 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validation.dart';
@@ -113,7 +112,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
 
       logger.d("$TAG - _saveContact -\n clientAddress:$clientAddress,\n walletAddress:$walletAddress,\n note:$note,\n firstName:$defaultName,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
 
-      ContactSchema scheme = ContactSchema(
+      ContactSchema schema = ContactSchema(
         clientAddress: clientAddress,
         nknWalletAddress: walletAddress,
         type: ContactType.friend,
@@ -126,9 +125,9 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
         },
       );
 
-      ContactSchema? added = await contactCommon.add(scheme);
+      ContactSchema? added = await contactCommon.add(schema);
       if (added == null) {
-        Toast.show(S.of(context).failure);
+        // Toast.show(S.of(context).failure);
         Loading.dismiss();
         return;
       }
