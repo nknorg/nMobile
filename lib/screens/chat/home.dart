@@ -21,7 +21,6 @@ import 'package:nmobile/screens/chat/no_connect.dart';
 import 'package:nmobile/screens/chat/session_list.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/contact/profile.dart';
-import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/utils/asset.dart';
 
 import 'no_wallet.dart';
@@ -336,14 +335,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
                                   );
                                   if (address != null) {
                                     Navigator.of(context).pop();
-                                    int count = await ContactStorage().queryCountByClientAddress(address);
-                                    var contact = ContactSchema(
-                                      type: ContactType.stranger,
-                                      clientAddress: address,
-                                    );
-                                    if (count == 0) {
-                                      await contactCommon.add(contact);
-                                    }
+                                    var contact = await ContactSchema.createByType(address, ContactType.stranger);
+                                    await contactCommon.add(contact);
                                     await ChatMessagesScreen.go(context, contact);
                                   } else {
                                     Navigator.of(context).pop();

@@ -54,21 +54,23 @@ class ContactCommon with Tag {
     return contact;
   }
 
-  Future<ContactSchema?> addByType(String? clientAddress, String contactType) async {
+  Future<ContactSchema?> addByType(String? clientAddress, String contactType, {bool canDuplicated = false}) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     ContactSchema? schema = await ContactSchema.createByType(clientAddress, contactType);
-    return add(schema);
+    return add(schema, canDuplicated: canDuplicated);
   }
 
-  Future<ContactSchema?> add(ContactSchema? schema) async {
+  Future<ContactSchema?> add(ContactSchema? schema, {bool canDuplicated = false}) async {
     if (schema == null || schema.clientAddress.isEmpty) return null;
     if (schema.nknWalletAddress == null || schema.nknWalletAddress!.isEmpty) {
       schema.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(schema.clientAddress));
     }
-    ContactSchema? exist = await queryByClientAddress(schema.clientAddress);
-    if (exist != null) {
-      logger.d("$TAG - add - duplicated - schema:$exist");
-      return null;
+    if (!canDuplicated) {
+      ContactSchema? exist = await queryByClientAddress(schema.clientAddress);
+      if (exist != null) {
+        logger.d("$TAG - add - duplicated - schema:$exist");
+        return null;
+      }
     }
     ContactSchema? added = await _contactStorage.insert(schema);
     if (added != null) addSink.add(added);
