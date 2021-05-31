@@ -36,7 +36,7 @@ class SessionSchema extends Equatable {
       content: e['content'],
       contentType: e['type'],
       lastReceiveTime: DateTime.fromMillisecondsSinceEpoch(e['receive_time']),
-      notReadCount: e['not_read'] as int,
+      notReadCount: e['not_read'] as int, // TODO:GG maybe null
     );
     if (res.targetId == null) {
       return null;
