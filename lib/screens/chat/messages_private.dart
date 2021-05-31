@@ -48,15 +48,11 @@ class _ChatMessagesPrivateLayoutState extends State<ChatMessagesPrivateLayout> {
     this._contact = widget.contact;
 
     // contact
-    _onContactUpdateStreamSubscription = contactCommon.updateStream.listen((List<ContactSchema> list) {
-      if (list.isEmpty) return;
-      List result = list.where((element) => element.id == _contact.id).toList();
-      if (result.isNotEmpty) {
-        if (mounted) {
-          setState(() {
-            _contact = result[0];
-          });
-        }
+    _onContactUpdateStreamSubscription = contactCommon.updateStream.where((event) => event.id == _contact.id).listen((ContactSchema event) {
+      if (mounted) {
+        setState(() {
+          _contact = event;
+        });
       }
     });
     // onReceive + OnSaveSqlite

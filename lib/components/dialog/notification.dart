@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/asset.dart';
 
-class NotificationDialog extends StatefulWidget {
+class NotificationDialog extends StatelessWidget {
   BuildContext context;
 
   NotificationDialog.of(this.context);
@@ -55,22 +55,12 @@ class NotificationDialog extends StatefulWidget {
   }
 
   @override
-  _NotificationDialogState createState() => _NotificationDialogState();
-}
-
-class _NotificationDialogState extends State<NotificationDialog> {
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          decoration: BoxDecoration(color: widget.bgColor ?? application.theme.primaryColor),
+          decoration: BoxDecoration(color: this.bgColor ?? application.theme.primaryColor),
           child: SafeArea(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -80,7 +70,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                   width: 48,
                   height: 48,
                   alignment: Alignment.center,
-                  child: (widget.headIcon ?? Asset.iconSvg('check', color: Colors.white)),
+                  child: (this.headIcon ?? Asset.iconSvg('check', color: Colors.white)),
                 ),
                 Expanded(
                   flex: 1,
@@ -91,7 +81,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                         child: Text(
-                          widget.title ?? "",
+                          this.title ?? "",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -103,7 +93,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                       Padding(
                         padding: const EdgeInsets.only(left: 8, right: 8, bottom: 18),
                         child: Text(
-                          widget.content ?? "",
+                          this.content ?? "",
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.white,
@@ -121,7 +111,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                   child: GestureDetector(
                     behavior: HitTestBehavior.translucent,
                     child: Asset.iconSvg('close', color: Colors.white, width: 14),
-                    onTap: widget.cancelFunc,
+                    onTap: this.cancelFunc,
                   ),
                 ),
               ],

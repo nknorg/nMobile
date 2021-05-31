@@ -3,7 +3,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/asset.dart';
 
-class WalletAvatar extends StatefulWidget {
+class WalletAvatar extends StatelessWidget {
   final double width;
   final double height;
   final String walletType;
@@ -29,40 +29,35 @@ class WalletAvatar extends StatefulWidget {
   });
 
   @override
-  _WalletAvatarState createState() => _WalletAvatarState();
-}
-
-class _WalletAvatarState extends State<WalletAvatar> {
-  @override
   Widget build(BuildContext context) {
-    bool canEtgBig = widget.walletType == WalletType.eth && widget.ethBig;
+    bool canEtgBig = this.walletType == WalletType.eth && this.ethBig;
     return Stack(
       children: [
         Padding(
-          padding: widget.padding,
+          padding: this.padding,
           child: Container(
-            width: widget.width,
-            height: widget.height,
+            width: this.width,
+            height: this.height,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: application.theme.logoBackground,
-              borderRadius: BorderRadius.all(Radius.circular(widget.radius)),
+              borderRadius: BorderRadius.all(Radius.circular(this.radius)),
             ),
             child: Asset.svg(
               canEtgBig ? 'ethereum-logo' : 'logo',
               color: canEtgBig ? application.theme.ethLogoColor : application.theme.nknLogoColor,
-              width: canEtgBig ? widget.ethWidth : null,
-              height: canEtgBig ? widget.ethHeight : null,
+              width: canEtgBig ? this.ethWidth : null,
+              height: canEtgBig ? this.ethHeight : null,
             ),
           ),
         ),
-        widget.walletType == WalletType.eth && !widget.ethBig
+        this.walletType == WalletType.eth && !this.ethBig
             ? Positioned(
-                top: widget.ethTop,
-                right: widget.ethRight,
+                top: this.ethTop,
+                right: this.ethRight,
                 child: Container(
-                  width: widget.ethWidth,
-                  height: widget.ethHeight,
+                  width: this.ethWidth,
+                  height: this.ethHeight,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: application.theme.ethLogoBackground,

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button_icon.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 
-class ChatSendBar extends StatefulWidget {
+class ChatSendBar extends BaseStateFulWidget {
   final VoidCallback? onMenuPressed;
   final Function(String)? onSendPress;
 
@@ -15,14 +16,16 @@ class ChatSendBar extends StatefulWidget {
   _ChatSendBarState createState() => _ChatSendBarState();
 }
 
-class _ChatSendBarState extends State<ChatSendBar> {
+class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
   FocusNode _sendFocusNode = FocusNode();
   TextEditingController _sendController = TextEditingController();
   bool _canSend = false;
 
   @override
+  void onRefreshArguments() {}
+
+  @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
     SkinTheme _theme = application.theme;
     return Container(
       constraints: BoxConstraints(minHeight: 70, maxHeight: 160),
@@ -104,7 +107,7 @@ class _ChatSendBarState extends State<ChatSendBar> {
                   color: _canSend ? _theme.primaryColor : _theme.fontColor2,
                 ),
                 onPressed: () async {
-                  // TODO:GG
+                  // TODO:GG refactor
                   String content = _sendController.text;
                   if (content.isEmpty) return;
                   _canSend = false;

@@ -7,7 +7,7 @@ import 'package:nmobile/utils/logger.dart';
 
 import 'item.dart';
 
-class WalletDropdown extends StatefulWidget {
+class WalletDropdown extends StatelessWidget {
   final WalletSchema schema;
   final String? selectTitle;
   final Function(WalletSchema)? onSelected;
@@ -23,32 +23,27 @@ class WalletDropdown extends StatefulWidget {
   });
 
   @override
-  _WalletDropdownState createState() => _WalletDropdownState();
-}
-
-class _WalletDropdownState extends State<WalletDropdown> {
-  @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
 
     return WalletItem(
-      walletType: widget.schema.type,
-      wallet: widget.schema,
+      walletType: this.schema.type,
+      wallet: this.schema,
       radius: BorderRadius.circular(8),
       padding: EdgeInsets.all(0),
       bgColor: Colors.transparent,
-      onTapWave: widget.onTapWave,
+      onTapWave: this.onTapWave,
       tail: Padding(
         padding: const EdgeInsets.only(left: 16),
         child: Asset.iconSvg('down2', width: 24),
       ),
       onTap: () async {
         WalletSchema? result = await BottomDialog.of(context).showWalletSelect(
-          title: widget.selectTitle ?? _localizations.select_another_wallet,
+          title: this.selectTitle ?? _localizations.select_another_wallet,
         );
         logger.d("wallet dropdown select - $result");
         if (result != null) {
-          widget.onSelected?.call(result);
+          this.onSelected?.call(result);
         }
       },
     );

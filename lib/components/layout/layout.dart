@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 
-class Layout extends StatefulWidget {
+class Layout extends StatelessWidget {
   final Key? key;
   final Color headerColor;
   final PreferredSizeWidget? header;
@@ -23,33 +23,28 @@ class Layout extends StatefulWidget {
   });
 
   @override
-  _LayoutState createState() => _LayoutState();
-}
-
-class _LayoutState extends State<Layout> {
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: widget.key,
-      backgroundColor: widget.headerColor,
-      appBar: widget.header,
-      floatingActionButton: widget.floatingActionButton,
-      floatingActionButtonLocation: widget.floatingActionButtonLocation,
+      key: this.key,
+      backgroundColor: this.headerColor,
+      appBar: this.header,
+      floatingActionButton: this.floatingActionButton,
+      floatingActionButtonLocation: this.floatingActionButtonLocation,
       body: Container(
         constraints: BoxConstraints.expand(),
         decoration: BoxDecoration(
-          borderRadius: widget.borderRadius ?? BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius: this.borderRadius ?? BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: PhysicalModel(
           elevation: 0,
           clipBehavior: Clip.antiAlias,
-          color: widget.bodyColor ?? application.theme.backgroundColor,
-          borderRadius: widget.borderRadius ?? BorderRadius.vertical(top: Radius.circular(32)),
+          color: this.bodyColor ?? application.theme.backgroundColor,
+          borderRadius: this.borderRadius ?? BorderRadius.vertical(top: Radius.circular(32)),
           child: Column(
             children: <Widget>[
               Expanded(
                 flex: 1,
-                child: widget.body,
+                child: this.body,
               ),
             ],
           ),

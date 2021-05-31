@@ -21,16 +21,16 @@ class ContactCommon {
   ContactStorage _contactStorage = ContactStorage();
 
   StreamController<ContactSchema> _addController = StreamController<ContactSchema>.broadcast();
-  StreamSink<ContactSchema> get _addSink => _addController.sink;
+  StreamSink<ContactSchema> get addSink => _addController.sink;
   Stream<ContactSchema> get addStream => _addController.stream;
 
   StreamController<int> _deleteController = StreamController<int>.broadcast();
-  StreamSink<int> get _deleteSink => _deleteController.sink;
+  StreamSink<int> get deleteSink => _deleteController.sink;
   Stream<int> get deleteStream => _deleteController.stream;
 
-  StreamController<List<ContactSchema>> _updateController = StreamController<List<ContactSchema>>.broadcast();
-  StreamSink<List<ContactSchema>> get _updateSink => _updateController.sink;
-  Stream<List<ContactSchema>> get updateStream => _updateController.stream;
+  StreamController<ContactSchema> _updateController = StreamController<ContactSchema>.broadcast();
+  StreamSink<ContactSchema> get _updateSink => _updateController.sink;
+  Stream<ContactSchema> get updateStream => _updateController.stream;
 
   close() {
     _addController.close();
@@ -65,14 +65,14 @@ class ContactCommon {
       scheme.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(scheme.clientAddress));
     }
     ContactSchema? added = await _contactStorage.insert(scheme);
-    if (added != null) _addSink.add(added);
+    if (added != null) addSink.add(added);
     return added;
   }
 
   Future<bool> delete(int? contactId) async {
     if (contactId == null || contactId == 0) return false;
     bool deleted = await _contactStorage.delete(contactId);
-    if (deleted) _deleteSink.add(contactId);
+    if (deleted) deleteSink.add(contactId);
     return deleted;
   }
 
@@ -213,7 +213,7 @@ class ContactCommon {
     if (contactId == null || contactId == 0) return;
     ContactSchema? updated = await _contactStorage.query(contactId);
     if (updated != null) {
-      _updateSink.add([updated]);
+      _updateSink.add(updated);
     }
   }
 
@@ -221,7 +221,7 @@ class ContactCommon {
     if (clientAddress == null || clientAddress.isEmpty) return;
     ContactSchema? updated = await _contactStorage.queryByClientAddress(clientAddress);
     if (updated != null) {
-      _updateSink.add([updated]);
+      _updateSink.add(updated);
     }
   }
 }
