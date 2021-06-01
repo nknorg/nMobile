@@ -13,13 +13,11 @@ import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
-import 'contact.dart';
-
-var uuid = Uuid();
-
 class ContentType {
   static const String system = 'system'; // TODO:GG wait data
   static const String receipt = 'receipt';
+  static const String contact = 'contact';
+
   static const String piece = 'nknOnePiece'; // TODO:GG wait handle
 
   static const String text = 'text';
@@ -28,7 +26,6 @@ class ContentType {
   static const String audio = 'audio'; // TODO:GG wait handle
   // static const String video = 'video';
 
-  static const String contact = 'contact'; // TODO:GG wait handle
   static const String eventContactOptions = 'event:contactOptions'; // TODO:GG wait handle
   static const String eventSubscribe = 'event:subscribe'; // TODO:GG wait handle
   static const String eventUnsubscribe = 'event:unsubscribe'; // TODO:GG wait handle
@@ -151,12 +148,23 @@ class MessageStatus {
 class MessageData {
   static String getReceipt(String msgId) {
     Map map = {
-      'id': uuid.v4(),
+      'id': Uuid().v4(),
       'contentType': ContentType.receipt,
       'targetID': msgId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(map);
+  }
+
+  static String getContact(String msgId, String requestType, String? profileVersion, DateTime expireAt) {
+    Map data = {
+      'id': msgId,
+      'contentType': ContentType.contact,
+      'requestType': requestType,
+      'version': profileVersion ?? "",
+      'expiresAt': expireAt,
+    };
+    return jsonEncode(data);
   }
 
   static String getPiece(MessageSchema schema) {
@@ -232,17 +240,6 @@ class MessageData {
     if (schema.topic != null) {
       data['topic'] = schema.topic;
     }
-    return jsonEncode(data);
-  }
-
-  static String getContact(MessageSchema schema, ContactSchema other, String requestType) {
-    Map data = {
-      'id': schema.msgId,
-      'contentType': ContentType.contact,
-      'requestType': requestType,
-      'version': other.profileVersion,
-      'expiresAt': 0, // TODO:GG expiresAt
-    };
     return jsonEncode(data);
   }
 
@@ -330,7 +327,7 @@ class MessageSchema extends Equatable {
     this.options,
     this.sendTime,
   }) {
-    if (msgId == null || msgId.isEmpty) msgId = uuid.v4();
+    if (msgId == null || msgId.isEmpty) msgId = Uuid().v4();
     if (sendTime == null) sendTime = DateTime.now();
   }
 
@@ -391,7 +388,7 @@ class MessageSchema extends Equatable {
     this.bytesLength,
   }) {
     // pid (SDK create)
-    if (msgId.isEmpty) msgId = uuid.v4();
+    if (msgId.isEmpty) msgId = Uuid().v4();
 
     sendTime = DateTime.now();
     receiveTime = null;
@@ -517,8 +514,8 @@ class MessageSchema extends Equatable {
       file.createSync(recursive: true);
       logger.d('MessageSchema - loadMediaFile - write:${file.absolute}');
       await file.writeAsBytes(bytes, flush: true);
-      content = file;
     }
+    content = file;
     return file;
   }
 
