@@ -166,8 +166,6 @@ class ContactCommon with Tag {
     return success;
   }
 
-  // TODO:GG contact setOrUpdateExtraProfile need??
-
   Future<bool> setNotes(ContactSchema? schema, String? notes, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
     bool success = await _contactStorage.setNotes(schema.id, notes, oldExtraInfo: schema.extraInfo);
