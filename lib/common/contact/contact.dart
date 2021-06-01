@@ -5,6 +5,7 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
+import 'package:uuid/uuid.dart';
 
 class ContactType {
   static const String stranger = 'stranger';
@@ -110,61 +111,58 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setName(ContactSchema? schema, String? name, {bool notify = false}) async {
-    if (schema == null || schema.id == 0 || name == null || name.isEmpty) return false;
+  Future<bool> setName(ContactSchema? old, String? name, {bool notify = false}) async {
+    if (old == null || old.id == 0 || name == null || name.isEmpty) return false;
     bool success = await _contactStorage.setProfile(
-      schema.id,
-      {'first_name': name},
-      oldProfileInfo: (schema.firstName == null || schema.firstName!.isEmpty) ? null : {'first_name': schema.firstName},
+      old.id,
+      {'first_name': name, 'profile_version': Uuid().v4()},
+      oldProfileInfo: {'first_name': old.firstName, 'profile_version': old.profileVersion},
     );
-    if (success && notify) queryAndNotify(schema.id);
+    if (success && notify) queryAndNotify(old.id);
     return success;
   }
 
-  Future<bool> setAvatar(ContactSchema? schema, String? avatarLocalPath, {bool notify = false}) async {
-    if (schema == null || schema.id == 0 || avatarLocalPath == null || avatarLocalPath.isEmpty) return false;
+  Future<bool> setAvatar(ContactSchema? old, String? avatarLocalPath, {bool notify = false}) async {
+    if (old == null || old.id == 0 || avatarLocalPath == null || avatarLocalPath.isEmpty) return false;
     bool success = await _contactStorage.setProfile(
-      schema.id,
-      {'avatar': avatarLocalPath},
-      oldProfileInfo: (schema.avatar == null) ? null : {'avatar': schema.avatar?.path},
+      old.id,
+      {'avatar': avatarLocalPath, 'profile_version': Uuid().v4()},
+      oldProfileInfo: {'avatar': old.avatar?.path, 'profile_version': old.profileVersion},
     );
-    if (success && notify) queryAndNotify(schema.id);
+    if (success && notify) queryAndNotify(old.id);
     return success;
   }
 
-  Future<bool> setProfileVersion(int? contactId, String? profileVersion, {bool notify = false}) async {
-    if (contactId == null || contactId == 0 || profileVersion == null) return false;
-    bool success = await _contactStorage.setProfileVersion(contactId, profileVersion);
-    if (success && notify) queryAndNotify(contactId);
+  Future<bool> setProfile(ContactSchema? old, String? name, String? avatarLocalPath, String? profileVersion, {bool notify = false}) async {
+    if (old == null || old.id == 0) return false; //  || name == null || name.isEmpty || avatarLocalPath == null || avatarLocalPath.isEmpty
+    bool success = await _contactStorage.setProfile(
+      old.id,
+      {'first_name': name, 'avatar': avatarLocalPath, 'profile_version': profileVersion ?? Uuid().v4()},
+      oldProfileInfo: {'first_name': old.firstName, 'avatar': old.avatar?.path, 'profile_version': old.profileVersion},
+    );
+    if (success && notify) queryAndNotify(old.id);
     return success;
   }
 
-  Future<bool> setProfileExpiresAt(int? contactId, int? expiresAt, {bool notify = false}) async {
-    if (contactId == null || contactId == 0 || expiresAt == null) return false;
-    bool success = await _contactStorage.setProfileExpiresAt(contactId, expiresAt);
-    if (success && notify) queryAndNotify(contactId);
-    return success;
-  }
-
-  Future<bool> setRemarkName(ContactSchema? schema, String? name, {bool notify = false}) async {
-    if (schema == null || schema.id == 0) return false;
+  Future<bool> setRemarkName(ContactSchema? old, String? name, {bool notify = false}) async {
+    if (old == null || old.id == 0) return false;
     bool success = await _contactStorage.setRemarkProfile(
-      schema.id,
+      old.id,
       {'firstName': name},
-      oldExtraInfo: schema.extraInfo,
+      oldExtraInfo: old.extraInfo,
     );
-    if (success && notify) queryAndNotify(schema.id);
+    if (success && notify) queryAndNotify(old.id);
     return success;
   }
 
-  Future<bool> setRemarkAvatar(ContactSchema? schema, String? avatarLocalPath, {bool notify = false}) async {
-    if (schema == null || schema.id == 0) return Future.value(false);
+  Future<bool> setRemarkAvatar(ContactSchema? old, String? avatarLocalPath, {bool notify = false}) async {
+    if (old == null || old.id == 0) return Future.value(false);
     bool success = await _contactStorage.setRemarkProfile(
-      schema.id,
+      old.id,
       {'avatar': avatarLocalPath},
-      oldExtraInfo: schema.extraInfo,
+      oldExtraInfo: old.extraInfo,
     );
-    if (success && notify) queryAndNotify(schema.id);
+    if (success && notify) queryAndNotify(old.id);
     return success;
   }
 
@@ -221,6 +219,9 @@ class ContactCommon with Tag {
     if (contactId == null || contactId == 0) return;
     ContactSchema? updated = await _contactStorage.query(contactId);
     if (updated != null) {
+      if (updated.type == ContactType.me) {
+        await refreshCurrentUser(updated.clientAddress);
+      }
       _updateSink.add(updated);
     }
   }
@@ -229,6 +230,9 @@ class ContactCommon with Tag {
     if (clientAddress == null || clientAddress.isEmpty) return;
     ContactSchema? updated = await _contactStorage.queryByClientAddress(clientAddress);
     if (updated != null) {
+      if (updated.type == ContactType.me) {
+        await refreshCurrentUser(updated.clientAddress);
+      }
       _updateSink.add(updated);
     }
   }

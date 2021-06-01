@@ -219,10 +219,8 @@ class ContactStorage with Tag {
     if (newProfileInfo['last_name'] != null) {
       saveDataInfo['last_name'] = newProfileInfo['last_name'];
     }
-    if (newProfileInfo['profile_expires_at'] != null) {
-      saveDataInfo['profile_expires_at'] = newProfileInfo['profile_expires_at'];
-    }
-    saveDataInfo['profile_version'] = Uuid().v4();
+    saveDataInfo['profile_version'] = newProfileInfo['profile_version'] ?? Uuid().v4();
+    saveDataInfo['profile_expires_at'] = newProfileInfo['profile_expires_at'] ?? DateTime.now().millisecondsSinceEpoch;
     saveDataInfo['updated_time'] = DateTime.now().millisecondsSinceEpoch;
 
     try {
@@ -237,50 +235,6 @@ class ContactStorage with Tag {
         return true;
       }
       logger.w("$TAG - setProfile - fail - contactId:$contactId - update:$saveDataInfo - new:$newProfileInfo - old:$oldProfileInfo");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
-
-  Future<bool> setProfileVersion(int? contactId, String? profileVersion) async {
-    if (contactId == null || contactId == 0 || profileVersion == null) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'profile_version': profileVersion,
-        },
-        where: 'id = ?',
-        whereArgs: [contactId],
-      );
-      if (count != null && count > 0) {
-        logger.d("$TAG - setProfileVersion - success - contactId:$contactId - version:$profileVersion");
-        return true;
-      }
-      logger.w("$TAG - setProfileVersion - fail - contactId:$contactId - version:$profileVersion");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
-
-  Future<bool> setProfileExpiresAt(int? contactId, int? expiresAt) async {
-    if (contactId == null || contactId == 0 || expiresAt == null) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'profile_expires_at': expiresAt,
-        },
-        where: 'id = ?',
-        whereArgs: [contactId],
-      );
-      if (count != null && count > 0) {
-        logger.d("$TAG - setProfileExpiresAt - success - contactId:$contactId - expiresAt:$expiresAt");
-        return true;
-      }
-      logger.w("$TAG - setProfileExpiresAt - fail - contactId:$contactId - expiresAt:$expiresAt");
     } catch (e) {
       handleError(e);
     }

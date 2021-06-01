@@ -108,7 +108,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
       schema = await receiveMessage.read(schema);
     }
     setState(() {
-      logger.i("$TAG - messages insert 0:$schema");
+      logger.d("$TAG - messages insert 0:$schema");
       _messages.insert(0, schema!);
     });
   }

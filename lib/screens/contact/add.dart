@@ -128,18 +128,24 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
 
       ContactSchema? exist = await contactCommon.queryByClientAddress(schema.clientAddress);
       if (exist != null) {
-        // TODO:GG contact toast
-        Loading.dismiss();
-        return;
+        if (exist.type == ContactType.friend) {
+          // TODO:GG contact toast duplicated
+          Loading.dismiss();
+          return;
+        } else {
+          contactCommon.setType(exist.id, ContactType.friend, notify: true);
+          contactCommon.deleteSink.add(exist.id ?? 0);
+          exist.type = ContactType.friend;
+          Future.delayed(Duration(milliseconds: 500), () => contactCommon.addSink.add(exist));
+        }
+      } else {
+        ContactSchema? added = await contactCommon.add(schema, canDuplicated: true);
+        if (added == null) {
+          Toast.show(S.of(context).failure);
+          Loading.dismiss();
+          return;
+        }
       }
-
-      ContactSchema? added = await contactCommon.add(schema, canDuplicated: true);
-      if (added == null) {
-        Toast.show(S.of(context).failure);
-        Loading.dismiss();
-        return;
-      }
-
       Loading.dismiss();
       Navigator.pop(context);
     }

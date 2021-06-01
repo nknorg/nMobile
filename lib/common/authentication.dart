@@ -17,11 +17,11 @@ class Authorization {
   Future<List<BiometricType>> get availableBiometrics async => await _localAuth.getAvailableBiometrics();
 
   Future<bool> authentication([String? localizedReason]) async {
-    if (localizedReason?.isNotEmpty != true) {
+    if (localizedReason == null || localizedReason.isEmpty) {
       localizedReason = S.of(Global.appContext).authenticate_to_access;
     }
     try {
-      bool success = await _localAuth.authenticate(localizedReason: localizedReason ?? "");
+      bool success = await _localAuth.authenticate(localizedReason: localizedReason);
       return success;
     } catch (e) {
       logger.e(e);

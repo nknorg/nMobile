@@ -2,13 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:crypto/crypto.dart';
 import 'package:equatable/equatable.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
@@ -156,14 +155,52 @@ class MessageData {
     return jsonEncode(map);
   }
 
-  static String getContact(String msgId, String requestType, String? profileVersion, DateTime expireAt) {
+  static String getContactRequest(String requestType, String? profileVersion, DateTime expiresAt) {
     Map data = {
-      'id': msgId,
+      'id': Uuid().v4(),
       'contentType': ContentType.contact,
       'requestType': requestType,
-      'version': profileVersion ?? "",
-      'expiresAt': expireAt,
+      'version': profileVersion,
+      'expiresAt': expiresAt.millisecondsSinceEpoch,
     };
+    return jsonEncode(data);
+  }
+
+  static String getContactResponseHeader(String? profileVersion, DateTime expiresAt) {
+    Map data = {
+      'id': Uuid().v4(),
+      'contentType': ContentType.contact,
+      'responseType': RequestType.header,
+      'version': profileVersion,
+      'expiresAt': expiresAt.millisecondsSinceEpoch,
+    };
+    data['onePieceReady'] = '1'; // TODO:GG ???
+    return jsonEncode(data);
+  }
+
+  static Future<String> getContactResponseFull(String? firstName, File? avatar, String? profileVersion, DateTime expiresAt) async {
+    Map data = {
+      'id': Uuid().v4(),
+      'contentType': ContentType.contact,
+      'responseType': RequestType.full,
+      'version': profileVersion,
+      'expiresAt': expiresAt.millisecondsSinceEpoch,
+    };
+    Map<String, dynamic> content = Map();
+    if (firstName?.isNotEmpty == true) {
+      content['first_name'] = firstName;
+      // SUPPORT:START
+      content['name'] = firstName;
+      // SUPPORT:END
+    }
+    if (avatar != null && await avatar.exists()) {
+      String base64 = base64Encode(await avatar.readAsBytes());
+      if (base64.isNotEmpty == true) {
+        content['avatar'] = {'type': 'base64', 'data': base64};
+      }
+    }
+    data['content'] = content;
+    data['onePieceReady'] = '1'; // TODO:GG ???
     return jsonEncode(data);
   }
 
@@ -337,9 +374,9 @@ class MessageSchema extends Equatable {
     Map<String, dynamic>? data = jsonFormat(raw.data);
     if (data == null || data['id'] == null || data['contentType'] == null) return null;
     MessageSchema schema = MessageSchema(
-      data['id'],
+      data['id']!,
       raw.src!,
-      data['contentType'],
+      data['contentType']!,
       pid: raw.messageId,
       to: chatCommon.id,
       topic: data['topic'],
@@ -349,6 +386,9 @@ class MessageSchema extends Equatable {
     switch (schema.contentType) {
       case ContentType.receipt:
         schema.content = data['targetID'];
+        break;
+      case ContentType.contact:
+        schema.content = data;
         break;
       default:
         schema.content = data['content'];
@@ -477,46 +517,6 @@ class MessageSchema extends Equatable {
     map['options'] = options != null ? jsonEncode(options) : null;
 
     return map;
-  }
-
-  Future<File?> loadMediaFile() async {
-    if (content == null) return null;
-    var match = RegExp(r'\(data:(.*);base64,(.*)\)').firstMatch(content);
-    var mimeType = match?.group(1) ?? "";
-    var fileBase64 = match?.group(2);
-    if (fileBase64 == null || fileBase64.isEmpty) return null;
-
-    var extension;
-    if (mimeType.indexOf('image/jpg') > -1 || mimeType.indexOf('image/jpeg') > -1) {
-      extension = 'jpg';
-    } else if (mimeType.indexOf('image/png') > -1) {
-      extension = 'png';
-    } else if (mimeType.indexOf('image/gif') > -1) {
-      extension = 'gif';
-    } else if (mimeType.indexOf('image/webp') > -1) {
-      extension = 'webp';
-    } else if (mimeType.indexOf('image/') > -1) {
-      extension = mimeType.split('/').last;
-    } else if (mimeType.indexOf('aac') > -1) {
-      extension = 'aac';
-    } else {
-      logger.w('MessageSchema - loadMediaFile - no_extension');
-    }
-
-    var bytes = base64Decode(fileBase64);
-    String name = hexEncode(Uint8List.fromList(md5.convert(bytes).bytes));
-    String localPath = Path.createLocalChatFile(hexEncode(chatCommon.publicKey!), '$name.$extension');
-    File file = File(Path.getCompleteFile(localPath));
-
-    logger.d('MessageSchema - loadMediaFile - path:${file.absolute}');
-
-    if (!await file.exists()) {
-      file.createSync(recursive: true);
-      logger.d('MessageSchema - loadMediaFile - write:${file.absolute}');
-      await file.writeAsBytes(bytes, flush: true);
-    }
-    content = file;
-    return file;
   }
 
   String? get getTargetId {
