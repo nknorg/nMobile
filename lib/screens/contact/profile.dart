@@ -218,7 +218,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       Toast.show(S.of(this.context).tip_switch_success);
 
       // TimerAuth.instance.enableAuth(); // TODO:GG contact auth
-      //_contactBloc.add(UpdateUserInfoEvent(currentUser)); // TODO:GG contact notify chat
     } catch (e) {
       handleError(e);
     } finally {
@@ -265,7 +264,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     } else {
       await contactCommon.setRemarkAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
     }
-    // _chatBloc.add(RefreshSessionEvent()); // TODO:GG contact notify chat
   }
 
   _modifyNickname() async {
@@ -284,7 +282,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     } else {
       await contactCommon.setRemarkName(_contactSchema, newName.trim(), notify: true);
     }
-    // _chatBloc.add(RefreshSessionEvent()); // TODO:GG contact notify chat
   }
 
   _updateBurnIfNeed() async {
@@ -354,6 +351,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     if (_contactSchema == null) return;
     contactCommon.setType(_contactSchema!.id, ContactType.friend, notify: true);
     contactCommon.deleteSink.add(_contactSchema!.id ?? 0);
+    _contactSchema?.type = ContactType.friend;
     Future.delayed(Duration(milliseconds: 500), () => contactCommon.addSink.add(_contactSchema!));
     Toast.show(_localizations.success);
   }

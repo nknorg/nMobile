@@ -36,15 +36,15 @@ class ContentType {
 }
 
 class MessageOptions {
-  static const KEY_AUDIO_DURATION = "audioDuration";
-  static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
-  static const KEY_DEVICE_TOKEN = "deviceToken";
+  static const KEY_AUDIO_DURATION = "audioDuration"; // TODO:GG wait handle
+  static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds"; // TODO:GG wait handle
+  static const KEY_DEVICE_TOKEN = "deviceToken"; // TODO:GG wait handle
 
-  static const KEY_PARENT_TYPE = "parentType";
-  static const KEY_PARITY = "parity";
-  static const KEY_TOTAL = "total";
-  static const KEY_INDEX = "index";
-  static const KEY_BYTES_LENGTH = "bytesLength";
+  static const KEY_PARENT_TYPE = "parentType"; // TODO:GG wait handle
+  static const KEY_PARITY = "parity"; // TODO:GG wait handle
+  static const KEY_TOTAL = "total"; // TODO:GG wait handle
+  static const KEY_INDEX = "index"; // TODO:GG wait handle
+  static const KEY_BYTES_LENGTH = "bytesLength"; // TODO:GG wait handle
 
   static Map<String, dynamic> createAudio(int duration) {
     return {KEY_AUDIO_DURATION: duration};
@@ -80,7 +80,7 @@ class MessageOptions {
 
 class MessageStatus {
   static const int Sending = 100;
-  static const int SendFail = 110; // TODO:GG update_stream
+  static const int SendFail = 110; // TODO:GG wait handle (update_stream)
   static const int SendSuccess = 120;
   static const int SendWithReceipt = 130;
   static const int Received = 200;
