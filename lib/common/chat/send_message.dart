@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
+import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
@@ -74,7 +75,7 @@ class SendMessage with Tag {
       logger.d("$TAG - sendMessageReceipt - success data:$data");
     } catch (e) {
       handleError(e);
-      logger.w("$TAG - sendMessageReceipt - fail tryCount:$tryCount");
+      logger.w("$TAG - sendMessageReceipt - fail - tryCount:$tryCount");
       Future.delayed(Duration(seconds: 1), () {
         sendMessageReceipt(received, tryCount: tryCount++);
       });
@@ -82,22 +83,47 @@ class SendMessage with Tag {
   }
 
   // NO DB insert
-  Future sendMessageContact(String? dest, ContactSchema? other, String requestType, {int tryCount = 1}) async {
-    if (dest == null || other == null || other.clientAddress.isEmpty) return;
+  Future sendMessageContactRequest(ContactSchema? target, String requestType, {int tryCount = 1}) async {
+    if (target == null || target.clientAddress.isEmpty) return;
     if (tryCount > 3) return;
     try {
-      String msgId = Uuid().v4();
       DateTime updateAt = DateTime.now();
-      String data = MessageData.getContact(msgId, requestType, other.profileVersion, updateAt);
-      await chatCommon.sendMessage(other.clientAddress, data);
-      logger.d("$TAG - sendMessageContact - success data:$data");
-      // sqlite
-      await contactCommon.setProfileExpiresAt(other.id, updateAt.millisecondsSinceEpoch);
+      String data = MessageData.getContactRequest(requestType, target.profileVersion, updateAt);
+      await chatCommon.sendMessage(target.clientAddress, data);
+      logger.d("$TAG - sendMessageContactRequest - success - data:$data");
     } catch (e) {
       handleError(e);
-      logger.w("$TAG - sendMessageContact - fail tryCount:$tryCount");
+      logger.w("$TAG - sendMessageContactRequest - fail - tryCount:$tryCount");
       Future.delayed(Duration(seconds: 1), () {
-        sendMessageContact(dest, other, requestType, tryCount: tryCount++);
+        sendMessageContactRequest(target, requestType, tryCount: tryCount++);
+      });
+    }
+  }
+
+  // NO DB insert
+  Future sendMessageContactResponse(ContactSchema? target, String requestType, {int tryCount = 1}) async {
+    if (contactCommon.currentUser == null || target == null || target.clientAddress.isEmpty) return;
+    if (tryCount > 3) return;
+    try {
+      DateTime updateAt = DateTime.now();
+      String data;
+      if (requestType == RequestType.header) {
+        data = MessageData.getContactResponseHeader(contactCommon.currentUser?.profileVersion, updateAt);
+      } else {
+        data = await MessageData.getContactResponseFull(
+          contactCommon.currentUser?.firstName,
+          contactCommon.currentUser?.avatar,
+          contactCommon.currentUser?.profileVersion,
+          updateAt,
+        );
+      }
+      await chatCommon.sendMessage(target.clientAddress, data);
+      logger.d("$TAG - sendMessageContactResponse - success - requestType:$requestType - data:$data");
+    } catch (e) {
+      handleError(e);
+      logger.w("$TAG - sendMessageContactResponse - fail - requestType:$requestType - tryCount:$tryCount");
+      Future.delayed(Duration(seconds: 1), () {
+        sendMessageContactResponse(target, requestType, tryCount: tryCount++);
       });
     }
   }
