@@ -114,18 +114,22 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
   }
 
   Widget _getAvatar(bool self) {
-    if (self) {
-      return contactCommon.currentUser != null ? ContactAvatar(contact: contactCommon.currentUser!, radius: 24) : SizedBox(width: 24 * 2);
-    }
-    return ContactAvatar(contact: _contact, radius: 24);
+    return self
+        ? SizedBox.shrink()
+        : ContactAvatar(
+            contact: _contact,
+            radius: 24,
+          );
   }
 
   Widget _getName(bool self) {
-    return Label(
-      self ? (contactCommon.currentUser?.getDisplayName ?? "") : _contact.getDisplayName,
-      type: LabelType.h3,
-      color: application.theme.primaryColor,
-    );
+    return self
+        ? SizedBox.shrink()
+        : Label(
+            self ? (contactCommon.currentUser?.getDisplayName ?? "") : _contact.getDisplayName,
+            type: LabelType.h3,
+            color: application.theme.primaryColor,
+          );
   }
 
   Widget _getContent(BoxDecoration decoration, bool dark) {
