@@ -217,7 +217,7 @@ class ContactCommon with Tag {
     return success;
   }
 
-  queryAndNotify(int? contactId) async {
+  Future queryAndNotify(int? contactId) async {
     if (contactId == null || contactId == 0) return;
     ContactSchema? updated = await _contactStorage.query(contactId);
     if (updated != null) {
@@ -225,11 +225,15 @@ class ContactCommon with Tag {
     }
   }
 
-  queryAndNotifyVyClientAddress(String? clientAddress) async {
+  Future queryAndNotifyVyClientAddress(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
     ContactSchema? updated = await _contactStorage.queryByClientAddress(clientAddress);
     if (updated != null) {
       _updateSink.add(updated);
     }
+  }
+
+  bool isProfileVersionSame(String? v1, String? v2) {
+    return v1 != null && v1.isNotEmpty && v1 == v2;
   }
 }
