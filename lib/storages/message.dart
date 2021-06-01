@@ -417,8 +417,8 @@ class MessageStorage with Tag {
         ContentType.text,
         ContentType.textExtension,
         ContentType.image,
-        ContentType.audio,
         ContentType.nknImage,
+        ContentType.audio,
       ],
       orderBy: 'send_time desc',
     );
@@ -437,8 +437,8 @@ class MessageStorage with Tag {
           ContentType.text,
           ContentType.textExtension,
           ContentType.image,
-          ContentType.audio,
           ContentType.nknImage,
+          ContentType.audio,
         ],
         orderBy: 'send_time desc',
       );

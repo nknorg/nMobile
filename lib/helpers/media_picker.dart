@@ -20,7 +20,7 @@ class MediaPicker {
     ImageSource source = ImageSource.gallery,
     int mediaType = MediaType.image,
     bool crop = false,
-    int compressQuality = 100,
+    int compressQuality = 100, // TODO:GG change to auto
     String? returnPath,
   }) async {
     // permission

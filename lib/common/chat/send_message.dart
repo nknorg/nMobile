@@ -3,15 +3,15 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
-import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/storages/message.dart';
-import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:uuid/uuid.dart';
 
 import '../locator.dart';
 
@@ -29,13 +29,11 @@ class SendMessage with Tag {
   Stream<MessageSchema> get onUpdateStream => _onUpdateController.stream;
 
   MessageStorage _messageStorage = MessageStorage();
-  TopicStorage _topicStorage = TopicStorage();
 
   Future<MessageSchema?> sendMessage(MessageSchema? schema, String? msgData) async {
     if (schema == null || msgData == null) return null;
-    // contact
-    contactCommon.addByType(schema.from, ContactType.stranger); // wait
-    // TODO:GG topicHandle
+    // contact (handle in other entry)
+    // topicHandle (handle in other entry)
     // sqlite
     schema = await _messageStorage.insert(schema);
     if (schema == null) return null;
@@ -71,14 +69,35 @@ class SendMessage with Tag {
   Future sendMessageReceipt(MessageSchema received, {int tryCount = 1}) async {
     if (tryCount > 3) return;
     try {
-      String receipt = MessageData.getReceipt(received.msgId);
-      await chatCommon.sendMessage(received.from, receipt);
-      logger.d("$TAG - sendMessageReceipt - success receipt:$receipt");
+      String data = MessageData.getReceipt(received.msgId);
+      await chatCommon.sendMessage(received.from, data);
+      logger.d("$TAG - sendMessageReceipt - success data:$data");
     } catch (e) {
       handleError(e);
-      logger.d("$TAG - sendMessageReceipt - fail tryCount:$tryCount");
+      logger.w("$TAG - sendMessageReceipt - fail tryCount:$tryCount");
       Future.delayed(Duration(seconds: 1), () {
         sendMessageReceipt(received, tryCount: tryCount++);
+      });
+    }
+  }
+
+  // NO DB insert
+  Future sendMessageContact(String? dest, ContactSchema? other, String requestType, {int tryCount = 1}) async {
+    if (dest == null || other == null || other.clientAddress.isEmpty) return;
+    if (tryCount > 3) return;
+    try {
+      String msgId = Uuid().v4();
+      DateTime updateAt = DateTime.now();
+      String data = MessageData.getContact(msgId, requestType, other.profileVersion, updateAt);
+      await chatCommon.sendMessage(other.clientAddress, data);
+      logger.d("$TAG - sendMessageContact - success data:$data");
+      // sqlite
+      await contactCommon.setProfileExpiresAt(other.id, updateAt.millisecondsSinceEpoch);
+    } catch (e) {
+      handleError(e);
+      logger.w("$TAG - sendMessageContact - fail tryCount:$tryCount");
+      Future.delayed(Duration(seconds: 1), () {
+        sendMessageContact(dest, other, requestType, tryCount: tryCount++);
       });
     }
   }
@@ -89,7 +108,7 @@ class SendMessage with Tag {
       return Future.value(null);
     }
     MessageSchema schema = MessageSchema.fromSend(
-      uuid.v4(),
+      Uuid().v4(),
       chatCommon.id!,
       ContentType.text,
       to: dest,
@@ -104,7 +123,7 @@ class SendMessage with Tag {
       return null;
     }
     MessageSchema schema = MessageSchema.fromSend(
-      uuid.v4(),
+      Uuid().v4(),
       chatCommon.id!,
       ContentType.image,
       to: dest,

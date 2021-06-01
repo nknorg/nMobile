@@ -133,7 +133,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
         return;
       }
 
-      ContactSchema? added = await contactCommon.add(schema);
+      ContactSchema? added = await contactCommon.add(schema, canDuplicated: true);
       if (added == null) {
         Toast.show(S.of(context).failure);
         Loading.dismiss();
