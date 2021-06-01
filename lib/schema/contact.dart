@@ -11,6 +11,8 @@ import 'package:uuid/uuid.dart';
 import 'option.dart';
 
 class ContactSchema {
+  static Duration profileExpireDuration = Duration(seconds: 10); // TODO:GG test hour 1
+
   int? id; // <- id
   String type; // (required) <-> type
   String clientAddress; // (required : (ID).PubKey) <-> address
@@ -25,7 +27,7 @@ class ContactSchema {
   DateTime? createdTime; // <-> created_time
   DateTime? updatedTime; // <-> updated_time
   String? profileVersion; // <-> profile_version
-  DateTime? profileExpiresAt; // <-> profile_expires_at(long)
+  DateTime? profileExpiresAt; // <-> profile_expires_at(long) == update_at
 
   bool isTop = false; // <-> is_top
   String? deviceToken; // <-> device_token
@@ -66,7 +68,7 @@ class ContactSchema {
       createdTime: e['created_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['created_time']) : null,
       updatedTime: e['updated_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['updated_time']) : null,
       profileVersion: e['profile_version'],
-      profileExpiresAt: e['profile_expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['profile_expires_at']) : DateTime.now(),
+      profileExpiresAt: DateTime.fromMillisecondsSinceEpoch(e['profile_expires_at'] != null ? e['profile_expires_at'] : 0),
       isTop: e['is_top'] == 1 ? true : false,
       deviceToken: e['device_token'],
       notificationOpen: (e['notification_open'] != null && e['notification_open'].toString() == '1') ? true : false,
@@ -133,8 +135,8 @@ class ContactSchema {
       'avatar': avatar != null ? Path.getLocalFile(avatar?.path) : null,
       'created_time': createdTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'updated_time': updatedTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'profile_version': profileVersion,
-      'profile_expires_at': profileExpiresAt?.millisecondsSinceEpoch,
+      'profile_version': profileVersion ?? Uuid().v4(),
+      'profile_expires_at': profileExpiresAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'is_top': isTop ? 1 : 0,
       'device_token': deviceToken,
       'notification_open': notificationOpen ? 1 : 0,
