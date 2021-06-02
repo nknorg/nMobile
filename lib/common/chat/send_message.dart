@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -8,6 +9,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/storages/message.dart';
@@ -17,6 +19,12 @@ import 'package:uuid/uuid.dart';
 import '../locator.dart';
 
 class SendMessage with Tag {
+  // piece
+  static const int pieceLength = 1024 * 6;
+  static const int piecesParity = 3;
+  static const int minPiecesCount = 2 * piecesParity; // parity >= 2
+  static const int maxPiecesCount = 10 * piecesParity; // parity <= 10
+
   SendMessage();
 
   // ignore: close_sinks
@@ -31,23 +39,23 @@ class SendMessage with Tag {
 
   MessageStorage _messageStorage = MessageStorage();
 
-  // NO DB NO display
+  // NO DB NO display (1 to 1)
   Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
     if (tryCount > 3) return;
     try {
       String data = MessageData.getReceipt(received.msgId);
       await chatCommon.sendMessage(received.from, data);
-      logger.d("$TAG - sendMessageReceipt - success data:$data");
+      logger.d("$TAG - sendMessageReceipt - success - data:$data");
     } catch (e) {
       handleError(e);
-      logger.w("$TAG - sendMessageReceipt - fail - tryCount:$tryCount");
-      Future.delayed(Duration(seconds: 1), () {
-        sendReceipt(received, tryCount: tryCount++);
+      logger.w("$TAG - sendMessageReceipt - fail - tryCount:$tryCount - received:$received");
+      await Future.delayed(Duration(seconds: 2), () {
+        return sendReceipt(received, tryCount: tryCount++);
       });
     }
   }
 
-  // NO DB NO display
+  // NO DB NO display (1 to 1)
   Future sendContactRequest(ContactSchema? target, String requestType, {int tryCount = 1}) async {
     if (target == null || target.clientAddress.isEmpty) return;
     if (tryCount > 3) return;
@@ -58,14 +66,14 @@ class SendMessage with Tag {
       logger.d("$TAG - sendMessageContactRequest - success - data:$data");
     } catch (e) {
       handleError(e);
-      logger.w("$TAG - sendMessageContactRequest - fail - tryCount:$tryCount");
-      Future.delayed(Duration(seconds: 1), () {
-        sendContactRequest(target, requestType, tryCount: tryCount++);
+      logger.w("$TAG - sendMessageContactRequest - fail - tryCount:$tryCount - requestType:$requestType - target:$target");
+      await Future.delayed(Duration(seconds: 2), () {
+        return sendContactRequest(target, requestType, tryCount: tryCount++);
       });
     }
   }
 
-  // NO DB NO display
+  // NO DB NO display (1 to 1)
   Future sendContactResponse(ContactSchema? target, String requestType, {int tryCount = 1}) async {
     if (contactCommon.currentUser == null || target == null || target.clientAddress.isEmpty) return;
     if (tryCount > 3) return;
@@ -86,9 +94,32 @@ class SendMessage with Tag {
       logger.d("$TAG - sendMessageContactResponse - success - requestType:$requestType - data:$data");
     } catch (e) {
       handleError(e);
-      logger.w("$TAG - sendMessageContactResponse - fail - requestType:$requestType - tryCount:$tryCount");
-      Future.delayed(Duration(seconds: 1), () {
-        sendContactResponse(target, requestType, tryCount: tryCount++);
+      logger.w("$TAG - sendMessageContactResponse - fail - tryCount:$tryCount - requestType:$requestType");
+      await Future.delayed(Duration(seconds: 2), () {
+        return sendContactResponse(target, requestType, tryCount: tryCount++);
+      });
+    }
+  }
+
+  // NO DB NO display
+  Future<MessageSchema?> sendPiece(MessageSchema schema, {int tryCount = 1}) async {
+    if (tryCount > 3) return null;
+    try {
+      String data = MessageData.getPiece(schema);
+      if (schema.topic != null) {
+        OnMessage? onResult = await chatCommon.publishMessage(schema.topic!, data);
+        schema.pid = onResult?.messageId;
+      } else if (schema.to != null) {
+        OnMessage? onResult = await chatCommon.sendMessage(schema.to!, data);
+        schema.pid = onResult?.messageId;
+      }
+      logger.d("$TAG - sendPiece - success - schema:$schema - data:$data");
+      return schema;
+    } catch (e) {
+      handleError(e);
+      logger.w("$TAG - sendPiece - fail - tryCount:$tryCount - schema:$schema");
+      return await Future.delayed(Duration(seconds: 2), () {
+        return sendPiece(schema, tryCount: tryCount++);
       });
     }
   }
@@ -105,7 +136,7 @@ class SendMessage with Tag {
       to: dest,
       content: content,
     );
-    return _sendMessage(schema, MessageData.getText(schema));
+    return _send(schema, MessageData.getText(schema));
   }
 
   Future<MessageSchema?> sendImage(String? dest, File? content) async {
@@ -120,42 +151,131 @@ class SendMessage with Tag {
       to: dest,
       content: content,
     );
-    return _sendMessage(schema, await MessageData.getImage(schema));
+    return _send(schema, await MessageData.getImage(schema));
   }
 
-  Future<MessageSchema?> _sendMessage(MessageSchema? schema, String? msgData) async {
+  Future<MessageSchema?> _send(
+    MessageSchema? schema,
+    String? msgData, {
+    bool database = true,
+    bool display = true,
+  }) async {
     if (schema == null || msgData == null) return null;
-    // contact (handle in other entry)
+    // contactHandle (handle in other entry)
     // topicHandle (handle in other entry)
     // DB
-    schema = await _messageStorage.insert(schema);
-    if (schema == null) return null;
+    if (database) {
+      schema = await _messageStorage.insert(schema);
+      if (schema == null) return null;
+    }
     // display
-    onSavedSink.add(schema);
+    if (display) onSavedSink.add(schema);
     // SDK
     Uint8List? pid;
     try {
-      if (schema.topic != null) {
-        OnMessage? onResult = await chatCommon.publishMessage(schema.topic!, msgData);
-        pid = onResult?.messageId;
-      } else if (schema.to != null) {
-        OnMessage? onResult = await chatCommon.sendMessage(schema.to!, msgData);
-        pid = onResult?.messageId;
+      pid = await _sendByPiecesIfNeed(schema);
+      if (pid == null || pid.isEmpty) {
+        if (schema.topic != null) {
+          OnMessage? onResult = await chatCommon.publishMessage(schema.topic!, msgData);
+          pid = onResult?.messageId;
+        } else if (schema.to != null) {
+          OnMessage? onResult = await chatCommon.sendMessage(schema.to!, msgData);
+          pid = onResult?.messageId;
+        }
       }
     } catch (e) {
       handleError(e);
+      // TODO:GG status_fail
+      return null;
+    }
+    if (pid == null || pid.isEmpty) {
+      // TODO:GG status_fail
       return null;
     }
     // pid
-    if (pid != null) {
-      schema.pid = pid;
-      _messageStorage.updatePid(schema.msgId, schema.pid); // await
-    }
+    schema.pid = pid;
+    if (database) _messageStorage.updatePid(schema.msgId, schema.pid); // await
     // status
     schema = MessageStatus.set(schema, MessageStatus.SendSuccess);
-    _messageStorage.updateMessageStatus(schema); // await
+    if (database) _messageStorage.updateMessageStatus(schema); // await
     // display
-    onUpdateSink.add(schema);
+    if (display) onUpdateSink.add(schema);
     return schema;
+  }
+
+  Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message) async {
+    List results = await _convert2Pieces(message);
+    if (results.isEmpty) return null;
+    String dataBytesString = results[0];
+    int bytesLength = results[1];
+    int total = results[2];
+    int parity = results[3];
+
+    List<Uint8List>? dataList;
+    try {
+      // dataList.size = (total + parity)
+      dataList = await Common.splitPieces(dataBytesString, total, parity);
+    } catch (e) {
+      handleError(e);
+    }
+    if (dataList?.isNotEmpty == true) return null;
+
+    List<Future<MessageSchema?>> futures = <Future<MessageSchema?>>[];
+    for (int index = 0; index < dataList!.length; index++) {
+      Uint8List data = dataList[index];
+      MessageSchema send = MessageSchema.fromSend(
+        message.msgId,
+        message.from,
+        ContentType.piece,
+        to: message.to,
+        topic: message.topic,
+        content: base64Encode(data),
+        options: message.options,
+        parentType: message.contentType,
+        bytesLength: bytesLength,
+        total: total,
+        parity: parity,
+        index: index,
+      );
+      futures.add(sendPiece(send));
+    }
+    List<MessageSchema?> returnList = await Future.wait(futures);
+    returnList.sort((prev, next) => (prev?.index ?? maxPiecesCount).compareTo((next?.index ?? maxPiecesCount)));
+
+    List<MessageSchema?> successList = returnList.where((element) => element != null).toList();
+    if (successList.length < total) return null;
+
+    MessageSchema? firstSuccess = returnList.firstWhere((element) => element?.pid != null);
+    return firstSuccess?.pid;
+  }
+
+  Future<List<dynamic>> _convert2Pieces(MessageSchema message) async {
+    if (!(message is File?)) return [];
+    File? file = message.content as File?;
+    if (file == null || !file.existsSync()) return [];
+    int length = await file.length();
+    if (length <= pieceLength) return [];
+    // data
+    Uint8List fileBytes = await file.readAsBytes();
+    String base64Data = base64.encode(fileBytes);
+    // bytesLength
+    int bytesLength = base64Data.length;
+    if (bytesLength < pieceLength * minPiecesCount) return [];
+    // total (5~257)
+    int total;
+    if (bytesLength < pieceLength * maxPiecesCount) {
+      total = bytesLength ~/ pieceLength;
+      if (bytesLength % pieceLength > 0) {
+        total += 1;
+      }
+    } else {
+      total = maxPiecesCount;
+    }
+    // parity(>=2)
+    int parity = total ~/ piecesParity;
+    if (parity <= 2) {
+      parity = 2;
+    }
+    return [base64Data, bytesLength, total, parity];
   }
 }
