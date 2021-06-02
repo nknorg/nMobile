@@ -33,10 +33,6 @@ apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 android {
     compileSdkVersion 30
 
-    sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
-    }
-
     defaultConfig {
         applicationId "org.nkn.mobile.app"
         minSdkVersion 21
@@ -82,7 +78,7 @@ android {
     }
     sourceSets {
         main {
-            java.srcDirs = ['src/main/java', 'src/main/aidl']
+            java.srcDirs = ['src/main/java', 'src/main/aidl', 'src/main/kotlin']
             jniLibs.srcDirs = ['libs']
         }
         androidTest.setRoot('tests')
