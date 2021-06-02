@@ -7,10 +7,11 @@ import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 
 class ChatSendBar extends BaseStateFulWidget {
+  final String targetId;
   final VoidCallback? onMenuPressed;
   final Function(String)? onSendPress;
 
-  ChatSendBar({this.onMenuPressed, this.onSendPress});
+  ChatSendBar({required this.targetId, this.onMenuPressed, this.onSendPress});
 
   @override
   _ChatSendBarState createState() => _ChatSendBarState();
@@ -20,6 +21,17 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
   FocusNode _sendFocusNode = FocusNode();
   TextEditingController _sendController = TextEditingController();
   bool _canSend = false;
+  late String? _draft;
+
+  @override
+  void initState() {
+    super.initState();
+    _draft = memoryCache.getDraft(widget.targetId);
+    if (_draft?.isNotEmpty == true) {
+      _sendController.text = _draft!;
+      _canSend = true;
+    }
+  }
 
   @override
   void onRefreshArguments() {}
@@ -71,6 +83,13 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                       focusNode: _sendFocusNode,
                       textInputAction: TextInputAction.newline,
                       onChanged: (val) {
+                        String draft = _sendController.text;
+                        if (draft.isNotEmpty) {
+                          memoryCache.setDraft(widget.targetId, draft);
+                        } else {
+                          memoryCache.removeDraft(widget.targetId);
+                        }
+
                         setState(() {
                           _canSend = val.isNotEmpty;
                         });
@@ -105,6 +124,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                   color: _canSend ? _theme.primaryColor : _theme.fontColor2,
                 ),
                 onPressed: () async {
+                  memoryCache.removeDraft(widget.targetId);
                   // TODO:GG refactor
                   String content = _sendController.text;
                   if (content.isEmpty) return;
