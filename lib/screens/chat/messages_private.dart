@@ -223,6 +223,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                 color: _theme.backgroundColor2,
               ),
               ChatSendBar(
+                targetId: _contact.clientAddress,
                 onMenuPressed: () {
                   _toggleBottomMenu();
                 },

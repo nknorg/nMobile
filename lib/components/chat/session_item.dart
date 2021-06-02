@@ -37,7 +37,7 @@ Widget _unReadWidget(SessionSchema item) {
 Widget createSessionWidget(BuildContext context, SessionSchema model) {
   S _localizations = S.of(context);
   Widget contentWidget;
-  String? draft; // TODO: draft
+  String? draft = memoryCache.getDraft(model.targetId!);
   if (draft != null && draft.length > 0) {
     contentWidget = Row(
       children: <Widget>[

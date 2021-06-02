@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -30,13 +31,17 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   bool loading = false;
   ContactSchema? _contact;
   TopicSchema? _topic;
+  late String _targetId;
 
   @override
   void onRefreshArguments() {
     dynamic who = widget.arguments![ChatMessagesScreen.argWho];
     if (who is TopicSchema) {
+      _topic = widget.arguments![ChatMessagesScreen.argWho];
+      _targetId = _topic!.topic;
     } else if (who is ContactSchema) {
       this._contact = widget.arguments![ChatMessagesScreen.argWho];
+      _targetId = _contact!.clientAddress;
     }
   }
 
