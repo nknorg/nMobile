@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/services.dart';
 
 import '../utils/logger.dart';
@@ -14,5 +16,18 @@ class Common {
       logger.e(e);
     }
     return false;
+  }
+
+  static Future<List<Uint8List>> splitPieces(String dataBytesString, int dataShards, int parityShards) async {
+    try {
+      final Map resp = await _methodChannel.invokeMethod('splitPieces', {
+        'data': dataBytesString,
+        'dataShards': dataShards,
+        'parityShards': parityShards,
+      });
+      return resp['data'] ?? [];
+    } catch (e) {
+      throw e;
+    }
   }
 }

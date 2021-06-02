@@ -422,7 +422,7 @@ class MessageSchema extends Equatable {
     this.index,
   }) {
     // pid (SDK create)
-    if (msgId.isEmpty) msgId = Uuid().v4();
+    if (msgId == null || msgId.isEmpty) msgId = Uuid().v4();
 
     sendTime = DateTime.now();
     receiveTime = null;
