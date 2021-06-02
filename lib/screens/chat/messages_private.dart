@@ -203,11 +203,10 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                       showTime = true;
                     } else {
                       if (index + 1 < _messages.length) {
-                        // TODO:GG refactor
                         var targetMessage = _messages[index + 1];
-                        // if (message.sendTime.isAfter(targetMessage.sendTime?.add(Duration(minutes: 3)))) {
-                        //   showTime = true;
-                        // }
+                        if ((message.sendTime ?? DateTime.now()).isAfter((targetMessage.sendTime ?? DateTime.now()).add(Duration(minutes: 3)))) {
+                          showTime = true;
+                        }
                       }
                     }
 

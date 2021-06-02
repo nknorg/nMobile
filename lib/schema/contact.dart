@@ -11,8 +11,6 @@ import 'package:uuid/uuid.dart';
 import 'option.dart';
 
 class ContactSchema {
-  static Duration profileExpireDuration = Duration(seconds: 10); // TODO:GG test hour 1
-
   int? id; // <- id
   String type; // (required) <-> type
   String clientAddress; // (required : (ID).PubKey) <-> address
