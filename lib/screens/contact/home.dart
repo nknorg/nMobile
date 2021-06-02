@@ -83,6 +83,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       _searchAction(_searchController.text);
     });
     _updateContactSubscription = contactCommon.updateStream.listen((ContactSchema event) {
+      // friend
       int friendIndex = -1;
       _allFriends.asMap().forEach((key, value) {
         if (value.id == event.id) {
@@ -90,10 +91,14 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
         }
       });
       if (friendIndex >= 0 && friendIndex < (_allFriends.length)) {
-        _allFriends[friendIndex] = event;
+        if (event.type == ContactType.friend) {
+          _allFriends[friendIndex] = event;
+        } else {
+          _allFriends.removeAt(friendIndex);
+        }
         _searchAction(_searchController.text);
-        return;
       }
+      // stranger
       int strangerIndex = -1;
       _allStrangers.asMap().forEach((key, value) {
         if (value.id == event.id) {
@@ -101,9 +106,19 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
         }
       });
       if (strangerIndex >= 0 && strangerIndex < (_allStrangers.length)) {
-        _allStrangers[strangerIndex] = event;
+        if (event.type == ContactType.stranger) {
+          _allStrangers[strangerIndex] = event;
+        } else {
+          _allStrangers.removeAt(strangerIndex);
+        }
         _searchAction(_searchController.text);
-        return;
+      }
+      // type
+      if (strangerIndex >= 0 && event.type == ContactType.friend) {
+        _allFriends.insert(0, event);
+      }
+      if (friendIndex >= 0 && event.type == ContactType.stranger) {
+        _allStrangers.insert(0, event);
       }
     });
 
