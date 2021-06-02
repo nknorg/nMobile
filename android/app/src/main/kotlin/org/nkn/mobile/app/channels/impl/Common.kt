@@ -1,12 +1,20 @@
 package org.nkn.mobile.app.channels.impl
 
 import android.app.Activity
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.nkn.mobile.app.channels.IChannelHandler
+import reedsolomon.BytesArray
+import reedsolomon.Encoder
+import reedsolomon.Reedsolomon
+import kotlin.text.Charsets.UTF_8
 
 class Common(private var activity: Activity) : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.StreamHandler, ViewModel() {
 
@@ -38,6 +46,12 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
             "backDesktop" -> {
                 backDesktop(call, result)
             }
+            "splitPieces" -> {
+                splitPieces(call, result)
+            }
+            "combinePieces" -> {
+                combinePieces(call, result)
+            }
             else -> {
                 result.notImplemented()
             }
@@ -49,4 +63,114 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
         result.success(true)
     }
 
+    private fun splitPieces(call: MethodCall, result: MethodChannel.Result) {
+        val flutterDataString = call.argument<String>("data")!!
+        val dataShards = call.argument<Int>("dataShards")!!
+        val parityShards = call.argument<Int>("parityShards")!!
+
+        val encoder: Encoder? = Reedsolomon.newDefault(dataShards.toLong(), parityShards.toLong());
+        val dataBytes: BytesArray? = encoder?.splitBytesArray(flutterDataString.toByteArray())
+
+        encoder?.encodeBytesArray(dataBytes)
+
+        val dataBytesArray = ArrayList<ByteArray>()
+
+        val totalPieces: Int = dataShards + parityShards - 1
+        for (index: Int in 0..totalPieces) {
+            val theBytes = dataBytes?.get(index.toLong())
+            if (theBytes != null) {
+                dataBytesArray.add(theBytes)
+            }
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val resp = hashMapOf(
+                    "event" to "intoPieces",
+                    "data" to dataBytesArray,
+                )
+                resultSuccess(result, resp)
+                return@launch
+
+            } catch (e: Throwable) {
+                resultError(result, e)
+                return@launch
+            }
+        }
+    }
+
+    private fun combinePieces(call: MethodCall, result: MethodChannel.Result) {
+        val _id = call.argument<String>("_id")!!
+        val fDataList = call.argument<ArrayList<ByteArray>>("data")!!
+        val dataShards = call.argument<Int>("dataShards")!!
+        val parityShards = call.argument<Int>("parityShards")!!
+        val bytesLength = call.argument<Int>("bytesLength")!!
+
+        val combines: String? = combineBytesArray(fDataList, dataShards, parityShards, bytesLength)
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val resp = hashMapOf(
+                    "_id" to _id,
+                    "event" to "combinePieces",
+                    "data" to combines,
+                )
+                resultSuccess(result, resp)
+            } catch (e: Exception) {
+                resultError(result, e)
+                return@launch
+            }
+        }
+    }
+
+    private fun combineBytesArray(fDataList: java.util.ArrayList<ByteArray>, dataShards: Int, parityShards: Int, totalLength: Int): String? {
+        val encoder = Reedsolomon.newDefault(dataShards.toLong(), parityShards.toLong())
+        val totalShards = dataShards + parityShards
+        val encodeDataBytes = BytesArray(totalShards.toLong())
+
+        var pieceLength = 0
+        for (index in fDataList.indices) {
+            val fDatas = fDataList[index]
+            if (fDatas.isNotEmpty()) {
+                pieceLength = fDatas.size
+                break
+            }
+        }
+
+        for (index in fDataList.indices) {
+            val fDatas = fDataList[index]
+            if (fDatas.isNotEmpty()) {
+                encodeDataBytes[index.toLong()] = fDatas
+            } else {
+                encodeDataBytes[index.toLong()] = null
+            }
+        }
+
+        try {
+            encoder.reconstructBytesArray(encodeDataBytes)
+        } catch (e: Exception) {
+            Log.e("combineBytesArray", "reconstructBytesArrayE:" + e.localizedMessage)
+            return null
+        }
+
+        val fullDataBytes = ByteArray(dataShards * pieceLength)
+        var copyIndex = 0
+        for (index in 0 until dataShards) {
+            val dataBytes = encodeDataBytes[index.toLong()]
+            System.arraycopy(dataBytes, 0, fullDataBytes, copyIndex, dataBytes.size)
+            copyIndex += dataBytes.size
+        }
+
+        val resultBytes = ByteArray(totalLength)
+        if (fullDataBytes.size > totalLength) {
+            System.arraycopy(fullDataBytes, 0, resultBytes, 0, totalLength)
+        } else {
+            System.arraycopy(fullDataBytes, 0, resultBytes, 0, totalLength)
+        }
+
+        if (resultBytes.isEmpty()) {
+            Log.e("combineBytesArray", "resultByte Length is 0")
+            return null
+        }
+        return String(resultBytes, UTF_8)
+    }
 }
