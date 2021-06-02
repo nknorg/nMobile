@@ -227,13 +227,13 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                   _toggleBottomMenu();
                 },
                 onSendPress: (String content) async {
-                  await sendMessage.sendMessageText(_contact.clientAddress, content);
+                  await sendMessage.sendText(_contact.clientAddress, content);
                 },
               ),
               ChatBottomMenu(
                 show: _showBottomMenu,
                 onPicked: (File picked) async {
-                  await sendMessage.sendMessageImage(_contact.clientAddress, picked);
+                  await sendMessage.sendImage(_contact.clientAddress, picked);
                 },
               ),
             ],
