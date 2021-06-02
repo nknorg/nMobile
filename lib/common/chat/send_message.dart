@@ -32,7 +32,7 @@ class SendMessage with Tag {
   MessageStorage _messageStorage = MessageStorage();
 
   // NO DB NO display
-  Future sendMessageReceipt(MessageSchema received, {int tryCount = 1}) async {
+  Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
     if (tryCount > 3) return;
     try {
       String data = MessageData.getReceipt(received.msgId);
@@ -42,13 +42,13 @@ class SendMessage with Tag {
       handleError(e);
       logger.w("$TAG - sendMessageReceipt - fail - tryCount:$tryCount");
       Future.delayed(Duration(seconds: 1), () {
-        sendMessageReceipt(received, tryCount: tryCount++);
+        sendReceipt(received, tryCount: tryCount++);
       });
     }
   }
 
   // NO DB NO display
-  Future sendMessageContactRequest(ContactSchema? target, String requestType, {int tryCount = 1}) async {
+  Future sendContactRequest(ContactSchema? target, String requestType, {int tryCount = 1}) async {
     if (target == null || target.clientAddress.isEmpty) return;
     if (tryCount > 3) return;
     try {
@@ -60,13 +60,13 @@ class SendMessage with Tag {
       handleError(e);
       logger.w("$TAG - sendMessageContactRequest - fail - tryCount:$tryCount");
       Future.delayed(Duration(seconds: 1), () {
-        sendMessageContactRequest(target, requestType, tryCount: tryCount++);
+        sendContactRequest(target, requestType, tryCount: tryCount++);
       });
     }
   }
 
   // NO DB NO display
-  Future sendMessageContactResponse(ContactSchema? target, String requestType, {int tryCount = 1}) async {
+  Future sendContactResponse(ContactSchema? target, String requestType, {int tryCount = 1}) async {
     if (contactCommon.currentUser == null || target == null || target.clientAddress.isEmpty) return;
     if (tryCount > 3) return;
     try {
@@ -88,12 +88,12 @@ class SendMessage with Tag {
       handleError(e);
       logger.w("$TAG - sendMessageContactResponse - fail - requestType:$requestType - tryCount:$tryCount");
       Future.delayed(Duration(seconds: 1), () {
-        sendMessageContactResponse(target, requestType, tryCount: tryCount++);
+        sendContactResponse(target, requestType, tryCount: tryCount++);
       });
     }
   }
 
-  Future<MessageSchema?> sendMessageText(String? dest, String? content, {bool toast = true}) {
+  Future<MessageSchema?> sendText(String? dest, String? content, {bool toast = true}) {
     if (chatCommon.id == null || dest == null || content == null || content.isEmpty) {
       Toast.show(S.of(Global.appContext).failure);
       return Future.value(null);
@@ -105,10 +105,10 @@ class SendMessage with Tag {
       to: dest,
       content: content,
     );
-    return sendMessage(schema, MessageData.getText(schema));
+    return _sendMessage(schema, MessageData.getText(schema));
   }
 
-  Future<MessageSchema?> sendMessageImage(String? dest, File? content) async {
+  Future<MessageSchema?> sendImage(String? dest, File? content) async {
     if (chatCommon.id == null || dest == null || content == null || (!await content.exists())) {
       Toast.show(S.of(Global.appContext).failure);
       return null;
@@ -120,10 +120,10 @@ class SendMessage with Tag {
       to: dest,
       content: content,
     );
-    return sendMessage(schema, await MessageData.getImage(schema));
+    return _sendMessage(schema, await MessageData.getImage(schema));
   }
 
-  Future<MessageSchema?> sendMessage(MessageSchema? schema, String? msgData) async {
+  Future<MessageSchema?> _sendMessage(MessageSchema? schema, String? msgData) async {
     if (schema == null || msgData == null) return null;
     // contact (handle in other entry)
     // topicHandle (handle in other entry)
