@@ -30,14 +30,14 @@ class ReceiveMessage with Tag {
   MessageStorage _messageStorage = MessageStorage();
   TopicStorage _topicStorage = TopicStorage();
 
-  startReceiveMessage() {
-    receiveMessageReceipt();
-    receiveMessageContact();
-    receiveMessageText();
-    receiveMessageImage();
+  startReceive() {
+    receiveReceipt();
+    receiveContact();
+    receiveText();
+    receiveImage();
   }
 
-  Future stopReceiveMessage() {
+  Future stopReceive() {
     List<Future> futures = <Future>[];
     onReceiveStreamSubscriptions.forEach((StreamSubscription element) {
       futures.add(element.cancel());
@@ -73,7 +73,7 @@ class ReceiveMessage with Tag {
     } else {
       if (exist.profileExpiresAt == null || DateTime.now().isAfter(exist.profileExpiresAt!.add(Settings.profileExpireDuration))) {
         logger.d("$TAG - contactHandle - sendMessageContactRequestHeader - schema:$exist");
-        await sendMessage.sendMessageContactRequest(exist, RequestType.header);
+        await sendMessage.sendContactRequest(exist, RequestType.header);
       } else {
         double between = ((exist.profileExpiresAt?.add(Settings.profileExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG contactHandle - expiresAt - between:${between}s");
@@ -95,7 +95,7 @@ class ReceiveMessage with Tag {
   }
 
   // NO DB NO display
-  receiveMessageReceipt() {
+  receiveReceipt() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.receipt).listen((MessageSchema event) async {
       List<MessageSchema> _schemaList = await _messageStorage.queryList(event.content);
       _schemaList.forEach((MessageSchema element) async {
@@ -112,7 +112,7 @@ class ReceiveMessage with Tag {
   }
 
   // NO DB NO display
-  receiveMessageContact() {
+  receiveContact() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.contact).listen((MessageSchema event) async {
       if (event.content == null) return;
       Map<String, dynamic> data = event.content; // == data
@@ -130,15 +130,15 @@ class ReceiveMessage with Tag {
       if ((requestType?.isNotEmpty == true) || (requestType == null && responseType == null && version == null)) {
         // need reply
         if (requestType == RequestType.header) {
-          await sendMessage.sendMessageContactResponse(exist, RequestType.header);
+          await sendMessage.sendContactResponse(exist, RequestType.header);
         } else {
-          await sendMessage.sendMessageContactResponse(exist, RequestType.full);
+          await sendMessage.sendContactResponse(exist, RequestType.full);
         }
       } else {
         // need request/save
         if (!contactCommon.isProfileVersionSame(exist.profileVersion, version)) {
           if (responseType != RequestType.full && content == null) {
-            await sendMessage.sendMessageContactRequest(exist, RequestType.full);
+            await sendMessage.sendContactRequest(exist, RequestType.full);
           } else {
             if (content == null) {
               logger.w("$TAG - receiveMessageContact - content is empty - data:$data");
@@ -167,7 +167,7 @@ class ReceiveMessage with Tag {
     onReceiveStreamSubscriptions.add(subscription);
   }
 
-  receiveMessageText() {
+  receiveText() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) async {
       // duplicated
       List<MessageSchema> exists = await _messageStorage.queryList(event.msgId);
@@ -187,7 +187,7 @@ class ReceiveMessage with Tag {
     onReceiveStreamSubscriptions.add(subscription);
   }
 
-  receiveMessageImage() {
+  receiveImage() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.image || event.contentType == ContentType.nknImage).listen((MessageSchema event) async {
       // duplicated
       List<MessageSchema> exists = await _messageStorage.queryList(event.msgId);
@@ -215,7 +215,7 @@ class ReceiveMessage with Tag {
     schemas.forEach((element) {
       int msgStatus = MessageStatus.get(element);
       if (msgStatus != MessageStatus.ReceivedRead) {
-        futures.add(sendMessage.sendMessageReceipt(element));
+        futures.add(sendMessage.sendReceipt(element));
       }
     });
     return await Future.wait(futures);
