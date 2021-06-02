@@ -31,42 +31,6 @@ class SendMessage with Tag {
 
   MessageStorage _messageStorage = MessageStorage();
 
-  Future<MessageSchema?> sendMessage(MessageSchema? schema, String? msgData) async {
-    if (schema == null || msgData == null) return null;
-    // contact (handle in other entry)
-    // topicHandle (handle in other entry)
-    // DB
-    schema = await _messageStorage.insert(schema);
-    if (schema == null) return null;
-    // display
-    onSavedSink.add(schema);
-    // SDK
-    Uint8List? pid;
-    try {
-      if (schema.topic != null) {
-        OnMessage? onResult = await chatCommon.publishMessage(schema.topic!, msgData);
-        pid = onResult?.messageId;
-      } else if (schema.to != null) {
-        OnMessage? onResult = await chatCommon.sendMessage(schema.to!, msgData);
-        pid = onResult?.messageId;
-      }
-    } catch (e) {
-      handleError(e);
-      return null;
-    }
-    // pid
-    if (pid != null) {
-      schema.pid = pid;
-      _messageStorage.updatePid(schema.msgId, schema.pid); // await
-    }
-    // status
-    schema = MessageStatus.set(schema, MessageStatus.SendSuccess);
-    _messageStorage.updateMessageStatus(schema); // await
-    // display
-    onUpdateSink.add(schema);
-    return schema;
-  }
-
   // NO DB NO display
   Future sendMessageReceipt(MessageSchema received, {int tryCount = 1}) async {
     if (tryCount > 3) return;
@@ -157,5 +121,41 @@ class SendMessage with Tag {
       content: content,
     );
     return sendMessage(schema, await MessageData.getImage(schema));
+  }
+
+  Future<MessageSchema?> sendMessage(MessageSchema? schema, String? msgData) async {
+    if (schema == null || msgData == null) return null;
+    // contact (handle in other entry)
+    // topicHandle (handle in other entry)
+    // DB
+    schema = await _messageStorage.insert(schema);
+    if (schema == null) return null;
+    // display
+    onSavedSink.add(schema);
+    // SDK
+    Uint8List? pid;
+    try {
+      if (schema.topic != null) {
+        OnMessage? onResult = await chatCommon.publishMessage(schema.topic!, msgData);
+        pid = onResult?.messageId;
+      } else if (schema.to != null) {
+        OnMessage? onResult = await chatCommon.sendMessage(schema.to!, msgData);
+        pid = onResult?.messageId;
+      }
+    } catch (e) {
+      handleError(e);
+      return null;
+    }
+    // pid
+    if (pid != null) {
+      schema.pid = pid;
+      _messageStorage.updatePid(schema.msgId, schema.pid); // await
+    }
+    // status
+    schema = MessageStatus.set(schema, MessageStatus.SendSuccess);
+    _messageStorage.updateMessageStatus(schema); // await
+    // display
+    onUpdateSink.add(schema);
+    return schema;
   }
 }

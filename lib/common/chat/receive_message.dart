@@ -30,6 +30,22 @@ class ReceiveMessage with Tag {
   MessageStorage _messageStorage = MessageStorage();
   TopicStorage _topicStorage = TopicStorage();
 
+  startReceiveMessage() {
+    receiveMessageReceipt();
+    receiveMessageContact();
+    receiveMessageText();
+    receiveMessageImage();
+  }
+
+  Future stopReceiveMessage() {
+    List<Future> futures = <Future>[];
+    onReceiveStreamSubscriptions.forEach((StreamSubscription element) {
+      futures.add(element.cancel());
+    });
+    onReceiveStreamSubscriptions.clear();
+    return Future.wait(futures);
+  }
+
   Future onClientMessage(MessageSchema? schema) async {
     if (schema == null) return;
     // contact
@@ -76,22 +92,6 @@ class ReceiveMessage with Tag {
         topic: received.topic!,
       ));
     }
-  }
-
-  startReceiveMessage() {
-    receiveMessageReceipt();
-    receiveMessageContact();
-    receiveMessageText();
-    receiveMessageImage();
-  }
-
-  Future stopReceiveMessage() {
-    List<Future> futures = <Future>[];
-    onReceiveStreamSubscriptions.forEach((StreamSubscription element) {
-      futures.add(element.cancel());
-    });
-    onReceiveStreamSubscriptions.clear();
-    return Future.wait(futures);
   }
 
   // NO DB NO display
