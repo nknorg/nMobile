@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:nmobile/common/contact/contact.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
@@ -54,11 +55,11 @@ class ReceiveMessage with Tag {
       logger.d("$TAG - contactHandle - new - from:$received.from");
       await contactCommon.addByType(received.from, ContactType.stranger, canDuplicated: true);
     } else {
-      if (exist.profileExpiresAt == null || DateTime.now().isAfter(exist.profileExpiresAt!.add(ContactSchema.profileExpireDuration))) {
+      if (exist.profileExpiresAt == null || DateTime.now().isAfter(exist.profileExpiresAt!.add(Settings.profileExpireDuration))) {
         logger.d("$TAG - contactHandle - sendMessageContactRequestHeader - schema:$exist");
         await sendMessage.sendMessageContactRequest(exist, RequestType.header);
       } else {
-        double between = ((exist.profileExpiresAt?.add(ContactSchema.profileExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
+        double between = ((exist.profileExpiresAt?.add(Settings.profileExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG contactHandle - expiresAt - between:${between}s");
       }
     }

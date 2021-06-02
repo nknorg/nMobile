@@ -18,7 +18,7 @@ import 'package:nmobile/utils/logger.dart';
 
 import '../../app.dart';
 
-// TODO:GG same with wallet dir
+// TODO:GG same with wallets create
 class ChatNoWalletLayout extends BaseStateFulWidget {
   @override
   _ChatNoWalletLayoutState createState() => _ChatNoWalletLayoutState();

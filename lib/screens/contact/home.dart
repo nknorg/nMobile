@@ -138,7 +138,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     List<ContactSchema> friends = await contactCommon.queryList(contactType: ContactType.friend);
     List<ContactSchema> strangers = await contactCommon.queryList(contactType: ContactType.stranger, limit: 20);
     List<TopicSchema> topics = []; // widget.arguments ? <TopicSchema>[] : await TopicRepo().getAllTopics(); // TODO:GG contact topic
-    topics = (this._isSelect == true) ? [] : topics; // TODO:GG contact (can not write this line in state)
+    topics = (this._isSelect == true) ? [] : topics; // TODO:GG contact topic (can not write this line in state)
 
     setState(() {
       _pageLoaded = true;
