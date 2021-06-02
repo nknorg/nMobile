@@ -14,6 +14,7 @@ import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/asset.dart';
+import 'package:nmobile/utils/logger.dart';
 
 class ChatSessionListLayout extends BaseStateFulWidget {
   @override
@@ -45,6 +46,8 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       String targetId = event.topic ?? event.from;
       _messageStorage.getUpdateSession(targetId).then((value) {
         _updateMessage(value);
+      }).onError((error, stackTrace) {
+        logger.e(error);
       });
     });
 
@@ -258,6 +261,8 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    print('----------------');
+    print(_sessionList);
     if (_sessionList.isEmpty) {
       return ChatNoMessageLayout();
     }
