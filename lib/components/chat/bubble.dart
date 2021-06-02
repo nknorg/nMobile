@@ -187,13 +187,23 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
   }
 
   Widget _getContentBodyImage(bool dark) {
-    if (!(_message.content is File)) return SizedBox.shrink();
+    if (!(_message.content is File)) {
+      return SizedBox.shrink();
+    }
     File file = _message.content as File;
+    double maxWidth = MediaQuery.of(context).size.width * 0.7;
+    double maxHeight = MediaQuery.of(context).size.height * 0.3;
     return GestureDetector(
       onTap: () {
         PhotoScreen.go(context, filePath: file.path);
       },
-      child: Image.file(file),
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: maxWidth,
+          maxHeight: maxHeight,
+        ),
+        child: Image.file(file),
+      ),
     );
   }
 

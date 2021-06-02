@@ -17,7 +17,7 @@ class ContentType {
   static const String receipt = 'receipt';
   static const String contact = 'contact';
 
-  static const String piece = 'nknOnePiece'; // TODO:GG wait handle
+  static const String piece = 'nknOnePiece';
 
   static const String text = 'text';
   static const String textExtension = 'textExtension'; // TODO:GG wait handle
@@ -40,29 +40,11 @@ class MessageOptions {
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds"; // TODO:GG wait handle
   static const KEY_DEVICE_TOKEN = "deviceToken"; // TODO:GG wait handle
 
-  static const KEY_PARENT_TYPE = "parentType"; // TODO:GG wait handle
-  static const KEY_PARITY = "parity"; // TODO:GG wait handle
-  static const KEY_TOTAL = "total"; // TODO:GG wait handle
-  static const KEY_INDEX = "index"; // TODO:GG wait handle
-  static const KEY_BYTES_LENGTH = "bytesLength"; // TODO:GG wait handle
-
-  static Map<String, dynamic> createAudio(int duration) {
-    return {KEY_AUDIO_DURATION: duration};
-  }
-
-  static Map<String, dynamic> createBurn(int deleteAfterSeconds) {
-    return {KEY_DELETE_AFTER_SECONDS: deleteAfterSeconds};
-  }
-
-  static Map<String, dynamic> createPiece(MessageSchema schema) {
-    return {
-      KEY_PARENT_TYPE: schema.parentType,
-      KEY_PARITY: schema.parity,
-      KEY_TOTAL: schema.total,
-      KEY_INDEX: schema.index,
-      KEY_BYTES_LENGTH: schema.bytesLength,
-    };
-  }
+  static const KEY_PARENT_TYPE = "parentType";
+  static const KEY_BYTES_LENGTH = "bytesLength";
+  static const KEY_PARITY = "parity";
+  static const KEY_TOTAL = "total";
+  static const KEY_INDEX = "index";
 
   static int? getDeleteAfterSeconds(MessageSchema? schema) {
     if (schema == null || schema.options == null || schema.options!.keys.length == 0) return null;
@@ -75,6 +57,16 @@ class MessageOptions {
     if (schema == null || schema.options == null || schema.options!.keys.length == 0) return null;
     var deviceToken = schema.options![MessageOptions.KEY_DEVICE_TOKEN];
     return deviceToken;
+  }
+
+  static Map<String, dynamic> createPiece(MessageSchema schema) {
+    return {
+      KEY_PARENT_TYPE: schema.parentType,
+      KEY_BYTES_LENGTH: schema.bytesLength,
+      KEY_TOTAL: schema.total,
+      KEY_PARITY: schema.parity,
+      KEY_INDEX: schema.index,
+    };
   }
 }
 
@@ -210,11 +202,11 @@ class MessageData {
       'contentType': ContentType.piece,
       'content': schema.content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'parentType': schema.parentType,
-      'parity': schema.parity,
-      'total': schema.total,
-      'index': schema.index,
+      'parentType': schema.parentType ?? schema.contentType,
       'bytesLength': schema.bytesLength,
+      'total': schema.total,
+      'parity': schema.parity,
+      'index': schema.index,
     };
     if (schema.options != null && schema.options!.keys.length > 0) {
       data['options'] = schema.options;
@@ -241,8 +233,9 @@ class MessageData {
     return jsonEncode(map);
   }
 
-  static Future<String> getImage(MessageSchema schema) async {
-    File file = schema.content as File;
+  static Future<String?> getImage(MessageSchema schema) async {
+    File? file = schema.content as File?;
+    if (file == null) return null;
     String content = '![media](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     Map data = {
       'id': schema.msgId,
@@ -259,8 +252,9 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static Future<String> getAudio(MessageSchema schema) async {
-    File file = schema.content as File;
+  static Future<String?> getAudio(MessageSchema schema) async {
+    File? file = schema.content as File?;
+    if (file == null) return null;
     // var mimeType = mime(file.path) ?? "";
     // if (mimeType.split('aac').length > 1) {
     String content = '![audio](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
@@ -348,10 +342,10 @@ class MessageSchema extends Equatable {
   bool isRead = false; // <-> is_read
 
   String? parentType;
-  int? parity;
-  int? total;
-  int? index;
   int? bytesLength;
+  int? total;
+  int? parity;
+  int? index;
 
   MessageSchema(
     this.msgId,
@@ -404,10 +398,10 @@ class MessageSchema extends Equatable {
     schema = MessageStatus.set(schema, MessageStatus.Received);
 
     schema.parentType = data['parentType'];
-    schema.parity = data['parity'];
-    schema.total = data['total'];
-    schema.index = data['index'];
     schema.bytesLength = data['bytesLength'];
+    schema.total = data['total'];
+    schema.parity = data['parity'];
+    schema.index = data['index'];
 
     return schema;
   }
@@ -422,10 +416,10 @@ class MessageSchema extends Equatable {
     this.content,
     this.options,
     this.parentType,
-    this.parity,
-    this.total,
-    this.index,
     this.bytesLength,
+    this.total,
+    this.parity,
+    this.index,
   }) {
     // pid (SDK create)
     if (msgId.isEmpty) msgId = Uuid().v4();
@@ -470,10 +464,10 @@ class MessageSchema extends Equatable {
 
     Map<String, dynamic> options = schema.options ?? Map<String, dynamic>();
     schema.parentType = options[MessageOptions.KEY_PARENT_TYPE];
-    schema.parity = options[MessageOptions.KEY_PARITY];
-    schema.total = options[MessageOptions.KEY_TOTAL];
-    schema.index = options[MessageOptions.KEY_INDEX];
     schema.bytesLength = options[MessageOptions.KEY_BYTES_LENGTH];
+    schema.total = options[MessageOptions.KEY_TOTAL];
+    schema.parity = options[MessageOptions.KEY_PARITY];
+    schema.index = options[MessageOptions.KEY_INDEX];
 
     return schema;
   }
@@ -498,11 +492,17 @@ class MessageSchema extends Equatable {
     };
     // String pubKey = hexEncode(chatCommon.publicKey);
     if (contentType == ContentType.nknImage || contentType == ContentType.image) {
-      map['content'] = Path.getLocalFile((content as File).path);
+      if (content is File) {
+        map['content'] = Path.getLocalFile((content as File).path);
+      }
     } else if (contentType == ContentType.audio) {
-      map['content'] = Path.getLocalFile((content as File).path);
+      if (content is File) {
+        map['content'] = Path.getLocalFile((content as File).path);
+      }
     } else if (contentType == ContentType.piece) {
-      map['content'] = Path.getLocalFile((content as File).path);
+      if (content is File) {
+        map['content'] = Path.getLocalFile((content as File).path);
+      }
     } else {
       map['content'] = content;
     }
@@ -529,7 +529,7 @@ class MessageSchema extends Equatable {
 
   @override
   String toString() {
-    return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, contentType: $contentType, content: $content, options: $options, sendTime: $sendTime, receiveTime: $receiveTime, deleteTime: $deleteTime, isOutbound: $isOutbound, isSendError: $isSendError, isSuccess: $isSuccess, isRead: $isRead, parentType: $parentType, parity: $parity, total: $total, index: $index, bytesLength: $bytesLength}';
+    return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, contentType: $contentType, content: $content, options: $options, sendTime: $sendTime, receiveTime: $receiveTime, deleteTime: $deleteTime, isOutbound: $isOutbound, isSendError: $isSendError, isSuccess: $isSuccess, isRead: $isRead, parentType: $parentType, bytesLength: $bytesLength, total: $total, parity: $parity, index: $index}';
   }
 
   @override
