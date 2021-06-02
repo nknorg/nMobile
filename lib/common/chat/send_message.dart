@@ -22,12 +22,12 @@ class SendMessage with Tag {
   // ignore: close_sinks
   StreamController<MessageSchema> onSavedController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get onSavedSink => onSavedController.sink;
-  Stream<MessageSchema> get onSavedStream => onSavedController.stream;
+  Stream<MessageSchema> get onSavedStream => onSavedController.stream.distinct((prev, next) => prev.msgId == next.msgId);
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onUpdateController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get onUpdateSink => _onUpdateController.sink;
-  Stream<MessageSchema> get onUpdateStream => _onUpdateController.stream;
+  Stream<MessageSchema> get onUpdateStream => _onUpdateController.stream; // .distinct((prev, next) => prev.msgId == next.msgId)
 
   MessageStorage _messageStorage = MessageStorage();
 
@@ -35,12 +35,12 @@ class SendMessage with Tag {
     if (schema == null || msgData == null) return null;
     // contact (handle in other entry)
     // topicHandle (handle in other entry)
-    // sqlite
+    // DB
     schema = await _messageStorage.insert(schema);
     if (schema == null) return null;
-    // view show
+    // display
     onSavedSink.add(schema);
-    // sdk send
+    // SDK
     Uint8List? pid;
     try {
       if (schema.topic != null) {
@@ -54,19 +54,20 @@ class SendMessage with Tag {
       handleError(e);
       return null;
     }
-    // result pid
+    // pid
     if (pid != null) {
       schema.pid = pid;
-      _messageStorage.updatePid(schema.msgId, schema.pid);
+      _messageStorage.updatePid(schema.msgId, schema.pid); // await
     }
-    // update status
+    // status
     schema = MessageStatus.set(schema, MessageStatus.SendSuccess);
-    _messageStorage.updateMessageStatus(schema);
+    _messageStorage.updateMessageStatus(schema); // await
+    // display
     onUpdateSink.add(schema);
     return schema;
   }
 
-  // NO DB insert
+  // NO DB NO display
   Future sendMessageReceipt(MessageSchema received, {int tryCount = 1}) async {
     if (tryCount > 3) return;
     try {
@@ -82,7 +83,7 @@ class SendMessage with Tag {
     }
   }
 
-  // NO DB insert
+  // NO DB NO display
   Future sendMessageContactRequest(ContactSchema? target, String requestType, {int tryCount = 1}) async {
     if (target == null || target.clientAddress.isEmpty) return;
     if (tryCount > 3) return;
@@ -100,7 +101,7 @@ class SendMessage with Tag {
     }
   }
 
-  // NO DB insert
+  // NO DB NO display
   Future sendMessageContactResponse(ContactSchema? target, String requestType, {int tryCount = 1}) async {
     if (contactCommon.currentUser == null || target == null || target.clientAddress.isEmpty) return;
     if (tryCount > 3) return;
