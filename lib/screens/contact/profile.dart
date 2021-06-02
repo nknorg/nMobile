@@ -350,9 +350,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     S _localizations = S.of(this.context);
     if (_contactSchema == null) return;
     contactCommon.setType(_contactSchema!.id, ContactType.friend, notify: true);
-    contactCommon.deleteSink.add(_contactSchema!.id ?? 0);
-    _contactSchema?.type = ContactType.friend;
-    Future.delayed(Duration(milliseconds: 500), () => contactCommon.addSink.add(_contactSchema!));
     Toast.show(_localizations.success);
   }
 

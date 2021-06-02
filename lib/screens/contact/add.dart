@@ -134,9 +134,6 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
           return;
         } else {
           contactCommon.setType(exist.id, ContactType.friend, notify: true);
-          contactCommon.deleteSink.add(exist.id ?? 0);
-          exist.type = ContactType.friend;
-          Future.delayed(Duration(milliseconds: 500), () => contactCommon.addSink.add(exist));
         }
       } else {
         ContactSchema? added = await contactCommon.add(schema, canDuplicated: true);
