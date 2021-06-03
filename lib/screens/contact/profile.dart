@@ -210,7 +210,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       // client change
       await chatCommon.close();
       await Future.delayed(Duration(seconds: 1)); // wait client close
-      await chatCommon.signIn(_walletDefault);
+      await chatCommon.signIn(_walletDefault); // TODO:GG password no need loading
       await Future.delayed(Duration(seconds: 1)); // wait client create
 
       // refresh state
@@ -247,7 +247,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _selectAvatarPicture() async {
-    if(chatCommon.publicKey == null) return;
+    if (chatCommon.publicKey == null) return;
     String remarkAvatarLocalPath = Path.createLocalContactFile(hexEncode(chatCommon.publicKey!), "${Uuid().v4()}.jpeg");
     String remarkAvatarPath = Path.getCompleteFile(remarkAvatarLocalPath);
     File? picked = await MediaPicker.pick(
