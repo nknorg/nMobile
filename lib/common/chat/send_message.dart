@@ -20,8 +20,8 @@ class SendMessage with Tag {
   // piece
   static const int pieceLength = 1024 * 6;
   static const int piecesParity = 3;
-  static const int minPiecesCount = 2 * piecesParity; // parity >= 2
-  static const int maxPiecesCount = 33 * piecesParity; // parity <= 25
+  static const int minPiecesTotal = 2 * piecesParity; // parity >= 2
+  static const int maxPiecesTotal = 33 * piecesParity; // parity <= 25
 
   SendMessage();
 
@@ -242,14 +242,14 @@ class SendMessage with Tag {
     }
     logger.d("$TAG - _sendByPiecesIfNeed:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     List<MessageSchema?> returnList = await Future.wait(futures);
-    returnList.sort((prev, next) => (prev?.index ?? maxPiecesCount).compareTo((next?.index ?? maxPiecesCount)));
+    returnList.sort((prev, next) => (prev?.index ?? maxPiecesTotal).compareTo((next?.index ?? maxPiecesTotal)));
 
     List<MessageSchema?> successList = returnList.where((element) => element != null).toList();
     if (successList.length < total) {
-      logger.w("$TAG - _sendByPiecesIfNeed:END - fail - count:${successList.length}");
+      logger.w("$TAG - _sendByPiecesIfNeed:FAIL - count:${successList.length}");
       return null;
     }
-    logger.d("$TAG - _sendByPiecesIfNeed:END - success - count:${successList.length}");
+    logger.d("$TAG - _sendByPiecesIfNeed:SUCCESS - count:${successList.length}");
 
     MessageSchema? firstSuccess = returnList.firstWhere((element) => element?.pid != null);
     return firstSuccess?.pid;
@@ -266,16 +266,16 @@ class SendMessage with Tag {
     String base64Data = base64.encode(fileBytes);
     // bytesLength
     int bytesLength = base64Data.length;
-    if (bytesLength < pieceLength * minPiecesCount) return [];
+    if (bytesLength < pieceLength * minPiecesTotal) return [];
     // total (5~257)
     int total;
-    if (bytesLength < pieceLength * maxPiecesCount) {
+    if (bytesLength < pieceLength * maxPiecesTotal) {
       total = bytesLength ~/ pieceLength;
       if (bytesLength % pieceLength > 0) {
         total += 1;
       }
     } else {
-      total = maxPiecesCount;
+      total = maxPiecesTotal;
     }
     // parity(>=2)
     int parity = total ~/ piecesParity;

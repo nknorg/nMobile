@@ -1,16 +1,21 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:nmobile/common/chat/send_message.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/file.dart';
+import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/topic.dart';
+import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/path.dart';
 
 import '../global.dart';
 import '../locator.dart';
@@ -188,7 +193,7 @@ class ReceiveMessage with Tag {
                 if (avatarData.toString().split(",").length != 1) {
                   avatarData = avatarData.toString().split(",")[1];
                 }
-                avatar = await FileHelper.convertBase64toFile(avatarData, extension: "jpg");
+                avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact, extension: "jpg");
               }
             }
             contactCommon.setProfile(exist, firstName, avatar?.path, version, notify: true);
@@ -205,19 +210,51 @@ class ReceiveMessage with Tag {
   receivePiece() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.piece).listen((MessageSchema event) async {
       // duplicated
-      List<MessageSchema> exists = await _messageStorage.queryListByNoType(event.msgId, ContentType.piece);
-      if (exists.isNotEmpty) {
-        logger.d("$TAG - receivePiece - duplicated - schema:$exists");
-        _checkReceipts(exists); // await
+      List<MessageSchema> existsCombine = await _messageStorage.queryListByType(event.msgId, event.parentType);
+      if (existsCombine.isNotEmpty) {
+        logger.d("$TAG - receivePiece - duplicated - schema:$existsCombine");
+        _checkReceipt(existsCombine[0]); // await
         return;
       }
-      // DB
-      // MessageSchema? schema = await _messageStorage.insert(event);
-      // if (schema == null) return;
-      // receipt
-      // _checkReceipts([schema]); // await
-      // display
-      // onSavedSink.add(schema);
+      // piece
+      MessageSchema? piece = await _messageStorage.queryByPid(event.pid);
+      if (piece == null) {
+        event.content = FileHelper.convertBase64toFile(event.content, SubDirType.cache, extension: event.parentType);
+        piece = await _messageStorage.insert(event);
+      }
+      if (piece == null) return;
+      // pieces
+      int total = piece.total ?? SendMessage.maxPiecesTotal;
+      int parity = piece.parity ?? (total ~/ SendMessage.piecesParity);
+      int bytesLength = piece.bytesLength ?? 0;
+      List<MessageSchema> pieces = await _messageStorage.queryListByType(piece.msgId, piece.contentType);
+      if (pieces.isEmpty || pieces.length < total || bytesLength <= 0) {
+        logger.d("$TAG - receivePiece - progress:${pieces.length}/${piece.total}");
+        return;
+      }
+      pieces.sort((prev, next) => (prev.index ?? SendMessage.maxPiecesTotal).compareTo((next.index ?? SendMessage.maxPiecesTotal)));
+      // combine
+      logger.d("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+      List<Uint8List> recoverList = <Uint8List>[];
+      for (int index = 0; index < pieces.length; index++) {
+        MessageSchema item = pieces[index];
+        File? file = item.content as File?;
+        if (file == null) continue;
+        Uint8List itemBytes = file.readAsBytesSync();
+        recoverList.add(itemBytes);
+      }
+      if (recoverList.length < total) {
+        logger.w("$TAG - receivePiece - COMBINE:FAIL - recover_lost:${pieces.length - recoverList.length}");
+        return;
+      }
+      String? base64String = await Common.combinePieces(recoverList, total, parity, bytesLength);
+      if (base64String == null || base64String.isEmpty) {
+        logger.w("$TAG - receivePiece - COMBINE:FAIL - base64String is empty");
+        return;
+      }
+      MessageSchema combine = MessageSchema.fromPieces(pieces, base64String);
+      logger.d("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
+      onClientMessage(combine);
     });
     onReceiveStreamSubscriptions.add(subscription);
   }
@@ -225,17 +262,17 @@ class ReceiveMessage with Tag {
   receiveText() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) async {
       // duplicated
-      List<MessageSchema> exists = await _messageStorage.queryListByNoType(event.msgId, ContentType.piece);
-      if (exists.isNotEmpty) {
+      MessageSchema? exists = await _messageStorage.queryByPid(event.pid);
+      if (exists != null) {
         logger.d("$TAG - receiveText - duplicated - schema:$exists");
-        _checkReceipts(exists); // await
+        _checkReceipt(exists); // await
         return;
       }
       // DB
       MessageSchema? schema = await _messageStorage.insert(event);
       if (schema == null) return;
       // receipt
-      _checkReceipts([schema]); // await
+      _checkReceipt(schema); // await
       // display
       onSavedSink.add(schema);
     });
@@ -245,19 +282,19 @@ class ReceiveMessage with Tag {
   receiveImage() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.image || event.contentType == ContentType.nknImage).listen((MessageSchema event) async {
       // duplicated
-      List<MessageSchema> exists = await _messageStorage.queryListByNoType(event.msgId, ContentType.piece);
-      if (exists.isNotEmpty) {
+      MessageSchema? exists = await _messageStorage.queryByPid(event.pid);
+      if (exists != null) {
         logger.d("$TAG - receiveImage - duplicated - schema:$exists");
-        _checkReceipts(exists); // await
+        _checkReceipt(exists); // await
         return;
       }
       // File
-      event.content = await FileHelper.convertBase64toFile(event.content);
+      event.content = await FileHelper.convertBase64toFile(event.content, SubDirType.chat, extension: "jpg");
       // DB
       MessageSchema? schema = await _messageStorage.insert(event);
       if (schema == null) return;
       // receipt
-      _checkReceipts([schema]); // await
+      _checkReceipt(schema); // await
       // display
       onSavedSink.add(schema);
     });
@@ -265,15 +302,11 @@ class ReceiveMessage with Tag {
   }
 
   // receipt(receive) != read(look)
-  Future _checkReceipts(List<MessageSchema> schemas) async {
-    List<Future> futures = <Future>[];
-    schemas.forEach((element) {
-      int msgStatus = MessageStatus.get(element);
-      if (msgStatus != MessageStatus.ReceivedRead) {
-        futures.add(sendMessage.sendReceipt(element));
-      }
-    });
-    return await Future.wait(futures);
+  Future _checkReceipt(MessageSchema schema) async {
+    int msgStatus = MessageStatus.get(schema);
+    if (msgStatus != MessageStatus.ReceivedRead) {
+      await sendMessage.sendReceipt(schema);
+    }
   }
 
   // receipt(receive) != read(look)
