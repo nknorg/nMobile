@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
@@ -11,6 +12,7 @@ import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
 
+import '../global.dart';
 import '../locator.dart';
 
 class ReceiveMessage with Tag {
@@ -18,13 +20,17 @@ class ReceiveMessage with Tag {
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onReceiveController = StreamController<MessageSchema>.broadcast();
+
   StreamSink<MessageSchema> get onReceiveSink => _onReceiveController.sink;
+
   Stream<MessageSchema> get onReceiveStream => _onReceiveController.stream.distinct((prev, next) => prev.pid == next.pid);
   List<StreamSubscription> onReceiveStreamSubscriptions = <StreamSubscription>[];
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
+
   StreamSink<MessageSchema> get onSavedSink => _onSavedController.sink;
+
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.pid == next.pid);
 
   MessageStorage _messageStorage = MessageStorage();
@@ -46,30 +52,31 @@ class ReceiveMessage with Tag {
     return Future.wait(futures);
   }
 
-  Future onClientMessage(MessageSchema? schema) async {
-    if (schema == null) return;
+  Future onClientMessage(MessageSchema? message) async {
+    if (message == null) return;
     // contact
-    contactHandle(schema); // await
+    ContactSchema? contactSchema = await contactHandle(message);
     // topic
-    topicHandle(schema); // await
-    // TODO: notification
-    // notification.showDChatNotification();
+    TopicSchema? topicSchema = await topicHandle(message);
+    // notification
+    notificationHandle(contactSchema, topicSchema, message);
+
     // receive
-    onReceiveSink.add(schema);
+    onReceiveSink.add(message);
   }
 
-  Future contactHandle(MessageSchema received) async {
+  Future<ContactSchema?> contactHandle(MessageSchema received) async {
     // type TODO:GG piece????
     bool noText = received.contentType != ContentType.text && received.contentType != ContentType.textExtension;
-    bool noImage = received.contentType != ContentType.image && received.contentType != ContentType.nknImage;
+    bool noImage = received.contentType != ContentType.media && received.contentType != ContentType.nknImage;
     bool noAudio = received.contentType != ContentType.audio;
-    if (noText && noImage && noAudio) return;
+    if (noText && noImage && noAudio) return null;
     // duplicated
-    if (received.from.isEmpty) return;
+    if (received.from.isEmpty) return null;
     ContactSchema? exist = await contactCommon.queryByClientAddress(received.from);
     if (exist == null) {
       logger.d("$TAG - contactHandle - new - from:$received.from");
-      await contactCommon.addByType(received.from, ContactType.stranger, canDuplicated: true);
+      return await contactCommon.addByType(received.from, ContactType.stranger, canDuplicated: true);
     } else {
       if (exist.profileExpiresAt == null || DateTime.now().isAfter(exist.profileExpiresAt!.add(Settings.profileExpireDuration))) {
         logger.d("$TAG - contactHandle - sendMessageContactRequestHeader - schema:$exist");
@@ -79,18 +86,49 @@ class ReceiveMessage with Tag {
         logger.d("$TAG contactHandle - expiresAt - between:${between}s");
       }
     }
+    return exist;
   }
 
-  Future topicHandle(MessageSchema received) async {
-    if (received.topic == null || received.topic!.isEmpty) return;
-    int count = await _topicStorage.queryCountByTopic(received.topic);
-    if (count == 0) {
-      await _topicStorage.insertTopic(TopicSchema(
+  Future<TopicSchema?> topicHandle(MessageSchema received) async {
+    if (received.topic == null || received.topic!.isEmpty) return null;
+    TopicSchema? topicSchema = await _topicStorage.queryTopicByTopicName(received.topic);
+    if (topicSchema == null) {
+      return await _topicStorage.insertTopic(TopicSchema(
         // TODO: get topic info
         // expireAt:
         // joined:
         topic: received.topic!,
       ));
+    }
+    return topicSchema;
+  }
+
+  Future<void> notificationHandle(ContactSchema? contact, TopicSchema? topic, MessageSchema message) async {
+    late String title;
+    late String content;
+    if (contact != null && topic == null) {
+      title = contact.displayName;
+      content = message.content;
+    } else if (topic != null) {
+      notification.showDChatNotification('[${topic.topicShort}] ${contact?.displayName}', message.content);
+      title = '[${topic.topicShort}] ${contact?.displayName}';
+      content = message.content;
+    }
+
+    S localizations = S.of(Global.appContext);
+    // TODO: notification
+    switch (message.contentType) {
+      case ContentType.text:
+      case ContentType.textExtension:
+        notification.showDChatNotification(title, content);
+        break;
+      case ContentType.media:
+      case ContentType.nknImage: // TODO: remove
+        notification.showDChatNotification(title, '[${localizations.image}]');
+        break;
+      case ContentType.audio:
+        notification.showDChatNotification(title, '[${localizations.audio}]');
+        break;
     }
   }
 
@@ -188,7 +226,8 @@ class ReceiveMessage with Tag {
   }
 
   receiveImage() {
-    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.image || event.contentType == ContentType.nknImage).listen((MessageSchema event) async {
+    StreamSubscription subscription =
+        onReceiveStream.where((event) => event.contentType == ContentType.media || event.contentType == ContentType.nknImage).listen((MessageSchema event) async {
       // duplicated
       List<MessageSchema> exists = await _messageStorage.queryList(event.msgId);
       if (exists.isNotEmpty) {

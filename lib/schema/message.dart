@@ -21,7 +21,7 @@ class ContentType {
 
   static const String text = 'text';
   static const String textExtension = 'textExtension'; // TODO:GG wait handle
-  static const String image = 'media';
+  static const String media = 'media';
   static const String audio = 'audio'; // TODO:GG wait handle
   // static const String video = 'video';
 
@@ -239,7 +239,7 @@ class MessageData {
     String content = '![media](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.image,
+      'contentType': ContentType.media,
       'content': content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -443,7 +443,7 @@ class MessageSchema extends Equatable {
       options: e['options'] != null ? jsonFormat(e['options']) : null,
     );
 
-    if (schema.contentType == ContentType.nknImage || schema.contentType == ContentType.image) {
+    if (schema.contentType == ContentType.nknImage || schema.contentType == ContentType.media) {
       schema.content = File(Path.getCompleteFile(e['content']));
     } else if (schema.contentType == ContentType.audio) {
       schema.content = File(Path.getCompleteFile(e['content']));
@@ -491,7 +491,7 @@ class MessageSchema extends Equatable {
       'is_send_error': isSendError ? 1 : 0,
     };
     // String pubKey = hexEncode(chatCommon.publicKey);
-    if (contentType == ContentType.nknImage || contentType == ContentType.image) {
+    if (contentType == ContentType.nknImage || contentType == ContentType.media) {
       if (content is File) {
         map['content'] = Path.getLocalFile((content as File).path);
       }

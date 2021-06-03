@@ -126,7 +126,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
     return self
         ? SizedBox.shrink()
         : Label(
-            self ? (contactCommon.currentUser?.getDisplayName ?? "") : _contact.getDisplayName,
+            self ? (contactCommon.currentUser?.displayName ?? "") : _contact.displayName,
             type: LabelType.h3,
             color: application.theme.primaryColor,
           );
@@ -141,7 +141,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
       case ContentType.textExtension:
         _body = _getContentBodyText(dark);
         break;
-      case ContentType.image:
+      case ContentType.media:
       case ContentType.nknImage:
         _body = _getContentBodyImage(dark);
         break;
