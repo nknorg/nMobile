@@ -64,7 +64,6 @@ dependencies:
 
   # image
   flutter_image_compress: ^1.0.0
-  flutter_luban: ^0.1.13
   image_cropper: ^1.4.0
 
   # file

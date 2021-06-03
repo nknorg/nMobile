@@ -175,10 +175,14 @@ class SendMessage with Tag {
         if (schema.topic != null) {
           OnMessage? onResult = await chatCommon.publishMessage(schema.topic!, msgData);
           pid = onResult?.messageId;
+          logger.d("$TAG - _send - topic - pid:$pid");
         } else if (schema.to != null) {
           OnMessage? onResult = await chatCommon.sendMessage(schema.to!, msgData);
           pid = onResult?.messageId;
+          logger.d("$TAG - _send - user - pid:$pid");
         }
+      } else {
+        logger.d("$TAG - _send - pieces - pid:$pid");
       }
     } catch (e) {
       handleError(e);

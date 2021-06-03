@@ -22,7 +22,7 @@ class ChatBottomMenu extends StatelessWidget {
     File? picked = await MediaPicker.pick(
       source: source,
       mediaType: MediaType.image,
-      compressQuality: 60,
+      compressQuality: 50,
     );
     if (picked == null) return;
     onPicked?.call(picked);
