@@ -22,6 +22,7 @@ class ContentType {
   static const String text = 'text';
   static const String textExtension = 'textExtension'; // TODO:GG wait handle
   static const String media = 'media';
+  // static const String image = 'image';
   static const String audio = 'audio'; // TODO:GG wait handle
   // static const String video = 'video';
 
