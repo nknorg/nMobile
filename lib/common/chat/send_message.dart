@@ -103,6 +103,7 @@ class SendMessage with Tag {
   Future<MessageSchema?> sendPiece(MessageSchema schema, {int tryCount = 1}) async {
     if (tryCount > 3) return null;
     try {
+      await Future.delayed(Duration(milliseconds: (schema.sendTime ?? DateTime.now()).millisecondsSinceEpoch - DateTime.now().millisecondsSinceEpoch));
       String data = MessageData.getPiece(schema);
       if (schema.topic != null) {
         OnMessage? onResult = await chatCommon.publishMessage(schema.topic!, data);
@@ -111,7 +112,7 @@ class SendMessage with Tag {
         OnMessage? onResult = await chatCommon.sendMessage(schema.to!, data);
         schema.pid = onResult?.messageId;
       }
-      // logger.d("$TAG - sendPiece - success - schema:$schema - data:$data");
+      // logger.d("$TAG - sendPiece - success - index:${schema.index} - time:${DateTime.now().millisecondsSinceEpoch} - schema:$schema - data:$data");
       return schema;
     } catch (e) {
       handleError(e);
@@ -218,6 +219,7 @@ class SendMessage with Tag {
     if (dataList.isEmpty == true) return null;
 
     List<Future<MessageSchema?>> futures = <Future<MessageSchema?>>[];
+    DateTime dataNow = DateTime.now();
     for (int index = 0; index < dataList.length; index++) {
       Uint8List? data = dataList[index] as Uint8List?;
       if (data == null || data.isEmpty) continue;
@@ -235,8 +237,8 @@ class SendMessage with Tag {
         parity: parity,
         index: index,
       );
+      send.sendTime = dataNow.add(Duration(milliseconds: index * 50)); // wait 50ms
       futures.add(sendPiece(send));
-      futures.add(Future.delayed(Duration(milliseconds: 200)));
     }
     logger.d("$TAG - _sendByPiecesIfNeed:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     List<MessageSchema?> returnList = await Future.wait(futures);
