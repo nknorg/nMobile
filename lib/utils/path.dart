@@ -93,17 +93,7 @@ class Path {
   }
 
   /// eg:{mPubKey}/{dirType}/{fileName}
-  static String _createLocalFile(String? mPubKey, String? dirType, String filePath) {
+  static String createLocalFile(String? mPubKey, String? dirType, String filePath) {
     return join(mPubKey ?? "", dirType, Path.getFileName(filePath));
-  }
-
-  /// {mPubKey}/{fileName}
-  static String createLocalChatFile(String? mPubKey, String filePath) {
-    return Path._createLocalFile(mPubKey, SubDirType.chat, filePath);
-  }
-
-  /// {mPubKey}/contact/{fileName}
-  static String createLocalContactFile(String? mPubKey, String filePath) {
-    return Path._createLocalFile(mPubKey, SubDirType.contact, filePath);
   }
 }
