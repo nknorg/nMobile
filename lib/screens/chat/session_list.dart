@@ -15,6 +15,7 @@ import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/utils.dart';
 
 class ChatSessionListLayout extends BaseStateFulWidget {
   @override
@@ -222,11 +223,16 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                         ),
                         Padding(
                           padding: const EdgeInsets.only(top: 6),
-                          child: Label(
-                            S.of(context).learn_more,
-                            type: LabelType.bodySmall,
-                            color: application.theme.primaryColor,
-                            fontWeight: FontWeight.bold,
+                          child: GestureDetector(
+                            onTap: (){
+                              launchUrl('https://nmobile.nkn.org/');
+                            },
+                            child: Label(
+                              S.of(context).learn_more,
+                              type: LabelType.bodySmall,
+                              color: application.theme.primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
