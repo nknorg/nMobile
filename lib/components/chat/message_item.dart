@@ -30,7 +30,7 @@ class ChatMessageItem extends StatelessWidget {
     switch (this.message.contentType) {
       case ContentType.text:
       case ContentType.textExtension:
-      case ContentType.image:
+      case ContentType.media:
       case ContentType.nknImage:
         contentsWidget.add(
           ChatBubble(

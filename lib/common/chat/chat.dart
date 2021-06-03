@@ -42,18 +42,23 @@ class ChatCommon with Tag {
   Client? client;
 
   String? get id => client?.address;
+
   Uint8List? get publicKey => client?.publicKey;
 
   late int status;
 
   // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
+
   StreamSink<int> get _statusSink => _statusController.sink;
+
   Stream<int> get statusStream => _statusController.stream;
 
   // ignore: close_sinks
   StreamController<dynamic> _onErrorController = StreamController<dynamic>.broadcast();
+
   StreamSink<dynamic> get _onErrorSink => _onErrorController.sink;
+
   Stream<dynamic> get onErrorStream => _onErrorController.stream;
 
   StreamSubscription? _onErrorStreamSubscription;

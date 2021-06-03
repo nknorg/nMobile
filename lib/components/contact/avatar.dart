@@ -42,7 +42,7 @@ class _ContactAvatarState extends BaseStateFulWidgetState<ContactAvatar> {
   @override
   Widget build(BuildContext context) {
     double radius = this.widget.radius ?? 24;
-    String name = widget.contact.getDisplayName;
+    String name = widget.contact.displayName;
 
     if (_avatarFile != null) {
       return CircleAvatar(

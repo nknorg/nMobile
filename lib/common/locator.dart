@@ -3,6 +3,7 @@ import 'package:nmobile/common/chat/send_message.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
 import 'package:nmobile/helpers/memory_cache.dart';
+import 'package:nmobile/services/background_fetch.dart';
 
 import '../services/task_service.dart';
 import 'application.dart';
@@ -15,6 +16,7 @@ GetIt locator = GetIt.instance;
 
 late Application application;
 late TaskService taskService;
+late BackgroundFetchService backgroundFetchService;
 late Notification notification;
 late Authorization authorization;
 
@@ -29,6 +31,7 @@ void setupLocator() {
   locator
     ..registerSingleton(Application())
     ..registerSingleton(TaskService())
+    ..registerSingleton(BackgroundFetchService())
     ..registerSingleton(Notification())
     ..registerSingleton(Authorization())
     ..registerSingleton(ChatCommon())
@@ -40,6 +43,7 @@ void setupLocator() {
 
   application = locator.get<Application>();
   taskService = locator.get<TaskService>();
+  backgroundFetchService = locator.get<BackgroundFetchService>();
   notification = locator.get<Notification>();
   authorization = locator.get<Authorization>();
 

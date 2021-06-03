@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:background_fetch/background_fetch.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/services/background_fetch.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'app.dart';
@@ -49,7 +51,7 @@ void main() async {
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
     _walletBloc.add(LoadWallet());
   });
-
+  backgroundFetchService.install();
   await SentryFlutter.init(
     (options) {
       options.dsn = 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254';

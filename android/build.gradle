@@ -1,5 +1,10 @@
 buildscript {
     ext.kotlin_version = '1.5.10'
+    ext {
+        compileSdkVersion = 30
+        targetSdkVersion = 30
+        appCompatVersion = "1.1.0"
+    }
     repositories {
         google()
         jcenter()
@@ -15,6 +20,9 @@ allprojects {
     repositories {
         google()
         jcenter()
+        maven {
+            url "${project(':background_fetch').projectDir}/libs"
+        }
     }
 }
 

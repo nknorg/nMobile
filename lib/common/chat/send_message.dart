@@ -145,7 +145,7 @@ class SendMessage with Tag {
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
       chatCommon.id!,
-      ContentType.image,
+      ContentType.media,
       to: dest,
       content: content,
     );
