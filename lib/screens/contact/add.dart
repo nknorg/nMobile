@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
@@ -57,11 +58,14 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
   }
 
   _selectAvatarPicture() async {
+    if (chatCommon.publicKey == null) return;
     String returnPath = Path.getCompleteFile(Path.createLocalContactFile(hexEncode(chatCommon.publicKey!), "${Uuid().v4()}.jpeg"));
     File? picked = await MediaPicker.pick(
       mediaType: MediaType.image,
       source: ImageSource.gallery,
-      crop: true,
+      cropStyle: CropStyle.rectangle,
+      cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
+      compressQuality: 50,
       returnPath: returnPath,
     );
     if (picked == null || !picked.existsSync()) {

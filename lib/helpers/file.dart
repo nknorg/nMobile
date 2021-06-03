@@ -10,7 +10,7 @@ import 'package:nmobile/utils/path.dart';
 
 class FileHelper {
   static Future<File?> convertBase64toFile(String? base64Data, {String? extension}) async {
-    if (base64Data == null || base64Data.isEmpty) return null;
+    if (base64Data == null || base64Data.isEmpty || chatCommon.publicKey == null) return null;
     if (extension == null || extension.isEmpty) {
       var match = RegExp(r'\(data:(.*);base64,(.*)\)').firstMatch(base64Data);
       var mimeType = match?.group(1) ?? "";

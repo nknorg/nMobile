@@ -19,8 +19,9 @@ class MediaPicker {
   static Future<File?> pick({
     ImageSource source = ImageSource.gallery,
     int mediaType = MediaType.image,
-    bool crop = false,
-    int compressQuality = 100, // TODO:GG change to auto
+    CropStyle? cropStyle,
+    CropAspectRatio? cropRatio,
+    int compressQuality = 100,
     String? returnPath,
   }) async {
     // permission
@@ -42,7 +43,6 @@ class MediaPicker {
       return null;
     }
     File pickedFile = File(pickedResult.path);
-    logger.d("MediaPicker - media_pick - picked - path:${pickedFile.path}"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
     String? fileExt = Path.getFileExt(pickedFile);
     if (fileExt == null || fileExt.isEmpty) {
       switch (mediaType) {
@@ -57,18 +57,23 @@ class MediaPicker {
           break;
       }
     }
+    logger.d("MediaPicker - media_pick - picked - path:${pickedFile.path} - ext:$fileExt"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
+    // logger.d('MediaPicker - media_pick - picked - size:${formatFlowSize(pickedFile.lengthSync().toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+
     // crop
     File? croppedFile;
-    if (!crop) {
+    if (cropStyle == null) {
       croppedFile = pickedFile;
     } else {
       croppedFile = await ImageCropper.cropImage(
         sourcePath: pickedFile.path,
-        // cropStyle: CropStyle.circle,
-        maxWidth: 300,
-        maxHeight: 300,
-        compressQuality: 50,
+        cropStyle: cropStyle,
+        aspectRatio: cropRatio,
+        compressQuality: 100, // later handle
+        // maxWidth: 300,
+        // maxHeight: 300,
         iosUiSettings: IOSUiSettings(
+          title: 'Cropper',
           minimumAspectRatio: 1.0,
         ),
         androidUiSettings: AndroidUiSettings(
@@ -80,6 +85,7 @@ class MediaPicker {
         ),
       );
       logger.d('MediaPicker - media_pick - crop - path:${croppedFile?.path}');
+      // logger.d('MediaPicker - media_pick - crop - size:${formatFlowSize(croppedFile?.lengthSync().toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
     }
     if (croppedFile == null) return null;
 
@@ -97,13 +103,14 @@ class MediaPicker {
           autoCorrectionAngle: true,
           numberOfRetries: 3,
           format: CompressFormat.jpeg,
-          minWidth: 300,
-          minHeight: 300,
+          // minWidth: 300,
+          // minHeight: 300,
         );
       } else {
         compressFile = croppedFile;
       }
       logger.d('MediaPicker - media_pick - compress - path:${compressFile?.path}');
+      // logger.d('MediaPicker - media_pick - compress - size:${formatFlowSize(compressFile?.lengthSync().toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
     }
     if (compressFile == null) return null;
 
