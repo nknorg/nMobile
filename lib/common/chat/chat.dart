@@ -107,14 +107,14 @@ class ChatCommon with Tag {
 
     // client error
     _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
-      logger.e("$TAG - onError -> event:$event");
+      logger.e("$TAG - onError -> event:${event.toString()}");
       _onErrorSink.add(event);
     });
 
     // client connect
     Completer completer = Completer();
     _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
-      logger.i("$TAG - onConnect -> event:$event");
+      logger.i("$TAG - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");
       _statusSink.add(ChatConnectStatus.connected);
       SettingsStorage().addSeedRpcServers(event.rpcServers!);
       completer.complete();
