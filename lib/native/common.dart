@@ -18,7 +18,7 @@ class Common {
     return false;
   }
 
-  static Future<List<Uint8List>> splitPieces(String dataBytesString, int dataShards, int parityShards) async {
+  static Future<List<Object?>> splitPieces(String dataBytesString, int dataShards, int parityShards) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('splitPieces', {
         'data': dataBytesString,
@@ -26,6 +26,20 @@ class Common {
         'parityShards': parityShards,
       });
       return resp['data'] ?? [];
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  static Future<String?> combinePieces(List<Uint8List> dataList, int dataShards, int parityShards, int bytesLength) async {
+    try {
+      final Map resp = await _methodChannel.invokeMethod('combinePieces', {
+        'data': dataList,
+        'dataShards': dataShards,
+        'parityShards': parityShards,
+        'bytesLength': bytesLength,
+      });
+      return resp['data'];
     } catch (e) {
       throw e;
     }
