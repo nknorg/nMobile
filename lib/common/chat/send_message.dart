@@ -10,6 +10,7 @@ import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/storages/message.dart';
+import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:uuid/uuid.dart';
 
@@ -20,7 +21,7 @@ class SendMessage with Tag {
   static const int pieceLength = 1024 * 6;
   static const int piecesParity = 3;
   static const int minPiecesCount = 2 * piecesParity; // parity >= 2
-  static const int maxPiecesCount = 10 * piecesParity; // parity <= 10
+  static const int maxPiecesCount = 33 * piecesParity; // parity <= 25
 
   SendMessage();
 
@@ -110,7 +111,7 @@ class SendMessage with Tag {
         OnMessage? onResult = await chatCommon.sendMessage(schema.to!, data);
         schema.pid = onResult?.messageId;
       }
-      logger.d("$TAG - sendPiece - success - schema:$schema - data:$data");
+      // logger.d("$TAG - sendPiece - success - schema:$schema - data:$data");
       return schema;
     } catch (e) {
       handleError(e);
@@ -212,14 +213,8 @@ class SendMessage with Tag {
     int total = results[2];
     int parity = results[3];
 
-    List<Object?>? dataList;
-    try {
-      // dataList.size = (total + parity)
-      dataList = await Common.splitPieces(dataBytesString, total, parity);
-    } catch (e) {
-      handleError(e);
-      return null;
-    }
+    // dataList.size = (total + parity)
+    List<Object?>? dataList = await Common.splitPieces(dataBytesString, total, parity);
     if (dataList.isEmpty == true) return null;
 
     List<Future<MessageSchema?>> futures = <Future<MessageSchema?>>[];
@@ -241,12 +236,18 @@ class SendMessage with Tag {
         index: index,
       );
       futures.add(sendPiece(send));
+      futures.add(Future.delayed(Duration(milliseconds: 200)));
     }
+    logger.d("$TAG - _sendByPiecesIfNeed:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     List<MessageSchema?> returnList = await Future.wait(futures);
     returnList.sort((prev, next) => (prev?.index ?? maxPiecesCount).compareTo((next?.index ?? maxPiecesCount)));
 
     List<MessageSchema?> successList = returnList.where((element) => element != null).toList();
-    if (successList.length < total) return null;
+    if (successList.length < total) {
+      logger.w("$TAG - _sendByPiecesIfNeed:END - fail - count:${successList.length}");
+      return null;
+    }
+    logger.d("$TAG - _sendByPiecesIfNeed:END - success - count:${successList.length}");
 
     MessageSchema? firstSuccess = returnList.firstWhere((element) => element?.pid != null);
     return firstSuccess?.pid;
