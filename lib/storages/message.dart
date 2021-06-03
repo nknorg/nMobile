@@ -88,6 +88,27 @@ class MessageStorage with Tag {
     return false;
   }
 
+  Future<MessageSchema?> queryByPid(Uint8List? pid) async {
+    if (pid == null || pid.isEmpty) return null;
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['*'],
+        where: 'pid = ?',
+        whereArgs: [pid],
+      );
+      if (res != null && res.length > 0) {
+        MessageSchema schema = MessageSchema.fromMap(res.first);
+        logger.d("$TAG - queryByPid - success - pid:$pid - schema:$schema");
+        return schema;
+      }
+      logger.d("$TAG - queryByPid - empty - pid:$pid ");
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+  }
+
   Future<List<MessageSchema>> queryList(String? msgId) async {
     if (msgId == null || msgId.isEmpty) return [];
     try {
@@ -144,42 +165,42 @@ class MessageStorage with Tag {
     return [];
   }
 
-  Future<List<MessageSchema>> queryListByNoType(String? msgId, String? contentType) async {
-    if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return [];
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        where: 'msg_id = ? AND NOT type = ?',
-        whereArgs: [msgId, contentType],
-      );
-      if (res == null || res.isEmpty) {
-        logger.d("$TAG - queryListByNoType - empty - msgId:$msgId - contentType:$contentType");
-        return [];
-      }
-      List<MessageSchema> result = <MessageSchema>[];
-      String logText = '';
-      res.forEach((map) {
-        MessageSchema item = MessageSchema.fromMap(map);
-        logText += "\n$item";
-        result.add(item);
-      });
-      logger.d("$TAG - queryListByNoType - success - msgId:$msgId - contentType:$contentType - length:${result.length} - items:$logText");
-      return result;
-    } catch (e) {
-      handleError(e);
-    }
-    return [];
-  }
+  // Future<List<MessageSchema>> queryListByNoType(String? msgId, String? contentType) async {
+  //   if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return [];
+  //   try {
+  //     List<Map<String, dynamic>>? res = await db?.query(
+  //       tableName,
+  //       columns: ['*'],
+  //       where: 'msg_id = ? AND NOT type = ?',
+  //       whereArgs: [msgId, contentType],
+  //     );
+  //     if (res == null || res.isEmpty) {
+  //       logger.d("$TAG - queryListByNoType - empty - msgId:$msgId - contentType:$contentType");
+  //       return [];
+  //     }
+  //     List<MessageSchema> result = <MessageSchema>[];
+  //     String logText = '';
+  //     res.forEach((map) {
+  //       MessageSchema item = MessageSchema.fromMap(map);
+  //       logText += "\n$item";
+  //       result.add(item);
+  //     });
+  //     logger.d("$TAG - queryListByNoType - success - msgId:$msgId - contentType:$contentType - length:${result.length} - items:$logText");
+  //     return result;
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return [];
+  // }
 
-  Future<int> queryCount(String? msgId) async {
-    if (msgId == null || msgId.isEmpty) return 0;
+  Future<int> queryCountByType(String? msgId, String? contentType) async {
+    if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return 0;
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
-        where: 'msg_id = ?',
-        whereArgs: [msgId],
+        where: 'msg_id = ? AND type = ?',
+        whereArgs: [msgId, contentType],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.d("$TAG - queryCount - msgId:$msgId - count:$count");

@@ -406,6 +406,35 @@ class MessageSchema extends Equatable {
     return schema;
   }
 
+  static MessageSchema fromPieces(List<MessageSchema> sortPieces, String base64String) {
+    MessageSchema piece = sortPieces.firstWhere((element) => element.pid != null);
+
+    MessageSchema combine = MessageSchema(
+      piece.msgId,
+      piece.from,
+      piece.parentType ?? "",
+      pid: piece.pid,
+      topic: piece.topic,
+      to: piece.to,
+      content: base64String,
+      options: piece.options,
+      sendTime: piece.sendTime,
+    );
+
+    combine.receiveTime = DateTime.now();
+    combine.deleteTime = null; // set in messages bubble
+
+    combine = MessageStatus.set(combine, MessageStatus.Received);
+
+    // combine.parentType = data['parentType'];
+    // combine.bytesLength = data['bytesLength'];
+    // combine.total = data['total'];
+    // combine.parity = data['parity'];
+    // combine.index = data['index'];
+
+    return combine;
+  }
+
   /// to send
   MessageSchema.fromSend(
     this.msgId,
