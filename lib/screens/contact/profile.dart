@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
@@ -246,12 +247,15 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _selectAvatarPicture() async {
+    if(chatCommon.publicKey == null) return;
     String remarkAvatarLocalPath = Path.createLocalContactFile(hexEncode(chatCommon.publicKey!), "${Uuid().v4()}.jpeg");
     String remarkAvatarPath = Path.getCompleteFile(remarkAvatarLocalPath);
     File? picked = await MediaPicker.pick(
       mediaType: MediaType.image,
       source: ImageSource.gallery,
-      crop: true,
+      cropStyle: CropStyle.rectangle,
+      cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
+      compressQuality: 50,
       returnPath: remarkAvatarPath,
     );
     if (picked == null) {
