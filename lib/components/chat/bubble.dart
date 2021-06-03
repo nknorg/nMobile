@@ -78,7 +78,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
     bool dark = styles[1];
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: isSendOut ? 4 : 8),
       child: Row(
         mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
