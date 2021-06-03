@@ -43,10 +43,10 @@ class SendMessage with Tag {
     try {
       String data = MessageData.getReceipt(received.msgId);
       await chatCommon.sendMessage(received.from, data);
-      logger.d("$TAG - sendMessageReceipt - success - data:$data");
+      logger.d("$TAG - sendReceipt - success - data:$data");
     } catch (e) {
       handleError(e);
-      logger.w("$TAG - sendMessageReceipt - fail - tryCount:$tryCount - received:$received");
+      logger.w("$TAG - sendReceipt - fail - tryCount:$tryCount - received:$received");
       await Future.delayed(Duration(seconds: 2), () {
         return sendReceipt(received, tryCount: tryCount++);
       });
@@ -61,10 +61,10 @@ class SendMessage with Tag {
       DateTime updateAt = DateTime.now();
       String data = MessageData.getContactRequest(requestType, target.profileVersion, updateAt);
       await chatCommon.sendMessage(target.clientAddress, data);
-      logger.d("$TAG - sendMessageContactRequest - success - data:$data");
+      logger.d("$TAG - sendContactRequest - success - data:$data");
     } catch (e) {
       handleError(e);
-      logger.w("$TAG - sendMessageContactRequest - fail - tryCount:$tryCount - requestType:$requestType - target:$target");
+      logger.w("$TAG - sendContactRequest - fail - tryCount:$tryCount - requestType:$requestType - target:$target");
       await Future.delayed(Duration(seconds: 2), () {
         return sendContactRequest(target, requestType, tryCount: tryCount++);
       });
@@ -89,10 +89,10 @@ class SendMessage with Tag {
         );
       }
       await chatCommon.sendMessage(target.clientAddress, data);
-      logger.d("$TAG - sendMessageContactResponse - success - requestType:$requestType - data:$data");
+      logger.d("$TAG - sendContactResponse - success - requestType:$requestType - data:$data");
     } catch (e) {
       handleError(e);
-      logger.w("$TAG - sendMessageContactResponse - fail - tryCount:$tryCount - requestType:$requestType");
+      logger.w("$TAG - sendContactResponse - fail - tryCount:$tryCount - requestType:$requestType");
       await Future.delayed(Duration(seconds: 2), () {
         return sendContactResponse(target, requestType, tryCount: tryCount++);
       });
