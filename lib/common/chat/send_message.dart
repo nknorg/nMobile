@@ -5,9 +5,6 @@ import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
-import 'package:nmobile/common/global.dart';
-import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -126,7 +123,7 @@ class SendMessage with Tag {
 
   Future<MessageSchema?> sendText(String? dest, String? content, {bool toast = true}) {
     if (chatCommon.id == null || dest == null || content == null || content.isEmpty) {
-      Toast.show(S.of(Global.appContext).failure);
+      // Toast.show(S.of(Global.appContext).failure);
       return Future.value(null);
     }
     MessageSchema schema = MessageSchema.fromSend(
@@ -141,7 +138,7 @@ class SendMessage with Tag {
 
   Future<MessageSchema?> sendImage(String? dest, File? content) async {
     if (chatCommon.id == null || dest == null || content == null || (!await content.exists())) {
-      Toast.show(S.of(Global.appContext).failure);
+      // Toast.show(S.of(Global.appContext).failure);
       return null;
     }
     MessageSchema schema = MessageSchema.fromSend(
@@ -211,18 +208,20 @@ class SendMessage with Tag {
     int total = results[2];
     int parity = results[3];
 
-    List<Uint8List>? dataList;
+    List<Object?>? dataList;
     try {
       // dataList.size = (total + parity)
       dataList = await Common.splitPieces(dataBytesString, total, parity);
     } catch (e) {
       handleError(e);
+      return null;
     }
-    if (dataList?.isNotEmpty == true) return null;
+    if (dataList.isEmpty == true) return null;
 
     List<Future<MessageSchema?>> futures = <Future<MessageSchema?>>[];
-    for (int index = 0; index < dataList!.length; index++) {
-      Uint8List data = dataList[index];
+    for (int index = 0; index < dataList.length; index++) {
+      Uint8List? data = dataList[index] as Uint8List?;
+      if (data == null || data.isEmpty) continue;
       MessageSchema send = MessageSchema.fromSend(
         message.msgId,
         message.from,
@@ -250,7 +249,7 @@ class SendMessage with Tag {
   }
 
   Future<List<dynamic>> _convert2Pieces(MessageSchema message) async {
-    if (!(message is File?)) return [];
+    if (!(message.content is File?)) return [];
     File? file = message.content as File?;
     if (file == null || !file.existsSync()) return [];
     int length = await file.length();
