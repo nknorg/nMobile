@@ -219,7 +219,7 @@ class ReceiveMessage with Tag {
       // piece
       MessageSchema? piece = await _messageStorage.queryByPid(event.pid);
       if (piece == null) {
-        event.content = FileHelper.convertBase64toFile(event.content, SubDirType.cache, extension: event.parentType);
+        event.content = await FileHelper.convertBase64toFile(event.content, SubDirType.cache, extension: event.parentType);
         piece = await _messageStorage.insert(event);
       }
       if (piece == null) return;
@@ -239,7 +239,10 @@ class ReceiveMessage with Tag {
       for (int index = 0; index < pieces.length; index++) {
         MessageSchema item = pieces[index];
         File? file = item.content as File?;
-        if (file == null) continue;
+        if (file == null || !file.existsSync()) {
+          logger.w("$TAG - receivePiece - COMBINE:ERROR - file no exists - item:$item - file:${file?.path}");
+          continue;
+        }
         Uint8List itemBytes = file.readAsBytesSync();
         recoverList.add(itemBytes);
       }
@@ -280,7 +283,7 @@ class ReceiveMessage with Tag {
   }
 
   receiveImage() {
-    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.image || event.contentType == ContentType.nknImage).listen((MessageSchema event) async {
+    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.media || event.contentType == ContentType.nknImage).listen((MessageSchema event) async {
       // duplicated
       MessageSchema? exists = await _messageStorage.queryByPid(event.pid);
       if (exists != null) {
