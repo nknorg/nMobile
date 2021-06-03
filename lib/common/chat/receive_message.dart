@@ -20,17 +20,13 @@ class ReceiveMessage with Tag {
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onReceiveController = StreamController<MessageSchema>.broadcast();
-
   StreamSink<MessageSchema> get onReceiveSink => _onReceiveController.sink;
-
   Stream<MessageSchema> get onReceiveStream => _onReceiveController.stream.distinct((prev, next) => prev.pid == next.pid);
   List<StreamSubscription> onReceiveStreamSubscriptions = <StreamSubscription>[];
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
-
   StreamSink<MessageSchema> get onSavedSink => _onSavedController.sink;
-
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.pid == next.pid);
 
   MessageStorage _messageStorage = MessageStorage();
@@ -39,6 +35,7 @@ class ReceiveMessage with Tag {
   startReceive() {
     receiveReceipt();
     receiveContact();
+    receivePiece();
     receiveText();
     receiveImage();
   }
@@ -143,7 +140,7 @@ class ReceiveMessage with Tag {
           // update send by receipt
           sendMessage.onUpdateSink.add(element);
         }
-        logger.d("$TAG - receiveMessageReceipt - updated:$element");
+        logger.d("$TAG - receiveReceipt - updated:$element");
       });
     });
     onReceiveStreamSubscriptions.add(subscription);
@@ -157,7 +154,7 @@ class ReceiveMessage with Tag {
       // duplicated
       ContactSchema? exist = await contactCommon.queryByClientAddress(event.from);
       if (exist == null) {
-        logger.w("$TAG - receiveMessageContact - empty - data:$data");
+        logger.w("$TAG - receiveContact - empty - data:$data");
         return;
       }
       // D-Chat NO RequestType.header
@@ -179,7 +176,7 @@ class ReceiveMessage with Tag {
             await sendMessage.sendContactRequest(exist, RequestType.full);
           } else {
             if (content == null) {
-              logger.w("$TAG - receiveMessageContact - content is empty - data:$data");
+              logger.w("$TAG - receiveContact - content is empty - data:$data");
               return;
             }
             String? firstName = content['first_name'] ?? content['name'];
@@ -195,12 +192,32 @@ class ReceiveMessage with Tag {
               }
             }
             contactCommon.setProfile(exist, firstName, avatar?.path, version, notify: true);
-            logger.i("$TAG - receiveMessageContact - setProfile - firstName:$firstName - avatar:${avatar?.path} - version:$version - data:$data");
+            logger.i("$TAG - receiveContact - setProfile - firstName:$firstName - avatar:${avatar?.path} - version:$version - data:$data");
           }
         } else {
-          logger.d("$TAG - receiveMessageContact - profileVersionSame - contact:$exist - data:$data");
+          logger.d("$TAG - receiveContact - profileVersionSame - contact:$exist - data:$data");
         }
       }
+    });
+    onReceiveStreamSubscriptions.add(subscription);
+  }
+
+  receivePiece() {
+    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.piece).listen((MessageSchema event) async {
+      // duplicated
+      List<MessageSchema> exists = await _messageStorage.queryListByNoType(event.msgId, ContentType.piece);
+      if (exists.isNotEmpty) {
+        logger.d("$TAG - receivePiece - duplicated - schema:$exists");
+        _checkReceipts(exists); // await
+        return;
+      }
+      // DB
+      // MessageSchema? schema = await _messageStorage.insert(event);
+      // if (schema == null) return;
+      // receipt
+      // _checkReceipts([schema]); // await
+      // display
+      // onSavedSink.add(schema);
     });
     onReceiveStreamSubscriptions.add(subscription);
   }
@@ -208,9 +225,9 @@ class ReceiveMessage with Tag {
   receiveText() {
     StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) async {
       // duplicated
-      List<MessageSchema> exists = await _messageStorage.queryList(event.msgId);
+      List<MessageSchema> exists = await _messageStorage.queryListByNoType(event.msgId, ContentType.piece);
       if (exists.isNotEmpty) {
-        logger.d("$TAG - receiveMessageText - duplicated - schema:$exists");
+        logger.d("$TAG - receiveText - duplicated - schema:$exists");
         _checkReceipts(exists); // await
         return;
       }
@@ -226,12 +243,11 @@ class ReceiveMessage with Tag {
   }
 
   receiveImage() {
-    StreamSubscription subscription =
-        onReceiveStream.where((event) => event.contentType == ContentType.media || event.contentType == ContentType.nknImage).listen((MessageSchema event) async {
+    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.image || event.contentType == ContentType.nknImage).listen((MessageSchema event) async {
       // duplicated
-      List<MessageSchema> exists = await _messageStorage.queryList(event.msgId);
+      List<MessageSchema> exists = await _messageStorage.queryListByNoType(event.msgId, ContentType.piece);
       if (exists.isNotEmpty) {
-        logger.d("$TAG - receiveMessageMedia - duplicated - schema:$exists");
+        logger.d("$TAG - receiveImage - duplicated - schema:$exists");
         _checkReceipts(exists); // await
         return;
       }
