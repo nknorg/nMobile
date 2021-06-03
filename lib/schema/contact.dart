@@ -175,7 +175,7 @@ class ContactSchema {
     }
   }
 
-  String get getDisplayName {
+  String get displayName {
     String? displayName;
 
     if (extraInfo != null && extraInfo!.isNotEmpty) {

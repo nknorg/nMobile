@@ -39,6 +39,9 @@
   "top": "Top",
   "top_cancel": "Cancel Top",
   "authenticate_to_access": "authenticate to access",
+  "image": "Image",
+  "audio": "Audio",
+  "video": "Video",
 
   "general": "General",
   "language": "Language",

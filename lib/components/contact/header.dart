@@ -19,7 +19,7 @@ class ContactHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String name = this.contact.getDisplayName;
+    String name = this.contact.displayName;
     return GestureDetector(
       onTap: () {
         if (this.onTap != null) this.onTap!();
