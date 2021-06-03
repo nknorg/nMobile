@@ -47,6 +47,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "amount": MessageLookupByLibrary.simpleMessage("数量"),
         "app_name": MessageLookupByLibrary.simpleMessage("nMobile"),
         "app_version": MessageLookupByLibrary.simpleMessage("版本号"),
+        "audio": MessageLookupByLibrary.simpleMessage("音频"),
         "authenticate_to_access":
             MessageLookupByLibrary.simpleMessage("认证以授权访问"),
         "auto": MessageLookupByLibrary.simpleMessage("跟随系统"),
@@ -207,6 +208,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "help": MessageLookupByLibrary.simpleMessage("帮助"),
         "hint_enter_wallet_name": MessageLookupByLibrary.simpleMessage("账户名称"),
         "hours": MessageLookupByLibrary.simpleMessage("小时"),
+        "image": MessageLookupByLibrary.simpleMessage("图片"),
         "import_ethereum_wallet":
             MessageLookupByLibrary.simpleMessage("导入以太坊账户"),
         "import_nkn_wallet": MessageLookupByLibrary.simpleMessage("导入主网账户"),
@@ -409,6 +411,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "verify_wallet_password":
             MessageLookupByLibrary.simpleMessage("验证账户密码"),
         "version": MessageLookupByLibrary.simpleMessage("版本"),
+        "video": MessageLookupByLibrary.simpleMessage("视频"),
         "view_all": MessageLookupByLibrary.simpleMessage("查看全部"),
         "view_channel_members": MessageLookupByLibrary.simpleMessage("查看群成员"),
         "view_profile": MessageLookupByLibrary.simpleMessage("查看资料"),

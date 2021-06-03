@@ -29,6 +29,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.6.1"
+  background_fetch:
+    dependency: "direct main"
+    description:
+      name: background_fetch
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.0-nullsafety.2"
   bloc:
     dependency: transitive
     description:

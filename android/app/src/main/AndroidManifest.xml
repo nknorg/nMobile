@@ -30,6 +30,7 @@
 
 
     <application
+        tools:replace="android:label"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round">
@@ -41,8 +42,8 @@
             android:hardwareAccelerated="true"
             android:launchMode="singleTop"
             android:showWhenLocked="true"
-            android:theme="@style/LaunchTheme"
             android:turnScreenOn="true"
+            android:theme="@style/LaunchTheme"
             android:roundIcon="@mipmap/ic_launcher_round"
             android:windowSoftInputMode="adjustResize">
             <!-- Specifies an Android theme to apply to this Activity as soon as

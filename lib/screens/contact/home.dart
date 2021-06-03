@@ -164,8 +164,8 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       });
     } else {
       setState(() {
-        _searchStrangers = _allStrangers.where((ContactSchema e) => e.getDisplayName.toLowerCase().contains(val.toLowerCase())).toList();
-        _searchFriends = _allFriends.where((ContactSchema e) => e.getDisplayName.toLowerCase().contains(val.toLowerCase())).toList();
+        _searchStrangers = _allStrangers.where((ContactSchema e) => e.displayName.toLowerCase().contains(val.toLowerCase())).toList();
+        _searchFriends = _allFriends.where((ContactSchema e) => e.displayName.toLowerCase().contains(val.toLowerCase())).toList();
         // _searchTopics = _allTopics.where((Topic e) => e.topic.contains(val)).toList(); // TODO:GG contact topic
       });
     }
@@ -341,7 +341,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
             contentWidget: ContactItem(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               contact: item,
-              bodyTitle: item.getDisplayName,
+              bodyTitle: item.displayName,
               bodyDesc: item.clientAddress,
             ),
             agree: Button(
@@ -396,7 +396,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
               _onTapContactItem(item);
             },
             bgColor: Colors.transparent,
-            bodyTitle: item.getDisplayName,
+            bodyTitle: item.displayName,
             bodyDesc: timeFormat(item.updatedTime),
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             tail: Padding(
@@ -427,7 +427,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
             _onTapContactItem(item);
           },
           bgColor: Colors.transparent,
-          bodyTitle: item.getDisplayName,
+          bodyTitle: item.displayName,
           bodyDesc: timeFormat(item.updatedTime),
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           tail: Padding(

@@ -51,6 +51,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "amount": MessageLookupByLibrary.simpleMessage("Amount"),
         "app_name": MessageLookupByLibrary.simpleMessage("nMobile"),
         "app_version": MessageLookupByLibrary.simpleMessage("App Version"),
+        "audio": MessageLookupByLibrary.simpleMessage("Audio"),
         "authenticate_to_access":
             MessageLookupByLibrary.simpleMessage("authenticate to access"),
         "auto": MessageLookupByLibrary.simpleMessage("Auto"),
@@ -237,6 +238,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "hint_enter_wallet_name":
             MessageLookupByLibrary.simpleMessage("Enter wallet name"),
         "hours": MessageLookupByLibrary.simpleMessage("hours"),
+        "image": MessageLookupByLibrary.simpleMessage("Image"),
         "import_ethereum_wallet":
             MessageLookupByLibrary.simpleMessage("Import Ethereum Account"),
         "import_nkn_wallet":
@@ -470,6 +472,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "verify_wallet_password":
             MessageLookupByLibrary.simpleMessage("Verify Account Password"),
         "version": MessageLookupByLibrary.simpleMessage("Version"),
+        "video": MessageLookupByLibrary.simpleMessage("Video"),
         "view_all": MessageLookupByLibrary.simpleMessage("View All"),
         "view_channel_members": MessageLookupByLibrary.simpleMessage("Members"),
         "view_profile": MessageLookupByLibrary.simpleMessage("View Profile"),

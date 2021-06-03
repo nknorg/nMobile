@@ -55,7 +55,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
         ),
       ],
     );
-  } else if (model.contentType == ContentType.nknImage || model.contentType == ContentType.image) {
+  } else if (model.contentType == ContentType.nknImage || model.contentType == ContentType.media) {
     contentWidget = Padding(
       padding: const EdgeInsets.only(top: 0),
       child: Row(
@@ -188,7 +188,7 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Label(
-                        _schema.getDisplayName,
+                        _schema.displayName,
                         type: LabelType.h3,
                         fontWeight: FontWeight.bold,
                       ),

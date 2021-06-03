@@ -267,8 +267,6 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    print('----------------');
-    print(_sessionList);
     if (_sessionList.isEmpty) {
       return ChatNoMessageLayout();
     }

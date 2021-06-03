@@ -430,6 +430,36 @@ class S {
     );
   }
 
+  /// `Image`
+  String get image {
+    return Intl.message(
+      'Image',
+      name: 'image',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Audio`
+  String get audio {
+    return Intl.message(
+      'Audio',
+      name: 'audio',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Video`
+  String get video {
+    return Intl.message(
+      'Video',
+      name: 'video',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `General`
   String get general {
     return Intl.message(

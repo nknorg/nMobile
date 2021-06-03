@@ -276,7 +276,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       title: _localizations.edit_nickname,
       inputTip: _localizations.edit_nickname,
       inputHint: _localizations.input_nickname,
-      value: _contactSchema?.getDisplayName,
+      value: _contactSchema?.displayName,
       actionText: _localizations.save,
       maxLength: 20,
     );
@@ -390,7 +390,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       clipAlias: false,
       header: Header(
         backgroundColor: application.theme.backgroundColor4,
-        title: _contactSchema?.getDisplayName ?? "",
+        title: _contactSchema?.displayName ?? "",
       ),
       body: _contactSchema?.isMe == true
           ? _getSelfView()
@@ -477,7 +477,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                           SizedBox(width: 20),
                           Expanded(
                             child: Label(
-                              _contactSchema?.getDisplayName ?? "",
+                              _contactSchema?.displayName ?? "",
                               type: LabelType.bodyRegular,
                               color: application.theme.fontColor2,
                               overflow: TextOverflow.fade,
@@ -608,7 +608,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                     SizedBox(width: 20),
                     Expanded(
                       child: Label(
-                        _contactSchema?.getDisplayName ?? "",
+                        _contactSchema?.displayName ?? "",
                         type: LabelType.bodyRegular,
                         color: application.theme.fontColor2,
                         overflow: TextOverflow.fade,
