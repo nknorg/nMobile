@@ -68,7 +68,7 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
         val dataShards = call.argument<Int>("dataShards")!!
         val parityShards = call.argument<Int>("parityShards")!!
 
-        val encoder: Encoder? = Reedsolomon.newDefault(dataShards.toLong(), parityShards.toLong());
+        val encoder: Encoder? = Reedsolomon.newDefault(dataShards.toLong(), parityShards.toLong())
         val dataBytes: BytesArray? = encoder?.splitBytesArray(flutterDataString.toByteArray())
 
         encoder?.encodeBytesArray(dataBytes)
@@ -99,7 +99,6 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
     }
 
     private fun combinePieces(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
         val fDataList = call.argument<ArrayList<ByteArray>>("data")!!
         val dataShards = call.argument<Int>("dataShards")!!
         val parityShards = call.argument<Int>("parityShards")!!
@@ -110,7 +109,6 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val resp = hashMapOf(
-                    "_id" to _id,
                     "event" to "combinePieces",
                     "data" to combines,
                 )

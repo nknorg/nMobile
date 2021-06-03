@@ -340,7 +340,7 @@ class BottomDialog extends BaseStateFulWidget {
                         if (contactCommon.currentUser != null) {
                           var contact = await ContactHomeScreen.go(context, isSelect: true);
                           if (contact != null && contact is ContactSchema) {
-                            _inputController.text = contact.clientAddress ?? "";
+                            _inputController.text = contact.clientAddress;
                           }
                         } else {
                           Toast.show(S.of(context).d_chat_not_login);
