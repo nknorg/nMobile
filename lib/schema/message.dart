@@ -69,6 +69,14 @@ class MessageOptions {
       KEY_INDEX: schema.index,
     };
   }
+
+  static Map<String, dynamic>? clearPiece(Map<String, dynamic>? options) {
+    options?.remove(KEY_PARENT_TYPE);
+    options?.remove(KEY_BYTES_LENGTH);
+    options?.remove(KEY_TOTAL);
+    options?.remove(KEY_PARITY);
+    options?.remove(KEY_INDEX);
+  }
 }
 
 class MessageStatus {
@@ -418,9 +426,10 @@ class MessageSchema extends Equatable {
       topic: piece.topic,
       to: piece.to,
       content: base64String,
-      options: piece.options,
       sendTime: piece.sendTime,
     );
+
+    combine.options = MessageOptions.clearPiece(piece.options);
 
     combine.receiveTime = DateTime.now();
     combine.deleteTime = null; // set in messages bubble
