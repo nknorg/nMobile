@@ -46,9 +46,9 @@ class ReceiveMessage with Tag {
 
   Future onClientMessage(MessageSchema? message, {bool sync = false}) async {
     if (message == null) return;
-    // contact TODO:GG txn/queue
+    // contact
     ContactSchema? contactSchema = await contactHandle(message);
-    // topic TODO:GG txn/queue
+    // topic
     TopicSchema? topicSchema = await topicHandle(message);
     // notification
     notificationHandle(contactSchema, topicSchema, message);
@@ -86,6 +86,7 @@ class ReceiveMessage with Tag {
 
   Future<TopicSchema?> topicHandle(MessageSchema received) async {
     if (received.topic == null || received.topic!.isEmpty) return null;
+    // TODO:GG duplicated
     TopicSchema? topicSchema = await _topicStorage.queryTopicByTopicName(received.topic);
     if (topicSchema == null) {
       return await _topicStorage.insertTopic(TopicSchema(
