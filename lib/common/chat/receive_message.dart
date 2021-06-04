@@ -40,74 +40,28 @@ class ReceiveMessage with Tag {
 
   Future start() async {
     await for (MessageSchema received in onReceiveStream) {
-      await handle(received);
+      await messageHandle(received);
     }
   }
 
-  Future onClientMessage(MessageSchema? message) async {
+  Future onClientMessage(MessageSchema? message, {bool sync = false}) async {
     if (message == null) return;
-    // contact
+    // contact TODO:GG txn/queue
     ContactSchema? contactSchema = await contactHandle(message);
-    // topic
+    // topic TODO:GG txn/queue
     TopicSchema? topicSchema = await topicHandle(message);
     // notification
     notificationHandle(contactSchema, topicSchema, message);
-
-    // receive
-    onReceiveSink.add(message);
-  Future onClientMessage(MessageSchema? received, {bool stream = true}) async {
-    if (received == null) return;
-    // TODO: notification
-    // notification.showDChatNotification();
-    // receive
-    if (stream) {
-      onReceiveSink.add(received);
-    } else {
-      await handle(received);
-    }
-  }
-
-  Future handle(MessageSchema received) async {
-    // contact
-    contactHandle(received); // await
-    // topic
-    topicHandle(received); // await
     // message
-    switch (received.contentType) {
-      // case ContentType.system:
-      //   break;
-      case ContentType.receipt:
-        receiveReceipt(received); // await
-        break;
-      case ContentType.contact:
-        receiveContact(received); // await
-        break;
-      case ContentType.piece:
-        await receivePiece(received);
-        break;
-      case ContentType.text:
-        await receiveText(received);
-        break;
-      // case ContentType.textExtension:
-      //   break;
-      case ContentType.media:
-      case ContentType.nknImage:
-        await receiveImage(received);
-        break;
-      // case ContentType.audio:
-      //   break;
-      // case ContentType.eventContactOptions:
-      //   break;
-      // case ContentType.eventSubscribe:
-      // case ContentType.eventUnsubscribe:
-      //   break;
-      // case ContentType.eventChannelInvitation:
-      //   break;
+    if (!sync) {
+      onReceiveSink.add(message);
+    } else {
+      await messageHandle(message);
     }
   }
 
   Future<ContactSchema?> contactHandle(MessageSchema received) async {
-    // type TODO:GG piece????
+    // type
     bool noText = received.contentType != ContentType.text && received.contentType != ContentType.textExtension;
     bool noImage = received.contentType != ContentType.media && received.contentType != ContentType.nknImage;
     bool noAudio = received.contentType != ContentType.audio;
@@ -170,6 +124,40 @@ class ReceiveMessage with Tag {
       case ContentType.audio:
         notification.showDChatNotification(title, '[${localizations.audio}]');
         break;
+    }
+  }
+
+  Future messageHandle(MessageSchema received) async {
+    switch (received.contentType) {
+      // case ContentType.system:
+      //   break;
+      case ContentType.receipt:
+        receiveReceipt(received); // await
+        break;
+      case ContentType.contact:
+        receiveContact(received); // await
+        break;
+      case ContentType.piece:
+        await receivePiece(received);
+        break;
+      case ContentType.text:
+        await receiveText(received);
+        break;
+      // case ContentType.textExtension:
+      //   break;
+      case ContentType.media:
+      case ContentType.nknImage:
+        await receiveImage(received);
+        break;
+      // case ContentType.audio:
+      //   break;
+      // case ContentType.eventContactOptions:
+      //   break;
+      // case ContentType.eventSubscribe:
+      // case ContentType.eventUnsubscribe:
+      //   break;
+      // case ContentType.eventChannelInvitation:
+      //   break;
     }
   }
 
@@ -295,7 +283,8 @@ class ReceiveMessage with Tag {
     }
     MessageSchema combine = MessageSchema.fromPieces(pieces, base64String);
     logger.d("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
-    await onClientMessage(combine, stream: false);
+    await onClientMessage(combine, sync: true);
+    // TODO:GG remove pieces
   }
 
   Future receiveText(MessageSchema received) async {

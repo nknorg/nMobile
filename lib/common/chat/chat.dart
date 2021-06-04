@@ -49,16 +49,12 @@ class ChatCommon with Tag {
 
   // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
-
   StreamSink<int> get _statusSink => _statusController.sink;
-
   Stream<int> get statusStream => _statusController.stream;
 
   // ignore: close_sinks
   StreamController<dynamic> _onErrorController = StreamController<dynamic>.broadcast();
-
   StreamSink<dynamic> get _onErrorSink => _onErrorController.sink;
-
   Stream<dynamic> get onErrorStream => _onErrorController.stream;
 
   StreamSubscription? _onErrorStreamSubscription;
@@ -129,7 +125,7 @@ class ChatCommon with Tag {
 
     // client messages_receive
     _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) async {
-      logger.i("$TAG - onMessage -> messageId:${event.messageId} - src:${event.src} - data:${event.data} - type:${event.type} - encrypted:${event.encrypted}");
+      logger.i("$TAG - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${event.data} - encrypted:${event.encrypted}");
       await receiveMessage.onClientMessage(MessageSchema.fromReceive(event));
     });
     await completer.future;
