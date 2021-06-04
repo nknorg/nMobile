@@ -167,7 +167,7 @@ class MessageData {
       'version': profileVersion,
       'expiresAt': expiresAt.millisecondsSinceEpoch,
     };
-    data['onePieceReady'] = '1'; // TODO:GG ???
+    // data['onePieceReady'] = '1';
     return jsonEncode(data);
   }
 
@@ -193,7 +193,7 @@ class MessageData {
       }
     }
     data['content'] = content;
-    data['onePieceReady'] = '1'; // TODO:GG ???
+    // data['onePieceReady'] = '1';
     return jsonEncode(data);
   }
 
@@ -559,7 +559,7 @@ class MessageSchema extends Equatable {
 
   @override
   String toString() {
-    return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, contentType: $contentType, content: $content, options: $options, sendTime: $sendTime, receiveTime: $receiveTime, deleteTime: $deleteTime, isOutbound: $isOutbound, isSendError: $isSendError, isSuccess: $isSuccess, isRead: $isRead, parentType: $parentType, bytesLength: $bytesLength, total: $total, parity: $parity, index: $index}';
+    return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, contentType: $contentType, content: ${(content is String && (content as String).length <= 100) ? content : "~~~~~"}, options: $options, sendTime: $sendTime, receiveTime: $receiveTime, deleteTime: $deleteTime, isOutbound: $isOutbound, isSendError: $isSendError, isSuccess: $isSuccess, isRead: $isRead, parentType: $parentType, bytesLength: $bytesLength, total: $total, parity: $parity, index: $index}';
   }
 
   @override

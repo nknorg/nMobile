@@ -21,13 +21,14 @@ import '../global.dart';
 import '../locator.dart';
 
 class ReceiveMessage with Tag {
-  ReceiveMessage();
+  ReceiveMessage() {
+    start();
+  }
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onReceiveController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get onReceiveSink => _onReceiveController.sink;
   Stream<MessageSchema> get onReceiveStream => _onReceiveController.stream.distinct((prev, next) => prev.pid == next.pid);
-  List<StreamSubscription> onReceiveStreamSubscriptions = <StreamSubscription>[];
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
@@ -37,21 +38,10 @@ class ReceiveMessage with Tag {
   MessageStorage _messageStorage = MessageStorage();
   TopicStorage _topicStorage = TopicStorage();
 
-  startReceive() {
-    receiveReceipt();
-    receiveContact();
-    receivePiece();
-    receiveText();
-    receiveImage();
-  }
-
-  Future stopReceive() {
-    List<Future> futures = <Future>[];
-    onReceiveStreamSubscriptions.forEach((StreamSubscription element) {
-      futures.add(element.cancel());
-    });
-    onReceiveStreamSubscriptions.clear();
-    return Future.wait(futures);
+  Future start() async {
+    await for (MessageSchema received in onReceiveStream) {
+      await handle(received);
+    }
   }
 
   Future onClientMessage(MessageSchema? message) async {
@@ -65,6 +55,55 @@ class ReceiveMessage with Tag {
 
     // receive
     onReceiveSink.add(message);
+  Future onClientMessage(MessageSchema? received, {bool stream = true}) async {
+    if (received == null) return;
+    // TODO: notification
+    // notification.showDChatNotification();
+    // receive
+    if (stream) {
+      onReceiveSink.add(received);
+    } else {
+      await handle(received);
+    }
+  }
+
+  Future handle(MessageSchema received) async {
+    // contact
+    contactHandle(received); // await
+    // topic
+    topicHandle(received); // await
+    // message
+    switch (received.contentType) {
+      // case ContentType.system:
+      //   break;
+      case ContentType.receipt:
+        receiveReceipt(received); // await
+        break;
+      case ContentType.contact:
+        receiveContact(received); // await
+        break;
+      case ContentType.piece:
+        await receivePiece(received);
+        break;
+      case ContentType.text:
+        await receiveText(received);
+        break;
+      // case ContentType.textExtension:
+      //   break;
+      case ContentType.media:
+      case ContentType.nknImage:
+        await receiveImage(received);
+        break;
+      // case ContentType.audio:
+      //   break;
+      // case ContentType.eventContactOptions:
+      //   break;
+      // case ContentType.eventSubscribe:
+      // case ContentType.eventUnsubscribe:
+      //   break;
+      // case ContentType.eventChannelInvitation:
+      //   break;
+    }
   }
 
   Future<ContactSchema?> contactHandle(MessageSchema received) async {
@@ -135,173 +174,165 @@ class ReceiveMessage with Tag {
   }
 
   // NO DB NO display
-  receiveReceipt() {
-    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.receipt).listen((MessageSchema event) async {
-      List<MessageSchema> _schemaList = await _messageStorage.queryList(event.content);
-      _schemaList.forEach((MessageSchema element) async {
-        element = MessageStatus.set(element, MessageStatus.SendWithReceipt);
-        bool updated = await _messageStorage.updateMessageStatus(element);
-        if (updated) {
-          // update send by receipt
-          sendMessage.onUpdateSink.add(element);
-        }
-        logger.d("$TAG - receiveReceipt - updated:$element");
-      });
+  Future receiveReceipt(MessageSchema received) async {
+    List<MessageSchema> _schemaList = await _messageStorage.queryList(received.content);
+    _schemaList.forEach((MessageSchema element) async {
+      element = MessageStatus.set(element, MessageStatus.SendWithReceipt);
+      bool updated = await _messageStorage.updateMessageStatus(element);
+      if (updated) {
+        // update send by receipt
+        sendMessage.onUpdateSink.add(element);
+      }
+      logger.d("$TAG - receiveReceipt - updated:$element");
     });
-    onReceiveStreamSubscriptions.add(subscription);
   }
 
   // NO DB NO display
-  receiveContact() {
-    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.contact).listen((MessageSchema event) async {
-      if (event.content == null) return;
-      Map<String, dynamic> data = event.content; // == data
-      // duplicated
-      ContactSchema? exist = await contactCommon.queryByClientAddress(event.from);
-      if (exist == null) {
-        logger.w("$TAG - receiveContact - empty - data:$data");
-        return;
+  Future receiveContact(MessageSchema received) async {
+    if (received.content == null) return;
+    Map<String, dynamic> data = received.content; // == data
+    // duplicated
+    ContactSchema? exist = await contactCommon.queryByClientAddress(received.from);
+    if (exist == null) {
+      logger.w("$TAG - receiveContact - empty - data:$data");
+      return;
+    }
+    // D-Chat NO RequestType.header
+    String? requestType = data['requestType'];
+    String? responseType = data['responseType'];
+    String? version = data['version'];
+    Map<String, dynamic>? content = data['content'];
+    if ((requestType?.isNotEmpty == true) || (requestType == null && responseType == null && version == null)) {
+      // need reply
+      if (requestType == RequestType.header) {
+        await sendMessage.sendContactResponse(exist, RequestType.header);
+      } else {
+        await sendMessage.sendContactResponse(exist, RequestType.full);
       }
-      // D-Chat NO RequestType.header
-      String? requestType = data['requestType'];
-      String? responseType = data['responseType'];
-      String? version = data['version'];
-      Map<String, dynamic>? content = data['content'];
-      if ((requestType?.isNotEmpty == true) || (requestType == null && responseType == null && version == null)) {
-        // need reply
-        if (requestType == RequestType.header) {
-          await sendMessage.sendContactResponse(exist, RequestType.header);
+    } else {
+      // need request/save
+      if (!contactCommon.isProfileVersionSame(exist.profileVersion, version)) {
+        if (responseType != RequestType.full && content == null) {
+          await sendMessage.sendContactRequest(exist, RequestType.full);
         } else {
-          await sendMessage.sendContactResponse(exist, RequestType.full);
+          if (content == null) {
+            logger.w("$TAG - receiveContact - content is empty - data:$data");
+            return;
+          }
+          String? firstName = content['first_name'] ?? content['name'];
+          File? avatar;
+          String? avatarType = content['avatar'] != null ? content['avatar']['type'] : null;
+          if (avatarType?.isNotEmpty == true) {
+            String? avatarData = content['avatar'] != null ? content['avatar']['data'] : null;
+            if (avatarData?.isNotEmpty == true) {
+              if (avatarData.toString().split(",").length != 1) {
+                avatarData = avatarData.toString().split(",")[1];
+              }
+              avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact, extension: "jpg");
+            }
+          }
+          await contactCommon.setProfile(exist, firstName, avatar?.path, version, notify: true);
+          logger.i("$TAG - receiveContact - setProfile - firstName:$firstName - avatar:${avatar?.path} - version:$version - data:$data");
         }
       } else {
-        // need request/save
-        if (!contactCommon.isProfileVersionSame(exist.profileVersion, version)) {
-          if (responseType != RequestType.full && content == null) {
-            await sendMessage.sendContactRequest(exist, RequestType.full);
-          } else {
-            if (content == null) {
-              logger.w("$TAG - receiveContact - content is empty - data:$data");
-              return;
-            }
-            String? firstName = content['first_name'] ?? content['name'];
-            File? avatar;
-            String? avatarType = content['avatar'] != null ? content['avatar']['type'] : null;
-            if (avatarType?.isNotEmpty == true) {
-              String? avatarData = content['avatar'] != null ? content['avatar']['data'] : null;
-              if (avatarData?.isNotEmpty == true) {
-                if (avatarData.toString().split(",").length != 1) {
-                  avatarData = avatarData.toString().split(",")[1];
-                }
-                avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact, extension: "jpg");
-              }
-            }
-            contactCommon.setProfile(exist, firstName, avatar?.path, version, notify: true);
-            logger.i("$TAG - receiveContact - setProfile - firstName:$firstName - avatar:${avatar?.path} - version:$version - data:$data");
-          }
-        } else {
-          logger.d("$TAG - receiveContact - profileVersionSame - contact:$exist - data:$data");
-        }
+        logger.d("$TAG - receiveContact - profileVersionSame - contact:$exist - data:$data");
       }
-    });
-    onReceiveStreamSubscriptions.add(subscription);
+    }
   }
 
-  receivePiece() {
-    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.piece).listen((MessageSchema event) async {
-      // duplicated
-      List<MessageSchema> existsCombine = await _messageStorage.queryListByType(event.msgId, event.parentType);
-      if (existsCombine.isNotEmpty) {
-        logger.d("$TAG - receivePiece - duplicated - schema:$existsCombine");
-        _checkReceipt(existsCombine[0]); // await
-        return;
+  Future receivePiece(MessageSchema received) async {
+    // duplicated
+    List<MessageSchema> existsCombine = await _messageStorage.queryListByType(received.msgId, received.parentType);
+    if (existsCombine.isNotEmpty) {
+      logger.d("$TAG - receivePiece - duplicated - schema:$existsCombine");
+      _checkReceipt(existsCombine[0]); // await
+      return;
+    }
+    // piece
+    MessageSchema? piece = await _messageStorage.queryByPid(received.pid);
+    if (piece == null) {
+      received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: received.parentType);
+      piece = await _messageStorage.insert(received);
+    }
+    if (piece == null) return;
+    // pieces
+    int total = piece.total ?? SendMessage.maxPiecesTotal;
+    int parity = piece.parity ?? (total ~/ SendMessage.piecesParity);
+    int bytesLength = piece.bytesLength ?? 0;
+    List<MessageSchema> pieces = await _messageStorage.queryListByType(piece.msgId, piece.contentType);
+    logger.d("$TAG - receivePiece - progress:${pieces.length}/${piece.total}/${total + parity}");
+    if (pieces.isEmpty || pieces.length < total || bytesLength <= 0) return;
+    logger.d("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+    pieces.sort((prev, next) => (prev.index ?? SendMessage.maxPiecesTotal).compareTo((next.index ?? SendMessage.maxPiecesTotal)));
+    // recover
+    List<Uint8List> recoverList = <Uint8List>[];
+    for (int index = 0; index < total + parity; index++) {
+      recoverList.add(Uint8List(0)); // fill
+    }
+    int recoverCount = 0;
+    for (int index = 0; index < pieces.length; index++) {
+      MessageSchema item = pieces[index];
+      File? file = item.content as File?;
+      if (file == null || !file.existsSync()) {
+        logger.w("$TAG - receivePiece - COMBINE:ERROR - file no exists - item:$item - file:${file?.path}");
+        continue;
       }
-      // piece
-      MessageSchema? piece = await _messageStorage.queryByPid(event.pid);
-      if (piece == null) {
-        event.content = await FileHelper.convertBase64toFile(event.content, SubDirType.cache, extension: event.parentType);
-        piece = await _messageStorage.insert(event);
+      Uint8List itemBytes = file.readAsBytesSync();
+      if (item.index != null && item.index! >= 0 && item.index! < recoverList.length) {
+        recoverList[item.index!] = itemBytes;
+        recoverCount++;
       }
-      if (piece == null) return;
-      // pieces
-      int total = piece.total ?? SendMessage.maxPiecesTotal;
-      int parity = piece.parity ?? (total ~/ SendMessage.piecesParity);
-      int bytesLength = piece.bytesLength ?? 0;
-      List<MessageSchema> pieces = await _messageStorage.queryListByType(piece.msgId, piece.contentType);
-      if (pieces.isEmpty || pieces.length < total || bytesLength <= 0) {
-        logger.d("$TAG - receivePiece - progress:${pieces.length}/${piece.total}");
-        return;
-      }
-      pieces.sort((prev, next) => (prev.index ?? SendMessage.maxPiecesTotal).compareTo((next.index ?? SendMessage.maxPiecesTotal)));
-      // combine
-      logger.d("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
-      List<Uint8List> recoverList = <Uint8List>[];
-      for (int index = 0; index < pieces.length; index++) {
-        MessageSchema item = pieces[index];
-        File? file = item.content as File?;
-        if (file == null || !file.existsSync()) {
-          logger.w("$TAG - receivePiece - COMBINE:ERROR - file no exists - item:$item - file:${file?.path}");
-          continue;
-        }
-        Uint8List itemBytes = file.readAsBytesSync();
-        recoverList.add(itemBytes);
-      }
-      if (recoverList.length < total) {
-        logger.w("$TAG - receivePiece - COMBINE:FAIL - recover_lost:${pieces.length - recoverList.length}");
-        return;
-      }
-      String? base64String = await Common.combinePieces(recoverList, total, parity, bytesLength);
-      if (base64String == null || base64String.isEmpty) {
-        logger.w("$TAG - receivePiece - COMBINE:FAIL - base64String is empty");
-        return;
-      }
-      MessageSchema combine = MessageSchema.fromPieces(pieces, base64String);
-      logger.d("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
-      onClientMessage(combine);
-    });
-    onReceiveStreamSubscriptions.add(subscription);
+    }
+    if (recoverCount < total) {
+      logger.w("$TAG - receivePiece - COMBINE:FAIL - recover_lost:${pieces.length - recoverCount}");
+      return;
+    }
+    // combine
+    String? base64String = await Common.combinePieces(recoverList, total, parity, bytesLength);
+    if (base64String == null || base64String.isEmpty) {
+      logger.w("$TAG - receivePiece - COMBINE:FAIL - base64String is empty");
+      return;
+    }
+    MessageSchema combine = MessageSchema.fromPieces(pieces, base64String);
+    logger.d("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
+    await onClientMessage(combine, stream: false);
   }
 
-  receiveText() {
-    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.text).listen((MessageSchema event) async {
-      // duplicated
-      MessageSchema? exists = await _messageStorage.queryByPid(event.pid);
-      if (exists != null) {
-        logger.d("$TAG - receiveText - duplicated - schema:$exists");
-        _checkReceipt(exists); // await
-        return;
-      }
-      // DB
-      MessageSchema? schema = await _messageStorage.insert(event);
-      if (schema == null) return;
-      // receipt
-      _checkReceipt(schema); // await
-      // display
-      onSavedSink.add(schema);
-    });
-    onReceiveStreamSubscriptions.add(subscription);
+  Future receiveText(MessageSchema received) async {
+    // duplicated
+    MessageSchema? exists = await _messageStorage.queryByPid(received.pid);
+    if (exists != null) {
+      logger.d("$TAG - receiveText - duplicated - schema:$exists");
+      _checkReceipt(exists); // await
+      return;
+    }
+    // DB
+    MessageSchema? schema = await _messageStorage.insert(received);
+    if (schema == null) return;
+    // receipt
+    _checkReceipt(schema); // await
+    // display
+    onSavedSink.add(schema);
   }
 
-  receiveImage() {
-    StreamSubscription subscription = onReceiveStream.where((event) => event.contentType == ContentType.media || event.contentType == ContentType.nknImage).listen((MessageSchema event) async {
-      // duplicated
-      MessageSchema? exists = await _messageStorage.queryByPid(event.pid);
-      if (exists != null) {
-        logger.d("$TAG - receiveImage - duplicated - schema:$exists");
-        _checkReceipt(exists); // await
-        return;
-      }
-      // File
-      event.content = await FileHelper.convertBase64toFile(event.content, SubDirType.chat, extension: "jpg");
-      // DB
-      MessageSchema? schema = await _messageStorage.insert(event);
-      if (schema == null) return;
-      // receipt
-      _checkReceipt(schema); // await
-      // display
-      onSavedSink.add(schema);
-    });
-    onReceiveStreamSubscriptions.add(subscription);
+  Future receiveImage(MessageSchema received) async {
+    // duplicated
+    MessageSchema? exists = await _messageStorage.queryByPid(received.pid);
+    if (exists != null) {
+      logger.d("$TAG - receiveImage - duplicated - schema:$exists");
+      _checkReceipt(exists); // await
+      return;
+    }
+    // File
+    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: "jpg");
+    if (received.content == null) return;
+    // DB
+    MessageSchema? schema = await _messageStorage.insert(received);
+    if (schema == null) return;
+    // receipt
+    _checkReceipt(schema); // await
+    // display
+    onSavedSink.add(schema);
   }
 
   // receipt(receive) != read(look)

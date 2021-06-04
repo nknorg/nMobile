@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -57,12 +58,13 @@ class MediaPicker {
           break;
       }
     }
+    bool isGif = (mime(pickedFile.path)?.indexOf('image/gif') ?? -1) >= 0;
     logger.d("MediaPicker - media_pick - picked - path:${pickedFile.path} - ext:$fileExt"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
     // logger.d('MediaPicker - media_pick - picked - size:${formatFlowSize(pickedFile.lengthSync().toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
 
     // crop
     File? croppedFile;
-    if (cropStyle == null) {
+    if (cropStyle == null || isGif) {
       croppedFile = pickedFile;
     } else {
       croppedFile = await ImageCropper.cropImage(
@@ -91,7 +93,7 @@ class MediaPicker {
 
     // compress
     File? compressFile;
-    if (compressQuality >= 100) {
+    if (compressQuality >= 100 || isGif) {
       compressFile = croppedFile;
     } else if (compressQuality < 100) {
       String compressPath = await Path.getCacheFile(null, fileExt: fileExt);

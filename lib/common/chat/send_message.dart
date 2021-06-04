@@ -18,10 +18,10 @@ import '../locator.dart';
 
 class SendMessage with Tag {
   // piece
-  static const int pieceLength = 1024 * 6;
   static const int piecesParity = 3;
+  static const int prePieceLength = 1024 * 6;
   static const int minPiecesTotal = 2 * piecesParity; // parity >= 2
-  static const int maxPiecesTotal = 33 * piecesParity; // parity <= 25
+  static const int maxPiecesTotal = 10 * piecesParity; // parity <= 10
 
   SendMessage();
 
@@ -260,18 +260,18 @@ class SendMessage with Tag {
     File? file = message.content as File?;
     if (file == null || !file.existsSync()) return [];
     int length = await file.length();
-    if (length <= pieceLength) return [];
+    if (length <= prePieceLength) return [];
     // data
     Uint8List fileBytes = await file.readAsBytes();
     String base64Data = base64.encode(fileBytes);
     // bytesLength
     int bytesLength = base64Data.length;
-    if (bytesLength < pieceLength * minPiecesTotal) return [];
+    if (bytesLength < prePieceLength * minPiecesTotal) return [];
     // total (5~257)
     int total;
-    if (bytesLength < pieceLength * maxPiecesTotal) {
-      total = bytesLength ~/ pieceLength;
-      if (bytesLength % pieceLength > 0) {
+    if (bytesLength < prePieceLength * maxPiecesTotal) {
+      total = bytesLength ~/ prePieceLength;
+      if (bytesLength % prePieceLength > 0) {
         total += 1;
       }
     } else {
@@ -279,8 +279,8 @@ class SendMessage with Tag {
     }
     // parity(>=2)
     int parity = total ~/ piecesParity;
-    if (parity <= 2) {
-      parity = 2;
+    if (parity <= minPiecesTotal ~/ piecesParity) {
+      parity = minPiecesTotal ~/ piecesParity;
     }
     return [base64Data, bytesLength, total, parity];
   }

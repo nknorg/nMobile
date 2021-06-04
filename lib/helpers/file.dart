@@ -55,4 +55,30 @@ class FileHelper {
     }
     return file;
   }
+
+  static String? getExtensionByBase64(String? base64Data) {
+    if (base64Data == null || base64Data.isEmpty) return null;
+    String? extension;
+    var match = RegExp(r'\(data:(.*);base64,(.*)\)').firstMatch(base64Data);
+    var mimeType = match?.group(1) ?? "";
+    var fileBase64 = match?.group(2);
+    if (fileBase64 == null || fileBase64.isEmpty) return null;
+
+    if (mimeType.indexOf('image/jpg') > -1 || mimeType.indexOf('image/jpeg') > -1) {
+      extension = 'jpg';
+    } else if (mimeType.indexOf('image/png') > -1) {
+      extension = 'png';
+    } else if (mimeType.indexOf('image/gif') > -1) {
+      extension = 'gif';
+    } else if (mimeType.indexOf('image/webp') > -1) {
+      extension = 'webp';
+    } else if (mimeType.indexOf('image/') > -1) {
+      extension = mimeType.split('/').last;
+    } else if (mimeType.indexOf('aac') > -1) {
+      extension = 'aac';
+    } else {
+      logger.w('FileHelper - convertBase64toFile - no_extension');
+    }
+    return extension;
+  }
 }

@@ -132,15 +132,12 @@ class ChatCommon with Tag {
       logger.i("$TAG - onMessage -> messageId:${event.messageId} - src:${event.src} - data:${event.data} - type:${event.type} - encrypted:${event.encrypted}");
       await receiveMessage.onClientMessage(MessageSchema.fromReceive(event));
     });
-    receiveMessage.startReceive();
     await completer.future;
   }
 
   close() async {
     // status
     _statusSink.add(ChatConnectStatus.disconnected);
-    // message
-    await receiveMessage.stopReceive();
     // client
     await _onErrorStreamSubscription?.cancel();
     await _onConnectStreamSubscription?.cancel();
