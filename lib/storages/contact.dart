@@ -49,11 +49,28 @@ class ContactStorage with Tag {
     await db.execute('CREATE INDEX index_contact_updated_time ON $tableName (updated_time)');
   }
 
-  Future<ContactSchema?> insert(ContactSchema? schema) async {
-    if (schema == null) return null;
+  Future<ContactSchema?> insert(ContactSchema? schema, {bool canDuplicated = false}) async {
+    if (schema == null || schema.clientAddress.isEmpty) return null;
     try {
       Map<String, dynamic> entity = await schema.toMap();
-      int? id = await db?.insert(tableName, entity);
+      int? id;
+      if (canDuplicated) {
+        id = await db?.insert(tableName, entity);
+      } else {
+        await db?.transaction((txn) async {
+          List<Map<String, dynamic>>? res = await txn.query(
+            tableName,
+            columns: ['*'],
+            where: 'address = ?',
+            whereArgs: [schema.clientAddress],
+          );
+          if (res != null && res.length > 0) {
+            throw Exception(["contact duplicated!"]);
+          } else {
+            id = await txn.insert(tableName, entity);
+          }
+        });
+      }
       if (id != null && id != 0) {
         ContactSchema schema = await ContactSchema.fromMap(entity);
         schema.id = id;
