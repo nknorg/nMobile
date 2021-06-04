@@ -234,7 +234,7 @@ class ReceiveMessage with Tag {
     List<MessageSchema> existsCombine = await _messageStorage.queryListByType(received.msgId, received.parentType);
     if (existsCombine.isNotEmpty) {
       logger.d("$TAG - receivePiece - duplicated - schema:$existsCombine");
-      _checkReceipt(existsCombine[0]); // await
+      sendMessage.sendReceipt(existsCombine[0]); // await
       return;
     }
     // piece
@@ -283,9 +283,29 @@ class ReceiveMessage with Tag {
       return;
     }
     MessageSchema combine = MessageSchema.fromPieces(pieces, base64String);
+    // combine.content - handle later
     logger.d("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
     await onClientMessage(combine, sync: true);
-    // TODO:GG remove pieces
+    // delete
+    logger.d("$TAG - receivePiece - DELETE:START - pieces_count:${pieces.length}");
+    bool deleted = await _messageStorage.delete(piece);
+    if (deleted) {
+      pieces.forEach((MessageSchema element) {
+        if (element.content is File) {
+          if ((element.content as File).existsSync()) {
+            (element.content as File).delete(); // await
+            logger.d("$TAG - receivePiece - DELETE:PROGRESS - path:${(element.content as File).path}");
+          } else {
+            logger.w("$TAG - receivePiece - DELETE:ERROR - NoExists - path:${(element.content as File).path}");
+          }
+        } else {
+          logger.w("$TAG - receivePiece - DELETE:ERROR - empty:${element.content?.toString()}");
+        }
+      });
+      logger.d("$TAG - receivePiece - DELETE:SUCCESS - count:${pieces.length}");
+    } else {
+      logger.w("$TAG - receivePiece - DELETE:FAIL - empty - pieces:$pieces");
+    }
   }
 
   Future receiveText(MessageSchema received) async {
@@ -293,14 +313,14 @@ class ReceiveMessage with Tag {
     MessageSchema? exists = await _messageStorage.queryByPid(received.pid);
     if (exists != null) {
       logger.d("$TAG - receiveText - duplicated - schema:$exists");
-      _checkReceipt(exists); // await
+      sendMessage.sendReceipt(exists); // await
       return;
     }
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);
     if (schema == null) return;
     // receipt
-    _checkReceipt(schema); // await
+    sendMessage.sendReceipt(schema); // await
     // display
     onSavedSink.add(schema);
   }
@@ -310,7 +330,7 @@ class ReceiveMessage with Tag {
     MessageSchema? exists = await _messageStorage.queryByPid(received.pid);
     if (exists != null) {
       logger.d("$TAG - receiveImage - duplicated - schema:$exists");
-      _checkReceipt(exists); // await
+      sendMessage.sendReceipt(exists); // await
       return;
     }
     // File
@@ -320,17 +340,9 @@ class ReceiveMessage with Tag {
     MessageSchema? schema = await _messageStorage.insert(received);
     if (schema == null) return;
     // receipt
-    _checkReceipt(schema); // await
+    sendMessage.sendReceipt(schema); // await
     // display
     onSavedSink.add(schema);
-  }
-
-  // receipt(receive) != read(look)
-  Future _checkReceipt(MessageSchema schema) async {
-    int msgStatus = MessageStatus.get(schema);
-    if (msgStatus != MessageStatus.ReceivedRead) {
-      await sendMessage.sendReceipt(schema);
-    }
   }
 
   // receipt(receive) != read(look)
