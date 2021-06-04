@@ -70,12 +70,12 @@ class MessageStorage with Tag {
   }
 
   Future<bool> delete(MessageSchema? schema) async {
-    if (schema == null) return false;
+    if (schema == null || schema.contentType.isEmpty) return false;
     try {
       int? result = await db?.delete(
         tableName,
-        where: 'msg_id = ?',
-        whereArgs: [schema.msgId],
+        where: 'msg_id = ? AND type = ?',
+        whereArgs: [schema.msgId, schema.contentType],
       );
       if (result != null && result > 0) {
         logger.d("$TAG - delete - success - schema:$schema");
@@ -87,6 +87,40 @@ class MessageStorage with Tag {
     }
     return false;
   }
+
+  // Future<int> deleteList(List<MessageSchema>? list) async {
+  //   if (list == null || list.isEmpty) return 0;
+  //   try {
+  //     Batch? batch = db?.batch();
+  //     for (MessageSchema schema in list) {
+  //       batch?.delete(
+  //         tableName,
+  //         where: 'msg_id = ?',
+  //         whereArgs: [schema.msgId],
+  //       );
+  //     }
+  //     List<Object?>? results = await batch?.commit();
+  //     int count = 0;
+  //     if (results != null && results.isNotEmpty) {
+  //       for (Object? result in results) {
+  //         if (result != null && (result as int) > 0) {
+  //           count += result;
+  //         }
+  //       }
+  //     }
+  //     if (count >= list.length) {
+  //       logger.d("$TAG - deleteList - success - count:$count");
+  //       return count;
+  //     } else if (count > 0) {
+  //       logger.w("$TAG - deleteList - lost - lost:${list.length - count}");
+  //       return count;
+  //     }
+  //     logger.w("$TAG - deleteList - empty - list:$list");
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return 0;
+  // }
 
   Future<MessageSchema?> queryByPid(Uint8List? pid) async {
     if (pid == null || pid.isEmpty) return null;
