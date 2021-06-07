@@ -14,6 +14,9 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		C61A6E70266A1A7C00A7F1E1 /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = C61A6E6F266A1A7C00A7F1E1 /* Common.swift */; };
+		C6F42E04266A28CE007BA337 /* channelBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F42E03266A28CE007BA337 /* channelBase.swift */; };
+		C6FFD764266E09E600410547 /* CommonOc.m in Sources */ = {isa = PBXBuildFile; fileRef = C6FFD763266E09E600410547 /* CommonOc.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -45,6 +48,10 @@
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BB81A8CC5C4B8BE86FCCED33 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		C61A6E6F266A1A7C00A7F1E1 /* Common.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Common.swift; sourceTree = "<group>"; };
+		C6F42E03266A28CE007BA337 /* channelBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = channelBase.swift; sourceTree = "<group>"; };
+		C6FFD762266E09E600410547 /* CommonOc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommonOc.h; sourceTree = "<group>"; };
+		C6FFD763266E09E600410547 /* CommonOc.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CommonOc.m; sourceTree = "<group>"; };
 		EF85A4F0D1B70F13FC0677EB /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		FEE3427A3D5D4232B5392C1A /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -93,6 +100,7 @@
 		97C146E51CF9000F007C117D = {
 			isa = PBXGroup;
 			children = (
+				C61A6E6D266A19F000A7F1E1 /* Classes */,
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
@@ -122,6 +130,25 @@
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
+			sourceTree = "<group>";
+		};
+		C61A6E6D266A19F000A7F1E1 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				C61A6E6E266A1A2100A7F1E1 /* NKNPush */,
+				C61A6E6F266A1A7C00A7F1E1 /* Common.swift */,
+				C6F42E03266A28CE007BA337 /* channelBase.swift */,
+				C6FFD762266E09E600410547 /* CommonOc.h */,
+				C6FFD763266E09E600410547 /* CommonOc.m */,
+			);
+			path = Classes;
+			sourceTree = "<group>";
+		};
+		C61A6E6E266A1A2100A7F1E1 /* NKNPush */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = NKNPush;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -271,7 +298,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C6FFD764266E09E600410547 /* CommonOc.m in Sources */,
+				C6F42E04266A28CE007BA337 /* channelBase.swift in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
+				C61A6E70266A1A7C00A7F1E1 /* Common.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
