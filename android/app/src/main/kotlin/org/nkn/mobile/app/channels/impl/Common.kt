@@ -64,31 +64,27 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
     }
 
     private fun splitPieces(call: MethodCall, result: MethodChannel.Result) {
-        val flutterDataString = call.argument<String>("data")!!
+        val dataString = call.argument<String>("data")!!
         val dataShards = call.argument<Int>("dataShards")!!
         val parityShards = call.argument<Int>("parityShards")!!
 
-        val encoder: Encoder? = Reedsolomon.newDefault(dataShards.toLong(), parityShards.toLong())
+        viewModelScope.launch(Dispatchers.IO) {
+            val encoder: Encoder? = Reedsolomon.newDefault(dataShards.toLong(), parityShards.toLong())
+            val splitBytes: BytesArray? = encoder?.splitBytesArray(dataString.toByteArray())
+            encoder?.encodeBytesArray(splitBytes)
 
-        val splitBytes: BytesArray? = encoder?.splitBytesArray(flutterDataString.toByteArray())
-
-        encoder?.encodeBytesArray(splitBytes)
-
-        val returnArray = ArrayList<ByteArray>()
-        if (splitBytes != null && splitBytes.len() > 0) {
-            for (index: Int in 0 until (dataShards + parityShards)) {
-                if (index >= splitBytes.len()) break
-                val theBytes = splitBytes.get(index.toLong())
-                if (theBytes != null) {
-                    returnArray.add(theBytes)
+            val returnArray = ArrayList<ByteArray>()
+            if (splitBytes != null && splitBytes.len() > 0) {
+                for (index: Int in 0 until (dataShards + parityShards)) {
+                    if (index >= splitBytes.len()) break
+                    val b = splitBytes.get(index.toLong())
+                    if (b != null) returnArray.add(b)
                 }
             }
-        }
 
-        viewModelScope.launch(Dispatchers.IO) {
             try {
                 val resp = hashMapOf(
-                    "event" to "intoPieces",
+                    "event" to "splitPieces",
                     "data" to returnArray,
                 )
                 resultSuccess(result, resp)
@@ -107,9 +103,52 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
         val parityShards = call.argument<Int>("parityShards")!!
         val bytesLength = call.argument<Int>("bytesLength")!!
 
-        val combines: String? = combineBytesArray(dataList, dataShards, parityShards, bytesLength)
-
         viewModelScope.launch(Dispatchers.IO) {
+            val totalShards = dataShards + parityShards
+            val encodeDataBytes = BytesArray(totalShards.toLong())
+            var piecesLength = 0
+            for (index in dataList.indices) {
+                val data = dataList[index]
+                piecesLength += data.size
+                if (data.isNotEmpty()) {
+                    encodeDataBytes[index.toLong()] = data
+                } else {
+                    encodeDataBytes[index.toLong()] = null
+                }
+            }
+
+            val encoder = Reedsolomon.newDefault(dataShards.toLong(), parityShards.toLong())
+            try {
+                encoder.reconstructBytesArray(encodeDataBytes)
+                val ok = encoder.verifyBytesArray(encodeDataBytes)
+                if (!ok) Log.e("combineBytesArray", "verifyBytesArray == false")
+            } catch (e: Exception) {
+                Log.e("combineBytesArray", "reconstructBytesArrayE:" + e.localizedMessage)
+                resultError(result, e)
+                return@launch
+            }
+
+            val fullDataList = ByteArray(piecesLength)
+            var copyIndex = 0
+            for (index in 0 until dataShards) {
+                val data = encodeDataBytes[index.toLong()]
+                val dataSize = data?.size ?: 0
+                System.arraycopy(data, 0, fullDataList, copyIndex, dataSize)
+                copyIndex += dataSize
+            }
+
+            val resultBytes = ByteArray(bytesLength)
+            val resultLength = if (fullDataList.size > bytesLength) bytesLength else fullDataList.size
+            System.arraycopy(fullDataList, 0, resultBytes, 0, resultLength)
+
+            if (resultBytes.isEmpty()) {
+                Log.e("combineBytesArray", "resultByte.size == 0")
+                resultError(result, Error("resultByte.size == 0"))
+                return@launch
+            }
+
+            val combines = String(resultBytes, UTF_8)
+
             try {
                 val resp = hashMapOf(
                     "event" to "combinePieces",
@@ -121,52 +160,5 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
                 return@launch
             }
         }
-    }
-
-    private fun combineBytesArray(dataList: java.util.ArrayList<ByteArray>, dataShards: Int, parityShards: Int, totalLength: Int): String? {
-        val totalShards = dataShards + parityShards
-        val encodeDataBytes = BytesArray(totalShards.toLong())
-        var piecesLength = 0
-        for (index in dataList.indices) {
-            val data = dataList[index]
-            piecesLength += data.size
-            if (data.isNotEmpty()) {
-                encodeDataBytes[index.toLong()] = data
-            } else {
-                encodeDataBytes[index.toLong()] = null
-            }
-        }
-
-        val encoder = Reedsolomon.newDefault(dataShards.toLong(), parityShards.toLong())
-        try {
-            encoder.reconstructBytesArray(encodeDataBytes)
-            val ok = encoder.verifyBytesArray(encodeDataBytes)
-            if (!ok) Log.e("combineBytesArray", "verifyBytesArray == false:")
-        } catch (e: Exception) {
-            Log.e("combineBytesArray", "reconstructBytesArrayE:" + e.localizedMessage)
-            return null
-        }
-
-        val fullDataList = ByteArray(piecesLength)
-        var copyIndex = 0
-        for (index in 0 until dataShards) {
-            val data = encodeDataBytes[index.toLong()]
-            val dataSize = data?.size ?: 0
-            System.arraycopy(data, 0, fullDataList, copyIndex, dataSize)
-            copyIndex += dataSize
-        }
-
-        val resultBytes = ByteArray(totalLength)
-        if (fullDataList.size > totalLength) {
-            System.arraycopy(fullDataList, 0, resultBytes, 0, totalLength)
-        } else {
-            System.arraycopy(fullDataList, 0, resultBytes, 0, fullDataList.size)
-        }
-
-        if (resultBytes.isEmpty()) {
-            Log.e("combineBytesArray", "resultByte.size == 0")
-            return null
-        }
-        return String(resultBytes, UTF_8)
     }
 }
