@@ -119,7 +119,7 @@ class ReceiveMessage with Tag {
         notification.showDChatNotification(title, content);
         break;
       case ContentType.media:
-      case ContentType.nknImage: // TODO: remove
+      case ContentType.nknImage:
         notification.showDChatNotification(title, '[${localizations.image}]');
         break;
       case ContentType.audio:

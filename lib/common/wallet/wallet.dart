@@ -76,6 +76,7 @@ class WalletCommon with Tag {
     return _walletStorage.getDefaultAddress();
   }
 
+  // TODO:GG move auth
   Future<String?> getPassword(BuildContext? context, String? walletAddress) {
     if (walletAddress == null || walletAddress.isEmpty) {
       return Future.value(null);
