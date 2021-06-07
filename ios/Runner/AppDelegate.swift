@@ -13,6 +13,10 @@ import Sentry
         }
         
         GeneratedPluginRegistrant.register(with: self)
+        
+        let controller : FlutterViewController = window?.rootViewController as! FlutterViewController;
+        Common.register(controller: controller)
+        
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
 }
