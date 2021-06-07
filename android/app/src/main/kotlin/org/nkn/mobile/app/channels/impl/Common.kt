@@ -4,6 +4,7 @@ import android.app.Activity
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
@@ -22,6 +23,10 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
         lateinit var methodChannel: MethodChannel
         var eventSink: EventChannel.EventSink? = null
         val CHANNEL_NAME = "org.nkn.mobile/native/common"
+
+        fun register(activity: Activity, flutterEngine: FlutterEngine) {
+            Common(activity).install(flutterEngine.dartExecutor.binaryMessenger)
+        }
     }
 
     override fun install(binaryMessenger: BinaryMessenger) {
