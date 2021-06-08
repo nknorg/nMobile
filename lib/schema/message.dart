@@ -179,7 +179,7 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static Future<String> getContactResponseFull(String? firstName, File? avatar, String? profileVersion, DateTime expiresAt) async {
+  static Future<String> getContactResponseFull(String? firstName, String? lastName, File? avatar, String? profileVersion, DateTime expiresAt) async {
     Map data = {
       'id': Uuid().v4(),
       'contentType': ContentType.contact,
@@ -190,6 +190,7 @@ class MessageData {
     Map<String, dynamic> content = Map();
     if (firstName?.isNotEmpty == true) {
       content['first_name'] = firstName;
+      content['last_name'] = lastName;
       // SUPPORT:START
       content['name'] = firstName;
       // SUPPORT:END

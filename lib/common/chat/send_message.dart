@@ -88,6 +88,7 @@ class SendMessage with Tag {
       } else {
         data = await MessageData.getContactResponseFull(
           contactCommon.currentUser?.firstName,
+          contactCommon.currentUser?.lastName,
           contactCommon.currentUser?.avatar,
           contactCommon.currentUser?.profileVersion,
           updateAt,

@@ -288,9 +288,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     );
     if (newName == null || newName.trim().isEmpty) return;
     if (_contactSchema?.type == ContactType.me) {
-      await contactCommon.setName(_contactSchema, newName.trim(), notify: true);
+      await contactCommon.setName(_contactSchema, newName.trim(), "", notify: true);
     } else {
-      await contactCommon.setRemarkName(_contactSchema, newName.trim(), notify: true);
+      await contactCommon.setRemarkName(_contactSchema, newName.trim(), "", notify: true);
     }
   }
 
