@@ -223,7 +223,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
     if (schema == null || schema.address.isEmpty) return;
     S _localizations = S.of(context);
 
-    walletCommon.getPassword(context, schema.address).then((String? password) async {
+    authorization.getWalletPassword(schema.address, context: context).then((String? password) async {
       if (password == null || password.isEmpty) return;
       String keystore = await walletCommon.getKeystoreByAddress(schema.address);
 

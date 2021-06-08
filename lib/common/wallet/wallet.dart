@@ -1,14 +1,6 @@
-import 'package:flutter/cupertino.dart';
-import 'package:nmobile/common/global.dart';
-import 'package:nmobile/common/settings.dart';
-import 'package:nmobile/components/dialog/bottom.dart';
-import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
-
-import '../locator.dart';
 
 class WalletCommon with Tag {
   WalletStorage _walletStorage = WalletStorage();
@@ -74,33 +66,6 @@ class WalletCommon with Tag {
 
   Future<String?> getDefaultAddress() {
     return _walletStorage.getDefaultAddress();
-  }
-
-  // TODO:GG move auth
-  Future<String?> getPassword(BuildContext? context, String? walletAddress) {
-    if (walletAddress == null || walletAddress.isEmpty) {
-      return Future.value(null);
-    }
-    S _localizations = S.of(context ?? Global.appContext);
-    return Future(() async {
-      if (Settings.biometricsAuthentication) {
-        return authorization.authenticationIfCan();
-      }
-      return false;
-    }).then((bool authOk) async {
-      String? pwd = await getPasswordNoCheck(walletAddress);
-      if (!authOk || pwd == null || pwd.isEmpty) {
-        return BottomDialog.of(context ?? Global.appContext).showInput(
-          title: _localizations.verify_wallet_password,
-          inputTip: _localizations.wallet_password,
-          inputHint: _localizations.input_password,
-          actionText: _localizations.continue_text,
-          validator: Validator.of(context).password(),
-          password: true,
-        );
-      }
-      return pwd;
-    });
   }
 
   Future getPasswordNoCheck(String walletAddress) {

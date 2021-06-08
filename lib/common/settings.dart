@@ -10,7 +10,7 @@ class Settings {
   static late String locale;
   static late int notificationType;
   static late bool biometricsAuthentication;
-  static late Duration profileExpireDuration = Duration(seconds: 10); // TODO:GG test hour 1
+  static late Duration profileExpireDuration = Duration(seconds: 30); // TODO:GG test hour 1
   static bool debug = true;
 
   static init() async {
