@@ -18,17 +18,17 @@ import 'package:nmobile/utils/logger.dart';
 
 import '../../app.dart';
 
-// TODO:GG same with wallets create
 class ChatNoWalletLayout extends BaseStateFulWidget {
   @override
   _ChatNoWalletLayoutState createState() => _ChatNoWalletLayoutState();
 }
 
 class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayout> with Tag {
-  late WalletBloc _walletBloc;
   GlobalKey _formKey = new GlobalKey<FormState>();
+
+  late WalletBloc _walletBloc;
+
   bool _formValid = false;
-  bool loaded = false;
   TextEditingController _nameController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
   FocusNode _nameFocusNode = FocusNode();
@@ -69,8 +69,6 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
-    double headImageWidth = MediaQuery.of(context).size.width * 0.55;
-    double headImageHeight = headImageWidth / 3 * 2;
 
     return Layout(
       headerColor: application.theme.primaryColor,
