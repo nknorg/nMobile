@@ -29,6 +29,10 @@ class ChatMessagesPrivateLayout extends BaseStateFulWidget {
 }
 
 class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessagesPrivateLayout> with Tag {
+  StreamController<Map<String, String>> _onInputChangeController = StreamController<Map<String, String>>.broadcast();
+  StreamSink<Map<String, String>> get _onInputChangeSink => _onInputChangeController.sink;
+  Stream<Map<String, String>> get _onInputChangeStream => _onInputChangeController.stream; // .distinct((prev, next) => prev == next);
+
   final int _messagesLimit = 20;
   ScrollController _scrollController = ScrollController();
   bool _moreLoading = false;
@@ -90,6 +94,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
 
   @override
   void dispose() {
+    _onInputChangeController.close();
     _onContactUpdateStreamSubscription.cancel();
     _onMessageReceiveStreamSubscription.cancel();
     _onMessageSendStreamSubscription.cancel();
@@ -122,13 +127,13 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
   }
 
   _toggleBottomMenu() async {
+    FocusScope.of(context).requestFocus(FocusNode());
     setState(() {
       _showBottomMenu = !_showBottomMenu;
     });
   }
 
   _hideAll() {
-    FocusScope.of(context).requestFocus(FocusNode());
     setState(() {
       _showBottomMenu = false;
     });
@@ -213,7 +218,14 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                     return ChatMessageItem(
                       message: message,
                       contact: contact,
+                      showProfile: false,
                       showTime: showTime,
+                      onLonePress: (ContactSchema contact, _) {
+                        _onInputChangeSink.add({
+                          "type": ChatSendBar.ChangeTypeAppend,
+                          "content": ' @${contact.fullName} ',
+                        });
+                      },
                       onResend: (String msgId) async {
                         MessageSchema? find;
                         this.setState(() {
@@ -241,10 +253,12 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                 onSendPress: (String content) async {
                   return await sendMessage.sendText(_contact.clientAddress, content);
                 },
+                onChangeStream: _onInputChangeStream,
               ),
               ChatBottomMenu(
                 show: _showBottomMenu,
-                onPicked: (File picked) async {
+                onPickedImage: (File picked) async {
+                  FocusScope.of(context).requestFocus(FocusNode());
                   return await sendMessage.sendImage(_contact.clientAddress, picked);
                 },
               ),

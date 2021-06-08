@@ -18,7 +18,6 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/photo.dart';
 import 'package:nmobile/theme/theme.dart';
-import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/utils.dart';
 
 import '../text/markdown.dart';
@@ -27,14 +26,16 @@ class ChatBubble extends BaseStateFulWidget {
   final MessageSchema message;
   final ContactSchema contact;
   final bool showTime;
-  final ValueChanged<String>? onChanged;
+  final bool showProfile;
+  final Function(ContactSchema, MessageSchema)? onLonePress;
   final Function(String)? onResend;
 
   ChatBubble({
     required this.message,
     required this.contact,
+    this.showProfile = false,
     this.showTime = false,
-    this.onChanged,
+    this.onLonePress,
     this.onResend,
   });
 
@@ -150,24 +151,24 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
     );
   }
 
-  // TODO:GG time
-  Widget _getTime() {
-    Widget timeWidget;
-    String timeFormat = formatChatTime(_message.sendTime);
-    return SizedBox.shrink();
-  }
-
   Widget _getAvatar(bool self) {
-    return self
+    return self || !widget.showProfile
         ? SizedBox.shrink()
-        : ContactAvatar(
-            contact: _contact,
-            radius: 24,
+        : GestureDetector(
+            onTap: () async {
+              File? file = await _contact.getDisplayAvatarFile;
+              PhotoScreen.go(context, filePath: file?.path);
+            },
+            onLongPress: () => widget.onLonePress?.call(_contact, _message),
+            child: ContactAvatar(
+              contact: _contact,
+              radius: 24,
+            ),
           );
   }
 
   Widget _getName(bool self) {
-    return self
+    return self || !widget.showProfile
         ? SizedBox.shrink()
         : Label(
             _contact.displayName,
@@ -228,7 +229,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
                     ModalDialog.of(context).confirm(
                       title: "confirm resend?", // TODO:GG locale resend title
                       agree: Button(
-                        text: "resend", // TODO:GG locale resend action
+                        text: _localizations.send_message, // TODO:GG locale resend action
                         backgroundColor: application.theme.strongColor,
                         width: double.infinity,
                         onPressed: () {

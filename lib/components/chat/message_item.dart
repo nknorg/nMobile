@@ -12,21 +12,33 @@ class ChatMessageItem extends StatelessWidget {
   final MessageSchema? prevMessage;
   final MessageSchema? nextMessage;
   final bool showTime;
+  final bool showProfile;
+  final Function(ContactSchema, MessageSchema)? onLonePress;
   final Function(String)? onResend;
 
-  ChatMessageItem({required this.message, required this.contact, this.prevMessage, this.nextMessage, this.showTime = false, this.onResend});
+  ChatMessageItem({
+    required this.message,
+    required this.contact,
+    this.prevMessage,
+    this.nextMessage,
+    this.showProfile = false,
+    this.showTime = false,
+    this.onResend,
+    this.onLonePress,
+  });
 
   @override
   Widget build(BuildContext context) {
-    String timeFormat = formatChatTime(this.message.sendTime);
-    Widget timeWidget = Label(
-      timeFormat,
-      type: LabelType.bodySmall,
-      fontSize: application.theme.bodyText2.fontSize ?? 14,
-    );
-
     List<Widget> contentsWidget = <Widget>[];
-    if (this.showTime) contentsWidget.add(timeWidget);
+    if (this.showTime) {
+      contentsWidget.add(
+        Label(
+          formatChatTime(this.message.sendTime),
+          type: LabelType.bodySmall,
+          fontSize: application.theme.bodyText2.fontSize ?? 14,
+        ),
+      );
+    }
 
     switch (this.message.contentType) {
       case ContentType.text:
@@ -38,12 +50,11 @@ class ChatMessageItem extends StatelessWidget {
             message: this.message,
             contact: this.contact,
             onResend: this.onResend,
+            onLonePress: this.onLonePress,
           ),
         );
         break;
-      case ContentType.system:
-        // TODO
-        break;
+      // TODO:GG contentType
     }
 
     return Column(

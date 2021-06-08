@@ -11,11 +11,11 @@ import 'package:nmobile/utils/asset.dart';
 
 class ChatBottomMenu extends StatelessWidget {
   bool show;
-  Function(File image)? onPicked;
+  final Function(File image)? onPickedImage;
 
   ChatBottomMenu({
     this.show = false,
-    this.onPicked,
+    this.onPickedImage,
   });
 
   _getImageFile({required ImageSource source}) async {
@@ -25,7 +25,7 @@ class ChatBottomMenu extends StatelessWidget {
       compressQuality: 50,
     );
     if (picked == null) return;
-    onPicked?.call(picked);
+    onPickedImage?.call(picked);
   }
 
   @override
