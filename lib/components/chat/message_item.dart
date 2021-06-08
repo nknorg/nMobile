@@ -11,7 +11,6 @@ class ChatMessageItem extends StatelessWidget {
   final ContactSchema contact;
   final MessageSchema? prevMessage;
   final MessageSchema? nextMessage;
-  final bool showTime;
   final bool showProfile;
   final Function(ContactSchema, MessageSchema)? onLonePress;
   final Function(String)? onResend;
@@ -22,7 +21,6 @@ class ChatMessageItem extends StatelessWidget {
     this.prevMessage,
     this.nextMessage,
     this.showProfile = false,
-    this.showTime = false,
     this.onResend,
     this.onLonePress,
   });
@@ -30,12 +28,29 @@ class ChatMessageItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     List<Widget> contentsWidget = <Widget>[];
-    if (this.showTime) {
+
+    bool showTime = false;
+    if (nextMessage == null) {
+      showTime = true;
+    } else {
+      if (message.sendTime != null && nextMessage?.sendTime != null) {
+        int curSec = message.sendTime!.millisecondsSinceEpoch ~/ 1000;
+        int nextSec = nextMessage!.sendTime!.millisecondsSinceEpoch ~/ 1000;
+        if (curSec - nextSec > 60 * 2) {
+          showTime = true;
+        }
+      }
+    }
+
+    if (showTime) {
       contentsWidget.add(
-        Label(
-          formatChatTime(this.message.sendTime),
-          type: LabelType.bodySmall,
-          fontSize: application.theme.bodyText2.fontSize ?? 14,
+        Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 6),
+          child: Label(
+            formatChatTime(this.message.sendTime),
+            type: LabelType.bodySmall,
+            fontSize: application.theme.bodyText2.fontSize ?? 14,
+          ),
         ),
       );
     }

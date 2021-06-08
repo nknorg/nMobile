@@ -33,16 +33,16 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
   StreamSink<Map<String, String>> get _onInputChangeSink => _onInputChangeController.sink;
   Stream<Map<String, String>> get _onInputChangeStream => _onInputChangeController.stream; // .distinct((prev, next) => prev == next);
 
-  final int _messagesLimit = 20;
-  ScrollController _scrollController = ScrollController();
-  bool _moreLoading = false;
-
-  late ContactSchema _contact;
-
   late StreamSubscription _onContactUpdateStreamSubscription;
   late StreamSubscription _onMessageReceiveStreamSubscription;
   late StreamSubscription _onMessageSendStreamSubscription;
   late StreamSubscription _onMessageUpdateStreamSubscription;
+
+  late ContactSchema _contact;
+
+  ScrollController _scrollController = ScrollController();
+  final int _messagesLimit = 20;
+  bool _moreLoading = false;
 
   List<MessageSchema> _messages = <MessageSchema>[];
 
@@ -199,32 +199,14 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                   padding: const EdgeInsets.only(bottom: 8, top: 16),
                   physics: const AlwaysScrollableScrollPhysics(),
                   itemBuilder: (BuildContext context, int index) {
-                    MessageSchema message = _messages[index];
-                    ContactSchema contact = _contact;
-
-                    // Fixme: show time
-                    bool showTime = false;
-                    if (index >= _messages.length - 1) {
-                      showTime = true;
-                    } else {
-                      if (index + 1 < _messages.length) {
-                        var targetMessage = _messages[index + 1];
-                        if ((message.sendTime ?? DateTime.now()).isAfter((targetMessage.sendTime ?? DateTime.now()).add(Duration(minutes: 3)))) {
-                          showTime = true;
-                        }
-                      }
-                    }
-
                     return ChatMessageItem(
-                      message: message,
-                      contact: contact,
+                      message: _messages[index],
+                      contact: _contact,
                       showProfile: false,
-                      showTime: showTime,
+                      prevMessage: (index - 1) >= 0 ? _messages[index - 1] : null,
+                      nextMessage: (index + 1) < _messages.length ? _messages[index + 1] : null,
                       onLonePress: (ContactSchema contact, _) {
-                        _onInputChangeSink.add({
-                          "type": ChatSendBar.ChangeTypeAppend,
-                          "content": ' @${contact.fullName} ',
-                        });
+                        _onInputChangeSink.add({"type": ChatSendBar.ChangeTypeAppend, "content": ' @${contact.fullName} '});
                       },
                       onResend: (String msgId) async {
                         MessageSchema? find;
