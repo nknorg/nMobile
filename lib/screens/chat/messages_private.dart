@@ -214,6 +214,17 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                       message: message,
                       contact: contact,
                       showTime: showTime,
+                      onResend: (String msgId) async {
+                        MessageSchema? find;
+                        this.setState(() {
+                          _messages = _messages.where((e) {
+                            if (e.msgId != msgId) return true;
+                            find = e;
+                            return false;
+                          }).toList();
+                        });
+                        await sendMessage.resend(find);
+                      },
                     );
                   },
                 ),
