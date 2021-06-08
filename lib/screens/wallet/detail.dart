@@ -323,7 +323,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
 
     switch (result) {
       case 0: // export
-        walletCommon.getPassword(context, _wallet?.address).then((String? password) async {
+        authorization.getWalletPassword(_wallet?.address, context: context).then((String? password) async {
           if (password == null || password.isEmpty) return;
           String keystore = await walletCommon.getKeystoreByAddress(_wallet?.address);
 

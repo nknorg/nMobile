@@ -190,7 +190,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       (_formKey.currentState as FormState).save();
       logger.d("$TAG - amount:$_amount, sendTo:$_sendTo, fee:$_fee");
 
-      walletCommon.getPassword(context, _wallet.address).then((String? password) async {
+      authorization.getWalletPassword(_wallet.address, context: context).then((String? password) async {
         if (password == null || password.isEmpty) return;
         String keystore = await walletCommon.getKeystoreByAddress(_wallet.address);
 
