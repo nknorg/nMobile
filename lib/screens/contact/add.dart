@@ -133,7 +133,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
       ContactSchema? exist = await contactCommon.queryByClientAddress(schema.clientAddress);
       if (exist != null) {
         if (exist.type == ContactType.friend) {
-          // TODO:GG contact toast duplicated
+          Toast.show("add duplicated!"); // TODO:GG locale add duplicated
           Loading.dismiss();
           return;
         } else {

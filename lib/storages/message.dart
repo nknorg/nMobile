@@ -350,6 +350,25 @@ class MessageStorage with Tag {
     return false;
   }
 
+  Future<bool> updateSendTime(String? msgId, DateTime? sendTime) async {
+    if (msgId == null || msgId.isEmpty) return false;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'send_time': sendTime?.millisecondsSinceEpoch,
+        },
+        where: 'msg_id = ?',
+        whereArgs: [msgId],
+      );
+      logger.d("$TAG - updateSendTime - count:$count - msgId:$msgId - sendTime:$sendTime}");
+      return (count ?? 0) > 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
   Future<bool> updateOptions(String? msgId, Map<String, dynamic>? options) async {
     if (msgId == null || msgId.isEmpty) return false;
     try {

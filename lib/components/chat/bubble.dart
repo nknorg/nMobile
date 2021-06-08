@@ -6,10 +6,13 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
+import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/button/button_icon.dart';
 import 'package:nmobile/components/contact/avatar.dart';
+import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/markdown.dart';
+import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/photo.dart';
@@ -23,14 +26,14 @@ class ChatBubble extends BaseStateFulWidget {
   final ContactSchema contact;
   final bool showTime;
   final ValueChanged<String>? onChanged;
-  final ValueChanged<String>? resendMessage;
+  final Function(String)? onResend;
 
   ChatBubble({
     required this.message,
     required this.contact,
     this.showTime = false,
     this.onChanged,
-    this.resendMessage,
+    this.onResend,
   });
 
   @override
@@ -174,6 +177,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
   }
 
   Widget _getTip(bool self) {
+    S _localizations = S.of(context);
     bool isSending = _msgStatus == MessageStatus.Sending;
     bool hasProgress = _message.content is File;
 
@@ -221,7 +225,19 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
                   height: 50,
                   padding: EdgeInsets.zero,
                   onPressed: () {
-                    // TODO:GG resend
+                    ModalDialog.of(context).confirm(
+                      title: "confirm resend?", // TODO:GG locale resend title
+                      agree: Button(
+                        text: "resend", // TODO:GG locale resend action
+                        backgroundColor: application.theme.strongColor,
+                        width: double.infinity,
+                        onPressed: () {
+                          widget.onResend?.call(_message.msgId);
+                          Navigator.pop(this.context);
+                        },
+                      ),
+                      hasCloseButton: true,
+                    );
                   },
                 )
               : SizedBox.shrink(),

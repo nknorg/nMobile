@@ -58,7 +58,7 @@ class ModalDialog extends StatelessWidget {
     Widget? titleWidget,
     String? content,
     Widget? contentWidget,
-    bool hasCloseIcon = true,
+    bool hasCloseIcon = false,
     bool hasCloseButton = false,
     double? height,
     Widget? agree,
