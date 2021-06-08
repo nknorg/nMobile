@@ -12,12 +12,14 @@ import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/markdown.dart';
+import 'package:nmobile/components/tip/popup_menu.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/photo.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/format.dart';
+import 'package:nmobile/utils/utils.dart';
 
 import '../text/markdown.dart';
 
@@ -41,7 +43,7 @@ class ChatBubble extends BaseStateFulWidget {
 }
 
 class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
-  GlobalKey _popupMenuKey = GlobalKey();
+  GlobalKey _contentKey = GlobalKey();
   StreamSubscription? _onPieceOutStreamSubscription;
 
   late MessageSchema _message;
@@ -81,29 +83,27 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
     super.dispose();
   }
 
-  // TODO:GG popMenu
-  // _textPopupMenuShow() {
-  //   PopupMenu popupMenu = PopupMenu(
-  //     context: context,
-  //     maxColumn: 4,
-  //     items: [
-  //       MenuItem(
-  //         userInfo: 0,
-  //         title: S.of(context).copy,
-  //         textStyle: TextStyle(color: application.theme.fontLightColor, fontSize: 12),
-  //       ),
-  //     ],
-  //     onClickMenu: (MenuItemProvider item) {
-  //       var index = (item as MenuItem).userInfo;
-  //       switch (index) {
-  //         case 0:
-  //           copyText(_message.content, context: context);
-  //           break;
-  //       }
-  //     },
-  //   );
-  //   popupMenu.show(widgetKey: popupMenuKey);
-  // }
+  _onContentTextTap() {
+    PopupMenu popupMenu = PopupMenu(
+      context: context,
+      items: [
+        MenuItem(
+          userInfo: 0,
+          title: S.of(context).copy,
+          textStyle: TextStyle(color: application.theme.fontLightColor, fontSize: 12),
+        ),
+      ],
+      onClickMenu: (MenuItemProvider item) {
+        var index = (item as MenuItem).userInfo;
+        switch (index) {
+          case 0:
+            copyText(_message.content, context: context);
+            break;
+        }
+      },
+    );
+    popupMenu.show(widgetKey: _contentKey);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -250,14 +250,20 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
     double maxWidth = MediaQuery.of(context).size.width - 12 * 2 * 2 - (24 * 2) * 2 - 8 * 2;
 
     Widget _body = SizedBox.shrink();
+    var onTap;
     switch (_message.contentType) {
       case ContentType.text:
       case ContentType.textExtension:
         _body = _getContentBodyText(dark);
+        onTap = () => _onContentTextTap();
         break;
       case ContentType.media:
       case ContentType.nknImage:
         _body = _getContentBodyImage(dark);
+        if (_message.content is File) {
+          File file = _message.content as File;
+          onTap = () => PhotoScreen.go(context, filePath: file.path);
+        }
         break;
       // TODO:GG contentTypeView
     }
@@ -280,17 +286,21 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
     //     }
     //   }
     // }
-    return Container(
-      padding: EdgeInsets.all(10),
-      decoration: decoration,
+    return GestureDetector(
+      key: _contentKey,
+      onTap: onTap,
       child: Container(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _body,
-            burnWidget,
-          ],
+        padding: EdgeInsets.all(10),
+        decoration: decoration,
+        child: Container(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _body,
+              burnWidget,
+            ],
+          ),
         ),
       ),
     );
@@ -308,19 +318,14 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
     double maxWidth = MediaQuery.of(context).size.width * 0.5;
     double maxHeight = MediaQuery.of(context).size.height * 0.3;
 
-    return GestureDetector(
-      onTap: () {
-        PhotoScreen.go(context, filePath: file.path);
-      },
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: maxWidth,
-          maxHeight: maxHeight,
-          minWidth: maxWidth / 4,
-          minHeight: maxWidth / 4,
-        ),
-        child: Image.file(file),
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
+        minWidth: maxWidth / 4,
+        minHeight: maxWidth / 4,
       ),
+      child: Image.file(file),
     );
   }
 
