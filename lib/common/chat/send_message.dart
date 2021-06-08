@@ -160,17 +160,41 @@ class SendMessage with Tag {
     return _send(schema, await MessageData.getImage(schema));
   }
 
-  Future<MessageSchema?> _send(MessageSchema? schema, String? msgData, {bool database = true, bool display = true}) async {
-    if (schema == null || msgData == null) return null;
+  Future<MessageSchema?> resend(MessageSchema? schema) async {
+    if (schema == null) return null;
+    switch (schema.contentType) {
+      case ContentType.text:
+        return await _send(schema, MessageData.getText(schema), resend: true);
+      case ContentType.media:
+      case ContentType.nknImage:
+        return await _send(schema, await MessageData.getImage(schema), resend: true);
+      case ContentType.audio:
+        // TODO:GG resend audio
+        return null;
+    }
+    return null;
+  }
+
+  Future<MessageSchema?> _send(
+    MessageSchema? schema,
+    String? msgData, {
+    bool database = true,
+    bool display = true,
+    bool resend = false,
+  }) async {
     // contactHandle (handle in other entry)
     // topicHandle (handle in other entry)
+    if (schema == null || msgData == null) return null;
     // DB
-    if (database) {
+    if (resend) {
+      await _messageStorage.updateSendTime(schema.msgId, DateTime.now());
+      // TODO:GG deleteTime
+    } else if (database) {
       schema = await _messageStorage.insert(schema);
-      if (schema == null) return null;
     }
+    if (schema == null) return null;
     // display
-    if (display) onSavedSink.add(schema);
+    if (display || resend) onSavedSink.add(schema);
     // SDK
     Uint8List? pid;
     try {
@@ -194,18 +218,18 @@ class SendMessage with Tag {
     // fail
     if (pid == null || pid.isEmpty) {
       schema = MessageStatus.set(schema, MessageStatus.SendFail);
-      if (database) _messageStorage.updateMessageStatus(schema); // await
-      if (display) onUpdateSink.add(schema);
+      if (database || resend) _messageStorage.updateMessageStatus(schema); // await
+      if (display || resend) onUpdateSink.add(schema);
       return null;
     }
     // pid
     schema.pid = pid;
-    if (database) _messageStorage.updatePid(schema.msgId, schema.pid); // await
+    if (database || resend) _messageStorage.updatePid(schema.msgId, schema.pid); // await
     // status
     schema = MessageStatus.set(schema, MessageStatus.SendSuccess);
-    if (database) _messageStorage.updateMessageStatus(schema); // await
+    if (database || resend) _messageStorage.updateMessageStatus(schema); // await
     // display
-    if (display) onUpdateSink.add(schema);
+    if (display || resend) onUpdateSink.add(schema);
     return schema;
   }
 

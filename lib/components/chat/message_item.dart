@@ -12,8 +12,9 @@ class ChatMessageItem extends StatelessWidget {
   final MessageSchema? prevMessage;
   final MessageSchema? nextMessage;
   final bool showTime;
+  final Function(String)? onResend;
 
-  ChatMessageItem({required this.message, required this.contact, this.prevMessage, this.nextMessage, this.showTime = false});
+  ChatMessageItem({required this.message, required this.contact, this.prevMessage, this.nextMessage, this.showTime = false, this.onResend});
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +37,7 @@ class ChatMessageItem extends StatelessWidget {
           ChatBubble(
             message: this.message,
             contact: this.contact,
+            onResend: this.onResend,
           ),
         );
         break;

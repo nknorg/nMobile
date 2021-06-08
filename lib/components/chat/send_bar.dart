@@ -129,10 +129,8 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                   String content = _sendController.text;
                   if (content.isEmpty) return;
                   _canSend = false;
-                  var result = await widget.onSendPress?.call(content);
-                  if (result != null) {
-                    _sendController.clear();
-                  }
+                  _sendController.clear();
+                  await widget.onSendPress?.call(content);
                   _canSend = true;
                 },
               ),

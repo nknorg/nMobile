@@ -202,7 +202,6 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
     dialog.show(
       title: _localizations.d_not_backed_up_title,
       content: _localizations.d_not_backed_up_desc,
-      hasCloseIcon: false,
       hasCloseButton: false,
       actions: [
         Button(
