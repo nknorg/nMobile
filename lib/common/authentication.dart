@@ -64,7 +64,7 @@ class Authorization {
           inputTip: _localizations.wallet_password,
           inputHint: _localizations.input_password,
           actionText: _localizations.continue_text,
-          validator: Validator.of(context).password(),
+          validator: Validator.of(context ?? Global.appContext).password(),
           password: true,
         );
       }
