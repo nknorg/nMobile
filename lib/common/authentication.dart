@@ -1,5 +1,10 @@
+import 'package:flutter/widgets.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/utils/logger.dart';
 
 import 'global.dart';
@@ -30,7 +35,7 @@ class Authorization {
     return false;
   }
 
-  Future<bool> authenticationIfCan([String? localizedReason]) async {
+  Future<bool> authenticationIfSupport([String? localizedReason]) async {
     if (await canCheckBiometrics) {
       return authentication(localizedReason);
     }
@@ -39,5 +44,31 @@ class Authorization {
 
   Future<bool> cancelAuthentication() {
     return _localAuth.stopAuthentication();
+  }
+
+  Future<String?> getWalletPassword(String? walletAddress, {BuildContext? context}) {
+    if (walletAddress == null || walletAddress.isEmpty) {
+      return Future.value(null);
+    }
+    S _localizations = S.of(context ?? Global.appContext);
+    return Future(() async {
+      if (Settings.biometricsAuthentication) {
+        return authenticationIfSupport();
+      }
+      return false;
+    }).then((bool authOk) async {
+      String? pwd = await walletCommon.getPasswordNoCheck(walletAddress);
+      if (!authOk || pwd == null || pwd.isEmpty) {
+        return BottomDialog.of(context ?? Global.appContext).showInput(
+          title: _localizations.verify_wallet_password,
+          inputTip: _localizations.wallet_password,
+          inputHint: _localizations.input_password,
+          actionText: _localizations.continue_text,
+          validator: Validator.of(context).password(),
+          password: true,
+        );
+      }
+      return pwd;
+    });
   }
 }

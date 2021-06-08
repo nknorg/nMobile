@@ -77,7 +77,7 @@ class ChatCommon with Tag {
   Future signIn(WalletSchema? schema) async {
     if (schema == null) return null;
     try {
-      String? pwd = await walletCommon.getPassword(Global.appContext, schema.address);
+      String? pwd = await authorization.getWalletPassword(schema.address);
       if (pwd == null || pwd.isEmpty) return;
       String keystore = await walletCommon.getKeystoreByAddress(schema.address);
 
