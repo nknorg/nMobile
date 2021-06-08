@@ -35,6 +35,11 @@ class SendMessage with Tag {
   StreamSink<MessageSchema> get onUpdateSink => _onUpdateController.sink;
   Stream<MessageSchema> get onUpdateStream => _onUpdateController.stream; // .distinct((prev, next) => prev.msgId == next.msgId)
 
+  // ignore: close_sinks
+  StreamController<Map<String, dynamic>> _onPieceOutController = StreamController<Map<String, dynamic>>.broadcast();
+  StreamSink<Map<String, dynamic>> get onPieceOutSink => _onPieceOutController.sink;
+  Stream<Map<String, dynamic>> get onPieceOutStream => _onPieceOutController.stream; // .distinct((prev, next) => prev.pid == next.pid);
+
   MessageStorage _messageStorage = MessageStorage();
 
   // NO DB NO display (1 to 1)
@@ -113,6 +118,8 @@ class SendMessage with Tag {
         schema.pid = onResult?.messageId;
       }
       // logger.d("$TAG - sendPiece - success - index:${schema.index} - time:${DateTime.now().millisecondsSinceEpoch} - schema:$schema - data:$data");
+      double percent = (schema.index ?? 0) / (schema.total ?? 1);
+      onPieceOutSink.add({"msg_id": schema.msgId, "percent": percent});
       return schema;
     } catch (e) {
       handleError(e);
@@ -153,12 +160,7 @@ class SendMessage with Tag {
     return _send(schema, await MessageData.getImage(schema));
   }
 
-  Future<MessageSchema?> _send(
-    MessageSchema? schema,
-    String? msgData, {
-    bool database = true,
-    bool display = true,
-  }) async {
+  Future<MessageSchema?> _send(MessageSchema? schema, String? msgData, {bool database = true, bool display = true}) async {
     if (schema == null || msgData == null) return null;
     // contactHandle (handle in other entry)
     // topicHandle (handle in other entry)
@@ -188,11 +190,12 @@ class SendMessage with Tag {
       }
     } catch (e) {
       handleError(e);
-      // TODO:GG status_fail
-      return null;
     }
+    // fail
     if (pid == null || pid.isEmpty) {
-      // TODO:GG status_fail
+      schema = MessageStatus.set(schema, MessageStatus.SendFail);
+      if (database) _messageStorage.updateMessageStatus(schema); // await
+      if (display) onUpdateSink.add(schema);
       return null;
     }
     // pid

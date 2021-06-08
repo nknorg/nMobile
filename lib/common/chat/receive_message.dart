@@ -26,7 +26,7 @@ class ReceiveMessage with Tag {
   }
 
   // ignore: close_sinks
-  StreamController<MessageSchema> _onReceiveController = StreamController<MessageSchema>.broadcast();
+  StreamController<MessageSchema> _onReceiveController = StreamController<MessageSchema>(); //.broadcast();
   StreamSink<MessageSchema> get onReceiveSink => _onReceiveController.sink;
   Stream<MessageSchema> get onReceiveStream => _onReceiveController.stream.distinct((prev, next) => prev.pid == next.pid);
 

@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
+import 'package:nmobile/components/button/button_icon.dart';
 import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/markdown.dart';
@@ -35,14 +39,43 @@ class ChatBubble extends BaseStateFulWidget {
 
 class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
   GlobalKey _popupMenuKey = GlobalKey();
+  StreamSubscription? _onPieceOutStreamSubscription;
 
   late MessageSchema _message;
   late ContactSchema _contact;
+  late int _msgStatus;
+
+  double _uploadProgress = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    // pieces
+    _onPieceOutStreamSubscription = sendMessage.onPieceOutStream.listen((Map<String, dynamic> event) {
+      String? msgId = event["msg_id"];
+      double? percent = event["percent"];
+      if (msgId == null || msgId != this._message.msgId || percent == null) return;
+      if (_msgStatus != MessageStatus.Sending) return;
+      if (!(_message.content is File)) return;
+      if (_uploadProgress >= 1) return;
+      this.setState(() {
+        _uploadProgress = percent;
+      });
+    });
+  }
 
   @override
   void onRefreshArguments() {
     _message = widget.message;
     _contact = widget.contact;
+    _msgStatus = MessageStatus.get(_message);
+    _uploadProgress = ((_message.content is File) && (_msgStatus == MessageStatus.Sending)) ? 0 : 1;
+  }
+
+  @override
+  void dispose() {
+    _onPieceOutStreamSubscription?.cancel();
+    super.dispose();
   }
 
   // TODO:GG popMenu
@@ -95,7 +128,15 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
                   SizedBox(height: 4),
                   _getName(isSendOut),
                   SizedBox(height: 4),
-                  _getContent(decoration, dark),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: isSendOut ? MainAxisAlignment.end : MainAxisAlignment.start,
+                    children: [
+                      isSendOut ? _getTip(isSendOut) : SizedBox.shrink(),
+                      _getContent(decoration, dark),
+                      isSendOut ? SizedBox.shrink() : _getTip(isSendOut),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -130,6 +171,63 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
             type: LabelType.h3,
             color: application.theme.primaryColor,
           );
+  }
+
+  Widget _getTip(bool self) {
+    bool isSending = _msgStatus == MessageStatus.Sending;
+    bool hasProgress = _message.content is File;
+
+    bool showSending = isSending && !hasProgress;
+    bool shoProgress = isSending && hasProgress && _uploadProgress < 1;
+    bool showFail = _msgStatus == MessageStatus.SendFail;
+
+    return Expanded(
+      flex: 1,
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: self ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          showSending
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: SpinKitRing(
+                    color: application.theme.fontColor4,
+                    lineWidth: 1,
+                    size: 15,
+                  ),
+                )
+              : SizedBox.shrink(),
+          shoProgress
+              ? Container(
+                  width: 40,
+                  height: 40,
+                  padding: EdgeInsets.all(10),
+                  child: CircularProgressIndicator(
+                    backgroundColor: application.theme.fontColor4.withAlpha(80),
+                    color: application.theme.primaryColor.withAlpha(200),
+                    strokeWidth: 2,
+                    value: _uploadProgress,
+                  ),
+                )
+              : SizedBox.shrink(),
+          showFail
+              ? ButtonIcon(
+                  icon: Icon(
+                    FontAwesomeIcons.exclamationCircle,
+                    size: 20,
+                    color: application.theme.fallColor,
+                  ),
+                  width: 50,
+                  height: 50,
+                  padding: EdgeInsets.zero,
+                  onPressed: () {
+                    // TODO:GG resend
+                  },
+                )
+              : SizedBox.shrink(),
+        ],
+      ),
+    );
   }
 
   Widget _getContent(BoxDecoration decoration, bool dark) {
@@ -191,8 +289,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
       return SizedBox.shrink();
     }
     File file = _message.content as File;
-    double maxWidth = MediaQuery.of(context).size.width * 0.7;
+    double maxWidth = MediaQuery.of(context).size.width * 0.5;
     double maxHeight = MediaQuery.of(context).size.height * 0.3;
+
     return GestureDetector(
       onTap: () {
         PhotoScreen.go(context, filePath: file.path);
@@ -201,6 +300,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
         constraints: BoxConstraints(
           maxWidth: maxWidth,
           maxHeight: maxHeight,
+          minWidth: maxWidth / 4,
+          minHeight: maxWidth / 4,
         ),
         child: Image.file(file),
       ),
@@ -209,11 +310,10 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
 
   List<dynamic> _getStyles() {
     SkinTheme _theme = application.theme;
-    int msgStatus = MessageStatus.get(_message);
 
     BoxDecoration decoration;
     bool dark = false;
-    if (msgStatus == MessageStatus.Sending || msgStatus == MessageStatus.SendSuccess) {
+    if (_msgStatus == MessageStatus.Sending || _msgStatus == MessageStatus.SendSuccess) {
       decoration = BoxDecoration(
         color: _theme.primaryColor.withAlpha(50),
         borderRadius: BorderRadius.only(
@@ -224,9 +324,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
         ),
       );
       dark = true;
-    } else if (msgStatus == MessageStatus.SendWithReceipt) {
+    } else if (_msgStatus == MessageStatus.SendFail) {
       decoration = BoxDecoration(
-        color: _theme.primaryColor,
+        color: _theme.primaryColor.withAlpha(50),
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(12),
           topRight: const Radius.circular(12),
@@ -235,9 +335,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
         ),
       );
       dark = true;
-    } else if (msgStatus == MessageStatus.SendFail) {
+    } else if (_msgStatus == MessageStatus.SendWithReceipt) {
       decoration = BoxDecoration(
-        color: _theme.fallColor.withAlpha(178),
+        color: _theme.primaryColor,
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(12),
           topRight: const Radius.circular(12),
