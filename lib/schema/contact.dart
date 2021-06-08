@@ -175,6 +175,10 @@ class ContactSchema {
     }
   }
 
+  String get fullName {
+    return firstName ?? "";
+  }
+
   String get displayName {
     String? displayName;
 
