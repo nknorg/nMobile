@@ -126,6 +126,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
         firstName: defaultName,
         extraInfo: {
           'firstName': remarkName,
+          'lastName': "",
           'avatar': remarkAvatar,
         },
       );

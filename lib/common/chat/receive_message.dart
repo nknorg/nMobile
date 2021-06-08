@@ -86,7 +86,7 @@ class ReceiveMessage with Tag {
 
   Future<TopicSchema?> topicHandle(MessageSchema received) async {
     if (received.topic == null || received.topic!.isEmpty) return null;
-    // TODO:GG duplicated
+    // TODO:GG topic duplicated
     TopicSchema? topicSchema = await _topicStorage.queryTopicByTopicName(received.topic);
     if (topicSchema == null) {
       return await _topicStorage.insertTopic(TopicSchema(
@@ -209,6 +209,7 @@ class ReceiveMessage with Tag {
             return;
           }
           String? firstName = content['first_name'] ?? content['name'];
+          String? lastName = content['last_name'];
           File? avatar;
           String? avatarType = content['avatar'] != null ? content['avatar']['type'] : null;
           if (avatarType?.isNotEmpty == true) {
@@ -220,7 +221,7 @@ class ReceiveMessage with Tag {
               avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact, extension: "jpg");
             }
           }
-          await contactCommon.setProfile(exist, firstName, avatar?.path, version, notify: true);
+          await contactCommon.setProfile(exist, firstName, lastName, avatar?.path, version, notify: true);
           logger.i("$TAG - receiveContact - setProfile - firstName:$firstName - avatar:${avatar?.path} - version:$version - data:$data");
         }
       } else {
