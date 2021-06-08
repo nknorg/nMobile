@@ -1,11 +1,11 @@
 import 'package:bot_toast/bot_toast.dart';
 
 class Loading {
-  static show() {
-    BotToast.showLoading();
+  static CancelFunc show() {
+    return BotToast.showLoading();
   }
 
-  static dismiss() {
+  static void dismiss() {
     BotToast.closeAllLoading();
   }
 }

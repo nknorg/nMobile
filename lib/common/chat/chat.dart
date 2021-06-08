@@ -74,15 +74,15 @@ class ChatCommon with Tag {
     });
   }
 
-  Future signIn(WalletSchema? schema) async {
-    if (schema == null) return null;
+  Future<bool> signIn(WalletSchema? schema) async {
+    if (schema == null) return false;
     try {
       String? pwd = await authorization.getWalletPassword(schema.address);
-      if (pwd == null || pwd.isEmpty) return;
+      if (pwd == null || pwd.isEmpty) return false;
       String keystore = await walletCommon.getKeystoreByAddress(schema.address);
 
       Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd));
-      if (wallet.address.isEmpty || wallet.keystore.isEmpty) return;
+      if (wallet.address.isEmpty || wallet.keystore.isEmpty) return false;
 
       String pubKey = hexEncode(wallet.publicKey);
       String password = hexEncode(Uint8List.fromList(sha256(wallet.seed)));
@@ -96,6 +96,7 @@ class ChatCommon with Tag {
     } catch (e) {
       handleError(e);
     }
+    return true;
   }
 
   Future connect(Wallet? wallet) async {

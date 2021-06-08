@@ -210,13 +210,19 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       // client change
       await chatCommon.close();
       await Future.delayed(Duration(seconds: 1)); // wait client close
-      await chatCommon.signIn(_walletDefault); // TODO:GG password no need loading
+      Loading.dismiss();
+      bool success = await chatCommon.signIn(_walletDefault);
+      Loading.show();
       await Future.delayed(Duration(seconds: 1)); // wait client create
 
-      // refresh state
-      await _refreshContactSchema(schema: contactCommon.currentUser);
-
-      Toast.show(S.of(this.context).tip_switch_success);
+      if (success) {
+        // refresh state
+        await _refreshContactSchema(schema: contactCommon.currentUser);
+        Toast.show(S.of(this.context).tip_switch_success);
+      } else {
+        // pop
+        Navigator.pop(this.context);
+      }
 
       // TimerAuth.instance.enableAuth(); // TODO:GG contact auth
     } catch (e) {
