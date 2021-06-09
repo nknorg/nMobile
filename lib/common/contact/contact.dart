@@ -26,9 +26,9 @@ class ContactCommon with Tag {
   StreamSink<ContactSchema> get addSink => _addController.sink;
   Stream<ContactSchema> get addStream => _addController.stream;
 
-  StreamController<int> _deleteController = StreamController<int>.broadcast();
-  StreamSink<int> get deleteSink => _deleteController.sink;
-  Stream<int> get deleteStream => _deleteController.stream;
+  // StreamController<int> _deleteController = StreamController<int>.broadcast();
+  // StreamSink<int> get deleteSink => _deleteController.sink;
+  // Stream<int> get deleteStream => _deleteController.stream;
 
   StreamController<ContactSchema> _updateController = StreamController<ContactSchema>.broadcast();
   StreamSink<ContactSchema> get _updateSink => _updateController.sink;
@@ -36,7 +36,7 @@ class ContactCommon with Tag {
 
   close() {
     _addController.close();
-    _deleteController.close();
+    // _deleteController.close();
     _updateController.close();
   }
 
@@ -83,9 +83,12 @@ class ContactCommon with Tag {
 
   Future<bool> delete(int? contactId) async {
     if (contactId == null || contactId == 0) return false;
-    bool deleted = await _contactStorage.delete(contactId);
-    if (deleted) deleteSink.add(contactId);
-    return deleted;
+    // bool deleted = await _contactStorage.delete(contactId);
+    // if (deleted) deleteSink.add(contactId);
+    // return deleted;
+    bool success = await _contactStorage.setType(contactId, ContactType.stranger);
+    if (success) queryAndNotify(contactId);
+    return success;
   }
 
   Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? limit, int? offset}) {
@@ -193,7 +196,7 @@ class ContactCommon with Tag {
   Future<bool> setTop(String? clientAddress, bool top, {bool notify = false}) async {
     if (clientAddress == null || clientAddress.isEmpty) return false;
     bool success = await _contactStorage.setTop(clientAddress, top);
-    if (success && notify) queryAndNotifyVyClientAddress(clientAddress);
+    if (success && notify) queryAndNotifyByClientAddress(clientAddress);
     return success;
   }
 
@@ -227,7 +230,7 @@ class ContactCommon with Tag {
     }
   }
 
-  Future queryAndNotifyVyClientAddress(String? clientAddress) async {
+  Future queryAndNotifyByClientAddress(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
     ContactSchema? updated = await _contactStorage.queryByClientAddress(clientAddress);
     if (updated != null) {
