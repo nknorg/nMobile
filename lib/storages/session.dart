@@ -34,12 +34,12 @@ class SessionStorage with Tag {
     await db.execute('CREATE INDEX index_session_top_last_message_time ON Session (is_top, last_message_time)');
   }
 
-  Future<SessionSchema?> insert(SessionSchema? schema, {bool canDuplicated = false}) async {
+  Future<SessionSchema?> insert(SessionSchema? schema, {bool checkDuplicated = true}) async {
     if (schema == null) return null;
     try {
       Map<String, dynamic> entity = await schema.toMap();
       int? id;
-      if (canDuplicated) {
+      if (!checkDuplicated) {
         id = await db?.insert(tableName, entity);
       } else {
         await db?.transaction((txn) async {
@@ -109,14 +109,14 @@ class SessionStorage with Tag {
     return null;
   }
 
-  Future<List<SessionSchema>> queryListRecent({int offset = 0, int limit = 20}) async {
+  Future<List<SessionSchema>> queryListRecent({int? offset, int? limit}) async {
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
         orderBy: 'is_top desc, send_time desc',
-        limit: limit,
-        offset: offset,
+        offset: offset ?? null,
+        limit: limit ?? null,
       );
       if (res == null || res.isEmpty) {
         logger.d("$TAG - queryListRecent - empty");
@@ -221,8 +221,8 @@ class SessionStorage with Tag {
       ],
       groupBy: 'm.target_id',
       orderBy: 'm.send_time desc',
-      limit: limit,
       offset: skip,
+      limit: limit,
     );
 
     List<SessionSchema> list = <SessionSchema>[];
@@ -286,9 +286,5 @@ class SessionStorage with Tag {
       }
     }
     return null;
-  }
-
-  Future<int> deleteTargetChat(String targetId) async {
-    return await db?.delete(tableName, where: 'target_id = ?', whereArgs: [targetId]) ?? 0;
   }
 }

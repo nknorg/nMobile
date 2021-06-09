@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:nmobile/common/chat/send_message.dart';
 import 'package:nmobile/common/contact/contact.dart';
+import 'package:nmobile/common/session/session.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
 import 'package:nmobile/helpers/memory_cache.dart';
 import 'package:nmobile/services/background_fetch.dart';
@@ -21,6 +22,7 @@ late Notification notification;
 late Authorization authorization;
 
 late ChatCommon chatCommon;
+late SessionCommon sessionCommon;
 late ReceiveMessage receiveMessage;
 late SendMessage sendMessage;
 late ContactCommon contactCommon;
@@ -28,18 +30,7 @@ late WalletCommon walletCommon;
 late MemoryCache memoryCache;
 
 void setupLocator() {
-  locator
-    ..registerSingleton(Application())
-    ..registerSingleton(TaskService())
-    ..registerSingleton(BackgroundFetchService())
-    ..registerSingleton(Notification())
-    ..registerSingleton(Authorization())
-    ..registerSingleton(ChatCommon())
-    ..registerSingleton(ReceiveMessage())
-    ..registerSingleton(SendMessage())
-    ..registerSingleton(ContactCommon())
-    ..registerSingleton(WalletCommon())
-    ..registerSingleton(MemoryCache());
+  locator..registerSingleton(Application())..registerSingleton(TaskService())..registerSingleton(BackgroundFetchService())..registerSingleton(Notification())..registerSingleton(Authorization())..registerSingleton(ChatCommon())..registerSingleton(SessionCommon())..registerSingleton(ReceiveMessage())..registerSingleton(SendMessage())..registerSingleton(ContactCommon())..registerSingleton(WalletCommon())..registerSingleton(MemoryCache());
 
   application = locator.get<Application>();
   taskService = locator.get<TaskService>();
@@ -48,6 +39,7 @@ void setupLocator() {
   authorization = locator.get<Authorization>();
 
   chatCommon = locator.get<ChatCommon>();
+  sessionCommon = locator.get<SessionCommon>();
   receiveMessage = locator.get<ReceiveMessage>();
   sendMessage = locator.get<SendMessage>();
   contactCommon = locator.get<ContactCommon>();

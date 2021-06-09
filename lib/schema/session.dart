@@ -11,13 +11,13 @@ import 'contact.dart';
 import 'topic.dart';
 
 class SessionSchema extends Equatable {
-  int? id;
-  String targetId;
-  bool isTopic = false;
-  DateTime? lastMessageTime;
-  Map<String, dynamic>? lastMessageOptions;
-  int unReadCount;
-  bool isTop;
+  int? id; // <-> id
+  String targetId; // (required) <-> target_id
+  bool isTopic = false; // (required) <-> is_topic
+  DateTime? lastMessageTime; // <-> last_message_time
+  Map<String, dynamic>? lastMessageOptions; // <-> last_message_options
+  int unReadCount; // <-> un_read_count
+  bool isTop; // <-> is_top
 
   SessionSchema({
     this.id,
@@ -65,14 +65,6 @@ class SessionSchema extends Equatable {
 
   Future<ContactSchema?> get contact {
     return contactCommon.queryByClientAddress(targetId);
-  }
-
-  MessageSchema? get lastMessageSync {
-    MessageSchema? message;
-    if (lastMessageOptions != null && lastMessageOptions!.isNotEmpty) {
-      message = MessageSchema.fromMap(lastMessageOptions!);
-    }
-    return message;
   }
 
   Future<MessageSchema?> get lastMessage async {

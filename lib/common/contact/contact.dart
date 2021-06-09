@@ -65,18 +65,18 @@ class ContactCommon with Tag {
     return currentUser;
   }
 
-  Future<ContactSchema?> addByType(String? clientAddress, String contactType, {bool canDuplicated = false}) async {
+  Future<ContactSchema?> addByType(String? clientAddress, String contactType, {bool checkDuplicated = true}) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     ContactSchema? schema = await ContactSchema.createByType(clientAddress, contactType);
-    return add(schema, canDuplicated: canDuplicated);
+    return add(schema, checkDuplicated: checkDuplicated);
   }
 
-  Future<ContactSchema?> add(ContactSchema? schema, {bool canDuplicated = false}) async {
+  Future<ContactSchema?> add(ContactSchema? schema, {bool checkDuplicated = true}) async {
     if (schema == null || schema.clientAddress.isEmpty) return null;
     if (schema.nknWalletAddress == null || schema.nknWalletAddress!.isEmpty) {
       schema.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(schema.clientAddress));
     }
-    if (!canDuplicated) {
+    if (checkDuplicated) {
       ContactSchema? exist = await queryByClientAddress(schema.clientAddress);
       if (exist != null) {
         logger.d("$TAG - add - duplicated - schema:$exist");
@@ -98,8 +98,8 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? limit, int? offset}) {
-    return _contactStorage.queryList(contactType: contactType, orderBy: orderBy, limit: limit, offset: offset);
+  Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? offset, int? limit}) {
+    return _contactStorage.queryList(contactType: contactType, orderBy: orderBy, offset: offset, limit: limit);
   }
 
   Future<ContactSchema?> query(int? contactId) async {

@@ -51,7 +51,7 @@ class ReceiveMessage with Tag {
     // topic
     TopicSchema? topicSchema = await topicHandle(message);
     // session
-    // TODO:GG session (sessionpage检查是否为null，为null添加)
+    // TODO:GG session (sessionPage检查是否为null，为null添加)
     // notification
     notificationHandle(contactSchema, topicSchema, message);
     // message
@@ -73,7 +73,7 @@ class ReceiveMessage with Tag {
     ContactSchema? exist = await contactCommon.queryByClientAddress(received.from);
     if (exist == null) {
       logger.d("$TAG - contactHandle - new - from:$received.from");
-      return await contactCommon.addByType(received.from, ContactType.stranger, canDuplicated: true);
+      return await contactCommon.addByType(received.from, ContactType.stranger, checkDuplicated: false);
     } else {
       if (exist.profileExpiresAt == null || DateTime.now().isAfter(exist.profileExpiresAt!.add(Settings.profileExpireDuration))) {
         logger.d("$TAG - contactHandle - sendMessageContactRequestHeader - schema:$exist");
