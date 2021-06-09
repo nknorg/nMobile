@@ -50,6 +50,8 @@ class ReceiveMessage with Tag {
     ContactSchema? contactSchema = await contactHandle(message);
     // topic
     TopicSchema? topicSchema = await topicHandle(message);
+    // session
+    // TODO:GG session (sessionpage检查是否为null，为null添加)
     // notification
     notificationHandle(contactSchema, topicSchema, message);
     // message
@@ -251,10 +253,11 @@ class ReceiveMessage with Tag {
     int total = piece.total ?? SendMessage.maxPiecesTotal;
     int parity = piece.parity ?? (total ~/ SendMessage.piecesParity);
     int bytesLength = piece.bytesLength ?? 0;
-    List<MessageSchema> pieces = await _messageStorage.queryListByType(piece.msgId, piece.contentType);
-    logger.d("$TAG - receivePiece - progress:${pieces.length}/${piece.total}/${total + parity}");
-    if (pieces.isEmpty || pieces.length < total || bytesLength <= 0) return;
+    int piecesCount = await _messageStorage.queryCountByType(piece.msgId, piece.contentType);
+    logger.d("$TAG - receivePiece - progress:$piecesCount/${piece.total}/${total + parity}");
+    if (piecesCount < total || bytesLength <= 0) return;
     logger.d("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+    List<MessageSchema> pieces = await _messageStorage.queryListByType(piece.msgId, piece.contentType);
     pieces.sort((prev, next) => (prev.index ?? SendMessage.maxPiecesTotal).compareTo((next.index ?? SendMessage.maxPiecesTotal)));
     // recover
     List<Uint8List> recoverList = <Uint8List>[];
