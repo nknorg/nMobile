@@ -42,7 +42,7 @@ class SessionSchema extends Equatable {
       'is_top': isTop ? 1 : 0,
     };
     Map<String, dynamic>? options = (await lastMessage)?.toMap();
-    map["last_message_options"] = options != null ? jsonEncode(options) : '{}';
+    map["last_message_options"] = options != null ? jsonEncode(options) : null;
     return map;
   }
 
@@ -67,6 +67,14 @@ class SessionSchema extends Equatable {
     return contactCommon.queryByClientAddress(targetId);
   }
 
+  MessageSchema? get lastMessageSync {
+    MessageSchema? message;
+    if (lastMessageOptions != null && lastMessageOptions!.isNotEmpty) {
+      message = MessageSchema.fromMap(lastMessageOptions!);
+    }
+    return message;
+  }
+
   Future<MessageSchema?> get lastMessage async {
     MessageSchema? message;
     if (lastMessageOptions != null && lastMessageOptions!.isNotEmpty) {
@@ -74,6 +82,7 @@ class SessionSchema extends Equatable {
     } else {
       List<MessageSchema> history = await MessageStorage().queryListCanReadByTargetId(targetId, offset: 0, limit: 1);
       if (history.isNotEmpty) {
+        lastMessageOptions = message?.toMap();
         message = history[0];
       }
     }
