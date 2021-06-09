@@ -218,7 +218,7 @@ class ReceiveMessage with Tag {
               if (avatarData.toString().split(",").length != 1) {
                 avatarData = avatarData.toString().split(",")[1];
               }
-              avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact, extension: "jpg");
+              avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact);
             }
           }
           await contactCommon.setProfile(exist, firstName, lastName, avatar?.path, version, notify: true);
@@ -311,10 +311,10 @@ class ReceiveMessage with Tag {
 
   Future receiveText(MessageSchema received) async {
     // duplicated
-    MessageSchema? exists = await _messageStorage.queryByPid(received.pid);
-    if (exists != null) {
+    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
+    if (exists.isNotEmpty) {
       logger.d("$TAG - receiveText - duplicated - schema:$exists");
-      sendMessage.sendReceipt(exists); // await
+      sendMessage.sendReceipt(exists[0]); // await
       return;
     }
     // DB
@@ -328,14 +328,14 @@ class ReceiveMessage with Tag {
 
   Future receiveImage(MessageSchema received) async {
     // duplicated
-    MessageSchema? exists = await _messageStorage.queryByPid(received.pid);
-    if (exists != null) {
+    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
+    if (exists.isNotEmpty) {
       logger.d("$TAG - receiveImage - duplicated - schema:$exists");
-      sendMessage.sendReceipt(exists); // await
+      sendMessage.sendReceipt(exists[0]); // await
       return;
     }
     // File
-    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: "jpg");
+    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat);
     if (received.content == null) return;
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);
