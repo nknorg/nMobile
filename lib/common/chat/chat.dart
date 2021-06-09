@@ -39,6 +39,8 @@ String? genTopicHash(String? topic) {
 }
 
 class ChatCommon with Tag {
+  DB? db;
+
   /// nkn-sdk-flutter
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
   Client? client;
@@ -76,6 +78,7 @@ class ChatCommon with Tag {
     });
   }
 
+  // need close
   Future<bool> signIn(WalletSchema? schema, {bool walletDefault = false}) async {
     if (schema == null) return false;
     try {
@@ -86,17 +89,18 @@ class ChatCommon with Tag {
       Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd));
       if (wallet.address.isEmpty || wallet.keystore.isEmpty) return false;
 
+      if (walletDefault) BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(schema.address));
+
       String pubKey = hexEncode(wallet.publicKey);
       String password = hexEncode(Uint8List.fromList(sha256(wallet.seed)));
+      if (pubKey.isEmpty || password.isEmpty) return false;
 
-      // toggle DB
-      await DB.open(pubKey, password);
-      // default wallet
-      if (walletDefault) BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(schema.address));
-      // refresh currentUser
+      // open DB
+      db = await DB.open(pubKey, password);
+      // set currentUser
       await contactCommon.refreshCurrentUser(pubKey);
       // start client connect (no await)
-      connect(wallet);
+      connect(wallet); // await
     } catch (e) {
       handleError(e);
     }
@@ -105,7 +109,7 @@ class ChatCommon with Tag {
 
   Future connect(Wallet? wallet) async {
     if (wallet == null || wallet.seed.isEmpty) return;
-    if (client != null) await close();
+    // if (client != null) await close(); // async boom!!!
     // client create
     ClientConfig config = ClientConfig(seedRPCServerAddr: await Global.getSeedRpcList());
     _statusSink.add(ChatConnectStatus.connecting);
@@ -145,6 +149,10 @@ class ChatCommon with Tag {
     await _onMessageStreamSubscription?.cancel();
     await client?.close();
     client = null;
+    // clear currentUser
+    await contactCommon.refreshCurrentUser(null, notify: true);
+    // close DB
+    await db?.close();
   }
 
   Future<List<MessageSchema>> queryListAndReadByTargetId(
