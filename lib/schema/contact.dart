@@ -55,6 +55,45 @@ class ContactSchema {
     }
   }
 
+  Future<Map<String, dynamic>> toMap() async {
+    if (extraInfo == null) {
+      extraInfo = new Map<String, dynamic>();
+    }
+    if (nknWalletAddress != null) {
+      extraInfo?['nknWalletAddress'] = nknWalletAddress;
+    } else {
+      extraInfo?['nknWalletAddress'] = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+    }
+    if (notes != null) {
+      extraInfo?['notes'] = notes;
+    }
+    if (extraInfo?.keys.length == 0) {
+      extraInfo = null;
+    }
+
+    if (options == null) {
+      options = OptionsSchema();
+    }
+
+    Map<String, dynamic> map = {
+      'type': type,
+      'address': clientAddress,
+      'first_name': firstName ?? getDefaultName(clientAddress),
+      'last_name': lastName,
+      'data': extraInfo != null ? jsonEncode(extraInfo) : '{}',
+      'options': options != null ? jsonEncode(options!.toMap()) : null,
+      'avatar': avatar != null ? Path.getLocalFile(avatar?.path) : null,
+      'created_time': createdTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'updated_time': updatedTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'profile_version': profileVersion ?? Uuid().v4(),
+      'profile_expires_at': profileExpiresAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'is_top': isTop ? 1 : 0,
+      'device_token': deviceToken,
+      'notification_open': notificationOpen ? 1 : 0,
+    };
+    return map;
+  }
+
   static Future<ContactSchema> fromMap(Map e) async {
     var contact = ContactSchema(
       id: e['id'],
@@ -101,45 +140,6 @@ class ContactSchema {
       contact.options = OptionsSchema();
     }
     return contact;
-  }
-
-  Future<Map<String, dynamic>> toMap() async {
-    if (extraInfo == null) {
-      extraInfo = new Map<String, dynamic>();
-    }
-    if (nknWalletAddress != null) {
-      extraInfo?['nknWalletAddress'] = nknWalletAddress;
-    } else {
-      extraInfo?['nknWalletAddress'] = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
-    }
-    if (notes != null) {
-      extraInfo?['notes'] = notes;
-    }
-    if (extraInfo?.keys.length == 0) {
-      extraInfo = null;
-    }
-
-    if (options == null) {
-      options = OptionsSchema();
-    }
-
-    Map<String, dynamic> map = {
-      'type': type,
-      'address': clientAddress,
-      'first_name': firstName ?? getDefaultName(clientAddress),
-      'last_name': lastName,
-      'data': extraInfo != null ? jsonEncode(extraInfo) : '{}',
-      'options': options != null ? jsonEncode(options!.toMap()) : null,
-      'avatar': avatar != null ? Path.getLocalFile(avatar?.path) : null,
-      'created_time': createdTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'updated_time': updatedTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'profile_version': profileVersion ?? Uuid().v4(),
-      'profile_expires_at': profileExpiresAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'is_top': isTop ? 1 : 0,
-      'device_token': deviceToken,
-      'notification_open': notificationOpen ? 1 : 0,
-    };
-    return map;
   }
 
   static Future<ContactSchema?> createByType(String? clientAddress, String contactType) async {
