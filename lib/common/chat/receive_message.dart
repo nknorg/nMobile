@@ -291,7 +291,7 @@ class ReceiveMessage with Tag {
     await onClientMessage(combine, sync: true);
     // delete
     logger.d("$TAG - receivePiece - DELETE:START - pieces_count:${pieces.length}");
-    bool deleted = await _messageStorage.delete(piece);
+    bool deleted = await _messageStorage.deleteByType(piece.msgId, piece.contentType);
     if (deleted) {
       pieces.forEach((MessageSchema element) {
         if (element.content is File) {
