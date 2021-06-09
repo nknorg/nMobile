@@ -158,8 +158,11 @@ class ChatCommon with Tag {
     // unread
     if (offset == 0 && (unread == null || unread > 0)) {
       List<MessageSchema> unreadList = await _messageStorage.queryListUnReadByTargetId(targetId);
-      unreadList.forEach((MessageSchema element) {
+      unreadList.asMap().forEach((index, MessageSchema element) {
         receiveMessage.read(element); // await
+        if (index >= unreadList.length) {
+          sessionCommon.setUnReadCount(element.targetId, 0, notify: true);
+        }
       });
       list = list.map((e) => e.isOutbound == false ? MessageStatus.set(e, MessageStatus.ReceivedRead) : e).toList(); // fake read
     }
