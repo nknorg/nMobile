@@ -157,6 +157,25 @@ class SessionStorage with Tag {
     return false;
   }
 
+  Future<bool> updateUnReadCount(String? targetId, int unread) async {
+    if (targetId == null || targetId.isEmpty) return false;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'un_read_count': unread,
+        },
+        where: 'target_id = ?',
+        whereArgs: [targetId],
+      );
+      logger.d("$TAG - updateUnReadCount - targetId:$targetId - unread:$unread");
+      return (count ?? 0) > 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
   Future<bool> updateIsTop(String? targetId, bool isTop) async {
     if (targetId == null || targetId.isEmpty) return false;
     try {
