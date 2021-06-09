@@ -12,7 +12,7 @@ class ChatSendBar extends BaseStateFulWidget {
   static const String ChangeTypeReplace = "replace";
   static const String ChangeTypeAppend = "append";
 
-  final String targetId;
+  final String? targetId;
   final VoidCallback? onMenuPressed;
   final Function(String)? onSendPress;
   final Stream<Map<String, dynamic>>? onChangeStream;
