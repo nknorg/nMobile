@@ -47,7 +47,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
 
   bool _pageLoaded = false;
   late StreamSubscription _addContactSubscription;
-  late StreamSubscription _deleteContactSubscription;
+  // late StreamSubscription _deleteContactSubscription;
   late StreamSubscription _updateContactSubscription;
 
   TextEditingController _searchController = TextEditingController();
@@ -77,11 +77,11 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       }
       _searchAction(_searchController.text);
     });
-    _deleteContactSubscription = contactCommon.deleteStream.listen((int contactId) {
-      _allFriends = _allFriends.where((element) => element.id != contactId).toList();
-      _allStrangers = _allStrangers.where((element) => element.id != contactId).toList();
-      _searchAction(_searchController.text);
-    });
+    // _deleteContactSubscription = contactCommon.deleteStream.listen((int contactId) {
+    //   _allFriends = _allFriends.where((element) => element.id != contactId).toList();
+    //   _allStrangers = _allStrangers.where((element) => element.id != contactId).toList();
+    //   _searchAction(_searchController.text);
+    // });
     _updateContactSubscription = contactCommon.updateStream.listen((ContactSchema event) {
       // friend
       int friendIndex = -1;
@@ -129,7 +129,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   @override
   void dispose() {
     _addContactSubscription.cancel();
-    _deleteContactSubscription.cancel();
+    // _deleteContactSubscription.cancel();
     _updateContactSubscription.cancel();
     super.dispose();
   }
