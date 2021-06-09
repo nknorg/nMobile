@@ -68,19 +68,19 @@ class MessageStorage with Tag {
     return null;
   }
 
-  Future<bool> delete(MessageSchema? schema) async {
-    if (schema == null || schema.contentType.isEmpty) return false;
+  Future<bool> deleteByType(String msgId, String contentType) async {
+    if (msgId.isEmpty || contentType.isEmpty) return false;
     try {
       int? result = await db?.delete(
         tableName,
         where: 'msg_id = ? AND type = ?',
-        whereArgs: [schema.msgId, schema.contentType],
+        whereArgs: [msgId, contentType],
       );
       if (result != null && result > 0) {
-        logger.d("$TAG - delete - success - schema:$schema");
+        logger.d("$TAG - delete - success - msgId:$msgId - contentType:$contentType");
         return true;
       }
-      logger.w("$TAG - delete - empty - schema:$schema");
+      logger.w("$TAG - delete - empty - msgId:$msgId - contentType:$contentType");
     } catch (e) {
       handleError(e);
     }
