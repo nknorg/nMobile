@@ -11,22 +11,20 @@ import 'contact.dart';
 import 'topic.dart';
 
 class SessionSchema extends Equatable {
+  int? id;
   String targetId;
   bool isTopic = false;
-  DateTime? lastReceiveTime;
-  Map<String, dynamic>? lastReceiveOptions;
+  DateTime? lastMessageTime;
+  Map<String, dynamic>? lastMessageOptions;
   int unReadCount;
   bool isTop;
 
-  TopicSchema? topic;
-  ContactSchema? contact;
-  MessageSchema? message;
-
   SessionSchema({
+    this.id,
     required this.targetId,
     required this.isTopic,
-    this.lastReceiveTime,
-    this.lastReceiveOptions,
+    this.lastMessageTime,
+    this.lastMessageOptions,
     this.unReadCount = 0,
     this.isTop = false,
   });
@@ -36,42 +34,49 @@ class SessionSchema extends Equatable {
 
   Future<Map<String, dynamic>> toMap() async {
     Map<String, dynamic> map = {
+      'id': id,
       'target_id': targetId,
       'is_topic': isTopic ? 1 : 0,
-      'last_receive_time': lastReceiveTime?.millisecondsSinceEpoch,
+      'last_message_time': lastMessageTime?.millisecondsSinceEpoch,
       'un_read_count': unReadCount,
       'is_top': isTop ? 1 : 0,
     };
-    Map<String, dynamic>? options = message?.toMap();
-    map["last_receive_options"] = options != null ? jsonEncode(options) : '{}';
+    Map<String, dynamic>? options = (await getLastMessage)?.toMap();
+    map["last_message_options"] = options != null ? jsonEncode(options) : '{}';
     return map;
   }
 
-  static Future<SessionSchema?> fromMap(Map e) async {
+  static SessionSchema fromMap(Map e) {
     var schema = SessionSchema(
+      id: e['id'],
       targetId: e['target_id'] ?? "",
       isTopic: (e['is_topic'] != null && e['is_topic'] == 1) ? true : false,
-      lastReceiveTime: e['last_receive_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['last_receive_time']) : null,
-      lastReceiveOptions: e['last_receive_options'] != null ? jsonFormat(e['last_receive_options']) : null,
+      lastMessageTime: e['last_message_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['last_message_time']) : null,
+      lastMessageOptions: e['last_message_options'] != null ? jsonFormat(e['last_message_options']) : null,
       unReadCount: e['un_read_count'] ?? 0,
       isTop: (e['is_top'] != null && e['is_top'] == 1) ? true : false,
     );
-    if (schema.targetId.isEmpty) return null;
-    // topic + contact
-    if (schema.isTopic) {
-      schema.topic = await TopicStorage().queryTopicByTopicName(schema.targetId);
+    return schema;
+  }
+
+  Future<TopicSchema?> get getTopic {
+    return TopicStorage().queryTopicByTopicName(targetId);
+  }
+
+  Future<ContactSchema?> get getContact {
+    return contactCommon.queryByClientAddress(targetId);
+  }
+
+  Future<MessageSchema?> get getLastMessage async {
+    MessageSchema? message;
+    if (lastMessageOptions != null && lastMessageOptions!.isNotEmpty) {
+      message = MessageSchema.fromMap(lastMessageOptions!);
     } else {
-      schema.contact = await contactCommon.queryByClientAddress(schema.targetId);
-    }
-    // message
-    if (schema.lastReceiveOptions != null && schema.lastReceiveOptions!.isNotEmpty) {
-      schema.message = MessageSchema.fromMap(schema.lastReceiveOptions!);
-    } else {
-      List<MessageSchema> history = await MessageStorage().queryListCanReadByTargetId(schema.targetId, offset: 0, limit: 1);
+      List<MessageSchema> history = await MessageStorage().queryListCanReadByTargetId(targetId, offset: 0, limit: 1);
       if (history.isNotEmpty) {
-        schema.message = history[0];
+        message = history[0];
       }
     }
-    return schema;
+    return message;
   }
 }
