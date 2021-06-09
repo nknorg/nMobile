@@ -41,29 +41,29 @@ class ReceiveMessage with Tag {
 
   Future start() async {
     await for (MessageSchema received in onReceiveStream) {
-      await messageHandle(received);
+      await _messageHandle(received);
     }
   }
 
   Future onClientMessage(MessageSchema? message, {bool sync = false}) async {
     if (message == null) return;
     // contact
-    ContactSchema? contactSchema = await contactHandle(message);
+    ContactSchema? contactSchema = await _contactHandle(message);
     // topic
-    TopicSchema? topicSchema = await topicHandle(message);
+    TopicSchema? topicSchema = await _topicHandle(message);
     // notification
-    notificationHandle(contactSchema, topicSchema, message);
+    _notificationHandle(contactSchema, topicSchema, message);
     // session
-    await sessionHandle(message);
+    await _sessionHandle(message);
     // message
     if (!sync) {
       onReceiveSink.add(message);
     } else {
-      await messageHandle(message);
+      await _messageHandle(message);
     }
   }
 
-  Future<ContactSchema?> contactHandle(MessageSchema received) async {
+  Future<ContactSchema?> _contactHandle(MessageSchema received) async {
     // type
     bool noText = received.contentType != ContentType.text && received.contentType != ContentType.textExtension;
     bool noImage = received.contentType != ContentType.media && received.contentType != ContentType.image && received.contentType != ContentType.nknImage;
@@ -87,7 +87,7 @@ class ReceiveMessage with Tag {
     return exist;
   }
 
-  Future<TopicSchema?> topicHandle(MessageSchema received) async {
+  Future<TopicSchema?> _topicHandle(MessageSchema received) async {
     // type
     bool noText = received.contentType != ContentType.text && received.contentType != ContentType.textExtension;
     bool noImage = received.contentType != ContentType.media && received.contentType != ContentType.image && received.contentType != ContentType.nknImage;
@@ -107,7 +107,7 @@ class ReceiveMessage with Tag {
     return exist;
   }
 
-  Future<void> notificationHandle(ContactSchema? contact, TopicSchema? topic, MessageSchema message) async {
+  Future<void> _notificationHandle(ContactSchema? contact, TopicSchema? topic, MessageSchema message) async {
     late String title;
     late String content;
     if (contact != null && topic == null) {
@@ -137,7 +137,7 @@ class ReceiveMessage with Tag {
     }
   }
 
-  Future<SessionSchema?> sessionHandle(MessageSchema received) async {
+  Future<SessionSchema?> _sessionHandle(MessageSchema received) async {
     // type
     bool noText = received.contentType != ContentType.text && received.contentType != ContentType.textExtension;
     bool noImage = received.contentType != ContentType.media && received.contentType != ContentType.image && received.contentType != ContentType.nknImage;
@@ -153,28 +153,28 @@ class ReceiveMessage with Tag {
     return exist;
   }
 
-  Future messageHandle(MessageSchema received) async {
+  Future _messageHandle(MessageSchema received) async {
     switch (received.contentType) {
       // case ContentType.system:
       //   break;
       case ContentType.receipt:
-        receiveReceipt(received); // await
+        _receiveReceipt(received); // await
         break;
       case ContentType.contact:
-        receiveContact(received); // await
+        _receiveContact(received); // await
         break;
       case ContentType.piece:
-        await receivePiece(received);
+        await _receivePiece(received);
         break;
       case ContentType.text:
-        await receiveText(received);
+        await _receiveText(received);
         break;
       // case ContentType.textExtension:
       //   break;
       case ContentType.media:
       case ContentType.image:
       case ContentType.nknImage:
-        await receiveImage(received);
+        await _receiveImage(received);
         break;
       // case ContentType.audio:
       //   break;
@@ -189,7 +189,7 @@ class ReceiveMessage with Tag {
   }
 
   // NO DB NO display
-  Future receiveReceipt(MessageSchema received) async {
+  Future _receiveReceipt(MessageSchema received) async {
     List<MessageSchema> _schemaList = await _messageStorage.queryList(received.content);
     _schemaList.forEach((MessageSchema element) async {
       element = MessageStatus.set(element, MessageStatus.SendWithReceipt);
@@ -203,7 +203,7 @@ class ReceiveMessage with Tag {
   }
 
   // NO DB NO display
-  Future receiveContact(MessageSchema received) async {
+  Future _receiveContact(MessageSchema received) async {
     if (received.content == null) return;
     Map<String, dynamic> data = received.content; // == data
     // duplicated
@@ -256,7 +256,7 @@ class ReceiveMessage with Tag {
     }
   }
 
-  Future receivePiece(MessageSchema received) async {
+  Future _receivePiece(MessageSchema received) async {
     // duplicated
     List<MessageSchema> existsCombine = await _messageStorage.queryListByType(received.msgId, received.parentType);
     if (existsCombine.isNotEmpty) {
@@ -265,7 +265,7 @@ class ReceiveMessage with Tag {
       return;
     }
     // piece
-    MessageSchema? piece = await _messageStorage.queryByPid(received.pid); // TODO:GG  dep??
+    MessageSchema? piece = await _messageStorage.queryByPid(received.pid); // TODO:GG dep??
     if (piece == null) {
       received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: received.parentType);
       piece = await _messageStorage.insert(received);
@@ -336,7 +336,7 @@ class ReceiveMessage with Tag {
     }
   }
 
-  Future receiveText(MessageSchema received) async {
+  Future _receiveText(MessageSchema received) async {
     // duplicated
     List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
     if (exists.isNotEmpty) {
@@ -355,7 +355,7 @@ class ReceiveMessage with Tag {
     sessionCommon.setLastMessageAndUnReadCount(schema.targetId, schema, null, notify: true); // await
   }
 
-  Future receiveImage(MessageSchema received) async {
+  Future _receiveImage(MessageSchema received) async {
     // duplicated
     List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
     if (exists.isNotEmpty) {
