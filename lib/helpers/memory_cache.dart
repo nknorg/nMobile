@@ -28,15 +28,18 @@ class MemoryCache {
   }
 
   // draft
-  getDraft(String targetId) {
+  getDraft(String? targetId) {
+    if (targetId == null) return null;
     return get('$targetId:$KEY_DRAFT');
   }
 
-  setDraft(String targetId, String draft) {
+  setDraft(String? targetId, String draft) {
+    if (targetId == null) return;
     put('$targetId:$KEY_DRAFT', draft);
   }
 
-  removeDraft(String targetId) {
+  removeDraft(String? targetId) {
+    if (targetId == null) return;
     remove('$targetId:$KEY_DRAFT');
   }
 }
