@@ -1,14 +1,7 @@
 import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
-import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/storages/message.dart';
-import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/utils.dart';
-
-import 'contact.dart';
-import 'topic.dart';
 
 class SessionSchema extends Equatable {
   int? id; // <-> id
@@ -41,8 +34,7 @@ class SessionSchema extends Equatable {
       'un_read_count': unReadCount,
       'is_top': isTop ? 1 : 0,
     };
-    Map<String, dynamic>? options = (await lastMessage)?.toMap();
-    map["last_message_options"] = options != null ? jsonEncode(options) : null;
+    map["last_message_options"] = lastMessageOptions != null ? jsonEncode(lastMessageOptions) : null;
     return map;
   }
 
@@ -57,28 +49,5 @@ class SessionSchema extends Equatable {
       isTop: (e['is_top'] != null && e['is_top'] == 1) ? true : false,
     );
     return schema;
-  }
-
-  Future<TopicSchema?> get topic {
-    return TopicStorage().queryTopicByTopicName(targetId);
-  }
-
-  Future<ContactSchema?> get contact {
-    return contactCommon.queryByClientAddress(targetId);
-  }
-
-  Future<MessageSchema?> get lastMessage async {
-    MessageSchema? message;
-    if (lastMessageOptions != null && lastMessageOptions!.isNotEmpty) {
-      message = MessageSchema.fromMap(lastMessageOptions!);
-    } else {
-      List<MessageSchema> history = await MessageStorage().queryListCanReadByTargetId(targetId, offset: 0, limit: 1);
-      if (history.isNotEmpty) {
-        message = history[0];
-        lastMessageOptions = message.toMap();
-      }
-    }
-    lastMessageTime = message?.sendTime;
-    return message;
   }
 }
