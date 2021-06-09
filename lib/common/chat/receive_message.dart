@@ -265,7 +265,7 @@ class ReceiveMessage with Tag {
       return;
     }
     // piece
-    MessageSchema? piece = await _messageStorage.queryByPid(received.pid); // TODO:GG dep??
+    MessageSchema? piece = await _messageStorage.queryByPid(received.pid); // TODO:GG  dep??
     if (piece == null) {
       received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: received.parentType);
       piece = await _messageStorage.insert(received);
@@ -351,6 +351,8 @@ class ReceiveMessage with Tag {
     sendMessage.sendReceipt(schema); // await
     // display
     onSavedSink.add(schema);
+    // session
+    sessionCommon.setLastMessageAndUnReadCount(schema.targetId, schema, null, notify: true); // await
   }
 
   Future receiveImage(MessageSchema received) async {
@@ -371,6 +373,8 @@ class ReceiveMessage with Tag {
     sendMessage.sendReceipt(schema); // await
     // display
     onSavedSink.add(schema);
+    // session
+    sessionCommon.setLastMessageAndUnReadCount(schema.targetId, schema, null, notify: true); // await
   }
 
   // receipt(receive) != read(look)
