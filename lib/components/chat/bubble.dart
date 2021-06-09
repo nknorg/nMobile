@@ -24,7 +24,7 @@ import '../text/markdown.dart';
 
 class ChatBubble extends BaseStateFulWidget {
   final MessageSchema message;
-  final ContactSchema contact;
+  final ContactSchema? contact;
   final bool showTime;
   final bool showProfile;
   final Function(ContactSchema, MessageSchema)? onLonePress;
@@ -48,7 +48,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
   StreamSubscription? _onPieceOutStreamSubscription;
 
   late MessageSchema _message;
-  late ContactSchema _contact;
+  ContactSchema? _contact;
   late int _msgStatus;
 
   double _uploadProgress = 1;
@@ -152,26 +152,26 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
   }
 
   Widget _getAvatar(bool self) {
-    return self || !widget.showProfile
+    return self || !widget.showProfile || _contact == null
         ? SizedBox.shrink()
         : GestureDetector(
             onTap: () async {
-              File? file = await _contact.displayAvatarFile;
+              File? file = await _contact!.displayAvatarFile;
               PhotoScreen.go(context, filePath: file?.path);
             },
-            onLongPress: () => widget.onLonePress?.call(_contact, _message),
+            onLongPress: () => widget.onLonePress?.call(_contact!, _message),
             child: ContactAvatar(
-              contact: _contact,
+              contact: _contact!,
               radius: 24,
             ),
           );
   }
 
   Widget _getName(bool self) {
-    return self || !widget.showProfile
+    return self || !widget.showProfile || _contact == null
         ? SizedBox.shrink()
         : Label(
-            _contact.displayName,
+            _contact!.displayName,
             type: LabelType.h3,
             color: application.theme.primaryColor,
           );

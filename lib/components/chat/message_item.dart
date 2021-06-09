@@ -8,7 +8,7 @@ import 'package:nmobile/utils/format.dart';
 
 class ChatMessageItem extends StatelessWidget {
   final MessageSchema message;
-  final ContactSchema contact;
+  final ContactSchema? contact;
   final MessageSchema? prevMessage;
   final MessageSchema? nextMessage;
   final bool showProfile;
