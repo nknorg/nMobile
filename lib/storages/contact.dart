@@ -103,8 +103,6 @@ class ContactStorage with Tag {
     return false;
   }
 
-  /// Query
-
   Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? limit, int? offset}) async {
     try {
       List<Map<String, dynamic>>? res = await db?.query(
@@ -194,8 +192,6 @@ class ContactStorage with Tag {
     }
     return 0;
   }
-
-  /// Type
 
   Future<bool> setType(int? contactId, String? contactType) async {
     if (contactId == null || contactId == 0 || contactType == null || contactType == ContactType.me) return false;
@@ -295,8 +291,6 @@ class ContactStorage with Tag {
     return false;
   }
 
-  /// notes(Data)
-
   Future<bool> setNotes(int? contactId, String? notes, {Map<String, dynamic>? oldExtraInfo}) async {
     if (contactId == null || contactId == 0) return false;
     try {
@@ -321,8 +315,6 @@ class ContactStorage with Tag {
     }
     return false;
   }
-
-  /// Options
 
   Future<bool> setOptionsColors(int? contactId, {OptionsSchema? old}) async {
     if (contactId == null || contactId == 0) return false;
@@ -390,8 +382,6 @@ class ContactStorage with Tag {
     return false;
   }
 
-  /// Top
-
   Future<bool> setTop(String? clientAddress, bool top) async {
     if (clientAddress == null || clientAddress.isEmpty) return false;
     try {
@@ -411,24 +401,6 @@ class ContactStorage with Tag {
     }
     return false;
   }
-
-  Future<bool> isTop(String? clientAddress) async {
-    if (clientAddress == null || clientAddress.isEmpty) return false;
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['is_top'],
-        where: 'address = ?',
-        whereArgs: [clientAddress],
-      );
-      return (res?.length ?? 0) > 0 && ((res![0]['is_top'] as int) == 1);
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
-
-  /// DeviceToken
 
   Future<bool> setDeviceToken(int? contactId, String? deviceToken) async {
     if (contactId == null || contactId == 0 || deviceToken == null || deviceToken.isEmpty) return false;
@@ -453,8 +425,6 @@ class ContactStorage with Tag {
     }
     return false;
   }
-
-  /// NotificationOpen
 
   Future<bool> setNotificationOpen(int? contactId, bool open) async {
     if (contactId == null || contactId == 0) return false;
