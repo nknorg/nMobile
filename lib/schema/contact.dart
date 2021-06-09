@@ -207,7 +207,7 @@ class ContactSchema {
     return displayName ?? "";
   }
 
-  Future<File?> get getDisplayAvatarFile async {
+  Future<File?> get displayAvatarFile async {
     String? avatarLocalPath;
 
     if (extraInfo != null && extraInfo!.isNotEmpty) {

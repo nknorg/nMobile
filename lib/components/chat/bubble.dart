@@ -156,7 +156,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
         ? SizedBox.shrink()
         : GestureDetector(
             onTap: () async {
-              File? file = await _contact.getDisplayAvatarFile;
+              File? file = await _contact.displayAvatarFile;
               PhotoScreen.go(context, filePath: file?.path);
             },
             onLongPress: () => widget.onLonePress?.call(_contact, _message),
