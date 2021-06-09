@@ -9,6 +9,7 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -232,7 +233,25 @@ class SendMessage with Tag {
     if (database || resend) _messageStorage.updateMessageStatus(schema); // await
     // display
     if (display || resend) onUpdateSink.add(schema);
+    // session
+    _sessionHandle(schema); // await
     return schema;
+  }
+
+  Future<SessionSchema?> _sessionHandle(MessageSchema send) async {
+    // type
+    bool noText = send.contentType != ContentType.text && send.contentType != ContentType.textExtension;
+    bool noImage = send.contentType != ContentType.media && send.contentType != ContentType.image && send.contentType != ContentType.nknImage;
+    bool noAudio = send.contentType != ContentType.audio;
+    if (noText && noImage && noAudio) return null;
+    // duplicated
+    if (send.targetId == null || send.targetId!.isEmpty) return null;
+    SessionSchema? exist = await sessionCommon.query(send.targetId);
+    if (exist == null) {
+      logger.d("$TAG - sessionHandle - new - targetId:${send.targetId}");
+      return await sessionCommon.add(SessionSchema(targetId: send.targetId!, isTopic: send.topic != null));
+    }
+    return exist;
   }
 
   Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message) async {
