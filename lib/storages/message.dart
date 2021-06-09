@@ -198,34 +198,6 @@ class MessageStorage with Tag {
     return [];
   }
 
-  // Future<List<MessageSchema>> queryListByNoType(String? msgId, String? contentType) async {
-  //   if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return [];
-  //   try {
-  //     List<Map<String, dynamic>>? res = await db?.query(
-  //       tableName,
-  //       columns: ['*'],
-  //       where: 'msg_id = ? AND NOT type = ?',
-  //       whereArgs: [msgId, contentType],
-  //     );
-  //     if (res == null || res.isEmpty) {
-  //       logger.d("$TAG - queryListByNoType - empty - msgId:$msgId - contentType:$contentType");
-  //       return [];
-  //     }
-  //     List<MessageSchema> result = <MessageSchema>[];
-  //     String logText = '';
-  //     res.forEach((map) {
-  //       MessageSchema item = MessageSchema.fromMap(map);
-  //       logText += "\n$item";
-  //       result.add(item);
-  //     });
-  //     logger.d("$TAG - queryListByNoType - success - msgId:$msgId - contentType:$contentType - length:${result.length} - items:$logText");
-  //     return result;
-  //   } catch (e) {
-  //     handleError(e);
-  //   }
-  //   return [];
-  // }
-
   Future<int> queryCountByType(String? msgId, String? contentType) async {
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return 0;
     try {
@@ -330,6 +302,24 @@ class MessageStorage with Tag {
     return [];
   }
 
+  Future<int> unReadCountByTargetId(String? targetId) async {
+    if (targetId == null || targetId.isEmpty) return 0;
+    try {
+      var res = await db?.query(
+        tableName,
+        columns: ['COUNT(id)'],
+        where: 'is_outbound = ? AND target_id = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
+        whereArgs: [0, targetId, 0, ContentType.piece, ContentType.receipt],
+      );
+      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+      logger.d("$TAG - unReadCountByTargetId - targetId:$targetId - count:$count");
+      return count ?? 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return 0;
+  }
+
   Future<bool> updatePid(String? msgId, Uint8List? pid) async {
     if (msgId == null || msgId.isEmpty) return false;
     try {
@@ -404,41 +394,6 @@ class MessageStorage with Tag {
       handleError(e);
     }
     return false;
-  }
-
-  Future<int> unReadCount() async {
-    try {
-      var res = await db?.query(
-        tableName,
-        columns: ['COUNT(id)'],
-        where: 'is_outbound = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
-        whereArgs: [0, 0, ContentType.piece, ContentType.receipt],
-      );
-      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.d("$TAG - unReadCountByNotSender - count:$count");
-      return count ?? 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return 0;
-  }
-
-  Future<int> unReadCountByTargetId(String? targetId) async {
-    if (targetId == null || targetId.isEmpty) return 0;
-    try {
-      var res = await db?.query(
-        tableName,
-        columns: ['COUNT(id)'],
-        where: 'is_outbound = ? AND target_id = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
-        whereArgs: [0, targetId, 0, ContentType.piece, ContentType.receipt],
-      );
-      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.d("$TAG - unReadCountByTargetId - targetId:$targetId - count:$count");
-      return count ?? 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return 0;
   }
 
   Future<bool> updateMessageStatus(MessageSchema? schema) async {

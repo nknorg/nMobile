@@ -13,17 +13,17 @@ import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
 class ContentType {
-  static const String system = 'system'; // TODO:GG wait data
-  static const String receipt = 'receipt';
-  static const String contact = 'contact';
+  static const String system = 'system'; // visible // TODO:GG wait data
+  static const String receipt = 'receipt'; // db
+  static const String contact = 'contact'; // .
 
-  static const String piece = 'nknOnePiece';
+  static const String piece = 'nknOnePiece'; // db
 
-  static const String text = 'text';
-  static const String textExtension = 'textExtension'; // TODO:GG wait handle
-  static const String media = 'media';
-  static const String image = 'image';
-  static const String audio = 'audio'; // TODO:GG wait handle
+  static const String text = 'text'; // db + visible
+  static const String textExtension = 'textExtension'; // db + visible // TODO:GG wait handle
+  static const String media = 'media'; // db + visible
+  static const String image = 'image'; // db + visible
+  static const String audio = 'audio'; // db + visible // TODO:GG wait handle
 
   static const String eventContactOptions = 'event:contactOptions'; // TODO:GG wait handle
   static const String eventSubscribe = 'event:subscribe'; // TODO:GG wait handle
