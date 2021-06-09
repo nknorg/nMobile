@@ -49,12 +49,12 @@ class ContactStorage with Tag {
     await db.execute('CREATE INDEX index_contact_updated_time ON $tableName (updated_time)');
   }
 
-  Future<ContactSchema?> insert(ContactSchema? schema, {bool canDuplicated = false}) async {
+  Future<ContactSchema?> insert(ContactSchema? schema, {bool checkDuplicated = true}) async {
     if (schema == null || schema.clientAddress.isEmpty) return null;
     try {
       Map<String, dynamic> entity = await schema.toMap();
       int? id;
-      if (canDuplicated) {
+      if (!checkDuplicated) {
         id = await db?.insert(tableName, entity);
       } else {
         await db?.transaction((txn) async {
@@ -113,8 +113,8 @@ class ContactStorage with Tag {
         orderBy: orderBy ?? 'updated_time desc',
         where: contactType != null ? 'type = ?' : null,
         whereArgs: contactType != null ? [contactType] : null,
-        limit: limit ?? null,
         offset: offset ?? null,
+        limit: limit ?? null,
       );
       if (res == null || res.isEmpty) {
         logger.d("$TAG - queryList - empty - contactType:$contactType");
