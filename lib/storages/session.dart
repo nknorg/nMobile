@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/helpers/error.dart';
-import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -193,98 +192,5 @@ class SessionStorage with Tag {
       handleError(e);
     }
     return false;
-  }
-
-  /// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-
-  /// ContentType is text, textExtension, media, audio counted to not read
-  Future<List<SessionSchema>> getLastSession(int skip, int limit) async {
-    List<Map<String, dynamic>>? res = await db?.query(
-      '$tableName as m',
-      columns: [
-        'm.*',
-        '(SELECT COUNT(id) from $tableName WHERE target_id = m.target_id AND is_outbound = 0 AND is_read = 0 '
-            'AND (type = "text" '
-            'or type = "textExtension" '
-            'or type = "media" '
-            'or type = "audio")) as not_read',
-        'MAX(send_time)'
-      ],
-      where: "type = ? or type = ? or type = ? or type = ? or type = ? or type = ?",
-      whereArgs: [
-        ContentType.text,
-        ContentType.textExtension,
-        ContentType.media,
-        ContentType.image,
-        ContentType.nknImage,
-        ContentType.audio,
-      ],
-      groupBy: 'm.target_id',
-      orderBy: 'm.send_time desc',
-      offset: skip,
-      limit: limit,
-    );
-
-    List<SessionSchema> list = <SessionSchema>[];
-    if (res != null && res.length > 0) {
-      for (var i = 0, length = res.length; i < length; i++) {
-        var item = res[i];
-        SessionSchema? model = SessionSchema.fromMap(item);
-        if (model != null) {
-          list.add(model);
-        }
-      }
-    }
-    if (list.length > 0) {
-      return list;
-    }
-    return [];
-  }
-
-  Future<SessionSchema?> getUpdateSession(String? targetId) async {
-    if (targetId == null || targetId.isEmpty) return null;
-    List<Map<String, dynamic>>? res = await db?.query(
-      '$tableName',
-      where: 'target_id = ? AND is_outbound = 0 AND is_read = 0 AND (type = ? or type = ? or type = ? or type = ? or type = ? or type = ?)',
-      whereArgs: [
-        targetId,
-        ContentType.text,
-        ContentType.textExtension,
-        ContentType.media,
-        ContentType.image,
-        ContentType.nknImage,
-        ContentType.audio,
-      ],
-      orderBy: 'send_time desc',
-    );
-
-    if (res != null && res.length > 0) {
-      Map info = res[0];
-      SessionSchema? model = SessionSchema.fromMap(info);
-      model?.notReadCount = res.length;
-      return model;
-    } else {
-      List<Map<String, dynamic>>? countResult = await db?.query(
-        '$tableName',
-        where: 'target_id = ? AND (type = ? or type = ? or type = ? or type = ? or type = ? or type = ?)',
-        whereArgs: [
-          targetId,
-          ContentType.text,
-          ContentType.textExtension,
-          ContentType.media,
-          ContentType.image,
-          ContentType.nknImage,
-          ContentType.audio,
-        ],
-        orderBy: 'send_time desc',
-      );
-      if (countResult != null && countResult.length > 0) {
-        Map info = countResult[0];
-        SessionSchema? model = SessionSchema.fromMap(info);
-        model?.notReadCount = 0;
-        return model;
-      }
-    }
-    return null;
   }
 }
