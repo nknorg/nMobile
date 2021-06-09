@@ -141,7 +141,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
           contactCommon.setType(exist.id, ContactType.friend, notify: true);
         }
       } else {
-        ContactSchema? added = await contactCommon.add(schema, canDuplicated: true);
+        ContactSchema? added = await contactCommon.add(schema, checkDuplicated: false);
         if (added == null) {
           Toast.show(S.of(context).failure);
           Loading.dismiss();
