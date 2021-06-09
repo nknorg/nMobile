@@ -130,7 +130,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
                     margin: EdgeInsets.only(left: 20),
                     child: StreamBuilder<ContactSchema?>(
                       initialData: contactCommon.currentUser,
-                      stream: contactCommon.updateStream.where((event) => event.id == contactCommon.currentUser?.id),
+                      stream: contactCommon.currentUpdateStream,
                       builder: (BuildContext context, AsyncSnapshot<ContactSchema?> snapshot) {
                         ContactSchema? _schema = snapshot.data ?? contactCommon.currentUser;
                         if (_schema == null) return SizedBox.shrink();

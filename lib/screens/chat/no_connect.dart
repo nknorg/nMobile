@@ -26,7 +26,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
   late StreamSubscription _walletAddSubscription;
 
   bool loaded = false;
-  WalletSchema? _defaultWallet;
+  WalletSchema? _selectWallet;
 
   @override
   void onRefreshArguments() {}
@@ -55,7 +55,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
       setState(() {
         loaded = true;
         if (value != null) {
-          _defaultWallet = value;
+          _selectWallet = value;
         }
       });
     });
@@ -112,7 +112,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
               ),
             ),
             SizedBox(height: 30),
-            this._defaultWallet == null || !loaded
+            this._selectWallet == null || !loaded
                 ? SizedBox(height: 30)
                 : Expanded(
                     flex: 0,
@@ -122,17 +122,17 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                         onTapWave: false,
                         onSelected: (v) {
                           setState(() {
-                            _defaultWallet = v;
+                            _selectWallet = v;
                           });
                         },
-                        schema: this._defaultWallet!,
+                        schema: this._selectWallet!,
                       ),
                     ),
                   ),
             SizedBox(height: 20),
             !loaded
                 ? SizedBox.shrink()
-                : this._defaultWallet == null
+                : this._selectWallet == null
                     ? Expanded(
                         flex: 0,
                         child: Column(
@@ -175,7 +175,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                                 width: double.infinity,
                                 text: _localizations.connect,
                                 onPressed: () async {
-                                  chatCommon.signIn(this._defaultWallet);
+                                  chatCommon.signIn(this._selectWallet, walletDefault: true);
                                 },
                               ),
                             )

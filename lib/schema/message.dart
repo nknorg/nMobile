@@ -22,9 +22,8 @@ class ContentType {
   static const String text = 'text';
   static const String textExtension = 'textExtension'; // TODO:GG wait handle
   static const String media = 'media';
-  // static const String image = 'image';
+  static const String image = 'image';
   static const String audio = 'audio'; // TODO:GG wait handle
-  // static const String video = 'video';
 
   static const String eventContactOptions = 'event:contactOptions'; // TODO:GG wait handle
   static const String eventSubscribe = 'event:subscribe'; // TODO:GG wait handle
@@ -249,7 +248,7 @@ class MessageData {
     String content = '![media](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.media,
+      'contentType': ContentType.media, // SUPPORT:IMAGE
       'content': content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -368,7 +367,7 @@ class MessageSchema extends Equatable {
     this.options,
     this.sendTime,
   }) {
-    if (msgId == null || msgId.isEmpty) msgId = Uuid().v4();
+    if (msgId.isEmpty) msgId = Uuid().v4();
     if (sendTime == null) sendTime = DateTime.now();
   }
 
@@ -378,9 +377,9 @@ class MessageSchema extends Equatable {
     Map<String, dynamic>? data = jsonFormat(raw.data);
     if (data == null || data['id'] == null || data['contentType'] == null) return null;
     MessageSchema schema = MessageSchema(
-      data['id']!,
-      raw.src!,
-      data['contentType']!,
+      data['id'] ?? "",
+      raw.src ?? "",
+      data['contentType'] ?? "",
       pid: raw.messageId,
       to: chatCommon.id,
       topic: data['topic'],
@@ -462,7 +461,7 @@ class MessageSchema extends Equatable {
     this.index,
   }) {
     // pid (SDK create)
-    if (msgId == null || msgId.isEmpty) msgId = Uuid().v4();
+    if (msgId.isEmpty) msgId = Uuid().v4();
 
     sendTime = DateTime.now();
     receiveTime = null;
@@ -474,16 +473,16 @@ class MessageSchema extends Equatable {
   /// from sqlite
   static MessageSchema fromMap(Map<String, dynamic> e) {
     MessageSchema schema = MessageSchema(
-      e['msg_id'],
-      e['sender'],
-      e['type'],
+      e['msg_id'] ?? "",
+      e['sender'] ?? "",
+      e['type'] ?? "",
       pid: e['pid'] != null ? hexDecode(e['pid']) : null,
       to: e['receiver'],
       topic: e['topic'],
       options: e['options'] != null ? jsonFormat(e['options']) : null,
     );
 
-    if (schema.contentType == ContentType.nknImage || schema.contentType == ContentType.media) {
+    if (schema.contentType == ContentType.nknImage || schema.contentType == ContentType.media || schema.contentType == ContentType.image) {
       schema.content = File(Path.getCompleteFile(e['content']));
     } else if (schema.contentType == ContentType.audio) {
       schema.content = File(Path.getCompleteFile(e['content']));
@@ -531,7 +530,7 @@ class MessageSchema extends Equatable {
       'is_send_error': isSendError ? 1 : 0,
     };
     // String pubKey = hexEncode(chatCommon.publicKey);
-    if (contentType == ContentType.nknImage || contentType == ContentType.media) {
+    if (contentType == ContentType.nknImage || contentType == ContentType.media || contentType == ContentType.image) {
       if (content is File) {
         map['content'] = Path.getLocalFile((content as File).path);
       }

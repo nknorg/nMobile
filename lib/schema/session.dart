@@ -6,24 +6,24 @@ import 'contact.dart';
 import 'topic.dart';
 
 class SessionSchema extends Equatable {
-  String? targetId;
+  String targetId;
   String? sender;
-  String? content;
   String? contentType;
+  String? content;
   DateTime? lastReceiveTime;
   int? notReadCount;
-  bool isTop = false;
+
   TopicSchema? topic;
   ContactSchema? contact;
+  bool isTop = false;
 
   SessionSchema({
-    this.targetId,
+    required this.targetId,
     this.sender,
-    this.content,
     this.contentType,
+    this.content,
     this.lastReceiveTime,
     this.notReadCount,
-    this.isTop = false,
   });
 
   @override
@@ -31,21 +31,20 @@ class SessionSchema extends Equatable {
 
   static Future<SessionSchema?> fromMap(Map e) async {
     var res = SessionSchema(
-      targetId: e['target_id'],
+      targetId: e['target_id'] ?? "",
       sender: e['sender'],
-      content: e['content'],
       contentType: e['type'],
+      content: e['content'],
       lastReceiveTime: DateTime.fromMillisecondsSinceEpoch(e['receive_time']),
       notReadCount: e['not_read'] ?? 0,
     );
-    if (res.targetId == null) {
-      return null;
-    }
+    if (res.targetId.isEmpty) return null;
     if (e['topic'] != null) {
-      res.topic = await TopicStorage().queryTopicByTopicName(res.targetId);
+      res.topic = await TopicStorage().queryTopicByTopicName(e['topic']);
+      res.contact = await ContactStorage().queryByClientAddress(res.targetId);
       res.isTop = res.topic?.isTop ?? false;
     } else {
-      res.contact = await ContactStorage().queryByClientAddress(res.targetId!);
+      res.contact = await ContactStorage().queryByClientAddress(res.targetId);
       res.isTop = res.contact?.isTop ?? false;
     }
     return res;
