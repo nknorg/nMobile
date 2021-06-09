@@ -207,11 +207,6 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> isTop(String? clientAddress) {
-    if (clientAddress == null || clientAddress.isEmpty) return Future.value(false);
-    return _contactStorage.isTop(clientAddress);
-  }
-
   Future<bool> setDeviceToken(int? contactId, String? deviceToken, {bool notify = false}) async {
     if (contactId == null || contactId == 0 || deviceToken == null || deviceToken.isEmpty) return false;
     bool success = await _contactStorage.setDeviceToken(contactId, deviceToken);
