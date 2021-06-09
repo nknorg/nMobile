@@ -30,9 +30,6 @@ class SessionCommon with Tag {
 
   Future<SessionSchema?> add(SessionSchema? schema, {bool checkDuplicated = true}) async {
     if (schema == null || schema.targetId.isEmpty) return null;
-    if (schema.unReadCount <= 0) {
-      schema.unReadCount = await _messageStorage.unReadCountByTargetId(schema.targetId);
-    }
     if (schema.lastMessageTime == null || schema.lastMessageOptions == null) {
       List<MessageSchema> history = await _messageStorage.queryListCanReadByTargetId(schema.targetId, offset: 0, limit: 1);
       if (history.isNotEmpty) {
@@ -40,6 +37,9 @@ class SessionCommon with Tag {
         schema.lastMessageTime = message.sendTime;
         schema.lastMessageOptions = message.toMap();
       }
+    }
+    if (schema.unReadCount <= 0) {
+      schema.unReadCount = await _messageStorage.unReadCountByTargetId(schema.targetId);
     }
     if (checkDuplicated) {
       SessionSchema? exist = await query(schema.targetId);
@@ -77,6 +77,14 @@ class SessionCommon with Tag {
     session.unReadCount = unread ?? await _messageStorage.unReadCountByTargetId(targetId);
     bool success = await _sessionStorage.updateLastMessageAndUnReadCount(session);
     if (success && notify) queryAndNotify(session.targetId);
+    return success;
+  }
+
+  Future<bool> setUnReadCount(String? targetId, int? unread, {bool notify = false}) async {
+    if (targetId == null || targetId.isEmpty) return false;
+    unread = unread ?? await _messageStorage.unReadCountByTargetId(targetId);
+    bool success = await _sessionStorage.updateUnReadCount(targetId, unread);
+    if (success && notify) queryAndNotify(targetId);
     return success;
   }
 
