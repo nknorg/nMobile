@@ -259,6 +259,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
         onTap = () => _onContentTextTap();
         break;
       case ContentType.media:
+      case ContentType.image:
       case ContentType.nknImage:
         _body = _getContentBodyImage(dark);
         if (_message.content is File) {

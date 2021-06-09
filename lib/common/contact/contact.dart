@@ -34,28 +34,35 @@ class ContactCommon with Tag {
   StreamSink<ContactSchema> get _updateSink => _updateController.sink;
   Stream<ContactSchema> get updateStream => _updateController.stream;
 
+  StreamController<ContactSchema?> _currentUpdateController = StreamController<ContactSchema?>.broadcast();
+  StreamSink<ContactSchema?> get _currentUpdateSink => _currentUpdateController.sink;
+  Stream<ContactSchema?> get currentUpdateStream => _currentUpdateController.stream;
+
   close() {
     _addController.close();
     // _deleteController.close();
     _updateController.close();
+    _currentUpdateController.close();
   }
 
-  Future<ContactSchema?> refreshCurrentUser(String? clientAddress) async {
+  Future<ContactSchema?> refreshCurrentUser(String? clientAddress, {bool notify = true}) async {
     if (clientAddress == null || clientAddress.isEmpty) {
       currentUser = null;
-      return null;
-    }
-    ContactSchema? contact = await _contactStorage.queryByClientAddress(clientAddress);
-    if (contact == null) {
-      contact = await addByType(clientAddress, ContactType.me);
-    }
-    if (contact != null) {
-      if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
-        contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress));
+    } else {
+      ContactSchema? contact = await _contactStorage.queryByClientAddress(clientAddress);
+      if (contact == null) {
+        contact = await addByType(clientAddress, ContactType.me);
       }
+      if (contact != null) {
+        if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
+          contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress));
+        }
+      }
+      currentUser = contact;
     }
-    currentUser = contact;
-    return contact;
+    _currentUpdateSink.add(currentUser);
+    if (notify && currentUser != null) _updateSink.add(currentUser!);
+    return currentUser;
   }
 
   Future<ContactSchema?> addByType(String? clientAddress, String contactType, {bool canDuplicated = false}) async {
@@ -224,7 +231,7 @@ class ContactCommon with Tag {
     ContactSchema? updated = await _contactStorage.query(contactId);
     if (updated != null) {
       if (updated.type == ContactType.me) {
-        await refreshCurrentUser(updated.clientAddress);
+        await refreshCurrentUser(updated.clientAddress, notify: false);
       }
       _updateSink.add(updated);
     }
@@ -235,7 +242,7 @@ class ContactCommon with Tag {
     ContactSchema? updated = await _contactStorage.queryByClientAddress(clientAddress);
     if (updated != null) {
       if (updated.type == ContactType.me) {
-        await refreshCurrentUser(updated.clientAddress);
+        await refreshCurrentUser(updated.clientAddress, notify: false);
       }
       _updateSink.add(updated);
     }

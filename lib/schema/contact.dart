@@ -58,8 +58,8 @@ class ContactSchema {
   static Future<ContactSchema> fromMap(Map e) async {
     var contact = ContactSchema(
       id: e['id'],
-      type: e['type'],
-      clientAddress: e['address'],
+      type: e['type'] ?? ContactType.stranger,
+      clientAddress: e['address'] ?? "",
       firstName: e['first_name'] ?? getDefaultName(e['address']),
       lastName: e['last_name'],
       avatar: File(Path.getCompleteFile(e['avatar'])),
@@ -67,7 +67,7 @@ class ContactSchema {
       updatedTime: e['updated_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['updated_time']) : null,
       profileVersion: e['profile_version'],
       profileExpiresAt: DateTime.fromMillisecondsSinceEpoch(e['profile_expires_at'] != null ? e['profile_expires_at'] : 0),
-      isTop: e['is_top'] == 1 ? true : false,
+      isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
       deviceToken: e['device_token'],
       notificationOpen: (e['notification_open'] != null && e['notification_open'].toString() == '1') ? true : false,
     );

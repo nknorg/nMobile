@@ -63,7 +63,7 @@ class ReceiveMessage with Tag {
   Future<ContactSchema?> contactHandle(MessageSchema received) async {
     // type
     bool noText = received.contentType != ContentType.text && received.contentType != ContentType.textExtension;
-    bool noImage = received.contentType != ContentType.media && received.contentType != ContentType.nknImage;
+    bool noImage = received.contentType != ContentType.media && received.contentType != ContentType.image && received.contentType != ContentType.nknImage;
     bool noAudio = received.contentType != ContentType.audio;
     if (noText && noImage && noAudio) return null;
     // duplicated
@@ -119,6 +119,7 @@ class ReceiveMessage with Tag {
         notification.showDChatNotification(title, content);
         break;
       case ContentType.media:
+      case ContentType.image:
       case ContentType.nknImage:
         notification.showDChatNotification(title, '[${localizations.image}]');
         break;
@@ -147,6 +148,7 @@ class ReceiveMessage with Tag {
       // case ContentType.textExtension:
       //   break;
       case ContentType.media:
+      case ContentType.image:
       case ContentType.nknImage:
         await receiveImage(received);
         break;
@@ -239,7 +241,7 @@ class ReceiveMessage with Tag {
       return;
     }
     // piece
-    MessageSchema? piece = await _messageStorage.queryByPid(received.pid);
+    MessageSchema? piece = await _messageStorage.queryByPid(received.pid); // TODO:GG dep??
     if (piece == null) {
       received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: received.parentType);
       piece = await _messageStorage.insert(received);

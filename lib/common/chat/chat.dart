@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -74,7 +76,7 @@ class ChatCommon with Tag {
     });
   }
 
-  Future<bool> signIn(WalletSchema? schema) async {
+  Future<bool> signIn(WalletSchema? schema, {bool walletDefault = false}) async {
     if (schema == null) return false;
     try {
       String? pwd = await authorization.getWalletPassword(schema.address);
@@ -89,6 +91,8 @@ class ChatCommon with Tag {
 
       // toggle DB
       await DB.open(pubKey, password);
+      // default wallet
+      if (walletDefault) BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(schema.address));
       // refresh currentUser
       await contactCommon.refreshCurrentUser(pubKey);
       // start client connect (no await)
