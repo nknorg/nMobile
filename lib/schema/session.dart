@@ -74,10 +74,11 @@ class SessionSchema extends Equatable {
     } else {
       List<MessageSchema> history = await MessageStorage().queryListCanReadByTargetId(targetId, offset: 0, limit: 1);
       if (history.isNotEmpty) {
-        lastMessageOptions = message?.toMap();
         message = history[0];
+        lastMessageOptions = message.toMap();
       }
     }
+    lastMessageTime = message?.sendTime;
     return message;
   }
 }

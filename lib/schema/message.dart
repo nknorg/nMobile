@@ -478,7 +478,7 @@ class MessageSchema extends Equatable {
       'sender': from,
       'receiver': to,
       'topic': topic,
-      'target_id': getTargetId,
+      'target_id': targetId,
       'type': contentType,
       'send_time': sendTime?.millisecondsSinceEpoch,
       'receive_time': receiveTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
@@ -558,7 +558,7 @@ class MessageSchema extends Equatable {
     return schema;
   }
 
-  String? get getTargetId {
+  String? get targetId {
     return topic != null
         ? topic
         : isOutbound

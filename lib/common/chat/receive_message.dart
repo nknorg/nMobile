@@ -10,6 +10,7 @@ import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/topic.dart';
@@ -50,10 +51,10 @@ class ReceiveMessage with Tag {
     ContactSchema? contactSchema = await contactHandle(message);
     // topic
     TopicSchema? topicSchema = await topicHandle(message);
-    // session
-    // TODO:GG session (sessionPage检查是否为null，为null添加)
     // notification
     notificationHandle(contactSchema, topicSchema, message);
+    // session
+    await sessionHandle(message);
     // message
     if (!sync) {
       onReceiveSink.add(message);
@@ -72,7 +73,7 @@ class ReceiveMessage with Tag {
     if (received.from.isEmpty) return null;
     ContactSchema? exist = await contactCommon.queryByClientAddress(received.from);
     if (exist == null) {
-      logger.d("$TAG - contactHandle - new - from:$received.from");
+      logger.d("$TAG - contactHandle - new - from:${received.from}");
       return await contactCommon.addByType(received.from, ContactType.stranger, checkDuplicated: false);
     } else {
       if (exist.profileExpiresAt == null || DateTime.now().isAfter(exist.profileExpiresAt!.add(Settings.profileExpireDuration))) {
@@ -87,10 +88,15 @@ class ReceiveMessage with Tag {
   }
 
   Future<TopicSchema?> topicHandle(MessageSchema received) async {
+    // type
+    bool noText = received.contentType != ContentType.text && received.contentType != ContentType.textExtension;
+    bool noImage = received.contentType != ContentType.media && received.contentType != ContentType.image && received.contentType != ContentType.nknImage;
+    bool noAudio = received.contentType != ContentType.audio;
+    if (noText && noImage && noAudio) return null;
+    // duplicated TODO:GG topic duplicated
     if (received.topic == null || received.topic!.isEmpty) return null;
-    // TODO:GG topic duplicated
-    TopicSchema? topicSchema = await _topicStorage.queryTopicByTopicName(received.topic);
-    if (topicSchema == null) {
+    TopicSchema? exist = await _topicStorage.queryTopicByTopicName(received.topic);
+    if (exist == null) {
       return await _topicStorage.insertTopic(TopicSchema(
         // TODO: get topic info
         // expireAt:
@@ -98,7 +104,7 @@ class ReceiveMessage with Tag {
         topic: received.topic!,
       ));
     }
-    return topicSchema;
+    return exist;
   }
 
   Future<void> notificationHandle(ContactSchema? contact, TopicSchema? topic, MessageSchema message) async {
@@ -129,6 +135,22 @@ class ReceiveMessage with Tag {
         notification.showDChatNotification(title, '[${localizations.audio}]');
         break;
     }
+  }
+
+  Future<SessionSchema?> sessionHandle(MessageSchema received) async {
+    // type
+    bool noText = received.contentType != ContentType.text && received.contentType != ContentType.textExtension;
+    bool noImage = received.contentType != ContentType.media && received.contentType != ContentType.image && received.contentType != ContentType.nknImage;
+    bool noAudio = received.contentType != ContentType.audio;
+    if (noText && noImage && noAudio) return null;
+    // duplicated
+    if (received.targetId == null || received.targetId!.isEmpty) return null;
+    SessionSchema? exist = await sessionCommon.query(received.targetId);
+    if (exist == null) {
+      logger.d("$TAG - sessionHandle - new - targetId:${received.targetId}");
+      return await sessionCommon.add(SessionSchema(targetId: received.targetId!, isTopic: received.topic != null));
+    }
+    return exist;
   }
 
   Future messageHandle(MessageSchema received) async {

@@ -33,6 +33,14 @@ class SessionCommon with Tag {
     if (schema.unReadCount <= 0) {
       schema.unReadCount = await _messageStorage.unReadCountByTargetId(schema.targetId);
     }
+    if (schema.lastMessageTime == null || schema.lastMessageOptions == null) {
+      List<MessageSchema> history = await _messageStorage.queryListCanReadByTargetId(schema.targetId, offset: 0, limit: 1);
+      if (history.isNotEmpty) {
+        MessageSchema message = history[0];
+        schema.lastMessageTime = message.sendTime;
+        schema.lastMessageOptions = message.toMap();
+      }
+    }
     if (checkDuplicated) {
       SessionSchema? exist = await query(schema.targetId);
       if (exist != null) {
