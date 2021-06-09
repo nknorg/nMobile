@@ -38,7 +38,7 @@ class SendMessage with Tag {
   // ignore: close_sinks
   StreamController<Map<String, dynamic>> _onPieceOutController = StreamController<Map<String, dynamic>>.broadcast();
   StreamSink<Map<String, dynamic>> get onPieceOutSink => _onPieceOutController.sink;
-  Stream<Map<String, dynamic>> get onPieceOutStream => _onPieceOutController.stream; // .distinct((prev, next) => prev.pid == next.pid);
+  Stream<Map<String, dynamic>> get onPieceOutStream => _onPieceOutController.stream.distinct((prev, next) => prev['percent'] >= next['percent']);
 
   MessageStorage _messageStorage = MessageStorage();
 
