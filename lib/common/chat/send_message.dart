@@ -138,7 +138,7 @@ class SendMessage with Tag {
     }
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
-      chatCommon.id!,
+      chatCommon.id ?? "",
       ContentType.text,
       to: dest,
       content: content,
@@ -153,8 +153,8 @@ class SendMessage with Tag {
     }
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
-      chatCommon.id!,
-      ContentType.media,
+      chatCommon.id ?? "",
+      ContentType.media, // SUPPORT:IMAGE
       to: dest,
       content: content,
     );
@@ -167,6 +167,7 @@ class SendMessage with Tag {
       case ContentType.text:
         return await _send(schema, MessageData.getText(schema), resend: true);
       case ContentType.media:
+      case ContentType.image:
       case ContentType.nknImage:
         return await _send(schema, await MessageData.getImage(schema), resend: true);
       case ContentType.audio:

@@ -23,8 +23,8 @@ class WalletSchema {
 
   static WalletSchema fromMap(Map<String, dynamic> map) {
     return WalletSchema(
-      type: map['type'],
-      address: map['address'],
+      type: map['type'] ?? "",
+      address: map['address'] ?? "",
       name: map['name'],
       balance: map['balance'] ?? 0,
       balanceEth: map['balanceEth'] ?? 0,
