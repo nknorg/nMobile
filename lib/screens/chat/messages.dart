@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/topic.dart';
