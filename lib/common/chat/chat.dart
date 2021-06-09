@@ -126,7 +126,7 @@ class ChatCommon with Tag {
 
     // client messages_receive
     _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) async {
-      logger.i("$TAG - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 100) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
+      logger.i("$TAG - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
       await receiveMessage.onClientMessage(MessageSchema.fromReceive(event));
     });
     await completer.future;

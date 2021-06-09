@@ -126,9 +126,9 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
             try {
                 encoder.reconstructBytesArray(encodeDataBytes)
                 val ok = encoder.verifyBytesArray(encodeDataBytes)
-                if (!ok) Log.e("combineBytesArray", "verifyBytesArray == false")
+                if (!ok) Log.e("combinePieces", "verifyBytesArray == false")
             } catch (e: Exception) {
-                Log.e("combineBytesArray", "reconstructBytesArrayE:" + e.localizedMessage)
+                Log.e("combinePieces", "reconstructBytesArrayE:" + e.localizedMessage)
                 resultError(result, e)
                 return@launch
             }
@@ -147,7 +147,7 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
             System.arraycopy(fullDataList, 0, resultBytes, 0, resultLength)
 
             if (resultBytes.isEmpty()) {
-                Log.e("combineBytesArray", "resultByte.size == 0")
+                Log.e("combinePieces", "resultByte.size == 0")
                 resultError(result, Error("resultByte.size == 0"))
                 return@launch
             }
