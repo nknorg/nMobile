@@ -290,8 +290,8 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
               // data
               if (jsonFormat) {
                 logger.d("$TAG - wallet send scan - address:${jsonData['address']} amount:${jsonData['amount']}");
-                _sendToController.text = jsonData['address'];
-                _amountController.text = jsonData['amount'].toString();
+                _sendToController.text = jsonData['address'] ?? "";
+                _amountController.text = jsonData['amount']?.toString() ?? "";
               } else if (_wallet.type == WalletType.nkn && verifyAddress(qrData.toString())) {
                 logger.d("$TAG - wallet send scan NKN - address:$qrData");
                 _sendToController.text = qrData.toString();
