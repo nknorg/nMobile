@@ -470,47 +470,6 @@ class MessageSchema extends Equatable {
     MessageStatus.set(this, MessageStatus.Sending);
   }
 
-  /// from sqlite
-  static MessageSchema fromMap(Map<String, dynamic> e) {
-    MessageSchema schema = MessageSchema(
-      e['msg_id'] ?? "",
-      e['sender'] ?? "",
-      e['type'] ?? "",
-      pid: e['pid'] != null ? hexDecode(e['pid']) : null,
-      to: e['receiver'],
-      topic: e['topic'],
-      options: e['options'] != null ? jsonFormat(e['options']) : null,
-    );
-
-    if (schema.contentType == ContentType.nknImage || schema.contentType == ContentType.media || schema.contentType == ContentType.image) {
-      schema.content = File(Path.getCompleteFile(e['content']));
-    } else if (schema.contentType == ContentType.audio) {
-      schema.content = File(Path.getCompleteFile(e['content']));
-    } else if (schema.contentType == ContentType.piece) {
-      schema.content = File(Path.getCompleteFile(e['content']));
-    } else {
-      schema.content = e['content'];
-    }
-
-    schema.sendTime = e['send_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['send_time']) : null;
-    schema.receiveTime = e['receive_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['receive_time']) : null;
-    schema.deleteTime = e['delete_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['delete_time']) : null;
-
-    schema.isOutbound = (e['is_outbound'] != null && e['is_outbound'] == 1) ? true : false;
-    schema.isSendError = (e['is_send_error'] != null && e['is_send_error'] == 1) ? true : false;
-    schema.isSuccess = (e['is_success'] != null && e['is_success'] == 1) ? true : false;
-    schema.isRead = (e['is_read'] != null && e['is_read'] == 1) ? true : false;
-
-    Map<String, dynamic> options = schema.options ?? Map<String, dynamic>();
-    schema.parentType = options[MessageOptions.KEY_PARENT_TYPE];
-    schema.bytesLength = options[MessageOptions.KEY_BYTES_LENGTH];
-    schema.total = options[MessageOptions.KEY_TOTAL];
-    schema.parity = options[MessageOptions.KEY_PARITY];
-    schema.index = options[MessageOptions.KEY_INDEX];
-
-    return schema;
-  }
-
   /// to sqlite
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {
@@ -556,6 +515,47 @@ class MessageSchema extends Equatable {
     map['options'] = options != null ? jsonEncode(options) : null;
 
     return map;
+  }
+
+  /// from sqlite
+  static MessageSchema fromMap(Map<String, dynamic> e) {
+    MessageSchema schema = MessageSchema(
+      e['msg_id'] ?? "",
+      e['sender'] ?? "",
+      e['type'] ?? "",
+      pid: e['pid'] != null ? hexDecode(e['pid']) : null,
+      to: e['receiver'],
+      topic: e['topic'],
+      options: e['options'] != null ? jsonFormat(e['options']) : null,
+    );
+
+    if (schema.contentType == ContentType.nknImage || schema.contentType == ContentType.media || schema.contentType == ContentType.image) {
+      schema.content = File(Path.getCompleteFile(e['content']));
+    } else if (schema.contentType == ContentType.audio) {
+      schema.content = File(Path.getCompleteFile(e['content']));
+    } else if (schema.contentType == ContentType.piece) {
+      schema.content = File(Path.getCompleteFile(e['content']));
+    } else {
+      schema.content = e['content'];
+    }
+
+    schema.sendTime = e['send_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['send_time']) : null;
+    schema.receiveTime = e['receive_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['receive_time']) : null;
+    schema.deleteTime = e['delete_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['delete_time']) : null;
+
+    schema.isOutbound = (e['is_outbound'] != null && e['is_outbound'] == 1) ? true : false;
+    schema.isSendError = (e['is_send_error'] != null && e['is_send_error'] == 1) ? true : false;
+    schema.isSuccess = (e['is_success'] != null && e['is_success'] == 1) ? true : false;
+    schema.isRead = (e['is_read'] != null && e['is_read'] == 1) ? true : false;
+
+    Map<String, dynamic> options = schema.options ?? Map<String, dynamic>();
+    schema.parentType = options[MessageOptions.KEY_PARENT_TYPE];
+    schema.bytesLength = options[MessageOptions.KEY_BYTES_LENGTH];
+    schema.total = options[MessageOptions.KEY_TOTAL];
+    schema.parity = options[MessageOptions.KEY_PARITY];
+    schema.index = options[MessageOptions.KEY_INDEX];
+
+    return schema;
   }
 
   String? get getTargetId {

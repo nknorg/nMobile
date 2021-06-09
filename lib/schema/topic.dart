@@ -58,6 +58,26 @@ class TopicSchema {
     }
   }
 
+  Map<String, dynamic> toMap() {
+    if (options == null) {
+      options = OptionsSchema();
+    }
+
+    Map<String, dynamic> map = {
+      'id': id,
+      'topic': topic,
+      'count': count,
+      'avatar': avatar != null ? Path.getLocalFile(avatar!.path) : null,
+      'options': options != null ? jsonEncode(options!.toMap()) : null,
+      'last_updated_time': lastUpdatedTime?.millisecondsSinceEpoch,
+      'is_top': isTop ? 1 : 0,
+      'expire_at': expireAt,
+      'type': topicType,
+      'joined': joined,
+    };
+    return map;
+  }
+
   static TopicSchema? fromMap(Map<String, dynamic>? e) {
     if (e == null) {
       return null;
@@ -93,25 +113,5 @@ class TopicSchema {
       topicSchema.options = OptionsSchema();
     }
     return topicSchema;
-  }
-
-  Map<String, dynamic> toMap() {
-    if (options == null) {
-      options = OptionsSchema();
-    }
-
-    Map<String, dynamic> map = {
-      'id': id,
-      'topic': topic,
-      'count': count,
-      'avatar': avatar != null ? Path.getLocalFile(avatar!.path) : null,
-      'options': options != null ? jsonEncode(options!.toMap()) : null,
-      'last_updated_time': lastUpdatedTime?.millisecondsSinceEpoch,
-      'is_top': isTop ? 1 : 0,
-      'expire_at': expireAt,
-      'type': topicType,
-      'joined': joined,
-    };
-    return map;
   }
 }
