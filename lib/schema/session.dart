@@ -41,7 +41,7 @@ class SessionSchema extends Equatable {
       'un_read_count': unReadCount,
       'is_top': isTop ? 1 : 0,
     };
-    Map<String, dynamic>? options = (await getLastMessage)?.toMap();
+    Map<String, dynamic>? options = (await lastMessage)?.toMap();
     map["last_message_options"] = options != null ? jsonEncode(options) : '{}';
     return map;
   }
@@ -59,15 +59,15 @@ class SessionSchema extends Equatable {
     return schema;
   }
 
-  Future<TopicSchema?> get getTopic {
+  Future<TopicSchema?> get topic {
     return TopicStorage().queryTopicByTopicName(targetId);
   }
 
-  Future<ContactSchema?> get getContact {
+  Future<ContactSchema?> get contact {
     return contactCommon.queryByClientAddress(targetId);
   }
 
-  Future<MessageSchema?> get getLastMessage async {
+  Future<MessageSchema?> get lastMessage async {
     MessageSchema? message;
     if (lastMessageOptions != null && lastMessageOptions!.isNotEmpty) {
       message = MessageSchema.fromMap(lastMessageOptions!);

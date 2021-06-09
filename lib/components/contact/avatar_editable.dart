@@ -36,7 +36,7 @@ class _ContactAvatarEditableState extends BaseStateFulWidgetState<ContactAvatarE
   }
 
   _checkAvatarFileExists() async {
-    File? avatarFile = await widget.contact.getDisplayAvatarFile;
+    File? avatarFile = await widget.contact.displayAvatarFile;
     if (_avatarFile?.path != avatarFile?.path) {
       setState(() {
         _avatarFile = avatarFile;
