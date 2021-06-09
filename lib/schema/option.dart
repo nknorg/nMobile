@@ -24,13 +24,6 @@ class OptionsSchema {
     }
   }
 
-  OptionsSchema.fromMap(Map map) {
-    this.deleteAfterSeconds = map['deleteAfterSeconds'];
-    this.updateBurnAfterTime = map['updateTime'];
-    this.backgroundColor = Color(map['backgroundColor']);
-    this.color = Color(map['color']);
-  }
-
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {};
     map['deleteAfterSeconds'] = deleteAfterSeconds;
@@ -38,6 +31,13 @@ class OptionsSchema {
     map['color'] = color?.value;
     map['updateTime'] = updateBurnAfterTime;
     return map;
+  }
+
+  OptionsSchema.fromMap(Map map) {
+    this.deleteAfterSeconds = map['deleteAfterSeconds'];
+    this.updateBurnAfterTime = map['updateTime'];
+    this.backgroundColor = Color(map['backgroundColor']);
+    this.color = Color(map['color']);
   }
 
   @override
