@@ -136,38 +136,20 @@ class SessionStorage with Tag {
     return [];
   }
 
-  Future<bool> updateLastMessage(SessionSchema? schema) async {
+  Future<bool> updateLastMessageAndUnReadCount(SessionSchema? schema) async {
     if (schema == null || schema.targetId.isEmpty) return false;
     try {
       int? count = await db?.update(
         tableName,
         {
           'last_message_time': schema.lastMessageTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-          'options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
+          'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
+          'un_read_count': schema.unReadCount,
         },
         where: 'target_id = ?',
         whereArgs: [schema.targetId],
       );
       logger.d("$TAG - updateLastMessage - count:$count - schema:$schema}");
-      return (count ?? 0) > 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
-
-  Future<bool> updateUnReadCount(String? targetId, int unread) async {
-    if (targetId == null || targetId.isEmpty) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'un_read_count': unread,
-        },
-        where: 'target_id = ?',
-        whereArgs: [targetId],
-      );
-      logger.d("$TAG - updateUnReadCount - targetId:$targetId - unread:$unread");
       return (count ?? 0) > 0;
     } catch (e) {
       handleError(e);

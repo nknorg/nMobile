@@ -11,11 +11,11 @@ class SessionCommon with Tag {
   MessageStorage _messageStorage = MessageStorage();
 
   StreamController<SessionSchema> _addController = StreamController<SessionSchema>.broadcast();
-  StreamSink<SessionSchema> get addSink => _addController.sink;
+  StreamSink<SessionSchema> get _addSink => _addController.sink;
   Stream<SessionSchema> get addStream => _addController.stream;
 
   StreamController<String> _deleteController = StreamController<String>.broadcast();
-  StreamSink<String> get deleteSink => _deleteController.sink;
+  StreamSink<String> get _deleteSink => _deleteController.sink;
   Stream<String> get deleteStream => _deleteController.stream;
 
   StreamController<SessionSchema> _updateController = StreamController<SessionSchema>.broadcast();
@@ -49,14 +49,14 @@ class SessionCommon with Tag {
       }
     }
     SessionSchema? added = await _sessionStorage.insert(schema);
-    if (added != null) addSink.add(added);
+    if (added != null) _addSink.add(added);
     return added;
   }
 
   Future<bool> delete(String? targetId) async {
     if (targetId == null || targetId.isEmpty) return false;
     bool deleted = await _sessionStorage.delete(targetId);
-    if (deleted) deleteSink.add(targetId);
+    if (deleted) _deleteSink.add(targetId);
     return deleted;
   }
 
@@ -69,20 +69,14 @@ class SessionCommon with Tag {
     return _sessionStorage.queryListRecent(offset: offset, limit: limit);
   }
 
-  Future<bool> setLastMessage(SessionSchema? session, MessageSchema? lastMessage, {bool notify = false}) async {
-    if (session == null || session.targetId.isEmpty || lastMessage == null) return false;
+  Future<bool> setLastMessageAndUnReadCount(String? targetId, MessageSchema? lastMessage, int? unread, {bool notify = false}) async {
+    if (targetId == null || targetId.isEmpty || lastMessage == null) return false;
+    SessionSchema session = SessionSchema(targetId: targetId, isTopic: lastMessage.topic != null);
     session.lastMessageTime = lastMessage.sendTime;
     session.lastMessageOptions = lastMessage.toMap();
-    bool success = await _sessionStorage.updateLastMessage(session);
+    session.unReadCount = unread ?? await _messageStorage.unReadCountByTargetId(targetId);
+    bool success = await _sessionStorage.updateLastMessageAndUnReadCount(session);
     if (success && notify) queryAndNotify(session.targetId);
-    return success;
-  }
-
-  Future<bool> setUnReadCount(String? targetId, int? unread, {bool notify = false}) async {
-    if (targetId == null || targetId.isEmpty) return false;
-    unread = unread ?? await _messageStorage.unReadCountByTargetId(targetId);
-    bool success = await _sessionStorage.updateUnReadCount(targetId, unread);
-    if (success && notify) queryAndNotify(targetId);
     return success;
   }
 

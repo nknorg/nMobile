@@ -23,7 +23,7 @@ class ContactCommon with Tag {
   ContactStorage _contactStorage = ContactStorage();
 
   StreamController<ContactSchema> _addController = StreamController<ContactSchema>.broadcast();
-  StreamSink<ContactSchema> get addSink => _addController.sink;
+  StreamSink<ContactSchema> get _addSink => _addController.sink;
   Stream<ContactSchema> get addStream => _addController.stream;
 
   // StreamController<int> _deleteController = StreamController<int>.broadcast();
@@ -84,7 +84,7 @@ class ContactCommon with Tag {
       }
     }
     ContactSchema? added = await _contactStorage.insert(schema);
-    if (added != null) addSink.add(added);
+    if (added != null) _addSink.add(added);
     return added;
   }
 
