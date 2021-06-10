@@ -106,6 +106,29 @@ class SendMessage with Tag {
     }
   }
 
+  // NO DB NO display (1 to 1)
+  Future sendContactOptions(String? clientAddress, int? seconds, {int tryCount = 1}) async {
+    if (contactCommon.currentUser == null || clientAddress == null || clientAddress.isEmpty) return;
+    if (tryCount > 3) return;
+    try {
+      MessageSchema send = MessageSchema.fromSend(
+        Uuid().v4(),
+        contactCommon.currentUser!.clientAddress,
+        ContentType.eventContactOptions,
+      );
+      send = MessageOptions.setDeleteAfterSeconds(send, seconds);
+      String data = MessageData.getEventContactOptionsBurn(send);
+      await chatCommon.sendMessage(clientAddress, data);
+      logger.d("$TAG - sendContactOptions - success - data:$data");
+    } catch (e) {
+      handleError(e);
+      logger.w("$TAG - sendContactOptions - fail - tryCount:$tryCount - clientAddress:$clientAddress - seconds:$seconds");
+      await Future.delayed(Duration(seconds: 2), () {
+        return sendContactOptions(clientAddress, seconds, tryCount: tryCount++);
+      });
+    }
+  }
+
   // NO DB NO display
   Future<MessageSchema?> sendPiece(MessageSchema schema, {int tryCount = 1}) async {
     if (tryCount > 3) return null;
