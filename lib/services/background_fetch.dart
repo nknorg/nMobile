@@ -21,6 +21,7 @@ class BackgroundFetchService {
 
   Future<void> install() async {
     if (Platform.isAndroid) {
+      // TODO:GG bug null safe
       BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
     }
     int status = await BackgroundFetch.configure(
@@ -71,8 +72,9 @@ class BackgroundFetchService {
       BackgroundFetch.finish(taskId);
       return;
     }
-    Future.delayed(Duration(seconds: 20), () {
-      chatCommon.close();
+    await Future.delayed(Duration(seconds: 20), () async {
+      await chatCommon.signOut();
+      // TODO:GG backgroundFetch delay
       BackgroundFetch.finish(taskId);
     });
     WalletSchema? wallet = await walletCommon.getDefault();

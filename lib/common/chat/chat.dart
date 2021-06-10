@@ -81,6 +81,7 @@ class ChatCommon with Tag {
   // need close
   Future<bool> signIn(WalletSchema? schema, {bool walletDefault = false}) async {
     if (schema == null) return false;
+    // if (client != null) await close(); // async boom!!!
     try {
       String? pwd = await authorization.getWalletPassword(schema.address);
       if (pwd == null || pwd.isEmpty) return false;
@@ -109,7 +110,6 @@ class ChatCommon with Tag {
 
   Future connect(Wallet? wallet) async {
     if (wallet == null || wallet.seed.isEmpty) return;
-    // if (client != null) await close(); // async boom!!!
     // client create
     ClientConfig config = ClientConfig(seedRPCServerAddr: await Global.getSeedRpcList());
     _statusSink.add(ChatConnectStatus.connecting);
@@ -140,7 +140,7 @@ class ChatCommon with Tag {
     await completer.future;
   }
 
-  close() async {
+  signOut() async {
     // status
     _statusSink.add(ChatConnectStatus.disconnected);
     // client
