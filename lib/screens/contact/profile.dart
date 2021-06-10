@@ -151,12 +151,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   @override
-  void didUpdateWidget(covariant ContactProfileScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _updateBurnIfNeed();
-  }
-
-  @override
   void dispose() {
     _updateBurnIfNeed();
     _updateContactSubscription.cancel();
@@ -312,7 +306,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     // inside update
     await contactCommon.setOptionsBurn(_contactSchema, _burnValue, notify: true);
     // outside update
-    await sendMessage.sendContactOptions(_contactSchema?.clientAddress, _burnValue);
+    await sendMessage.sendContactOptionsBurn(_contactSchema?.clientAddress, _burnValue);
   }
 
   _updateNotificationAndDeviceToken() async {
@@ -809,6 +803,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
           TextButton(
             style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
             onPressed: () {
+              _updateBurnIfNeed(); // await
               ChatMessagesScreen.go(this.context, _contactSchema);
             },
             child: Row(

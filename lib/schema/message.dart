@@ -25,7 +25,7 @@ class ContentType {
   static const String image = 'image'; // db + visible
   static const String audio = 'audio'; // db + visible // TODO:GG wait handle
 
-  static const String eventContactOptions = 'event:contactOptions';
+  static const String eventContactOptions = 'event:contactOptions'; // db + visible
   static const String eventSubscribe = 'event:subscribe'; // TODO:GG wait handle
   static const String eventUnsubscribe = 'event:unsubscribe'; // TODO:GG wait handle
   static const String eventChannelInvitation = 'event:channelInvitation'; // TODO:GG wait data
@@ -56,8 +56,8 @@ class MessageOptions {
 
   static int? getDeleteAfterSeconds(MessageSchema? schema) {
     if (schema == null || schema.options == null || schema.options!.keys.length == 0) return null;
-    var seconds = schema.options![MessageOptions.KEY_DELETE_AFTER_SECONDS];
-    if (seconds == null) return null;
+    var seconds = schema.options![MessageOptions.KEY_DELETE_AFTER_SECONDS]?.toString();
+    if (seconds == null || seconds.isEmpty) return null;
     return int.parse(seconds);
   }
 
@@ -159,8 +159,11 @@ class MessageStatus {
 }
 
 class MessageData {
-  static const CONTACT_OPTIONS_TYPE_BURN_TIME = '0';
-  static const CONTACT_OPTIONS_TYPE_DEVICE_TOKEN = '1';
+  static const K_CONTACT_PIECE_SUPPORT = 'onePieceReady';
+  static const K_CONTACT_OPTIONS_TYPE = 'optionType';
+
+  static const V_CONTACT_OPTIONS_TYPE_BURN_TIME = '0';
+  static const V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN = '1';
 
   static String getReceipt(String msgId) {
     Map map = {
@@ -191,7 +194,7 @@ class MessageData {
       'version': profileVersion,
       'expiresAt': expiresAt.millisecondsSinceEpoch,
     };
-    data['onePieceReady'] = '2'; // DChat no support pieces
+    data[K_CONTACT_PIECE_SUPPORT] = '2'; // DChat no support pieces
     return jsonEncode(data);
   }
 
@@ -218,7 +221,7 @@ class MessageData {
       }
     }
     data['content'] = content;
-    data['onePieceReady'] = '2'; // DChat no support pieces
+    data[K_CONTACT_PIECE_SUPPORT] = '2'; // DChat no support pieces
     return jsonEncode(data);
   }
 
@@ -309,7 +312,7 @@ class MessageData {
       'content': {'deleteAfterSeconds': deleteAfterSeconds},
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
-    data['optionType'] = CONTACT_OPTIONS_TYPE_BURN_TIME;
+    data[K_CONTACT_OPTIONS_TYPE] = V_CONTACT_OPTIONS_TYPE_BURN_TIME;
     return jsonEncode(data);
   }
 
@@ -322,7 +325,7 @@ class MessageData {
       'content': {'deviceToken': deviceToken},
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
-    data['optionType'] = CONTACT_OPTIONS_TYPE_DEVICE_TOKEN;
+    data[K_CONTACT_OPTIONS_TYPE] = V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN;
     return jsonEncode(data);
   }
 
@@ -412,8 +415,10 @@ class MessageSchema extends Equatable {
         schema.content = data['targetID'];
         break;
       case ContentType.contact:
+      case ContentType.eventContactOptions:
         schema.content = data;
         break;
+      // TODO:GG receiveMap contentType
       default:
         schema.content = data['content'];
         break;
