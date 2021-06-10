@@ -15,8 +15,8 @@ import 'package:nmobile/utils/format.dart';
 
 class ChatSessionItem extends BaseStateFulWidget {
   final SessionSchema session;
-  final GestureTapCallback? onTap;
-  final GestureLongPressCallback? onLongPress;
+  final Function(dynamic)? onTap;
+  final Function(dynamic)? onLongPress;
 
   ChatSessionItem({
     Key? key,
@@ -310,8 +310,8 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       color: Colors.transparent,
       elevation: 0,
       child: InkWell(
-        onTap: widget.onTap,
-        onLongPress: widget.onLongPress,
+        onTap: () => widget.onTap?.call(_contact ?? _topic),
+        onLongPress: () => widget.onLongPress?.call(_contact ?? _topic),
         child: contentWidget,
       ),
     );
