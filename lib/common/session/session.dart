@@ -102,4 +102,20 @@ class SessionCommon with Tag {
       _updateSink.add(updated);
     }
   }
+
+  Future<MessageSchema?> findLastMessage(SessionSchema? session) async {
+    if (session == null) return null;
+    MessageSchema? message;
+    if (session.lastMessageOptions != null && session.lastMessageOptions!.isNotEmpty) {
+      message = MessageSchema.fromMap(session.lastMessageOptions!);
+    } else {
+      List<MessageSchema> history = await _messageStorage.queryListCanReadByTargetId(session.targetId, offset: 0, limit: 1);
+      if (history.isNotEmpty) {
+        message = history[0];
+        // session.lastMessageOptions = message.toMap();
+      }
+    }
+    // session.lastMessageTime = message?.sendTime;
+    return message;
+  }
 }
