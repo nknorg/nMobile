@@ -40,7 +40,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   void onRefreshArguments() async {
     if (widget.session.isTopic) {
       if (_topic == null || widget.session.targetId != _topic?.id?.toString()) {
-        _topic = null; // TODO:GG topic session
+        _topic = null; // TODO:GG topic session get
       }
     } else {
       if (_contact == null || widget.session.targetId != _contact?.id?.toString()) {
@@ -60,7 +60,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         _contact = event;
       });
     });
-    // topic TODO:GG topic update
+    // topic TODO:GG topic session update
   }
 
   @override
