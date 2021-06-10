@@ -25,18 +25,6 @@ class ChatConnectStatus {
   static const int stopping = 3;
 }
 
-unLeadingHashIt(String str) {
-  return str.replaceFirst(RegExp(r'^#*'), '');
-}
-
-String? genTopicHash(String? topic) {
-  if (topic == null || topic.isEmpty) {
-    return null;
-  }
-  var t = unLeadingHashIt(topic);
-  return 'dchat' + hexEncode(Uint8List.fromList(sha1(t)));
-}
-
 class ChatCommon with Tag {
   DB? db;
 
