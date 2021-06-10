@@ -265,7 +265,7 @@ class ReceiveMessage with Tag {
       return;
     }
     // piece
-    MessageSchema? piece = await _messageStorage.queryByPid(received.pid); // TODO:GG dep??
+    MessageSchema? piece = await _messageStorage.queryByPid(received.pid);
     if (piece == null) {
       received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: received.parentType);
       piece = await _messageStorage.insert(received);
@@ -338,7 +338,7 @@ class ReceiveMessage with Tag {
 
   Future _receiveText(MessageSchema received) async {
     // duplicated
-    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
+    List<MessageSchema> exists = await _messageStorage.queryListByType(received.msgId, received.contentType);
     if (exists.isNotEmpty) {
       logger.d("$TAG - receiveText - duplicated - schema:$exists");
       sendMessage.sendReceipt(exists[0]); // await
@@ -357,14 +357,14 @@ class ReceiveMessage with Tag {
 
   Future _receiveImage(MessageSchema received) async {
     // duplicated
-    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
+    List<MessageSchema> exists = await _messageStorage.queryListByType(received.msgId, received.contentType);
     if (exists.isNotEmpty) {
       logger.d("$TAG - receiveImage - duplicated - schema:$exists");
       sendMessage.sendReceipt(exists[0]); // await
       return;
     }
     // File
-    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat);
+    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: "jpg");
     if (received.content == null) return;
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);
