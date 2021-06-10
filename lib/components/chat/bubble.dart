@@ -267,7 +267,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
           onTap = () => PhotoScreen.go(context, filePath: file.path);
         }
         break;
-      // TODO:GG contentTypeView
     }
     // TODO:GG burn
     Widget burnWidget = SizedBox.shrink();

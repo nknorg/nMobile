@@ -107,7 +107,7 @@ class SendMessage with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future sendContactOptions(String? clientAddress, int? seconds, {int tryCount = 1}) async {
+  Future sendContactOptionsBurn(String? clientAddress, int? deleteSeconds, {int tryCount = 1}) async {
     if (contactCommon.currentUser == null || clientAddress == null || clientAddress.isEmpty) return;
     if (tryCount > 3) return;
     try {
@@ -116,15 +116,15 @@ class SendMessage with Tag {
         contactCommon.currentUser!.clientAddress,
         ContentType.eventContactOptions,
       );
-      send = MessageOptions.setDeleteAfterSeconds(send, seconds);
+      send = MessageOptions.setDeleteAfterSeconds(send, deleteSeconds);
       String data = MessageData.getEventContactOptionsBurn(send);
       await chatCommon.sendMessage(clientAddress, data);
-      logger.d("$TAG - sendContactOptions - success - data:$data");
+      logger.d("$TAG - sendContactOptionsBurn - success - data:$data");
     } catch (e) {
       handleError(e);
-      logger.w("$TAG - sendContactOptions - fail - tryCount:$tryCount - clientAddress:$clientAddress - seconds:$seconds");
+      logger.w("$TAG - sendContactOptionsBurn - fail - tryCount:$tryCount - clientAddress:$clientAddress - deleteSeconds:$deleteSeconds");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendContactOptions(clientAddress, seconds, tryCount: tryCount++);
+        return sendContactOptionsBurn(clientAddress, deleteSeconds, tryCount: tryCount++);
       });
     }
   }
@@ -195,7 +195,8 @@ class SendMessage with Tag {
       case ContentType.nknImage:
         return await _send(schema, await MessageData.getImage(schema), resend: true);
       case ContentType.audio:
-        // TODO:GG resend audio
+      case ContentType.textExtension:
+        // TODO:GG resend contentType
         return null;
     }
     return null;

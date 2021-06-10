@@ -134,6 +134,16 @@ class ReceiveMessage with Tag {
       case ContentType.audio:
         notification.showDChatNotification(title, '[${localizations.audio}]');
         break;
+      case ContentType.system:
+      case ContentType.contact:
+      case ContentType.receipt:
+      case ContentType.piece:
+      case ContentType.eventContactOptions:
+      case ContentType.eventSubscribe:
+      case ContentType.eventUnsubscribe:
+      case ContentType.eventChannelInvitation:
+        // TODO:GG notification contentType
+        break;
     }
   }
 
@@ -155,8 +165,6 @@ class ReceiveMessage with Tag {
 
   Future _messageHandle(MessageSchema received) async {
     switch (received.contentType) {
-      // case ContentType.system:
-      //   break;
       case ContentType.receipt:
         _receiveReceipt(received); // await
         break;
@@ -169,22 +177,22 @@ class ReceiveMessage with Tag {
       case ContentType.text:
         await _receiveText(received);
         break;
-      // case ContentType.textExtension:
-      //   break;
       case ContentType.media:
       case ContentType.image:
       case ContentType.nknImage:
         await _receiveImage(received);
         break;
-      // case ContentType.audio:
-      //   break;
-      // case ContentType.eventContactOptions:
-      //   break;
-      // case ContentType.eventSubscribe:
-      // case ContentType.eventUnsubscribe:
-      //   break;
-      // case ContentType.eventChannelInvitation:
-      //   break;
+      case ContentType.eventContactOptions:
+        _receiveContactOptions(received); // await
+        break;
+      case ContentType.system:
+      case ContentType.textExtension:
+      case ContentType.audio:
+      case ContentType.eventSubscribe:
+      case ContentType.eventUnsubscribe:
+      case ContentType.eventChannelInvitation:
+        // TODO:GG receive contentType
+        break;
     }
   }
 
@@ -213,14 +221,14 @@ class ReceiveMessage with Tag {
       return;
     }
     // D-Chat NO support piece
-    String? supportPiece = data['onePieceReady'];
+    String? supportPiece = data[MessageData.K_CONTACT_PIECE_SUPPORT]?.toString();
     if (supportPiece?.isNotEmpty == true) {
       contactCommon.setSupportPiece(received.from, value: supportPiece); // await
     }
     // D-Chat NO RequestType.header
-    String? requestType = data['requestType'];
-    String? responseType = data['responseType'];
-    String? version = data['version'];
+    String? requestType = data['requestType']?.toString();
+    String? responseType = data['responseType']?.toString();
+    String? version = data['version']?.toString();
     Map<String, dynamic>? content = data['content'];
     if ((requestType?.isNotEmpty == true) || (requestType == null && responseType == null && version == null)) {
       // need reply
@@ -258,6 +266,33 @@ class ReceiveMessage with Tag {
       } else {
         logger.d("$TAG - receiveContact - profileVersionSame - contact:$exist - data:$data");
       }
+    }
+  }
+
+  // NO DB NO display
+  Future _receiveContactOptions(MessageSchema received) async {
+    if (received.content == null) return;
+    Map<String, dynamic> data = received.content; // == data
+    // duplicated
+    ContactSchema? exist = await contactCommon.queryByClientAddress(received.from);
+    if (exist == null) {
+      logger.w("$TAG - _receiveContactOptions - empty - received:$received");
+      return;
+    }
+    // options type
+    String? optionsType = data[MessageData.K_CONTACT_OPTIONS_TYPE]?.toString();
+    Map<String, dynamic> content = data['content'] ?? Map();
+    if (optionsType == null || optionsType.isEmpty) return;
+    if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_BURN_TIME) {
+      int? seconds = content['deleteAfterSeconds'] as int?;
+      logger.i("$TAG - _receiveContactOptions - setBurn - seconds:$seconds - data:$data");
+      contactCommon.setOptionsBurn(exist, seconds, notify: true);
+    } else if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN) {
+      String? deviceToken = content['deviceToken']?.toString();
+      logger.i("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
+      contactCommon.setDeviceToken(exist.id, deviceToken, notify: true);
+    } else {
+      logger.w("$TAG - _receiveContactOptions - setNothing - data:$data");
     }
   }
 
