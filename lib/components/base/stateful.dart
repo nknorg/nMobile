@@ -5,6 +5,9 @@ abstract class BaseStateFulWidget extends StatefulWidget {
 }
 
 abstract class BaseStateFulWidgetState<T extends StatefulWidget> extends State<T> {
+  @protected
+  void onRefreshArguments();
+
   @override
   void initState() {
     super.initState();
@@ -26,7 +29,4 @@ abstract class BaseStateFulWidgetState<T extends StatefulWidget> extends State<T
   void setState(VoidCallback fn) {
     if (mounted) super.setState(fn);
   }
-
-  @protected
-  void onRefreshArguments();
 }
