@@ -79,7 +79,9 @@ class ContactStorage with Tag {
       }
       logger.w("$TAG - insert - fail - schema:$schema");
     } catch (e) {
-      handleError(e);
+      if (e.toString() != "contact duplicated!") {
+        handleError(e);
+      }
     }
     return null;
   }

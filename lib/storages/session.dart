@@ -23,14 +23,14 @@ class SessionStorage with Tag {
         last_message_time INTEGER,
         last_message_options TEXT,
         un_read_count INTEGER,
-        is_top BOOLEAN DEFAULT 0,
+        is_top BOOLEAN DEFAULT 0
       )''');
     // index
-    await db.execute('CREATE INDEX index_session_target_id ON Session (target_id)');
-    await db.execute('CREATE INDEX index_session_is_topic ON Session (is_topic)');
-    await db.execute('CREATE INDEX index_session_un_read_count ON Session (un_read_count)');
+    await db.execute('CREATE INDEX index_session_target_id ON $tableName (target_id)');
+    await db.execute('CREATE INDEX index_session_is_topic ON $tableName (is_topic)');
+    await db.execute('CREATE INDEX index_session_un_read_count ON $tableName (un_read_count)');
     // query session
-    await db.execute('CREATE INDEX index_session_top_last_message_time ON Session (is_top, last_message_time)');
+    await db.execute('CREATE INDEX index_session_top_last_message_time ON $tableName (is_top, last_message_time)');
   }
 
   Future<SessionSchema?> insert(SessionSchema? schema, {bool checkDuplicated = true}) async {
@@ -113,7 +113,7 @@ class SessionStorage with Tag {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        orderBy: 'is_top desc, send_time desc',
+        orderBy: 'is_top desc, last_message_time desc',
         offset: offset ?? null,
         limit: limit ?? null,
       );
