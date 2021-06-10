@@ -87,17 +87,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     });
     _sessionUpdateSubscription = sessionCommon.updateStream.listen((SessionSchema event) {
       _sessionList = _sessionList.map((SessionSchema e) => e.targetId != event.targetId ? e : event).toList();
-      bool needSort = false;
-      _sessionList.forEach((SessionSchema e) {
-        needSort = e.isTop != event.isTop;
-      });
-      if (needSort) {
-        _sortMessages();
-      } else {
-        setState(() {
-          _sessionList = _sessionList;
-        });
-      }
+      _sortMessages();
     });
 
     // scroll
@@ -334,10 +324,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
         ],
       );
     } else {
-      return Expanded(
-        flex: 1,
-        child: _sessionLiseView(),
-      );
+      return _sessionLiseView();
     }
   }
 
