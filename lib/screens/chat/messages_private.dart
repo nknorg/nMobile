@@ -49,13 +49,13 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
   bool _showBottomMenu = false;
 
   @override
-  void onRefreshArguments() {}
+  void onRefreshArguments() async {
+    this._contact = widget.contact;
+  }
 
   @override
   void initState() {
     super.initState();
-    this._contact = widget.contact;
-
     // contact
     _onContactUpdateStreamSubscription = contactCommon.updateStream.where((event) => event.id == _contact.id).listen((ContactSchema event) {
       setState(() {
@@ -63,15 +63,15 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
       });
     });
     // onReceive + OnSaveSqlite
-    _onMessageReceiveStreamSubscription = receiveMessage.onSavedStream.where((MessageSchema event) => event.getTargetId == _contact.clientAddress).listen((MessageSchema event) {
+    _onMessageReceiveStreamSubscription = receiveMessage.onSavedStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
       _insertMessage(event);
     });
     // onSaveSqlite (no_send_success)
-    _onMessageSendStreamSubscription = sendMessage.onSavedStream.where((MessageSchema event) => event.getTargetId == _contact.clientAddress).listen((MessageSchema event) {
+    _onMessageSendStreamSubscription = sendMessage.onSavedStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
       _insertMessage(event);
     });
     // onStatusUpdate (success + fail + receipt)
-    _onMessageUpdateStreamSubscription = sendMessage.onUpdateStream.where((MessageSchema event) => event.getTargetId == _contact.clientAddress).listen((MessageSchema event) {
+    _onMessageUpdateStreamSubscription = sendMessage.onUpdateStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
       setState(() {
         _messages = _messages.map((MessageSchema e) => (e.msgId == event.msgId) ? event : e).toList();
       });

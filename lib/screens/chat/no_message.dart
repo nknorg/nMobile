@@ -55,7 +55,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
                   decoration: BoxDecoration(color: Color(0xFF5458F7), borderRadius: BorderRadius.circular(100)),
                   child: InkWell(
                     onTap: () {
-                      // TODO: join channel
+                      // TODO: topic join channel
                     },
                     child: Center(
                       child: Text(

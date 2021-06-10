@@ -13,7 +13,6 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/settings.dart';
-import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -66,7 +65,6 @@ class ChatCommon with Tag {
   StreamSubscription? _onMessageStreamSubscription;
 
   MessageStorage _messageStorage = MessageStorage();
-  TopicStorage _topicStorage = TopicStorage();
 
   ChatCommon() {
     status = ChatConnectStatus.disconnected;

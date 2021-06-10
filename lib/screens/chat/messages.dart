@@ -27,20 +27,18 @@ class ChatMessagesScreen extends BaseStateFulWidget {
 }
 
 class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScreen> {
-  bool loading = false;
   ContactSchema? _contact;
   TopicSchema? _topic;
-  late String _targetId;
 
   @override
   void onRefreshArguments() {
     dynamic who = widget.arguments![ChatMessagesScreen.argWho];
     if (who is TopicSchema) {
       _topic = widget.arguments![ChatMessagesScreen.argWho];
-      _targetId = _topic!.topic;
+      // _targetId = _topic!.topic;
     } else if (who is ContactSchema) {
       this._contact = widget.arguments![ChatMessagesScreen.argWho];
-      _targetId = _contact!.clientAddress;
+      // _targetId = _contact!.clientAddress;
     }
   }
 
@@ -50,8 +48,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       return ChatMessagesPrivateLayout(
         contact: _contact!,
       );
+    } else if (_topic != null) {
+      // TODO:GG topic page
+      return SizedBox.shrink();
     } else {
-      return Container();
+      return SizedBox.shrink();
     }
   }
 }
