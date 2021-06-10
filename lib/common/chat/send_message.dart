@@ -255,6 +255,7 @@ class SendMessage with Tag {
   }
 
   Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message) async {
+    if (!await contactCommon.isSupportPiece(message.to)) return null;
     List results = await _convert2Pieces(message);
     if (results.isEmpty) return null;
     String dataBytesString = results[0];
