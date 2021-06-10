@@ -20,6 +20,8 @@ class RequestType {
 }
 
 class ContactCommon with Tag {
+  static const String KEY_PIECE_ENABLE = "PIECE_ENABLE";
+
   ContactSchema? currentUser;
   LocalStorage _localStorage = LocalStorage();
   ContactStorage _contactStorage = ContactStorage();
@@ -251,12 +253,12 @@ class ContactCommon with Tag {
 
   setSupportPiece(String? clientAddress, {String? value}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
-    await _localStorage.set("PIECE_ENABLE:$clientAddress", value ?? "1");
+    await _localStorage.set("$KEY_PIECE_ENABLE:$clientAddress", value ?? "1");
   }
 
   Future<bool> isSupportPiece(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return false;
-    String? value = await _localStorage.get("PIECE_ENABLE:$clientAddress");
+    String? value = await _localStorage.get("$KEY_PIECE_ENABLE:$clientAddress");
     return value != null && value.isNotEmpty;
   }
 }
