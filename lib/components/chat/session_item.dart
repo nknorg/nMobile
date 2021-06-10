@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/contact/item.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/components/topic/item.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
@@ -11,175 +13,241 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 
-Widget _unReadWidget(SessionSchema item) {
-  String countStr = item.notReadCount.toString();
-  if ((item.notReadCount ?? 0) > 999) {
-    countStr = '999+';
-  }
-  return Container(
-    padding: const EdgeInsets.only(left: 4, right: 4),
-    constraints: BoxConstraints(minWidth: 25),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(12.5),
-      color: application.theme.badgeColor,
-    ),
-    height: 25,
-    child: Center(
-      child: Label(
-        countStr,
-        type: LabelType.bodySmall,
-        dark: true,
-      ),
-    ),
-  );
+class ChatSessionItem extends BaseStateFulWidget {
+  final SessionSchema session;
+  final GestureTapCallback? onTap;
+  final GestureLongPressCallback? onLongPress;
+
+  ChatSessionItem({
+    Key? key,
+    required this.session,
+    this.onTap,
+    this.onLongPress,
+  }) : super(key: key);
+
+  @override
+  _ChatSessionItemState createState() => _ChatSessionItemState();
 }
 
-Widget createSessionWidget(BuildContext context, SessionSchema model) {
-  S _localizations = S.of(context);
-  Widget contentWidget;
-  String? draft = memoryCache.getDraft(model.targetId!);
-  if (draft != null && draft.length > 0) {
-    contentWidget = Row(
-      children: <Widget>[
-        Label(
-          _localizations.placeholder_draft,
-          type: LabelType.bodyRegular,
-          color: Colors.red,
-          overflow: TextOverflow.ellipsis,
-        ),
-        SizedBox(width: 5),
-        Label(
-          draft,
-          type: LabelType.bodyRegular,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  } else if (model.contentType == ContentType.nknImage || model.contentType == ContentType.media || model.contentType == ContentType.image) {
-    contentWidget = Padding(
-      padding: const EdgeInsets.only(top: 0),
-      child: Row(
-        children: <Widget>[
-          Asset.iconSvg('image', width: 16, color: application.theme.fontColor2),
-        ],
+class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
+  StreamSubscription? _updateContactSubscription;
+
+  TopicSchema? _topic;
+  ContactSchema? _contact;
+  MessageSchema? _lastMsg;
+
+  @override
+  void onRefreshArguments() async {
+    if (widget.session.isTopic) {
+      if (_topic == null || widget.session.targetId != _topic?.id?.toString()) {
+        _topic = null; // TODO:GG topic session
+      }
+    } else {
+      if (_contact == null || widget.session.targetId != _contact?.id?.toString()) {
+        _contact = await contactCommon.queryByClientAddress(widget.session.targetId);
+      }
+    }
+    _lastMsg = widget.session.lastMessageOptions != null ? MessageSchema.fromMap(widget.session.lastMessageOptions!) : null;
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // contact
+    _updateContactSubscription = contactCommon.updateStream.where((event) => event.id == _contact?.id).listen((event) {
+      setState(() {
+        _contact = event;
+      });
+    });
+    // topic TODO:GG topic update
+  }
+
+  @override
+  void dispose() {
+    _updateContactSubscription?.cancel();
+    super.dispose();
+  }
+
+  Widget _unReadWidget(SessionSchema session) {
+    String countStr = session.unReadCount.toString();
+    if ((session.unReadCount) > 999) {
+      countStr = '999+';
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+      constraints: BoxConstraints(minWidth: 24, minHeight: 24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: application.theme.badgeColor,
       ),
-    );
-  } else if (model.contentType == ContentType.audio) {
-    contentWidget = Padding(
-      padding: const EdgeInsets.only(top: 0),
-      child: Row(
-        children: <Widget>[
-          Asset.iconSvg('microphone', width: 16, color: application.theme.fontColor2),
-        ],
+      child: Center(
+        child: Label(
+          countStr,
+          type: LabelType.bodySmall,
+          dark: true,
+        ),
       ),
-    );
-  } else if (model.contentType == ContentType.eventChannelInvitation) {
-    contentWidget = Label(
-      _localizations.channel_invitation,
-      maxLines: 1,
-      type: LabelType.bodyRegular,
-      overflow: TextOverflow.ellipsis,
-    );
-  } else if (model.contentType == ContentType.eventSubscribe) {
-    contentWidget = Label(
-      _localizations.joined_channel,
-      maxLines: 1,
-      type: LabelType.bodyRegular,
-      overflow: TextOverflow.ellipsis,
-    );
-  } else {
-    contentWidget = Label(
-      model.content ?? "",
-      type: LabelType.bodyRegular,
-      overflow: TextOverflow.ellipsis,
-      maxLines: 1,
     );
   }
-  if (model.topic != null) {
-    List<Widget> topicNameWidget = [
-      Label(
-        model.topic!.topicName ?? "",
-        type: LabelType.h3,
-        fontWeight: FontWeight.bold,
-      ),
-    ];
 
-    if (model.topic!.topicType == TopicType.privateTopic) {
-      topicNameWidget.insert(0, Asset.iconSvg('lock', width: 18, color: application.theme.primaryColor));
-    }
+  Widget _contentWidget(SessionSchema session) {
+    S _localizations = S.of(context);
+    String? msgType = _lastMsg?.contentType;
+    String? msgContent = session.lastMessageOptions != null ? session.lastMessageOptions!["content"] : null;
+    String? draft = memoryCache.getDraft(session.targetId);
 
-    return Container(
-      color: model.isTop ? application.theme.backgroundColor1 : Colors.transparent,
-      padding: const EdgeInsets.only(left: 12, right: 12),
-      height: 72,
-      child: Flex(
-        direction: Axis.horizontal,
-        children: [
-          Expanded(
-            flex: 1,
-            child: TopicItem(
-              topic: model.topic!,
-              body: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    children: topicNameWidget,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: contentWidget,
-                  ),
-                ],
-              ),
-            ),
+    Widget contentWidget;
+    if (draft != null && draft.length > 0) {
+      // draft
+      contentWidget = Row(
+        children: <Widget>[
+          Label(
+            _localizations.placeholder_draft,
+            type: LabelType.bodyRegular,
+            color: Colors.red,
+            overflow: TextOverflow.ellipsis,
           ),
-          Expanded(
-            flex: 0,
-            child: Container(
-              child: Row(
-                children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 0, bottom: 6),
-                        child: Label(
-                          timeFormat(model.lastReceiveTime),
-                          type: LabelType.bodyRegular,
-                        ),
-                      ),
-                      (model.notReadCount ?? 0) > 0
-                          ? Padding(
-                              padding: const EdgeInsets.only(right: 0),
-                              child: _unReadWidget(SessionSchema(notReadCount: model.notReadCount)),
-                            )
-                          : SizedBox.shrink(),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+          SizedBox(width: 5),
+          Label(
+            draft,
+            type: LabelType.bodyRegular,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
-      ),
-    );
-  } else if (model.content != null) {
+      );
+    } else if (msgType == ContentType.nknImage || msgType == ContentType.media || msgType == ContentType.image) {
+      contentWidget = Padding(
+        padding: const EdgeInsets.only(top: 0),
+        child: Row(
+          children: <Widget>[
+            Asset.iconSvg('image', width: 16, color: application.theme.fontColor2),
+          ],
+        ),
+      );
+    } else if (msgType == ContentType.audio) {
+      contentWidget = Padding(
+        padding: const EdgeInsets.only(top: 0),
+        child: Row(
+          children: <Widget>[
+            Asset.iconSvg('microphone', width: 16, color: application.theme.fontColor2),
+          ],
+        ),
+      );
+    } else if (msgType == ContentType.eventChannelInvitation) {
+      contentWidget = Label(
+        _localizations.channel_invitation,
+        type: LabelType.bodyRegular,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    } else if (msgType == ContentType.eventSubscribe) {
+      contentWidget = Label(
+        _localizations.joined_channel,
+        type: LabelType.bodyRegular,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    } else {
+      contentWidget = Label(
+        msgContent ?? " ",
+        type: LabelType.bodyRegular,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+    return contentWidget;
+  }
+
+  Widget _topicWidget(SessionSchema session) {
+    // TODO:GG topic session item
+    return SizedBox.shrink();
+    //   List<Widget> topicNameWidget = [
+    //     Label(
+    //       model.topic!.topicName ?? "",
+    //       type: LabelType.h3,
+    //       fontWeight: FontWeight.bold,
+    //     ),
+    //   ];
+    //
+    //   if (model.topic!.topicType == TopicType.privateTopic) {
+    //     topicNameWidget.insert(0, Asset.iconSvg('lock', width: 18, color: application.theme.primaryColor));
+    //   }
+    //
+    //   return Container(
+    //     color: model.isTop ? application.theme.backgroundColor1 : Colors.transparent,
+    //     padding: const EdgeInsets.only(left: 12, right: 12),
+    //     height: 72,
+    //     child: Flex(
+    //       direction: Axis.horizontal,
+    //       children: [
+    //         Expanded(
+    //           flex: 1,
+    //           child: TopicItem(
+    //             topic: model.topic!,
+    //             body: Column(
+    //               crossAxisAlignment: CrossAxisAlignment.start,
+    //               mainAxisAlignment: MainAxisAlignment.center,
+    //               children: [
+    //                 Row(
+    //                   children: topicNameWidget,
+    //                 ),
+    //                 Padding(
+    //                   padding: const EdgeInsets.only(top: 6),
+    //                   child: contentWidget,
+    //                 ),
+    //               ],
+    //             ),
+    //           ),
+    //         ),
+    //         Expanded(
+    //           flex: 0,
+    //           child: Container(
+    //             child: Row(
+    //               children: [
+    //                 Column(
+    //                   mainAxisAlignment: MainAxisAlignment.center,
+    //                   crossAxisAlignment: CrossAxisAlignment.end,
+    //                   children: [
+    //                     Padding(
+    //                       padding: const EdgeInsets.only(right: 0, bottom: 6),
+    //                       child: Label(
+    //                         timeFormat(model.lastReceiveTime),
+    //                         type: LabelType.bodyRegular,
+    //                       ),
+    //                     ),
+    //                     (model.notReadCount ?? 0) > 0
+    //                         ? Padding(
+    //                             padding: const EdgeInsets.only(right: 0),
+    //                             child: _unReadWidget(SessionSchema(notReadCount: model.notReadCount)),
+    //                           )
+    //                         : SizedBox.shrink(),
+    //                   ],
+    //                 ),
+    //               ],
+    //             ),
+    //           ),
+    //         ),
+    //       ],
+    //     ),
+    //   );
+  }
+
+  Widget _contactWidget(SessionSchema session) {
     return Container(
-      color: model.isTop ? application.theme.backgroundColor1 : Colors.transparent,
-      padding: const EdgeInsets.only(left: 12, right: 12),
+      color: session.isTop ? application.theme.backgroundColor1 : Colors.transparent,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       height: 72,
-      child: Flex(
-        direction: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Expanded(
             flex: 1,
             child: StreamBuilder<ContactSchema?>(
-              initialData: model.contact,
-              stream: contactCommon.updateStream.where((event) => event.id == model.contact?.id),
+              initialData: _contact,
+              stream: contactCommon.updateStream.where((event) => event.id.toString() == session.targetId),
               builder: (BuildContext context, AsyncSnapshot<ContactSchema?> snapshot) {
-                ContactSchema? _schema = snapshot.data ?? model.contact;
+                ContactSchema? _schema = snapshot.data ?? _contact;
                 if (_schema == null) return SizedBox.shrink();
                 return ContactItem(
                   contact: _schema,
@@ -194,46 +262,58 @@ Widget createSessionWidget(BuildContext context, SessionSchema model) {
                       ),
                       Padding(
                         padding: const EdgeInsets.only(top: 6),
-                        child: contentWidget,
+                        child: _contentWidget(session),
                       ),
                     ],
                   ),
+                  onTapWave: false,
                 );
               },
             ),
           ),
-          Expanded(
-            flex: 0,
-            child: Container(
-              child: Row(
-                children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 0, bottom: 6),
-                        child: Label(
-                          timeFormat(model.lastReceiveTime),
-                          type: LabelType.bodyRegular,
-                        ),
+          Container(
+            child: Row(
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 0, bottom: 6),
+                      child: Label(
+                        timeFormat(session.lastMessageTime),
+                        type: LabelType.bodyRegular,
                       ),
-                      (model.notReadCount ?? 0) > 0
-                          ? Padding(
-                              padding: const EdgeInsets.only(right: 0),
-                              child: _unReadWidget(SessionSchema(notReadCount: model.notReadCount)),
-                            )
-                          : SizedBox.shrink(),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                    (session.unReadCount) > 0
+                        ? Padding(
+                            padding: const EdgeInsets.only(right: 0),
+                            child: _unReadWidget(session),
+                          )
+                        : SizedBox.shrink(),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
-  } else {
-    return SizedBox.shrink();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    SessionSchema session = widget.session;
+    Widget contentWidget = session.isTopic ? _topicWidget(session) : _contactWidget(session);
+
+    return Material(
+      color: Colors.transparent,
+      elevation: 0,
+      child: InkWell(
+        onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
+        child: contentWidget,
+      ),
+    );
   }
 }
