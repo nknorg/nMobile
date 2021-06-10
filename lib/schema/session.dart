@@ -50,4 +50,9 @@ class SessionSchema extends Equatable {
     );
     return schema;
   }
+
+  @override
+  String toString() {
+    return 'SessionSchema{id: $id, targetId: $targetId, isTopic: $isTopic, unReadCount: $unReadCount, isTop: $isTop, lastMessageTime: $lastMessageTime, lastMessageOptions: $lastMessageOptions}';
+  }
 }
