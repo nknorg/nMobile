@@ -104,12 +104,12 @@ class ContactCommon with Tag {
 
   Future<ContactSchema?> query(int? contactId) async {
     if (contactId == null || contactId == 0) return null;
-    return await _contactStorage.query(contactId);
+    return await _contactStorage.query(contactId); // CACHE
   }
 
   Future<ContactSchema?> queryByClientAddress(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    return await _contactStorage.queryByClientAddress(clientAddress);
+    return await _contactStorage.queryByClientAddress(clientAddress); // CACHE
   }
 
   Future<int> queryCountByClientAddress(String? clientAddress) {

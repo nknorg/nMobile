@@ -62,7 +62,7 @@ class SessionCommon with Tag {
 
   Future<SessionSchema?> query(String? targetId) async {
     if (targetId == null || targetId.isEmpty) return null;
-    return await _sessionStorage.query(targetId);
+    return await _sessionStorage.query(targetId); // CACHE
   }
 
   Future<List<SessionSchema>> queryListRecent({int? offset, int? limit}) {
@@ -71,7 +71,7 @@ class SessionCommon with Tag {
 
   Future<bool> setLastMessageAndUnReadCount(String? targetId, MessageSchema? lastMessage, int? unread, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty || lastMessage == null) return false;
-    SessionSchema session = SessionSchema(targetId: targetId, isTopic: lastMessage.topic != null);
+    SessionSchema session = SessionSchema(targetId: targetId, isTopic: lastMessage.topic != null); // CACHE
     session.lastMessageTime = lastMessage.sendTime;
     session.lastMessageOptions = lastMessage.toMap();
     session.unReadCount = unread ?? await _messageStorage.unReadCountByTargetId(targetId);
@@ -82,7 +82,7 @@ class SessionCommon with Tag {
 
   Future<bool> setUnReadCount(String? targetId, int? unread, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty) return false;
-    unread = unread ?? await _messageStorage.unReadCountByTargetId(targetId);
+    unread = unread ?? await _messageStorage.unReadCountByTargetId(targetId); // CACHE
     bool success = await _sessionStorage.updateUnReadCount(targetId, unread);
     if (success && notify) queryAndNotify(targetId);
     return success;
