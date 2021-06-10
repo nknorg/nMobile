@@ -529,12 +529,13 @@ class MessageSchema extends Equatable {
       options: e['options'] != null ? jsonFormat(e['options']) : null,
     );
 
+    String? completePath = Path.getCompleteFile(e['content']);
     if (schema.contentType == ContentType.nknImage || schema.contentType == ContentType.media || schema.contentType == ContentType.image) {
-      schema.content = File(Path.getCompleteFile(e['content']));
+      schema.content = completePath != null ? File(completePath) : null;
     } else if (schema.contentType == ContentType.audio) {
-      schema.content = File(Path.getCompleteFile(e['content']));
+      schema.content = completePath != null ? File(completePath) : null;
     } else if (schema.contentType == ContentType.piece) {
-      schema.content = File(Path.getCompleteFile(e['content']));
+      schema.content = completePath != null ? File(completePath) : null;
     } else {
       schema.content = e['content'];
     }
