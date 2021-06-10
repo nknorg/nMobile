@@ -41,9 +41,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
   late ContactSchema _contact;
 
   ScrollController _scrollController = ScrollController();
-  final int _messagesLimit = 20;
   bool _moreLoading = false;
-
   List<MessageSchema> _messages = <MessageSchema>[];
 
   bool _showBottomMenu = false;
@@ -62,15 +60,14 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
         _contact = event;
       });
     });
-    // onReceive + OnSaveSqlite
+
+    // messages
     _onMessageReceiveStreamSubscription = receiveMessage.onSavedStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
       _insertMessage(event);
     });
-    // onSaveSqlite (no_send_success)
     _onMessageSendStreamSubscription = sendMessage.onSavedStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
       _insertMessage(event);
     });
-    // onStatusUpdate (success + fail + receipt)
     _onMessageUpdateStreamSubscription = sendMessage.onUpdateStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
       setState(() {
         _messages = _messages.map((MessageSchema e) => (e.msgId == event.msgId) ? event : e).toList();
@@ -82,14 +79,17 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
       double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
       if (offsetFromBottom < 50 && !_moreLoading) {
         _moreLoading = true;
-        _loadMore().then((v) {
+        _getDataMessages(false).then((v) {
           _moreLoading = false;
         });
       }
     });
 
-    // init
-    initDataAsync();
+    // messages
+    _getDataMessages(true);
+
+    // read
+    sessionCommon.setUnReadCount(_contact.clientAddress.toString(), 0, notify: true); // await
   }
 
   @override
@@ -102,8 +102,17 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
     super.dispose();
   }
 
-  initDataAsync() async {
-    await _loadMore();
+  _getDataMessages(bool refresh) async {
+    int _offset = 0;
+    if (refresh) {
+      _messages = [];
+    } else {
+      _offset = _messages.length;
+    }
+    var messages = await chatCommon.queryListAndReadByTargetId(_contact.clientAddress, offset: _offset, limit: 20);
+    setState(() {
+      _messages = _messages + messages;
+    });
   }
 
   _insertMessage(MessageSchema? schema) async {
@@ -111,18 +120,11 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
     if (!schema.isOutbound) {
       // read
       schema = await receiveMessage.read(schema);
+      sessionCommon.setUnReadCount(_contact.clientAddress.toString(), 0, notify: true);
     }
     setState(() {
       logger.d("$TAG - messages insert 0:$schema");
       _messages.insert(0, schema!);
-    });
-  }
-
-  _loadMore() async {
-    int _offset = _messages.length;
-    var messages = await chatCommon.queryListAndReadByTargetId(_contact.clientAddress, offset: _offset, limit: _messagesLimit);
-    setState(() {
-      _messages = _messages + messages;
     });
   }
 
@@ -134,6 +136,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
   }
 
   _hideAll() {
+    FocusScope.of(context).requestFocus(FocusNode());
     setState(() {
       _showBottomMenu = false;
     });
@@ -187,8 +190,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
           _hideAll();
         },
         child: SafeArea(
-          child: Flex(
-            direction: Axis.vertical,
+          child: Column(
             children: [
               Expanded(
                 flex: 1,
@@ -223,10 +225,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                   },
                 ),
               ),
-              Divider(
-                height: 1,
-                color: _theme.backgroundColor2,
-              ),
+              Divider(height: 1, color: _theme.backgroundColor2),
               ChatSendBar(
                 targetId: _contact.clientAddress,
                 onMenuPressed: () {

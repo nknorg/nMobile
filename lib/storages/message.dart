@@ -247,32 +247,32 @@ class MessageStorage with Tag {
     return [];
   }
 
-  Future<List<MessageSchema>> queryListUnRead() async {
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        where: 'is_outbound = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
-        whereArgs: [0, 0, ContentType.piece, ContentType.receipt],
-      );
-      if (res == null || res.isEmpty) {
-        logger.d("$TAG - queryListUnRead - empty");
-        return [];
-      }
-      List<MessageSchema> result = <MessageSchema>[];
-      String logText = '';
-      res.forEach((map) {
-        MessageSchema item = MessageSchema.fromMap(map);
-        logText += "\n$item";
-        result.add(item);
-      });
-      logger.d("$TAG - queryListUnRead- length:${result.length} - items:$logText");
-      return result;
-    } catch (e) {
-      handleError(e);
-    }
-    return [];
-  }
+  // Future<List<MessageSchema>> queryListUnRead() async {
+  //   try {
+  //     List<Map<String, dynamic>>? res = await db?.query(
+  //       tableName,
+  //       columns: ['*'],
+  //       where: 'is_outbound = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
+  //       whereArgs: [0, 0, ContentType.piece, ContentType.receipt],
+  //     );
+  //     if (res == null || res.isEmpty) {
+  //       logger.d("$TAG - queryListUnRead - empty");
+  //       return [];
+  //     }
+  //     List<MessageSchema> result = <MessageSchema>[];
+  //     String logText = '';
+  //     res.forEach((map) {
+  //       MessageSchema item = MessageSchema.fromMap(map);
+  //       logText += "\n$item";
+  //       result.add(item);
+  //     });
+  //     logger.d("$TAG - queryListUnRead- length:${result.length} - items:$logText");
+  //     return result;
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return [];
+  // }
 
   Future<List<MessageSchema>> queryListUnReadByTargetId(String? targetId) async {
     if (targetId == null || targetId.isEmpty) return [];
@@ -308,8 +308,8 @@ class MessageStorage with Tag {
       var res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
-        where: 'is_outbound = ? AND target_id = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
-        whereArgs: [0, targetId, 0, ContentType.piece, ContentType.receipt],
+        where: 'target_id = ? AND is_outbound = ? AND is_read = ? AND NOT type = ? AND NOT type = ?',
+        whereArgs: [targetId, 0, 0, ContentType.piece, ContentType.receipt],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.d("$TAG - unReadCountByTargetId - targetId:$targetId - count:$count");

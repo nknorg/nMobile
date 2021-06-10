@@ -166,7 +166,7 @@ class ChatCommon with Tag {
       List<MessageSchema> unreadList = await _messageStorage.queryListUnReadByTargetId(targetId);
       unreadList.asMap().forEach((index, MessageSchema element) {
         receiveMessage.read(element); // await
-        if (index >= unreadList.length) {
+        if (index >= unreadList.length - 1) {
           sessionCommon.setUnReadCount(element.targetId, 0, notify: true);
         }
       });
