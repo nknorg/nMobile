@@ -25,7 +25,7 @@ class ContentType {
   static const String image = 'image'; // db + visible
   static const String audio = 'audio'; // db + visible // TODO:GG wait handle
 
-  static const String eventContactOptions = 'event:contactOptions'; // TODO:GG wait handle
+  static const String eventContactOptions = 'event:contactOptions';
   static const String eventSubscribe = 'event:subscribe'; // TODO:GG wait handle
   static const String eventUnsubscribe = 'event:unsubscribe'; // TODO:GG wait handle
   static const String eventChannelInvitation = 'event:channelInvitation'; // TODO:GG wait data
@@ -48,11 +48,23 @@ class MessageOptions {
 
   static const KEY_PARENT_PIECE = "parent_piece";
 
+  static MessageSchema setDeleteAfterSeconds(MessageSchema schema, int? deleteTimeSec) {
+    if (schema.options == null) schema.options = Map<String, dynamic>();
+    schema.options![MessageOptions.KEY_DELETE_AFTER_SECONDS] = deleteTimeSec;
+    return schema;
+  }
+
   static int? getDeleteAfterSeconds(MessageSchema? schema) {
     if (schema == null || schema.options == null || schema.options!.keys.length == 0) return null;
     var seconds = schema.options![MessageOptions.KEY_DELETE_AFTER_SECONDS];
     if (seconds == null) return null;
     return int.parse(seconds);
+  }
+
+  static MessageSchema setDeviceToken(MessageSchema schema, String? deviceToken) {
+    if (schema.options == null) schema.options = Map<String, dynamic>();
+    schema.options![MessageOptions.KEY_DEVICE_TOKEN] = deviceToken;
+    return schema;
   }
 
   static String? getDeviceToken(MessageSchema? schema) {
@@ -147,6 +159,9 @@ class MessageStatus {
 }
 
 class MessageData {
+  static const CONTACT_OPTIONS_TYPE_BURN_TIME = '0';
+  static const CONTACT_OPTIONS_TYPE_DEVICE_TOKEN = '1';
+
   static String getReceipt(String msgId) {
     Map map = {
       'id': Uuid().v4(),
@@ -263,6 +278,7 @@ class MessageData {
     return jsonEncode(data);
   }
 
+  // TODO:GG wait call
   static Future<String?> getAudio(MessageSchema schema) async {
     File? file = schema.content as File?;
     if (file == null) return null;
@@ -293,10 +309,11 @@ class MessageData {
       'content': {'deleteAfterSeconds': deleteAfterSeconds},
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
-    data['optionType'] = '0';
+    data['optionType'] = CONTACT_OPTIONS_TYPE_BURN_TIME;
     return jsonEncode(data);
   }
 
+  // TODO:GG wait call
   static String getEventContactOptionsNotice(MessageSchema schema, {String? token}) {
     String? deviceToken = token ?? MessageOptions.getDeviceToken(schema);
     Map data = {
@@ -305,10 +322,11 @@ class MessageData {
       'content': {'deviceToken': deviceToken},
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
-    data['optionType'] = '1';
+    data['optionType'] = CONTACT_OPTIONS_TYPE_DEVICE_TOKEN;
     return jsonEncode(data);
   }
 
+  // TODO:GG wait call
   String getEventSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
@@ -320,6 +338,7 @@ class MessageData {
     return jsonEncode(data);
   }
 
+  // TODO:GG wait call
   String getEventUnSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,

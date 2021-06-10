@@ -151,6 +151,12 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   @override
+  void didUpdateWidget(covariant ContactProfileScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _updateBurnIfNeed();
+  }
+
+  @override
   void dispose() {
     _updateBurnIfNeed();
     _updateContactSubscription.cancel();
@@ -233,7 +239,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     }
   }
 
-  String _getClientAddress() {
+  String _getClientAddressShow() {
     if (_contactSchema?.clientAddress != null) {
       if (_contactSchema!.clientAddress.length > 10) {
         return _contactSchema!.clientAddress.substring(0, 10) + '...';
@@ -303,18 +309,10 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     } else {
       _burnValue = burnValueArray[_burnProgress].inSeconds;
     }
+    // inside update
     await contactCommon.setOptionsBurn(_contactSchema, _burnValue, notify: true);
-
-    // TODO:GG contact notify chat
-    // var sendMsg = MessageSchema.formSendMessage(
-    //   from: NKNClientCaller.currentChatId,
-    //   to: currentUser.clientAddress,
-    //   contentType: ContentType.eventContactOptions,
-    // );
-    // sendMsg.burnAfterSeconds = _burnValue;
-    // sendMsg.content = sendMsg.toContactBurnOptionData();
-    //
-    // _chatBloc.add(SendMessageEvent(sendMsg));
+    // outside update
+    await sendMessage.sendContactOptions(_contactSchema?.clientAddress, _burnValue);
   }
 
   _updateNotificationAndDeviceToken() async {
@@ -519,7 +517,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                           SizedBox(width: 20),
                           Expanded(
                             child: Label(
-                              _getClientAddress(),
+                              _getClientAddressShow(),
                               type: LabelType.bodyRegular,
                               color: application.theme.fontColor2,
                               overflow: TextOverflow.fade,
@@ -650,7 +648,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                     SizedBox(width: 20),
                     Expanded(
                       child: Label(
-                        _getClientAddress(),
+                        _getClientAddressShow(),
                         type: LabelType.bodyRegular,
                         color: application.theme.fontColor2,
                         overflow: TextOverflow.fade,
