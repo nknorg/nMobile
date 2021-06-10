@@ -3,108 +3,118 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
+import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/chat/session_item.dart';
+import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/chat/no_message.dart';
-import 'package:nmobile/storages/contact.dart';
-import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/settings.dart';
-import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class ChatSessionListLayout extends BaseStateFulWidget {
+  ContactSchema current;
+
+  ChatSessionListLayout(this.current);
+
   @override
   _ChatSessionListLayoutState createState() => _ChatSessionListLayoutState();
 }
 
 class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionListLayout> with AutomaticKeepAliveClientMixin {
-  ContactStorage _contactStorage = ContactStorage();
-  TopicStorage _topicStorage = TopicStorage();
-  ScrollController _scrollController = ScrollController();
-  late StreamSubscription _onMessageStreamSubscription;
-  MessageStorage _messageStorage = MessageStorage();
+  SettingsStorage _settingsStorage = SettingsStorage();
+  StreamSubscription? _contactCurrentUpdateSubscription;
+  StreamSubscription? _sessionAddSubscription;
+  StreamSubscription? _sessionDeleteSubscription;
+  StreamSubscription? _sessionUpdateSubscription;
+
+  int _offset = 0;
+  int _limit = 20;
   List<SessionSchema> _sessionList = [];
 
-  SettingsStorage _settingsStorage = SettingsStorage();
-
-  bool loading = false;
-  int _skip = 0;
-  int _limit = 20;
+  ScrollController _scrollController = ScrollController();
   bool _isShowTip = true;
+  bool loading = false;
+
+  ContactSchema? _current;
 
   @override
-  void onRefreshArguments() {}
+  void onRefreshArguments() {
+    bool sameUser = _current?.id == widget.current.id;
+    _current = widget.current;
+    if (!sameUser) {
+      _getDataSessions(true);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _onMessageStreamSubscription = receiveMessage.onSavedStream.listen((event) {
-      String targetId = event.topic ?? event.from;
-      _messageStorage.getUpdateSession(targetId).then((value) {
-        _updateMessage(value);
-      }).onError((error, stackTrace) {
-        logger.e(error);
+
+    // session
+    _sessionAddSubscription = sessionCommon.addStream.listen((SessionSchema event) {
+      if (_sessionList.length <= 0) {
+        setState(() {
+          _sessionList.insert(0, event);
+        });
+        return;
+      }
+      int firstNoTopIndex = 0;
+      _sessionList.asMap().forEach((key, value) {
+        if (!value.isTop) {
+          firstNoTopIndex = key;
+        }
+        if (key >= _sessionList.length - 1) {
+          firstNoTopIndex = _sessionList.length;
+        }
+      });
+      if (firstNoTopIndex >= 0 && firstNoTopIndex < _sessionList.length) {
+        setState(() {
+          _sessionList.insert(firstNoTopIndex, event);
+        });
+      } else if (firstNoTopIndex >= _sessionList.length) {
+        setState(() {
+          _sessionList.add(event);
+        });
+      }
+    });
+    _sessionDeleteSubscription = sessionCommon.deleteStream.listen((String event) {
+      setState(() {
+        _sessionList = _sessionList.where((element) => element.targetId != event).toList();
       });
     });
+    _sessionUpdateSubscription = sessionCommon.updateStream.listen((SessionSchema event) {
+      _sessionList = _sessionList.map((SessionSchema e) => e.targetId != event.targetId ? e : event).toList();
+      bool needSort = false;
+      _sessionList.forEach((SessionSchema e) {
+        needSort = e.isTop != event.isTop;
+      });
+      if (needSort) {
+        _sortMessages();
+      } else {
+        setState(() {
+          _sessionList = _sessionList;
+        });
+      }
+    });
 
+    // scroll
     _scrollController.addListener(() {
+      if (loading) return;
       double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
-
-      if (offsetFromBottom < 50 && !loading) {
+      if (offsetFromBottom < 50) {
         loading = true;
-        _loadMore().then((v) {
+        _getDataSessions(false).then((v) {
           loading = false;
         });
       }
     });
 
-    initAsync();
-  }
-
-  @override
-  void dispose() {
-    _onMessageStreamSubscription.cancel();
-    super.dispose();
-  }
-
-  _sortMessages() {
-    setState(() {
-      _sessionList.sort((a, b) => a.isTop ? (b.isTop ? -1 : -1) : (b.isTop ? 1 : (b.lastReceiveTime ?? DateTime.now()).compareTo((a.lastReceiveTime ?? DateTime.now()))));
-    });
-  }
-
-  _updateMessage(SessionSchema? model) {
-    if (model == null) return;
-    int replaceIndex = -1;
-    for (int i = 0; i < _sessionList.length; i++) {
-      SessionSchema item = _sessionList[i];
-      if (model.targetId == item.targetId) {
-        _sessionList.removeAt(i);
-        _sessionList.insert(i, model);
-        replaceIndex = i;
-        break;
-      }
-    }
-    if (replaceIndex < 0) {
-      _sessionList.insert(0, model);
-    }
-    _sortMessages();
-  }
-
-  _loadMore() async {
-    _skip = _sessionList.length;
-    var messages = await _messageStorage.getLastSession(_skip, _limit);
-    _sessionList = _sessionList + messages;
-    _sortMessages();
-  }
-
-  initAsync() async {
-    _loadMore();
+    // tip
     _settingsStorage.getSettings(SettingsStorage.CHAT_TIP_STATUS).then((value) {
       setState(() {
         _isShowTip = !value;
@@ -112,7 +122,35 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     });
   }
 
-  _showItemMenu(SessionSchema item, int index) {
+  @override
+  void dispose() {
+    _contactCurrentUpdateSubscription?.cancel();
+    _sessionAddSubscription?.cancel();
+    _sessionDeleteSubscription?.cancel();
+    _sessionUpdateSubscription?.cancel();
+    super.dispose();
+  }
+
+  _getDataSessions(bool refresh) async {
+    if (refresh) {
+      _offset = 0;
+      _sessionList = [];
+    } else {
+      _offset = _sessionList.length;
+    }
+    var messages = await sessionCommon.queryListRecent(offset: _offset, limit: _limit);
+    setState(() {
+      _sessionList += messages;
+    });
+  }
+
+  _sortMessages() {
+    setState(() {
+      _sessionList.sort((a, b) => a.isTop ? (b.isTop ? (b.lastMessageTime ?? DateTime.now()).compareTo((a.lastMessageTime ?? DateTime.now())) : -1) : (b.isTop ? 1 : (b.lastMessageTime ?? DateTime.now()).compareTo((a.lastMessageTime ?? DateTime.now()))));
+    });
+  }
+
+  _popItemMenu(SessionSchema item, int index) {
     showDialog<Null>(
       context: context,
       builder: (BuildContext context) {
@@ -136,19 +174,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
               onPressed: () async {
                 Navigator.of(context).pop();
                 bool top = !item.isTop;
-                if (item.topic != null) {
-                  bool flag = await _topicStorage.setTop(item.targetId!, top);
-                  if (flag) {
-                    item.isTop = top;
-                    _sortMessages();
-                  }
-                } else {
-                  bool flag = await _contactStorage.setTop(item.targetId, top);
-                  if (flag) {
-                    item.isTop = top;
-                    _sortMessages();
-                  }
-                }
+                sessionCommon.setTop(item.targetId, top, notify: true);
               },
             ),
             SimpleDialogOption(
@@ -166,12 +192,19 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
               ),
               onPressed: () async {
                 Navigator.of(context).pop();
-                if (item.targetId == null) return;
-                int delCount = await _messageStorage.deleteTargetChat(item.targetId!);
-                if (delCount > 0) {
-                  _sessionList.remove(item);
-                  _sortMessages();
-                }
+                ModalDialog.of(context).confirm(
+                  content: S.of(context).delete_contact_confirm_title, // TODO:GG local delete session
+                  hasCloseButton: true,
+                  agree: Button(
+                    text: S.of(context).delete_contact,
+                    backgroundColor: application.theme.strongColor,
+                    width: double.infinity,
+                    onPressed: () async {
+                      Navigator.pop(this.context);
+                      await sessionCommon.delete(item.targetId);
+                    },
+                  ),
+                );
               },
             ),
           ],
@@ -180,88 +213,110 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     );
   }
 
-  _createTipView() {
-    if (_isShowTip) {
-      return Expanded(
-        flex: 0,
-        child: Container(
-          margin: const EdgeInsets.only(top: 25, bottom: 8, left: 20, right: 20),
-          padding: const EdgeInsets.only(bottom: 16),
-          width: double.infinity,
-          decoration: BoxDecoration(color: application.theme.backgroundColor2, borderRadius: BorderRadius.circular(8)),
-          child: Stack(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Container(
-                    width: 48,
-                    height: 48,
-                    margin: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(color: Color(0x190F6EFF), borderRadius: BorderRadius.circular(8)),
-                    child: Center(child: Asset.iconSvg('lock', width: 24, color: application.theme.primaryColor)),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.only(top: 16),
+  _getTipView() {
+    return Expanded(
+      flex: 0,
+      child: Container(
+        margin: const EdgeInsets.only(top: 25, bottom: 8, left: 20, right: 20),
+        padding: const EdgeInsets.only(bottom: 16),
+        width: double.infinity,
+        decoration: BoxDecoration(color: application.theme.backgroundColor2, borderRadius: BorderRadius.circular(8)),
+        child: Stack(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  width: 48,
+                  height: 48,
+                  margin: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: Color(0x190F6EFF), borderRadius: BorderRadius.circular(8)),
+                  child: Center(child: Asset.iconSvg('lock', width: 24, color: application.theme.primaryColor)),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Label(
+                          S.of(context).private_messages,
+                          type: LabelType.h3,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Label(
+                          S.of(context).private_messages_desc,
+                          type: LabelType.bodyRegular,
+                          softWrap: true,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: GestureDetector(
+                          onTap: () {
+                            launchUrl('https://nmobile.nkn.org/');
+                          },
                           child: Label(
-                            S.of(context).private_messages,
-                            type: LabelType.h3,
+                            S.of(context).learn_more,
+                            type: LabelType.bodySmall,
+                            color: application.theme.primaryColor,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Label(
-                            S.of(context).private_messages_desc,
-                            type: LabelType.bodyRegular,
-                            softWrap: true,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: GestureDetector(
-                            onTap: (){
-                              launchUrl('https://nmobile.nkn.org/');
-                            },
-                            child: Label(
-                              S.of(context).learn_more,
-                              type: LabelType.bodySmall,
-                              color: application.theme.primaryColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
+              ],
+            ),
+            Positioned(
+              right: 10,
+              top: 10,
+              child: InkWell(
+                onTap: () {
+                  _settingsStorage.setSettings(SettingsStorage.CHAT_TIP_STATUS, true);
+                  setState(() {
+                    _isShowTip = false;
+                  });
+                },
+                child: Asset.iconSvg(
+                  'close',
+                  width: 16,
+                ),
               ),
-              Positioned(
-                  right: 10,
-                  top: 10,
-                  child: InkWell(
-                    onTap: () {
-                      _settingsStorage.setSettings(SettingsStorage.CHAT_TIP_STATUS, true);
-                      setState(() {
-                        _isShowTip = false;
-                      });
-                    },
-                    child: Asset.iconSvg(
-                      'close',
-                      width: 16,
-                    ),
-                  )),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
-    } else {
-      return SizedBox.shrink();
-    }
+      ),
+    );
+  }
+
+  Widget _sessionLiseView() {
+    return ListView.builder(
+      padding: EdgeInsets.only(bottom: 72),
+      controller: _scrollController,
+      itemCount: _sessionList.length,
+      itemBuilder: (BuildContext context, int index) {
+        var session = _sessionList[index];
+        return Column(
+          children: [
+            ChatSessionItem(
+              session: session,
+              onTap: (who) async {
+                await ChatMessagesScreen.go(context, who);
+              },
+              onLongPress: (who) {
+                _popItemMenu(session, index);
+              },
+            ),
+            Divider(color: session.isTop ? application.theme.backgroundColor3 : application.theme.dividerColor, height: 0, indent: 70, endIndent: 12),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -270,42 +325,22 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     if (_sessionList.isEmpty) {
       return ChatNoMessageLayout();
     }
-    return Flex(
-      direction: Axis.vertical,
-      children: [
-        _createTipView(),
-        Expanded(
-          flex: 1,
-          child: ListView.builder(
-            padding: EdgeInsets.only(bottom: 72),
-            controller: _scrollController,
-            itemCount: _sessionList.length,
-            itemBuilder: (BuildContext context, int index) {
-              var item = _sessionList[index];
-              Widget widget = createSessionWidget(context, item);
-
-              return Column(
-                children: [
-                  InkWell(
-                    onTap: () async {
-                      await ChatMessagesScreen.go(context, item.contact);
-                      _messageStorage.getUpdateSession(item.targetId).then((value) {
-                        _updateMessage(value);
-                      });
-                    },
-                    onLongPress: () {
-                      _showItemMenu(item, index);
-                    },
-                    child: widget,
-                  ),
-                  Divider(color: item.isTop ? application.theme.backgroundColor3 : application.theme.dividerColor, height: 0, indent: 70, endIndent: 12),
-                ],
-              );
-            },
+    if (_isShowTip) {
+      return Column(
+        children: [
+          _getTipView(),
+          Expanded(
+            flex: 1,
+            child: _sessionLiseView(),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    } else {
+      return Expanded(
+        flex: 1,
+        child: _sessionLiseView(),
+      );
+    }
   }
 
   @override
