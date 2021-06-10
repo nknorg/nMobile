@@ -38,17 +38,17 @@ class MessageStorage with Tag {
         delete_time INTEGER
       )''');
     // index
-    await db.execute('CREATE INDEX index_messages_pid ON Messages (pid)');
-    await db.execute('CREATE INDEX index_messages_msg_id ON Messages (msg_id)');
-    await db.execute('CREATE INDEX index_messages_sender ON Messages (sender)');
-    await db.execute('CREATE INDEX index_messages_receiver ON Messages (receiver)');
-    await db.execute('CREATE INDEX index_messages_target_id ON Messages (target_id)');
-    await db.execute('CREATE INDEX index_messages_receive_time ON Messages (receive_time)');
-    await db.execute('CREATE INDEX index_messages_send_time ON Messages (send_time)');
-    await db.execute('CREATE INDEX index_messages_delete_time ON Messages (delete_time)');
+    await db.execute('CREATE INDEX index_messages_pid ON $tableName (pid)');
+    await db.execute('CREATE INDEX index_messages_msg_id ON $tableName (msg_id)');
+    await db.execute('CREATE INDEX index_messages_sender ON $tableName (sender)');
+    await db.execute('CREATE INDEX index_messages_receiver ON $tableName (receiver)');
+    await db.execute('CREATE INDEX index_messages_target_id ON $tableName (target_id)');
+    await db.execute('CREATE INDEX index_messages_receive_time ON $tableName (receive_time)');
+    await db.execute('CREATE INDEX index_messages_send_time ON $tableName (send_time)');
+    await db.execute('CREATE INDEX index_messages_delete_time ON $tableName (delete_time)');
     // query message
-    await db.execute('CREATE INDEX index_messages_target_id_is_outbound ON Messages (target_id, is_outbound)');
-    await db.execute('CREATE INDEX index_messages_target_id_type ON Messages (target_id, type)');
+    await db.execute('CREATE INDEX index_messages_target_id_is_outbound ON $tableName (target_id, is_outbound)');
+    await db.execute('CREATE INDEX index_messages_target_id_type ON $tableName (target_id, type)');
   }
 
   Future<MessageSchema?> insert(MessageSchema? schema) async {

@@ -382,7 +382,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                 if (clientAddress == null || clientAddress.isEmpty) return;
                 String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
                 if (this._wallet?.address == walletAddress) {
-                  await chatCommon.close();
+                  await chatCommon.signOut();
                 }
               } catch (e) {
                 handleError(e);
