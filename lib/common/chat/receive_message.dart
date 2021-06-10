@@ -244,7 +244,7 @@ class ReceiveMessage with Tag {
               if (avatarData.toString().split(",").length != 1) {
                 avatarData = avatarData.toString().split(",")[1];
               }
-              avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact);
+              avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact, extension: "jpg");
             }
           }
           await contactCommon.setProfile(exist, firstName, lastName, avatar?.path, version, notify: true);

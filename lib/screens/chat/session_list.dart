@@ -32,15 +32,13 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   StreamSubscription? _sessionDeleteSubscription;
   StreamSubscription? _sessionUpdateSubscription;
 
-  int _offset = 0;
-  int _limit = 20;
-  List<SessionSchema> _sessionList = [];
+  ContactSchema? _current;
 
   ScrollController _scrollController = ScrollController();
-  bool _isShowTip = true;
-  bool loading = false;
+  bool _moreLoading = false;
+  List<SessionSchema> _sessionList = [];
 
-  ContactSchema? _current;
+  bool _isShowTip = true;
 
   @override
   void onRefreshArguments() {
@@ -104,12 +102,12 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // scroll
     _scrollController.addListener(() {
-      if (loading) return;
+      if (_moreLoading) return;
       double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
       if (offsetFromBottom < 50) {
-        loading = true;
+        _moreLoading = true;
         _getDataSessions(false).then((v) {
-          loading = false;
+          _moreLoading = false;
         });
       }
     });
@@ -132,13 +130,13 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   }
 
   _getDataSessions(bool refresh) async {
+    int _offset = 0;
     if (refresh) {
-      _offset = 0;
       _sessionList = [];
     } else {
       _offset = _sessionList.length;
     }
-    var messages = await sessionCommon.queryListRecent(offset: _offset, limit: _limit);
+    var messages = await sessionCommon.queryListRecent(offset: _offset, limit: 20);
     setState(() {
       _sessionList += messages;
     });
