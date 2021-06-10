@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/contact/contact.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -208,7 +209,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     //Loading.show(); // set on func _selectDefaultWallet
     try {
       // client change
-      await chatCommon.close();
+      await chatCommon.signOut();
       await Future.delayed(Duration(seconds: 1)); // wait client close
       Loading.dismiss();
       bool success = await chatCommon.signIn(_walletDefault);
@@ -218,7 +219,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       if (success) {
         // refresh state
         await _refreshContactSchema(schema: contactCommon.currentUser);
-        Toast.show(S.of(this.context).tip_switch_success);
+        Toast.show(S.of(Global.appContext).tip_switch_success); // must global context
       } else {
         // pop
         Navigator.pop(this.context);
