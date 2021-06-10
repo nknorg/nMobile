@@ -212,6 +212,11 @@ class ReceiveMessage with Tag {
       logger.w("$TAG - receiveContact - empty - data:$data");
       return;
     }
+    // D-Chat NO support piece
+    String? supportPiece = data['onePieceReady'];
+    if (supportPiece?.isNotEmpty == true) {
+      contactCommon.setSupportPiece(received.from, value: supportPiece); // await
+    }
     // D-Chat NO RequestType.header
     String? requestType = data['requestType'];
     String? responseType = data['responseType'];
@@ -338,7 +343,7 @@ class ReceiveMessage with Tag {
 
   Future _receiveText(MessageSchema received) async {
     // duplicated
-    List<MessageSchema> exists = await _messageStorage.queryListByType(received.msgId, received.contentType);
+    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
     if (exists.isNotEmpty) {
       logger.d("$TAG - receiveText - duplicated - schema:$exists");
       sendMessage.sendReceipt(exists[0]); // await
@@ -356,15 +361,21 @@ class ReceiveMessage with Tag {
   }
 
   Future _receiveImage(MessageSchema received) async {
+    bool isPieceCombine = received.options != null ? received.options![MessageOptions.KEY_PARENT_PIECE] : false;
     // duplicated
-    List<MessageSchema> exists = await _messageStorage.queryListByType(received.msgId, received.contentType);
+    List<MessageSchema> exists = [];
+    if (isPieceCombine) {
+      exists = await _messageStorage.queryListByType(received.msgId, received.contentType);
+    } else {
+      exists = await _messageStorage.queryList(received.msgId); // old version will send type nknImage/media/image
+    }
     if (exists.isNotEmpty) {
       logger.d("$TAG - receiveImage - duplicated - schema:$exists");
       sendMessage.sendReceipt(exists[0]); // await
       return;
     }
     // File
-    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: "jpg");
+    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: isPieceCombine ? "jpg" : null);
     if (received.content == null) return;
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);

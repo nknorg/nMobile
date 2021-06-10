@@ -46,6 +46,8 @@ class MessageOptions {
   static const KEY_TOTAL = "total";
   static const KEY_INDEX = "index";
 
+  static const KEY_PARENT_PIECE = "parent_piece";
+
   static int? getDeleteAfterSeconds(MessageSchema? schema) {
     if (schema == null || schema.options == null || schema.options!.keys.length == 0) return null;
     var seconds = schema.options![MessageOptions.KEY_DELETE_AFTER_SECONDS];
@@ -174,7 +176,7 @@ class MessageData {
       'version': profileVersion,
       'expiresAt': expiresAt.millisecondsSinceEpoch,
     };
-    // data['onePieceReady'] = '1';
+    data['onePieceReady'] = '2'; // DChat no support pieces
     return jsonEncode(data);
   }
 
@@ -201,7 +203,7 @@ class MessageData {
       }
     }
     data['content'] = content;
-    // data['onePieceReady'] = '1';
+    data['onePieceReady'] = '2'; // DChat no support pieces
     return jsonEncode(data);
   }
 
@@ -430,6 +432,8 @@ class MessageSchema extends Equatable {
     );
 
     combine.options = MessageOptions.clearPiece(piece.options);
+    if (combine.options == null) combine.options = Map();
+    combine.options?[MessageOptions.KEY_PARENT_PIECE] = true; // diff with really image
 
     combine.receiveTime = DateTime.now();
     combine.deleteTime = null; // set in messages bubble
