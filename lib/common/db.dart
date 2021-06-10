@@ -11,7 +11,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class DB {
   static const String NKN_DATABASE_NAME = 'nkn';
-  static int currentDatabaseVersion = 3;
+  static int currentDatabaseVersion = 4;
   static Database? currentDatabase;
 
   String publicKey;
@@ -21,12 +21,14 @@ class DB {
   static Future<Database> _openDB(String publicKey, String password) async {
     var databasesPath = await getDatabasesPath();
     String path = join(databasesPath, '${NKN_DATABASE_NAME}_$publicKey.db');
+    logger.i("DB - path:$path - key:$publicKey - pwd:$password");
     var db = await openDatabase(
       path,
       password: password,
       version: currentDatabaseVersion,
+      singleInstance: true,
       onCreate: (Database db, int version) async {
-        logger.i("DB - database tables create");
+        logger.i("DB - create - version:$version");
         await ContactStorage.create(db, version);
         await MessageStorage.create(db, version);
         await TopicStorage.create(db, version);
@@ -45,7 +47,7 @@ class DB {
         }
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
-        logger.i("DB - database tables upgrade");
+        logger.i("DB - upgrade - old:$oldVersion - new:$newVersion");
         // TODO:GG session data upgrade
         // if (newVersion >= dataBaseVersionV2) {
         //   await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
@@ -55,6 +57,12 @@ class DB {
         //   await TopicRepo.updateTopicTableToV3(db);
         //   await SubscriberRepo.updateTopicTableToV3(db);
         // }
+        if (oldVersion < 4 && newVersion >= 4) {
+          await SessionStorage.create(db, newVersion);
+        }
+      },
+      onOpen: (Database db) async {
+        logger.i("DB - open");
       },
     );
     // await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
@@ -65,7 +73,7 @@ class DB {
   }
 
   static open(String publicKey, String password) async {
-    if (currentDatabase != null) return;
+    //if (currentDatabase != null) return; // bug!
     currentDatabase = await _openDB(publicKey, password);
   }
 
