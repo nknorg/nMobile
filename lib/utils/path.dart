@@ -81,7 +81,8 @@ class Path {
   }
 
   /// eg:{rootPath}/{localPath}
-  static String getCompleteFile(String? localPath) {
+  static String? getCompleteFile(String? localPath) {
+    if (localPath == null || localPath.isEmpty) return null;
     return join(Global.applicationRootDirectory.path, localPath);
   }
 
@@ -93,7 +94,7 @@ class Path {
   }
 
   /// eg:{mPubKey}/{dirType}/{fileName}
-  static String createLocalFile(String? mPubKey, String? dirType, String filePath) {
-    return join(mPubKey ?? "", dirType, Path.getFileName(filePath));
+  static String createLocalFile(String mPubKey, String dirType, String filePath) {
+    return join(mPubKey, dirType, Path.getFileName(filePath));
   }
 }

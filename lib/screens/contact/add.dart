@@ -59,7 +59,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
 
   _selectAvatarPicture() async {
     if (chatCommon.publicKey == null) return;
-    String returnPath = Path.getCompleteFile(Path.createLocalFile(hexEncode(chatCommon.publicKey!), SubDirType.contact, "${Uuid().v4()}.jpeg"));
+    String? returnPath = Path.getCompleteFile(Path.createLocalFile(hexEncode(chatCommon.publicKey!), SubDirType.contact, "${Uuid().v4()}.jpeg"));
     File? picked = await MediaPicker.pick(
       mediaType: MediaType.image,
       source: ImageSource.gallery,
@@ -113,7 +113,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
       String remarkName = _nameController.text;
       String defaultName = ContactSchema.getDefaultName(clientAddress);
 
-      String? remarkAvatar = _headImage == null ? null : Path.getLocalFile(_headImage!.path);
+      String? remarkAvatar = Path.getLocalFile(_headImage?.path);
 
       logger.d("$TAG - _saveContact -\n clientAddress:$clientAddress,\n walletAddress:$walletAddress,\n note:$note,\n firstName:$defaultName,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
 

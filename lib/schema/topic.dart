@@ -67,7 +67,7 @@ class TopicSchema {
       'id': id,
       'topic': topic,
       'count': count,
-      'avatar': avatar != null ? Path.getLocalFile(avatar!.path) : null,
+      'avatar': Path.getLocalFile(avatar?.path),
       'options': options != null ? jsonEncode(options!.toMap()) : null,
       'last_updated_time': lastUpdatedTime?.millisecondsSinceEpoch,
       'is_top': isTop ? 1 : 0,
@@ -94,7 +94,7 @@ class TopicSchema {
     );
 
     if (e['avatar'] != null && e['avatar'].toString().length > 0) {
-      topicSchema.avatar = File(Path.getCompleteFile(e['avatar']));
+      topicSchema.avatar = Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null;
     }
     if (e['options'] != null) {
       try {

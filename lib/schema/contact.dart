@@ -82,7 +82,7 @@ class ContactSchema {
       'last_name': lastName,
       'data': extraInfo != null ? jsonEncode(extraInfo) : '{}',
       'options': options != null ? jsonEncode(options!.toMap()) : null,
-      'avatar': avatar != null ? Path.getLocalFile(avatar?.path) : null,
+      'avatar': Path.getLocalFile(avatar?.path),
       'created_time': createdTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'updated_time': updatedTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'profile_version': profileVersion ?? Uuid().v4(),
@@ -101,7 +101,7 @@ class ContactSchema {
       clientAddress: e['address'] ?? "",
       firstName: e['first_name'] ?? getDefaultName(e['address']),
       lastName: e['last_name'],
-      avatar: File(Path.getCompleteFile(e['avatar'])),
+      avatar: Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null,
       createdTime: e['created_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['created_time']) : null,
       updatedTime: e['updated_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['updated_time']) : null,
       profileVersion: e['profile_version'],
@@ -227,7 +227,11 @@ class ContactSchema {
     if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
       return Future.value(null);
     }
-    File avatarFile = File(Path.getCompleteFile(avatarLocalPath));
+    String? completePath = Path.getCompleteFile(avatarLocalPath);
+    if (completePath == null || completePath.isEmpty) {
+      return Future.value(null);
+    }
+    File avatarFile = File(completePath);
     bool exits = await avatarFile.exists();
     if (!exits) {
       return Future.value(null);

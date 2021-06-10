@@ -256,7 +256,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   _selectAvatarPicture() async {
     if (chatCommon.publicKey == null) return;
     String remarkAvatarLocalPath = Path.createLocalFile(hexEncode(chatCommon.publicKey!), SubDirType.contact, "${Uuid().v4()}.jpeg");
-    String remarkAvatarPath = Path.getCompleteFile(remarkAvatarLocalPath);
+    String? remarkAvatarPath = Path.getCompleteFile(remarkAvatarLocalPath);
     File? picked = await MediaPicker.pick(
       mediaType: MediaType.image,
       source: ImageSource.gallery,
