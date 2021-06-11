@@ -310,9 +310,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _updateNotificationAndDeviceToken() async {
-    // TODO:GG contact deviceToken get
-    // String deviceToken = '';
-    // widget.contactInfo.notificationOpen = _notificationOpen;
+    String deviceToken = _notificationOpen ? Uuid().v4() : ""; // TODO:GG contact deviceToken get
     // if (_notificationOpen == true) {
     //   deviceToken = await NKNClientCaller.fetchDeviceToken();
     //   if (Platform.isIOS) {
@@ -335,18 +333,10 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     //   showToast(_localizations.close);
     // }
 
+    // inside update
     contactCommon.setNotificationOpen(_contactSchema?.id, _notificationOpen, notify: true);
-
-    // TODO:GG contact notify chat
-    // var sendMsg = MessageSchema.formSendMessage(
-    //   from: NKNClientCaller.currentChatId,
-    //   to: currentUser.clientAddress,
-    //   contentType: ContentType.eventContactOptions,
-    //   deviceToken: deviceToken,
-    // );
-    // sendMsg.deviceToken = deviceToken;
-    // sendMsg.content = sendMsg.toContactNoticeOptionData();
-    // _chatBloc.add(SendMessageEvent(sendMsg));
+    // outside update
+    await sendMessage.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken);
   }
 
   _addFriend() {

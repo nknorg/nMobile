@@ -127,6 +127,7 @@ class ReceiveMessage with Tag {
       case ContentType.audio:
         notification.showDChatNotification(title, '[${localizations.audio}]');
         break;
+      // TODO:GG notification contentType
       case ContentType.system:
       case ContentType.eventSubscribe:
       case ContentType.eventUnsubscribe:
@@ -135,7 +136,6 @@ class ReceiveMessage with Tag {
         // case ContentType.receipt:
         // case ContentType.piece:
         // case ContentType.eventContactOptions:
-        // TODO:GG notification contentType
         break;
     }
   }
@@ -174,13 +174,13 @@ class ReceiveMessage with Tag {
       case ContentType.eventContactOptions:
         _receiveContactOptions(received); // await
         break;
+      // TODO:GG receive contentType
       case ContentType.system:
       case ContentType.textExtension:
       case ContentType.audio:
       case ContentType.eventSubscribe:
       case ContentType.eventUnsubscribe:
       case ContentType.eventChannelInvitation:
-        // TODO:GG receive contentType
         break;
     }
   }

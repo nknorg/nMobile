@@ -49,7 +49,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         contact: _contact!,
       );
     } else if (_topic != null) {
-      // TODO:GG topic page
+      // TODO:GG messages topic page
       return SizedBox.shrink();
     } else {
       return SizedBox.shrink();
