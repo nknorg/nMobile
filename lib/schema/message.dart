@@ -633,7 +633,7 @@ class MessageSchema extends Equatable {
   }
 
   // UnReadCount / Session / Notification
-  bool get canRead {
+  bool get canDisplayAndRead {
     bool isText = contentType == ContentType.text || contentType == ContentType.textExtension;
     bool isImage = contentType == ContentType.media || contentType == ContentType.image || contentType == ContentType.nknImage;
     bool isAudio = contentType == ContentType.audio;

@@ -4,16 +4,13 @@ import 'dart:typed_data';
 
 import 'package:nmobile/common/chat/send_message.dart';
 import 'package:nmobile/common/contact/contact.dart';
-import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
-import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -37,23 +34,24 @@ class ReceiveMessage with Tag {
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.pid == next.pid);
 
   MessageStorage _messageStorage = MessageStorage();
-  TopicStorage _topicStorage = TopicStorage();
 
   Future onClientMessage(MessageSchema? message, {bool sync = false}) async {
     if (message == null) return;
     // contact
-    ContactSchema? contactSchema = await _contactHandle(message);
+    ContactSchema? contact = await chatCommon.contactHandle(message);
     // topic
-    TopicSchema? topicSchema = await _topicHandle(message);
-    // notification
-    _notificationHandle(contactSchema, topicSchema, message);
+    TopicSchema? topic = await chatCommon.topicHandle(message);
     // session
-    await _sessionHandle(message);
+    chatCommon.sessionHandle(message); // await
+    // burn
+    message = await chatCommon.burningHandle(message, contact: contact);
+    // notification
+    _notificationHandle(contact, topic, message);
     // message
     if (!sync) {
       onReceiveSink.add(message);
     } else {
-      await _messageHandle(message, contact: contactSchema);
+      await _messageHandle(message, contact: contact);
     }
   }
 
@@ -63,44 +61,9 @@ class ReceiveMessage with Tag {
     }
   }
 
-  Future<ContactSchema?> _contactHandle(MessageSchema received) async {
-    if (!received.canRead) return null;
-    // duplicated
-    if (received.from.isEmpty) return null;
-    ContactSchema? exist = await contactCommon.queryByClientAddress(received.from);
-    if (exist == null) {
-      logger.d("$TAG - contactHandle - new - from:${received.from}");
-      return await contactCommon.addByType(received.from, ContactType.stranger, checkDuplicated: false);
-    } else {
-      if (exist.profileExpiresAt == null || DateTime.now().isAfter(exist.profileExpiresAt!.add(Settings.profileExpireDuration))) {
-        logger.d("$TAG - contactHandle - sendMessageContactRequestHeader - schema:$exist");
-        await sendMessage.sendContactRequest(exist, RequestType.header);
-      } else {
-        double between = ((exist.profileExpiresAt?.add(Settings.profileExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
-        logger.d("$TAG contactHandle - expiresAt - between:${between}s");
-      }
-    }
-    return exist;
-  }
-
-  Future<TopicSchema?> _topicHandle(MessageSchema received) async {
-    if (!received.canRead) return null;
-    // duplicated TODO:GG topic duplicated
-    if (received.topic == null || received.topic!.isEmpty) return null;
-    TopicSchema? exist = await _topicStorage.queryTopicByTopicName(received.topic);
-    if (exist == null) {
-      return await _topicStorage.insertTopic(TopicSchema(
-        // TODO: get topic info
-        // expireAt:
-        // joined:
-        topic: received.topic!,
-      ));
-    }
-    return exist;
-  }
-
+  // TODO:GG move to notification
   Future<void> _notificationHandle(ContactSchema? contact, TopicSchema? topic, MessageSchema message) async {
-    if (!message.canRead) return null;
+    if (!message.canDisplayAndRead) return null;
     late String title;
     late String content;
     if (contact != null && topic == null) {
@@ -138,18 +101,6 @@ class ReceiveMessage with Tag {
         // case ContentType.eventContactOptions:
         break;
     }
-  }
-
-  Future<SessionSchema?> _sessionHandle(MessageSchema received) async {
-    if (!received.canRead) return null;
-    // duplicated
-    if (received.targetId == null || received.targetId!.isEmpty) return null;
-    SessionSchema? exist = await sessionCommon.query(received.targetId);
-    if (exist == null) {
-      logger.d("$TAG - sessionHandle - new - targetId:${received.targetId}");
-      return await sessionCommon.add(SessionSchema(targetId: received.targetId!, type: SessionSchema.getTypeByMessage(received)));
-    }
-    return exist;
   }
 
   Future _messageHandle(MessageSchema received, {ContactSchema? contact}) async {
@@ -393,12 +344,8 @@ class ReceiveMessage with Tag {
     if (schema == null) return;
     // receipt
     sendMessage.sendReceipt(schema); // await
-    // burn
-    schema = await chatCommon.checkMsgBurning(schema, contact: contact);
     // display
     onSavedSink.add(schema);
-    // session
-    sessionCommon.setLastMessageAndUnReadCount(schema.targetId, schema, null, notify: true); // await
   }
 
   Future _receiveImage(MessageSchema received, {ContactSchema? contact}) async {
@@ -423,11 +370,7 @@ class ReceiveMessage with Tag {
     if (schema == null) return;
     // receipt
     sendMessage.sendReceipt(schema); // await
-    // burn
-    schema = await chatCommon.checkMsgBurning(schema, contact: contact);
     // display
     onSavedSink.add(schema);
-    // session
-    sessionCommon.setLastMessageAndUnReadCount(schema.targetId, schema, null, notify: true); // await
   }
 }
