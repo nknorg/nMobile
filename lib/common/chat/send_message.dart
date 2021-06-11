@@ -108,7 +108,7 @@ class SendMessage with Tag {
   }
 
   // NO topic (1 to 1)
-  Future sendContactOptionsBurn(String? clientAddress, int? deleteSeconds, {int tryCount = 1}) async {
+  Future sendContactOptionsBurn(String? clientAddress, int deleteSeconds, {int tryCount = 1}) async {
     if (contactCommon.currentUser == null || clientAddress == null || clientAddress.isEmpty) return;
     if (tryCount > 3) return;
     try {
@@ -127,6 +127,30 @@ class SendMessage with Tag {
       logger.w("$TAG - sendContactOptionsBurn - fail - tryCount:$tryCount - clientAddress:$clientAddress - deleteSeconds:$deleteSeconds");
       await Future.delayed(Duration(seconds: 2), () {
         return sendContactOptionsBurn(clientAddress, deleteSeconds, tryCount: tryCount++);
+      });
+    }
+  }
+
+  // NO topic (1 to 1)
+  Future sendContactOptionsToken(String? clientAddress, String deviceToken, {int tryCount = 1}) async {
+    if (contactCommon.currentUser == null || clientAddress == null || clientAddress.isEmpty) return;
+    if (tryCount > 3) return;
+    try {
+      MessageSchema send = MessageSchema.fromSend(
+        Uuid().v4(),
+        contactCommon.currentUser!.clientAddress,
+        ContentType.eventContactOptions,
+        to: clientAddress,
+      );
+      send = MessageOptions.setDeviceToken(send, deviceToken);
+      send.content = MessageData.getEventContactOptionsToken(send);
+      await _send(send, send.content, database: true, display: true);
+      logger.d("$TAG - sendContactOptionsToken - success - data:${send.content}");
+    } catch (e) {
+      handleError(e);
+      logger.w("$TAG - sendContactOptionsToken - fail - tryCount:$tryCount - clientAddress:$clientAddress - deviceToken:$deviceToken");
+      await Future.delayed(Duration(seconds: 2), () {
+        return sendContactOptionsToken(clientAddress, deviceToken, tryCount: tryCount++);
       });
     }
   }
