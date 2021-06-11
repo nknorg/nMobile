@@ -519,6 +519,7 @@ class MessageSchema extends Equatable {
 
     // content = String
     switch (contentType) {
+      case ContentType.piece:
       case ContentType.media:
       case ContentType.nknImage:
       case ContentType.image:
@@ -533,7 +534,6 @@ class MessageSchema extends Equatable {
       // TODO:GG fromMap contentType
       case ContentType.system:
       case ContentType.receipt:
-      case ContentType.piece:
       case ContentType.text:
       case ContentType.textExtension:
       case ContentType.audio:
@@ -574,6 +574,7 @@ class MessageSchema extends Equatable {
       case ContentType.receipt:
         schema.content = e['targetID'];
         break;
+      case ContentType.piece:
       case ContentType.media:
       case ContentType.nknImage:
       case ContentType.image:
@@ -590,7 +591,6 @@ class MessageSchema extends Equatable {
         break;
       // TODO:GG fromMap contentType
       case ContentType.system:
-      case ContentType.piece:
       case ContentType.text:
       case ContentType.textExtension:
       case ContentType.audio:
@@ -627,6 +627,14 @@ class MessageSchema extends Equatable {
         : isOutbound
             ? to
             : from;
+  }
+
+  // UnReadCount / Session / Notification
+  bool get canRead {
+    bool isText = contentType == ContentType.text || contentType == ContentType.textExtension;
+    bool isImage = contentType == ContentType.media || contentType == ContentType.image || contentType == ContentType.nknImage;
+    bool isAudio = contentType == ContentType.audio;
+    return isText || isImage || isAudio;
   }
 
   @override

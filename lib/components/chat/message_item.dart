@@ -76,13 +76,13 @@ class ChatMessageItem extends StatelessWidget {
         contentsWidget.add(_contactOptionsWidget(context));
         break;
       case ContentType.system:
-      case ContentType.receipt:
-      case ContentType.contact:
-      case ContentType.piece:
       case ContentType.textExtension:
       case ContentType.eventSubscribe:
       case ContentType.eventUnsubscribe:
       case ContentType.eventChannelInvitation:
+        // case ContentType.receipt:
+        // case ContentType.contact:
+        // case ContentType.piece:
         // TODO:GG messageItem contentType
         break;
     }
