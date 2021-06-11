@@ -19,7 +19,7 @@ class SessionStorage with Tag {
       CREATE TABLE $tableName (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         target_id TEXT,
-        is_topic BOOLEAN DEFAULT 0,
+        type TEXT,
         last_message_time INTEGER,
         last_message_options TEXT,
         un_read_count INTEGER,
@@ -27,7 +27,7 @@ class SessionStorage with Tag {
       )''');
     // index
     await db.execute('CREATE INDEX index_session_target_id ON $tableName (target_id)');
-    await db.execute('CREATE INDEX index_session_is_topic ON $tableName (is_topic)');
+    await db.execute('CREATE INDEX index_session_type ON $tableName (type)');
     await db.execute('CREATE INDEX index_session_un_read_count ON $tableName (un_read_count)');
     // query session
     await db.execute('CREATE INDEX index_session_top_last_message_time ON $tableName (is_top, last_message_time)');
@@ -145,6 +145,26 @@ class SessionStorage with Tag {
           'last_message_time': schema.lastMessageTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
           'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
           'un_read_count': schema.unReadCount,
+        },
+        where: 'target_id = ?',
+        whereArgs: [schema.targetId],
+      );
+      logger.d("$TAG - updateLastMessageAndUnReadCount - count:$count - schema:$schema}");
+      return (count ?? 0) > 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
+  Future<bool> updateLastMessage(SessionSchema? schema) async {
+    if (schema == null || schema.targetId.isEmpty) return false;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'last_message_time': schema.lastMessageTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+          'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
         },
         where: 'target_id = ?',
         whereArgs: [schema.targetId],

@@ -275,7 +275,7 @@ class SendMessage with Tag {
     SessionSchema? exist = await sessionCommon.query(send.targetId);
     if (exist == null) {
       logger.d("$TAG - sessionHandle - new - targetId:${send.targetId}");
-      return await sessionCommon.add(SessionSchema(targetId: send.targetId!, isTopic: send.topic != null));
+      return await sessionCommon.add(SessionSchema(targetId: send.targetId!, type: SessionSchema.getTypeByMessage(send)));
     }
     return exist;
   }

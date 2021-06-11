@@ -158,7 +158,7 @@ class ReceiveMessage with Tag {
     SessionSchema? exist = await sessionCommon.query(received.targetId);
     if (exist == null) {
       logger.d("$TAG - sessionHandle - new - targetId:${received.targetId}");
-      return await sessionCommon.add(SessionSchema(targetId: received.targetId!, isTopic: received.topic != null));
+      return await sessionCommon.add(SessionSchema(targetId: received.targetId!, type: SessionSchema.getTypeByMessage(received)));
     }
     return exist;
   }

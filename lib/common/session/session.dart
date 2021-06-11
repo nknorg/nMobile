@@ -71,11 +71,21 @@ class SessionCommon with Tag {
 
   Future<bool> setLastMessageAndUnReadCount(String? targetId, MessageSchema? lastMessage, int? unread, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty || lastMessage == null) return false;
-    SessionSchema session = SessionSchema(targetId: targetId, isTopic: lastMessage.topic != null); // CACHE
+    SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage)); // CACHE
     session.lastMessageTime = lastMessage.sendTime;
     session.lastMessageOptions = lastMessage.toMap();
     session.unReadCount = unread ?? await _messageStorage.unReadCountByTargetId(targetId);
     bool success = await _sessionStorage.updateLastMessageAndUnReadCount(session);
+    if (success && notify) queryAndNotify(session.targetId);
+    return success;
+  }
+
+  Future<bool> setLastMessage(String? targetId, MessageSchema? lastMessage, {bool notify = false}) async {
+    if (targetId == null || targetId.isEmpty || lastMessage == null) return false;
+    SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage)); // CACHE
+    session.lastMessageTime = lastMessage.sendTime;
+    session.lastMessageOptions = lastMessage.toMap();
+    bool success = await _sessionStorage.updateLastMessage(session);
     if (success && notify) queryAndNotify(session.targetId);
     return success;
   }
