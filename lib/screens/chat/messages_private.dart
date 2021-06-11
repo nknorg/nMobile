@@ -170,7 +170,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
             child: IconButton(
               icon: Asset.iconSvg('notification-bell', color: Colors.white, width: 24),
               onPressed: () {
-                // TODO:GG notification
+                // TODO:GG notificationOpen
               },
             ),
           ),

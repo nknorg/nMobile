@@ -38,7 +38,7 @@ class ContentType {
 class MessageOptions {
   static const KEY_AUDIO_DURATION = "audioDuration"; // TODO:GG wait handle
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds"; // TODO:GG wait handle
-  static const KEY_DEVICE_TOKEN = "deviceToken"; // TODO:GG wait handle
+  static const KEY_DEVICE_TOKEN = "deviceToken";
 
   static const KEY_PARENT_TYPE = "parentType";
   static const KEY_BYTES_LENGTH = "bytesLength";
@@ -48,7 +48,7 @@ class MessageOptions {
 
   static const KEY_PARENT_PIECE = "parent_piece";
 
-  static MessageSchema setDeleteAfterSeconds(MessageSchema schema, int? deleteTimeSec) {
+  static MessageSchema setDeleteAfterSeconds(MessageSchema schema, int deleteTimeSec) {
     if (schema.options == null) schema.options = Map<String, dynamic>();
     schema.options![MessageOptions.KEY_DELETE_AFTER_SECONDS] = deleteTimeSec;
     return schema;
@@ -61,7 +61,7 @@ class MessageOptions {
     return int.parse(seconds);
   }
 
-  static MessageSchema setDeviceToken(MessageSchema schema, String? deviceToken) {
+  static MessageSchema setDeviceToken(MessageSchema schema, String deviceToken) {
     if (schema.options == null) schema.options = Map<String, dynamic>();
     schema.options![MessageOptions.KEY_DEVICE_TOKEN] = deviceToken;
     return schema;
@@ -316,8 +316,7 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  // TODO:GG wait call
-  static String getEventContactOptionsNotice(MessageSchema schema, {String? token}) {
+  static String getEventContactOptionsToken(MessageSchema schema, {String? token}) {
     String? deviceToken = token ?? MessageOptions.getDeviceToken(schema);
     Map data = {
       'id': schema.msgId,
