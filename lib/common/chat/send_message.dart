@@ -265,17 +265,16 @@ class SendMessage with Tag {
   }
 
   Future<SessionSchema?> _sessionHandle(MessageSchema send) async {
-    // type
-    bool noText = send.contentType != ContentType.text && send.contentType != ContentType.textExtension;
-    bool noImage = send.contentType != ContentType.media && send.contentType != ContentType.image && send.contentType != ContentType.nknImage;
-    bool noAudio = send.contentType != ContentType.audio;
-    if (noText && noImage && noAudio) return null;
+    if (!send.canRead) return null;
     // duplicated
     if (send.targetId == null || send.targetId!.isEmpty) return null;
     SessionSchema? exist = await sessionCommon.query(send.targetId);
     if (exist == null) {
       logger.d("$TAG - sessionHandle - new - targetId:${send.targetId}");
       return await sessionCommon.add(SessionSchema(targetId: send.targetId!, type: SessionSchema.getTypeByMessage(send)));
+    } else {
+      logger.d("$TAG - sessionHandle - update - targetId:${send.targetId}");
+      sessionCommon.setLastMessage(send.targetId, send, notify: true); // await
     }
     return exist;
   }
