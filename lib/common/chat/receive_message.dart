@@ -274,7 +274,7 @@ class ReceiveMessage with Tag {
       sendMessage.sendReceipt(existsMsg[0]); // await
       return;
     }
-    // options type
+    // options type // TODO: remove optionsType
     String? optionsType = data[MessageData.K_CONTACT_OPTIONS_TYPE]?.toString();
     Map<String, dynamic> content = data['content'] ?? Map();
     if (optionsType == null || optionsType.isEmpty) return;
