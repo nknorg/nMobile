@@ -18,6 +18,7 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/photo.dart';
 import 'package:nmobile/theme/theme.dart';
+import 'package:nmobile/utils/chat.dart';
 import 'package:nmobile/utils/utils.dart';
 
 import '../text/markdown.dart';
@@ -248,25 +249,25 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
   Widget _getContent(BoxDecoration decoration, bool dark) {
     double maxWidth = MediaQuery.of(context).size.width - 12 * 2 * 2 - (24 * 2) * 2 - 8 * 2;
 
-    Widget _body = SizedBox.shrink();
+    List<Widget> _bodyList = [SizedBox.shrink()];
     var onTap;
     switch (_message.contentType) {
       case ContentType.text:
       case ContentType.textExtension:
-        _body = _getContentBodyText(dark);
+        _bodyList = _getContentBodyText(dark);
         onTap = () => _onContentTextTap();
         break;
       case ContentType.media:
       case ContentType.image:
       case ContentType.nknImage:
-        _body = _getContentBodyImage(dark);
+        _bodyList = _getContentBodyImage(dark);
         if (_message.content is File) {
           File file = _message.content as File;
           onTap = () => PhotoScreen.go(context, filePath: file.path);
         }
         break;
     }
-    // TODO:GG burn
+    // TODO:GG  burn
     Widget burnWidget = SizedBox.shrink();
 
     // int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(schema);
@@ -296,7 +297,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _body,
+              ..._bodyList,
               burnWidget,
             ],
           ),
@@ -305,27 +306,71 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
     );
   }
 
-  Widget _getContentBodyText(bool dark) {
-    return Markdown(data: _message.content, dark: dark);
+  // Widget getBurnTimeView() {
+  //   if (contactInfo?.options != null && contactInfo?.options?.deleteAfterSeconds != null) {
+  //     return Row(
+  //       children: [
+  //         Icon(Icons.alarm_on, size: 16, color: DefaultTheme.backgroundLightColor).pad(r: 4),
+  //         Label(
+  //           Format.durationFormat(Duration(seconds: contactInfo?.options?.deleteAfterSeconds)),
+  //           type: LabelType.bodySmall,
+  //           color: DefaultTheme.backgroundLightColor,
+  //         ),
+  //       ],
+  //     ).pad(t: 2);
+  //   } else {
+  //     return Label(
+  //       NL10ns.of(context).click_to_settings,
+  //       type: LabelType.bodySmall,
+  //       color: DefaultTheme.backgroundLightColor,
+  //     );
+  //   }
+  // }
+
+  List<Widget> _getContentBodyText(bool dark) {
+    List contents = getChatFormatString(_message.content);
+    if (contents.isNotEmpty) {
+      List<InlineSpan> children = [];
+      for (String s in contents) {
+        if (s.contains(chatRegSpecial)) {
+          children.add(TextSpan(text: s, style: TextStyle(height: 1.15, color: Color(0xFFF5B800), fontStyle: FontStyle.italic, fontWeight: FontWeight.bold)));
+        } else {
+          children.add(TextSpan(text: s, style: TextStyle(color: dark ? application.theme.fontLightColor : application.theme.fontColor3, height: 1.25)));
+        }
+      }
+      return [
+        RichText(
+          text: TextSpan(
+            style: TextStyle(fontSize: 16),
+            text: '',
+            children: children,
+          ),
+        )
+      ];
+    } else {
+      return [Markdown(data: _message.content, dark: dark)];
+    }
   }
 
-  Widget _getContentBodyImage(bool dark) {
+  List<Widget> _getContentBodyImage(bool dark) {
     if (!(_message.content is File)) {
-      return SizedBox.shrink();
+      return [SizedBox.shrink()];
     }
     File file = _message.content as File;
     double maxWidth = MediaQuery.of(context).size.width * 0.5;
     double maxHeight = MediaQuery.of(context).size.height * 0.3;
 
-    return Container(
-      constraints: BoxConstraints(
-        maxWidth: maxWidth,
-        maxHeight: maxHeight,
-        minWidth: maxWidth / 4,
-        minHeight: maxWidth / 4,
-      ),
-      child: Image.file(file),
-    );
+    return [
+      Container(
+        constraints: BoxConstraints(
+          maxWidth: maxWidth,
+          maxHeight: maxHeight,
+          minWidth: maxWidth / 4,
+          minHeight: maxWidth / 4,
+        ),
+        child: Image.file(file),
+      )
+    ];
   }
 
   List<dynamic> _getStyles() {
