@@ -64,11 +64,7 @@ class ReceiveMessage with Tag {
   }
 
   Future<ContactSchema?> _contactHandle(MessageSchema received) async {
-    // type
-    bool noText = received.contentType != ContentType.text && received.contentType != ContentType.textExtension;
-    bool noImage = received.contentType != ContentType.media && received.contentType != ContentType.image && received.contentType != ContentType.nknImage;
-    bool noAudio = received.contentType != ContentType.audio;
-    if (noText && noImage && noAudio) return null;
+    if (!received.canRead) return null;
     // duplicated
     if (received.from.isEmpty) return null;
     ContactSchema? exist = await contactCommon.queryByClientAddress(received.from);
@@ -88,11 +84,7 @@ class ReceiveMessage with Tag {
   }
 
   Future<TopicSchema?> _topicHandle(MessageSchema received) async {
-    // type
-    bool noText = received.contentType != ContentType.text && received.contentType != ContentType.textExtension;
-    bool noImage = received.contentType != ContentType.media && received.contentType != ContentType.image && received.contentType != ContentType.nknImage;
-    bool noAudio = received.contentType != ContentType.audio;
-    if (noText && noImage && noAudio) return null;
+    if (!received.canRead) return null;
     // duplicated TODO:GG topic duplicated
     if (received.topic == null || received.topic!.isEmpty) return null;
     TopicSchema? exist = await _topicStorage.queryTopicByTopicName(received.topic);
@@ -108,6 +100,7 @@ class ReceiveMessage with Tag {
   }
 
   Future<void> _notificationHandle(ContactSchema? contact, TopicSchema? topic, MessageSchema message) async {
+    if (!message.canRead) return null;
     late String title;
     late String content;
     if (contact != null && topic == null) {
@@ -135,24 +128,20 @@ class ReceiveMessage with Tag {
         notification.showDChatNotification(title, '[${localizations.audio}]');
         break;
       case ContentType.system:
-      case ContentType.contact:
-      case ContentType.receipt:
-      case ContentType.piece:
-      case ContentType.eventContactOptions:
       case ContentType.eventSubscribe:
       case ContentType.eventUnsubscribe:
       case ContentType.eventChannelInvitation:
+        // case ContentType.contact:
+        // case ContentType.receipt:
+        // case ContentType.piece:
+        // case ContentType.eventContactOptions:
         // TODO:GG notification contentType
         break;
     }
   }
 
   Future<SessionSchema?> _sessionHandle(MessageSchema received) async {
-    // type
-    bool noText = received.contentType != ContentType.text && received.contentType != ContentType.textExtension;
-    bool noImage = received.contentType != ContentType.media && received.contentType != ContentType.image && received.contentType != ContentType.nknImage;
-    bool noAudio = received.contentType != ContentType.audio;
-    if (noText && noImage && noAudio) return null;
+    if (!received.canRead) return null;
     // duplicated
     if (received.targetId == null || received.targetId!.isEmpty) return null;
     SessionSchema? exist = await sessionCommon.query(received.targetId);
