@@ -6,18 +6,23 @@ import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/session.dart';
+import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/settings.dart';
+import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/logger.dart';
 
 import '../global.dart';
+import '../settings.dart';
 
 class ChatConnectStatus {
   static const int disconnected = 0;
@@ -54,6 +59,7 @@ class ChatCommon with Tag {
   StreamSubscription? _onMessageStreamSubscription;
 
   MessageStorage _messageStorage = MessageStorage();
+  TopicStorage _topicStorage = TopicStorage();
 
   ChatCommon() {
     status = ChatConnectStatus.disconnected;
@@ -144,6 +150,77 @@ class ChatCommon with Tag {
     await db?.close();
   }
 
+  /// ******************************************************   Handle   ****************************************************** ///
+
+  Future<ContactSchema?> contactHandle(MessageSchema message) async {
+    if (!message.canDisplayAndRead) return null;
+    // duplicated
+    String? clientAddress = message.isOutbound ? message.to : message.from;
+    if (clientAddress == null || clientAddress.isEmpty) return null;
+    ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
+    if (exist == null) {
+      logger.d("$TAG - contactHandle - new - clientAddress:$clientAddress");
+      return await contactCommon.addByType(clientAddress, ContactType.stranger, checkDuplicated: false);
+    } else {
+      if (exist.profileExpiresAt == null || DateTime.now().isAfter(exist.profileExpiresAt!.add(Settings.profileExpireDuration))) {
+        logger.d("$TAG - contactHandle - sendMessageContactRequestHeader - schema:$exist");
+        await sendMessage.sendContactRequest(exist, RequestType.header);
+      } else {
+        double between = ((exist.profileExpiresAt?.add(Settings.profileExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
+        logger.d("$TAG contactHandle - expiresAt - between:${between}s");
+      }
+    }
+    return exist;
+  }
+
+  Future<TopicSchema?> topicHandle(MessageSchema message) async {
+    if (!message.canDisplayAndRead) return null;
+    // duplicated TODO:GG topic duplicated
+    if (!message.isTopic) return null;
+    TopicSchema? exist = await _topicStorage.queryTopicByTopicName(message.topic);
+    if (exist == null) {
+      return await _topicStorage.insertTopic(TopicSchema(
+        // TODO: get topic info
+        // expireAt:
+        // joined:
+        topic: message.topic!,
+      ));
+    }
+    return exist;
+  }
+
+  Future<SessionSchema?> sessionHandle(MessageSchema message) async {
+    if (!message.canDisplayAndRead) return null;
+    // duplicated
+    if (message.targetId == null || message.targetId!.isEmpty) return null;
+    SessionSchema? exist = await sessionCommon.query(message.targetId);
+    if (exist == null) {
+      logger.d("$TAG - sessionHandle - new - targetId:${message.targetId}");
+      return await sessionCommon.add(SessionSchema(targetId: message.targetId!, type: SessionSchema.getTypeByMessage(message)));
+    }
+    if (message.isOutbound) {
+      await sessionCommon.setLastMessage(message.targetId, message, notify: true);
+    } else {
+      await sessionCommon.setLastMessageAndUnReadCount(message.targetId, message, null, notify: true);
+    }
+    return exist;
+  }
+
+  Future<MessageSchema> burningHandle(MessageSchema message, {ContactSchema? contact, bool database = false}) async {
+    int? seconds = MessageOptions.getDeleteAfterSeconds(message);
+    if (seconds != null && seconds > 0) {
+      message.deleteTime = DateTime.now().add(Duration(seconds: seconds));
+      if (database) await _messageStorage.updateDeleteTime(message.msgId, message.deleteTime);
+    }
+    if (contact != null) {
+      if (contact.options?.deleteAfterSeconds != seconds) {
+        contact.options?.updateBurnAfterTime = DateTime.now().millisecondsSinceEpoch;
+        contactCommon.setOptionsBurn(contact, seconds, notify: true); // await
+      }
+    }
+    return message;
+  }
+
   /// ******************************************************   Messages   ****************************************************** ///
 
   Future<List<MessageSchema>> queryListAndReadByTargetId(
@@ -175,26 +252,11 @@ class ChatCommon with Tag {
     return schema;
   }
 
-  Future<MessageSchema> checkMsgBurning(MessageSchema message, {ContactSchema? contact, bool notify = false}) async {
-    int? seconds = MessageOptions.getDeleteAfterSeconds(message);
-    if (seconds != null && seconds > 0) {
-      message.deleteTime = DateTime.now().add(Duration(seconds: seconds));
-      _messageStorage.updateDeleteTime(message.msgId, message.deleteTime);
-    }
-    if (contact != null) {
-      if (contact.options?.deleteAfterSeconds != seconds) {
-        contact.options?.updateBurnAfterTime = DateTime.now().millisecondsSinceEpoch;
-        contactCommon.setOptionsBurn(contact, seconds, notify: true);
-      }
-    }
-    return message;
-  }
-
-  Future<OnMessage?> sendMessage(String dest, String data) async {
+  Future<OnMessage?> sendData(String dest, String data) async {
     return await this.client?.sendText([dest], data);
   }
 
-  Future<OnMessage?> publishMessage(String topic, String data) async {
+  Future<OnMessage?> publishData(String topic, String data) async {
     return await this.client?.publishText(topic, data);
   }
 }
