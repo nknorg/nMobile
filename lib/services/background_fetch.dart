@@ -21,7 +21,7 @@ class BackgroundFetchService {
 
   Future<void> install() async {
     if (Platform.isAndroid) {
-      // TODO:GG bug null safe
+      // TODO:GG backgroundFetch nullSafe bug
       BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
     }
     int status = await BackgroundFetch.configure(
