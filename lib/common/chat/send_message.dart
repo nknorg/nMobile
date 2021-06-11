@@ -191,8 +191,8 @@ class SendMessage with Tag {
       ContentType.text,
       to: clientAddress,
       content: content,
+      deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
     );
-    schema = await chatCommon.burningHandle(schema, contact: contact, database: false);
     return _send(schema, MessageData.getText(schema));
   }
 
@@ -207,8 +207,8 @@ class SendMessage with Tag {
       ContentType.media, // SUPPORT:IMAGE
       to: clientAddress,
       content: content,
+      deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
     );
-    schema = await chatCommon.burningHandle(schema, contact: contact, database: false);
     return _send(schema, await MessageData.getImage(schema));
   }
 

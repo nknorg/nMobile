@@ -232,7 +232,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                   _toggleBottomMenu();
                 },
                 onSendPress: (String content) async {
-                  return await sendMessage.sendText(_contact.clientAddress, content);
+                  return await sendMessage.sendText(_contact.clientAddress, content, contact: _contact);
                 },
                 onChangeStream: _onInputChangeStream,
               ),
@@ -240,7 +240,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                 show: _showBottomMenu,
                 onPickedImage: (File picked) async {
                   FocusScope.of(context).requestFocus(FocusNode());
-                  return await sendMessage.sendImage(_contact.clientAddress, picked);
+                  return await sendMessage.sendImage(_contact.clientAddress, picked, contact: _contact);
                 },
               ),
             ],
