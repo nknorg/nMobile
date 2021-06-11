@@ -19,6 +19,7 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/photo.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/chat.dart';
+import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/utils.dart';
 
 import '../text/markdown.dart';
@@ -75,6 +76,12 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
     _contact = widget.contact;
     _msgStatus = MessageStatus.get(_message);
     _uploadProgress = ((_message.content is File) && (_msgStatus == MessageStatus.Sending)) ? 0 : 1;
+    // burn
+    int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(_message);
+    if (_message.deleteTime == null && burnAfterSeconds != null && burnAfterSeconds > 0) {
+      _message.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
+      chatCommon.burningHandle(_message, contact: _contact); // await
+    }
   }
 
   @override
@@ -267,25 +274,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
         }
         break;
     }
-    // TODO:GG  burn
-    Widget burnWidget = SizedBox.shrink();
 
-    // int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(schema);
-    // if (schema.deleteTime == null && burnAfterSeconds != null) {
-    //   schema.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
-    //   await _messageStorage.updateDeleteTime(schema.msgId, schema.deleteTime); // await
-    // }
-
-    // if (list.isNotEmpty && handleBurn) {
-    //   for (var i = 0; i < list.length; i++) {
-    //     MessageSchema messageItem = list[i];
-    //     int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(messageItem);
-    //     if (messageItem.deleteTime == null && burnAfterSeconds != null) {
-    //       messageItem.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
-    //       _messageStorage.updateDeleteTime(messageItem.msgId, messageItem.deleteTime); // await
-    //     }
-    //   }
-    // }
     return GestureDetector(
       key: _contentKey,
       onTap: onTap,
@@ -298,7 +287,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ..._bodyList,
-              burnWidget,
+              _burnWidget(),
             ],
           ),
         ),
@@ -306,26 +295,25 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
     );
   }
 
-  // Widget getBurnTimeView() {
-  //   if (contactInfo?.options != null && contactInfo?.options?.deleteAfterSeconds != null) {
-  //     return Row(
-  //       children: [
-  //         Icon(Icons.alarm_on, size: 16, color: DefaultTheme.backgroundLightColor).pad(r: 4),
-  //         Label(
-  //           Format.durationFormat(Duration(seconds: contactInfo?.options?.deleteAfterSeconds)),
-  //           type: LabelType.bodySmall,
-  //           color: DefaultTheme.backgroundLightColor,
-  //         ),
-  //       ],
-  //     ).pad(t: 2);
-  //   } else {
-  //     return Label(
-  //       NL10ns.of(context).click_to_settings,
-  //       type: LabelType.bodySmall,
-  //       color: DefaultTheme.backgroundLightColor,
-  //     );
-  //   }
-  // }
+  Widget _burnWidget() {
+    if (_message.deleteTime == null) return SizedBox.shrink();
+    DateTime deleteTime = _message.deleteTime ?? DateTime.now().add(Duration(seconds: (MessageOptions.getDeleteAfterSeconds(_message) ?? 0) + 1));
+    Color clockColor = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        Icon(FontAwesomeIcons.clock, size: 12, color: clockColor),
+        SizedBox(width: 4),
+        Label(
+          timeFromNowFormat(deleteTime),
+          type: LabelType.bodySmall,
+          fontSize: application.theme.iconTextFontSize,
+          color: clockColor,
+        ),
+      ],
+    );
+  }
 
   List<Widget> _getContentBodyText(bool dark) {
     List contents = getChatFormatString(_message.content);

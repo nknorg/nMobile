@@ -35,6 +35,8 @@ class ReceiveMessage with Tag {
 
   MessageStorage _messageStorage = MessageStorage();
 
+  // TODO:GG delMsgListCache
+
   Future onClientMessage(MessageSchema? message, {bool sync = false}) async {
     if (message == null) return;
     // contact
@@ -43,8 +45,6 @@ class ReceiveMessage with Tag {
     TopicSchema? topic = await chatCommon.topicHandle(message);
     // session
     chatCommon.sessionHandle(message); // await
-    // burn
-    message = await chatCommon.burningHandle(message, contact: contact, database: false);
     // notification
     _notificationHandle(contact, topic, message);
     // message

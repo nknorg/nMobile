@@ -486,6 +486,7 @@ class MessageSchema extends Equatable {
     this.total,
     this.parity,
     this.index,
+    int? deleteAfterSeconds,
   }) {
     // pid (SDK create)
     if (msgId.isEmpty) msgId = Uuid().v4();
@@ -495,6 +496,14 @@ class MessageSchema extends Equatable {
     deleteTime = null; // set in messages bubble
 
     MessageStatus.set(this, MessageStatus.Sending);
+
+    // burn
+    if (deleteAfterSeconds != null && deleteAfterSeconds > 0) {
+      if (this.contentType == ContentType.text) {
+        this.contentType = ContentType.textExtension;
+      }
+      MessageOptions.setDeleteAfterSeconds(this, deleteAfterSeconds);
+    }
   }
 
   /// to sqlite
