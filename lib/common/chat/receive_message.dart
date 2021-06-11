@@ -196,7 +196,7 @@ class ReceiveMessage with Tag {
     }
   }
 
-  // NO DB NO display
+  // NO DB NO display NO topic (1 to 1)
   Future _receiveReceipt(MessageSchema received) async {
     List<MessageSchema> _schemaList = await _messageStorage.queryList(received.content);
     _schemaList.forEach((MessageSchema element) async {
@@ -210,7 +210,7 @@ class ReceiveMessage with Tag {
     });
   }
 
-  // NO DB NO display
+  // NO DB NO display (1 to 1)
   Future _receiveContact(MessageSchema received) async {
     if (received.content == null) return;
     Map<String, dynamic> data = received.content; // == data
@@ -269,14 +269,20 @@ class ReceiveMessage with Tag {
     }
   }
 
-  // NO DB NO display
+  // NO DB NO display NO topic (1 to 1)
   Future _receiveContactOptions(MessageSchema received) async {
     if (received.content == null) return;
     Map<String, dynamic> data = received.content; // == data
     // duplicated
-    ContactSchema? exist = await contactCommon.queryByClientAddress(received.from);
-    if (exist == null) {
+    ContactSchema? existContact = await contactCommon.queryByClientAddress(received.from);
+    if (existContact == null) {
       logger.w("$TAG - _receiveContactOptions - empty - received:$received");
+      return;
+    }
+    List<MessageSchema> existsMsg = await _messageStorage.queryList(received.msgId);
+    if (existsMsg.isNotEmpty) {
+      logger.d("$TAG - receiveText - duplicated - schema:$existsMsg");
+      sendMessage.sendReceipt(existsMsg[0]); // await
       return;
     }
     // options type
@@ -284,18 +290,27 @@ class ReceiveMessage with Tag {
     Map<String, dynamic> content = data['content'] ?? Map();
     if (optionsType == null || optionsType.isEmpty) return;
     if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_BURN_TIME) {
-      int? seconds = content['deleteAfterSeconds'] as int?;
+      int seconds = (content['deleteAfterSeconds'] as int?) ?? 0;
       logger.i("$TAG - _receiveContactOptions - setBurn - seconds:$seconds - data:$data");
-      contactCommon.setOptionsBurn(exist, seconds, notify: true);
+      contactCommon.setOptionsBurn(existContact, seconds, notify: true);
     } else if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN) {
-      String? deviceToken = content['deviceToken']?.toString();
+      String deviceToken = (content['deviceToken']?.toString()) ?? "";
       logger.i("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
-      contactCommon.setDeviceToken(exist.id, deviceToken, notify: true);
+      contactCommon.setDeviceToken(existContact.id, deviceToken, notify: true);
     } else {
       logger.w("$TAG - _receiveContactOptions - setNothing - data:$data");
+      return;
     }
+    // DB
+    MessageSchema? schema = await _messageStorage.insert(received);
+    if (schema == null) return;
+    // receipt
+    sendMessage.sendReceipt(schema); // await
+    // display
+    onSavedSink.add(schema);
   }
 
+  // NO DB NO display
   Future _receivePiece(MessageSchema received) async {
     // duplicated
     List<MessageSchema> existsCombine = await _messageStorage.queryListByType(received.msgId, received.parentType);

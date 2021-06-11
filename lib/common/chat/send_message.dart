@@ -43,8 +43,9 @@ class SendMessage with Tag {
 
   MessageStorage _messageStorage = MessageStorage();
 
-  // NO DB NO display (1 to 1)
+  // NO DB NO display NO topic (1 to 1)
   Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
+    if (received.from.isEmpty || received.topic != null) return;
     if (tryCount > 3) return;
     try {
       String data = MessageData.getReceipt(received.msgId);
@@ -106,7 +107,7 @@ class SendMessage with Tag {
     }
   }
 
-  // NO DB NO display (1 to 1)
+  // NO topic (1 to 1)
   Future sendContactOptionsBurn(String? clientAddress, int? deleteSeconds, {int tryCount = 1}) async {
     if (contactCommon.currentUser == null || clientAddress == null || clientAddress.isEmpty) return;
     if (tryCount > 3) return;
@@ -115,11 +116,12 @@ class SendMessage with Tag {
         Uuid().v4(),
         contactCommon.currentUser!.clientAddress,
         ContentType.eventContactOptions,
+        to: clientAddress,
       );
       send = MessageOptions.setDeleteAfterSeconds(send, deleteSeconds);
-      String data = MessageData.getEventContactOptionsBurn(send);
-      await chatCommon.sendMessage(clientAddress, data);
-      logger.d("$TAG - sendContactOptionsBurn - success - data:$data");
+      send.content = MessageData.getEventContactOptionsBurn(send);
+      await _send(send, send.content, database: true, display: true);
+      logger.d("$TAG - sendContactOptionsBurn - success - data:${send.content}");
     } catch (e) {
       handleError(e);
       logger.w("$TAG - sendContactOptionsBurn - fail - tryCount:$tryCount - clientAddress:$clientAddress - deleteSeconds:$deleteSeconds");
