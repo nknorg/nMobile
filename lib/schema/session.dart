@@ -4,10 +4,12 @@ import 'package:equatable/equatable.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/utils/utils.dart';
 
-class SessionSchema extends Equatable {
-  static const TYPE_CONTACT = "contact";
-  static const TYPE_TOPIC = "topic";
+class SessionType {
+  static const CONTACT = "contact";
+  static const TOPIC = "topic";
+}
 
+class SessionSchema extends Equatable {
   int? id; // <-> id
   String targetId; // (required) <-> target_id
   String type; // (required) <-> type
@@ -57,18 +59,18 @@ class SessionSchema extends Equatable {
 
   static String getTypeByMessage(MessageSchema? msg) {
     if (msg?.isTopic == true) {
-      return TYPE_TOPIC;
+      return SessionType.TOPIC;
     } else {
-      return TYPE_CONTACT;
+      return SessionType.CONTACT;
     }
   }
 
   bool get isContact {
-    return type == TYPE_CONTACT;
+    return type == SessionType.CONTACT;
   }
 
   bool get isTopic {
-    return type == TYPE_TOPIC;
+    return type == SessionType.TOPIC;
   }
 
   @override
