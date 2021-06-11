@@ -216,13 +216,13 @@ class SendMessage with Tag {
     if (schema == null) return null;
     switch (schema.contentType) {
       case ContentType.text:
+      case ContentType.textExtension:
         return await _send(schema, MessageData.getText(schema), resend: true);
       case ContentType.media:
       case ContentType.image:
       case ContentType.nknImage:
         return await _send(schema, await MessageData.getImage(schema), resend: true);
       case ContentType.audio:
-      case ContentType.textExtension:
         // TODO:GG resend contentType
         return null;
     }
