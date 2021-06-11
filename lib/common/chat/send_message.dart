@@ -9,7 +9,6 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -49,7 +48,7 @@ class SendMessage with Tag {
     if (tryCount > 3) return;
     try {
       String data = MessageData.getReceipt(received.msgId);
-      await chatCommon.sendMessage(received.from, data);
+      await chatCommon.sendData(received.from, data);
       logger.d("$TAG - sendReceipt - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -67,7 +66,7 @@ class SendMessage with Tag {
     try {
       DateTime updateAt = DateTime.now();
       String data = MessageData.getContactRequest(requestType, target.profileVersion, updateAt);
-      await chatCommon.sendMessage(target.clientAddress, data);
+      await chatCommon.sendData(target.clientAddress, data);
       logger.d("$TAG - sendContactRequest - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -96,7 +95,7 @@ class SendMessage with Tag {
           updateAt,
         );
       }
-      await chatCommon.sendMessage(target.clientAddress, data);
+      await chatCommon.sendData(target.clientAddress, data);
       logger.d("$TAG - sendContactResponse - success - requestType:$requestType - data:$data");
     } catch (e) {
       handleError(e);
@@ -162,10 +161,10 @@ class SendMessage with Tag {
       await Future.delayed(Duration(milliseconds: (schema.sendTime ?? DateTime.now()).millisecondsSinceEpoch - DateTime.now().millisecondsSinceEpoch));
       String data = MessageData.getPiece(schema);
       if (schema.isTopic) {
-        OnMessage? onResult = await chatCommon.publishMessage(schema.topic!, data);
+        OnMessage? onResult = await chatCommon.publishData(schema.topic!, data);
         schema.pid = onResult?.messageId;
       } else if (schema.to != null) {
-        OnMessage? onResult = await chatCommon.sendMessage(schema.to!, data);
+        OnMessage? onResult = await chatCommon.sendData(schema.to!, data);
         schema.pid = onResult?.messageId;
       }
       // logger.d("$TAG - sendPiece - success - index:${schema.index} - time:${DateTime.now().millisecondsSinceEpoch} - schema:$schema - data:$data");
@@ -181,23 +180,23 @@ class SendMessage with Tag {
     }
   }
 
-  Future<MessageSchema?> sendText(String? dest, String? content, {bool toast = true}) {
-    if (chatCommon.id == null || dest == null || content == null || content.isEmpty) {
+  Future<MessageSchema?> sendText(String? clientAddress, String? content) async {
+    if (chatCommon.id == null || clientAddress == null || content == null || content.isEmpty) {
       // Toast.show(S.of(Global.appContext).failure);
-      return Future.value(null);
+      return null;
     }
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
       chatCommon.id ?? "",
       ContentType.text,
-      to: dest,
+      to: clientAddress,
       content: content,
     );
     return _send(schema, MessageData.getText(schema));
   }
 
-  Future<MessageSchema?> sendImage(String? dest, File? content) async {
-    if (chatCommon.id == null || dest == null || content == null || (!await content.exists())) {
+  Future<MessageSchema?> sendImage(String? clientAddress, File? content) async {
+    if (chatCommon.id == null || clientAddress == null || content == null || (!await content.exists())) {
       // Toast.show(S.of(Global.appContext).failure);
       return null;
     }
@@ -205,7 +204,7 @@ class SendMessage with Tag {
       Uuid().v4(),
       chatCommon.id ?? "",
       ContentType.media, // SUPPORT:IMAGE
-      to: dest,
+      to: clientAddress,
       content: content,
     );
     return _send(schema, await MessageData.getImage(schema));
@@ -235,13 +234,12 @@ class SendMessage with Tag {
     bool display = true,
     bool resend = false,
   }) async {
-    // contactHandle (handle in other entry)
-    // topicHandle (handle in other entry)
     if (schema == null || msgData == null) return null;
+    // burning
+    schema = await chatCommon.burningHandle(schema, database: false);
     // DB
     if (resend) {
       await _messageStorage.updateSendTime(schema.msgId, DateTime.now());
-      // TODO:GG deleteTime
     } else if (database) {
       schema = await _messageStorage.insert(schema);
     }
@@ -254,11 +252,11 @@ class SendMessage with Tag {
       pid = await _sendByPiecesIfNeed(schema);
       if (pid == null || pid.isEmpty) {
         if (schema.isTopic) {
-          OnMessage? onResult = await chatCommon.publishMessage(schema.topic!, msgData);
+          OnMessage? onResult = await chatCommon.publishData(schema.topic!, msgData);
           pid = onResult?.messageId;
           logger.d("$TAG - _send - topic - pid:$pid");
         } else if (schema.to != null) {
-          OnMessage? onResult = await chatCommon.sendMessage(schema.to!, msgData);
+          OnMessage? onResult = await chatCommon.sendData(schema.to!, msgData);
           pid = onResult?.messageId;
           logger.d("$TAG - _send - user - pid:$pid");
         }
@@ -268,6 +266,12 @@ class SendMessage with Tag {
     } catch (e) {
       handleError(e);
     }
+    // contact
+    chatCommon.contactHandle(schema); // await
+    // topic
+    chatCommon.topicHandle(schema); // await
+    // session
+    chatCommon.sessionHandle(schema); // await
     // fail
     if (pid == null || pid.isEmpty) {
       schema = MessageStatus.set(schema, MessageStatus.SendFail);
@@ -283,24 +287,7 @@ class SendMessage with Tag {
     if (database || resend) _messageStorage.updateMessageStatus(schema); // await
     // display
     if (display || resend) onUpdateSink.add(schema);
-    // session
-    _sessionHandle(schema); // await
     return schema;
-  }
-
-  Future<SessionSchema?> _sessionHandle(MessageSchema send) async {
-    if (!send.canRead) return null;
-    // duplicated
-    if (send.targetId == null || send.targetId!.isEmpty) return null;
-    SessionSchema? exist = await sessionCommon.query(send.targetId);
-    if (exist == null) {
-      logger.d("$TAG - sessionHandle - new - targetId:${send.targetId}");
-      return await sessionCommon.add(SessionSchema(targetId: send.targetId!, type: SessionSchema.getTypeByMessage(send)));
-    } else {
-      logger.d("$TAG - sessionHandle - update - targetId:${send.targetId}");
-      sessionCommon.setLastMessage(send.targetId, send, notify: true); // await
-    }
-    return exist;
   }
 
   Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message) async {
