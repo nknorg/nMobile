@@ -45,7 +45,7 @@ class SendMessage with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
-    if (received.from.isEmpty || received.topic != null) return;
+    if (received.from.isEmpty || received.isTopic) return;
     if (tryCount > 3) return;
     try {
       String data = MessageData.getReceipt(received.msgId);
@@ -161,7 +161,7 @@ class SendMessage with Tag {
     try {
       await Future.delayed(Duration(milliseconds: (schema.sendTime ?? DateTime.now()).millisecondsSinceEpoch - DateTime.now().millisecondsSinceEpoch));
       String data = MessageData.getPiece(schema);
-      if (schema.topic != null) {
+      if (schema.isTopic) {
         OnMessage? onResult = await chatCommon.publishMessage(schema.topic!, data);
         schema.pid = onResult?.messageId;
       } else if (schema.to != null) {
@@ -253,7 +253,7 @@ class SendMessage with Tag {
     try {
       pid = await _sendByPiecesIfNeed(schema);
       if (pid == null || pid.isEmpty) {
-        if (schema.topic != null) {
+        if (schema.isTopic) {
           OnMessage? onResult = await chatCommon.publishMessage(schema.topic!, msgData);
           pid = onResult?.messageId;
           logger.d("$TAG - _send - topic - pid:$pid");

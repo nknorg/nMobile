@@ -67,7 +67,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),

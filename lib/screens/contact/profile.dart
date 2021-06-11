@@ -303,6 +303,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     } else {
       _burnValue = burnValueArray[_burnProgress].inSeconds;
     }
+    _contactSchema?.options?.deleteAfterSeconds = _burnValue;
+    _contactSchema?.options?.updateBurnAfterTime = DateTime.now().millisecondsSinceEpoch;
     // inside update
     await contactCommon.setOptionsBurn(_contactSchema, _burnValue, notify: true);
     // outside update
@@ -333,6 +335,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     //   showToast(_localizations.close);
     // }
 
+    _contactSchema?.notificationOpen = _notificationOpen;
     // inside update
     contactCommon.setNotificationOpen(_contactSchema?.id, _notificationOpen, notify: true);
     // outside update

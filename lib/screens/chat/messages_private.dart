@@ -119,7 +119,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
     if (schema == null) return;
     if (!schema.isOutbound) {
       // read
-      schema = await receiveMessage.read(schema);
+      schema = await chatCommon.read(schema);
       sessionCommon.setUnReadCount(_contact.clientAddress.toString(), 0, notify: true);
     }
     setState(() {

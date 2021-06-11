@@ -39,12 +39,6 @@ class ReceiveMessage with Tag {
   MessageStorage _messageStorage = MessageStorage();
   TopicStorage _topicStorage = TopicStorage();
 
-  Future start() async {
-    await for (MessageSchema received in onReceiveStream) {
-      await _messageHandle(received);
-    }
-  }
-
   Future onClientMessage(MessageSchema? message, {bool sync = false}) async {
     if (message == null) return;
     // contact
@@ -59,7 +53,13 @@ class ReceiveMessage with Tag {
     if (!sync) {
       onReceiveSink.add(message);
     } else {
-      await _messageHandle(message);
+      await _messageHandle(message, contact: contactSchema);
+    }
+  }
+
+  Future start() async {
+    await for (MessageSchema received in onReceiveStream) {
+      await _messageHandle(received);
     }
   }
 
@@ -152,31 +152,31 @@ class ReceiveMessage with Tag {
     return exist;
   }
 
-  Future _messageHandle(MessageSchema received) async {
+  Future _messageHandle(MessageSchema received, {ContactSchema? contact}) async {
     switch (received.contentType) {
       case ContentType.receipt:
         _receiveReceipt(received); // await
         break;
       case ContentType.contact:
-        _receiveContact(received); // await
+        _receiveContact(received, contact: contact); // await
         break;
       case ContentType.piece:
         await _receivePiece(received);
         break;
       case ContentType.text:
-        await _receiveText(received);
+      case ContentType.textExtension:
+        await _receiveText(received, contact: contact);
         break;
       case ContentType.media:
       case ContentType.image:
       case ContentType.nknImage:
-        await _receiveImage(received);
+        await _receiveImage(received, contact: contact);
         break;
       case ContentType.eventContactOptions:
-        _receiveContactOptions(received); // await
+        _receiveContactOptions(received, contact: contact); // await
         break;
       // TODO:GG receive contentType
       case ContentType.system:
-      case ContentType.textExtension:
       case ContentType.audio:
       case ContentType.eventSubscribe:
       case ContentType.eventUnsubscribe:
@@ -200,11 +200,11 @@ class ReceiveMessage with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future _receiveContact(MessageSchema received) async {
+  Future _receiveContact(MessageSchema received, {ContactSchema? contact}) async {
     if (received.content == null) return;
     Map<String, dynamic> data = received.content; // == data
     // duplicated
-    ContactSchema? exist = await contactCommon.queryByClientAddress(received.from);
+    ContactSchema? exist = contact ?? await contactCommon.queryByClientAddress(received.from);
     if (exist == null) {
       logger.w("$TAG - receiveContact - empty - data:$data");
       return;
@@ -259,11 +259,11 @@ class ReceiveMessage with Tag {
   }
 
   // NO DB NO display NO topic (1 to 1)
-  Future _receiveContactOptions(MessageSchema received) async {
+  Future _receiveContactOptions(MessageSchema received, {ContactSchema? contact}) async {
     if (received.content == null) return;
     Map<String, dynamic> data = received.content; // == data
     // duplicated
-    ContactSchema? existContact = await contactCommon.queryByClientAddress(received.from);
+    ContactSchema? existContact = contact ?? await contactCommon.queryByClientAddress(received.from);
     if (existContact == null) {
       logger.w("$TAG - _receiveContactOptions - empty - received:$received");
       return;
@@ -281,11 +281,11 @@ class ReceiveMessage with Tag {
     if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_BURN_TIME) {
       int seconds = (content['deleteAfterSeconds'] as int?) ?? 0;
       logger.i("$TAG - _receiveContactOptions - setBurn - seconds:$seconds - data:$data");
-      contactCommon.setOptionsBurn(existContact, seconds, notify: true);
+      contactCommon.setOptionsBurn(existContact, seconds, notify: true); // await
     } else if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN) {
       String deviceToken = (content['deviceToken']?.toString()) ?? "";
       logger.i("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
-      contactCommon.setDeviceToken(existContact.id, deviceToken, notify: true);
+      contactCommon.setDeviceToken(existContact.id, deviceToken, notify: true); // await
     } else {
       logger.w("$TAG - _receiveContactOptions - setNothing - data:$data");
       return;
@@ -380,7 +380,7 @@ class ReceiveMessage with Tag {
     }
   }
 
-  Future _receiveText(MessageSchema received) async {
+  Future _receiveText(MessageSchema received, {ContactSchema? contact}) async {
     // duplicated
     List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
     if (exists.isNotEmpty) {
@@ -393,13 +393,15 @@ class ReceiveMessage with Tag {
     if (schema == null) return;
     // receipt
     sendMessage.sendReceipt(schema); // await
+    // burn
+    schema = await chatCommon.checkMsgBurning(schema, contact: contact);
     // display
     onSavedSink.add(schema);
     // session
     sessionCommon.setLastMessageAndUnReadCount(schema.targetId, schema, null, notify: true); // await
   }
 
-  Future _receiveImage(MessageSchema received) async {
+  Future _receiveImage(MessageSchema received, {ContactSchema? contact}) async {
     bool isPieceCombine = received.options != null ? received.options![MessageOptions.KEY_PARENT_PIECE] : false;
     // duplicated
     List<MessageSchema> exists = [];
@@ -421,16 +423,11 @@ class ReceiveMessage with Tag {
     if (schema == null) return;
     // receipt
     sendMessage.sendReceipt(schema); // await
+    // burn
+    schema = await chatCommon.checkMsgBurning(schema, contact: contact);
     // display
     onSavedSink.add(schema);
     // session
     sessionCommon.setLastMessageAndUnReadCount(schema.targetId, schema, null, notify: true); // await
-  }
-
-  // receipt(receive) != read(look)
-  Future<MessageSchema> read(MessageSchema schema) async {
-    schema = MessageStatus.set(schema, MessageStatus.ReceivedRead);
-    await _messageStorage.updateMessageStatus(schema);
-    return schema;
   }
 }

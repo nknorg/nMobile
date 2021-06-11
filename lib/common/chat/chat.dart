@@ -9,6 +9,7 @@ import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/message.dart';
@@ -63,6 +64,8 @@ class ChatCommon with Tag {
       // TODO:GG client error
     });
   }
+
+  /// ******************************************************   Client   ****************************************************** ///
 
   // need close
   Future<bool> signIn(WalletSchema? schema, {bool walletDefault = false}) async {
@@ -141,6 +144,8 @@ class ChatCommon with Tag {
     await db?.close();
   }
 
+  /// ******************************************************   Messages   ****************************************************** ///
+
   Future<List<MessageSchema>> queryListAndReadByTargetId(
     String? targetId, {
     int offset = 0,
@@ -153,14 +158,36 @@ class ChatCommon with Tag {
     if (offset == 0 && (unread == null || unread > 0)) {
       List<MessageSchema> unreadList = await _messageStorage.queryListUnReadByTargetId(targetId);
       unreadList.asMap().forEach((index, MessageSchema element) {
-        receiveMessage.read(element); // await
+        read(element); // await
         if (index >= unreadList.length - 1) {
-          sessionCommon.setUnReadCount(element.targetId, 0, notify: true);
+          sessionCommon.setUnReadCount(element.targetId, 0, notify: true); // await
         }
       });
       list = list.map((e) => e.isOutbound == false ? MessageStatus.set(e, MessageStatus.ReceivedRead) : e).toList(); // fake read
     }
     return list;
+  }
+
+  // receipt(receive) != read(look)
+  Future<MessageSchema> read(MessageSchema schema) async {
+    schema = MessageStatus.set(schema, MessageStatus.ReceivedRead);
+    await _messageStorage.updateMessageStatus(schema);
+    return schema;
+  }
+
+  Future<MessageSchema> checkMsgBurning(MessageSchema message, {ContactSchema? contact, bool notify = false}) async {
+    int? seconds = MessageOptions.getDeleteAfterSeconds(message);
+    if (seconds != null && seconds > 0) {
+      message.deleteTime = DateTime.now().add(Duration(seconds: seconds));
+      _messageStorage.updateDeleteTime(message.msgId, message.deleteTime);
+    }
+    if (contact != null) {
+      if (contact.options?.deleteAfterSeconds != seconds) {
+        contact.options?.updateBurnAfterTime = DateTime.now().millisecondsSinceEpoch;
+        contactCommon.setOptionsBurn(contact, seconds, notify: true);
+      }
+    }
+    return message;
   }
 
   Future<OnMessage?> sendMessage(String dest, String data) async {
