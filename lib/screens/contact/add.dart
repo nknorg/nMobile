@@ -110,10 +110,10 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
       String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
       String note = _notesController.text;
 
-      String remarkName = _nameController.text;
       String defaultName = ContactSchema.getDefaultName(clientAddress);
+      String? remarkName = _nameController.text != defaultName ? _nameController.text : null;
 
-      String? remarkAvatar = Path.getLocalFile(_headImage?.path);
+      String? remarkAvatar = _headImage?.path.isNotEmpty == true ? Path.getLocalFile(_headImage?.path) : null;
 
       logger.d("$TAG - _saveContact -\n clientAddress:$clientAddress,\n walletAddress:$walletAddress,\n note:$note,\n firstName:$defaultName,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
 
