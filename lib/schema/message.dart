@@ -20,7 +20,7 @@ class ContentType {
   static const String piece = 'nknOnePiece'; // db
 
   static const String text = 'text'; // db + visible
-  static const String textExtension = 'textExtension'; // db + visible // TODO:GG wait handle
+  static const String textExtension = 'textExtension'; // db + visible
   static const String media = 'media'; // db + visible
   static const String image = 'image'; // db + visible
   static const String audio = 'audio'; // db + visible // TODO:GG wait handle
@@ -37,7 +37,7 @@ class ContentType {
 
 class MessageOptions {
   static const KEY_AUDIO_DURATION = "audioDuration"; // TODO:GG wait handle
-  static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds"; // TODO:GG wait handle
+  static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
   static const KEY_DEVICE_TOKEN = "deviceToken";
 
   static const KEY_PARENT_TYPE = "parentType";

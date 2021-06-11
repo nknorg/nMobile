@@ -44,7 +44,7 @@ class ReceiveMessage with Tag {
     // session
     chatCommon.sessionHandle(message); // await
     // burn
-    message = await chatCommon.burningHandle(message, contact: contact);
+    message = await chatCommon.burningHandle(message, contact: contact, database: false);
     // notification
     _notificationHandle(contact, topic, message);
     // message
