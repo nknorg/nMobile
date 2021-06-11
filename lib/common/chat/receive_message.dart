@@ -247,8 +247,8 @@ class ReceiveMessage with Tag {
             logger.w("$TAG - receiveContact - content is empty - data:$data");
             return;
           }
-          String? firstName = content['first_name'] ?? content['name'];
-          String? lastName = content['last_name'];
+          String firstName = content['first_name'] ?? content['name'] ?? "";
+          String lastName = content['last_name'] ?? "";
           File? avatar;
           String? avatarType = content['avatar'] != null ? content['avatar']['type'] : null;
           if (avatarType?.isNotEmpty == true) {
@@ -260,7 +260,7 @@ class ReceiveMessage with Tag {
               avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact, extension: "jpg");
             }
           }
-          await contactCommon.setProfile(exist, firstName, lastName, avatar?.path, version, notify: true);
+          await contactCommon.setOtherProfile(exist, firstName, lastName, avatar?.path ?? "", version, notify: true);
           logger.i("$TAG - receiveContact - setProfile - firstName:$firstName - avatar:${avatar?.path} - version:$version - data:$data");
         }
       } else {
