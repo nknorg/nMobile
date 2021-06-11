@@ -516,21 +516,33 @@ class MessageSchema extends Equatable {
       'is_success': isSuccess ? 1 : 0,
       'is_send_error': isSendError ? 1 : 0,
     };
-    // String pubKey = hexEncode(chatCommon.publicKey);
-    if (contentType == ContentType.nknImage || contentType == ContentType.media || contentType == ContentType.image) {
-      if (content is File) {
-        map['content'] = Path.getLocalFile((content as File).path);
-      }
-    } else if (contentType == ContentType.audio) {
-      if (content is File) {
-        map['content'] = Path.getLocalFile((content as File).path);
-      }
-    } else if (contentType == ContentType.piece) {
-      if (content is File) {
-        map['content'] = Path.getLocalFile((content as File).path);
-      }
-    } else {
-      map['content'] = content;
+
+    // content = String
+    switch (contentType) {
+      case ContentType.media:
+      case ContentType.nknImage:
+      case ContentType.image:
+        if (content is File) {
+          map['content'] = Path.getLocalFile((content as File).path);
+        }
+        break;
+      case ContentType.contact:
+      case ContentType.eventContactOptions:
+        map['content'] = content is Map ? jsonEncode(content) : content;
+        break;
+      // TODO:GG fromMap contentType
+      case ContentType.system:
+      case ContentType.receipt:
+      case ContentType.piece:
+      case ContentType.text:
+      case ContentType.textExtension:
+      case ContentType.audio:
+      case ContentType.eventSubscribe:
+      case ContentType.eventUnsubscribe:
+      case ContentType.eventChannelInvitation:
+      default:
+        map['content'] = content;
+        break;
     }
 
     if (contentType == ContentType.piece) {
@@ -557,15 +569,37 @@ class MessageSchema extends Equatable {
       options: e['options'] != null ? jsonFormat(e['options']) : null,
     );
 
-    String? completePath = Path.getCompleteFile(e['content']);
-    if (schema.contentType == ContentType.nknImage || schema.contentType == ContentType.media || schema.contentType == ContentType.image) {
-      schema.content = completePath != null ? File(completePath) : null;
-    } else if (schema.contentType == ContentType.audio) {
-      schema.content = completePath != null ? File(completePath) : null;
-    } else if (schema.contentType == ContentType.piece) {
-      schema.content = completePath != null ? File(completePath) : null;
-    } else {
-      schema.content = e['content'];
+    // content = File/Map/String...
+    switch (schema.contentType) {
+      case ContentType.receipt:
+        schema.content = e['targetID'];
+        break;
+      case ContentType.media:
+      case ContentType.nknImage:
+      case ContentType.image:
+        String? completePath = Path.getCompleteFile(e['content']);
+        schema.content = completePath != null ? File(completePath) : null;
+        break;
+      case ContentType.contact:
+      case ContentType.eventContactOptions:
+        if (e['content'] != null && e['content'] is String && e[''].toString().isNotEmpty) {
+          schema.content = jsonFormat(e['content']);
+        } else {
+          schema.content = e['content'];
+        }
+        break;
+      // TODO:GG fromMap contentType
+      case ContentType.system:
+      case ContentType.piece:
+      case ContentType.text:
+      case ContentType.textExtension:
+      case ContentType.audio:
+      case ContentType.eventSubscribe:
+      case ContentType.eventUnsubscribe:
+      case ContentType.eventChannelInvitation:
+      default:
+        schema.content = e['content'];
+        break;
     }
 
     schema.sendTime = e['send_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['send_time']) : null;

@@ -134,16 +134,16 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           ],
         ),
       );
-    } else if (msgType == ContentType.eventChannelInvitation) {
+    } else if (msgType == ContentType.eventSubscribe) {
       contentWidget = Label(
-        _localizations.channel_invitation,
+        _localizations.joined_channel,
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
-    } else if (msgType == ContentType.eventSubscribe) {
+    } else if (msgType == ContentType.eventChannelInvitation) {
       contentWidget = Label(
-        _localizations.joined_channel,
+        _localizations.channel_invitation,
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
