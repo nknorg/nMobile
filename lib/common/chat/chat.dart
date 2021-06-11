@@ -207,26 +207,29 @@ class ChatCommon with Tag {
   }
 
   Future<MessageSchema> burningHandle(MessageSchema message, {ContactSchema? contact, bool database = false}) async {
-    if (!message.canDisplayAndRead) return message;
-    int? seconds = MessageOptions.getDeleteAfterSeconds(message);
-    if (seconds != null && seconds > 0) {
-      if (message.isOutbound) {
-        // send
+    if (!message.canDisplayAndRead || message.isTopic) return message;
+    if (message.isOutbound) {
+      // send
+      ContactSchema? _contact = contact ?? await contactCommon.queryByClientAddress(message.targetId);
+      int deleteAfterSeconds = _contact?.options?.deleteAfterSeconds ?? 0;
+      if (deleteAfterSeconds > 0) {
         if (message.contentType == ContentType.text) {
           message.contentType = ContentType.textExtension;
         }
-        message = MessageOptions.setDeleteAfterSeconds(message, seconds);
-      } else {
-        // receive
+        message = MessageOptions.setDeleteAfterSeconds(message, deleteAfterSeconds);
+      }
+    } else {
+      // receive
+      int? seconds = MessageOptions.getDeleteAfterSeconds(message);
+      if (seconds != null && seconds > 0) {
         message.deleteTime = DateTime.now().add(Duration(seconds: seconds));
         if (database) await _messageStorage.updateDeleteTime(message.msgId, message.deleteTime);
       }
-    }
-    // contact options
-    if (contact != null) {
-      if (contact.options?.deleteAfterSeconds != seconds) {
-        contact.options?.updateBurnAfterTime = DateTime.now().millisecondsSinceEpoch;
-        contactCommon.setOptionsBurn(contact, seconds, notify: true); // await
+      if (contact != null) {
+        if (contact.options?.deleteAfterSeconds != seconds) {
+          contact.options?.updateBurnAfterTime = DateTime.now().millisecondsSinceEpoch;
+          contactCommon.setOptionsBurn(contact, seconds, notify: true); // await
+        }
       }
     }
     return message;
