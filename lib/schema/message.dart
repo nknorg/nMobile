@@ -531,10 +531,10 @@ class MessageSchema extends Equatable {
         map['content'] = content is Map ? jsonEncode(content) : content;
         break;
       // TODO:GG fromMap contentType
-      case ContentType.system:
-      case ContentType.receipt:
-      case ContentType.text:
-      case ContentType.textExtension:
+      // case ContentType.system:
+      // case ContentType.receipt:
+      // case ContentType.text:
+      // case ContentType.textExtension:
       case ContentType.audio:
       case ContentType.eventSubscribe:
       case ContentType.eventUnsubscribe:
@@ -589,9 +589,9 @@ class MessageSchema extends Equatable {
         }
         break;
       // TODO:GG fromMap contentType
-      case ContentType.system:
-      case ContentType.text:
-      case ContentType.textExtension:
+      // case ContentType.system:
+      // case ContentType.text:
+      // case ContentType.textExtension:
       case ContentType.audio:
       case ContentType.eventSubscribe:
       case ContentType.eventUnsubscribe:
