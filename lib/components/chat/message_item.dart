@@ -59,6 +59,7 @@ class ChatMessageItem extends StatelessWidget {
 
     switch (this.message.contentType) {
       case ContentType.text:
+      case ContentType.textExtension:
       case ContentType.media:
       case ContentType.image:
       case ContentType.nknImage:
@@ -77,7 +78,6 @@ class ChatMessageItem extends StatelessWidget {
         break;
       // TODO:GG messageItem contentType
       case ContentType.system:
-      case ContentType.textExtension:
       case ContentType.eventSubscribe:
       case ContentType.eventUnsubscribe:
       case ContentType.eventChannelInvitation:
