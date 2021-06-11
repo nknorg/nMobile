@@ -345,7 +345,7 @@ class MessageStorage with Tag {
       int? count = await db?.update(
         tableName,
         {
-          'send_time': sendTime?.millisecondsSinceEpoch,
+          'send_time': sendTime?.millisecondsSinceEpoch ?? DateTime.now(),
         },
         where: 'msg_id = ?',
         whereArgs: [msgId],
