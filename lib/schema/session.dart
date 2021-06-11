@@ -56,7 +56,7 @@ class SessionSchema extends Equatable {
   }
 
   static String getTypeByMessage(MessageSchema? msg) {
-    if (msg?.topic != null) {
+    if (msg?.isTopic == true) {
       return TYPE_TOPIC;
     } else {
       return TYPE_CONTACT;

@@ -240,7 +240,7 @@ class MessageData {
     if (schema.options != null && schema.options!.keys.length > 0) {
       data['options'] = schema.options;
     }
-    if (schema.topic != null) {
+    if (schema.isTopic) {
       data['topic'] = schema.topic;
     }
     return jsonEncode(data);
@@ -256,7 +256,7 @@ class MessageData {
     if (schema.options != null && schema.options!.keys.length > 0) {
       map['options'] = schema.options;
     }
-    if (schema.topic != null) {
+    if (schema.isTopic) {
       map['topic'] = schema.topic;
     }
     return jsonEncode(map);
@@ -275,7 +275,7 @@ class MessageData {
     if (schema.options != null && schema.options!.keys.length > 0) {
       data['options'] = schema.options;
     }
-    if (schema.topic != null) {
+    if (schema.isTopic) {
       data['topic'] = schema.topic;
     }
     return jsonEncode(data);
@@ -298,7 +298,7 @@ class MessageData {
     if (schema.options != null && schema.options!.keys.length > 0) {
       data['options'] = schema.options;
     }
-    if (schema.topic != null) {
+    if (schema.isTopic) {
       data['topic'] = schema.topic;
     }
     return jsonEncode(data);
@@ -621,11 +621,15 @@ class MessageSchema extends Equatable {
   }
 
   String? get targetId {
-    return topic != null
+    return isTopic
         ? topic
         : isOutbound
             ? to
             : from;
+  }
+
+  bool get isTopic {
+    return topic?.isNotEmpty == true;
   }
 
   // UnReadCount / Session / Notification
