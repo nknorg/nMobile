@@ -180,7 +180,7 @@ class SendMessage with Tag {
     }
   }
 
-  Future<MessageSchema?> sendText(String? clientAddress, String? content) async {
+  Future<MessageSchema?> sendText(String? clientAddress, String? content, {ContactSchema? contact}) async {
     if (chatCommon.id == null || clientAddress == null || content == null || content.isEmpty) {
       // Toast.show(S.of(Global.appContext).failure);
       return null;
@@ -192,10 +192,11 @@ class SendMessage with Tag {
       to: clientAddress,
       content: content,
     );
+    schema = await chatCommon.burningHandle(schema, contact: contact, database: false);
     return _send(schema, MessageData.getText(schema));
   }
 
-  Future<MessageSchema?> sendImage(String? clientAddress, File? content) async {
+  Future<MessageSchema?> sendImage(String? clientAddress, File? content, {ContactSchema? contact}) async {
     if (chatCommon.id == null || clientAddress == null || content == null || (!await content.exists())) {
       // Toast.show(S.of(Global.appContext).failure);
       return null;
@@ -207,6 +208,7 @@ class SendMessage with Tag {
       to: clientAddress,
       content: content,
     );
+    schema = await chatCommon.burningHandle(schema, contact: contact, database: false);
     return _send(schema, await MessageData.getImage(schema));
   }
 
@@ -235,8 +237,6 @@ class SendMessage with Tag {
     bool resend = false,
   }) async {
     if (schema == null || msgData == null) return null;
-    // burning
-    schema = await chatCommon.burningHandle(schema, database: false);
     // DB
     if (resend) {
       await _messageStorage.updateSendTime(schema.msgId, DateTime.now());
