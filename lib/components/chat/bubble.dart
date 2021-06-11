@@ -25,7 +25,6 @@ import '../text/markdown.dart';
 class ChatBubble extends BaseStateFulWidget {
   final MessageSchema message;
   final ContactSchema? contact;
-  final bool showTime;
   final bool showProfile;
   final Function(ContactSchema, MessageSchema)? onLonePress;
   final Function(String)? onResend;
@@ -34,7 +33,6 @@ class ChatBubble extends BaseStateFulWidget {
     required this.message,
     required this.contact,
     this.showProfile = false,
-    this.showTime = false,
     this.onLonePress,
     this.onResend,
   });

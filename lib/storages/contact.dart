@@ -357,7 +357,7 @@ class ContactStorage with Tag {
     if (seconds != null && seconds > 0) {
       options.deleteAfterSeconds = seconds;
     } else {
-      options.deleteAfterSeconds = null;
+      options.deleteAfterSeconds = 0;
     }
 
     int currentTimeStamp = DateTime.now().millisecondsSinceEpoch;

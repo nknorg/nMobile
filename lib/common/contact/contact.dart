@@ -197,7 +197,7 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setOptionsBurn(ContactSchema? schema, int? seconds, {bool notify = false}) async {
+  Future<bool> setOptionsBurn(ContactSchema? schema, int seconds, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
     bool success = await _contactStorage.setOptionsBurn(schema.id, seconds, old: schema.options);
     if (success && notify) queryAndNotify(schema.id);
@@ -211,8 +211,8 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setDeviceToken(int? contactId, String? deviceToken, {bool notify = false}) async {
-    if (contactId == null || contactId == 0 || deviceToken == null || deviceToken.isEmpty) return false;
+  Future<bool> setDeviceToken(int? contactId, String deviceToken, {bool notify = false}) async {
+    if (contactId == null || contactId == 0) return false;
     bool success = await _contactStorage.setDeviceToken(contactId, deviceToken);
     if (success && notify) queryAndNotify(contactId);
     return success;

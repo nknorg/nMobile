@@ -297,9 +297,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
   _updateBurnIfNeed() async {
     if (_burnOpen == _initBurnOpen && _burnProgress == _initBurnProgress) return;
-    var _burnValue;
+    int _burnValue;
     if (!_burnOpen || _burnProgress < 0) {
-      _burnValue = null;
+      _burnValue = 0;
     } else {
       _burnValue = burnValueArray[_burnProgress].inSeconds;
     }
