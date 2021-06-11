@@ -271,7 +271,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     }
 
     if (_contactSchema?.type == ContactType.me) {
-      await contactCommon.setAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
+      await contactCommon.setSelfAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
     } else {
       await contactCommon.setRemarkAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
     }
@@ -289,7 +289,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     );
     if (newName == null || newName.trim().isEmpty) return;
     if (_contactSchema?.type == ContactType.me) {
-      await contactCommon.setName(_contactSchema, newName.trim(), "", notify: true);
+      await contactCommon.setSelfName(_contactSchema, newName.trim(), "", notify: true);
     } else {
       await contactCommon.setRemarkName(_contactSchema, newName.trim(), "", notify: true);
     }

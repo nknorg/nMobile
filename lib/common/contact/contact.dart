@@ -128,8 +128,8 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setName(ContactSchema? old, String? firstName, String? lastName, {bool notify = false}) async {
-    if (old == null || old.id == 0 || firstName == null || firstName.isEmpty) return false;
+  Future<bool> setSelfName(ContactSchema? old, String firstName, String lastName, {bool notify = false}) async {
+    if (old == null || old.id == 0) return false;
     bool success = await _contactStorage.setProfile(
       old.id,
       {'first_name': firstName, 'last_name': lastName, 'profile_version': Uuid().v4()},
@@ -139,8 +139,8 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setAvatar(ContactSchema? old, String? avatarLocalPath, {bool notify = false}) async {
-    if (old == null || old.id == 0 || avatarLocalPath == null || avatarLocalPath.isEmpty) return false;
+  Future<bool> setSelfAvatar(ContactSchema? old, String avatarLocalPath, {bool notify = false}) async {
+    if (old == null || old.id == 0) return false;
     bool success = await _contactStorage.setProfile(
       old.id,
       {'avatar': avatarLocalPath, 'profile_version': Uuid().v4()},
@@ -150,7 +150,7 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setProfile(ContactSchema? old, String? firstName, String? lastName, String? avatarLocalPath, String? profileVersion, {bool notify = false}) async {
+  Future<bool> setOtherProfile(ContactSchema? old, String firstName, String lastName, String avatarLocalPath, String? profileVersion, {bool notify = false}) async {
     if (old == null || old.id == 0) return false; //  || name == null || name.isEmpty || avatarLocalPath == null || avatarLocalPath.isEmpty
     bool success = await _contactStorage.setProfile(
       old.id,
@@ -161,7 +161,7 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setRemarkName(ContactSchema? old, String? firstName, String? lastName, {bool notify = false}) async {
+  Future<bool> setRemarkName(ContactSchema? old, String firstName, String lastName, {bool notify = false}) async {
     if (old == null || old.id == 0) return false;
     bool success = await _contactStorage.setRemarkProfile(
       old.id,
@@ -172,7 +172,7 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setRemarkAvatar(ContactSchema? old, String? avatarLocalPath, {bool notify = false}) async {
+  Future<bool> setRemarkAvatar(ContactSchema? old, String avatarLocalPath, {bool notify = false}) async {
     if (old == null || old.id == 0) return Future.value(false);
     bool success = await _contactStorage.setRemarkProfile(
       old.id,
@@ -190,14 +190,14 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> toggleOptionsColors(ContactSchema? schema, {bool notify = false}) async {
+  Future<bool> randomOptionsColors(ContactSchema? schema, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
-    bool success = await _contactStorage.setOptionsColors(schema.id, old: schema.options);
+    bool success = await _contactStorage.randomOptionsColors(schema.id, old: schema.options);
     if (success && notify) queryAndNotify(schema.id);
     return success;
   }
 
-  Future<bool> setOptionsBurn(ContactSchema? schema, int seconds, {bool notify = false}) async {
+  Future<bool> setOptionsBurn(ContactSchema? schema, int? seconds, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
     bool success = await _contactStorage.setOptionsBurn(schema.id, seconds, old: schema.options);
     if (success && notify) queryAndNotify(schema.id);
@@ -211,7 +211,7 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setDeviceToken(int? contactId, String deviceToken, {bool notify = false}) async {
+  Future<bool> setDeviceToken(int? contactId, String? deviceToken, {bool notify = false}) async {
     if (contactId == null || contactId == 0) return false;
     bool success = await _contactStorage.setDeviceToken(contactId, deviceToken);
     if (success && notify) queryAndNotify(contactId);

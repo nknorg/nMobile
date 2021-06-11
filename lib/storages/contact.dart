@@ -318,7 +318,7 @@ class ContactStorage with Tag {
     return false;
   }
 
-  Future<bool> setOptionsColors(int? contactId, {OptionsSchema? old}) async {
+  Future<bool> randomOptionsColors(int? contactId, {OptionsSchema? old}) async {
     if (contactId == null || contactId == 0) return false;
 
     int random = Random().nextInt(application.theme.randomBackgroundColorList.length);
