@@ -118,7 +118,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                             backgroundColor: application.theme.strongColor,
                             width: double.infinity,
                             onPressed: () async {
-                              // todo
+                              // TODO:GG cache
                             },
                           ),
                           reject: Button(
@@ -199,7 +199,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                             backgroundColor: application.theme.strongColor,
                             width: double.infinity,
                             onPressed: () async {
-                              // todo auth
+                              // TODO:GG cache
                               await DB.currentDatabase?.close();
                               await clearDbFile(Global.applicationRootDirectory);
                               var size = await getTotalSizeOfDbFile(Global.applicationRootDirectory);

@@ -19,7 +19,6 @@ import 'common/locator.dart';
 import 'common/settings.dart';
 import 'generated/l10n.dart';
 import 'routes/routes.dart';
-import 'services/task.dart';
 
 void initialize() {
   application.registerInitialize(() async {
@@ -51,7 +50,7 @@ void main() async {
   // mounted
   application.registerMounted(() async {
     notification.init();
-    locator.get<TaskService>().install();
+    taskService.install();
   });
   application.registerMounted(() async {
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
