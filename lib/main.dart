@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:background_fetch/background_fetch.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,7 +8,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
-import 'package:nmobile/services/background_fetch.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'app.dart';
@@ -20,7 +18,7 @@ import 'common/locator.dart';
 import 'common/settings.dart';
 import 'generated/l10n.dart';
 import 'routes/routes.dart' as routes;
-import 'services/task_service.dart';
+import 'services/task.dart';
 
 void initialize() {
   application.registerInitialize(() async {

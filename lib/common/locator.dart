@@ -7,7 +7,7 @@ import 'package:nmobile/common/wallet/wallet.dart';
 import 'package:nmobile/helpers/memory_cache.dart';
 import 'package:nmobile/services/background_fetch.dart';
 
-import '../services/task_service.dart';
+import '../services/task.dart';
 import 'application.dart';
 import 'authentication.dart';
 import 'chat/chat.dart';
