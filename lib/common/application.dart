@@ -7,7 +7,7 @@ typedef Func = Future Function();
 class Application {
   List<Func> _initializeFutures = <Func>[];
   List<Func> _mountedFutures = <Func>[];
-  Map<String, WidgetBuilder> _routes = {};
+
   SkinTheme theme = LightTheme();
   AppLifecycleState appLifecycleState = AppLifecycleState.resumed;
 
@@ -33,28 +33,5 @@ class Application {
       futures.add(func());
     });
     await Future.wait(futures);
-  }
-
-  registerRoutes(Map<String, WidgetBuilder> routes) {
-    _routes.addAll(routes);
-  }
-
-  Route<dynamic>? onGenerateRoute(RouteSettings settings) {
-    final String? name = settings.name;
-    final Function? pageContentBuilder = _routes[name];
-    if (pageContentBuilder != null) {
-      if (settings.arguments != null) {
-        return MaterialPageRoute(
-          settings: RouteSettings(name: name),
-          builder: (context) => pageContentBuilder(context, arguments: settings.arguments),
-        );
-      } else {
-        return MaterialPageRoute(
-          settings: RouteSettings(name: name),
-          builder: (context) => pageContentBuilder(context),
-        );
-      }
-    }
-    return null;
   }
 }

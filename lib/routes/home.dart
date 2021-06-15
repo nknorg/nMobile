@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/routes/routes.dart';
 import 'package:nmobile/screens/common/photo.dart';
 import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/screens/common/select.dart';
@@ -11,5 +11,5 @@ Map<String, WidgetBuilder> _routes = {
 };
 
 init() {
-  application.registerRoutes(_routes);
+  Routes.registerRoutes(_routes);
 }
