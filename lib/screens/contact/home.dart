@@ -365,7 +365,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       },
       onDismissed: (direction) async {
         if (direction == DismissDirection.endToStart) {
-          await contactCommon.delete(item.id);
+          await contactCommon.delete(item.id, notify: true);
         }
       },
       background: Container(

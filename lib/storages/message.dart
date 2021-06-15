@@ -68,6 +68,25 @@ class MessageStorage with Tag {
     return null;
   }
 
+  Future<bool> delete(String msgId) async {
+    if (msgId.isEmpty) return false;
+    try {
+      int? result = await db?.delete(
+        tableName,
+        where: 'msg_id = ?',
+        whereArgs: [msgId],
+      );
+      if (result != null && result > 0) {
+        logger.d("$TAG - delete - success - msgId:$msgId");
+        return true;
+      }
+      logger.w("$TAG - delete - empty - msgId:$msgId");
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
   Future<bool> deleteByType(String msgId, String contentType) async {
     if (msgId.isEmpty || contentType.isEmpty) return false;
     try {
@@ -77,10 +96,10 @@ class MessageStorage with Tag {
         whereArgs: [msgId, contentType],
       );
       if (result != null && result > 0) {
-        logger.d("$TAG - delete - success - msgId:$msgId - contentType:$contentType");
+        logger.d("$TAG - deleteByType - success - msgId:$msgId - contentType:$contentType");
         return true;
       }
-      logger.w("$TAG - delete - empty - msgId:$msgId - contentType:$contentType");
+      logger.w("$TAG - deleteByType - empty - msgId:$msgId - contentType:$contentType");
     } catch (e) {
       handleError(e);
     }
