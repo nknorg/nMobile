@@ -404,7 +404,7 @@ class MessageSchema extends Equatable {
       raw.src ?? "",
       data['contentType'] ?? "",
       pid: raw.messageId,
-      to: chatCommon.id,
+      to: clientCommon.id,
       topic: data['topic'],
       options: data['options'],
     );

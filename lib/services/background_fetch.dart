@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:background_fetch/background_fetch.dart';
-import 'package:nmobile/common/chat/chat.dart';
+import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -68,16 +68,16 @@ class BackgroundFetchService {
 
   void _onBackgroundFetch(String taskId) async {
     print("[BackgroundFetch] Event received $taskId");
-    if (chatCommon.status == ChatConnectStatus.connected) {
+    if (clientCommon.status == ClientConnectStatus.connected) {
       BackgroundFetch.finish(taskId);
       return;
     }
     await Future.delayed(Duration(seconds: 20), () async {
-      await chatCommon.signOut();
+      await clientCommon.signOut();
       // TODO:GG backgroundFetch delay
       BackgroundFetch.finish(taskId);
     });
     WalletSchema? wallet = await walletCommon.getDefault();
-    chatCommon.signIn(wallet);
+    clientCommon.signIn(wallet);
   }
 }
