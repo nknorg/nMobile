@@ -97,21 +97,35 @@ class MediaPicker {
       compressFile = croppedFile;
     } else if (compressQuality < 100) {
       String compressPath = await Path.getCacheFile(null, fileExt: fileExt);
-      if (mediaType == MediaType.image) {
-        compressFile = await FlutterImageCompress.compressAndGetFile(
-          croppedFile.path,
-          compressPath,
-          quality: compressQuality,
-          autoCorrectionAngle: true,
-          numberOfRetries: 3,
-          format: CompressFormat.jpeg,
-          // minWidth: 300,
-          // minHeight: 300,
-        );
-      } else {
-        compressFile = croppedFile;
+      CompressFormat? format;
+      if (compressPath.endsWith(".jpg") || compressPath.endsWith(".jpeg")) {
+        format = CompressFormat.jpeg;
+      } else if (compressPath.endsWith(".png")) {
+        format = CompressFormat.png;
+      } else if (compressPath.endsWith(".heic")) {
+        format = CompressFormat.heic;
+      } else if (compressPath.endsWith(".webp")) {
+        format = CompressFormat.webp;
       }
-      logger.d('MediaPicker - media_pick - compress - path:${compressFile?.path}');
+      if (format == null) {
+        compressFile = croppedFile;
+      } else {
+        if (mediaType == MediaType.image) {
+          compressFile = await FlutterImageCompress.compressAndGetFile(
+            croppedFile.path,
+            compressPath,
+            quality: compressQuality,
+            autoCorrectionAngle: true,
+            numberOfRetries: 3,
+            format: format,
+            // minWidth: 300,
+            // minHeight: 300,
+          );
+        } else {
+          compressFile = croppedFile;
+        }
+      }
+      logger.d('MediaPicker - media_pick - compress - format:$format - path:${compressFile?.path}');
       // logger.d('MediaPicker - media_pick - compress - size:${formatFlowSize(compressFile?.lengthSync().toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
     }
     if (compressFile == null) return null;
