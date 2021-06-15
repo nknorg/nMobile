@@ -40,6 +40,12 @@ class Path {
     if (fileExt == null || fileExt.isEmpty) {
       return fileName;
     } else {
+      List<String> party = fileName.split("/");
+      int index = party[(party.length - 1) >= 0 ? party.length - 1 : 0].lastIndexOf(".");
+      if (index < 0) {
+        return join(fileName + '.' + fileExt);
+      }
+      fileName = fileName.substring(0, index);
       return join(fileName + '.' + fileExt);
     }
   }
