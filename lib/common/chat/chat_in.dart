@@ -247,6 +247,11 @@ class ChatInCommon with Tag {
   }
 
   Future _receiveText(MessageSchema received, {ContactSchema? contact}) async {
+    // deleted
+    if (chatCommon.deletedCache[received.msgId] != null) {
+      logger.d("$TAG - receiveText - duplicated - deleted:${received.msgId}");
+      return;
+    }
     // duplicated
     List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
     if (exists.isNotEmpty) {
@@ -261,6 +266,11 @@ class ChatInCommon with Tag {
   }
 
   Future _receiveImage(MessageSchema received, {ContactSchema? contact}) async {
+    // deleted
+    if (chatCommon.deletedCache[received.msgId] != null) {
+      logger.d("$TAG - receiveText - duplicated - deleted:${received.msgId}");
+      return;
+    }
     bool isPieceCombine = received.options != null ? received.options![MessageOptions.KEY_PARENT_PIECE] : false;
     // duplicated
     List<MessageSchema> exists = [];
@@ -306,11 +316,11 @@ class ChatInCommon with Tag {
     if (optionsType == null || optionsType.isEmpty) return;
     if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_BURN_TIME) {
       int seconds = (content['deleteAfterSeconds'] as int?) ?? 0;
-      logger.i("$TAG - _receiveContactOptions - setBurn - seconds:$seconds - data:$data");
+      logger.d("$TAG - _receiveContactOptions - setBurn - seconds:$seconds - data:$data");
       contactCommon.setOptionsBurn(existContact, seconds, notify: true); // await
     } else if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN) {
       String deviceToken = (content['deviceToken']?.toString()) ?? "";
-      logger.i("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
+      logger.d("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
       contactCommon.setDeviceToken(existContact.id, deviceToken, notify: true); // await
     } else {
       logger.w("$TAG - _receiveContactOptions - setNothing - data:$data");

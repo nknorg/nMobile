@@ -135,6 +135,13 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
   @override
   Widget build(BuildContext context) {
+    if (_message.deleteTime != null) {
+      DateTime deleteTime = _message.deleteTime ?? DateTime.now();
+      if (deleteTime.millisecondsSinceEpoch <= DateTime.now().millisecondsSinceEpoch) {
+        return SizedBox.shrink();
+      }
+    }
+
     bool isSendOut = _message.isOutbound;
 
     List styles = _getStyles();

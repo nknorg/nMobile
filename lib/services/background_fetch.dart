@@ -11,11 +11,11 @@ class BackgroundFetchService {
     String taskId = task.taskId;
     bool isTimeout = task.timeout;
     if (isTimeout) {
-      logger.i("[BackgroundFetch] Headless task timed-out: $taskId");
+      logger.d("[BackgroundFetch] Headless task timed-out: $taskId");
       BackgroundFetch.finish(taskId);
       return;
     }
-    print('[BackgroundFetch] Headless event received.');
+    logger.d('[BackgroundFetch] Headless event received.');
     _onBackgroundFetch(taskId);
   }
 
