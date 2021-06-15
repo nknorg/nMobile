@@ -110,9 +110,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   ContactSchema? _contactSchema;
   WalletSchema? _walletDefault;
 
-  late WalletBloc _walletBloc;
-  late StreamSubscription _updateContactSubscription;
-  late StreamSubscription _changeWalletSubscription;
+  WalletBloc? _walletBloc;
+  StreamSubscription? _updateContactSubscription;
+  StreamSubscription? _changeWalletSubscription;
 
   bool _initBurnOpen = false;
   int _initBurnProgress = -1;
@@ -138,7 +138,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         _contactSchema = event;
       });
     });
-    _changeWalletSubscription = _walletBloc.stream.listen((event) {
+    _changeWalletSubscription = _walletBloc?.stream.listen((event) {
       if (event is WalletDefault) {
         if (_contactSchema?.type == ContactType.me) {
           _onDefaultWalletChange();
@@ -153,8 +153,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   @override
   void dispose() {
     _updateBurnIfNeed();
-    _updateContactSubscription.cancel();
-    _changeWalletSubscription.cancel();
+    _updateContactSubscription?.cancel();
+    _changeWalletSubscription?.cancel();
     super.dispose();
   }
 
@@ -247,7 +247,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     S _localizations = S.of(this.context);
     WalletSchema? result = await BottomDialog.of(this.context).showWalletSelect(title: _localizations.select_another_wallet, onlyNKN: true);
     if (result == null || result.address == _contactSchema?.nknWalletAddress) return;
-    _walletBloc.add(DefaultWallet(result.address));
+    _walletBloc?.add(DefaultWallet(result.address));
     Loading.show();
     // no change chat immediately because wallet default maybe failure
     // Loading.dismiss();

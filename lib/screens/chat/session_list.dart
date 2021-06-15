@@ -9,6 +9,7 @@ import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/chat/no_message.dart';
@@ -31,6 +32,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   StreamSubscription? _sessionAddSubscription;
   StreamSubscription? _sessionDeleteSubscription;
   StreamSubscription? _sessionUpdateSubscription;
+  StreamSubscription? _onMessageDeleteStreamSubscription;
 
   ContactSchema? _current;
 
@@ -90,6 +92,22 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       _sortMessages();
     });
 
+    // message
+    _onMessageDeleteStreamSubscription = chatCommon.onDeleteStream.listen((String msgId) {
+      setState(() {
+        _sessionList.forEach((SessionSchema element) async {
+          if (element.lastMessageOptions != null && element.lastMessageOptions!["msg_id"] == msgId) {
+            MessageSchema? lastMessage = await sessionCommon.findLastMessage(element);
+            lastMessage?.sendTime = DateTime.now(); // for sort
+            element.lastMessageTime = lastMessage?.sendTime;
+            element.lastMessageOptions = lastMessage?.toMap();
+            element.unReadCount = element.unReadCount > 0 ? element.unReadCount - 1 : 0;
+            sessionCommon.setLastMessageAndUnReadCount(element.targetId, lastMessage, element.unReadCount, notify: true);
+          }
+        });
+      });
+    });
+
     // scroll
     _scrollController.addListener(() {
       if (_moreLoading) return;
@@ -116,6 +134,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     _sessionAddSubscription?.cancel();
     _sessionDeleteSubscription?.cancel();
     _sessionUpdateSubscription?.cancel();
+    _onMessageDeleteStreamSubscription?.cancel();
     super.dispose();
   }
 
