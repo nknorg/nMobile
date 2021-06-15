@@ -88,6 +88,10 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       DateTime deleteTime = _message.deleteTime ?? DateTime.now();
       if (deleteTime.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch) {
         taskService.addTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}", () async {
+          if (_message.originalId != contactCommon.currentUser?.clientAddress) {
+            taskService.removeTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}");
+            return;
+          }
           if (deleteTime.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch) {
             // logger.d("$TAG - tick - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
           } else {

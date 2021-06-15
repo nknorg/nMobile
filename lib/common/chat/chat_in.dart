@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/helpers/file.dart';
@@ -253,7 +252,7 @@ class ChatInCommon with Tag {
 
   Future _receiveText(MessageSchema received, {ContactSchema? contact}) async {
     // deleted
-    String key = hexEncode(clientCommon.publicKey ?? Uint8List(0));
+    String key = contactCommon.currentUser?.clientAddress ?? "";
     if (chatCommon.deletedCache[key] != null && chatCommon.deletedCache[key]![received.msgId] != null) {
       logger.d("$TAG - receiveText - duplicated - deleted:${received.msgId}");
       return;
@@ -273,7 +272,7 @@ class ChatInCommon with Tag {
 
   Future _receiveImage(MessageSchema received, {ContactSchema? contact}) async {
     // deleted
-    String key = hexEncode(clientCommon.publicKey ?? Uint8List(0));
+    String key = contactCommon.currentUser?.clientAddress ?? "";
     if (chatCommon.deletedCache[key] != null && chatCommon.deletedCache[key]![received.msgId] != null) {
       logger.d("$TAG - receiveText - duplicated - deleted:${received.msgId}");
       return;
