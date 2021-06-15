@@ -28,10 +28,10 @@ class SessionCommon with Tag {
     _updateController.close();
   }
 
-  Future<SessionSchema?> add(SessionSchema? schema, {bool checkDuplicated = true}) async {
+  Future<SessionSchema?> add(SessionSchema? schema, {MessageSchema? lastMsg, bool checkDuplicated = true}) async {
     if (schema == null || schema.targetId.isEmpty) return null;
     // lastMessage
-    MessageSchema? lastMessage = await findLastMessage(schema);
+    MessageSchema? lastMessage = lastMsg ?? await findLastMessage(schema);
     schema.lastMessageTime = lastMessage?.sendTime;
     schema.lastMessageOptions = lastMessage?.toMap();
     // unReadCount
