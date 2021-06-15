@@ -29,6 +29,8 @@ class ChatCommon with Tag {
   MessageStorage _messageStorage = MessageStorage();
   TopicStorage _topicStorage = TopicStorage();
 
+  Map<String, DateTime> deletedCache = Map<String, DateTime>();
+
   Future<OnMessage?> sendData(String dest, String data) async {
     return await clientCommon.client?.sendText([dest], data);
   }
@@ -186,6 +188,7 @@ class ChatCommon with Tag {
 
   Future<bool> msgDelete(String msgId, {bool notify = false}) async {
     bool success = await _messageStorage.delete(msgId);
+    if (success) deletedCache[msgId] = DateTime.now();
     if (success && notify) onDeleteSink.add(msgId);
     return success;
   }
