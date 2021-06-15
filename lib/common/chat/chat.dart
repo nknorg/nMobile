@@ -24,8 +24,6 @@ class ChatCommon with Tag {
   MessageStorage _messageStorage = MessageStorage();
   TopicStorage _topicStorage = TopicStorage();
 
-  // TODO:GG delMsgListCache
-
   Future<OnMessage?> sendData(String dest, String data) async {
     return await clientCommon.client?.sendText([dest], data);
   }
@@ -83,7 +81,8 @@ class ChatCommon with Tag {
     if (message.isOutbound) {
       await sessionCommon.setLastMessage(message.targetId, message, notify: true);
     } else {
-      await sessionCommon.setLastMessageAndUnReadCount(message.targetId, message, null, notify: true);
+      int unreadCount = exist.unReadCount + 1;
+      await sessionCommon.setLastMessageAndUnReadCount(message.targetId, message, unreadCount, notify: true);
     }
     return exist;
   }
