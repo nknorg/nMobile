@@ -189,7 +189,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                     width: double.infinity,
                     onPressed: () async {
                       Navigator.pop(this.context);
-                      await sessionCommon.delete(item.targetId);
+                      await sessionCommon.delete(item.targetId, notify: true);
                     },
                   ),
                 );

@@ -92,13 +92,13 @@ class ContactCommon with Tag {
     return added;
   }
 
-  Future<bool> delete(int? contactId) async {
+  Future<bool> delete(int? contactId, {bool notify = false}) async {
     if (contactId == null || contactId == 0) return false;
     // bool deleted = await _contactStorage.delete(contactId);
     // if (deleted) deleteSink.add(contactId);
     // return deleted;
     bool success = await _contactStorage.setType(contactId, ContactType.stranger);
-    if (success) queryAndNotify(contactId);
+    if (success && notify) queryAndNotify(contactId);
     return success;
   }
 
