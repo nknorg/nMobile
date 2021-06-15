@@ -650,12 +650,18 @@ class MessageSchema extends Equatable {
     return topic?.isNotEmpty == true;
   }
 
-  // UnReadCount / Session / Notification
+  // UnReadCount / Notification / Burning
   bool get canDisplayAndRead {
     bool isText = contentType == ContentType.text || contentType == ContentType.textExtension;
     bool isImage = contentType == ContentType.media || contentType == ContentType.image || contentType == ContentType.nknImage;
     bool isAudio = contentType == ContentType.audio;
     return isText || isImage || isAudio;
+  }
+
+  // ++ Session
+  bool get canDisplay {
+    bool isEvent = contentType == ContentType.eventContactOptions || contentType == ContentType.eventSubscribe || contentType == ContentType.eventUnsubscribe || contentType == ContentType.eventChannelInvitation;
+    return canDisplayAndRead || isEvent;
   }
 
   @override

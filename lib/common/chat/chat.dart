@@ -118,7 +118,7 @@ class ChatCommon with Tag {
   }
 
   Future<SessionSchema?> sessionHandle(MessageSchema message) async {
-    if (!message.canDisplayAndRead) return null;
+    if (!message.canDisplay) return null;
     // duplicated
     if (message.targetId == null || message.targetId!.isEmpty) return null;
     SessionSchema? exist = await sessionCommon.query(message.targetId);
