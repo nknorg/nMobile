@@ -74,6 +74,47 @@ class ChatCommon with Tag {
     return exist;
   }
 
+  Future<void> notificationHandle(ContactSchema? contact, TopicSchema? topic, MessageSchema message) async {
+    if (!message.canDisplayAndRead) return null;
+    late String title;
+    late String content;
+    if (contact != null && topic == null) {
+      title = contact.displayName;
+      content = message.content;
+    } else if (topic != null) {
+      notification.showDChatNotification('[${topic.topicShort}] ${contact?.displayName}', message.content);
+      title = '[${topic.topicShort}] ${contact?.displayName}';
+      content = message.content;
+    }
+
+    S localizations = S.of(Global.appContext);
+    // TODO: notification
+    switch (message.contentType) {
+      case ContentType.text:
+      case ContentType.textExtension:
+        notification.showDChatNotification(title, content);
+        break;
+      case ContentType.media:
+      case ContentType.image:
+      case ContentType.nknImage:
+        notification.showDChatNotification(title, '[${localizations.image}]');
+        break;
+      case ContentType.audio:
+        notification.showDChatNotification(title, '[${localizations.audio}]');
+        break;
+      // TODO:GG notification contentType
+      case ContentType.system:
+      case ContentType.eventSubscribe:
+      case ContentType.eventUnsubscribe:
+      case ContentType.eventChannelInvitation:
+        // case ContentType.contact:
+        // case ContentType.receipt:
+        // case ContentType.piece:
+        // case ContentType.eventContactOptions:
+        break;
+    }
+  }
+
   Future<SessionSchema?> sessionHandle(MessageSchema message) async {
     if (!message.canDisplayAndRead) return null;
     // duplicated
@@ -147,47 +188,5 @@ class ChatCommon with Tag {
     bool success = await _messageStorage.delete(msgId);
     if (success && notify) onDeleteSink.add(msgId);
     return success;
-  }
-
-  // TODO:GG move to notification
-  Future<void> notificationHandle(ContactSchema? contact, TopicSchema? topic, MessageSchema message) async {
-    if (!message.canDisplayAndRead) return null;
-    late String title;
-    late String content;
-    if (contact != null && topic == null) {
-      title = contact.displayName;
-      content = message.content;
-    } else if (topic != null) {
-      notification.showDChatNotification('[${topic.topicShort}] ${contact?.displayName}', message.content);
-      title = '[${topic.topicShort}] ${contact?.displayName}';
-      content = message.content;
-    }
-
-    S localizations = S.of(Global.appContext);
-    // TODO: notification
-    switch (message.contentType) {
-      case ContentType.text:
-      case ContentType.textExtension:
-        notification.showDChatNotification(title, content);
-        break;
-      case ContentType.media:
-      case ContentType.image:
-      case ContentType.nknImage:
-        notification.showDChatNotification(title, '[${localizations.image}]');
-        break;
-      case ContentType.audio:
-        notification.showDChatNotification(title, '[${localizations.audio}]');
-        break;
-      // TODO:GG notification contentType
-      case ContentType.system:
-      case ContentType.eventSubscribe:
-      case ContentType.eventUnsubscribe:
-      case ContentType.eventChannelInvitation:
-        // case ContentType.contact:
-        // case ContentType.receipt:
-        // case ContentType.piece:
-        // case ContentType.eventContactOptions:
-        break;
-    }
   }
 }
