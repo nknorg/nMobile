@@ -158,8 +158,12 @@ class ChatInCommon with Tag {
               avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact, extension: "jpg");
             }
           }
+          // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {
+          //   logger.i("$TAG - receiveContact - setProfile - NULL");
+          // } else {
           await contactCommon.setOtherProfile(exist, firstName, lastName, avatar?.path ?? "", version, notify: true);
           logger.i("$TAG - receiveContact - setProfile - firstName:$firstName - avatar:${avatar?.path} - version:$version - data:$data");
+          // }
         }
       } else {
         logger.d("$TAG - receiveContact - profileVersionSame - contact:$exist - data:$data");
