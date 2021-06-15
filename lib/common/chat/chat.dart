@@ -124,7 +124,7 @@ class ChatCommon with Tag {
     SessionSchema? exist = await sessionCommon.query(message.targetId);
     if (exist == null) {
       logger.d("$TAG - sessionHandle - new - targetId:${message.targetId}");
-      return await sessionCommon.add(SessionSchema(targetId: message.targetId!, type: SessionSchema.getTypeByMessage(message)));
+      return await sessionCommon.add(SessionSchema(targetId: message.targetId!, type: SessionSchema.getTypeByMessage(message)), lastMsg: message);
     }
     if (message.isOutbound) {
       await sessionCommon.setLastMessage(message.targetId, message, notify: true);
