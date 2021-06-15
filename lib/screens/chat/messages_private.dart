@@ -17,6 +17,7 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
+import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class ChatMessagesPrivateLayout extends BaseStateFulWidget {
@@ -33,7 +34,6 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
   StreamSink<Map<String, String>> get _onInputChangeSink => _onInputChangeController.sink;
   Stream<Map<String, String>> get _onInputChangeStream => _onInputChangeController.stream; // .distinct((prev, next) => prev == next);
 
-  StreamSubscription? _onContactUpdateStreamSubscription;
   StreamSubscription? _onMessageReceiveStreamSubscription;
   StreamSubscription? _onMessageSendStreamSubscription;
   StreamSubscription? _onMessageDeleteStreamSubscription;
@@ -55,13 +55,6 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
   @override
   void initState() {
     super.initState();
-    // contact
-    _onContactUpdateStreamSubscription = contactCommon.updateStream.where((event) => event.id == _contact.id).listen((ContactSchema event) {
-      setState(() {
-        _contact = event;
-      });
-    });
-
     // messages
     _onMessageReceiveStreamSubscription = chatInCommon.onSavedStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
       _insertMessage(event);
@@ -101,7 +94,6 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
   @override
   void dispose() {
     _onInputChangeController.close();
-    _onContactUpdateStreamSubscription?.cancel();
     _onMessageReceiveStreamSubscription?.cancel();
     _onMessageSendStreamSubscription?.cancel();
     _onMessageDeleteStreamSubscription?.cancel();
@@ -153,6 +145,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
     SkinTheme _theme = application.theme;
+    int deleteAfterSeconds = _contact.options?.deleteAfterSeconds ?? 0;
 
     return Layout(
       headerColor: _theme.headBarColor2,
@@ -164,10 +157,25 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
             onTap: () {
               ContactProfileScreen.go(context, contactId: _contact.id);
             },
-            body: Label(
-              _localizations.click_to_settings,
-              type: LabelType.h4,
-              color: _theme.fontColor2,
+            body: Container(
+              padding: EdgeInsets.only(top: 3),
+              child: deleteAfterSeconds > 0
+                  ? Row(
+                      children: [
+                        Icon(Icons.alarm_on, size: 16, color: _theme.backgroundLightColor),
+                        SizedBox(width: 4),
+                        Label(
+                          durationFormat(Duration(seconds: deleteAfterSeconds)),
+                          type: LabelType.bodySmall,
+                          color: _theme.backgroundLightColor,
+                        ),
+                      ],
+                    )
+                  : Label(
+                      _localizations.click_to_settings,
+                      type: LabelType.h4,
+                      color: _theme.fontColor2,
+                    ),
             ),
           ),
         ),
