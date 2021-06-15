@@ -2,12 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get_it/get_it.dart';
 import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/wallet/home.dart';
 import 'package:nmobile/utils/logger.dart';
 
-import 'common/application.dart';
 import 'common/global.dart';
 import 'common/locator.dart';
 import 'components/layout/nav.dart';
@@ -34,25 +32,20 @@ class AppScreen extends StatefulWidget {
 }
 
 class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
-  GetIt locator = GetIt.instance;
-  late Application app;
-
-  int _currentIndex = 0;
-  late PageController _pageController;
-
   List<Widget> screens = <Widget>[
     ChatHomeScreen(),
     WalletHomeScreen(),
     SettingsHomeScreen(),
   ];
 
+  int _currentIndex = 0;
+  late PageController _pageController;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addObserver(this);
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
-    app = locator.get<Application>();
 
     this._currentIndex = widget.arguments != null ? (widget.arguments![AppScreen.argIndex] ?? 0) : 0;
     _pageController = PageController(initialPage: this._currentIndex);
@@ -78,7 +71,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     // init
     Global.appContext = context;
-    app.mounted();
+    application.mounted();
 
     return WillPopScope(
       onWillPop: () async {
