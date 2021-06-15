@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/generated/l10n.dart';
@@ -29,7 +31,7 @@ class ChatCommon with Tag {
   MessageStorage _messageStorage = MessageStorage();
   TopicStorage _topicStorage = TopicStorage();
 
-  Map<String, DateTime> deletedCache = Map<String, DateTime>();
+  Map<String, Map<String, DateTime>> deletedCache = Map<String, Map<String, DateTime>>();
 
   Future<OnMessage?> sendData(String dest, String data) async {
     return await clientCommon.client?.sendText([dest], data);
@@ -188,7 +190,11 @@ class ChatCommon with Tag {
 
   Future<bool> msgDelete(String msgId, {bool notify = false}) async {
     bool success = await _messageStorage.delete(msgId);
-    if (success) deletedCache[msgId] = DateTime.now();
+    String key = hexEncode(clientCommon.publicKey ?? Uint8List(0));
+    if (success) {
+      if (deletedCache[key] == null) deletedCache[key] = Map();
+      deletedCache[key]![msgId] = DateTime.now();
+    }
     if (success && notify) onDeleteSink.add(msgId);
     return success;
   }
