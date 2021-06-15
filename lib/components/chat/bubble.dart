@@ -57,7 +57,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
   void initState() {
     super.initState();
     // pieces
-    _onPieceOutStreamSubscription = sendMessage.onPieceOutStream.listen((Map<String, dynamic> event) {
+    _onPieceOutStreamSubscription = chatOutCommon.onPieceOutStream.listen((Map<String, dynamic> event) {
       String? msgId = event["msg_id"];
       double? percent = event["percent"];
       if (msgId == null || msgId != this._message.msgId || percent == null) return;
