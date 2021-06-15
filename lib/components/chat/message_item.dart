@@ -78,6 +78,7 @@ class ChatMessageItem extends StatelessWidget {
         break;
       // TODO:GG messageItem contentType
       case ContentType.system:
+      case ContentType.audio:
       case ContentType.eventSubscribe:
       case ContentType.eventUnsubscribe:
       case ContentType.eventChannelInvitation:

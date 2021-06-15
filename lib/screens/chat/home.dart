@@ -106,8 +106,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
 
-    // _firstAutoShowAuth() TODO:GG auth
-
     return BlocBuilder<WalletBloc, WalletState>(
       builder: (context, state) {
         if (state is WalletLoaded) {

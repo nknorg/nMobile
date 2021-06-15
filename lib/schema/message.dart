@@ -417,7 +417,17 @@ class MessageSchema extends Equatable {
       case ContentType.eventContactOptions:
         schema.content = data;
         break;
-      // TODO:GG receiveMap contentType
+      // case ContentType.system:
+      // case ContentType.piece:
+      // case ContentType.text:
+      // case ContentType.textExtension:
+      // case ContentType.media:
+      // case ContentType.image:
+      // case ContentType.nknImage:
+      // case ContentType.audio:
+      // case ContentType.eventSubscribe:
+      // case ContentType.eventUnsubscribe:
+      // case ContentType.eventChannelInvitation:
       default:
         schema.content = data['content'];
         break;
@@ -531,6 +541,7 @@ class MessageSchema extends Equatable {
       case ContentType.media:
       case ContentType.nknImage:
       case ContentType.image:
+      case ContentType.audio:
         if (content is File) {
           map['content'] = Path.getLocalFile((content as File).path);
         }
@@ -539,15 +550,13 @@ class MessageSchema extends Equatable {
       case ContentType.eventContactOptions:
         map['content'] = content is Map ? jsonEncode(content) : content;
         break;
-      // TODO:GG fromMap contentType
       // case ContentType.system:
       // case ContentType.receipt:
       // case ContentType.text:
       // case ContentType.textExtension:
-      case ContentType.audio:
-      case ContentType.eventSubscribe:
-      case ContentType.eventUnsubscribe:
-      case ContentType.eventChannelInvitation:
+      // case ContentType.eventSubscribe:
+      // case ContentType.eventUnsubscribe:
+      // case ContentType.eventChannelInvitation:
       default:
         map['content'] = content;
         break;
@@ -586,6 +595,7 @@ class MessageSchema extends Equatable {
       case ContentType.media:
       case ContentType.nknImage:
       case ContentType.image:
+      case ContentType.audio:
         String? completePath = Path.getCompleteFile(e['content']);
         schema.content = completePath != null ? File(completePath) : null;
         break;
@@ -597,14 +607,12 @@ class MessageSchema extends Equatable {
           schema.content = e['content'];
         }
         break;
-      // TODO:GG fromMap contentType
       // case ContentType.system:
       // case ContentType.text:
       // case ContentType.textExtension:
-      case ContentType.audio:
-      case ContentType.eventSubscribe:
-      case ContentType.eventUnsubscribe:
-      case ContentType.eventChannelInvitation:
+      // case ContentType.eventSubscribe:
+      // case ContentType.eventUnsubscribe:
+      // case ContentType.eventChannelInvitation:
       default:
         schema.content = e['content'];
         break;

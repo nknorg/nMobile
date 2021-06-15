@@ -20,7 +20,7 @@ class RequestType {
 }
 
 class ContactCommon with Tag {
-  static const String KEY_PIECE_ENABLE = "PIECE_ENABLE"; // TODO:GG refactor
+  static const String KEY_PIECE_ENABLE = "PIECE_ENABLE";
 
   ContactSchema? currentUser;
   LocalStorage _localStorage = LocalStorage();
