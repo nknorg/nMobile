@@ -67,9 +67,11 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    logger.i("AppScreen - APP生命周期 - $state");
+    AppLifecycleState old = application.appLifecycleState;
     application.appLifecycleState = state;
     super.didChangeAppLifecycleState(state);
-    logger.i("AppScreen - APP生命周期 - ${application.appLifecycleState}");
+    application.appLifeSink.add([old, state]);
   }
 
   @override
