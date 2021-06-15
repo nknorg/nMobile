@@ -16,28 +16,23 @@ import 'package:uuid/uuid.dart';
 
 import '../locator.dart';
 
-class SendMessage with Tag {
+class ChatOutCommon with Tag {
   // piece
   static const int piecesParity = 3;
   static const int prePieceLength = 1024 * 6;
   static const int minPiecesTotal = 2 * piecesParity; // parity >= 2
   static const int maxPiecesTotal = 10 * piecesParity; // parity <= 10
 
-  SendMessage();
+  ChatOutCommon();
 
   // ignore: close_sinks
-  StreamController<MessageSchema> onSavedController = StreamController<MessageSchema>.broadcast();
-  StreamSink<MessageSchema> get onSavedSink => onSavedController.sink;
-  Stream<MessageSchema> get onSavedStream => onSavedController.stream.distinct((prev, next) => prev.msgId == next.msgId);
-
-  // ignore: close_sinks
-  StreamController<MessageSchema> _onUpdateController = StreamController<MessageSchema>.broadcast();
-  StreamSink<MessageSchema> get onUpdateSink => _onUpdateController.sink;
-  Stream<MessageSchema> get onUpdateStream => _onUpdateController.stream; // .distinct((prev, next) => prev.msgId == next.msgId)
+  StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
+  StreamSink<MessageSchema> get _onSavedSink => _onSavedController.sink;
+  Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.msgId == next.msgId);
 
   // ignore: close_sinks
   StreamController<Map<String, dynamic>> _onPieceOutController = StreamController<Map<String, dynamic>>.broadcast();
-  StreamSink<Map<String, dynamic>> get onPieceOutSink => _onPieceOutController.sink;
+  StreamSink<Map<String, dynamic>> get _onPieceOutSink => _onPieceOutController.sink;
   Stream<Map<String, dynamic>> get onPieceOutStream => _onPieceOutController.stream.distinct((prev, next) => prev['percent'] >= next['percent']);
 
   MessageStorage _messageStorage = MessageStorage();
@@ -169,7 +164,7 @@ class SendMessage with Tag {
       }
       // logger.d("$TAG - sendPiece - success - index:${schema.index} - time:${DateTime.now().millisecondsSinceEpoch} - schema:$schema - data:$data");
       double percent = (schema.index ?? 0) / (schema.total ?? 1);
-      onPieceOutSink.add({"msg_id": schema.msgId, "percent": percent});
+      _onPieceOutSink.add({"msg_id": schema.msgId, "percent": percent});
       return schema;
     } catch (e) {
       handleError(e);
@@ -180,40 +175,41 @@ class SendMessage with Tag {
     }
   }
 
-  Future<MessageSchema?> sendText(String? clientAddress, String? content, {ContactSchema? contact}) async {
-    if (chatCommon.id == null || clientAddress == null || content == null || content.isEmpty) {
+  Future<MessageSchema?> sendText(String? clientAddress, String? content, {required ContactSchema contact}) async {
+    if (clientCommon.id == null || clientAddress == null || content == null || content.isEmpty) {
       // Toast.show(S.of(Global.appContext).failure);
       return null;
     }
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
-      chatCommon.id ?? "",
+      clientCommon.id ?? "",
       ContentType.text,
       to: clientAddress,
       content: content,
-      deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
+      deleteAfterSeconds: contact.options?.deleteAfterSeconds,
     );
     return _send(schema, MessageData.getText(schema));
   }
 
-  Future<MessageSchema?> sendImage(String? clientAddress, File? content, {ContactSchema? contact}) async {
-    if (chatCommon.id == null || clientAddress == null || content == null || (!await content.exists())) {
+  Future<MessageSchema?> sendImage(String? clientAddress, File? content, {required ContactSchema contact}) async {
+    if (clientCommon.id == null || clientAddress == null || content == null || (!await content.exists())) {
       // Toast.show(S.of(Global.appContext).failure);
       return null;
     }
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
-      chatCommon.id ?? "",
+      clientCommon.id ?? "",
       ContentType.media, // SUPPORT:IMAGE
       to: clientAddress,
       content: content,
-      deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
+      deleteAfterSeconds: contact.options?.deleteAfterSeconds,
     );
     return _send(schema, await MessageData.getImage(schema));
   }
 
   Future<MessageSchema?> resend(MessageSchema? schema) async {
     if (schema == null) return null;
+    schema.sendTime = DateTime.now();
     switch (schema.contentType) {
       case ContentType.text:
       case ContentType.textExtension:
@@ -239,13 +235,13 @@ class SendMessage with Tag {
     if (schema == null || msgData == null) return null;
     // DB
     if (resend) {
-      await _messageStorage.updateSendTime(schema.msgId, DateTime.now());
+      await _messageStorage.updateSendTime(schema.msgId, schema.sendTime ?? DateTime.now());
     } else if (database) {
       schema = await _messageStorage.insert(schema);
     }
     if (schema == null) return null;
     // display
-    if (display || resend) onSavedSink.add(schema);
+    if (display) _onSavedSink.add(schema);
     // SDK
     Uint8List? pid;
     try {
@@ -276,7 +272,7 @@ class SendMessage with Tag {
     if (pid == null || pid.isEmpty) {
       schema = MessageStatus.set(schema, MessageStatus.SendFail);
       if (database || resend) _messageStorage.updateMessageStatus(schema); // await
-      if (display || resend) onUpdateSink.add(schema);
+      if (display || resend) chatCommon.onUpdateSink.add(schema);
       return null;
     }
     // pid
@@ -286,7 +282,7 @@ class SendMessage with Tag {
     schema = MessageStatus.set(schema, MessageStatus.SendSuccess);
     if (database || resend) _messageStorage.updateMessageStatus(schema); // await
     // display
-    if (display || resend) onUpdateSink.add(schema);
+    if (display || resend) chatCommon.onUpdateSink.add(schema);
     return schema;
   }
 
@@ -300,8 +296,8 @@ class SendMessage with Tag {
     int parity = results[3];
 
     // dataList.size = (total + parity)
-    List<Object?>? dataList = await Common.splitPieces(dataBytesString, total, parity);
-    if (dataList.isEmpty == true) return null;
+    List<Object?> dataList = await Common.splitPieces(dataBytesString, total, parity);
+    if (dataList.isEmpty) return null;
 
     List<Future<MessageSchema?>> futures = <Future<MessageSchema?>>[];
     DateTime dataNow = DateTime.now();
