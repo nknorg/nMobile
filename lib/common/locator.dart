@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
-import 'package:nmobile/common/chat/send_message.dart';
+import 'package:nmobile/common/chat/chat_out.dart';
+import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/session/session.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
@@ -10,7 +11,7 @@ import '../services/task_service.dart';
 import 'application.dart';
 import 'authentication.dart';
 import 'chat/chat.dart';
-import 'chat/receive_message.dart';
+import 'chat/chat_in.dart';
 import 'notification.dart';
 
 GetIt locator = GetIt.instance;
@@ -21,16 +22,17 @@ late BackgroundFetchService backgroundFetchService;
 late Notification notification;
 late Authorization authorization;
 
+late ClientCommon clientCommon;
 late ChatCommon chatCommon;
 late SessionCommon sessionCommon;
-late ReceiveMessage receiveMessage;
-late SendMessage sendMessage;
+late ChatInCommon chatInCommon;
+late ChatOutCommon chatOutCommon;
 late ContactCommon contactCommon;
 late WalletCommon walletCommon;
 late MemoryCache memoryCache;
 
 void setupLocator() {
-  locator..registerSingleton(Application())..registerSingleton(TaskService())..registerSingleton(BackgroundFetchService())..registerSingleton(Notification())..registerSingleton(Authorization())..registerSingleton(ChatCommon())..registerSingleton(SessionCommon())..registerSingleton(ReceiveMessage())..registerSingleton(SendMessage())..registerSingleton(ContactCommon())..registerSingleton(WalletCommon())..registerSingleton(MemoryCache());
+  locator..registerSingleton(Application())..registerSingleton(TaskService())..registerSingleton(BackgroundFetchService())..registerSingleton(Notification())..registerSingleton(Authorization())..registerSingleton(ClientCommon())..registerSingleton(ChatCommon())..registerSingleton(SessionCommon())..registerSingleton(ChatInCommon())..registerSingleton(ChatOutCommon())..registerSingleton(ContactCommon())..registerSingleton(WalletCommon())..registerSingleton(MemoryCache());
 
   application = locator.get<Application>();
   taskService = locator.get<TaskService>();
@@ -38,10 +40,11 @@ void setupLocator() {
   notification = locator.get<Notification>();
   authorization = locator.get<Authorization>();
 
+  clientCommon = locator.get<ClientCommon>();
   chatCommon = locator.get<ChatCommon>();
   sessionCommon = locator.get<SessionCommon>();
-  receiveMessage = locator.get<ReceiveMessage>();
-  sendMessage = locator.get<SendMessage>();
+  chatInCommon = locator.get<ChatInCommon>();
+  chatOutCommon = locator.get<ChatOutCommon>();
   contactCommon = locator.get<ContactCommon>();
   walletCommon = locator.get<WalletCommon>();
 

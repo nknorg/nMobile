@@ -30,7 +30,7 @@ class SessionCommon with Tag {
 
   Future<SessionSchema?> add(SessionSchema? schema, {bool checkDuplicated = true}) async {
     if (schema == null || schema.targetId.isEmpty) return null;
-    if (schema.lastMessageTime == null || schema.lastMessageOptions == null) {
+    if (schema.lastMessageTime == null || schema.lastMessageOptions == null || schema.lastMessageOptions!.isEmpty) {
       List<MessageSchema> history = await _messageStorage.queryListCanReadByTargetId(schema.targetId, offset: 0, limit: 1);
       if (history.isNotEmpty) {
         MessageSchema message = history[0];
