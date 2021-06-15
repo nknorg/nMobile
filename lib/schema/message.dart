@@ -89,6 +89,7 @@ class MessageOptions {
     options?.remove(KEY_TOTAL);
     options?.remove(KEY_PARITY);
     options?.remove(KEY_INDEX);
+    return options;
   }
 }
 
