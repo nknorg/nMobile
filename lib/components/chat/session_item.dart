@@ -134,6 +134,38 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           ],
         ),
       );
+    } else if (msgType == ContentType.eventContactOptions) {
+      Map<String, dynamic> optionData = _lastMsg?.content ?? Map<String, dynamic>();
+      Map<String, dynamic> content = optionData['content'] ?? Map<String, dynamic>();
+      if (content.keys.length <= 0) return SizedBox.shrink();
+      String? deviceToken = content['deviceToken'] as String?;
+      int? deleteAfterSeconds = content['deleteAfterSeconds'] as int?;
+
+      bool isDeviceToken = deviceToken != null;
+      bool isBurn = deleteAfterSeconds != null;
+
+      // SUPPORT:START
+      isBurn = isBurn || !isDeviceToken;
+      if (isBurn) deleteAfterSeconds = deleteAfterSeconds ?? 0;
+      // SUPPORT:END
+
+      if (isDeviceToken) {
+        String deviceDesc = deviceToken.length == 0 ? ' ${_localizations.setting_deny_notification}' : ' ${_localizations.setting_accept_notification}';
+        contentWidget = Label(
+          deviceDesc,
+          type: LabelType.bodyRegular,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        );
+      } else {
+        String burnDecs = ' ${deleteAfterSeconds != null && deleteAfterSeconds > 0 ? _localizations.update_burn_after_reading : _localizations.close_burn_after_reading} ';
+        contentWidget = Label(
+          burnDecs,
+          type: LabelType.bodyRegular,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        );
+      }
     } else if (msgType == ContentType.eventSubscribe) {
       contentWidget = Label(
         _localizations.joined_channel,

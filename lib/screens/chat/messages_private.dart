@@ -33,10 +33,11 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
   StreamSink<Map<String, String>> get _onInputChangeSink => _onInputChangeController.sink;
   Stream<Map<String, String>> get _onInputChangeStream => _onInputChangeController.stream; // .distinct((prev, next) => prev == next);
 
-  late StreamSubscription _onContactUpdateStreamSubscription;
-  late StreamSubscription _onMessageReceiveStreamSubscription;
-  late StreamSubscription _onMessageSendStreamSubscription;
-  late StreamSubscription _onMessageUpdateStreamSubscription;
+  StreamSubscription? _onContactUpdateStreamSubscription;
+  StreamSubscription? _onMessageReceiveStreamSubscription;
+  StreamSubscription? _onMessageSendStreamSubscription;
+  StreamSubscription? _onMessageDeleteStreamSubscription;
+  StreamSubscription? _onMessageUpdateStreamSubscription;
 
   late ContactSchema _contact;
 
@@ -68,6 +69,11 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
     _onMessageSendStreamSubscription = chatOutCommon.onSavedStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
       _insertMessage(event);
     });
+    _onMessageDeleteStreamSubscription = chatCommon.onDeleteStream.listen((event) {
+      setState(() {
+        _messages = _messages.where((element) => element.msgId != event).toList();
+      });
+    });
     _onMessageUpdateStreamSubscription = chatCommon.onUpdateStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
       setState(() {
         _messages = _messages.map((MessageSchema e) => (e.msgId == event.msgId) ? event : e).toList();
@@ -95,10 +101,11 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
   @override
   void dispose() {
     _onInputChangeController.close();
-    _onContactUpdateStreamSubscription.cancel();
-    _onMessageReceiveStreamSubscription.cancel();
-    _onMessageSendStreamSubscription.cancel();
-    _onMessageUpdateStreamSubscription.cancel();
+    _onContactUpdateStreamSubscription?.cancel();
+    _onMessageReceiveStreamSubscription?.cancel();
+    _onMessageSendStreamSubscription?.cancel();
+    _onMessageDeleteStreamSubscription?.cancel();
+    _onMessageUpdateStreamSubscription?.cancel();
     super.dispose();
   }
 
@@ -119,7 +126,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
     if (schema == null) return;
     if (!schema.isOutbound) {
       // read
-      schema = await chatCommon.read(schema);
+      schema = await chatCommon.msgRead(schema);
       sessionCommon.setUnReadCount(_contact.clientAddress.toString(), 0, notify: true);
     }
     setState(() {

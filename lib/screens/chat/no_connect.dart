@@ -22,8 +22,8 @@ class ChatNoConnectLayout extends BaseStateFulWidget {
 }
 
 class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLayout> {
-  late WalletBloc _walletBloc;
-  late StreamSubscription _walletAddSubscription;
+  WalletBloc? _walletBloc;
+  StreamSubscription? _walletAddSubscription;
 
   bool loaded = false;
   WalletSchema? _selectWallet;
@@ -36,7 +36,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
     super.initState();
     // listen
     _walletBloc = BlocProvider.of<WalletBloc>(this.context);
-    _walletAddSubscription = _walletBloc.stream.listen((event) {
+    _walletAddSubscription = _walletBloc?.stream.listen((event) {
       _refreshWalletDefault();
     });
 
@@ -46,7 +46,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
 
   @override
   void dispose() {
-    _walletAddSubscription.cancel();
+    _walletAddSubscription?.cancel();
     super.dispose();
   }
 
