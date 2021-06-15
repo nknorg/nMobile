@@ -207,7 +207,7 @@ SPEC CHECKSUMS:
   flutter_secure_storage: 7953c38a04c3fdbb00571bcd87d8e3b5ceb9daec
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   image_cropper: f1668dd8d2cad2d357955caad15a40547856edcb
-  image_picker: 50e7c7ff960e5f58faa4d1f4af84a771c671bc4a
+  image_picker: e06f7a68f000bd36f552c1847e33cda96ed31f1f
   libwebp: e90b9c01d99205d03b6bb8f2c8c415e5a4ef66f0
   local_auth: 25938960984c3a7f6e3253e3f8d962fdd16852bd
   Mantle: 4c0ed6ce47c96eccc4dc3bb071deb3def0e2c3be
