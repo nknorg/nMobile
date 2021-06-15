@@ -42,7 +42,7 @@ class ChatCommon with Tag {
   }
 
   Future<ContactSchema?> contactHandle(MessageSchema message) async {
-    if (!message.canDisplayAndRead) return null;
+    if (!message.canDisplay) return null;
     // duplicated
     String? clientAddress = message.isOutbound ? message.to : message.from;
     if (clientAddress == null || clientAddress.isEmpty) return null;
@@ -63,7 +63,7 @@ class ChatCommon with Tag {
   }
 
   Future<TopicSchema?> topicHandle(MessageSchema message) async {
-    if (!message.canDisplayAndRead) return null;
+    if (!message.canDisplay) return null;
     // duplicated TODO:GG topic duplicated
     if (!message.isTopic) return null;
     TopicSchema? exist = await _topicStorage.queryTopicByTopicName(message.topic);
@@ -79,7 +79,7 @@ class ChatCommon with Tag {
   }
 
   Future<void> notificationHandle(ContactSchema? contact, TopicSchema? topic, MessageSchema message) async {
-    if (!message.canDisplayAndRead) return null;
+    if (!message.canDisplay) return null;
     late String title;
     late String content;
     if (contact != null && topic == null) {
