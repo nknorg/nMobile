@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
-import 'package:nmobile/common/chat/chat.dart';
+import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -116,10 +116,10 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
           }
         }
         return StreamBuilder<int>(
-          stream: chatCommon.statusStream,
-          initialData: chatCommon.status,
+          stream: clientCommon.statusStream,
+          initialData: clientCommon.status,
           builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
-            if (snapshot.data == ChatConnectStatus.disconnected) {
+            if (snapshot.data == ClientConnectStatus.disconnected) {
               return ChatNoConnectLayout();
             } else {
               return StreamBuilder<ContactSchema?>(
@@ -140,8 +140,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
                                   ContactProfileScreen.go(context, contactId: contact.id);
                                 },
                                 body: StreamBuilder<int>(
-                                  stream: chatCommon.statusStream,
-                                  initialData: chatCommon.status,
+                                  stream: clientCommon.statusStream,
+                                  initialData: clientCommon.status,
                                   builder: (context, snapshot) {
                                     Widget statusWidget = Row(
                                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -157,7 +157,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
                                       ],
                                     );
                                     switch (snapshot.data) {
-                                      case ChatConnectStatus.disconnected:
+                                      case ClientConnectStatus.disconnected:
                                         statusWidget = Row(
                                           crossAxisAlignment: CrossAxisAlignment.end,
                                           children: <Widget>[
@@ -165,7 +165,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
                                           ],
                                         );
                                         break;
-                                      case ChatConnectStatus.connected:
+                                      case ClientConnectStatus.connected:
                                         statusWidget = Row(
                                           crossAxisAlignment: CrossAxisAlignment.end,
                                           children: <Widget>[

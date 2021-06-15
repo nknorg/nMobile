@@ -209,10 +209,10 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     //Loading.show(); // set on func _selectDefaultWallet
     try {
       // client change
-      await chatCommon.signOut();
+      await clientCommon.signOut();
       await Future.delayed(Duration(seconds: 1)); // wait client close
       Loading.dismiss();
-      bool success = await chatCommon.signIn(_walletDefault);
+      bool success = await clientCommon.signIn(_walletDefault);
       Loading.show();
       await Future.delayed(Duration(seconds: 1)); // wait client create
 
@@ -254,8 +254,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _selectAvatarPicture() async {
-    if (chatCommon.publicKey == null) return;
-    String remarkAvatarLocalPath = Path.createLocalFile(hexEncode(chatCommon.publicKey!), SubDirType.contact, "${Uuid().v4()}.jpeg");
+    if (clientCommon.publicKey == null) return;
+    String remarkAvatarLocalPath = Path.createLocalFile(hexEncode(clientCommon.publicKey!), SubDirType.contact, "${Uuid().v4()}.jpeg");
     String? remarkAvatarPath = Path.getCompleteFile(remarkAvatarLocalPath);
     File? picked = await MediaPicker.pick(
       mediaType: MediaType.image,
@@ -308,7 +308,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     // inside update
     await contactCommon.setOptionsBurn(_contactSchema, _burnValue, notify: true);
     // outside update
-    await sendMessage.sendContactOptionsBurn(_contactSchema?.clientAddress, _burnValue);
+    await chatOutCommon.sendContactOptionsBurn(_contactSchema?.clientAddress, _burnValue);
   }
 
   _updateNotificationAndDeviceToken() async {
@@ -339,7 +339,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     // inside update
     contactCommon.setNotificationOpen(_contactSchema?.id, _notificationOpen, notify: true);
     // outside update
-    await sendMessage.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken);
+    await chatOutCommon.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken);
   }
 
   _addFriend() {

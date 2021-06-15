@@ -11,7 +11,7 @@ import 'package:nmobile/utils/path.dart';
 
 class FileHelper {
   static Future<File?> convertBase64toFile(String? base64Data, String dirType, {String? extension}) async {
-    if (base64Data == null || base64Data.isEmpty || chatCommon.publicKey == null) return null;
+    if (base64Data == null || base64Data.isEmpty || clientCommon.publicKey == null) return null;
     if (extension == null || extension.isEmpty) {
       var match = RegExp(r'\(data:(.*);base64,(.*)\)').firstMatch(base64Data);
       var mimeType = match?.group(1) ?? "";
@@ -44,7 +44,7 @@ class FileHelper {
       return null;
     }
     String name = hexEncode(Uint8List.fromList(md5.convert(bytes).bytes));
-    String localPath = Path.createLocalFile(hexEncode(chatCommon.publicKey!), dirType, '$name.$extension');
+    String localPath = Path.createLocalFile(hexEncode(clientCommon.publicKey!), dirType, '$name.$extension');
     File? file = Path.getCompleteFile(localPath) != null ? File(Path.getCompleteFile(localPath)!) : null;
     logger.d('MessageSchema - loadMediaFile - path:${file?.absolute}');
     if (file == null) return null;
