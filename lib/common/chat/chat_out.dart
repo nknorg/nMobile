@@ -101,54 +101,6 @@ class ChatOutCommon with Tag {
     }
   }
 
-  // NO topic (1 to 1)
-  Future sendContactOptionsBurn(String? clientAddress, int deleteSeconds, {int tryCount = 1}) async {
-    if (contactCommon.currentUser == null || clientAddress == null || clientAddress.isEmpty) return;
-    if (tryCount > 3) return;
-    try {
-      MessageSchema send = MessageSchema.fromSend(
-        Uuid().v4(),
-        contactCommon.currentUser!.clientAddress,
-        ContentType.eventContactOptions,
-        to: clientAddress,
-      );
-      send = MessageOptions.setDeleteAfterSeconds(send, deleteSeconds);
-      send.content = MessageData.getEventContactOptionsBurn(send);
-      await _send(send, send.content, database: true, display: true);
-      logger.d("$TAG - sendContactOptionsBurn - success - data:${send.content}");
-    } catch (e) {
-      handleError(e);
-      logger.w("$TAG - sendContactOptionsBurn - fail - tryCount:$tryCount - clientAddress:$clientAddress - deleteSeconds:$deleteSeconds");
-      await Future.delayed(Duration(seconds: 2), () {
-        return sendContactOptionsBurn(clientAddress, deleteSeconds, tryCount: tryCount++);
-      });
-    }
-  }
-
-  // NO topic (1 to 1)
-  Future sendContactOptionsToken(String? clientAddress, String deviceToken, {int tryCount = 1}) async {
-    if (contactCommon.currentUser == null || clientAddress == null || clientAddress.isEmpty) return;
-    if (tryCount > 3) return;
-    try {
-      MessageSchema send = MessageSchema.fromSend(
-        Uuid().v4(),
-        contactCommon.currentUser!.clientAddress,
-        ContentType.eventContactOptions,
-        to: clientAddress,
-      );
-      send = MessageOptions.setDeviceToken(send, deviceToken);
-      send.content = MessageData.getEventContactOptionsToken(send);
-      await _send(send, send.content, database: true, display: true);
-      logger.d("$TAG - sendContactOptionsToken - success - data:${send.content}");
-    } catch (e) {
-      handleError(e);
-      logger.w("$TAG - sendContactOptionsToken - fail - tryCount:$tryCount - clientAddress:$clientAddress - deviceToken:$deviceToken");
-      await Future.delayed(Duration(seconds: 2), () {
-        return sendContactOptionsToken(clientAddress, deviceToken, tryCount: tryCount++);
-      });
-    }
-  }
-
   // NO DB NO display
   Future<MessageSchema?> sendPiece(MessageSchema schema, {int tryCount = 1}) async {
     if (tryCount > 3) return null;
@@ -207,6 +159,54 @@ class ChatOutCommon with Tag {
     return _send(schema, await MessageData.getImage(schema));
   }
 
+  // NO topic (1 to 1)
+  Future sendContactOptionsBurn(String? clientAddress, int deleteSeconds, {int tryCount = 1}) async {
+    if (contactCommon.currentUser == null || clientAddress == null || clientAddress.isEmpty) return;
+    if (tryCount > 3) return;
+    try {
+      MessageSchema send = MessageSchema.fromSend(
+        Uuid().v4(),
+        contactCommon.currentUser!.clientAddress,
+        ContentType.eventContactOptions,
+        to: clientAddress,
+      );
+      send = MessageOptions.setDeleteAfterSeconds(send, deleteSeconds);
+      send.content = MessageData.getEventContactOptionsBurn(send);
+      await _send(send, send.content, database: true, display: true);
+      logger.d("$TAG - sendContactOptionsBurn - success - data:${send.content}");
+    } catch (e) {
+      handleError(e);
+      logger.w("$TAG - sendContactOptionsBurn - fail - tryCount:$tryCount - clientAddress:$clientAddress - deleteSeconds:$deleteSeconds");
+      await Future.delayed(Duration(seconds: 2), () {
+        return sendContactOptionsBurn(clientAddress, deleteSeconds, tryCount: tryCount++);
+      });
+    }
+  }
+
+  // NO topic (1 to 1)
+  Future sendContactOptionsToken(String? clientAddress, String deviceToken, {int tryCount = 1}) async {
+    if (contactCommon.currentUser == null || clientAddress == null || clientAddress.isEmpty) return;
+    if (tryCount > 3) return;
+    try {
+      MessageSchema send = MessageSchema.fromSend(
+        Uuid().v4(),
+        contactCommon.currentUser!.clientAddress,
+        ContentType.eventContactOptions,
+        to: clientAddress,
+      );
+      send = MessageOptions.setDeviceToken(send, deviceToken);
+      send.content = MessageData.getEventContactOptionsToken(send);
+      await _send(send, send.content, database: true, display: true);
+      logger.d("$TAG - sendContactOptionsToken - success - data:${send.content}");
+    } catch (e) {
+      handleError(e);
+      logger.w("$TAG - sendContactOptionsToken - fail - tryCount:$tryCount - clientAddress:$clientAddress - deviceToken:$deviceToken");
+      await Future.delayed(Duration(seconds: 2), () {
+        return sendContactOptionsToken(clientAddress, deviceToken, tryCount: tryCount++);
+      });
+    }
+  }
+
   Future<MessageSchema?> resend(MessageSchema? schema) async {
     if (schema == null) return null;
     schema.sendTime = DateTime.now();
@@ -263,9 +263,9 @@ class ChatOutCommon with Tag {
       handleError(e);
     }
     // contact
-    chatCommon.contactHandle(schema); // await
+    await chatCommon.contactHandle(schema);
     // topic
-    chatCommon.topicHandle(schema); // await
+    await chatCommon.topicHandle(schema);
     // session
     chatCommon.sessionHandle(schema); // await
     // fail
