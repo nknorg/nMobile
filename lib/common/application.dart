@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:nmobile/theme/light.dart';
 import 'package:nmobile/theme/theme.dart';
@@ -9,6 +11,11 @@ class Application {
   List<Func> _mountedFutures = <Func>[];
 
   SkinTheme theme = LightTheme();
+
+  // ignore: close_sinks
+  StreamController<List<AppLifecycleState>> _appLifeController = StreamController<List<AppLifecycleState>>.broadcast();
+  StreamSink<List<AppLifecycleState>> get appLifeSink => _appLifeController.sink;
+  Stream<List<AppLifecycleState>> get appLifeStream => _appLifeController.stream;
   AppLifecycleState appLifecycleState = AppLifecycleState.resumed;
 
   registerInitialize(Func fn) {
