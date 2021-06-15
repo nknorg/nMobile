@@ -87,7 +87,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   void initState() {
     super.initState();
     // balance query
-    taskService.queryWalletBalanceTask();
+    walletCommon.queryBalance();
     // init
     _init(this._wallet.type == WalletType.eth);
   }
@@ -246,7 +246,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
       String? txHash = await restore.transfer(_sendTo!, amount, fee: fee);
       if (txHash != null) {
-        taskService.queryWalletBalanceTask();
+        walletCommon.queryBalance();
         return txHash.length > 10;
       }
       return false;
