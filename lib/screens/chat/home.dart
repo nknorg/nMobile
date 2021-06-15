@@ -62,8 +62,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
   //   WalletSchema wallet = await TimerAuth.loadCurrentWallet();
   //   TimerAuth.instance.enableAuth();
   //
-  //   print('chat.dart _onGetPassword');
-  //
   //   try {
   //     var eWallet = await wallet.exportWallet(password);
   //     var walletAddress = eWallet['address'];
