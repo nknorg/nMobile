@@ -50,7 +50,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
   void initState() {
     super.initState();
     // balance query
-    // taskService.queryWalletBalanceTask();
+    // walletCommon.queryBalance();
   }
 
   @override

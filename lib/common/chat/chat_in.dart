@@ -80,7 +80,7 @@ class ChatInCommon with Tag {
         chatOutCommon.sendReceipt(received); // await
         break;
       case ContentType.eventContactOptions:
-        _receiveContactOptions(received, contact: contact); // await
+        await _receiveContactOptions(received, contact: contact);
         chatOutCommon.sendReceipt(received); // await
         break;
       // TODO:GG receive contentType
