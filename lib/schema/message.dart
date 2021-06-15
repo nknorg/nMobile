@@ -638,12 +638,12 @@ class MessageSchema extends Equatable {
     return schema;
   }
 
+  String? get originalId {
+    return isOutbound ? from : (isTopic ? topic : to);
+  }
+
   String? get targetId {
-    return isTopic
-        ? topic
-        : isOutbound
-            ? to
-            : from;
+    return isTopic ? topic : (isOutbound ? to : from);
   }
 
   bool get isTopic {
