@@ -360,7 +360,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         backgroundColor: application.theme.strongColor,
         width: double.infinity,
         onPressed: () async {
-          contactCommon.delete(_contactSchema?.id);
+          contactCommon.delete(_contactSchema?.id, notify: true);
           Navigator.pop(this.context);
           Navigator.pop(this.context);
         },

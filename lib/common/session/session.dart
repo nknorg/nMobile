@@ -30,17 +30,15 @@ class SessionCommon with Tag {
 
   Future<SessionSchema?> add(SessionSchema? schema, {bool checkDuplicated = true}) async {
     if (schema == null || schema.targetId.isEmpty) return null;
-    if (schema.lastMessageTime == null || schema.lastMessageOptions == null || schema.lastMessageOptions!.isEmpty) {
-      List<MessageSchema> history = await _messageStorage.queryListCanReadByTargetId(schema.targetId, offset: 0, limit: 1);
-      if (history.isNotEmpty) {
-        MessageSchema message = history[0];
-        schema.lastMessageTime = message.sendTime;
-        schema.lastMessageOptions = message.toMap();
-      }
-    }
+    // lastMessage
+    MessageSchema? lastMessage = await findLastMessage(schema);
+    schema.lastMessageTime = lastMessage?.sendTime;
+    schema.lastMessageOptions = lastMessage?.toMap();
+    // unReadCount
     if (schema.unReadCount <= 0) {
       schema.unReadCount = await _messageStorage.unReadCountByTargetId(schema.targetId);
     }
+    // duplicated
     if (checkDuplicated) {
       SessionSchema? exist = await query(schema.targetId);
       if (exist != null) {
@@ -48,15 +46,16 @@ class SessionCommon with Tag {
         return null;
       }
     }
+    // insert
     SessionSchema? added = await _sessionStorage.insert(schema);
     if (added != null) _addSink.add(added);
     return added;
   }
 
-  Future<bool> delete(String? targetId) async {
+  Future<bool> delete(String? targetId, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty) return false;
     bool deleted = await _sessionStorage.delete(targetId);
-    if (deleted) _deleteSink.add(targetId);
+    if (deleted && notify) _deleteSink.add(targetId);
     return deleted;
   }
 
