@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/wallet/home.dart';
+import 'package:nmobile/utils/logger.dart';
 
 import 'common/application.dart';
 import 'common/global.dart';
@@ -35,8 +36,10 @@ class AppScreen extends StatefulWidget {
 class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   GetIt locator = GetIt.instance;
   late Application app;
+
   int _currentIndex = 0;
   late PageController _pageController;
+
   List<Widget> screens = <Widget>[
     ChatHomeScreen(),
     WalletHomeScreen(),
@@ -46,17 +49,19 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance?.addObserver(this);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
     app = locator.get<Application>();
+
     this._currentIndex = widget.arguments != null ? (widget.arguments![AppScreen.argIndex] ?? 0) : 0;
     _pageController = PageController(initialPage: this._currentIndex);
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    WidgetsBinding.instance?.removeObserver(this);
     super.dispose();
   }
 
@@ -64,6 +69,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     application.appLifecycleState = state;
     super.didChangeAppLifecycleState(state);
+    logger.i("AppScreen - APP生命周期 - ${application.appLifecycleState}");
   }
 
   @override
