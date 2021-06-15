@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -27,6 +30,8 @@ class ChatMessagesScreen extends BaseStateFulWidget {
 }
 
 class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScreen> {
+  StreamSubscription? _onContactUpdateStreamSubscription;
+
   ContactSchema? _contact;
   TopicSchema? _topic;
 
@@ -40,6 +45,24 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       this._contact = widget.arguments![ChatMessagesScreen.argWho];
       // _targetId = _contact!.clientAddress;
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // contact
+    _onContactUpdateStreamSubscription = contactCommon.updateStream.where((event) => event.id == _contact?.id).listen((ContactSchema event) {
+      setState(() {
+        _contact = event;
+      });
+    });
+    // TODO:GG messages topic refresh
+  }
+
+  @override
+  void dispose() {
+    _onContactUpdateStreamSubscription?.cancel();
+    super.dispose();
   }
 
   @override
