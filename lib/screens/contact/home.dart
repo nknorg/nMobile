@@ -46,9 +46,9 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   bool _isSelect = false;
 
   bool _pageLoaded = false;
-  late StreamSubscription _addContactSubscription;
-  // late StreamSubscription _deleteContactSubscription;
-  late StreamSubscription _updateContactSubscription;
+  StreamSubscription? _addContactSubscription;
+  // StreamSubscription? _deleteContactSubscription;
+  StreamSubscription? _updateContactSubscription;
 
   TextEditingController _searchController = TextEditingController();
 
@@ -128,9 +128,9 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
 
   @override
   void dispose() {
-    _addContactSubscription.cancel();
-    // _deleteContactSubscription.cancel();
-    _updateContactSubscription.cancel();
+    _addContactSubscription?.cancel();
+    // _deleteContactSubscription?.cancel();
+    _updateContactSubscription?.cancel();
     super.dispose();
   }
 

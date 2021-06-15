@@ -87,26 +87,26 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     if (_message.deleteTime != null) {
       DateTime deleteTime = _message.deleteTime ?? DateTime.now();
       if (deleteTime.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch) {
-        taskService.addTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}", () {
+        taskService.addTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}", () async {
           if (deleteTime.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch) {
             // logger.d("$TAG - tick - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
           } else {
             logger.i("$TAG - delete(tick) - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
-            // TODO:GG delete
+            await chatCommon.msgDelete(_message.msgId, notify: true);
             taskService.removeTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}");
           }
           setState(() {});
         });
       } else {
         logger.i("$TAG - delete(now) - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
-        // TODO:GG delete
+        chatCommon.msgDelete(_message.msgId, notify: true); // await
       }
     }
   }
 
   @override
   void dispose() {
-    taskService.removeTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}");
+    // taskService.removeTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}");
     _onPieceOutStreamSubscription?.cancel();
     super.dispose();
   }
