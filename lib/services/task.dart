@@ -4,6 +4,9 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class TaskService with Tag {
+  static const KEY_WALLET_BALANCE = "wallet_balance";
+  static const KEY_MSG_BURNING = "message_burning";
+
   bool _isInit = false;
 
   Timer? _timer1;
@@ -33,7 +36,7 @@ class TaskService with Tag {
       });
 
       // task
-      addTask60("wallet_balance", walletCommon.queryBalance, callNow: true);
+      addTask60(KEY_WALLET_BALANCE, walletCommon.queryBalance, callNow: true);
 
       _isInit = true;
     }
@@ -45,6 +48,7 @@ class TaskService with Tag {
   }
 
   void addTask1(String key, Function func, {bool callNow = true}) {
+    logger.d("$Tag - addTask1 - key:$key - func:${func.toString()}");
     if (callNow) func.call();
     tasks1[key] = func;
   }
@@ -54,6 +58,7 @@ class TaskService with Tag {
   }
 
   void addTask60(String key, Function func, {bool callNow = true}) {
+    logger.d("$Tag - addTask60 - key:$key - func:${func.toString()}");
     if (callNow) func.call();
     tasks60[key] = func;
   }

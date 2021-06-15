@@ -17,9 +17,11 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/photo.dart';
+import 'package:nmobile/services/task.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/chat.dart';
 import 'package:nmobile/utils/format.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
 import '../text/markdown.dart';
@@ -43,7 +45,7 @@ class ChatBubble extends BaseStateFulWidget {
   _ChatBubbleState createState() => _ChatBubbleState();
 }
 
-class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
+class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   GlobalKey _contentKey = GlobalKey();
   StreamSubscription? _onPieceOutStreamSubscription;
 
@@ -82,10 +84,29 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> {
       _message.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
       chatCommon.burningHandle(_message, contact: _contact); // await
     }
+    if (_message.deleteTime != null) {
+      DateTime deleteTime = _message.deleteTime ?? DateTime.now();
+      if (deleteTime.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch) {
+        taskService.addTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}", () {
+          if (deleteTime.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch) {
+            // logger.d("$TAG - tick - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
+          } else {
+            logger.i("$TAG - delete(tick) - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
+            // TODO:GG delete
+            taskService.removeTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}");
+          }
+          setState(() {});
+        });
+      } else {
+        logger.i("$TAG - delete(now) - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
+        // TODO:GG delete
+      }
+    }
   }
 
   @override
   void dispose() {
+    taskService.removeTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}");
     _onPieceOutStreamSubscription?.cancel();
     super.dispose();
   }
