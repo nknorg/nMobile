@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/routes/routes.dart';
 import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 
@@ -9,5 +9,5 @@ Map<String, WidgetBuilder> _routes = {
 };
 
 init() {
-  application.registerRoutes(_routes);
+  Routes.registerRoutes(_routes);
 }
