@@ -8,6 +8,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/routes/routes.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'app.dart';
@@ -17,7 +18,7 @@ import 'common/global.dart';
 import 'common/locator.dart';
 import 'common/settings.dart';
 import 'generated/l10n.dart';
-import 'routes/routes.dart' as routes;
+import 'routes/routes.dart';
 import 'services/task.dart';
 
 void initialize() {
@@ -38,7 +39,7 @@ void main() async {
   await Client.install();
 
   setupLocator();
-  routes.init();
+  Routes.init();
   initialize();
   await application.initialize();
   application.registerMounted(() async {
@@ -102,7 +103,8 @@ class _MainState extends State<Main> {
               ...S.delegate.supportedLocales,
             ],
             initialRoute: AppScreen.routeName,
-            onGenerateRoute: application.onGenerateRoute,
+            onGenerateRoute: Routes.onGenerateRoute,
+            navigatorObservers: [BotToastNavigatorObserver(), Routes.routeObserver],
             localeResolutionCallback: (locale, supportLocales) {
               if (locale?.languageCode == 'zh') {
                 if (locale?.scriptCode == 'Hant') {
