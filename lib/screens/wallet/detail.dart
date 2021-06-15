@@ -52,8 +52,8 @@ class WalletDetailScreen extends BaseStateFulWidget {
 class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScreen> {
   WalletSchema? _wallet;
 
-  late WalletBloc _walletBloc;
-  late StreamSubscription _walletSubscription;
+  WalletBloc? _walletBloc;
+  StreamSubscription? _walletSubscription;
 
   bool isDefault = false;
 
@@ -68,7 +68,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
     _walletBloc = BlocProvider.of<WalletBloc>(context);
 
     // default
-    _walletSubscription = _walletBloc.stream.listen((state) {
+    _walletSubscription = _walletBloc?.stream.listen((state) {
       if (state is WalletDefault) {
         setState(() {
           isDefault = state.walletAddress == _wallet?.address;
@@ -86,7 +86,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
 
   @override
   void dispose() {
-    _walletSubscription.cancel();
+    _walletSubscription?.cancel();
     // TimerAuth.onOtherPage = false; // TODO:GG wallet unlock
     super.dispose();
   }
@@ -314,7 +314,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
       this._wallet?.name = newName; // update appBar title
     });
     if (this._wallet != null) {
-      _walletBloc.add(UpdateWallet(this._wallet!));
+      _walletBloc?.add(UpdateWallet(this._wallet!));
     }
   }
 
@@ -375,7 +375,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
             backgroundColor: application.theme.strongColor,
             width: double.infinity,
             onPressed: () async {
-              _walletBloc.add(DeleteWallet(this._wallet!));
+              _walletBloc?.add(DeleteWallet(this._wallet!));
               // client close
               try {
                 String? clientAddress = contactCommon.currentUser?.clientAddress;

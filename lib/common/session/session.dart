@@ -112,10 +112,10 @@ class SessionCommon with Tag {
     }
   }
 
-  Future<MessageSchema?> findLastMessage(SessionSchema? session) async {
+  Future<MessageSchema?> findLastMessage(SessionSchema? session, {bool checkOptions = false}) async {
     if (session == null) return null;
     MessageSchema? message;
-    if (session.lastMessageOptions != null && session.lastMessageOptions!.isNotEmpty) {
+    if (checkOptions && session.lastMessageOptions != null && session.lastMessageOptions!.isNotEmpty) {
       message = MessageSchema.fromMap(session.lastMessageOptions!);
     } else {
       List<MessageSchema> history = await _messageStorage.queryListCanReadByTargetId(session.targetId, offset: 0, limit: 1);

@@ -34,8 +34,8 @@ class WalletHomeListLayout extends BaseStateFulWidget {
 }
 
 class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListLayout> with Tag {
-  late WalletBloc _walletBloc;
-  late StreamSubscription _walletSubscription;
+  WalletBloc? _walletBloc;
+  StreamSubscription? _walletSubscription;
 
   bool _allBackedUp = false;
 
@@ -51,7 +51,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
     _walletBloc = BlocProvider.of<WalletBloc>(context);
 
     // backup
-    _walletSubscription = _walletBloc.stream.listen((state) async {
+    _walletSubscription = _walletBloc?.stream.listen((state) async {
       // if (state is WalletBackup) {
       //   setState(() {
       //     _allBackedUp = state.allBackup ?? false;
@@ -76,7 +76,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
 
   @override
   void dispose() {
-    _walletSubscription.cancel();
+    _walletSubscription?.cancel();
     super.dispose();
   }
 

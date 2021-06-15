@@ -21,6 +21,11 @@ class ChatCommon with Tag {
   StreamSink<MessageSchema> get onUpdateSink => _onUpdateController.sink;
   Stream<MessageSchema> get onUpdateStream => _onUpdateController.stream; // .distinct((prev, next) => prev.msgId == next.msgId)
 
+  // ignore: close_sinks
+  StreamController<String> _onDeleteController = StreamController<String>.broadcast();
+  StreamSink<String> get onDeleteSink => _onDeleteController.sink;
+  Stream<String> get onDeleteStream => _onDeleteController.stream; // .distinct((prev, next) => prev.msgId == next.msgId)
+
   MessageStorage _messageStorage = MessageStorage();
   TopicStorage _topicStorage = TopicStorage();
 
@@ -119,7 +124,7 @@ class ChatCommon with Tag {
           if (index == 0) {
             sessionCommon.setUnReadCount(element.targetId, 0, notify: true); // await
           }
-          read(element); // await
+          msgRead(element); // await
           // if (index >= unreadList.length - 1) {
           //   sessionCommon.setUnReadCount(element.targetId, 0, notify: true); // await
           // }
@@ -131,10 +136,17 @@ class ChatCommon with Tag {
   }
 
   // receipt(receive) != read(look)
-  Future<MessageSchema> read(MessageSchema schema) async {
+  Future<MessageSchema> msgRead(MessageSchema schema, {bool notify = false}) async {
     schema = MessageStatus.set(schema, MessageStatus.ReceivedRead);
     await _messageStorage.updateMessageStatus(schema);
+    if (notify) onUpdateSink.add(schema);
     return schema;
+  }
+
+  Future<bool> msgDelete(String msgId, {bool notify = false}) async {
+    bool success = await _messageStorage.delete(msgId);
+    if (success && notify) onDeleteSink.add(msgId);
+    return success;
   }
 
   // TODO:GG move to notification
