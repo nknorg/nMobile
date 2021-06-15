@@ -62,13 +62,13 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
     });
 
     // messages
-    _onMessageReceiveStreamSubscription = receiveMessage.onSavedStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
+    _onMessageReceiveStreamSubscription = chatInCommon.onSavedStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
       _insertMessage(event);
     });
-    _onMessageSendStreamSubscription = sendMessage.onSavedStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
+    _onMessageSendStreamSubscription = chatOutCommon.onSavedStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
       _insertMessage(event);
     });
-    _onMessageUpdateStreamSubscription = sendMessage.onUpdateStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
+    _onMessageUpdateStreamSubscription = chatCommon.onUpdateStream.where((MessageSchema event) => event.targetId == _contact.clientAddress).listen((MessageSchema event) {
       setState(() {
         _messages = _messages.map((MessageSchema e) => (e.msgId == event.msgId) ? event : e).toList();
       });
@@ -219,7 +219,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                             return false;
                           }).toList();
                         });
-                        await sendMessage.resend(find);
+                        await chatOutCommon.resend(find);
                       },
                     );
                   },
@@ -232,7 +232,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                   _toggleBottomMenu();
                 },
                 onSendPress: (String content) async {
-                  return await sendMessage.sendText(_contact.clientAddress, content, contact: _contact);
+                  return await chatOutCommon.sendText(_contact.clientAddress, content, contact: _contact);
                 },
                 onChangeStream: _onInputChangeStream,
               ),
@@ -240,7 +240,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                 show: _showBottomMenu,
                 onPickedImage: (File picked) async {
                   FocusScope.of(context).requestFocus(FocusNode());
-                  return await sendMessage.sendImage(_contact.clientAddress, picked, contact: _contact);
+                  return await chatOutCommon.sendImage(_contact.clientAddress, picked, contact: _contact);
                 },
               ),
             ],
