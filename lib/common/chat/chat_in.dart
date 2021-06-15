@@ -277,7 +277,7 @@ class ChatInCommon with Tag {
       logger.d("$TAG - receiveText - duplicated - deleted:${received.msgId}");
       return;
     }
-    bool isPieceCombine = received.options != null ? received.options![MessageOptions.KEY_PARENT_PIECE] : false;
+    bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_PARENT_PIECE] ?? false) : false;
     // duplicated
     List<MessageSchema> exists = [];
     if (isPieceCombine) {
