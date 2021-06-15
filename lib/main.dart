@@ -23,6 +23,7 @@ import 'services/task.dart';
 
 void initialize() {
   application.registerInitialize(() async {
+    Routes.init();
     Global.init();
     Settings.init();
   });
@@ -35,13 +36,19 @@ void main() async {
     SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(statusBarColor: Colors.transparent);
     SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
   }
+
+  // nkn
   await Wallet.install();
   await Client.install();
 
+  // locator
   setupLocator();
-  Routes.init();
+
+  // init
   initialize();
   await application.initialize();
+
+  // mounted
   application.registerMounted(() async {
     notification.init();
     locator.get<TaskService>().install();
@@ -50,7 +57,11 @@ void main() async {
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
     _walletBloc.add(LoadWallet());
   });
+
+  // background
   backgroundFetchService.install();
+
+  // return
   await SentryFlutter.init(
     (options) {
       options.dsn = 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254';
