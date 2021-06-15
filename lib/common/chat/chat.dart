@@ -79,7 +79,7 @@ class ChatCommon with Tag {
   }
 
   Future<void> notificationHandle(ContactSchema? contact, TopicSchema? topic, MessageSchema message) async {
-    if (!message.canDisplay) return null;
+    if (!message.canDisplayAndRead) return null;
     late String title;
     late String content;
     if (contact != null && topic == null) {
