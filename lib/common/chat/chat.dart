@@ -130,7 +130,7 @@ class ChatCommon with Tag {
         lastMessageTime: message.sendTime,
         lastMessageOptions: message.toMap(),
         isTop: false,
-        unReadCount: message.isOutbound ? 0 : 1,
+        unReadCount: message.isOutbound || !message.canDisplayAndRead ? 0 : 1,
       ));
     }
     if (message.isOutbound) {
