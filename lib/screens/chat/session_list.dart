@@ -97,11 +97,17 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       setState(() {
         _sessionList.forEach((SessionSchema element) async {
           if (element.lastMessageOptions != null && element.lastMessageOptions!["msg_id"] == msgId) {
+            MessageSchema oldLastMsg = MessageSchema.fromMap(element.lastMessageOptions!);
             MessageSchema? lastMessage = await sessionCommon.findLastMessage(element);
-            lastMessage?.sendTime = DateTime.now(); // for sort
-            element.lastMessageTime = lastMessage?.sendTime;
-            element.lastMessageOptions = lastMessage?.toMap();
-            element.unReadCount = element.unReadCount > 0 ? element.unReadCount - 1 : 0;
+            if (lastMessage == null) {
+              sessionCommon.delete(element.targetId, notify: true);
+              return;
+            }
+            lastMessage.sendTime = DateTime.now(); // for sort
+            element.lastMessageTime = lastMessage.sendTime;
+            element.lastMessageOptions = lastMessage.toMap();
+            int unreadCount = oldLastMsg.canDisplayAndRead ? element.unReadCount - 1 : element.unReadCount;
+            element.unReadCount = unreadCount > 0 ? unreadCount : 0;
             sessionCommon.setLastMessageAndUnReadCount(element.targetId, lastMessage, element.unReadCount, notify: true);
           }
         });
