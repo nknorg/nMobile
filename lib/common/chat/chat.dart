@@ -124,12 +124,19 @@ class ChatCommon with Tag {
     SessionSchema? exist = await sessionCommon.query(message.targetId);
     if (exist == null) {
       logger.d("$TAG - sessionHandle - new - targetId:${message.targetId}");
-      return await sessionCommon.add(SessionSchema(targetId: message.targetId!, type: SessionSchema.getTypeByMessage(message)), lastMsg: message);
+      return await sessionCommon.add(SessionSchema(
+        targetId: message.targetId!,
+        type: SessionSchema.getTypeByMessage(message),
+        lastMessageTime: message.sendTime,
+        lastMessageOptions: message.toMap(),
+        isTop: false,
+        unReadCount: message.isOutbound ? 0 : 1,
+      ));
     }
     if (message.isOutbound) {
       await sessionCommon.setLastMessage(message.targetId, message, notify: true);
     } else {
-      int unreadCount = exist.unReadCount + 1;
+      int unreadCount = message.canDisplayAndRead ? exist.unReadCount + 1 : exist.unReadCount;
       await sessionCommon.setLastMessageAndUnReadCount(message.targetId, message, unreadCount, notify: true);
     }
     return exist;
