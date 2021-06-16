@@ -81,7 +81,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
               sessionCommon.delete(element.targetId, notify: true);
               return;
             }
-            lastMessage.sendTime = DateTime.now(); // for sort
+            lastMessage.sendTime = oldLastMsg.sendTime; // for sort
             element.lastMessageTime = lastMessage.sendTime;
             element.lastMessageOptions = lastMessage.toMap();
             int unreadCount = oldLastMsg.canDisplayAndRead ? element.unReadCount - 1 : element.unReadCount;
