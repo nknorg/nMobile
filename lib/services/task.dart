@@ -14,6 +14,8 @@ class TaskService with Tag {
   Timer? _timer60;
   Map<String, Function(String)> tasks60 = Map<String, Function(String)>();
 
+  TaskService();
+
   install({bool isFirst = true}) {
     // listen
     if (isFirst) {

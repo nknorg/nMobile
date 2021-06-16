@@ -18,6 +18,8 @@ class Application {
   Stream<List<AppLifecycleState>> get appLifeStream => _appLifeController.stream;
   AppLifecycleState appLifecycleState = AppLifecycleState.resumed;
 
+  Application();
+
   registerInitialize(Func fn) {
     _initializeFutures.add(fn);
   }
