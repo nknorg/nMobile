@@ -48,7 +48,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
   bool _showBottomMenu = false;
 
   @override
-  void onRefreshArguments() async {
+  void onRefreshArguments() {
     this._contact = widget.contact;
   }
 
