@@ -87,17 +87,18 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     if (_message.deleteTime != null) {
       DateTime deleteTime = _message.deleteTime ?? DateTime.now();
       if (deleteTime.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch) {
-        taskService.addTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}", () async {
+        String taskKey = "${TaskService.KEY_MSG_BURNING}:${_message.msgId}";
+        taskService.addTask1(taskKey, (String key) async {
           if (_message.originalId != contactCommon.currentUser?.clientAddress) {
-            taskService.removeTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}");
+            taskService.removeTask1(key);
             return;
           }
           if (deleteTime.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch) {
-            // logger.d("$TAG - tick - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
+            // logger.d("$TAG - tick - key:$key - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
           } else {
-            logger.i("$TAG - delete(tick) - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
+            logger.i("$TAG - delete(tick) - key:$key - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
             await chatCommon.msgDelete(_message.msgId, notify: true);
-            taskService.removeTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}");
+            taskService.removeTask1(key);
           }
           setState(() {});
         });
