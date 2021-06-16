@@ -243,7 +243,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                                 value: _biometricsSelected,
                                 activeColor: application.theme.primaryColor,
                                 onChanged: (value) async {
-                                  // TODO: auth password
+                                  // TODO:GG auth password
                                   Settings.biometricsAuthentication = value;
                                   _settingsStorage.setSettings('${SettingsStorage.BIOMETRICS_AUTHENTICATION}', value);
                                   setState(() {
