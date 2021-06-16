@@ -235,7 +235,7 @@ class MessageStorage with Tag {
     return 0;
   }
 
-  Future<List<MessageSchema>> queryListCanReadByTargetId(String? targetId, {int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListCanDisplayReadByTargetId(String? targetId, {int offset = 0, int limit = 20}) async {
     if (targetId == null || targetId.isEmpty) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.query(
@@ -271,8 +271,8 @@ class MessageStorage with Tag {
   //     List<Map<String, dynamic>>? res = await db?.query(
   //       tableName,
   //       columns: ['*'],
-  //       where: 'is_outbound = ? AND is_read = ? AND NOT type = ?', // AND NOT type = ?',
-  //       whereArgs: [0, 0, ContentType.piece], // , ContentType.receipt],
+  //       where: 'is_outbound = ? AND is_read = ?', // AND NOT type = ?', // AND NOT type = ?',
+  //       whereArgs: [0, 0], // , ContentType.piece], // , ContentType.receipt],
   //     );
   //     if (res == null || res.isEmpty) {
   //       logger.d("$TAG - queryListUnRead - empty");
@@ -299,8 +299,8 @@ class MessageStorage with Tag {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: 'target_id = ? AND is_outbound = ? AND is_read = ? AND NOT type = ?', // AND NOT type = ?',
-        whereArgs: [targetId, 0, 0, ContentType.piece], // , ContentType.receipt],
+        where: 'target_id = ? AND is_outbound = ? AND is_read = ?', // AND NOT type = ?', // AND NOT type = ?',
+        whereArgs: [targetId, 0, 0], // , ContentType.piece], // , ContentType.receipt],
       );
       if (res == null || res.isEmpty) {
         logger.d("$TAG - queryListUnReadByTargetId - empty - targetId:$targetId");
@@ -327,8 +327,8 @@ class MessageStorage with Tag {
       var res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
-        where: 'target_id = ? AND is_outbound = ? AND is_read = ? AND NOT type = ?', //  AND NOT type = ?',
-        whereArgs: [targetId, 0, 0, ContentType.piece], // , ContentType.receipt],
+        where: 'target_id = ? AND is_outbound = ? AND is_read = ?', // AND NOT type = ?', //  AND NOT type = ?',
+        whereArgs: [targetId, 0, 0], // , ContentType.piece], // , ContentType.receipt],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.d("$TAG - unReadCountByTargetId - targetId:$targetId - count:$count");
