@@ -70,13 +70,17 @@ class ChatInCommon with Tag {
         break;
       case ContentType.text:
       case ContentType.textExtension:
-        await _receiveText(received, contact: contact);
+        await _receiveText(received);
         chatOutCommon.sendReceipt(received); // await
         break;
       case ContentType.media:
       case ContentType.image:
       case ContentType.nknImage:
-        await _receiveImage(received, contact: contact);
+        await _receiveImage(received);
+        chatOutCommon.sendReceipt(received); // await
+        break;
+      case ContentType.audio:
+        await _receiveAudio(received);
         chatOutCommon.sendReceipt(received); // await
         break;
       case ContentType.eventContactOptions:
@@ -85,7 +89,6 @@ class ChatInCommon with Tag {
         break;
       // TODO:GG receive contentType
       case ContentType.system:
-      case ContentType.audio:
       case ContentType.eventSubscribe:
       case ContentType.eventUnsubscribe:
       case ContentType.eventChannelInvitation:
@@ -254,7 +257,7 @@ class ChatInCommon with Tag {
     }
   }
 
-  Future _receiveText(MessageSchema received, {ContactSchema? contact}) async {
+  Future _receiveText(MessageSchema received) async {
     // deleted
     String key = contactCommon.currentUser?.clientAddress ?? "";
     if (chatCommon.deletedCache[key] != null && chatCommon.deletedCache[key]![received.msgId] != null) {
@@ -274,11 +277,11 @@ class ChatInCommon with Tag {
     _onSavedSink.add(schema);
   }
 
-  Future _receiveImage(MessageSchema received, {ContactSchema? contact}) async {
+  Future _receiveImage(MessageSchema received) async {
     // deleted
     String key = contactCommon.currentUser?.clientAddress ?? "";
     if (chatCommon.deletedCache[key] != null && chatCommon.deletedCache[key]![received.msgId] != null) {
-      logger.d("$TAG - receiveText - duplicated - deleted:${received.msgId}");
+      logger.d("$TAG - receiveImage - duplicated - deleted:${received.msgId}");
       return;
     }
     bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_PARENT_PIECE] ?? false) : false;
@@ -297,6 +300,37 @@ class ChatInCommon with Tag {
     }
     // File
     received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: isPieceCombine ? "jpg" : null);
+    if (received.content == null) return;
+    // DB
+    MessageSchema? schema = await _messageStorage.insert(received);
+    if (schema == null) return;
+    // display
+    _onSavedSink.add(schema);
+  }
+
+  Future _receiveAudio(MessageSchema received) async {
+    // deleted
+    String key = contactCommon.currentUser?.clientAddress ?? "";
+    if (chatCommon.deletedCache[key] != null && chatCommon.deletedCache[key]![received.msgId] != null) {
+      logger.d("$TAG - receiveAudio - duplicated - deleted:${received.msgId}");
+      return;
+    }
+    bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_PARENT_PIECE] ?? false) : false;
+    // duplicated
+    List<MessageSchema> exists = [];
+    if (isPieceCombine) {
+      exists = await _messageStorage.queryListByType(received.msgId, received.contentType);
+    } else {
+      // SUPPORT:START
+      exists = await _messageStorage.queryList(received.msgId); // old version will send type 2 times
+      // SUPPORT:END
+    }
+    if (exists.isNotEmpty) {
+      logger.d("$TAG - receiveAudio - duplicated - schema:$exists");
+      return;
+    }
+    // File
+    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: isPieceCombine ? "aac" : null);
     if (received.content == null) return;
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);
