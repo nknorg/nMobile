@@ -94,7 +94,6 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   Widget _contentWidget(SessionSchema session) {
     S _localizations = S.of(context);
     String? msgType = _lastMsg?.contentType;
-    String? msgContent = session.lastMessageOptions != null ? session.lastMessageOptions!["content"] : null;
     String? draft = memoryCache.getDraft(session.targetId);
 
     Widget contentWidget;
@@ -144,6 +143,8 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       bool isDeviceToken = deviceToken != null;
       bool isBurn = deleteAfterSeconds != null;
 
+      String who = (_lastMsg?.isOutbound == true) ? _localizations.you : (_contact?.displayName ?? " ");
+
       // SUPPORT:START
       isBurn = isBurn || !isDeviceToken;
       if (isBurn) deleteAfterSeconds = deleteAfterSeconds ?? 0;
@@ -152,7 +153,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       if (isDeviceToken) {
         String deviceDesc = deviceToken.length == 0 ? ' ${_localizations.setting_deny_notification}' : ' ${_localizations.setting_accept_notification}';
         contentWidget = Label(
-          deviceDesc,
+          who + deviceDesc,
           type: LabelType.bodyRegular,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -160,7 +161,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       } else {
         String burnDecs = ' ${deleteAfterSeconds != null && deleteAfterSeconds > 0 ? _localizations.update_burn_after_reading : _localizations.close_burn_after_reading} ';
         contentWidget = Label(
-          burnDecs,
+          who + burnDecs,
           type: LabelType.bodyRegular,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -182,7 +183,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       );
     } else {
       contentWidget = Label(
-        msgContent ?? " ",
+        _lastMsg?.content ?? " ",
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
