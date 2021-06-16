@@ -11,7 +11,6 @@ class WalletStorage {
   static const String KEY_WALLET = 'WALLETS';
   static const String KEY_KEYSTORE = 'KEYSTORES';
   static const String KEY_PASSWORD = 'PASSWORDS';
-  static const String KEY_SEED = 'SEED';
   static const String KEY_BACKUP = 'BACKUP';
   static const String KEY_DEFAULT_ADDRESS = 'WALLET_DEFAULT_ADDRESS';
 
@@ -30,7 +29,7 @@ class WalletStorage {
     return [];
   }
 
-  Future add(WalletSchema? walletSchema, String? keystore, {String? password, String? seed}) async {
+  Future add(WalletSchema? walletSchema, String? keystore, {String? password}) async {
     List<Future> futures = <Future>[];
     var wallets = await _localStorage.getArray(KEY_WALLET);
     int index = wallets.indexWhere((x) => x['address'] == walletSchema?.address);
@@ -49,9 +48,6 @@ class WalletStorage {
     if (password != null && password.isNotEmpty) {
       futures.add(_secureStorage.set('$KEY_PASSWORD:${walletSchema?.address}', password));
     }
-    if (seed != null && seed.isNotEmpty) {
-      futures.add(_secureStorage.set('$KEY_SEED:${walletSchema?.address}', seed));
-    }
     return Future.wait(futures);
   }
 
@@ -65,7 +61,6 @@ class WalletStorage {
         futures.add(_secureStorage.delete('$KEY_KEYSTORE:${walletSchema?.address}'));
       }
       futures.add(_secureStorage.delete('$KEY_PASSWORD:${walletSchema?.address}'));
-      futures.add(_secureStorage.delete('$KEY_SEED:${walletSchema?.address}'));
       futures.add(_localStorage.remove('$KEY_BACKUP:${walletSchema?.address}'));
       if (await getDefaultAddress() == walletSchema?.address) {
         futures.add(_localStorage.remove('$KEY_DEFAULT_ADDRESS'));
@@ -87,9 +82,6 @@ class WalletStorage {
       }
       if (password != null && password.isNotEmpty) {
         futures.add(_secureStorage.set('$KEY_PASSWORD:${walletSchema?.address}', password));
-      }
-      if (seed != null && seed.isNotEmpty) {
-        futures.add(_secureStorage.set('$KEY_SEED:${walletSchema?.address}', seed));
       }
     }
     return Future.wait(futures);
@@ -129,11 +121,6 @@ class WalletStorage {
   Future getPassword(String? address) async {
     if (address == null || address.isEmpty) return null;
     return _secureStorage.get('$KEY_PASSWORD:$address');
-  }
-
-  Future getSeed(String? address) async {
-    if (address == null || address.isEmpty) return null;
-    return _localStorage.get('$KEY_SEED:$address');
   }
 
   Future setBackup(String? address, bool backup) async {

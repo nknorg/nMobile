@@ -45,7 +45,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> with Tag {
   Stream<WalletState> _mapAddWalletToState(AddWallet event) async* {
     logger.d("$TAG - wallet add - ${event.wallet}, keystore:${event.keystore}");
     if (state is WalletLoaded) {
-      await _walletStorage.add(event.wallet, event.keystore, password: event.password, seed: event.seed);
+      await _walletStorage.add(event.wallet, event.keystore, password: event.password);
       final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
       int index = list.indexWhere((x) => x.address == event.wallet.address);
       if (index >= 0) {
