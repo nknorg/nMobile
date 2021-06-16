@@ -48,7 +48,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       }
     }
     _lastMsg = widget.session.lastMessageOptions != null ? MessageSchema.fromMap(widget.session.lastMessageOptions!) : null;
-    setState(() {});
+    setState(() {}); // async need
   }
 
   @override
