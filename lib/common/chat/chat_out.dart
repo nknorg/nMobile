@@ -23,8 +23,6 @@ class ChatOutCommon with Tag {
   static const int minPiecesTotal = 2 * piecesParity; // parity >= 2
   static const int maxPiecesTotal = 10 * piecesParity; // parity <= 10
 
-  ChatOutCommon();
-
   // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get _onSavedSink => _onSavedController.sink;
@@ -36,6 +34,8 @@ class ChatOutCommon with Tag {
   Stream<Map<String, dynamic>> get onPieceOutStream => _onPieceOutController.stream.distinct((prev, next) => prev['percent'] >= next['percent']);
 
   MessageStorage _messageStorage = MessageStorage();
+
+  ChatOutCommon();
 
   // NO DB NO display NO topic (1 to 1)
   Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {

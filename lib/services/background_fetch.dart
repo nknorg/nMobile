@@ -7,6 +7,8 @@ import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class BackgroundFetchService {
+  BackgroundFetchService();
+
   void backgroundFetchHeadlessTask(HeadlessTask task) async {
     String taskId = task.taskId;
     bool isTimeout = task.timeout;

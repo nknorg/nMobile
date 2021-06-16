@@ -10,6 +10,8 @@ class MemoryCache {
   static const String KEY_DRAFT = 'draft';
   Map<String, CacheEntry> _cacheMap = {};
 
+  MemoryCache();
+
   put(String key, dynamic value) {
     CacheEntry cacheEntry = CacheEntry(key: key, val: value, invalid: 0);
     _cacheMap[key] = cacheEntry;

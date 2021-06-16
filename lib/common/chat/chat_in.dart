@@ -17,10 +17,6 @@ import 'package:nmobile/utils/path.dart';
 import '../locator.dart';
 
 class ChatInCommon with Tag {
-  ChatInCommon() {
-    start();
-  }
-
   // ignore: close_sinks
   StreamController<MessageSchema> _onReceiveController = StreamController<MessageSchema>(); //.broadcast();
   StreamSink<MessageSchema> get _onReceiveSink => _onReceiveController.sink;
@@ -32,6 +28,10 @@ class ChatInCommon with Tag {
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.pid == next.pid);
 
   MessageStorage _messageStorage = MessageStorage();
+
+  ChatInCommon() {
+    start();
+  }
 
   Future onClientMessage(MessageSchema? message, {bool needWait = false}) async {
     if (message == null) return;

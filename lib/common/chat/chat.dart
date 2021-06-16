@@ -31,6 +31,8 @@ class ChatCommon with Tag {
 
   Map<String, Map<String, DateTime>> deletedCache = Map<String, Map<String, DateTime>>();
 
+  ChatCommon();
+
   Future<OnMessage?> sendData(String dest, String data) async {
     return await clientCommon.client?.sendText([dest], data);
   }
