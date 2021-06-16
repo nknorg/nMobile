@@ -57,30 +57,8 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // session
     _sessionAddSubscription = sessionCommon.addStream.listen((SessionSchema event) {
-      if (_sessionList.length <= 0) {
-        setState(() {
-          _sessionList.insert(0, event);
-        });
-        return;
-      }
-      int firstNoTopIndex = 0;
-      _sessionList.asMap().forEach((key, value) {
-        if (!value.isTop) {
-          firstNoTopIndex = key;
-        }
-        if (key >= _sessionList.length - 1) {
-          firstNoTopIndex = _sessionList.length;
-        }
-      });
-      if (firstNoTopIndex >= 0 && firstNoTopIndex < _sessionList.length) {
-        setState(() {
-          _sessionList.insert(firstNoTopIndex, event);
-        });
-      } else if (firstNoTopIndex >= _sessionList.length) {
-        setState(() {
-          _sessionList.add(event);
-        });
-      }
+      _sessionList.insert(0, event);
+      _sortMessages();
     });
     _sessionDeleteSubscription = sessionCommon.deleteStream.listen((String event) {
       setState(() {
