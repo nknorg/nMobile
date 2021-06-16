@@ -66,6 +66,7 @@ dependencies:
   image_cropper: ^1.4.0
 
   # audio
+  audioplayers: ^0.19.0
   flutter_sound: ^8.1.4
 
   # file
