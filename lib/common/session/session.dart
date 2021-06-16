@@ -22,6 +22,8 @@ class SessionCommon with Tag {
   StreamSink<SessionSchema> get _updateSink => _updateController.sink;
   Stream<SessionSchema> get updateStream => _updateController.stream;
 
+  SessionCommon();
+
   close() {
     _addController.close();
     _deleteController.close();

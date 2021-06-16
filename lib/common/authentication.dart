@@ -21,6 +21,8 @@ class Authorization {
 
   Future<List<BiometricType>> get availableBiometrics async => await _localAuth.getAvailableBiometrics();
 
+  Authorization();
+
   Future<bool> authentication([String? localizedReason]) async {
     if (localizedReason == null || localizedReason.isEmpty) {
       localizedReason = S.of(Global.appContext).authenticate_to_access;

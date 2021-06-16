@@ -42,6 +42,8 @@ class ContactCommon with Tag {
   StreamSink<ContactSchema?> get _currentUpdateSink => _currentUpdateController.sink;
   Stream<ContactSchema?> get currentUpdateStream => _currentUpdateController.stream;
 
+  ContactCommon();
+
   close() {
     _addController.close();
     // _deleteController.close();

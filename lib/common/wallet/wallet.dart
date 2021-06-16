@@ -10,6 +10,8 @@ import '../global.dart';
 class WalletCommon with Tag {
   WalletStorage _walletStorage = WalletStorage();
 
+  WalletCommon();
+
   Future<WalletSchema?> getInStorageByAddress(String? address) async {
     if (address == null || address.length == 0) return null;
     List<WalletSchema> wallets = await _walletStorage.getWallets();
