@@ -9,10 +9,10 @@ class TaskService with Tag {
   static const KEY_MSG_BURNING = "message_burning";
 
   Timer? _timer1;
-  Map<String, Function> tasks1 = Map<String, Function>();
+  Map<String, Function(String)> tasks1 = Map<String, Function(String)>();
 
   Timer? _timer60;
-  Map<String, Function> tasks60 = Map<String, Function>();
+  Map<String, Function(String)> tasks60 = Map<String, Function(String)>();
 
   install({bool isFirst = true}) {
     // listen
@@ -31,7 +31,7 @@ class TaskService with Tag {
         Timer.periodic(Duration(seconds: 1), (timer) async {
           tasks1.keys.forEach((String key) {
             // logger.d("TickHelper - tick");
-            tasks1[key]?.call();
+            tasks1[key]?.call(key);
           });
         });
 
@@ -40,12 +40,12 @@ class TaskService with Tag {
         Timer.periodic(Duration(seconds: 60), (timer) {
           tasks60.keys.forEach((String key) {
             // logger.d("TickHelper - tick");
-            tasks60[key]?.call();
+            tasks60[key]?.call(key);
           });
         });
 
     // task
-    addTask60(KEY_WALLET_BALANCE, walletCommon.queryBalance, callNow: true);
+    addTask60(KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(), callNow: true);
   }
 
   uninstall() {
@@ -55,9 +55,9 @@ class TaskService with Tag {
     _timer60 = null;
   }
 
-  void addTask1(String key, Function func, {bool callNow = true}) {
+  void addTask1(String key, Function(String) func, {bool callNow = true}) {
     logger.d("$Tag - addTask1 - key:$key - func:${func.toString()}");
-    if (callNow) func.call();
+    if (callNow) func.call(key);
     tasks1[key] = func;
   }
 
@@ -65,9 +65,9 @@ class TaskService with Tag {
     tasks1.remove(key);
   }
 
-  void addTask60(String key, Function func, {bool callNow = true}) {
+  void addTask60(String key, Function(String) func, {bool callNow = true}) {
     logger.d("$Tag - addTask60 - key:$key - func:${func.toString()}");
-    if (callNow) func.call();
+    if (callNow) func.call(key);
     tasks60[key] = func;
   }
 
