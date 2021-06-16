@@ -136,7 +136,7 @@ class ChatCommon with Tag {
   }
 
   Future<MessageSchema> burningHandle(MessageSchema message, {ContactSchema? contact}) async {
-    if (!message.canDisplayAndRead || message.isTopic) return message;
+    if (!message.canBurning || message.isTopic) return message;
     int? seconds = MessageOptions.getDeleteAfterSeconds(message);
     if (seconds != null && seconds > 0) {
       message.deleteTime = DateTime.now().add(Duration(seconds: seconds));
@@ -159,7 +159,7 @@ class ChatCommon with Tag {
     int? unread,
     bool handleBurn = true,
   }) async {
-    List<MessageSchema> list = await _messageStorage.queryListCanReadByTargetId(targetId, offset: offset, limit: limit);
+    List<MessageSchema> list = await _messageStorage.queryListCanDisplayReadByTargetId(targetId, offset: offset, limit: limit);
     // unread
     if (offset == 0 && (unread == null || unread > 0)) {
       _messageStorage.queryListUnReadByTargetId(targetId).then((List<MessageSchema> unreadList) {

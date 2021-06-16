@@ -91,10 +91,14 @@ class ChatInCommon with Tag {
       case ContentType.eventChannelInvitation:
         break;
     }
+    if (!received.canDisplayAndRead) {
+      chatCommon.msgRead(received);
+    }
   }
 
   // NO DB NO display NO topic (1 to 1)
   Future _receiveReceipt(MessageSchema received) async {
+    // if (received.isTopic) return; (limit in out)
     List<MessageSchema> _schemaList = await _messageStorage.queryList(received.content);
     _schemaList.forEach((MessageSchema element) async {
       element = MessageStatus.set(element, MessageStatus.SendWithReceipt);
@@ -303,7 +307,7 @@ class ChatInCommon with Tag {
 
   // NO topic (1 to 1)
   Future _receiveContactOptions(MessageSchema received, {ContactSchema? contact}) async {
-    if (received.content == null) return;
+    if (received.content == null) return; // received.isTopic (limit in out)
     Map<String, dynamic> data = received.content; // == data
     // duplicated
     ContactSchema? existContact = contact ?? await contactCommon.queryByClientAddress(received.from);

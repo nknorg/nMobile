@@ -49,6 +49,7 @@ class DB {
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - upgrade - old:$oldVersion - new:$newVersion");
         // TODO:GG session data move
+        // TODO:GG delete message(receipt) + read message(piece + contactOptions)
         // if (newVersion >= dataBaseVersionV2) {
         //   await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
         //   await NKNDataManager.upgradeContactSchema2V3(db, dataBaseVersionV3);

@@ -118,7 +118,7 @@ class SessionCommon with Tag {
     if (checkOptions && session.lastMessageOptions != null && session.lastMessageOptions!.isNotEmpty) {
       message = MessageSchema.fromMap(session.lastMessageOptions!);
     } else {
-      List<MessageSchema> history = await _messageStorage.queryListCanReadByTargetId(session.targetId, offset: 0, limit: 1);
+      List<MessageSchema> history = await _messageStorage.queryListCanDisplayReadByTargetId(session.targetId, offset: 0, limit: 1);
       if (history.isNotEmpty) {
         message = history[0];
         // session.lastMessageOptions = message.toMap();
