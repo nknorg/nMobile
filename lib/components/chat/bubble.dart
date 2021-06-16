@@ -100,7 +100,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             await chatCommon.msgDelete(_message.msgId, notify: true);
             taskService.removeTask1(key);
           }
-          setState(() {});
+          setState(() {}); // async need
         });
       } else {
         logger.i("$TAG - delete(now) - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
