@@ -4,6 +4,7 @@ import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/session/session.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
+import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/helpers/memory_cache.dart';
 import 'package:nmobile/services/background_fetch.dart';
 
@@ -21,6 +22,7 @@ late TaskService taskService;
 late BackgroundFetchService backgroundFetchService;
 late Notification notification;
 late Authorization authorization;
+late AudioHelper audioHelper;
 
 late ClientCommon clientCommon;
 late ChatCommon chatCommon;
@@ -32,13 +34,14 @@ late WalletCommon walletCommon;
 late MemoryCache memoryCache;
 
 void setupLocator() {
-  locator..registerSingleton(Application())..registerSingleton(TaskService())..registerSingleton(BackgroundFetchService())..registerSingleton(Notification())..registerSingleton(Authorization())..registerSingleton(ClientCommon())..registerSingleton(ChatCommon())..registerSingleton(SessionCommon())..registerSingleton(ChatInCommon())..registerSingleton(ChatOutCommon())..registerSingleton(ContactCommon())..registerSingleton(WalletCommon())..registerSingleton(MemoryCache());
+  locator..registerSingleton(Application())..registerSingleton(TaskService())..registerSingleton(BackgroundFetchService())..registerSingleton(Notification())..registerSingleton(Authorization())..registerSingleton(AudioHelper())..registerSingleton(ClientCommon())..registerSingleton(ChatCommon())..registerSingleton(SessionCommon())..registerSingleton(ChatInCommon())..registerSingleton(ChatOutCommon())..registerSingleton(ContactCommon())..registerSingleton(WalletCommon())..registerSingleton(MemoryCache());
 
   application = locator.get<Application>();
   taskService = locator.get<TaskService>();
   backgroundFetchService = locator.get<BackgroundFetchService>();
   notification = locator.get<Notification>();
   authorization = locator.get<Authorization>();
+  audioHelper = locator.get<AudioHelper>();
 
   clientCommon = locator.get<ClientCommon>();
   chatCommon = locator.get<ChatCommon>();

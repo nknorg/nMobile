@@ -10,6 +10,8 @@ class Notification {
   FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   int _notificationId = 0;
 
+  Notification();
+
   init() async {
     var initializationSettingsAndroid = new AndroidInitializationSettings('@mipmap/ic_launcher_round');
 
