@@ -93,6 +93,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
 
   @override
   void dispose() {
+    audioHelper.playerRelease();
     _onInputChangeController.close();
     _onMessageReceiveStreamSubscription?.cancel();
     _onMessageSendStreamSubscription?.cancel();

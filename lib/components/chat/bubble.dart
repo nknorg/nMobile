@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -48,12 +49,17 @@ class ChatBubble extends BaseStateFulWidget {
 class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   GlobalKey _contentKey = GlobalKey();
   StreamSubscription? _onPieceOutStreamSubscription;
+  StreamSubscription? _onPlayStateChangedSubscription;
+  StreamSubscription? _onPlayPositionChangedSubscription;
 
   late MessageSchema _message;
   ContactSchema? _contact;
   late int _msgStatus;
 
   double _uploadProgress = 1;
+
+  PlayerState _playState = PlayerState.STOPPED;
+  double _playProgress = 0;
 
   @override
   void initState() {
@@ -62,12 +68,54 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _onPieceOutStreamSubscription = chatOutCommon.onPieceOutStream.listen((Map<String, dynamic> event) {
       String? msgId = event["msg_id"];
       double? percent = event["percent"];
-      if (msgId == null || msgId != this._message.msgId || percent == null) return;
-      if (_msgStatus != MessageStatus.Sending) return;
-      if (!(_message.content is File)) return;
-      if (_uploadProgress >= 1) return;
+      if (msgId == null || msgId != this._message.msgId || percent == null || _msgStatus != MessageStatus.Sending || !(_message.content is File)) {
+        if (_uploadProgress != 1) {
+          setState(() {
+            _uploadProgress = 1;
+          });
+        }
+        return;
+      }
+      if (_uploadProgress >= 1 || percent == _uploadProgress) return;
       this.setState(() {
         _uploadProgress = percent;
+      });
+    });
+    // player
+    _onPlayStateChangedSubscription = audioHelper.onPlayStateChangedStream.listen((Map<String, dynamic> event) {
+      String? playerId = event["id"];
+      PlayerState? state = event["state"];
+      if (playerId == null || playerId != this._message.msgId || state == null) {
+        if (_playState != PlayerState.STOPPED) {
+          setState(() {
+            _playState = PlayerState.STOPPED;
+            _playProgress = 0;
+          });
+        }
+        return;
+      }
+      if (state == _playState) return;
+      this.setState(() {
+        _playState = state;
+        _playProgress = 0;
+      });
+    });
+    _onPlayPositionChangedSubscription = audioHelper.onPlayPositionChangedStream.listen((Map<String, dynamic> event) {
+      String? playerId = event["id"];
+      // int? duration = event["duration"];
+      // Duration? position = event["position"];
+      double? percent = event["percent"];
+      if (playerId == null || playerId != this._message.msgId || percent == null) {
+        if (_playProgress != 0) {
+          setState(() {
+            _playProgress = 0;
+          });
+        }
+        return;
+      }
+      if (percent == _playProgress) return;
+      this.setState(() {
+        _playProgress = percent;
       });
     });
   }
@@ -78,6 +126,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _contact = widget.contact;
     _msgStatus = MessageStatus.get(_message);
     _uploadProgress = ((_message.content is File) && (_msgStatus == MessageStatus.Sending)) ? 0 : 1;
+    _playProgress = 0;
     // burn
     int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(_message);
     if (_message.deleteTime == null && burnAfterSeconds != null && burnAfterSeconds > 0) {
@@ -91,6 +140,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         taskService.addTask1(taskKey, (String key) async {
           if (_message.originalId != contactCommon.currentUser?.clientAddress) {
             taskService.removeTask1(key);
+            onRefreshArguments(); // refresh task
             return;
           }
           if (deleteTime.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch) {
@@ -112,6 +162,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   @override
   void dispose() {
     // taskService.removeTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}");
+    _onPlayStateChangedSubscription?.cancel();
+    _onPlayPositionChangedSubscription?.cancel();
     _onPieceOutStreamSubscription?.cancel();
     super.dispose();
   }
@@ -306,6 +358,15 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           onTap = () => PhotoScreen.go(context, filePath: file.path);
         }
         break;
+      case ContentType.audio:
+        _bodyList = _getContentBodyAudio(dark);
+        if (_message.content is File) {
+          double? durationS = MessageOptions.getAudioDuration(_message);
+          int? durationMs = durationS == null ? null : ((durationS * 1000).round());
+          File file = _message.content as File;
+          onTap = () => audioHelper.playStart(_message.msgId, file.path, durationMs: durationMs);
+        }
+        break;
     }
 
     return GestureDetector(
@@ -378,7 +439,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       return [SizedBox.shrink()];
     }
     File file = _message.content as File;
-    double maxWidth = MediaQuery.of(context).size.width * 0.5;
+    double maxWidth = MediaQuery.of(context).size.width * (widget.showProfile ? 0.5 : 0.55);
     double maxHeight = MediaQuery.of(context).size.height * 0.3;
 
     return [
@@ -391,6 +452,56 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         ),
         child: Image.file(file),
       )
+    ];
+  }
+
+  List<Widget> _getContentBodyAudio(bool dark) {
+    bool isPlaying = _playState == PlayerState.PLAYING;
+
+    Color iconColor = _message.isOutbound ? Colors.white : application.theme.primaryColor;
+    Color textColor = _message.isOutbound ? Colors.white : application.theme.fontColor2;
+    Color progressBgColor = _message.isOutbound ? Colors.white : application.theme.primaryColor.withAlpha(50);
+    Color progressValueColor = _message.isOutbound ? Colors.grey : application.theme.primaryColor;
+
+    double? durationS = MessageOptions.getAudioDuration(_message);
+    double durationRatio = ((durationS ?? 30) > 60 ? 60 : (durationS ?? 30)) / 60;
+    double minWidth = MediaQuery.of(context).size.width * 0.1;
+    double maxWidth = MediaQuery.of(context).size.width * (widget.showProfile ? 0.35 : 0.4);
+    double progressWidth = minWidth + (maxWidth - minWidth) * durationRatio;
+
+    num durationText = getNumByValueDouble(durationS ?? 0, 2) ?? 0;
+
+    return [
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          isPlaying
+              ? Icon(
+                  FontAwesomeIcons.pauseCircle,
+                  size: 25,
+                  color: iconColor,
+                )
+              : Icon(
+                  FontAwesomeIcons.playCircle,
+                  size: 25,
+                  color: iconColor,
+                ),
+          SizedBox(width: 8),
+          Container(
+            width: progressWidth,
+            child: LinearProgressIndicator(
+              minHeight: 10,
+              backgroundColor: progressBgColor,
+              valueColor: AlwaysStoppedAnimation<Color>(progressValueColor),
+              value: _playProgress,
+            ),
+          ),
+          SizedBox(width: 8),
+          Label('$durationText\"', type: LabelType.bodyRegular, color: textColor),
+        ],
+      ),
     ];
   }
 

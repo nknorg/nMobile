@@ -119,3 +119,9 @@ String? genTopicHash(String? topic) {
   var t = unLeadingHashIt(topic);
   return 'dchat' + hexEncode(Uint8List.fromList(sha1(t)));
 }
+
+num? getNumByValueDouble(double? value, int fractionDigits) {
+  if (value == null) return null;
+  String valueStr = value.toStringAsFixed(fractionDigits);
+  return fractionDigits == 0 ? int.tryParse(valueStr) : double.tryParse(valueStr);
+}

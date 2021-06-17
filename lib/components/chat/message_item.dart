@@ -63,6 +63,7 @@ class ChatMessageItem extends StatelessWidget {
       case ContentType.media:
       case ContentType.image:
       case ContentType.nknImage:
+      case ContentType.audio:
         contentsWidget.add(
           ChatBubble(
             message: this.message,
@@ -78,7 +79,6 @@ class ChatMessageItem extends StatelessWidget {
         break;
       // TODO:GG messageItem contentType
       case ContentType.system:
-      case ContentType.audio:
       case ContentType.eventSubscribe:
       case ContentType.eventUnsubscribe:
       case ContentType.eventChannelInvitation:
