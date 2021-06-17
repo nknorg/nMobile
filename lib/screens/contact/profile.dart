@@ -194,25 +194,31 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     setState(() {});
   }
 
-  Future<WalletSchema?> _refreshDefaultWallet() async {
-    WalletSchema? schema = await walletCommon.getDefault();
+  Future _refreshDefaultWallet({WalletSchema? wallet}) async {
+    WalletSchema? schema = wallet ?? await walletCommon.getDefault();
     setState(() {
       _walletDefault = schema;
     });
-    return schema;
   }
 
   _onDefaultWalletChange() async {
-    WalletSchema? _walletDefault = await _refreshDefaultWallet();
-    if (_walletDefault == null) return;
+    WalletSchema? walletDefault = await walletCommon.getDefault();
+    if (walletDefault?.address == this._walletDefault?.address) return;
+    await _refreshDefaultWallet(wallet: walletDefault);
 
     //Loading.show(); // set on func _selectDefaultWallet
     try {
-      // client change
+      // client exit
       await clientCommon.signOut();
       await Future.delayed(Duration(seconds: 1)); // wait client close
       Loading.dismiss();
-      bool success = await clientCommon.signIn(_walletDefault);
+
+      // client entry
+      if (walletDefault == null) {
+        Navigator.pop(this.context);
+        return;
+      }
+      bool success = await clientCommon.signIn(walletDefault);
       Loading.show();
       await Future.delayed(Duration(seconds: 1)); // wait client create
 
@@ -228,6 +234,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       // TimerAuth.instance.enableAuth(); // TODO:GG contact auth
     } catch (e) {
       handleError(e);
+      Loading.dismiss();
+      Navigator.pop(this.context);
     } finally {
       Loading.dismiss();
     }
