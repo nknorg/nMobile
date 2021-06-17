@@ -276,33 +276,27 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         children: [
           Expanded(
             flex: 1,
-            child: StreamBuilder<ContactSchema?>(
-              initialData: _contact,
-              stream: contactCommon.updateStream.where((event) => event.id.toString() == session.targetId),
-              builder: (BuildContext context, AsyncSnapshot<ContactSchema?> snapshot) {
-                ContactSchema? _schema = snapshot.data ?? _contact;
-                if (_schema == null) return SizedBox.shrink();
-                return ContactItem(
-                  contact: _schema,
-                  body: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Label(
-                        _schema.displayName,
-                        type: LabelType.h3,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: _contentWidget(session),
-                      ),
-                    ],
-                  ),
-                  onTapWave: false,
-                );
-              },
-            ),
+            child: _contact != null
+                ? ContactItem(
+                    contact: _contact!,
+                    body: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Label(
+                          _contact?.displayName ?? " ",
+                          type: LabelType.h3,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: _contentWidget(session),
+                        ),
+                      ],
+                    ),
+                    onTapWave: false,
+                  )
+                : SizedBox.shrink(),
           ),
           Container(
             child: Row(
