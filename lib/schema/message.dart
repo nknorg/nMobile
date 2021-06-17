@@ -23,7 +23,7 @@ class ContentType {
   static const String textExtension = 'textExtension'; // db + visible
   static const String media = 'media'; // db + visible
   static const String image = 'image'; // db + visible
-  static const String audio = 'audio'; // db + visible // TODO:GG wait handle
+  static const String audio = 'audio'; // db + visible
 
   static const String eventContactOptions = 'event:contactOptions'; // db + visible
   static const String eventSubscribe = 'event:subscribe'; // TODO:GG wait handle
@@ -36,7 +36,7 @@ class ContentType {
 }
 
 class MessageOptions {
-  static const KEY_AUDIO_DURATION = "audioDuration"; // TODO:GG wait handle
+  static const KEY_AUDIO_DURATION = "audioDuration";
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
   static const KEY_DEVICE_TOKEN = "deviceToken";
 
@@ -47,6 +47,19 @@ class MessageOptions {
   static const KEY_INDEX = "index";
 
   static const KEY_PARENT_PIECE = "parent_piece";
+
+  static MessageSchema setAudioDuration(MessageSchema schema, double? durationS) {
+    if (schema.options == null) schema.options = Map<String, dynamic>();
+    schema.options![MessageOptions.KEY_AUDIO_DURATION] = durationS;
+    return schema;
+  }
+
+  static double? getAudioDuration(MessageSchema? schema) {
+    if (schema == null || schema.options == null || schema.options!.keys.length == 0) return null;
+    var duration = schema.options![MessageOptions.KEY_AUDIO_DURATION];
+    if (duration == null || duration.isEmpty) return null;
+    return double.parse(duration);
+  }
 
   static MessageSchema setDeleteAfterSeconds(MessageSchema schema, int deleteTimeSec) {
     if (schema.options == null) schema.options = Map<String, dynamic>();
