@@ -43,6 +43,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
 
   @override
   void onRefreshArguments() {
+    // _qrSubscription?.cancel();
     _qrSubscription = widget.qrStream?.listen((event) {
       setState(() {
         _seedController.text = event;
