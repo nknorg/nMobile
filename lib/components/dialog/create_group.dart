@@ -34,7 +34,11 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<CreateGroupDialog>
   bool _privateSelected = false;
 
   @override
-  void onRefreshArguments() {
+  void onRefreshArguments() {}
+
+  @override
+  void initState() {
+    super.initState();
     _feeController.text = _fee.toString();
   }
 
