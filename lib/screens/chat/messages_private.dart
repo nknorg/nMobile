@@ -11,7 +11,9 @@ import 'package:nmobile/components/contact/header.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/contact/profile.dart';
@@ -93,7 +95,8 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
 
   @override
   void dispose() {
-    audioHelper.playerRelease();
+    audioHelper.playerRelease(); // await
+    audioHelper.recordRelease(); // await
     _onInputChangeController.close();
     _onMessageReceiveStreamSubscription?.cancel();
     _onMessageSendStreamSubscription?.cancel();
@@ -249,6 +252,32 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                 },
                 onSendPress: (String content) async {
                   return await chatOutCommon.sendText(_contact.clientAddress, content, contact: _contact);
+                },
+                onRecordTap: (bool visible, bool complete, int durationMs) async {
+                  if (visible) {
+                    String? savePath = await audioHelper.recordStart(_contact.clientAddress, maxDurationS: AudioHelper.MessageRecordMaxDurationS);
+                    if (savePath == null || savePath.isEmpty) {
+                      await audioHelper.recordStop();
+                    }
+                    return null;
+                  } else {
+                    String? savePath = await audioHelper.recordStop();
+                    if (savePath == null || savePath.isEmpty) {
+                      Toast.show(S.of(context).failure);
+                      return null;
+                    }
+                    File content = File(savePath);
+                    if (!complete) {
+                      if (await content.exists()) {
+                        await content.delete();
+                      }
+                      return null;
+                    }
+                    if (durationMs < 500) {
+                      return null;
+                    }
+                    return await chatOutCommon.sendAudio(_contact.clientAddress, content, durationMs / 1000, contact: _contact);
+                  }
                 },
                 onChangeStream: _onInputChangeStream,
               ),

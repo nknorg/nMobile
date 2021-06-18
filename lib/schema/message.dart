@@ -56,7 +56,7 @@ class MessageOptions {
 
   static double? getAudioDuration(MessageSchema? schema) {
     if (schema == null || schema.options == null || schema.options!.keys.length == 0) return null;
-    var duration = schema.options![MessageOptions.KEY_AUDIO_DURATION];
+    var duration = schema.options![MessageOptions.KEY_AUDIO_DURATION]?.toString();
     if (duration == null || duration.isEmpty) return null;
     return double.parse(duration);
   }
@@ -82,7 +82,7 @@ class MessageOptions {
 
   static String? getDeviceToken(MessageSchema? schema) {
     if (schema == null || schema.options == null || schema.options!.keys.length == 0) return null;
-    var deviceToken = schema.options![MessageOptions.KEY_DEVICE_TOKEN];
+    var deviceToken = schema.options![MessageOptions.KEY_DEVICE_TOKEN]?.toString();
     return deviceToken;
   }
 
@@ -251,11 +251,11 @@ class MessageData {
       'parity': schema.parity,
       'index': schema.index,
     };
-    if (schema.options != null && schema.options!.keys.length > 0) {
-      data['options'] = schema.options;
-    }
     if (schema.isTopic) {
       data['topic'] = schema.topic;
+    }
+    if (schema.options != null && schema.options!.keys.length > 0) {
+      data['options'] = schema.options;
     }
     return jsonEncode(data);
   }
@@ -267,11 +267,11 @@ class MessageData {
       'content': schema.content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
-    if (schema.options != null && schema.options!.keys.length > 0) {
-      map['options'] = schema.options;
-    }
     if (schema.isTopic) {
       map['topic'] = schema.topic;
+    }
+    if (schema.options != null && schema.options!.keys.length > 0) {
+      map['options'] = schema.options;
     }
     return jsonEncode(map);
   }
@@ -279,41 +279,39 @@ class MessageData {
   static Future<String?> getImage(MessageSchema schema) async {
     File? file = schema.content as File?;
     if (file == null) return null;
-    String content = '![media](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
+    String content = '![media](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})'; // SUPPORT:D_CHAT_IMAGE
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.media, // SUPPORT:IMAGE
+      'contentType': ContentType.media, // SUPPORT:D_CHAT_IMAGE
       'content': content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
-    if (schema.options != null && schema.options!.keys.length > 0) {
-      data['options'] = schema.options;
-    }
     if (schema.isTopic) {
       data['topic'] = schema.topic;
+    }
+    if (schema.options != null && schema.options!.keys.length > 0) {
+      data['options'] = schema.options;
     }
     return jsonEncode(data);
   }
 
-  // TODO:GG wait call
   static Future<String?> getAudio(MessageSchema schema) async {
     File? file = schema.content as File?;
     if (file == null) return null;
-    // var mimeType = mime(file.path) ?? "";
-    // if (mimeType.split('aac').length > 1) {
+    var mimeType = mime(file.path) ?? "";
+    if (mimeType.split('aac').length <= 0) return null;
     String content = '![audio](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
-    // }
     Map data = {
       'id': schema.msgId,
       'contentType': ContentType.audio,
       'content': content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
-    if (schema.options != null && schema.options!.keys.length > 0) {
-      data['options'] = schema.options;
-    }
     if (schema.isTopic) {
       data['topic'] = schema.topic;
+    }
+    if (schema.options != null && schema.options!.keys.length > 0) {
+      data['options'] = schema.options;
     }
     return jsonEncode(data);
   }
@@ -511,6 +509,7 @@ class MessageSchema extends Equatable {
     this.parity,
     this.index,
     int? deleteAfterSeconds,
+    double? audioDurationS,
   }) {
     // pid (SDK create)
     if (msgId.isEmpty) msgId = Uuid().v4();
@@ -527,6 +526,9 @@ class MessageSchema extends Equatable {
         this.contentType = ContentType.textExtension;
       }
       MessageOptions.setDeleteAfterSeconds(this, deleteAfterSeconds);
+    }
+    if (audioDurationS != null && audioDurationS > 0) {
+      MessageOptions.setAudioDuration(this, audioDurationS);
     }
   }
 
