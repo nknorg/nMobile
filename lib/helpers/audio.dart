@@ -150,7 +150,7 @@ class AudioHelper with Tag {
       _onRecordProgressSink.add({
         "id": this.recordId,
         "duration": event.duration,
-        "volume": event.decibels,
+        "volume": (event.decibels ?? 0) / 120,
       });
       // maxDuration
       if (this.recordMaxDurationS != null && this.recordMaxDurationS! > 0) {
