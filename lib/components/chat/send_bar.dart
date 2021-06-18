@@ -101,7 +101,13 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
   Widget build(BuildContext context) {
     SkinTheme _theme = application.theme;
 
-    Color recordColor = (_audioRecordDurationMs % 1000) <= 500 ? Colors.red : Colors.transparent;
+    Color volumeColor = (_audioRecordDurationMs % 1000) <= 500 ? Colors.red : Colors.transparent;
+    Color durationColor = Colors.red;
+
+    Duration recordDuration = Duration(milliseconds: _audioRecordDurationMs);
+    String recordMin = "${recordDuration.inMinutes < 10 ? 0 : ""}${recordDuration.inMinutes}";
+    String recordSec = "${recordDuration.inSeconds < 10 ? 0 : ""}${recordDuration.inSeconds}";
+    String recordDurationText = "$recordMin:$recordSec";
 
     return Container(
       constraints: BoxConstraints(minHeight: 70, maxHeight: 160),
@@ -171,14 +177,20 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                   )
                 : Row(
                     children: [
+                      SizedBox(width: 16),
+                      Icon(FontAwesomeIcons.microphone, size: 24, color: volumeColor),
+                      SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.only(left: 16, right: 8),
-                        child: Icon(FontAwesomeIcons.microphone, size: 24, color: recordColor),
+                        child: Label(
+                          recordDurationText,
+                          type: LabelType.bodyRegular,
+                          fontWeight: FontWeight.normal,
+                          color: durationColor,
+                        ),
                       ),
-                      Container(
-                        child: Label("recordLength", type: LabelType.bodyRegular, fontWeight: FontWeight.normal, color: Colors.red),
-                      ),
+                      SizedBox(width: 8),
                       Expanded(
+                        // TODO:GG
                         flex: 1,
                         child: Container(
                           color: Colors.red[100],
@@ -240,6 +252,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
     if (visible == _audioRecordVisible) return;
     this.setState(() {
       _audioRecordVisible = visible;
+      _audioRecordDurationMs = visible ? 0 : _audioRecordDurationMs;
     });
     widget.onRecordTap?.call(visible, complete, _audioRecordDurationMs); // await
   }
