@@ -37,18 +37,21 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   MessageSchema? _lastMsg;
 
   @override
-  void onRefreshArguments() async {
+  void onRefreshArguments() {
     if (widget.session.isTopic) {
       if (_topic == null || widget.session.targetId != _topic?.id?.toString()) {
         _topic = null; // TODO:GG topic session get
       }
     } else {
       if (_contact == null || widget.session.targetId != _contact?.id?.toString()) {
-        _contact = await contactCommon.queryByClientAddress(widget.session.targetId);
+        contactCommon.queryByClientAddress(widget.session.targetId).then((value) {
+          setState(() {
+            _contact = value;
+          });
+        });
       }
     }
     _lastMsg = widget.session.lastMessageOptions != null ? MessageSchema.fromMap(widget.session.lastMessageOptions!) : null;
-    setState(() {}); // async need
   }
 
   @override
