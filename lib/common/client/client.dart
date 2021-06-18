@@ -115,7 +115,7 @@ class ClientCommon with Tag {
       completer.complete();
     });
 
-    // TODO:GG client disconnect/reconnect listen (action statusSink.add)
+    // TODO:GG client disconnect/reconnect listen (action statusSink.add) (effect message send / receive)
 
     // client messages_receive
     _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) async {

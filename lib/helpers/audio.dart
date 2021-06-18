@@ -1,12 +1,22 @@
 import 'dart:async';
+import 'dart:io';
 
-import 'package:audioplayers/audioplayers.dart';
+import 'package:audioplayers/audioplayers.dart' as Player;
+import 'package:flutter_sound/flutter_sound.dart' as Sound;
+import 'package:flutter_sound/public/flutter_sound_recorder.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/path.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:uuid/uuid.dart';
 
 class AudioHelper with Tag {
+  static const double MessageRecordMaxDurationS = 30;
+
   // player
-  AudioPlayer player = AudioPlayer(mode: PlayerMode.MEDIA_PLAYER, playerId: "AudioHelper")..setReleaseMode(ReleaseMode.STOP);
+  Player.AudioPlayer player = Player.AudioPlayer(mode: Player.PlayerMode.MEDIA_PLAYER, playerId: "AudioHelper")..setReleaseMode(Player.ReleaseMode.STOP);
   String? playerId;
   int? playerDuration; // milliSeconds
 
@@ -20,17 +30,27 @@ class AudioHelper with Tag {
   StreamSink<Map<String, dynamic>> get _onPlayPositionChangedSink => _onPlayPositionChangedController.sink;
   Stream<Map<String, dynamic>> get onPlayPositionChangedStream => _onPlayPositionChangedController.stream; // .distinct((prev, next) => (prev['player_id'] == next['player_id']) && (next['percent'] < prev['percent']));
 
-  // TODO:GG record
+  // record
+  Sound.FlutterSoundRecorder record = Sound.FlutterSoundRecorder();
+  String? recordId;
+  String? recordPath;
+  double? recordMaxDurationS;
+  StreamSubscription? _onRecordProgressSubscription;
+
+  // ignore: close_sinks
+  StreamController<Map<String, dynamic>> _onRecordProgressController = StreamController<Map<String, dynamic>>.broadcast();
+  StreamSink<Map<String, dynamic>> get _onRecordProgressSink => _onRecordProgressController.sink;
+  Stream<Map<String, dynamic>> get onRecordProgressStream => _onRecordProgressController.stream; // .distinct((prev, next) => (prev['player_id'] == next['player_id']) && (next['percent'] < prev['percent']));
 
   AudioHelper() {
     // player
-    AudioPlayer.logEnabled = Settings.debug;
+    Player.AudioPlayer.logEnabled = Settings.debug;
     player.onPlayerError.listen((String event) {
       logger.e("$TAG - onPlayerError - playerId:$playerId - reason:$event");
       if (playerId == null) return;
       _onPlayStateChangedSink.add({
         "id": playerId,
-        "state": PlayerState.STOPPED,
+        "state": Player.PlayerState.STOPPED,
       });
       _onPlayPositionChangedSink.add({
         "id": playerId,
@@ -39,7 +59,7 @@ class AudioHelper with Tag {
         "percent": 0,
       });
     });
-    player.onPlayerStateChanged.listen((PlayerState event) {
+    player.onPlayerStateChanged.listen((Player.PlayerState event) {
       logger.d("$TAG - onPlayerStateChanged - playerId:$playerId - state:$event");
       if (playerId == null) return;
       _onPlayStateChangedSink.add({
@@ -61,10 +81,12 @@ class AudioHelper with Tag {
         "percent": event.inMilliseconds / playerDuration!,
       });
     });
+    // record
+    // empty
   }
 
   Future<bool> playStart(String playerId, String localPath, {int? durationMs, Duration? position, bool isLocal = true}) async {
-    if (player.state == PlayerState.PLAYING) {
+    if (player.state == Player.PlayerState.PLAYING) {
       bool isSame = playerId == this.playerId;
       await playStop();
       if (isSame) return true;
@@ -94,5 +116,81 @@ class AudioHelper with Tag {
     int result = await player.release();
     // await player.dispose();
     return success && (result == 1);
+  }
+
+  Future<String?> recordStart(String recordId, {String? savePath, double? maxDurationS, Function(RecordingDisposition)? onProgress}) async {
+    logger.d("$TAG - recordStart - recordId:$recordId");
+    var status = await Permission.microphone.request();
+    if (status != PermissionStatus.granted) {
+      throw RecordingPermissionException('Microphone permission not granted');
+    }
+    // duplicated
+    if (record.isRecording) {
+      bool isSame = recordId == this.recordId;
+      await recordStop();
+      if (isSame) return null;
+    }
+    // save
+    this.recordPath = savePath ?? await _getRecordPath();
+    if (recordPath == null || recordPath!.isEmpty) return null;
+    // init
+    FlutterSoundRecorder? _record = await record.openAudioSession(
+      category: Sound.SessionCategory.record,
+    );
+    if (_record == null) return null;
+    record = _record;
+    this.recordId = recordId;
+    this.recordMaxDurationS = maxDurationS;
+    // progress
+    if (_onRecordProgressSubscription != null) {
+      _onRecordProgressSubscription?.cancel();
+    }
+    _onRecordProgressSubscription = record.onProgress?.listen((RecordingDisposition event) async {
+      onProgress?.call(event);
+      _onRecordProgressSink.add({
+        "id": this.recordId,
+        "duration": event.duration,
+        "volume": event.decibels,
+      });
+      // maxDuration
+      if (this.recordMaxDurationS != null && this.recordMaxDurationS! > 0) {
+        if (event.duration.inMilliseconds >= this.recordMaxDurationS! * 1000) {
+          await recordStop();
+        }
+      }
+    });
+    // start
+    await record.setSubscriptionDuration(Duration(milliseconds: 50));
+    await record.startRecorder(
+      toFile: recordPath,
+      codec: Sound.Codec.aacADTS,
+    );
+    return recordPath;
+  }
+
+  Future<String?> recordStop() async {
+    _onRecordProgressSubscription?.cancel();
+    _onRecordProgressSubscription = null;
+    await record.stopRecorder();
+    await record.closeAudioSession();
+    // this.recordId = null;
+    // this.recordPath = null;
+    // this.recordMaxDurationS = null;
+    return recordPath;
+  }
+
+  Future recordRelease() async {
+    await recordStop();
+    return;
+  }
+
+  Future<String?> _getRecordPath() async {
+    String? recordPath = Path.getCompleteFile(Path.createLocalFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, "${Uuid().v4()}.aac"));
+    if (recordPath == null || recordPath.isEmpty) return null;
+    var outputFile = File(recordPath);
+    if (await outputFile.exists()) {
+      await outputFile.delete();
+    }
+    return outputFile.path;
   }
 }

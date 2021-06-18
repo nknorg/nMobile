@@ -151,12 +151,29 @@ class ChatOutCommon with Tag {
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
       clientCommon.id ?? "",
-      ContentType.media, // SUPPORT:IMAGE
+      ContentType.media, // SUPPORT:D_CHAT_IMAGE
       to: clientAddress,
       content: content,
       deleteAfterSeconds: contact.options?.deleteAfterSeconds,
     );
     return _send(schema, await MessageData.getImage(schema));
+  }
+
+  Future<MessageSchema?> sendAudio(String? clientAddress, File? content, double? durationS, {required ContactSchema contact}) async {
+    if (clientCommon.id == null || clientAddress == null || content == null || (!await content.exists())) {
+      // Toast.show(S.of(Global.appContext).failure);
+      return null;
+    }
+    MessageSchema schema = MessageSchema.fromSend(
+      Uuid().v4(),
+      clientCommon.id ?? "",
+      ContentType.audio,
+      to: clientAddress,
+      content: content,
+      deleteAfterSeconds: contact.options?.deleteAfterSeconds,
+      audioDurationS: durationS,
+    );
+    return _send(schema, await MessageData.getAudio(schema));
   }
 
   // NO topic (1 to 1)
@@ -219,8 +236,7 @@ class ChatOutCommon with Tag {
       case ContentType.nknImage:
         return await _send(schema, await MessageData.getImage(schema), resend: true);
       case ContentType.audio:
-        // TODO:GG resend contentType
-        return null;
+        return await _send(schema, await MessageData.getAudio(schema), resend: true);
     }
     return null;
   }

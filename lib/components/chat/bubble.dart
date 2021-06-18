@@ -15,6 +15,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/markdown.dart';
 import 'package:nmobile/components/tip/popup_menu.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/photo.dart';
@@ -393,18 +394,23 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     if (_message.deleteTime == null) return SizedBox.shrink();
     DateTime deleteTime = _message.deleteTime ?? DateTime.now().add(Duration(seconds: (MessageOptions.getDeleteAfterSeconds(_message) ?? 0) + 1));
     Color clockColor = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-        Icon(FontAwesomeIcons.clock, size: 12, color: clockColor),
-        SizedBox(width: 4),
-        Label(
-          timeFromNowFormat(deleteTime),
-          type: LabelType.bodySmall,
-          fontSize: application.theme.iconTextFontSize,
-          color: clockColor,
-        ),
+    return Column(
+      children: [
+        SizedBox(height: 3),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Icon(FontAwesomeIcons.clock, size: 12, color: clockColor),
+            SizedBox(width: 4),
+            Label(
+              timeFromNowFormat(deleteTime),
+              type: LabelType.bodySmall,
+              fontSize: application.theme.iconTextFontSize,
+              color: clockColor,
+            ),
+          ],
+        )
       ],
     );
   }
@@ -458,13 +464,14 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   List<Widget> _getContentBodyAudio(bool dark) {
     bool isPlaying = _playState == PlayerState.PLAYING;
 
-    Color iconColor = _message.isOutbound ? Colors.white : application.theme.primaryColor;
-    Color textColor = _message.isOutbound ? Colors.white : application.theme.fontColor2;
-    Color progressBgColor = _message.isOutbound ? Colors.white : application.theme.primaryColor.withAlpha(50);
-    Color progressValueColor = _message.isOutbound ? Colors.grey : application.theme.primaryColor;
+    Color iconColor = _message.isOutbound ? Colors.white.withAlpha(200) : application.theme.primaryColor.withAlpha(200);
+    Color textColor = _message.isOutbound ? Colors.white.withAlpha(200) : application.theme.fontColor2.withAlpha(200);
+    Color progressBgColor = _message.isOutbound ? Colors.white.withAlpha(230) : application.theme.primaryColor.withAlpha(30);
+    Color progressValueColor = _message.isOutbound ? application.theme.backgroundColor4.withAlpha(127) : application.theme.primaryColor.withAlpha(200);
 
     double? durationS = MessageOptions.getAudioDuration(_message);
-    double durationRatio = ((durationS ?? 30) > 60 ? 60 : (durationS ?? 30)) / 60;
+    double maxDurationS = AudioHelper.MessageRecordMaxDurationS;
+    double durationRatio = ((durationS ?? (maxDurationS / 2)) > maxDurationS ? maxDurationS : (durationS ?? (maxDurationS / 2))) / maxDurationS;
     double minWidth = MediaQuery.of(context).size.width * 0.1;
     double maxWidth = MediaQuery.of(context).size.width * (widget.showProfile ? 0.35 : 0.4);
     double progressWidth = minWidth + (maxWidth - minWidth) * durationRatio;
