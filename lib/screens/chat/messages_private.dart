@@ -49,6 +49,9 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
 
   bool _showBottomMenu = false;
 
+  bool _showRecordLock = false;
+  bool _showRecordLockLocked = false;
+
   @override
   void onRefreshArguments() {
     this._contact = widget.contact;
@@ -213,35 +216,62 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
             children: [
               Expanded(
                 flex: 1,
-                child: ListView.builder(
-                  controller: _scrollController,
-                  itemCount: _messages.length,
-                  reverse: true,
-                  padding: const EdgeInsets.only(bottom: 8, top: 16),
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  itemBuilder: (BuildContext context, int index) {
-                    return ChatMessageItem(
-                      message: _messages[index],
-                      contact: _contact,
-                      showProfile: false,
-                      prevMessage: (index - 1) >= 0 ? _messages[index - 1] : null,
-                      nextMessage: (index + 1) < _messages.length ? _messages[index + 1] : null,
-                      onLonePress: (ContactSchema contact, _) {
-                        _onInputChangeSink.add({"type": ChatSendBar.ChangeTypeAppend, "content": ' @${contact.fullName} '});
+                child: Stack(
+                  children: [
+                    ListView.builder(
+                      controller: _scrollController,
+                      itemCount: _messages.length,
+                      reverse: true,
+                      padding: const EdgeInsets.only(bottom: 8, top: 16),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemBuilder: (BuildContext context, int index) {
+                        return ChatMessageItem(
+                          message: _messages[index],
+                          contact: _contact,
+                          showProfile: false,
+                          prevMessage: (index - 1) >= 0 ? _messages[index - 1] : null,
+                          nextMessage: (index + 1) < _messages.length ? _messages[index + 1] : null,
+                          onLonePress: (ContactSchema contact, _) {
+                            _onInputChangeSink.add({"type": ChatSendBar.ChangeTypeAppend, "content": ' @${contact.fullName} '});
+                          },
+                          onResend: (String msgId) async {
+                            MessageSchema? find;
+                            this.setState(() {
+                              _messages = _messages.where((e) {
+                                if (e.msgId != msgId) return true;
+                                find = e;
+                                return false;
+                              }).toList();
+                            });
+                            await chatOutCommon.resend(find);
+                          },
+                        );
                       },
-                      onResend: (String msgId) async {
-                        MessageSchema? find;
-                        this.setState(() {
-                          _messages = _messages.where((e) {
-                            if (e.msgId != msgId) return true;
-                            find = e;
-                            return false;
-                          }).toList();
-                        });
-                        await chatOutCommon.resend(find);
-                      },
-                    );
-                  },
+                    ),
+                    _showRecordLock
+                        ? Positioned(
+                            width: ChatSendBar.LockActionSize,
+                            height: ChatSendBar.LockActionSize,
+                            right: ChatSendBar.LockActionMargin,
+                            bottom: ChatSendBar.LockActionMargin,
+                            child: Container(
+                              width: ChatSendBar.LockActionSize,
+                              height: ChatSendBar.LockActionSize,
+                              decoration: BoxDecoration(
+                                color: _showRecordLockLocked ? Colors.red : Colors.white,
+                                borderRadius: BorderRadius.all(Radius.circular(ChatSendBar.LockActionSize / 2)),
+                              ),
+                              child: UnconstrainedBox(
+                                child: Asset.iconSvg(
+                                  'lock',
+                                  width: ChatSendBar.LockActionSize / 2,
+                                  color: _showRecordLockLocked ? Colors.white : Colors.red,
+                                ),
+                              ),
+                            ),
+                          )
+                        : SizedBox.shrink(),
+                  ],
                 ),
               ),
               Divider(height: 1, color: _theme.backgroundColor2),
@@ -278,6 +308,15 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                     }
                     return await chatOutCommon.sendAudio(_contact.clientAddress, content, durationMs / 1000, contact: _contact);
                   }
+                },
+                onRecordLock: (bool visible, bool lock) {
+                  if (_showRecordLock != visible || _showRecordLockLocked != lock) {
+                    setState(() {
+                      _showRecordLock = visible;
+                      _showRecordLockLocked = lock;
+                    });
+                  }
+                  return true;
                 },
                 onChangeStream: _onInputChangeStream,
               ),
