@@ -13,11 +13,14 @@ import 'package:nmobile/utils/asset.dart';
 class ChatSendBar extends BaseStateFulWidget {
   static const String ChangeTypeReplace = "replace";
   static const String ChangeTypeAppend = "append";
+  static const double LockActionSize = 50;
+  static const double LockActionMargin = 20;
 
   final String? targetId;
   final VoidCallback? onMenuPressed;
   final Function(String)? onSendPress;
   final Function(bool, bool, int)? onRecordTap;
+  final Function(bool, bool)? onRecordLock;
   final Stream<Map<String, dynamic>>? onChangeStream;
 
   ChatSendBar({
@@ -26,6 +29,7 @@ class ChatSendBar extends BaseStateFulWidget {
     this.onMenuPressed,
     this.onSendPress,
     this.onRecordTap,
+    this.onRecordLock,
     this.onChangeStream,
   }) : super(key: key);
 
@@ -47,8 +51,9 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
   bool _canSendText = false;
 
   bool _audioRecordVisible = false;
-  bool _audioLockedMode = false;
   int _audioRecordDurationMs = 0;
+
+  bool _audioLockedMode = false;
 
   ColorTween _audioBgColorTween = ColorTween(begin: Colors.transparent, end: Colors.red);
   ColorTween _audioTextColorTween = ColorTween(begin: Colors.red, end: Colors.white);
@@ -119,203 +124,196 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
     String recordSec = "${recordDuration.inSeconds < 10 ? 0 : ""}${recordDuration.inSeconds}";
     String recordDurationText = "$recordMin:$recordSec";
 
-    return Container(
-      constraints: BoxConstraints(minHeight: 70, maxHeight: 160),
-      child: GestureDetector(
-        onTapDown: (TapDownDetails details) {
-          this._onGesture(
-            details.localPosition.dx,
-            details.localPosition.dy,
-            menuToggle: () => widget.onMenuPressed?.call(),
-            sendText: () => _onSendText(),
-            recordStart: () => _setAudioRecordVisible(true, false),
-            recordSuccess: () => _setAudioRecordVisible(false, true),
-            recordCancel: () => _setAudioRecordVisible(false, false),
-          );
-        },
-        onLongPressStart: (LongPressStartDetails details) {
-          this._onGesture(
-            details.localPosition.dx,
-            details.localPosition.dy,
-            recordStart: () => _setAudioRecordVisible(true, false),
-            recordSuccess: () => _setAudioRecordVisible(false, true),
-            recordCancel: () => _setAudioRecordVisible(false, false),
-          );
-        },
-        onLongPressMoveUpdate: (LongPressMoveUpdateDetails details) {
-          double offsetX = details.localPosition.dx;
-          double offsetY = details.localPosition.dy;
-          if (0 <= offsetY && offsetY <= ActionHeight) {
-            if (ActionWidth * 1.5 < offsetX && offsetX < (screenWidth! - ActionWidth * 1.5)) {
-              double touchWidth = (screenWidth! - ActionWidth * 3);
-              double percent = 1 - (((offsetX - ActionWidth * 1.5) - (touchWidth / 2)) / (touchWidth / 2)).abs();
-              if (_audioDragPercent != percent) {
-                setState(() {
-                  _audioDragPercent = percent;
-                });
-              }
-            } else {
-              if (_audioDragPercent != 0) {
-                setState(() {
-                  _audioDragPercent = 0;
-                });
-              }
-            }
-          } else {
-            if (_audioDragPercent != 0) {
-              setState(() {
-                _audioDragPercent = 0;
-              });
-            }
-            // TODO:GG 往上移lock剪头跟随 窝草居然可以溢出屏幕
-          }
-        },
-        onLongPressEnd: (LongPressEndDetails details) {
-          this._onGesture(
-            details.localPosition.dx,
-            details.localPosition.dy,
-            recordStart: () => _setAudioRecordVisible(true, false),
-            recordSuccess: () => _setAudioRecordVisible(false, true),
-            recordCancel: () => _setAudioRecordVisible(false, false),
-          );
-        },
-        child: Container(
-          height: ActionHeight,
-          color: _audioBgColorTween.transform(_audioDragPercent),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                flex: 1,
-                child: !_audioRecordVisible
-                    ? Row(
-                        children: [
-                          SizedBox(
-                            width: ActionWidth,
-                            height: ActionHeight,
-                            child: UnconstrainedBox(
-                              child: Asset.iconSvg(
-                                'grid',
-                                width: 24,
-                                color: _theme.primaryColor,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: _theme.backgroundColor2,
-                                borderRadius: BorderRadius.all(Radius.circular(20)),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: <Widget>[
-                                  Expanded(
-                                    flex: 1,
-                                    child: TextField(
-                                      style: TextStyle(fontSize: 14, height: 1.4),
-                                      decoration: InputDecoration(
-                                        hintText: S.of(context).type_a_message,
-                                        hintStyle: TextStyle(color: _theme.fontColor2),
-                                        contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                                        border: UnderlineInputBorder(
-                                          borderRadius: BorderRadius.all(Radius.circular(20)),
-                                          borderSide: const BorderSide(width: 0, style: BorderStyle.none),
-                                        ),
-                                      ),
-                                      maxLines: 5,
-                                      minLines: 1,
-                                      controller: _sendController,
-                                      focusNode: _sendFocusNode,
-                                      textInputAction: TextInputAction.newline,
-                                      onChanged: (val) {
-                                        String draft = _sendController.text;
-                                        if (draft.isNotEmpty) {
-                                          memoryCache.setDraft(widget.targetId, draft);
-                                        } else {
-                                          memoryCache.removeDraft(widget.targetId);
-                                        }
-                                        setState(() {
-                                          _canSendText = val.isNotEmpty;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : Row(
-                        children: [
-                          SizedBox(width: 16),
-                          Icon(FontAwesomeIcons.microphone, size: 24, color: volumeColor),
-                          SizedBox(width: 8),
-                          Container(
-                            child: Label(
-                              recordDurationText,
-                              type: LabelType.bodyRegular,
-                              fontWeight: FontWeight.normal,
-                              color: recordWidgetColor,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            flex: 1,
-                            child: Container(
-                              height: ActionHeight,
-                              child: Center(
-                                child: Label(
-                                  _audioLockedMode ? S.of(context).cancel : (_audioDragPercent != 0 ? "松开取消" : S.of(context).slide_to_cancel), // TODO:GG locale record cancel
-                                  color: recordWidgetColor,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-              _canSendText
-                  ? SizedBox(
-                      width: ActionWidth,
-                      height: ActionHeight,
-                      child: UnconstrainedBox(
-                        child: Asset.iconSvg(
-                          'send',
-                          width: 24,
-                          color: _canSendText ? _theme.primaryColor : _theme.fontColor2,
-                        ),
-                      ),
-                    )
-                  : (_audioLockedMode
-                      ? Label(
-                          S.of(context).send,
-                          type: LabelType.bodyLarge,
-                          fontWeight: FontWeight.normal,
-                          color: _theme.primaryColor,
-                          textAlign: TextAlign.center,
-                        )
-                      : SizedBox(
+    return GestureDetector(
+      onTapDown: (TapDownDetails details) {
+        this._onGesture(
+          false,
+          details.localPosition.dx,
+          details.localPosition.dy,
+          menuToggle: () => widget.onMenuPressed?.call(),
+          sendText: () => _onSendText(),
+          recordStart: () => _setAudioRecordVisible(true, false),
+          recordSuccess: () => _setAudioRecordVisible(false, true),
+          recordCancel: () => _setAudioRecordVisible(false, false),
+        );
+      },
+      // onLongPressStart: (LongPressStartDetails details) {
+      //   this._onGesture(
+      //     details.localPosition.dx,
+      //     details.localPosition.dy,
+      //     // recordStart: () => _setAudioRecordVisible(true, false),
+      //     // recordSuccess: () => _setAudioRecordVisible(false, true),
+      //     // recordCancel: () => _setAudioRecordVisible(false, false),
+      //   );
+      // },
+      onLongPressMoveUpdate: (LongPressMoveUpdateDetails details) {
+        // logger.w("录音 - onLongPressMoveUpdate --> 长按移动");
+        this._onGesture(
+          true,
+          details.localPosition.dx,
+          details.localPosition.dy,
+          // recordStart: () => _setAudioRecordVisible(true, false),
+          // recordSuccess: () => _setAudioRecordVisible(false, true),
+          // recordCancel: () => _setAudioRecordVisible(false, false),
+        );
+      },
+      onLongPressEnd: (LongPressEndDetails details) {
+        this._onGesture(
+          false,
+          details.localPosition.dx,
+          details.localPosition.dy,
+          // recordStart: () => _setAudioRecordVisible(true, false),
+          recordSuccess: () => _setAudioRecordVisible(false, true),
+          recordCancel: () => _setAudioRecordVisible(false, false),
+        );
+      },
+      onTapUp: (TapUpDetails details) {
+        this._onGesture(
+          false,
+          details.localPosition.dx,
+          details.localPosition.dy,
+          // recordStart: () => _setAudioRecordVisible(true, false),
+          recordSuccess: () => _setAudioRecordVisible(false, true),
+          recordCancel: () => _setAudioRecordVisible(false, false),
+        );
+      },
+      child: Container(
+        height: ActionHeight,
+        color: _audioBgColorTween.transform(_audioDragPercent),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              flex: 1,
+              child: !_audioRecordVisible
+                  ? Row(
+                      children: [
+                        SizedBox(
                           width: ActionWidth,
                           height: ActionHeight,
                           child: UnconstrainedBox(
                             child: Asset.iconSvg(
-                              'microphone',
+                              'grid',
                               width: 24,
-                              color: !_canSendText ? _theme.primaryColor : _theme.fontColor2,
+                              color: _theme.primaryColor,
                             ),
                           ),
-                        )),
-              // _voiceAndSendWidget(),
-            ],
-          ),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: _theme.backgroundColor2,
+                              borderRadius: BorderRadius.all(Radius.circular(20)),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: <Widget>[
+                                Expanded(
+                                  flex: 1,
+                                  child: TextField(
+                                    style: TextStyle(fontSize: 14, height: 1.4),
+                                    decoration: InputDecoration(
+                                      hintText: S.of(context).type_a_message,
+                                      hintStyle: TextStyle(color: _theme.fontColor2),
+                                      contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                      border: UnderlineInputBorder(
+                                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                                        borderSide: const BorderSide(width: 0, style: BorderStyle.none),
+                                      ),
+                                    ),
+                                    maxLines: 5,
+                                    minLines: 1,
+                                    controller: _sendController,
+                                    focusNode: _sendFocusNode,
+                                    textInputAction: TextInputAction.newline,
+                                    onChanged: (val) {
+                                      String draft = _sendController.text;
+                                      if (draft.isNotEmpty) {
+                                        memoryCache.setDraft(widget.targetId, draft);
+                                      } else {
+                                        memoryCache.removeDraft(widget.targetId);
+                                      }
+                                      setState(() {
+                                        _canSendText = val.isNotEmpty;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        SizedBox(width: 16),
+                        Icon(FontAwesomeIcons.microphone, size: 24, color: volumeColor),
+                        SizedBox(width: 8),
+                        Container(
+                          child: Label(
+                            recordDurationText,
+                            type: LabelType.bodyRegular,
+                            fontWeight: FontWeight.normal,
+                            color: recordWidgetColor,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          flex: 1,
+                          child: Container(
+                            height: ActionHeight,
+                            child: Center(
+                              child: Label(
+                                _audioLockedMode ? S.of(context).cancel : (_audioDragPercent != 0 ? "松开取消" : S.of(context).slide_to_cancel), // TODO:GG locale record cancel
+                                color: recordWidgetColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+            _canSendText
+                ? SizedBox(
+                    width: ActionWidth,
+                    height: ActionHeight,
+                    child: UnconstrainedBox(
+                      child: Asset.iconSvg(
+                        'send',
+                        width: 24,
+                        color: _canSendText ? _theme.primaryColor : _theme.fontColor2,
+                      ),
+                    ),
+                  )
+                : (_audioLockedMode
+                    ? Label(
+                        S.of(context).send,
+                        type: LabelType.bodyLarge,
+                        fontWeight: FontWeight.normal,
+                        color: _theme.primaryColor,
+                        textAlign: TextAlign.center,
+                      )
+                    : SizedBox(
+                        width: ActionWidth,
+                        height: ActionHeight,
+                        child: UnconstrainedBox(
+                          child: Asset.iconSvg(
+                            'microphone',
+                            width: 24,
+                            color: !_canSendText ? _theme.primaryColor : _theme.fontColor2,
+                          ),
+                        ),
+                      )),
+            // _voiceAndSendWidget(),
+          ],
         ),
       ),
     );
   }
 
   _onGesture(
+    bool isMove,
     double offsetX,
     double offsetY, {
     Function? menuToggle,
@@ -326,47 +324,90 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
   }) {
     if (0 <= offsetY && offsetY <= ActionHeight) {
       if (0 <= offsetX && offsetX <= ActionWidth) {
-        if (!_audioRecordVisible) {
-          // menu toggle
-          menuToggle?.call();
+        // left
+        if (!isMove) {
+          if (!_audioRecordVisible) {
+            // menu toggle
+            menuToggle?.call();
+          } else {
+            // record info
+          }
         } else {
-          // record info
+          this._onRecordLockAndPercentChange(false, 1);
         }
       } else if (ActionWidth * 1.5 < offsetX && offsetX < (screenWidth! - ActionWidth * 1.5)) {
-        if (!_audioRecordVisible) {
-          // text editing
+        // center
+        if (!isMove) {
+          if (!_audioRecordVisible) {
+            // text editing
+          } else {
+            // record cancel
+            if (recordCancel != null) Toast.show("录音取消"); // TODO:GG
+            recordCancel?.call();
+          }
         } else {
-          // record cancel
-          Toast.show("录音取消");
-          recordCancel?.call();
+          double touchWidth = (screenWidth! - ActionWidth * 1.5 * 2);
+          double percent = 1 - (((touchWidth / 2) - (offsetX - ActionWidth * 1.5)) / (touchWidth / 2)).abs();
+          this._onRecordLockAndPercentChange(false, percent);
         }
       } else if ((screenWidth! - ActionWidth) <= offsetX && offsetX <= screenWidth!) {
-        if (_canSendText) {
-          // text send
-          sendText?.call();
-        } else {
-          if (!_audioRecordVisible) {
-            // record start
-            Toast.show("录音开始");
-            recordStart?.call();
+        // right
+        if (!isMove) {
+          if (_canSendText) {
+            // text send
+            sendText?.call();
           } else {
-            Toast.show("录音成功");
-            recordSuccess?.call();
+            if (!_audioRecordVisible) {
+              // record start
+              if (recordStart != null) Toast.show("录音开始"); // TODO:GG
+              recordStart?.call();
+            } else {
+              // lock success
+              if (recordSuccess != null) Toast.show("录音成功"); // TODO:GG
+              recordSuccess?.call();
+            }
           }
+        } else {
+          this._onRecordLockAndPercentChange(false, 0);
+        }
+      }
+    } else if (-(ChatSendBar.LockActionMargin + ChatSendBar.LockActionSize) <= offsetY && offsetY <= -ChatSendBar.LockActionMargin) {
+      if (!isMove) {
+        if ((screenWidth! - ChatSendBar.LockActionMargin - ChatSendBar.LockActionSize) <= offsetX && offsetX <= (screenWidth! - ChatSendBar.LockActionMargin)) {
+          // lock mode
+          this._onRecordLockAndPercentChange(true, 0);
+        } else {
+          // record cancel
+          if (recordCancel != null) Toast.show("录音取消"); // TODO:GG
+          recordCancel?.call();
+        }
+      } else {
+        if ((screenWidth! - ChatSendBar.LockActionMargin - ChatSendBar.LockActionSize) <= offsetX && offsetX <= (screenWidth! - ChatSendBar.LockActionMargin)) {
+          this._onRecordLockAndPercentChange(true, 0);
+        } else {
+          this._onRecordLockAndPercentChange(false, 1);
         }
       }
     } else {
-      // TODO:GG 上面松手lock
-      if (false) {
-        // setState(() {
-        //   _audioLockedMode = true;
-        // });
-      } else {
+      if (!isMove) {
         // record cancel
-        Toast.show("录音取消");
+        if (recordCancel != null) Toast.show("录音取消"); // TODO:GG
         recordCancel?.call();
+      } else {
+        this._onRecordLockAndPercentChange(false, 1);
       }
     }
+  }
+
+  _onRecordLockAndPercentChange(bool lockMode, double percent) {
+    bool lockModeChange = _audioLockedMode != lockMode;
+    if (_audioLockedMode != lockMode || _audioDragPercent != percent) {
+      setState(() {
+        _audioLockedMode = lockMode;
+        _audioDragPercent = percent;
+      });
+    }
+    if (lockModeChange) widget.onRecordLock?.call(true, lockMode);
   }
 
   _onSendText() {
@@ -382,12 +423,16 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
 
   _setAudioRecordVisible(bool visible, bool complete) {
     if (visible == _audioRecordVisible) return;
+    var durationMs = visible ? 0 : _audioRecordDurationMs;
+    bool lockMode = visible ? _audioLockedMode : false;
+    double percent = visible ? _audioDragPercent : 0;
     this.setState(() {
       _audioRecordVisible = visible;
-      _audioRecordDurationMs = visible ? 0 : _audioRecordDurationMs;
-      _audioLockedMode = visible ? _audioLockedMode : false;
-      _audioDragPercent = visible ? _audioDragPercent : 0;
+      _audioRecordDurationMs = durationMs;
+      _audioLockedMode = lockMode;
+      _audioDragPercent = percent;
     });
+    widget.onRecordLock?.call(visible, lockMode);
     widget.onRecordTap?.call(visible, complete, _audioRecordDurationMs); // await
   }
 }
