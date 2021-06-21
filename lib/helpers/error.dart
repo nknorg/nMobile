@@ -31,7 +31,7 @@ String? getErrorShow(error) {
 
   String pwdWrong = "wrong password";
   if (error.message == pwdWrong || error.toString() == pwdWrong) {
-    return _localizations.password_wrong;
+    return _localizations.tip_password_error;
   }
   String txError = 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds';
   if (error.message == txError || error.toString() == txError) {
