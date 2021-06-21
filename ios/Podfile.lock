@@ -1,4 +1,6 @@
 PODS:
+  - audioplayers (0.0.1):
+    - Flutter
   - background_fetch (1.0.0):
     - Flutter
   - DKImagePickerController/Core (4.3.2):
@@ -44,6 +46,10 @@ PODS:
     - Flutter
   - flutter_secure_storage (3.3.1):
     - Flutter
+  - flutter_sound (8.1.4):
+    - Flutter
+    - mobile-ffmpeg-full (= 4.4.LTS)
+    - tau_core (= 8.1.4)
   - FMDB/SQLCipher (2.7.5):
     - SQLCipher
   - image_cropper (0.0.4):
@@ -65,6 +71,7 @@ PODS:
   - Mantle (2.1.6):
     - Mantle/extobjc (= 2.1.6)
   - Mantle/extobjc (2.1.6)
+  - mobile-ffmpeg-full (4.4.LTS)
   - MTBBarcodeScanner (5.0.11)
   - nkn_sdk_flutter (0.0.4):
     - Flutter
@@ -103,6 +110,7 @@ PODS:
   - SQLCipher/standard (4.4.2):
     - SQLCipher/common
   - SwiftyGif (5.4.0)
+  - tau_core (8.1.4)
   - TOCropViewController (2.6.0)
   - url_launcher (0.0.1):
     - Flutter
@@ -110,12 +118,14 @@ PODS:
     - Flutter
 
 DEPENDENCIES:
+  - audioplayers (from `.symlinks/plugins/audioplayers/ios`)
   - background_fetch (from `.symlinks/plugins/background_fetch/ios`)
   - file_picker (from `.symlinks/plugins/file_picker/ios`)
   - Flutter (from `Flutter`)
   - flutter_image_compress (from `.symlinks/plugins/flutter_image_compress/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
+  - flutter_sound (from `.symlinks/plugins/flutter_sound/ios`)
   - image_cropper (from `.symlinks/plugins/image_cropper/ios`)
   - image_picker (from `.symlinks/plugins/image_picker/ios`)
   - local_auth (from `.symlinks/plugins/local_auth/ios`)
@@ -139,14 +149,18 @@ SPEC REPOS:
     - FMDB
     - libwebp
     - Mantle
+    - mobile-ffmpeg-full
     - MTBBarcodeScanner
     - SDWebImage
     - SDWebImageWebPCoder
     - SQLCipher
     - SwiftyGif
+    - tau_core
     - TOCropViewController
 
 EXTERNAL SOURCES:
+  audioplayers:
+    :path: ".symlinks/plugins/audioplayers/ios"
   background_fetch:
     :path: ".symlinks/plugins/background_fetch/ios"
   file_picker:
@@ -159,6 +173,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_local_notifications/ios"
   flutter_secure_storage:
     :path: ".symlinks/plugins/flutter_secure_storage/ios"
+  flutter_sound:
+    :path: ".symlinks/plugins/flutter_sound/ios"
   image_cropper:
     :path: ".symlinks/plugins/image_cropper/ios"
   image_picker:
@@ -197,6 +213,7 @@ CHECKOUT OPTIONS:
     :tag: 6.2.1
 
 SPEC CHECKSUMS:
+  audioplayers: 455322b54050b30ea4b1af7cd9e9d105f74efa8c
   background_fetch: a07dfad941a3de26ba3c3c516f97e11da20b95d2
   DKImagePickerController: b5eb7f7a388e4643264105d648d01f727110fc3d
   DKPhotoGallery: fdfad5125a9fdda9cc57df834d49df790dbb4179
@@ -205,12 +222,14 @@ SPEC CHECKSUMS:
   flutter_image_compress: 082f8daaf6c1b0c9fe798251c750ef0ecd98d7ae
   flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
   flutter_secure_storage: 7953c38a04c3fdbb00571bcd87d8e3b5ceb9daec
+  flutter_sound: b7e3e75915112839e8bb926b6bab1d28121ac6d5
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   image_cropper: f1668dd8d2cad2d357955caad15a40547856edcb
   image_picker: e06f7a68f000bd36f552c1847e33cda96ed31f1f
   libwebp: e90b9c01d99205d03b6bb8f2c8c415e5a4ef66f0
   local_auth: 25938960984c3a7f6e3253e3f8d962fdd16852bd
   Mantle: 4c0ed6ce47c96eccc4dc3bb071deb3def0e2c3be
+  mobile-ffmpeg-full: f17c82219b4ff9e4018b5e21f88b78c28a3475db
   MTBBarcodeScanner: f453b33c4b7dfe545d8c6484ed744d55671788cb
   nkn_sdk_flutter: 474f0ff5cf11795bd592708a1c707cc15e70e49a
   package_info: 873975fc26034f0b863a300ad47e7f1ac6c7ec62
@@ -226,6 +245,7 @@ SPEC CHECKSUMS:
   sqflite_sqlcipher: 70eb7fd8d4f0b0352d0bde5cf345b810737f54bb
   SQLCipher: 1ab0b9486a77d141e72e92ff30681926ed79c07a
   SwiftyGif: 5d4af95df24caf1c570dbbcb32a3b8a0763bc6d7
+  tau_core: 8e07b9ce46e5e1b1956fb4d5e9ac713206e5c315
   TOCropViewController: 3105367e808b7d3d886a74ff59bf4804e7d3ab38
   url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
   vibration: b5a33e764c3f609a975b9dca73dce20fdde627dc

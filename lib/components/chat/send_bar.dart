@@ -332,7 +332,6 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
         } else {
           // record info
           if (!isMove) {
-            if (recordCancel != null) Toast.show("录音取消"); // TODO:GG
             recordCancel?.call();
           } else {
             this._onRecordLockAndPercentChange(false, 1);
@@ -345,7 +344,6 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
         } else {
           // record cancel
           if (!isMove) {
-            if (recordCancel != null) Toast.show("录音取消"); // TODO:GG
             recordCancel?.call();
           } else {
             double touchWidth = (screenWidth! - ActionWidth * 2);
@@ -367,13 +365,11 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
           if (!_audioRecordVisible) {
             // record start
             if (!isMove) {
-              if (recordStart != null) Toast.show("录音开始"); // TODO:GG
               recordStart?.call();
             } else {}
           } else {
             // record success
             if (!isMove) {
-              if (recordSuccess != null) Toast.show("录音成功"); // TODO:GG
               recordSuccess?.call();
             } else {
               this._onRecordLockAndPercentChange(false, 0);
@@ -395,7 +391,6 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
         } else {
           // record cancel
           if (!isMove) {
-            if (recordCancel != null) Toast.show("录音取消"); // TODO:GG
             recordCancel?.call();
           } else {
             this._onRecordLockAndPercentChange(false, 1);
@@ -408,7 +403,6 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
       } else {
         if (!isMove) {
           // record cancel
-          if (recordCancel != null) Toast.show("录音取消"); // TODO:GG
           recordCancel?.call();
         } else {
           this._onRecordLockAndPercentChange(false, 1);
