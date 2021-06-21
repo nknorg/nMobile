@@ -49,7 +49,7 @@ class ChatCommon with Tag {
     ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
     if (exist == null) {
       logger.d("$TAG - contactHandle - new - clientAddress:$clientAddress");
-      return await contactCommon.addByType(clientAddress, ContactType.stranger, checkDuplicated: false);
+      exist = await contactCommon.addByType(clientAddress, ContactType.stranger, checkDuplicated: false);
     } else {
       if (exist.profileExpiresAt == null || DateTime.now().isAfter(exist.profileExpiresAt!.add(Settings.profileExpireDuration))) {
         logger.d("$TAG - contactHandle - sendRequestHeader - schema:$exist");
@@ -57,6 +57,21 @@ class ChatCommon with Tag {
       } else {
         double between = ((exist.profileExpiresAt?.add(Settings.profileExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG contactHandle - expiresAt - between:${between}s");
+      }
+    }
+    // burning
+    if (exist != null && message.canBurning && !message.isTopic && message.contentType != ContentType.eventContactOptions) {
+      List<int?> burningOptions = MessageOptions.getContactBurning(message);
+      int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
+      int? updateBurnAfterTime = burningOptions.length >= 2 ? burningOptions[1] : null;
+      if (burnAfterSeconds != null && burnAfterSeconds > 0 && exist.options?.deleteAfterSeconds != burnAfterSeconds) {
+        if (exist.options?.updateBurnAfterTime == null || (updateBurnAfterTime ?? 0) > exist.options!.updateBurnAfterTime!) {
+          exist.options?.deleteAfterSeconds = burnAfterSeconds;
+          exist.options?.updateBurnAfterTime = updateBurnAfterTime;
+          contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterTime, notify: true); // await
+        } else if ((updateBurnAfterTime ?? 0) <= exist.options!.updateBurnAfterTime!) {
+          // TODO:GG 根据device协议来判断是不是回发burning，以保持一致
+        }
       }
     }
     return exist;
@@ -68,7 +83,7 @@ class ChatCommon with Tag {
     if (!message.isTopic) return null;
     TopicSchema? exist = await _topicStorage.queryTopicByTopicName(message.topic);
     if (exist == null) {
-      return await _topicStorage.insertTopic(TopicSchema(
+      exist = await _topicStorage.insertTopic(TopicSchema(
         // TODO: topic get info
         // expireAt:
         // joined:
@@ -144,20 +159,15 @@ class ChatCommon with Tag {
     return exist;
   }
 
-  Future<MessageSchema> burningHandle(MessageSchema message, {ContactSchema? contact}) async {
+  Future<MessageSchema> burningHandle(MessageSchema message) async {
     if (!message.canBurning || message.isTopic) return message;
-    int? seconds = MessageOptions.getDeleteAfterSeconds(message);
-    if (seconds != null && seconds > 0) {
-      message.deleteTime = DateTime.now().add(Duration(seconds: seconds));
+    List<int?> burningOptions = MessageOptions.getContactBurning(message);
+    int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
+    if (burnAfterSeconds != null && burnAfterSeconds > 0) {
+      message.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
       bool success = await _messageStorage.updateDeleteTime(message.msgId, message.deleteTime);
       if (success) onUpdateSink.add(message);
     }
-    // if (contact != null) {
-    //   if (contact.options?.deleteAfterSeconds != seconds) {
-    //     contact.options?.updateBurnAfterTime = DateTime.now().millisecondsSinceEpoch;
-    //     contactCommon.setOptionsBurn(contact, seconds, notify: true); // await
-    //   }
-    // }
     return message;
   }
 

@@ -37,7 +37,9 @@ class ContentType {
 
 class MessageOptions {
   static const KEY_AUDIO_DURATION = "audioDuration";
+
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
+  static const KEY_UPDATE_BURNING_AFTER_TIME = "updateBurnAfterTime";
   static const KEY_DEVICE_TOKEN = "deviceToken";
 
   static const KEY_PARENT_TYPE = "parentType";
@@ -61,17 +63,20 @@ class MessageOptions {
     return double.parse(duration);
   }
 
-  static MessageSchema setDeleteAfterSeconds(MessageSchema schema, int deleteTimeSec) {
+  static MessageSchema setContactBurning(MessageSchema schema, int deleteTimeSec, int? updateTime) {
     if (schema.options == null) schema.options = Map<String, dynamic>();
     schema.options![MessageOptions.KEY_DELETE_AFTER_SECONDS] = deleteTimeSec;
+    schema.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_TIME] = updateTime;
     return schema;
   }
 
-  static int? getDeleteAfterSeconds(MessageSchema? schema) {
-    if (schema == null || schema.options == null || schema.options!.keys.length == 0) return null;
+  static List<int?> getContactBurning(MessageSchema? schema) {
+    if (schema == null || schema.options == null || schema.options!.keys.length == 0) return [];
     var seconds = schema.options![MessageOptions.KEY_DELETE_AFTER_SECONDS]?.toString();
-    if (seconds == null || seconds.isEmpty) return null;
-    return int.parse(seconds);
+    var update = schema.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_TIME]?.toString();
+    int? t1 = (seconds == null || seconds.isEmpty) ? null : int.parse(seconds);
+    int? t2 = (update == null || update.isEmpty) ? null : int.parse(update);
+    return [t1, t2];
   }
 
   static MessageSchema setDeviceToken(MessageSchema schema, String deviceToken) {
@@ -242,7 +247,7 @@ class MessageData {
   static String getPiece(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.piece,
+      'contentType': schema.contentType,
       'content': schema.content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'parentType': schema.parentType ?? schema.contentType,
@@ -263,7 +268,7 @@ class MessageData {
   static String getText(MessageSchema schema) {
     Map map = {
       'id': schema.msgId,
-      'contentType': ContentType.text,
+      'contentType': schema.contentType,
       'content': schema.content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -282,7 +287,7 @@ class MessageData {
     String content = '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.image,
+      'contentType': schema.contentType,
       'content': content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -303,7 +308,7 @@ class MessageData {
     String content = '![audio](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.audio,
+      'contentType': schema.contentType,
       'content': content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -316,23 +321,25 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getEventContactOptionsBurn(MessageSchema schema, {int? seconds}) {
-    int? deleteAfterSeconds = seconds ?? MessageOptions.getDeleteAfterSeconds(schema);
+  static String getEventContactOptionsBurn(MessageSchema schema) {
+    List<int?> burningOptions = MessageOptions.getContactBurning(schema);
+    int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
+    int? updateBurnAfterTime = burningOptions.length >= 2 ? burningOptions[1] : null;
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.eventContactOptions,
-      'content': {'deleteAfterSeconds': deleteAfterSeconds},
+      'contentType': schema.contentType,
+      'content': {'deleteAfterSeconds': burnAfterSeconds, 'updateBurnAfterTime': updateBurnAfterTime},
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     data[K_CONTACT_OPTIONS_TYPE] = V_CONTACT_OPTIONS_TYPE_BURN_TIME;
     return jsonEncode(data);
   }
 
-  static String getEventContactOptionsToken(MessageSchema schema, {String? token}) {
-    String? deviceToken = token ?? MessageOptions.getDeviceToken(schema);
+  static String getEventContactOptionsToken(MessageSchema schema) {
+    String? deviceToken = MessageOptions.getDeviceToken(schema);
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.eventContactOptions,
+      'contentType': schema.contentType,
       'content': {'deviceToken': deviceToken},
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -344,7 +351,7 @@ class MessageData {
   String getEventSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.eventSubscribe,
+      'contentType': schema.contentType,
       'content': schema.content,
       'topic': schema.topic,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
@@ -356,7 +363,7 @@ class MessageData {
   String getEventUnSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.eventUnsubscribe,
+      'contentType': schema.contentType,
       'content': schema.content,
       'topic': schema.topic,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
@@ -508,8 +515,9 @@ class MessageSchema extends Equatable {
     this.total,
     this.parity,
     this.index,
-    int? deleteAfterSeconds,
     double? audioDurationS,
+    int? deleteAfterSeconds,
+    int? burningUpdateTime,
   }) {
     // pid (SDK create)
     if (msgId.isEmpty) msgId = Uuid().v4();
@@ -525,7 +533,7 @@ class MessageSchema extends Equatable {
       if (this.contentType == ContentType.text) {
         this.contentType = ContentType.textExtension;
       }
-      MessageOptions.setDeleteAfterSeconds(this, deleteAfterSeconds);
+      MessageOptions.setContactBurning(this, deleteAfterSeconds, burningUpdateTime);
     }
     if (audioDurationS != null && audioDurationS > 0) {
       MessageOptions.setAudioDuration(this, audioDurationS);

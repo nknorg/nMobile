@@ -314,9 +314,18 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     _contactSchema?.options?.deleteAfterSeconds = _burnValue;
     _contactSchema?.options?.updateBurnAfterTime = DateTime.now().millisecondsSinceEpoch;
     // inside update
-    await contactCommon.setOptionsBurn(_contactSchema, _burnValue, notify: true);
+    await contactCommon.setOptionsBurn(
+      _contactSchema,
+      _burnValue,
+      DateTime.now().millisecondsSinceEpoch,
+      notify: true,
+    );
     // outside update
-    await chatOutCommon.sendContactOptionsBurn(_contactSchema?.clientAddress, _burnValue);
+    await chatOutCommon.sendContactOptionsBurn(
+      _contactSchema?.clientAddress,
+      _burnValue,
+      DateTime.now().millisecondsSinceEpoch,
+    );
   }
 
   _updateNotificationAndDeviceToken() async {
