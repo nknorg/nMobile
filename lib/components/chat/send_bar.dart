@@ -267,6 +267,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                             ),
                           ),
                         ),
+                        SizedBox(width: 16),
                       ],
                     ),
             ),
@@ -417,14 +418,15 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
   }
 
   _onRecordLockAndPercentChange(bool lockMode, double percent) {
+    bool canLock = false;
     bool lockModeChange = _audioLockedMode != lockMode;
+    if (lockModeChange) canLock = widget.onRecordLock?.call(true, lockMode);
     if (_audioLockedMode != lockMode || _audioDragPercent != percent) {
       setState(() {
-        _audioLockedMode = lockMode;
+        _audioLockedMode = canLock && lockMode;
         _audioDragPercent = percent > 1 ? 1 : percent;
       });
     }
-    if (lockModeChange) widget.onRecordLock?.call(true, lockMode);
   }
 
   _onSendText() {
@@ -443,13 +445,13 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
     var durationMs = visible ? 0 : _audioRecordDurationMs;
     bool lockMode = visible ? _audioLockedMode : false;
     double percent = visible ? _audioDragPercent : 0;
+    bool canLock = widget.onRecordLock?.call(visible, lockMode);
     this.setState(() {
       _audioRecordVisible = visible;
       _audioRecordDurationMs = durationMs;
-      _audioLockedMode = lockMode;
+      _audioLockedMode = canLock && lockMode;
       _audioDragPercent = percent > 1 ? 1 : percent;
     });
-    widget.onRecordLock?.call(visible, lockMode);
     widget.onRecordTap?.call(visible, complete, _audioRecordDurationMs); // await
   }
 }
