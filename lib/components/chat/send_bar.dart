@@ -7,6 +7,7 @@ import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 
@@ -89,6 +90,9 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
         return;
       }
       if (duration.inMilliseconds == _audioRecordDurationMs) return;
+      if (_audioRecordDurationMs < AudioHelper.MessageRecordMaxDurationS * 1000 && duration.inMilliseconds >= AudioHelper.MessageRecordMaxDurationS * 1000) {
+        _setAudioRecordVisible(false, true);
+      }
       this.setState(() {
         _audioRecordDurationMs = duration.inMilliseconds;
       });
@@ -137,17 +141,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
           recordCancel: () => _setAudioRecordVisible(false, false),
         );
       },
-      // onLongPressStart: (LongPressStartDetails details) {
-      //   this._onGesture(
-      //     details.localPosition.dx,
-      //     details.localPosition.dy,
-      //     // recordStart: () => _setAudioRecordVisible(true, false),
-      //     // recordSuccess: () => _setAudioRecordVisible(false, true),
-      //     // recordCancel: () => _setAudioRecordVisible(false, false),
-      //   );
-      // },
       onLongPressMoveUpdate: (LongPressMoveUpdateDetails details) {
-        // logger.w("录音 - onLongPressMoveUpdate --> 长按移动");
         this._onGesture(
           true,
           details.localPosition.dx,
@@ -266,6 +260,8 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                             child: Center(
                               child: Label(
                                 _audioLockedMode ? S.of(context).cancel : (_audioDragPercent != 0 ? "松开取消" : S.of(context).slide_to_cancel), // TODO:GG locale record cancel
+                                type: LabelType.bodyLarge,
+                                textAlign: TextAlign.center,
                                 color: recordWidgetColor,
                               ),
                             ),
@@ -287,12 +283,16 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                     ),
                   )
                 : (_audioLockedMode
-                    ? Label(
-                        S.of(context).send,
-                        type: LabelType.bodyLarge,
-                        fontWeight: FontWeight.normal,
-                        color: _theme.primaryColor,
-                        textAlign: TextAlign.center,
+                    ? Container(
+                        width: ActionWidth,
+                        height: ActionHeight,
+                        alignment: Alignment.center,
+                        child: Label(
+                          S.of(context).send,
+                          type: LabelType.bodyLarge,
+                          textAlign: TextAlign.center,
+                          color: _theme.primaryColor,
+                        ),
                       )
                     : SizedBox(
                         width: ActionWidth,
@@ -325,76 +325,93 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
     if (0 <= offsetY && offsetY <= ActionHeight) {
       if (0 <= offsetX && offsetX <= ActionWidth) {
         // left
-        if (!isMove) {
-          if (!_audioRecordVisible) {
-            // menu toggle
-            menuToggle?.call();
-          } else {
-            // record info
-          }
+        if (!_audioRecordVisible) {
+          // menu toggle
+          menuToggle?.call();
         } else {
-          this._onRecordLockAndPercentChange(false, 1);
-        }
-      } else if (ActionWidth * 1.5 < offsetX && offsetX < (screenWidth! - ActionWidth * 1.5)) {
-        // center
-        if (!isMove) {
-          if (!_audioRecordVisible) {
-            // text editing
-          } else {
-            // record cancel
+          // record info
+          if (!isMove) {
             if (recordCancel != null) Toast.show("录音取消"); // TODO:GG
             recordCancel?.call();
+          } else {
+            this._onRecordLockAndPercentChange(false, 1);
           }
+        }
+      } else if (ActionWidth < offsetX && offsetX < (screenWidth! - ActionWidth)) {
+        // center
+        if (!_audioRecordVisible) {
+          // text editing
         } else {
-          double touchWidth = (screenWidth! - ActionWidth * 1.5 * 2);
-          double percent = 1 - (((touchWidth / 2) - (offsetX - ActionWidth * 1.5)) / (touchWidth / 2)).abs();
-          this._onRecordLockAndPercentChange(false, percent);
+          // record cancel
+          if (!isMove) {
+            if (recordCancel != null) Toast.show("录音取消"); // TODO:GG
+            recordCancel?.call();
+          } else {
+            double touchWidth = (screenWidth! - ActionWidth * 2);
+            double percent = 1;
+            if ((offsetX - ActionWidth) > (touchWidth / 2)) {
+              percent = 1 - (((touchWidth / 2) - (offsetX - ActionWidth)) / (touchWidth / 2)).abs();
+            }
+            this._onRecordLockAndPercentChange(false, percent);
+          }
         }
       } else if ((screenWidth! - ActionWidth) <= offsetX && offsetX <= screenWidth!) {
         // right
-        if (!isMove) {
-          if (_canSendText) {
-            // text send
+        if (_canSendText) {
+          // text send
+          if (!isMove) {
             sendText?.call();
-          } else {
-            if (!_audioRecordVisible) {
-              // record start
+          } else {}
+        } else {
+          if (!_audioRecordVisible) {
+            // record start
+            if (!isMove) {
               if (recordStart != null) Toast.show("录音开始"); // TODO:GG
               recordStart?.call();
-            } else {
-              // lock success
+            } else {}
+          } else {
+            // record success
+            if (!isMove) {
               if (recordSuccess != null) Toast.show("录音成功"); // TODO:GG
               recordSuccess?.call();
+            } else {
+              this._onRecordLockAndPercentChange(false, 0);
             }
           }
-        } else {
-          this._onRecordLockAndPercentChange(false, 0);
         }
       }
     } else if (-(ChatSendBar.LockActionMargin + ChatSendBar.LockActionSize) <= offsetY && offsetY <= -ChatSendBar.LockActionMargin) {
-      if (!isMove) {
-        if ((screenWidth! - ChatSendBar.LockActionMargin - ChatSendBar.LockActionSize) <= offsetX && offsetX <= (screenWidth! - ChatSendBar.LockActionMargin)) {
-          // lock mode
-          this._onRecordLockAndPercentChange(true, 0);
-        } else {
-          // record cancel
-          if (recordCancel != null) Toast.show("录音取消"); // TODO:GG
-          recordCancel?.call();
-        }
+      if (!_audioRecordVisible) {
+        // nothing
       } else {
         if ((screenWidth! - ChatSendBar.LockActionMargin - ChatSendBar.LockActionSize) <= offsetX && offsetX <= (screenWidth! - ChatSendBar.LockActionMargin)) {
-          this._onRecordLockAndPercentChange(true, 0);
+          // lock mode
+          if (!isMove) {
+            this._onRecordLockAndPercentChange(true, 0);
+          } else {
+            this._onRecordLockAndPercentChange(true, 0);
+          }
         } else {
-          this._onRecordLockAndPercentChange(false, 1);
+          // record cancel
+          if (!isMove) {
+            if (recordCancel != null) Toast.show("录音取消"); // TODO:GG
+            recordCancel?.call();
+          } else {
+            this._onRecordLockAndPercentChange(false, 1);
+          }
         }
       }
     } else {
-      if (!isMove) {
-        // record cancel
-        if (recordCancel != null) Toast.show("录音取消"); // TODO:GG
-        recordCancel?.call();
+      if (!_audioRecordVisible) {
+        // nothing
       } else {
-        this._onRecordLockAndPercentChange(false, 1);
+        if (!isMove) {
+          // record cancel
+          if (recordCancel != null) Toast.show("录音取消"); // TODO:GG
+          recordCancel?.call();
+        } else {
+          this._onRecordLockAndPercentChange(false, 1);
+        }
       }
     }
   }
@@ -404,7 +421,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
     if (_audioLockedMode != lockMode || _audioDragPercent != percent) {
       setState(() {
         _audioLockedMode = lockMode;
-        _audioDragPercent = percent;
+        _audioDragPercent = percent > 1 ? 1 : percent;
       });
     }
     if (lockModeChange) widget.onRecordLock?.call(true, lockMode);
@@ -430,7 +447,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
       _audioRecordVisible = visible;
       _audioRecordDurationMs = durationMs;
       _audioLockedMode = lockMode;
-      _audioDragPercent = percent;
+      _audioDragPercent = percent > 1 ? 1 : percent;
     });
     widget.onRecordLock?.call(visible, lockMode);
     widget.onRecordTap?.call(visible, complete, _audioRecordDurationMs); // await
