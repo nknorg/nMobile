@@ -151,7 +151,9 @@ class ChatOutCommon with Tag {
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
       clientCommon.id ?? "",
-      ContentType.media, // SUPPORT:D_CHAT_IMAGE
+      // SUPPORT:START
+      ContentType.nknImage,
+      // SUPPORT:END
       to: clientAddress,
       content: content,
       deleteAfterSeconds: contact.options?.deleteAfterSeconds,
@@ -186,8 +188,8 @@ class ChatOutCommon with Tag {
         contactCommon.currentUser!.clientAddress,
         ContentType.eventContactOptions,
         to: clientAddress,
+        deleteAfterSeconds: deleteSeconds,
       );
-      send = MessageOptions.setDeleteAfterSeconds(send, deleteSeconds);
       send.content = MessageData.getEventContactOptionsBurn(send);
       await _send(send, send.content, database: true, display: true);
       logger.d("$TAG - sendContactOptionsBurn - success - data:${send.content}");

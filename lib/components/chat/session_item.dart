@@ -118,7 +118,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           ),
         ],
       );
-    } else if (msgType == ContentType.nknImage || msgType == ContentType.media || msgType == ContentType.image) {
+    } else if (msgType == ContentType.media || msgType == ContentType.image || msgType == ContentType.nknImage) {
       contentWidget = Padding(
         padding: const EdgeInsets.only(top: 0),
         child: Row(

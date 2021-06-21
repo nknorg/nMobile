@@ -279,10 +279,10 @@ class MessageData {
   static Future<String?> getImage(MessageSchema schema) async {
     File? file = schema.content as File?;
     if (file == null) return null;
-    String content = '![media](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})'; // SUPPORT:D_CHAT_IMAGE
+    String content = '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.media, // SUPPORT:D_CHAT_IMAGE
+      'contentType': ContentType.image,
       'content': content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -555,8 +555,8 @@ class MessageSchema extends Equatable {
     switch (contentType) {
       case ContentType.piece:
       case ContentType.media:
-      case ContentType.nknImage:
       case ContentType.image:
+      case ContentType.nknImage:
       case ContentType.audio:
         if (content is File) {
           map['content'] = Path.getLocalFile((content as File).path);
@@ -609,8 +609,8 @@ class MessageSchema extends Equatable {
         break;
       case ContentType.piece:
       case ContentType.media:
-      case ContentType.nknImage:
       case ContentType.image:
+      case ContentType.nknImage:
       case ContentType.audio:
         String? completePath = Path.getCompleteFile(e['content']);
         schema.content = completePath != null ? File(completePath) : null;
