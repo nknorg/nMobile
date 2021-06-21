@@ -130,10 +130,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _uploadProgress = ((_message.content is File) && (_msgStatus == MessageStatus.Sending)) ? (_uploadProgress == 1 ? 0 : _uploadProgress) : 1;
     // _playProgress = 0;
     // burn
-    int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(_message);
+    List<int?> burningOptions = MessageOptions.getContactBurning(_message);
+    int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
     if (_message.deleteTime == null && burnAfterSeconds != null && burnAfterSeconds > 0) {
       _message.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
-      chatCommon.burningHandle(_message, contact: _contact); // await
+      chatCommon.burningHandle(_message); // await
     }
     if (_message.deleteTime != null) {
       DateTime deleteTime = _message.deleteTime ?? DateTime.now();
@@ -393,7 +394,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
   Widget _burnWidget() {
     if (_message.deleteTime == null) return SizedBox.shrink();
-    DateTime deleteTime = _message.deleteTime ?? DateTime.now().add(Duration(seconds: (MessageOptions.getDeleteAfterSeconds(_message) ?? 0) + 1));
+    List<int?> burningOptions = MessageOptions.getContactBurning(_message);
+    int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
+    DateTime deleteTime = _message.deleteTime ?? DateTime.now().add(Duration(seconds: (burnAfterSeconds ?? 0) + 1));
     Color clockColor = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
     return Column(
       children: [

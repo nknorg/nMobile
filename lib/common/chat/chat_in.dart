@@ -359,9 +359,10 @@ class ChatInCommon with Tag {
     Map<String, dynamic> content = data['content'] ?? Map();
     if (optionsType == null || optionsType.isEmpty) return;
     if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_BURN_TIME) {
-      int seconds = (content['deleteAfterSeconds'] as int?) ?? 0;
-      logger.d("$TAG - _receiveContactOptions - setBurn - seconds:$seconds - data:$data");
-      contactCommon.setOptionsBurn(existContact, seconds, notify: true); // await
+      int burningSeconds = (content['deleteAfterSeconds'] as int?) ?? 0;
+      int updateTime = (content['updateBurnAfterTime'] as int?) ?? (DateTime.now().millisecondsSinceEpoch - 1000);
+      logger.d("$TAG - _receiveContactOptions - setBurn - burningSeconds:$burningSeconds - updateTIme:${DateTime.fromMillisecondsSinceEpoch(updateTime)} - data:$data");
+      contactCommon.setOptionsBurn(existContact, burningSeconds, updateTime, notify: true); // await
     } else if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN) {
       String deviceToken = (content['deviceToken']?.toString()) ?? "";
       logger.d("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
