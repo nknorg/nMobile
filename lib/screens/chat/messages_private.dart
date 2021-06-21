@@ -303,7 +303,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                       }
                       return null;
                     }
-                    if (durationMs < 500) {
+                    if (durationMs < AudioHelper.MessageRecordMinDurationS * 1000) {
                       return null;
                     }
                     return await chatOutCommon.sendAudio(_contact.clientAddress, content, durationMs / 1000, contact: _contact);
