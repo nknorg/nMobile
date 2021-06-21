@@ -291,6 +291,9 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                     }
                     return null;
                   } else {
+                    if (durationMs < AudioHelper.MessageRecordMinDurationS * 1000) {
+                      return null;
+                    }
                     String? savePath = await audioHelper.recordStop();
                     if (savePath == null || savePath.isEmpty) {
                       Toast.show(S.of(context).failure);
@@ -301,9 +304,6 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                       if (await content.exists()) {
                         await content.delete();
                       }
-                      return null;
-                    }
-                    if (durationMs < AudioHelper.MessageRecordMinDurationS * 1000) {
                       return null;
                     }
                     return await chatOutCommon.sendAudio(_contact.clientAddress, content, durationMs / 1000, contact: _contact);
