@@ -7,10 +7,15 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validation.dart';
+import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/settings/cache.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
@@ -242,12 +247,35 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                             CupertinoSwitch(
                                 value: _biometricsSelected,
                                 activeColor: application.theme.primaryColor,
-                                onChanged: (value) async {
-                                  // TODO:GG auth password
-                                  Settings.biometricsAuthentication = value;
-                                  _settingsStorage.setSettings('${SettingsStorage.BIOMETRICS_AUTHENTICATION}', value);
-                                  setState(() {
-                                    _biometricsSelected = value;
+                                onChanged: (bool value) async {
+                                  WalletSchema? _wallet = await walletCommon.getDefault();
+                                  if (_wallet == null || _wallet.address.isEmpty) {
+                                    ModalDialog.of(context).confirm(
+                                      title: 'Wallet Info missing,Quit and ReImport', // TODO:GG locale wallet empty
+                                      hasCloseButton: true,
+                                    );
+                                    return;
+                                  }
+                                  BottomDialog.of(context)
+                                      .showInput(
+                                    title: _localizations.verify_wallet_password,
+                                    inputTip: _localizations.wallet_password,
+                                    inputHint: _localizations.input_password,
+                                    actionText: _localizations.continue_text,
+                                    validator: Validator.of(context).password(),
+                                    password: true,
+                                  )
+                                      .then((String? input) async {
+                                    String? pwd = await walletCommon.getPasswordNoCheck(_wallet.address);
+                                    if (input == null || input != pwd) {
+                                      Toast.show(S.of(context).tip_password_error);
+                                      return;
+                                    }
+                                    Settings.biometricsAuthentication = value;
+                                    _settingsStorage.setSettings('${SettingsStorage.BIOMETRICS_AUTHENTICATION}', value);
+                                    setState(() {
+                                      _biometricsSelected = value;
+                                    });
                                   });
                                 })
                           ],
