@@ -31,7 +31,7 @@ class ChatOutCommon with Tag {
   // ignore: close_sinks
   StreamController<Map<String, dynamic>> _onPieceOutController = StreamController<Map<String, dynamic>>.broadcast();
   StreamSink<Map<String, dynamic>> get _onPieceOutSink => _onPieceOutController.sink;
-  Stream<Map<String, dynamic>> get onPieceOutStream => _onPieceOutController.stream.distinct((prev, next) => (prev['msg_id'] == prev['msg_id']) && (next['percent'] < prev['percent']));
+  Stream<Map<String, dynamic>> get onPieceOutStream => _onPieceOutController.stream.distinct((prev, next) => (next['msg_id'] == prev['msg_id']) && (next['percent'] < prev['percent']));
 
   MessageStorage _messageStorage = MessageStorage();
 
