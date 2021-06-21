@@ -350,25 +350,23 @@ class ContactStorage with Tag {
     return false;
   }
 
-  Future<bool> setOptionsBurn(int? contactId, int? seconds, {OptionsSchema? old}) async {
+  Future<bool> setOptionsBurn(int? contactId, int? burningSeconds, int? updateTime, {OptionsSchema? old}) async {
     if (contactId == null || contactId == 0) return false;
     OptionsSchema options = old ?? OptionsSchema();
 
-    if (seconds != null && seconds > 0) {
-      options.deleteAfterSeconds = seconds;
+    if (burningSeconds != null && burningSeconds > 0) {
+      options.deleteAfterSeconds = burningSeconds;
     } else {
       options.deleteAfterSeconds = 0;
     }
-
-    int currentTimeStamp = DateTime.now().millisecondsSinceEpoch;
-    options.updateBurnAfterTime = currentTimeStamp;
+    options.updateBurnAfterTime = updateTime ?? DateTime.now().millisecondsSinceEpoch;
 
     try {
       int? count = await db?.update(
         tableName,
         {
           'options': jsonEncode(options.toMap()),
-          'updated_time': currentTimeStamp,
+          'updated_time': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [contactId],

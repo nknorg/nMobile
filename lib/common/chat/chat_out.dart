@@ -139,6 +139,7 @@ class ChatOutCommon with Tag {
       to: clientAddress,
       content: content,
       deleteAfterSeconds: contact.options?.deleteAfterSeconds,
+      burningUpdateTime: contact.options?.updateBurnAfterTime,
     );
     return _send(schema, MessageData.getText(schema));
   }
@@ -157,6 +158,7 @@ class ChatOutCommon with Tag {
       to: clientAddress,
       content: content,
       deleteAfterSeconds: contact.options?.deleteAfterSeconds,
+      burningUpdateTime: contact.options?.updateBurnAfterTime,
     );
     return _send(schema, await MessageData.getImage(schema));
   }
@@ -172,14 +174,15 @@ class ChatOutCommon with Tag {
       ContentType.audio,
       to: clientAddress,
       content: content,
-      deleteAfterSeconds: contact.options?.deleteAfterSeconds,
       audioDurationS: durationS,
+      deleteAfterSeconds: contact.options?.deleteAfterSeconds,
+      burningUpdateTime: contact.options?.updateBurnAfterTime,
     );
     return _send(schema, await MessageData.getAudio(schema));
   }
 
   // NO topic (1 to 1)
-  Future sendContactOptionsBurn(String? clientAddress, int deleteSeconds, {int tryCount = 1}) async {
+  Future sendContactOptionsBurn(String? clientAddress, int deleteSeconds, int updateTime, {int tryCount = 1}) async {
     if (contactCommon.currentUser == null || clientAddress == null || clientAddress.isEmpty) return;
     if (tryCount > 3) return;
     try {
@@ -189,6 +192,7 @@ class ChatOutCommon with Tag {
         ContentType.eventContactOptions,
         to: clientAddress,
         deleteAfterSeconds: deleteSeconds,
+        burningUpdateTime: updateTime,
       );
       send.content = MessageData.getEventContactOptionsBurn(send);
       await _send(send, send.content, database: true, display: true);
@@ -197,7 +201,7 @@ class ChatOutCommon with Tag {
       handleError(e);
       logger.w("$TAG - sendContactOptionsBurn - fail - tryCount:$tryCount - clientAddress:$clientAddress - deleteSeconds:$deleteSeconds");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendContactOptionsBurn(clientAddress, deleteSeconds, tryCount: tryCount++);
+        return sendContactOptionsBurn(clientAddress, deleteSeconds, updateTime, tryCount: tryCount++);
       });
     }
   }
