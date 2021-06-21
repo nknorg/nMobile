@@ -70,6 +70,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       String? msgId = event["msg_id"];
       double? percent = event["percent"];
       if (msgId == null || msgId != this._message.msgId || percent == null || _msgStatus != MessageStatus.Sending || !(_message.content is File)) {
+        // logger.d("onPieceOutStream - percent:$percent - send_msgId:$msgId - receive_msgId:${this._message.msgId}");
         if (_uploadProgress != 1) {
           setState(() {
             _uploadProgress = 1;
@@ -77,7 +78,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         }
         return;
       }
-      if (_uploadProgress >= 1 || percent == _uploadProgress) return;
+      if (_uploadProgress >= 1 || percent <= _uploadProgress) return;
       this.setState(() {
         _uploadProgress = percent;
       });
@@ -126,8 +127,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _message = widget.message;
     _contact = widget.contact;
     _msgStatus = MessageStatus.get(_message);
-    _uploadProgress = ((_message.content is File) && (_msgStatus == MessageStatus.Sending)) ? 0 : 1;
-    _playProgress = 0;
+    _uploadProgress = ((_message.content is File) && (_msgStatus == MessageStatus.Sending)) ? (_uploadProgress == 1 ? 0 : _uploadProgress) : 1;
+    // _playProgress = 0;
     // burn
     int? burnAfterSeconds = MessageOptions.getDeleteAfterSeconds(_message);
     if (_message.deleteTime == null && burnAfterSeconds != null && burnAfterSeconds > 0) {
@@ -275,7 +276,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool hasProgress = _message.content is File;
 
     bool showSending = isSending && !hasProgress;
-    bool shoProgress = isSending && hasProgress && _uploadProgress < 1;
+    bool showProgress = isSending && hasProgress && _uploadProgress < 1;
     bool showFail = _msgStatus == MessageStatus.SendFail;
 
     return Expanded(
@@ -294,7 +295,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                   ),
                 )
               : SizedBox.shrink(),
-          shoProgress
+          showProgress
               ? Container(
                   width: 40,
                   height: 40,
