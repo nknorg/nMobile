@@ -80,8 +80,8 @@ class Main extends StatefulWidget {
 
 class _MainState extends State<Main> {
   List<BlocProvider> providers = [
-    BlocProvider<SettingsBloc>(create: (BuildContext context) => SettingsBloc()),
     BlocProvider<WalletBloc>(create: (BuildContext context) => WalletBloc()),
+    BlocProvider<SettingsBloc>(create: (BuildContext context) => SettingsBloc()),
   ];
 
   final botToastBuilder = BotToastInit();
