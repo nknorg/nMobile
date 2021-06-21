@@ -56,7 +56,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         _contact = event;
       });
     });
-    // TODO:GG messages topic refresh
+    // TODO:GG topic messages refresh
   }
 
   @override
@@ -72,7 +72,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         contact: _contact!,
       );
     } else if (_topic != null) {
-      // TODO:GG messages topic page
+      // TODO:GG topic messages page
       return SizedBox.shrink();
     } else {
       return SizedBox.shrink();
