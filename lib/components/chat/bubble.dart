@@ -79,7 +79,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         }
         return;
       }
-      if (_uploadProgress >= 1 || percent <= _uploadProgress) return;
+      if (percent <= _uploadProgress) return;
       this.setState(() {
         _uploadProgress = percent;
       });
