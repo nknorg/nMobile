@@ -42,8 +42,6 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
                 Text(
                   title?.toUpperCase() ?? '',
                   textAlign: TextAlign.start,
-                  // todo
-                  // style: TextStyle(fontSize: SkinTheme.labelFontSize),
                   overflow: TextOverflow.fade,
                   softWrap: false,
                   maxLines: 1,
