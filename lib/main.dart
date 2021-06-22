@@ -20,14 +20,6 @@ import 'common/settings.dart';
 import 'generated/l10n.dart';
 import 'routes/routes.dart';
 
-void initialize() {
-  application.registerInitialize(() async {
-    Routes.init();
-    Global.init();
-    Settings.init();
-  });
-}
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -44,26 +36,28 @@ void main() async {
   setupLocator();
 
   // init
-  initialize();
+  application.registerInitialize(() async {
+    Routes.init();
+    Global.init();
+    Settings.init();
+  });
   await application.initialize();
 
   // mounted
   application.registerMounted(() async {
     notification.init();
     taskService.install();
+    backgroundFetchService.install();
   });
   application.registerMounted(() async {
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
     _walletBloc.add(LoadWallet());
   });
 
-  // background
-  backgroundFetchService.install();
-
   // return
   await SentryFlutter.init(
     (options) {
-      options.dsn = 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254';
+      options.dsn = Settings.sentryDSN;
       options.environment = Global.isRelease ? 'production' : 'debug';
       options.release = Global.versionFormat;
     },
@@ -72,8 +66,6 @@ void main() async {
 }
 
 class Main extends StatefulWidget {
-  static final String name = 'nMobile';
-
   @override
   _MainState createState() => _MainState();
 }
@@ -100,7 +92,7 @@ class _MainState extends State<Main> {
             onGenerateTitle: (context) {
               return S.of(context).app_name;
             },
-            title: Main.name,
+            title: Settings.appName,
             theme: application.theme.themeData,
             locale: Settings.locale == 'auto' ? null : Locale.fromSubtags(languageCode: Settings.locale),
             localizationsDelegates: [
