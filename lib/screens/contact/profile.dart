@@ -311,20 +311,21 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     } else {
       _burnValue = burnValueArray[_burnProgress].inSeconds;
     }
+    int timeNow = DateTime.now().millisecondsSinceEpoch;
     _contactSchema?.options?.deleteAfterSeconds = _burnValue;
-    _contactSchema?.options?.updateBurnAfterTime = DateTime.now().millisecondsSinceEpoch;
+    _contactSchema?.options?.updateBurnAfterTime = timeNow;
     // inside update
     await contactCommon.setOptionsBurn(
       _contactSchema,
       _burnValue,
-      DateTime.now().millisecondsSinceEpoch,
+      timeNow,
       notify: true,
     );
     // outside update
     await chatOutCommon.sendContactOptionsBurn(
       _contactSchema?.clientAddress,
       _burnValue,
-      DateTime.now().millisecondsSinceEpoch,
+      timeNow,
     );
   }
 
