@@ -50,6 +50,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   @override
   void initState() {
     super.initState();
+    chatCommon.currentTalkId = _contact?.clientAddress ?? _topic?.topic;
     // contact
     _onContactUpdateStreamSubscription = contactCommon.updateStream.where((event) => event.id == _contact?.id).listen((ContactSchema event) {
       setState(() {
@@ -61,6 +62,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   @override
   void dispose() {
+    chatCommon.currentTalkId = null;
     _onContactUpdateStreamSubscription?.cancel();
     super.dispose();
   }

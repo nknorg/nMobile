@@ -16,6 +16,8 @@ import '../global.dart';
 import '../settings.dart';
 
 class ChatCommon with Tag {
+  String? currentTalkId;
+
   // ignore: close_sinks
   StreamController<MessageSchema> _onUpdateController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get onUpdateSink => _onUpdateController.sink;
@@ -94,32 +96,26 @@ class ChatCommon with Tag {
   }
 
   Future<void> notificationHandle(ContactSchema? contact, TopicSchema? topic, MessageSchema message) async {
-    if (!message.canDisplayAndRead) return null;
-    late String title;
-    late String content;
-    if (contact != null && topic == null) {
-      title = contact.displayName;
-      content = message.content;
-    } else if (topic != null) {
-      notification.showDChatNotification('[${topic.topicShort}] ${contact?.displayName}', message.content);
+    String title = " ";
+    if (topic != null) {
       title = '[${topic.topicShort}] ${contact?.displayName}';
-      content = message.content;
+    } else if (contact != null) {
+      title = contact.displayName;
     }
 
     S localizations = S.of(Global.appContext);
-    // TODO: notification
     switch (message.contentType) {
       case ContentType.text:
       case ContentType.textExtension:
-        notification.showDChatNotification(title, content);
+        notification.showLocalNotification(message.msgId, title, message.content, message: message);
         break;
       case ContentType.media:
       case ContentType.image:
       case ContentType.nknImage:
-        notification.showDChatNotification(title, '[${localizations.image}]');
+        notification.showLocalNotification(message.msgId, title, '[${localizations.image}]', message: message);
         break;
       case ContentType.audio:
-        notification.showDChatNotification(title, '[${localizations.audio}]');
+        notification.showLocalNotification(message.msgId, title, '[${localizations.audio}]', message: message);
         break;
       // TODO:GG notification contentType
       case ContentType.system:

@@ -28,7 +28,11 @@ class Authorization {
       localizedReason = S.of(Global.appContext).authenticate_to_access;
     }
     try {
-      bool success = await _localAuth.authenticate(localizedReason: localizedReason);
+      bool success = await _localAuth.authenticate(
+        localizedReason: localizedReason,
+        useErrorDialogs: true,
+        stickyAuth: true,
+      );
       return success;
     } catch (e) {
       logger.e(e);
