@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/button/button_icon.dart';
@@ -159,6 +160,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         logger.i("$TAG - delete(now) - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
         chatCommon.msgDelete(_message.msgId, notify: true); // await
       }
+    }
+    // resend
+    int _status = MessageStatus.get(_message);
+    if (_status == MessageStatus.Sending && _message.sendTime != null && DateTime.now().isAfter(_message.sendTime!.add(Settings.msgResendDuration))) {
+      chatCommon.updateMessageStatus(_message, MessageStatus.SendFail, notify: true); // await
     }
   }
 
