@@ -95,7 +95,9 @@ class ChatInCommon with Tag {
         break;
     }
     if (!received.canDisplayAndRead) {
-      chatCommon.msgRead(received);
+      chatCommon.updateMessageStatus(received, MessageStatus.ReceivedRead);
+    } else {
+      // handle in messages screen
     }
   }
 
