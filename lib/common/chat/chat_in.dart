@@ -245,7 +245,7 @@ class ChatInCommon with Tag {
         if (element.content is File) {
           if ((element.content as File).existsSync()) {
             (element.content as File).delete(); // await
-            logger.d("$TAG - receivePiece - DELETE:PROGRESS - path:${(element.content as File).path}");
+            // logger.d("$TAG - receivePiece - DELETE:PROGRESS - path:${(element.content as File).path}");
           } else {
             logger.w("$TAG - receivePiece - DELETE:ERROR - NoExists - path:${(element.content as File).path}");
           }
