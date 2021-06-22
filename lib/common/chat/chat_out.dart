@@ -232,7 +232,7 @@ class ChatOutCommon with Tag {
 
   Future<MessageSchema?> resend(MessageSchema? schema) async {
     if (schema == null) return null;
-    schema.sendTime = DateTime.now();
+    schema = await chatCommon.updateMessageStatus(schema, MessageStatus.Sending, notify: true);
     switch (schema.contentType) {
       case ContentType.text:
       case ContentType.textExtension:
@@ -244,7 +244,7 @@ class ChatOutCommon with Tag {
       case ContentType.audio:
         return await _send(schema, await MessageData.getAudio(schema), resend: true);
     }
-    return null;
+    return schema;
   }
 
   Future<MessageSchema?> _send(
@@ -257,6 +257,7 @@ class ChatOutCommon with Tag {
     if (schema == null || msgData == null) return null;
     // DB
     if (resend) {
+      schema.sendTime = DateTime.now();
       await _messageStorage.updateSendTime(schema.msgId, schema.sendTime ?? DateTime.now());
     } else if (database) {
       schema = await _messageStorage.insert(schema);
