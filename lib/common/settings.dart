@@ -7,12 +7,16 @@ class NotificationType {
 }
 
 class Settings {
+  static bool debug = true;
+  static String appName = "nMobile";
+  static String sentryDSN = 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254';
+
   static late String locale;
   static late int notificationType;
   static late bool biometricsAuthentication;
+
   static late Duration profileExpireDuration = Duration(seconds: 30); // TODO:GG test hour 1
   static late Duration msgResendDuration = Duration(minutes: 3);
-  static bool debug = true;
 
   static init() async {
     SettingsStorage settingsStorage = SettingsStorage();

@@ -362,7 +362,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<CreateGroupDialog>
   }
 
   _createOrJoinGroupSuccess(String topicName) async {
-    // todo
+    // TODO:GG topic
     // await GroupChatHelper.insertTopicIfNotExists(topicName);
     // var group = await GroupChatHelper.fetchTopicInfoByName(topicName);
     //
@@ -371,7 +371,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<CreateGroupDialog>
   }
 
   createOrJoinGroup(topicName) async {
-    // todo
+    // TODO:GG topic
     // if (isEmpty(topicName)) {
     //   return;
     // }

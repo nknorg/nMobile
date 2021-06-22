@@ -47,6 +47,9 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance?.addObserver(this);
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
+    Global.appContext = context; // before at mounted
+    application.mounted();
+
     this._currentIndex = widget.arguments != null ? (widget.arguments![AppScreen.argIndex] ?? 0) : 0;
     _pageController = PageController(initialPage: this._currentIndex);
   }
@@ -60,7 +63,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    logger.i("AppScreen - APP生命周期 - $state");
+    logger.i("AppScreen - didChangeAppLifecycleState - $state");
     AppLifecycleState old = application.appLifecycleState;
     application.appLifecycleState = state;
     super.didChangeAppLifecycleState(state);
@@ -69,10 +72,6 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    // init
-    Global.appContext = context;
-    application.mounted();
-
     return WillPopScope(
       onWillPop: () async {
         if (Platform.isAndroid) {
