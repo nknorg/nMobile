@@ -186,7 +186,7 @@ class ChatCommon with Tag {
           if (index == 0) {
             sessionCommon.setUnReadCount(element.targetId, 0, notify: true); // await
           }
-          msgRead(element); // await
+          updateMessageStatus(element, MessageStatus.ReceivedRead); // await
           // if (index >= unreadList.length - 1) {
           //   sessionCommon.setUnReadCount(element.targetId, 0, notify: true); // await
           // }
@@ -198,8 +198,8 @@ class ChatCommon with Tag {
   }
 
   // receipt(receive) != read(look)
-  Future<MessageSchema> msgRead(MessageSchema schema, {bool notify = false}) async {
-    schema = MessageStatus.set(schema, MessageStatus.ReceivedRead);
+  Future<MessageSchema> updateMessageStatus(MessageSchema schema, int status, {bool notify = false}) async {
+    schema = MessageStatus.set(schema, status);
     await _messageStorage.updateMessageStatus(schema);
     if (notify) onUpdateSink.add(schema);
     return schema;
