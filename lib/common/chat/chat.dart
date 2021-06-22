@@ -86,7 +86,7 @@ class ChatCommon with Tag {
     TopicSchema? exist = await _topicStorage.queryTopicByTopicName(message.topic);
     if (exist == null) {
       exist = await _topicStorage.insertTopic(TopicSchema(
-        // TODO: topic get info
+        // TODO:GG topic get info
         // expireAt:
         // joined:
         topic: message.topic!,

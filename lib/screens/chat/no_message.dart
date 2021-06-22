@@ -55,7 +55,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
                   decoration: BoxDecoration(color: Color(0xFF5458F7), borderRadius: BorderRadius.circular(100)),
                   child: InkWell(
                     onTap: () {
-                      // TODO: topic join channel
+                      // TODO:GG topic join channel
                     },
                     child: Center(
                       child: Text(
@@ -151,7 +151,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
                     ],
                   ),
                   onPressed: () async {
-                    // TODO: new private chat
+                    // TODO:GG new private chat
                   },
                 ),
               ),
