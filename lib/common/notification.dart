@@ -1,62 +1,87 @@
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/schema/message.dart';
 
 import 'global.dart';
 
 class Notification {
   FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  int _notificationId = 0;
 
   Notification();
 
   init() async {
-    var initializationSettingsAndroid = new AndroidInitializationSettings('@mipmap/ic_launcher_round');
-
+    var initializationSettingsAndroid = new AndroidInitializationSettings(
+      '@mipmap/ic_launcher_round',
+    );
     var initializationSettingsIOS = IOSInitializationSettings(
       requestSoundPermission: true,
       requestBadgePermission: true,
       requestAlertPermission: true,
     );
+
     var initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsIOS,
     );
-    await _flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: (payload) async {
+
+    await _flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: (String? payload) async {
       _flutterLocalNotificationsPlugin.cancelAll();
     });
   }
 
-  showDChatNotification(String title, String content, {int? badgeNumber}) async {
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(badgeNumber: badgeNumber ?? 0);
+  Future showLocalNotification(
+    String uuid,
+    String title,
+    String content, {
+    MessageSchema? message,
+    int? badgeNumber,
+    String? payload,
+  }) async {
+    if (message != null && application.appLifecycleState == AppLifecycleState.resumed) {
+      if (chatCommon.currentTalkId == message.targetId) return;
+    }
+
+    int notificationId = uuid.hashCode;
+    String? userId = message?.targetId;
+
     var androidNotificationDetails = AndroidNotificationDetails(
       'nmobile_d_chat',
       'D-Chat',
       'D-Chat notification',
-      vibrationPattern: Int64List.fromList([0, 30, 100, 30]),
+      importance: Importance.max,
+      priority: Priority.high,
       autoCancel: true,
+      enableVibration: true,
+      vibrationPattern: Int64List.fromList([0, 30, 100, 30]),
+      enableLights: true,
+      groupKey: userId,
     );
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails(
+      badgeNumber: badgeNumber,
+      threadIdentifier: userId,
+    );
+
     var platformChannelSpecifics = NotificationDetails(
       android: androidNotificationDetails,
       iOS: iOSPlatformChannelSpecifics,
     );
+
     S localizations = S.of(Global.appContext);
     switch (Settings.notificationType) {
       case NotificationType.only_name:
-        await _flutterLocalNotificationsPlugin.show(++_notificationId, title, localizations.you_have_new_message, platformChannelSpecifics);
+        await _flutterLocalNotificationsPlugin.show(notificationId, title, localizations.you_have_new_message, platformChannelSpecifics, payload: payload);
         break;
       case NotificationType.name_and_message:
-        await _flutterLocalNotificationsPlugin.show(++_notificationId, title, content, platformChannelSpecifics);
+        await _flutterLocalNotificationsPlugin.show(notificationId, title, content, platformChannelSpecifics, payload: payload);
         break;
       case NotificationType.none:
-        await _flutterLocalNotificationsPlugin.show(++_notificationId, localizations.new_message, localizations.you_have_new_message, platformChannelSpecifics);
+        await _flutterLocalNotificationsPlugin.show(notificationId, localizations.new_message, localizations.you_have_new_message, platformChannelSpecifics, payload: payload);
         break;
     }
-  }
-
-  Future cancelAllNotifications() async {
-    await _flutterLocalNotificationsPlugin.cancelAll();
   }
 }
