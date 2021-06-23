@@ -5,10 +5,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/schema/message.dart';
 
 import 'global.dart';
 
+@deprecated
 class Notification {
   FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -38,16 +38,16 @@ class Notification {
     String uuid,
     String title,
     String content, {
-    MessageSchema? message,
+    FlutterLocalNotificationsPlugin? plugin,
+    String? targetId,
     int? badgeNumber,
     String? payload,
   }) async {
-    if (message != null && application.appLifecycleState == AppLifecycleState.resumed) {
-      if (chatCommon.currentTalkId == message.targetId) return;
+    if (targetId != null && application.appLifecycleState == AppLifecycleState.resumed) {
+      if (chatCommon.currentTalkId == targetId) return;
     }
 
     int notificationId = uuid.hashCode;
-    String? userId = message?.targetId;
 
     var androidNotificationDetails = AndroidNotificationDetails(
       'nmobile_d_chat',
@@ -59,11 +59,11 @@ class Notification {
       enableVibration: true,
       vibrationPattern: Int64List.fromList([0, 30, 100, 30]),
       enableLights: true,
-      groupKey: userId,
+      groupKey: targetId,
     );
     var iOSPlatformChannelSpecifics = IOSNotificationDetails(
       badgeNumber: badgeNumber,
-      threadIdentifier: userId,
+      threadIdentifier: targetId,
     );
 
     var platformChannelSpecifics = NotificationDetails(
@@ -74,13 +74,13 @@ class Notification {
     S localizations = S.of(Global.appContext);
     switch (Settings.notificationType) {
       case NotificationType.only_name:
-        await _flutterLocalNotificationsPlugin.show(notificationId, title, localizations.you_have_new_message, platformChannelSpecifics, payload: payload);
+        await (plugin ?? _flutterLocalNotificationsPlugin).show(notificationId, title, localizations.you_have_new_message, platformChannelSpecifics, payload: payload);
         break;
       case NotificationType.name_and_message:
-        await _flutterLocalNotificationsPlugin.show(notificationId, title, content, platformChannelSpecifics, payload: payload);
+        await (plugin ?? _flutterLocalNotificationsPlugin).show(notificationId, title, content, platformChannelSpecifics, payload: payload);
         break;
       case NotificationType.none:
-        await _flutterLocalNotificationsPlugin.show(notificationId, localizations.new_message, localizations.you_have_new_message, platformChannelSpecifics, payload: payload);
+        await (plugin ?? _flutterLocalNotificationsPlugin).show(notificationId, localizations.new_message, localizations.you_have_new_message, platformChannelSpecifics, payload: payload);
         break;
     }
   }
