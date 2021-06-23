@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:background_fetch/background_fetch.dart';
+import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/schema/wallet.dart';
@@ -71,7 +72,12 @@ class BackgroundFetchService with Tag {
 
   void _onBackgroundFetch(String taskId) async {
     if (clientCommon.status == ClientConnectStatus.connected) {
-      logger.d("$TAG - _onBackgroundFetch - finish - taskId:$taskId");
+      logger.d("$TAG - _onBackgroundFetch - finish - connected - taskId:$taskId");
+      BackgroundFetch.finish(taskId);
+      return;
+    }
+    if (application.appLifecycleState == AppLifecycleState.resumed) {
+      logger.d("$TAG - _onBackgroundFetch - finish - resumed - taskId:$taskId");
       BackgroundFetch.finish(taskId);
       return;
     }
