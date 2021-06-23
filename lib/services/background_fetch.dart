@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:background_fetch/background_fetch.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -31,7 +30,7 @@ class BackgroundFetchService with Tag {
 
         /// Android only: Set true to force Task to use Android AlarmManager mechanism rather than JobScheduler.
         /// Will result in more precise scheduling of tasks at the cost of higher battery usage.
-        forceAlarmManager: false,
+        forceAlarmManager: true,
 
         /// Android only Set detailed description of the kind of network your job requires.
         requiredNetworkType: NetworkType.ANY,
@@ -73,28 +72,18 @@ class BackgroundFetchService with Tag {
   void _onBackgroundFetch(String taskId) async {
     if (clientCommon.status == ClientConnectStatus.connected) {
       logger.d("$TAG - _onBackgroundFetch - finish - taskId:$taskId");
-      // TODO:GG test start
-      await Future.delayed(Duration(seconds: 10));
-      List<ContactSchema> contacts = await contactCommon.queryList(offset: 0, limit: 1);
-      if (contacts.isEmpty) return;
-      chatOutCommon.sendText(contacts[0].clientAddress, "正在后台:$taskId", contact: contacts[0]);
-      // TODO:GG test end
       BackgroundFetch.finish(taskId);
       return;
     }
     logger.i("$TAG - _onBackgroundFetch - todo - taskId:$taskId");
     // signOut
-    await clientCommon.signOut();
     await Future.delayed(Duration(seconds: 1));
+    await clientCommon.signOut();
     // signIn
+    await Future.delayed(Duration(seconds: 1));
     WalletSchema? wallet = await walletCommon.getDefault();
     await clientCommon.signIn(wallet);
+
     BackgroundFetch.finish(taskId);
-    // TODO:GG test start
-    await Future.delayed(Duration(seconds: 10));
-    List<ContactSchema> contacts = await contactCommon.queryList(offset: 0, limit: 1);
-    if (contacts.isEmpty) return;
-    chatOutCommon.sendText(contacts[0].clientAddress, "正在后台:$taskId", contact: contacts[0]);
-    // TODO:GG test end
   }
 }
