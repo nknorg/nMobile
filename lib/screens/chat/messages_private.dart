@@ -148,11 +148,29 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
     });
   }
 
+  _toggleNotificationOpen() async {
+    S _localizations = S.of(this.context);
+    bool nextOpen = !_contact.notificationOpen;
+    String? deviceToken = nextOpen ? await fireBaseMessaging.getToken() : null;
+    if (nextOpen && (deviceToken == null || deviceToken.isEmpty)) {
+      Toast.show(_localizations.unavailable_device);
+      return;
+    }
+    setState(() {
+      _contact.notificationOpen = nextOpen;
+    });
+    // inside update
+    contactCommon.setNotificationOpen(_contact.id, _contact.notificationOpen, notify: true);
+    // outside update
+    await chatOutCommon.sendContactOptionsToken(_contact.clientAddress, deviceToken ?? "");
+  }
+
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
     SkinTheme _theme = application.theme;
     int deleteAfterSeconds = _contact.options?.deleteAfterSeconds ?? 0;
+    Color notifyBellColor = _contact.notificationOpen ? application.theme.primaryColor : Colors.white38;
 
     return Layout(
       headerColor: _theme.headBarColor2,
@@ -190,9 +208,9 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: IconButton(
-              icon: Asset.iconSvg('notification-bell', color: Colors.white, width: 24),
+              icon: Asset.iconSvg('notification-bell', color: notifyBellColor, width: 24),
               onPressed: () {
-                // TODO:GG notificationOpen
+                _toggleNotificationOpen();
               },
             ),
           ),
