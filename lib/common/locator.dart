@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
+import 'package:nmobile/common/firebase_messaging.dart';
 import 'package:nmobile/common/session/session.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
 import 'package:nmobile/helpers/audio.dart';
@@ -13,16 +14,17 @@ import 'application.dart';
 import 'authentication.dart';
 import 'chat/chat.dart';
 import 'chat/chat_in.dart';
-import 'notification.dart';
 
 GetIt locator = GetIt.instance;
 
 late Application application;
 late TaskService taskService;
-late BackgroundFetchService backgroundFetchService;
-late Notification notification;
 late Authorization authorization;
 late AudioHelper audioHelper;
+// late Notification notification;
+late FireBaseMessaging fireBaseMessaging;
+late BackgroundFetchService backgroundFetchService;
+late MemoryCache memoryCache;
 
 late ClientCommon clientCommon;
 late ChatCommon chatCommon;
@@ -31,17 +33,35 @@ late ChatInCommon chatInCommon;
 late ChatOutCommon chatOutCommon;
 late ContactCommon contactCommon;
 late WalletCommon walletCommon;
-late MemoryCache memoryCache;
 
 void setupLocator() {
-  locator..registerSingleton(Application())..registerSingleton(TaskService())..registerSingleton(BackgroundFetchService())..registerSingleton(Notification())..registerSingleton(Authorization())..registerSingleton(AudioHelper())..registerSingleton(ClientCommon())..registerSingleton(ChatCommon())..registerSingleton(SessionCommon())..registerSingleton(ChatInCommon())..registerSingleton(ChatOutCommon())..registerSingleton(ContactCommon())..registerSingleton(WalletCommon())..registerSingleton(MemoryCache());
+  // register
+  locator.registerSingleton(Application());
+  locator.registerSingleton(TaskService());
+  locator.registerSingleton(Authorization());
+  locator.registerSingleton(AudioHelper());
+  // locator.registerSingleton(Notification());
+  locator.registerSingleton(FireBaseMessaging());
+  locator.registerSingleton(BackgroundFetchService());
+  locator.registerSingleton(MemoryCache());
 
+  locator.registerSingleton(ClientCommon());
+  locator.registerSingleton(ChatCommon());
+  locator.registerSingleton(SessionCommon());
+  locator.registerSingleton(ChatInCommon());
+  locator.registerSingleton(ChatOutCommon());
+  locator.registerSingleton(ContactCommon());
+  locator.registerSingleton(WalletCommon());
+
+  // instance
   application = locator.get<Application>();
   taskService = locator.get<TaskService>();
-  backgroundFetchService = locator.get<BackgroundFetchService>();
-  notification = locator.get<Notification>();
   authorization = locator.get<Authorization>();
   audioHelper = locator.get<AudioHelper>();
+  // notification = locator.get<Notification>();
+  fireBaseMessaging = locator.get<FireBaseMessaging>();
+  backgroundFetchService = locator.get<BackgroundFetchService>();
+  memoryCache = locator.get<MemoryCache>();
 
   clientCommon = locator.get<ClientCommon>();
   chatCommon = locator.get<ChatCommon>();
@@ -50,6 +70,4 @@ void setupLocator() {
   chatOutCommon = locator.get<ChatOutCommon>();
   contactCommon = locator.get<ContactCommon>();
   walletCommon = locator.get<WalletCommon>();
-
-  memoryCache = locator.get<MemoryCache>();
 }

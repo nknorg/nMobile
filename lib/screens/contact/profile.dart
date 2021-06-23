@@ -330,34 +330,20 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _updateNotificationAndDeviceToken() async {
-    String deviceToken = _notificationOpen ? Uuid().v4() : ""; // TODO:GG contact deviceToken get
-    // if (_notificationOpen == true) {
-    //   deviceToken = await NKNClientCaller.fetchDeviceToken();
-    //   if (Platform.isIOS) {
-    //     String fcmToken = await NKNClientCaller.fetchFcmToken();
-    //     if (fcmToken != null && fcmToken.length > 0) {
-    //       deviceToken = deviceToken + "$fcmGapString$fcmToken";
-    //     }
-    //   }
-    //   if (Platform.isAndroid && deviceToken.length == 0) {
-    //     showToast(_localizations.unavailable_device);
-    //     setState(() {
-    //       widget.contactInfo.notificationOpen = false;
-    //       _notificationOpen = false;
-    //       currentUser.setNotificationOpen(_notificationOpen);
-    //     });
-    //     return;
-    //   }
-    // } else {
-    //   deviceToken = '';
-    //   showToast(_localizations.close);
-    // }
-
+    S _localizations = S.of(this.context);
+    String? deviceToken = _notificationOpen ? await fireBaseMessaging.getToken() : null;
+    if (_notificationOpen && (deviceToken == null || deviceToken.isEmpty)) {
+      setState(() {
+        _notificationOpen = false;
+      });
+      Toast.show(_localizations.unavailable_device);
+      return;
+    }
     _contactSchema?.notificationOpen = _notificationOpen;
     // inside update
     contactCommon.setNotificationOpen(_contactSchema?.id, _notificationOpen, notify: true);
     // outside update
-    await chatOutCommon.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken);
+    await chatOutCommon.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken ?? "");
   }
 
   _addFriend() {
