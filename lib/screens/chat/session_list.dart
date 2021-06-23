@@ -184,7 +184,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
               onPressed: () async {
                 Navigator.of(context).pop();
                 ModalDialog.of(context).confirm(
-                  content: S.of(context).delete_contact_confirm_title, // TODO:GG local delete session
+                  content: S.of(context).delete_contact_confirm_title, // TODO:GG locale delete session
                   hasCloseButton: true,
                   agree: Button(
                     text: S.of(context).delete_contact,

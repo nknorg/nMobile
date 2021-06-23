@@ -48,6 +48,7 @@ class DB {
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - upgrade - old:$oldVersion - new:$newVersion");
+        // TODO:GG index sync
         // TODO:GG session data move
         // TODO:GG delete message(receipt) + read message(piece + contactOptions)
         // if (newVersion >= dataBaseVersionV2) {
