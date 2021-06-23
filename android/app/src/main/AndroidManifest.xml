@@ -32,11 +32,11 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
-        tools:replace="android:label"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round">
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:usesCleartextTraffic="true"
+        tools:replace="android:label">
         <activity
             android:name=".MainActivity"
             android:allowBackup="false"
@@ -44,10 +44,10 @@
             android:fullBackupContent="false"
             android:hardwareAccelerated="true"
             android:launchMode="singleTop"
-            android:showWhenLocked="true"
-            android:turnScreenOn="true"
-            android:theme="@style/LaunchTheme"
             android:roundIcon="@mipmap/ic_launcher_round"
+            android:showWhenLocked="true"
+            android:theme="@style/LaunchTheme"
+            android:turnScreenOn="true"
             android:windowSoftInputMode="adjustResize">
             <!-- Specifies an Android theme to apply to this Activity as soon as
                  the Android process has started. This theme is visible to the user
@@ -80,10 +80,23 @@
             android:name="io.sentry.dsn"
             android:value="https://e8e2c15b0e914295a8b318919f766701@o466976.ingest.sentry.io/5483308" />
 
+        <!-- firebase -->
+        <meta-data
+            android:name="firebase_messaging_auto_init_enabled"
+            android:value="true" />
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher_round" />
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/hint_color" />
+
         <!-- flutter image_cropper -->
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
     </application>
 </manifest>
