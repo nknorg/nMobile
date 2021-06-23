@@ -8,7 +8,6 @@ import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -38,11 +37,9 @@ class ChatInCommon with Tag {
     // contact
     ContactSchema? contact = await chatCommon.contactHandle(message);
     // topic
-    TopicSchema? topic = await chatCommon.topicHandle(message);
+    await chatCommon.topicHandle(message);
     // session
-    await chatCommon.sessionHandle(message); // before by notification
-    // notification
-    chatCommon.notificationHandle(contact, topic, message); // await
+    await chatCommon.sessionHandle(message);
     // message
     if (needWait) {
       await _messageHandle(message, contact: contact);

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
@@ -12,7 +11,6 @@ import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
 
-import '../global.dart';
 import '../settings.dart';
 
 class ChatCommon with Tag {
@@ -93,41 +91,6 @@ class ChatCommon with Tag {
       ));
     }
     return exist;
-  }
-
-  Future<void> notificationHandle(ContactSchema? contact, TopicSchema? topic, MessageSchema message) async {
-    String title = " ";
-    if (topic != null) {
-      title = '[${topic.topicShort}] ${contact?.displayName}';
-    } else if (contact != null) {
-      title = contact.displayName;
-    }
-
-    S localizations = S.of(Global.appContext);
-    switch (message.contentType) {
-      case ContentType.text:
-      case ContentType.textExtension:
-        notification.showLocalNotification(message.msgId, title, message.content, message: message);
-        break;
-      case ContentType.media:
-      case ContentType.image:
-      case ContentType.nknImage:
-        notification.showLocalNotification(message.msgId, title, '[${localizations.image}]', message: message);
-        break;
-      case ContentType.audio:
-        notification.showLocalNotification(message.msgId, title, '[${localizations.audio}]', message: message);
-        break;
-      // TODO:GG notification contentType
-      case ContentType.system:
-      case ContentType.eventSubscribe:
-      case ContentType.eventUnsubscribe:
-      case ContentType.eventChannelInvitation:
-        // case ContentType.contact:
-        // case ContentType.receipt:
-        // case ContentType.piece:
-        // case ContentType.eventContactOptions:
-        break;
-    }
   }
 
   Future<SessionSchema?> sessionHandle(MessageSchema message) async {
