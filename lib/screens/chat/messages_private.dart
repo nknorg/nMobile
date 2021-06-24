@@ -305,16 +305,20 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                   if (visible) {
                     String? savePath = await audioHelper.recordStart(_contact.clientAddress, maxDurationS: AudioHelper.MessageRecordMaxDurationS);
                     if (savePath == null || savePath.isEmpty) {
+                      Toast.show(S.of(context).failure);
                       await audioHelper.recordStop();
+                      return false;
                     }
-                    return null;
+                    return true;
                   } else {
                     if (durationMs < AudioHelper.MessageRecordMinDurationS * 1000) {
+                      await audioHelper.recordStop();
                       return null;
                     }
                     String? savePath = await audioHelper.recordStop();
                     if (savePath == null || savePath.isEmpty) {
                       Toast.show(S.of(context).failure);
+                      await audioHelper.recordStop();
                       return null;
                     }
                     File content = File(savePath);
@@ -322,6 +326,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                       if (await content.exists()) {
                         await content.delete();
                       }
+                      await audioHelper.recordStop();
                       return null;
                     }
                     return await chatOutCommon.sendAudio(_contact.clientAddress, content, durationMs / 1000, contact: _contact);
