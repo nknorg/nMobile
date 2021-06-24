@@ -7,7 +7,6 @@ import 'package:nmobile/common/session/session.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
 import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/helpers/memory_cache.dart';
-import 'package:nmobile/services/background_fetch.dart';
 
 import '../services/task.dart';
 import 'application.dart';
@@ -21,9 +20,9 @@ late Application application;
 late TaskService taskService;
 late Authorization authorization;
 late AudioHelper audioHelper;
-// late Notification notification;
 late FireBaseMessaging fireBaseMessaging;
-late BackgroundFetchService backgroundFetchService;
+// late Notification notification;
+// late BackgroundFetchService backgroundFetchService;
 late MemoryCache memoryCache;
 
 late ClientCommon clientCommon;
@@ -40,9 +39,9 @@ void setupLocator() {
   locator.registerSingleton(TaskService());
   locator.registerSingleton(Authorization());
   locator.registerSingleton(AudioHelper());
-  // locator.registerSingleton(Notification());
   locator.registerSingleton(FireBaseMessaging());
-  locator.registerSingleton(BackgroundFetchService());
+  // locator.registerSingleton(Notification());
+  // locator.registerSingleton(BackgroundFetchService());
   locator.registerSingleton(MemoryCache());
 
   locator.registerSingleton(ClientCommon());
@@ -58,9 +57,9 @@ void setupLocator() {
   taskService = locator.get<TaskService>();
   authorization = locator.get<Authorization>();
   audioHelper = locator.get<AudioHelper>();
-  // notification = locator.get<Notification>();
   fireBaseMessaging = locator.get<FireBaseMessaging>();
-  backgroundFetchService = locator.get<BackgroundFetchService>();
+  // notification = locator.get<Notification>();
+  // backgroundFetchService = locator.get<BackgroundFetchService>();
   memoryCache = locator.get<MemoryCache>();
 
   clientCommon = locator.get<ClientCommon>();
