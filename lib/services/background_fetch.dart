@@ -7,6 +7,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
 
+@deprecated
 class BackgroundFetchService with Tag {
   BackgroundFetchService();
 
