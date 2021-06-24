@@ -30,6 +30,13 @@
             {
               "client_id": "980911608673-roe44tqqg0g3qahcaf1clm8i8j5rq3pv.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "980911608673-jsfne43egn1j5595bh58qqiohqu09hut.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.nkn.nmobile"
+              }
             }
           ]
         }
@@ -59,6 +66,13 @@
             {
               "client_id": "980911608673-roe44tqqg0g3qahcaf1clm8i8j5rq3pv.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "980911608673-jsfne43egn1j5595bh58qqiohqu09hut.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.nkn.nmobile"
+              }
             }
           ]
         }

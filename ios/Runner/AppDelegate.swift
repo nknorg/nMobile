@@ -18,7 +18,7 @@ import Sentry
         Common.register(controller: controller)
         
         if #available(iOS 10.0, *) {
-          UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
+          UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
         }
         
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
