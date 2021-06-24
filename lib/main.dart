@@ -40,16 +40,16 @@ void main() async {
     Routes.init();
     Global.init();
     Settings.init();
-    fireBaseMessaging.init();
+    await fireBaseMessaging.init();
   });
   await application.initialize();
 
   // mounted
   application.registerMounted(() async {
     taskService.install();
-    // notification.init();
     fireBaseMessaging.startListen();
-    backgroundFetchService.install();
+    // notification.init();
+    // backgroundFetchService.install();
   });
   application.registerMounted(() async {
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
