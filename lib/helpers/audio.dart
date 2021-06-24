@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart' as Player;
 import 'package:flutter_sound/flutter_sound.dart' as Sound;
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/locator.dart';
@@ -147,6 +148,7 @@ class AudioHelper with Tag {
       _onRecordProgressSubscription?.cancel();
     }
     _onRecordProgressSubscription = record.onProgress?.listen((RecordingDisposition event) async {
+      // logger.d("$TAG - onProgress - recordId:${this.recordId} - duration:${event.duration}");
       onProgress?.call(event);
       _onRecordProgressSink.add({
         "id": this.recordId,
@@ -161,7 +163,7 @@ class AudioHelper with Tag {
       }
     });
     // start
-    await record.setSubscriptionDuration(Duration(milliseconds: 50));
+    await record.setSubscriptionDuration(Duration(milliseconds: 100));
     await record.startRecorder(
       toFile: recordPath,
       codec: Sound.Codec.aacADTS,
@@ -186,11 +188,16 @@ class AudioHelper with Tag {
   }
 
   Future<String?> _getRecordPath() async {
+    if (clientCommon.publicKey == null) return null;
     String? recordPath = Path.getCompleteFile(Path.createLocalFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, "${Uuid().v4()}.aac"));
     if (recordPath == null || recordPath.isEmpty) return null;
     var outputFile = File(recordPath);
-    if (await outputFile.exists()) {
-      await outputFile.delete();
+    if (Platform.isAndroid) {
+      if (await outputFile.exists()) {
+        await outputFile.delete();
+      }
+    } else {
+      await outputFile.create(recursive: true);
     }
     return outputFile.path;
   }
