@@ -5,7 +5,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/theme/theme.dart';
@@ -434,7 +433,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
     widget.onSendPress?.call(content); // await
   }
 
-  _setAudioRecordVisible(bool visible, bool complete) {
+  _setAudioRecordVisible(bool visible, bool complete) async {
     if (visible == _audioRecordVisible) return;
     var durationMs = visible ? 0 : _audioRecordDurationMs;
     bool lockMode = visible ? _audioLockedMode : false;
@@ -446,6 +445,9 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
       _audioLockedMode = canLock && lockMode;
       _audioDragPercent = percent > 1 ? 1 : percent;
     });
-    widget.onRecordTap?.call(visible, complete, _audioRecordDurationMs); // await
+    var result = await widget.onRecordTap?.call(visible, complete, _audioRecordDurationMs);
+    if (visible && result == false) {
+      _setAudioRecordVisible(false, false);
+    }
   }
 }
