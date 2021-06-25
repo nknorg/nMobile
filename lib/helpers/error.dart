@@ -1,31 +1,50 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 
-import '../utils/logger.dart';
-
-// TODO:GG global handle
+catchGlobalError(Function? callback, {Function(Object error, StackTrace stack)? onZoneError}) {
+  // zone
+  runZonedGuarded(() async {
+    await callback?.call();
+  }, (error, stackTrace) async {
+    await onZoneError?.call(error, stackTrace);
+  }, zoneSpecification: ZoneSpecification(print: (Zone self, ZoneDelegate parent, Zone zone, String line) {
+    DateTime now = DateTime.now();
+    String format = "${now.hour}:${now.minute}:${now.second}";
+    parent.print(zone, "$format：$line");
+  }));
+  // flutter
+  FlutterError.onError = (details, {bool forceReport = false}) {
+    if (Settings.debug) {
+      // just print
+      FlutterError.dumpErrorToConsole(details);
+    } else {
+      // go onZoneError
+      Zone.current.handleUncaughtError(details.exception, details.stack ?? StackTrace.empty);
+    }
+  };
+}
 
 void handleError(
-  error, {
+  dynamic error, {
   StackTrace? stackTrace,
   String? toast,
 }) {
-  logger.e(error);
-  debugPrintStack(maxFrames: 20);
-  if (error == null) return;
   String? show = getErrorShow(error);
   if (show != null && show.isNotEmpty) {
     Toast.show(show);
   } else {
-    if (toast != null && toast.isNotEmpty) {
+    if (toast?.isNotEmpty == true) {
       Toast.show(toast);
     }
   }
 }
 
-String? getErrorShow(error) {
+String? getErrorShow(dynamic error) {
   if (error == null) return null;
   S _localizations = S.of(Global.appContext);
 
@@ -45,5 +64,5 @@ String? getErrorShow(error) {
   if (error.message == ksError || error.toString() == ksError) {
     return ksError;
   }
-  return error.message;
+  return Settings.debug ? error.message : _localizations.failure;
 }

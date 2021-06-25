@@ -8,6 +8,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/routes/routes.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -56,15 +57,21 @@ void main() async {
     _walletBloc.add(LoadWallet());
   });
 
-  // return
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = Settings.sentryDSN;
-      options.environment = Global.isRelease ? 'production' : 'debug';
-      options.release = Global.versionFormat;
-    },
-    appRunner: () => runApp(Main()),
-  );
+  // error
+  catchGlobalError(() async {
+    await SentryFlutter.init(
+      (options) {
+        options.debug = Settings.debug;
+        options.dsn = Settings.sentryDSN;
+        options.environment = Global.isRelease ? 'production' : 'debug';
+        options.release = Global.versionFormat;
+      },
+      // return
+      appRunner: () => runApp(Main()),
+    );
+  }, onZoneError: (Object error, StackTrace stack) async {
+    await Sentry.captureException(error, stackTrace: stack);
+  });
 }
 
 class Main extends StatefulWidget {
@@ -108,7 +115,11 @@ class _MainState extends State<Main> {
             ],
             initialRoute: AppScreen.routeName,
             onGenerateRoute: Routes.onGenerateRoute,
-            navigatorObservers: [BotToastNavigatorObserver(), Routes.routeObserver],
+            navigatorObservers: [
+              BotToastNavigatorObserver(),
+              SentryNavigatorObserver(),
+              Routes.routeObserver,
+            ],
             localeResolutionCallback: (locale, supportLocales) {
               if (locale?.languageCode == 'zh') {
                 if (locale?.scriptCode == 'Hant') {
