@@ -1,14 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
-import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -38,7 +36,7 @@ class FireBaseMessaging with Tag {
       channel_id,
       channel_name,
       channel_desc,
-      importance: Importance.high,
+      importance: Importance.max,
       showBadge: true,
       playSound: true,
       enableLights: true,
@@ -57,15 +55,16 @@ class FireBaseMessaging with Tag {
     await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
-      sound: false,
-    );
+      sound: true,
+    ); // await
   }
 
-  startListen() {
+  startListen() async {
     // token refresh
     FirebaseMessaging.instance.onTokenRefresh.listen((String event) {
       logger.i("$TAG - onTokenRefresh - old:$_token - new:$event");
       // TODO:GG firebase should notify all contact who notificationOpen?
+      // TODO:GG ios wrong?
       _token = event;
     });
 
@@ -78,12 +77,10 @@ class FireBaseMessaging with Tag {
     // foreground pop
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       logger.d("$TAG - onMessage - messageId:${message.messageId} - from:${message.from}");
-      String? targetId = message.from; // TODO:GG no same with clientAddress? use senderId?
+      // if (application.appLifecycleState == AppLifecycleState.resumed) return; // TODO:GG test // handle in chatIn with localNotification
+      // String? targetId = message.from; // cant check contactNotificationOpen and messagesScreen because payload no contactInfo and msgInfo
       RemoteNotification? notification = message.notification;
       if (notification == null) return;
-      if (targetId != null && application.appLifecycleState == AppLifecycleState.resumed) {
-        if (chatCommon.currentTalkId == targetId) return;
-      }
       // AndroidNotification? android = message.notification?.android;
       // AppleNotification? apple = message.notification?.apple;
       flutterLocalNotificationsPlugin.show(
@@ -95,7 +92,7 @@ class FireBaseMessaging with Tag {
             channel_id,
             channel_name,
             channel_desc,
-            groupKey: targetId,
+            // groupKey: targetId,
             importance: Importance.max,
             priority: Priority.high,
             autoCancel: true,
@@ -105,7 +102,7 @@ class FireBaseMessaging with Tag {
             // icon: , // set in manifest
           ),
           iOS: IOSNotificationDetails(
-            threadIdentifier: targetId,
+            // threadIdentifier: targetId,
             // badgeNumber: apple?.badge, // TODO:GG firebase badgeNumber
             presentBadge: true,
             presentSound: true,
@@ -119,6 +116,24 @@ class FireBaseMessaging with Tag {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       logger.d("$TAG - onMessageOpenedApp - messageId:${message.messageId} - from:${message.from}");
     });
+
+    // ios permission
+    NotificationSettings settings = await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      logger.d('$TAG - requestPermission - OK');
+    } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+      logger.w('$TAG - requestPermission - temp');
+    } else {
+      logger.w('$TAG - requestPermission - NONE');
+    }
   }
 
   Future<String?> getToken() async {
@@ -126,6 +141,7 @@ class FireBaseMessaging with Tag {
       if (Platform.isAndroid) {
         _token = await FirebaseMessaging.instance.getToken();
       } else {
+        // TODO:GG ios wrong?
         _token = await FirebaseMessaging.instance.getAPNSToken();
       }
     }
@@ -147,10 +163,13 @@ class FireBaseMessaging with Tag {
     String? payload,
   }) async {
     try {
-      String body = constructFCMPayload(token, title, content, targetId, 100000);
+      String body = createFCMPayload(token, title, content);
       http.Response response = await http.post(
-        Uri.parse('https://api.rnfirebase.io/messaging/send'),
-        headers: <String, String>{'Content-Type': 'application/json; charset=UTF-8'},
+        Uri.parse('https://fcm.googleapis.com/fcm/send'),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Authorization': 'key=${Settings.fcmServerToken}',
+        },
         body: body,
       );
       if (response.statusCode == 200) {
@@ -163,15 +182,24 @@ class FireBaseMessaging with Tag {
     }
   }
 
-  String constructFCMPayload(
+  String createFCMPayload(
     String token,
     String title,
     String content,
-    String? targetId,
-    int expireS,
+    // String? targetId,
+    // int expireS,
   ) {
+    token = "064cd3060e55ce3806d99284f318d5305930f4b1defb1805be70494196eb7469__FCMToken__:cpS5pduEJE-xj5tFfTyRcC:APA91bGPIWCBhDjXiZwxSXnTpyVvTAJq-Hg2439DbV7DrLMIaBWM067YXU1jevv48knUDN_xqEkbbu94sJU6JQbEECwLdCH4nfRL5e5UtTN5iqb0vmsKqUbjsvKJqyoUNdU_5sLll8QA";
+    // SUPPORT:START
+    String fcmGapString = "__FCMToken__:";
+    List<String> sList = token.split(fcmGapString);
+    if (sList.length > 1) {
+      token = sList[1].toString();
+    }
+    // SUPPORT:END
+
     return jsonEncode({
-      'token': token,
+      'to': token,
       // 'data': {
       //   'via': 'FlutterFire Cloud Messaging!!!',
       //   'count': "_messageCount.toString()",
@@ -181,22 +209,22 @@ class FireBaseMessaging with Tag {
         'body': content,
       },
       "android": {
-        "collapseKey": targetId,
+        // "collapseKey": targetId,
         "priority": "normal",
-        "ttl": "${expireS}s",
+        // "ttl": "${expireS}s",
       },
       "apns": {
-        "apns-collapse-id": targetId,
+        // "apns-collapse-id": targetId,
         "headers": {
           "apns-priority": "5",
-          "apns-expiration": "${DateTime.now().add(Duration(seconds: expireS)).millisecondsSinceEpoch / 1000}",
+          // "apns-expiration": "${DateTime.now().add(Duration(seconds: expireS)).millisecondsSinceEpoch / 1000}",
         },
       },
       "webpush": {
-        "Topic": targetId,
+        // "Topic": targetId,
         "headers": {
           "Urgency": "high",
-          "TTL": "$expireS",
+          // "TTL": "$expireS",
         }
       },
     });

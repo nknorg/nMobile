@@ -5,10 +5,13 @@ import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
+import 'package:nmobile/common/global.dart';
+import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -286,9 +289,9 @@ class ChatOutCommon with Tag {
       handleError(e);
     }
     // contact
-    await chatCommon.contactHandle(schema);
+    ContactSchema? _contact = await chatCommon.contactHandle(schema);
     // topic
-    await chatCommon.topicHandle(schema);
+    TopicSchema? _topic = await chatCommon.topicHandle(schema);
     // session
     chatCommon.sessionHandle(schema); // await
     // fail
@@ -306,7 +309,60 @@ class ChatOutCommon with Tag {
     if (database || resend) _messageStorage.updateMessageStatus(schema); // await
     // display
     if (display || resend) chatCommon.onUpdateSink.add(schema);
+    // notification
+    _sendPush(schema, _contact, _topic); // await
     return schema;
+  }
+
+  _sendPush(MessageSchema message, ContactSchema? contact, TopicSchema? topic) async {
+    if (!message.canDisplayAndRead) return;
+    if (topic != null) {
+      // TODO:GG topic get all subers token and list.send
+      return;
+    }
+    if (contact == null || contact.deviceToken == null || contact.deviceToken!.isEmpty) return;
+
+    S localizations = S.of(Global.appContext);
+
+    String title = localizations.new_message;
+    // if (topic != null) {
+    //   title = '[${topic.topicShort}] ${contact?.displayName}';
+    // } else if (contact != null) {
+    //   title = contact.displayName;
+    // }
+
+    String content = localizations.you_have_new_message;
+    // switch (message.contentType) {
+    //   case ContentType.text:
+    //   case ContentType.textExtension:
+    //     content = message.content;
+    //     break;
+    //   case ContentType.media:
+    //   case ContentType.image:
+    //   case ContentType.nknImage:
+    //     content = '[${localizations.image}]';
+    //     break;
+    //   case ContentType.audio:
+    //     content = '[${localizations.audio}]';
+    //     break;
+    //   case ContentType.system:
+    //   case ContentType.eventSubscribe:
+    //   case ContentType.eventUnsubscribe:
+    //   case ContentType.eventChannelInvitation:
+    //     // case ContentType.contact:
+    //     // case ContentType.receipt:
+    //     // case ContentType.piece:
+    //     // case ContentType.eventContactOptions:
+    //     break;
+    // }
+
+    await fireBaseMessaging.sendPushMessage(
+      contact.deviceToken!,
+      message.msgId,
+      title,
+      content,
+      targetId: message.targetId,
+    );
   }
 
   Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message) async {
