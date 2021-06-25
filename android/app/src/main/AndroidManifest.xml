@@ -86,6 +86,10 @@
             android:value="true" />
 
         <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="nmobile_d_chat" />
+
+        <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@mipmap/ic_launcher_round" />
 
