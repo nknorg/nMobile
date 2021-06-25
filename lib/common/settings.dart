@@ -7,9 +7,10 @@ class NotificationType {
 }
 
 class Settings {
-  static bool debug = true;
-  static String appName = "nMobile";
-  static String sentryDSN = 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254';
+  static const bool debug = true;
+  static const String appName = "nMobile";
+  static const String sentryDSN = 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254';
+  static const String fcmServerToken = "Add Your Firebase server token";
 
   static late String locale;
   static late int notificationType;
