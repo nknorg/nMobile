@@ -16,6 +16,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 class FireBaseMessaging with Tag {
+  static const fcmGapString = '__FCMToken__:';
+
   static const String channel_id = "nmobile_d_chat";
   static const String channel_name = "D-Chat";
   static const String channel_desc = "D-Chat notification";
@@ -23,7 +25,7 @@ class FireBaseMessaging with Tag {
   late AndroidNotificationChannel channel;
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
-  String? _token;
+  String? _deviceToken;
 
   init() async {
     await Firebase.initializeApp();
@@ -61,11 +63,10 @@ class FireBaseMessaging with Tag {
 
   startListen() async {
     // token refresh
-    FirebaseMessaging.instance.onTokenRefresh.listen((String event) {
-      logger.i("$TAG - onTokenRefresh - old:$_token - new:$event");
+    FirebaseMessaging.instance.onTokenRefresh.listen((String event) async {
+      logger.i("$TAG - onTokenRefresh - old:$_deviceToken - new:$event");
+      _deviceToken = await getDeviceToken();
       // TODO:GG firebase should notify all contact who notificationOpen?
-      // TODO:GG ios wrong?
-      _token = event;
     });
 
     // background click
@@ -74,7 +75,7 @@ class FireBaseMessaging with Tag {
       logger.i("$TAG - getInitialMessage - messageId:${message.messageId} - from:${message.from}");
     });
 
-    // foreground pop
+    // foreground pop TODO:GG maybe use local notification
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       logger.d("$TAG - onMessage - messageId:${message.messageId} - from:${message.from}");
       // if (application.appLifecycleState == AppLifecycleState.resumed) return; // TODO:GG test // handle in chatIn with localNotification
@@ -136,21 +137,23 @@ class FireBaseMessaging with Tag {
     }
   }
 
-  Future<String?> getToken() async {
-    if (_token == null) {
-      if (Platform.isAndroid) {
-        _token = await FirebaseMessaging.instance.getToken();
-      } else {
-        // TODO:GG ios wrong?
-        _token = await FirebaseMessaging.instance.getAPNSToken();
+  Future<String?> getDeviceToken() async {
+    if (_deviceToken == null) {
+      // FCM
+      _deviceToken = await FirebaseMessaging.instance.getToken();
+      if (Platform.isIOS) {
+        // APNS
+        String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+        _deviceToken = "$apnsToken$fcmGapString $_deviceToken";
       }
     }
-    return _token;
+    logger.i("$TAG - getDeviceToken - $_deviceToken");
+    return _deviceToken;
   }
 
   Future deleteToken() async {
     await FirebaseMessaging.instance.deleteToken();
-    _token = null;
+    _deviceToken = null;
   }
 
   sendPushMessage(
@@ -162,6 +165,8 @@ class FireBaseMessaging with Tag {
     int? badgeNumber, // TODO:GG firebase badgeNumber
     String? payload,
   }) async {
+    // TODO:GG 判断platform，如果是android则call下native的googleServiceEnable(还没写)，如果支持则走fcm，否则看对方的platform，如果是ios则走apns
+    // FirebaseMessaging.instance.isSupported();
     try {
       String body = createFCMPayload(token, title, content);
       http.Response response = await http.post(
@@ -189,7 +194,7 @@ class FireBaseMessaging with Tag {
     // String? targetId,
     // int expireS,
   ) {
-    token = "064cd3060e55ce3806d99284f318d5305930f4b1defb1805be70494196eb7469__FCMToken__:cpS5pduEJE-xj5tFfTyRcC:APA91bGPIWCBhDjXiZwxSXnTpyVvTAJq-Hg2439DbV7DrLMIaBWM067YXU1jevv48knUDN_xqEkbbu94sJU6JQbEECwLdCH4nfRL5e5UtTN5iqb0vmsKqUbjsvKJqyoUNdU_5sLll8QA";
+    // token = "064cd3060e55ce3806d99284f318d5305930f4b1defb1805be70494196eb7469__FCMToken__:cpS5pduEJE-xj5tFfTyRcC:APA91bGPIWCBhDjXiZwxSXnTpyVvTAJq-Hg2439DbV7DrLMIaBWM067YXU1jevv48knUDN_xqEkbbu94sJU6JQbEECwLdCH4nfRL5e5UtTN5iqb0vmsKqUbjsvKJqyoUNdU_5sLll8QA";
     // SUPPORT:START
     String fcmGapString = "__FCMToken__:";
     List<String> sList = token.split(fcmGapString);
@@ -200,6 +205,7 @@ class FireBaseMessaging with Tag {
 
     return jsonEncode({
       'to': token,
+      'token': token,
       // 'data': {
       //   'via': 'FlutterFire Cloud Messaging!!!',
       //   'count': "_messageCount.toString()",
@@ -208,9 +214,10 @@ class FireBaseMessaging with Tag {
         'title': title,
         'body': content,
       },
+      "priority": "high",
       "android": {
         // "collapseKey": targetId,
-        "priority": "normal",
+        "priority": "high",
         // "ttl": "${expireS}s",
       },
       "apns": {
