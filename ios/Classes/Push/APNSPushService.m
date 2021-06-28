@@ -1,12 +1,12 @@
 //
-//  PushService.m
+//  APNSPushService.m
 //  Runner
 //
 //  Created by  ZhiGuoJiang on 2020/9/21.
 //  Copyright © 2020 The Chromium Authors. All rights reserved.
 //
 
-#import "PushService.h"
+#import "APNSPushService.h"
 
 #import "NWSecTools.h"
 
@@ -16,13 +16,13 @@
 #define Push_Production  "gateway.push.apple.com"
 
 // If you want to add APNS, locate your own p12 or .cer file here
-//#define APNSPushFileName            @"filename"
-//#define APNSPushPassword            @"password"
+#define APNSPushFileName            @"filename"
+#define APNSPushPassword            @"password"
 
-@implementation PushService
+@implementation APNSPushService
 
-static PushService * sharedService = nil;
-+ (PushService *)sharedService{
+static APNSPushService * sharedService = nil;
++ (APNSPushService *)sharedService{
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedService = [[self alloc] init];
@@ -32,7 +32,7 @@ static PushService * sharedService = nil;
 
 - (void)connectAPNS{
     if(_serial == nil){
-        _serial = dispatch_queue_create("PushService", DISPATCH_QUEUE_CONCURRENT);
+        _serial = dispatch_queue_create("APNSPushService", DISPATCH_QUEUE_CONCURRENT);
     }
     // If you want to add APNS, locate your own p12 or .cer file here
     NSURL *url = [NSBundle.mainBundle URLForResource:APNSPushFileName withExtension:nil];
@@ -107,7 +107,7 @@ static PushService * sharedService = nil;
     __block NWIdentityRef blockIdentity = _identity;
     
     if(_serial == nil){
-        _serial = dispatch_queue_create("PushService", DISPATCH_QUEUE_CONCURRENT);
+        _serial = dispatch_queue_create("APNSPushService", DISPATCH_QUEUE_CONCURRENT);
     }
     __block dispatch_queue_t blockSerailQueue = _serial;
     dispatch_async(_serial, ^{
