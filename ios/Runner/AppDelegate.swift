@@ -30,7 +30,7 @@ import Sentry
     
     override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
-            PushService.shared().connectAPNS();
+            APNSPushService.shared().connectAPNS();
         }
     }
     
@@ -54,12 +54,12 @@ import Sentry
     
     @objc func becomeActive(noti:Notification){
         NSLog("NKNClient Enter foreground")
-        PushService.shared().connectAPNS()
+        APNSPushService.shared().connectAPNS()
     }
 
     @objc func becomeDeath(noti:Notification){
         NSLog("NKNClient Enter background")
-        PushService.shared().disConnectAPNS()
+        APNSPushService.shared().disConnectAPNS()
     }
     
 
