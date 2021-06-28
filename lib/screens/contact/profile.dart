@@ -11,6 +11,7 @@ import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/avatar_editable.dart';
@@ -331,7 +332,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
   _updateNotificationAndDeviceToken() async {
     S _localizations = S.of(this.context);
-    String? deviceToken = _notificationOpen ? await fireBaseMessaging.getDeviceToken() : null;
+    String? deviceToken = _notificationOpen ? await DeviceToken.get() : null;
     if (_notificationOpen && (deviceToken == null || deviceToken.isEmpty)) {
       setState(() {
         _notificationOpen = false;

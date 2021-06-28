@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/chat/bottom_menu.dart';
 import 'package:nmobile/components/chat/message_item.dart';
@@ -151,7 +152,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
   _toggleNotificationOpen() async {
     S _localizations = S.of(this.context);
     bool nextOpen = !_contact.notificationOpen;
-    String? deviceToken = nextOpen ? await fireBaseMessaging.getDeviceToken() : null;
+    String? deviceToken = nextOpen ? await DeviceToken.get() : null;
     if (nextOpen && (deviceToken == null || deviceToken.isEmpty)) {
       Toast.show(_localizations.unavailable_device);
       return;
