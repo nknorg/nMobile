@@ -41,6 +41,8 @@ class Common : ChannelBase, FlutterStreamHandler {
         switch call.method{
         case "configure":
             create(call, result: result)
+        case "sendPush":
+            sendPush(call, result: result)
         case "splitPieces":
             splitPieces(call, result: result)
         case "combinePieces":
@@ -52,6 +54,20 @@ class Common : ChannelBase, FlutterStreamHandler {
     
     private func create(_ call: FlutterMethodCall, result: FlutterResult) {
         result(nil)
+    }
+    
+    private func sendPush(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let deviceToken = args["deviceToken"] as? String ?? ""
+        let pushContent = args["pushContent"] as? String ?? ""
+        
+        commonQueue.async {
+            PushService.shared().pushContent(pushContent, token: deviceToken)
+            var resp: [String: Any] = [String: Any]()
+            resp["event"] = "splitPieces"
+            self.resultSuccess(result: result, resp: resp)
+            return
+        }
     }
     
     private func splitPieces(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
