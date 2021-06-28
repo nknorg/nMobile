@@ -8,9 +8,6 @@ import Sentry
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-        
-        registerNotification();
-        
         SentrySDK.start { options in
             options.dsn = "https://0d2217601b1c4eb4bf310ca001fabf39@o466976.ingest.sentry.io/5680254"
             let infoDictionary = Bundle.main.infoDictionary
@@ -20,6 +17,8 @@ import Sentry
             }
             options.releaseName = "nMobile"
         }
+        
+        registerNotification();
         
         GeneratedPluginRegistrant.register(with: self)
         
