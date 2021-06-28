@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/push/send_push.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
@@ -356,13 +357,7 @@ class ChatOutCommon with Tag {
     //     break;
     // }
 
-    await fireBaseMessaging.sendPushMessage(
-      contact.deviceToken!,
-      message.msgId,
-      title,
-      content,
-      targetId: message.targetId,
-    );
+    await SendPush.send(contact.deviceToken!, title, content, badgeNumber: 1);
   }
 
   Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message) async {
