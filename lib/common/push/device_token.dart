@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -9,35 +11,50 @@ class DeviceToken {
   static const PREFIX_OPPO = "[OPPO]:";
   static const PREFIX_VIVO = "[VIVO]:";
 
-  static Future<String?> getAPNSToken() async {
+  static Future<String?> get() async {
+    String token = "";
+    if (Platform.isIOS) {
+      token = await getAPNS();
+    } else if (Platform.isAndroid) {
+      // TODO:GG googleServiceEnable ???
+      token = await getFCM();
+    }
+    logger.i("DeviceToken - getToken - $token");
+    return token;
+  }
+
+  static Future<String> getAPNS() async {
     String? token = await FirebaseMessaging.instance.getAPNSToken();
+    // TODO:GG 根据deviceInfo协议来判断是否要拼接
+    String? fcmToken = await FirebaseMessaging.instance.getToken();
+    token = "$token'__FCMToken__:' $fcmToken";
     logger.i("$DeviceToken - getAPNSToken - $token");
     return token;
   }
 
-  static Future<String?> getFCMToken() async {
+  static Future<String> getFCM() async {
     String? token = await FirebaseMessaging.instance.getToken();
     logger.i("$DeviceToken - getFCMToken - $token");
-    return token;
+    return token ?? "";
   }
 
-  static Future<String?> getHuaWeiToken() async {
+  static Future<String?> getHuaWei() async {
     return null;
   }
 
-  static Future<String?> getXiaoMiToken() async {
+  static Future<String?> getXiaoMi() async {
     return null;
   }
 
-  static Future<String?> getOPPOToken() async {
+  static Future<String?> getOPPO() async {
     return null;
   }
 
-  static Future<String?> getVIVOToken() async {
+  static Future<String?> getVIVO() async {
     return null;
   }
 
-  static String splitAPNSToken(String? token) {
+  static String splitAPNS(String? token) {
     if (token == null || token.isEmpty) return "";
     if (token.startsWith(PREFIX_APNS)) {
       return token.replaceAll(PREFIX_APNS, "");
@@ -55,7 +72,7 @@ class DeviceToken {
     return "";
   }
 
-  static String splitFCMToken(String? token) {
+  static String splitFCM(String? token) {
     if (token == null || token.isEmpty) return "";
     if (token.startsWith(PREFIX_FCM)) {
       return token.replaceAll(PREFIX_FCM, "");
@@ -68,19 +85,19 @@ class DeviceToken {
     return "";
   }
 
-  static String splitHuaWeiToken(String? token) {
+  static String splitHuaWei(String? token) {
     return "";
   }
 
-  static String splitXiaoMiToken(String? token) {
+  static String splitXiaoMi(String? token) {
     return "";
   }
 
-  static String splitOPPOToken(String? token) {
+  static String splitOPPO(String? token) {
     return "";
   }
 
-  static String splitVIVOToken(String? token) {
+  static String splitVIVO(String? token) {
     return "";
   }
 }

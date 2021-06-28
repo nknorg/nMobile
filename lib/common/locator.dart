@@ -20,8 +20,8 @@ late Application application;
 late TaskService taskService;
 late Authorization authorization;
 late AudioHelper audioHelper;
+// late LocalNotification localNotification;
 late FireBaseMessaging fireBaseMessaging;
-// late Notification notification;
 // late BackgroundFetchService backgroundFetchService;
 late MemoryCache memoryCache;
 
@@ -39,8 +39,8 @@ void setupLocator() {
   locator.registerSingleton(TaskService());
   locator.registerSingleton(Authorization());
   locator.registerSingleton(AudioHelper());
+  // locator.registerSingleton(LocalNotification());
   locator.registerSingleton(FireBaseMessaging());
-  // locator.registerSingleton(Notification());
   // locator.registerSingleton(BackgroundFetchService());
   locator.registerSingleton(MemoryCache());
 
@@ -57,8 +57,8 @@ void setupLocator() {
   taskService = locator.get<TaskService>();
   authorization = locator.get<Authorization>();
   audioHelper = locator.get<AudioHelper>();
+  // localNotification = locator.get<LocalNotification>();
   fireBaseMessaging = locator.get<FireBaseMessaging>();
-  // notification = locator.get<Notification>();
   // backgroundFetchService = locator.get<BackgroundFetchService>();
   memoryCache = locator.get<MemoryCache>();
 
