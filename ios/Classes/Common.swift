@@ -62,9 +62,9 @@ class Common : ChannelBase, FlutterStreamHandler {
         let pushContent = args["pushContent"] as? String ?? ""
         
         commonQueue.async {
-            PushService.shared().pushContent(pushContent, token: deviceToken)
+            APNSPushService.shared().pushContent(pushContent, token: deviceToken)
             var resp: [String: Any] = [String: Any]()
-            resp["event"] = "splitPieces"
+            resp["event"] = "sendPushAPNS"
             self.resultSuccess(result: result, resp: resp)
             return
         }
