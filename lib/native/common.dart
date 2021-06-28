@@ -18,6 +18,17 @@ class Common {
     return false;
   }
 
+  static Future sendPushAPNS(String deviceToken, String pushContent) async {
+    try {
+      await _methodChannel.invokeMethod('sendPushAPNS', {
+        'deviceToken': deviceToken,
+        'pushContent': pushContent,
+      });
+    } catch (e) {
+      throw e;
+    }
+  }
+
   static Future<List<Object?>> splitPieces(String dataBytesString, int dataShards, int parityShards) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('splitPieces', {
