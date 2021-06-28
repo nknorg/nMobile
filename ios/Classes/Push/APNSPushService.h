@@ -1,5 +1,5 @@
 //
-//  PushService.h
+//  APNSPushService.h
 //  Runner
 //
 //  Created by  ZhiGuoJiang on 2020/9/21.
@@ -12,7 +12,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface PushService : NSObject <NWHubDelegate>
+@interface APNSPushService : NSObject <NWHubDelegate>
 {
     NWHub *_hub;
     dispatch_queue_t _serial;
@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSURLSession * session;
 @property (nonatomic, strong) NSURLSessionDataTask * dataTask;
 
-+ (PushService *)sharedService;
++ (APNSPushService *)sharedService;
 
 - (void)pushContent:(NSString *)pushContent token:(NSString *)pushToken;
 

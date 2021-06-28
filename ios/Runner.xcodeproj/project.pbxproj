@@ -17,7 +17,7 @@
 		C61A6E70266A1A7C00A7F1E1 /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = C61A6E6F266A1A7C00A7F1E1 /* Common.swift */; };
 		C62BB8152689AA0E00DAAC43 /* NWNotification.m in Sources */ = {isa = PBXBuildFile; fileRef = C62BB8092689AA0D00DAAC43 /* NWNotification.m */; };
 		C62BB8162689AA0E00DAAC43 /* NWPushFeedback.m in Sources */ = {isa = PBXBuildFile; fileRef = C62BB80A2689AA0D00DAAC43 /* NWPushFeedback.m */; };
-		C62BB8172689AA0E00DAAC43 /* PushService.m in Sources */ = {isa = PBXBuildFile; fileRef = C62BB80B2689AA0D00DAAC43 /* PushService.m */; };
+		C62BB8172689AA0E00DAAC43 /* APNSPushService.m in Sources */ = {isa = PBXBuildFile; fileRef = C62BB80B2689AA0D00DAAC43 /* APNSPushService.m */; };
 		C62BB8182689AA0E00DAAC43 /* NWType.m in Sources */ = {isa = PBXBuildFile; fileRef = C62BB80C2689AA0D00DAAC43 /* NWType.m */; };
 		C62BB8192689AA0E00DAAC43 /* NWSSLConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = C62BB80E2689AA0E00DAAC43 /* NWSSLConnection.m */; };
 		C62BB81A2689AA0E00DAAC43 /* NWPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = C62BB80F2689AA0E00DAAC43 /* NWPusher.m */; };
@@ -63,11 +63,11 @@
 		C61A6E6F266A1A7C00A7F1E1 /* Common.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Common.swift; sourceTree = "<group>"; };
 		C62BB8042689AA0D00DAAC43 /* NWSSLConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NWSSLConnection.h; sourceTree = "<group>"; };
 		C62BB8052689AA0D00DAAC43 /* NWSecTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NWSecTools.h; sourceTree = "<group>"; };
-		C62BB8062689AA0D00DAAC43 /* PushService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PushService.h; sourceTree = "<group>"; };
+		C62BB8062689AA0D00DAAC43 /* APNSPushService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = APNSPushService.h; sourceTree = "<group>"; };
 		C62BB8082689AA0D00DAAC43 /* NWNotification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NWNotification.h; sourceTree = "<group>"; };
 		C62BB8092689AA0D00DAAC43 /* NWNotification.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NWNotification.m; sourceTree = "<group>"; };
 		C62BB80A2689AA0D00DAAC43 /* NWPushFeedback.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NWPushFeedback.m; sourceTree = "<group>"; };
-		C62BB80B2689AA0D00DAAC43 /* PushService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PushService.m; sourceTree = "<group>"; };
+		C62BB80B2689AA0D00DAAC43 /* APNSPushService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = APNSPushService.m; sourceTree = "<group>"; };
 		C62BB80C2689AA0D00DAAC43 /* NWType.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NWType.m; sourceTree = "<group>"; };
 		C62BB80D2689AA0E00DAAC43 /* NWHub.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NWHub.h; sourceTree = "<group>"; };
 		C62BB80E2689AA0E00DAAC43 /* NWSSLConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NWSSLConnection.m; sourceTree = "<group>"; };
@@ -183,8 +183,8 @@
 			isa = PBXGroup;
 			children = (
 				C62BB8222689B19200DAAC43 /* Resource */,
-				C62BB8062689AA0D00DAAC43 /* PushService.h */,
-				C62BB80B2689AA0D00DAAC43 /* PushService.m */,
+				C62BB8062689AA0D00DAAC43 /* APNSPushService.h */,
+				C62BB80B2689AA0D00DAAC43 /* APNSPushService.m */,
 				C62BB80D2689AA0E00DAAC43 /* NWHub.h */,
 				C62BB8132689AA0E00DAAC43 /* NWHub.m */,
 				C62BB8082689AA0D00DAAC43 /* NWNotification.h */,
@@ -369,7 +369,7 @@
 				C62BB8182689AA0E00DAAC43 /* NWType.m in Sources */,
 				C62BB8152689AA0E00DAAC43 /* NWNotification.m in Sources */,
 				C6F42E04266A28CE007BA337 /* ChannelBase.swift in Sources */,
-				C62BB8172689AA0E00DAAC43 /* PushService.m in Sources */,
+				C62BB8172689AA0E00DAAC43 /* APNSPushService.m in Sources */,
 				C62BB81B2689AA0E00DAAC43 /* NWHub.m in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				C61A6E70266A1A7C00A7F1E1 /* Common.swift in Sources */,
