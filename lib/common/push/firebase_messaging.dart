@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -16,16 +15,12 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 class FireBaseMessaging with Tag {
-  static const fcmGapString = '__FCMToken__:';
-
   static const String channel_id = "nmobile_d_chat";
   static const String channel_name = "D-Chat";
   static const String channel_desc = "D-Chat notification";
 
   late AndroidNotificationChannel channel;
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
-
-  String? _deviceToken;
 
   init() async {
     await Firebase.initializeApp();
@@ -64,9 +59,8 @@ class FireBaseMessaging with Tag {
   startListen() async {
     // token refresh
     FirebaseMessaging.instance.onTokenRefresh.listen((String event) async {
-      logger.i("$TAG - onTokenRefresh - old:$_deviceToken - new:$event");
-      _deviceToken = await getDeviceToken();
-      // TODO:GG firebase should notify all contact who notificationOpen?
+      logger.i("$TAG - onTokenRefresh - :$event");
+      // TODO:GG update deviceInfo profileVersion
     });
 
     // background click
@@ -137,25 +131,6 @@ class FireBaseMessaging with Tag {
     }
   }
 
-  Future<String?> getDeviceToken() async {
-    if (_deviceToken == null) {
-      // FCM
-      _deviceToken = await FirebaseMessaging.instance.getToken();
-      if (Platform.isIOS) {
-        // APNS
-        String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-        _deviceToken = "$apnsToken$fcmGapString $_deviceToken";
-      }
-    }
-    logger.i("$TAG - getDeviceToken - $_deviceToken");
-    return _deviceToken;
-  }
-
-  Future deleteToken() async {
-    await FirebaseMessaging.instance.deleteToken();
-    _deviceToken = null;
-  }
-
   sendPushMessage(
     String token,
     String uuid,
@@ -165,8 +140,6 @@ class FireBaseMessaging with Tag {
     int? badgeNumber, // TODO:GG firebase badgeNumber
     String? payload,
   }) async {
-    // TODO:GG 判断platform，如果是android则call下native的googleServiceEnable(还没写)，如果支持则走fcm，否则看对方的platform，如果是ios则走apns
-    // FirebaseMessaging.instance.isSupported();
     try {
       String body = createFCMPayload(token, title, content);
       http.Response response = await http.post(
@@ -194,15 +167,6 @@ class FireBaseMessaging with Tag {
     // String? targetId,
     // int expireS,
   ) {
-    // token = "064cd3060e55ce3806d99284f318d5305930f4b1defb1805be70494196eb7469__FCMToken__:cpS5pduEJE-xj5tFfTyRcC:APA91bGPIWCBhDjXiZwxSXnTpyVvTAJq-Hg2439DbV7DrLMIaBWM067YXU1jevv48knUDN_xqEkbbu94sJU6JQbEECwLdCH4nfRL5e5UtTN5iqb0vmsKqUbjsvKJqyoUNdU_5sLll8QA";
-    // SUPPORT:START
-    String fcmGapString = "__FCMToken__:";
-    List<String> sList = token.split(fcmGapString);
-    if (sList.length > 1) {
-      token = sList[1].toString();
-    }
-    // SUPPORT:END
-
     return jsonEncode({
       'to': token,
       'token': token,

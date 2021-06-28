@@ -47,9 +47,9 @@ void main() async {
 
   // mounted
   application.registerMounted(() async {
-    taskService.install();
+    // localNotification.init();
     fireBaseMessaging.startListen();
-    // notification.init();
+    taskService.install();
     // backgroundFetchService.install();
   });
   application.registerMounted(() async {
