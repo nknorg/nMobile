@@ -2,7 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
-import 'package:nmobile/common/firebase_messaging.dart';
+import 'package:nmobile/common/push/firebase_messaging.dart';
 import 'package:nmobile/common/session/session.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
 import 'package:nmobile/helpers/audio.dart';

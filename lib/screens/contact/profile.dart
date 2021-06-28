@@ -331,7 +331,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
   _updateNotificationAndDeviceToken() async {
     S _localizations = S.of(this.context);
-    String? deviceToken = _notificationOpen ? await fireBaseMessaging.getToken() : null;
+    String? deviceToken = _notificationOpen ? await fireBaseMessaging.getDeviceToken() : null;
     if (_notificationOpen && (deviceToken == null || deviceToken.isEmpty)) {
       setState(() {
         _notificationOpen = false;

@@ -6,7 +6,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/generated/l10n.dart';
 
-import 'global.dart';
+import '../global.dart';
 
 @deprecated
 class Notification {
