@@ -26,10 +26,10 @@ class DeviceToken {
   static Future<String> getAPNS() async {
     String? token = await FirebaseMessaging.instance.getAPNSToken();
     // TODO:GG 根据deviceInfo协议来判断是否要拼接
-    String? fcmToken = await FirebaseMessaging.instance.getToken();
-    token = "$token'__FCMToken__:' $fcmToken";
+    // String? fcmToken = await FirebaseMessaging.instance.getToken();
+    // token = "$token'__FCMToken__:' $fcmToken";
     logger.i("$DeviceToken - getAPNSToken - $token");
-    return token;
+    return token ?? "";
   }
 
   static Future<String> getFCM() async {
