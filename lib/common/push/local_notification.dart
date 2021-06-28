@@ -9,10 +9,10 @@ import 'package:nmobile/generated/l10n.dart';
 import '../global.dart';
 
 @deprecated
-class Notification {
+class LocalNotification {
   FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-  Notification();
+  LocalNotification();
 
   init() async {
     var initializationSettingsAndroid = new AndroidInitializationSettings(
@@ -34,7 +34,7 @@ class Notification {
     });
   }
 
-  Future showLocalNotification(
+  Future show(
     String uuid,
     String title,
     String content, {
