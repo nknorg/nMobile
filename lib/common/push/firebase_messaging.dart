@@ -1,12 +1,8 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:http/http.dart' as http;
-import 'package:nmobile/common/settings.dart';
-import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/logger.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -129,75 +125,5 @@ class FireBaseMessaging with Tag {
     } else {
       logger.w('$TAG - requestPermission - NONE');
     }
-  }
-
-  sendPushMessage(
-    String token,
-    String uuid,
-    String title,
-    String content, {
-    String? targetId,
-    int? badgeNumber, // TODO:GG firebase badgeNumber
-    String? payload,
-  }) async {
-    try {
-      String body = createFCMPayload(token, title, content);
-      http.Response response = await http.post(
-        Uri.parse('https://fcm.googleapis.com/fcm/send'),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-          'Authorization': 'key=${Settings.fcmServerToken}',
-        },
-        body: body,
-      );
-      if (response.statusCode == 200) {
-        logger.d("$TAG - sendPushMessage - success - body:$body");
-      } else {
-        logger.w("$TAG - sendPushMessage - fail - code:${response.statusCode} - body:$body");
-      }
-    } catch (e) {
-      handleError(e);
-    }
-  }
-
-  String createFCMPayload(
-    String token,
-    String title,
-    String content,
-    // String? targetId,
-    // int expireS,
-  ) {
-    return jsonEncode({
-      'to': token,
-      'token': token,
-      // 'data': {
-      //   'via': 'FlutterFire Cloud Messaging!!!',
-      //   'count': "_messageCount.toString()",
-      // },
-      'notification': {
-        'title': title,
-        'body': content,
-      },
-      "priority": "high",
-      "android": {
-        // "collapseKey": targetId,
-        "priority": "high",
-        // "ttl": "${expireS}s",
-      },
-      "apns": {
-        // "apns-collapse-id": targetId,
-        "headers": {
-          "apns-priority": "5",
-          // "apns-expiration": "${DateTime.now().add(Duration(seconds: expireS)).millisecondsSinceEpoch / 1000}",
-        },
-      },
-      "webpush": {
-        // "Topic": targetId,
-        "headers": {
-          "Urgency": "high",
-          // "TTL": "$expireS",
-        }
-      },
-    });
   }
 }
