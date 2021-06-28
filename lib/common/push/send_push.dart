@@ -16,32 +16,31 @@ class SendPush {
   }) async {
     String apns = DeviceToken.splitAPNS(deviceToken);
     if (apns.isNotEmpty) {
-      return sendAPNS(deviceToken, title, content);
+      return sendAPNS(apns, title, content);
     }
     String fcm = DeviceToken.splitFCM(deviceToken);
     if (fcm.isNotEmpty) {
-      return sendFCM(deviceToken, title, content);
+      return sendFCM(fcm, title, content);
     }
     String huawei = DeviceToken.splitHuaWei(deviceToken);
     if (huawei.isNotEmpty) {
-      return sendHuaWei(deviceToken, title, content);
+      return sendHuaWei(huawei, title, content);
     }
     String xiaomi = DeviceToken.splitXiaoMi(deviceToken);
     if (xiaomi.isNotEmpty) {
-      return sendXiaoMi(deviceToken, title, content);
+      return sendXiaoMi(xiaomi, title, content);
     }
     String oppo = DeviceToken.splitOPPO(deviceToken);
     if (oppo.isNotEmpty) {
-      return sendOPPO(deviceToken, title, content);
+      return sendOPPO(oppo, title, content);
     }
     String vivo = DeviceToken.splitVIVO(deviceToken);
     if (vivo.isNotEmpty) {
-      return sendVIVO(deviceToken, title, content);
+      return sendVIVO(vivo, title, content);
     }
     return false;
   }
 
-  // TODO:GG android native
   static Future<bool> sendAPNS(
     String deviceToken,
     String title,
