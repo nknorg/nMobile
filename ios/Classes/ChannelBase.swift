@@ -1,5 +1,5 @@
 //
-//  channelBase.swift
+//  ChannelBase.swift
 //  Runner
 //
 //  Created by 蒋治国 on 2021/6/4.
