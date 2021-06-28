@@ -151,7 +151,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
   _toggleNotificationOpen() async {
     S _localizations = S.of(this.context);
     bool nextOpen = !_contact.notificationOpen;
-    String? deviceToken = nextOpen ? await fireBaseMessaging.getToken() : null;
+    String? deviceToken = nextOpen ? await fireBaseMessaging.getDeviceToken() : null;
     if (nextOpen && (deviceToken == null || deviceToken.isEmpty)) {
       Toast.show(_localizations.unavailable_device);
       return;
