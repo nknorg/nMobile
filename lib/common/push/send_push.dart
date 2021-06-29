@@ -48,11 +48,17 @@ class SendPush {
     int? badgeNumber,
   }) async {
     try {
-      String body = jsonEncode({
-        'title': title,
-        'body': content,
-      }); // TODO:GG test
-      await Common.sendPushAPNS(deviceToken, content);
+      String payload = jsonEncode({
+        'aps': {
+          'alert': {
+            'title': title,
+            'body': content,
+          },
+          'badge': badgeNumber ?? 1,
+          'sound': "default",
+        },
+      });
+      await Common.sendPushAPNS(deviceToken, payload);
       return true;
     } catch (e) {
       handleError(e);
