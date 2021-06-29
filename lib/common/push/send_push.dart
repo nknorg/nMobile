@@ -8,12 +8,7 @@ import 'package:nmobile/native/common.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class SendPush {
-  static Future<bool> send(
-    String deviceToken,
-    String title,
-    String content, {
-    int? badgeNumber, // TODO:GG firebase badgeNumber
-  }) async {
+  static Future<bool> send(String deviceToken, String title, String content) async {
     String apns = DeviceToken.splitAPNS(deviceToken);
     if (apns.isNotEmpty) {
       return sendAPNS(apns, title, content);
@@ -41,12 +36,7 @@ class SendPush {
     return false;
   }
 
-  static Future<bool> sendAPNS(
-    String deviceToken,
-    String title,
-    String content, {
-    int? badgeNumber,
-  }) async {
+  static Future<bool> sendAPNS(String deviceToken, String title, String content) async {
     try {
       String payload = jsonEncode({
         'aps': {
@@ -54,7 +44,7 @@ class SendPush {
             'title': title,
             'body': content,
           },
-          'badge': badgeNumber ?? 1,
+          'badge': 1,
           'sound': "default",
         },
       });
@@ -66,12 +56,7 @@ class SendPush {
     return false;
   }
 
-  static Future<bool> sendFCM(
-    String deviceToken,
-    String title,
-    String content, {
-    int? badgeNumber,
-  }) async {
+  static Future<bool> sendFCM(String deviceToken, String title, String content) async {
     try {
       // body
       String body = jsonEncode({
