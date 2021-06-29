@@ -43,13 +43,6 @@ class FireBaseMessaging with Tag {
     /// Create an Android Notification Channel.
     /// We use this channel in the `AndroidManifest.xml` file to override the default FCM channel to enable heads up notifications.
     await flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(channel);
-
-    /// Update the iOS foreground notification presentation options to allow heads up notifications.
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
-    ); // await
   }
 
   startListen() async {
@@ -107,23 +100,5 @@ class FireBaseMessaging with Tag {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       logger.d("$TAG - onMessageOpenedApp - messageId:${message.messageId} - from:${message.from}");
     });
-
-    // ios permission
-    NotificationSettings settings = await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      logger.d('$TAG - requestPermission - OK');
-    } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
-      logger.w('$TAG - requestPermission - temp');
-    } else {
-      logger.w('$TAG - requestPermission - NONE');
-    }
   }
 }
