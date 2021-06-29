@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (APNSPushService *)sharedService;
 
-- (void)pushContent:(NSString *)pushContent token:(NSString *)pushToken;
+- (void)pushContent:(NSString *)pushPayload token:(NSString *)pushToken;
 
 - (void)connectAPNS;
 
