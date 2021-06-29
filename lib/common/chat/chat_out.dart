@@ -357,7 +357,7 @@ class ChatOutCommon with Tag {
     //     break;
     // }
 
-    await SendPush.send(contact.deviceToken!, title, content, badgeNumber: 1);
+    await SendPush.send(contact.deviceToken!, title, content);
   }
 
   Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message) async {
