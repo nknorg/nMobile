@@ -38,7 +38,7 @@ static APNSPushService * sharedService = nil;
     NSURL *url = [NSBundle.mainBundle URLForResource:APNSPushFileName withExtension:nil];
     NSData *pkcs12 = [NSData dataWithContentsOfURL:url];
     NSError *error = nil;
-
+    
     // Change your own p12 password Here
     NSArray *ids = [NWSecTools identitiesWithPKCS12Data:pkcs12 password:APNSPushPassword error:&error];
     if (!ids) {
@@ -52,11 +52,11 @@ static APNSPushService * sharedService = nil;
             NSLog(@"Unable to import p12 file: %@", error.localizedDescription);
             return;
         }
-
+        
         _identity = identity;
         _certificate = certificate;
     }
-
+    
     NSLog(@"Connecting..");
     __block NWHub * blockHub = _hub;
     __block NWCertificateRef blockCertificate = _certificate;
@@ -65,7 +65,7 @@ static APNSPushService * sharedService = nil;
         NSError *error = nil;
         NWEnvironment preferredEnvironment = [self preferredEnvironmentForCertificate:blockCertificate];
         NWHub *hub = [NWHub connectWithDelegate:self identity:blockIdentity environment:NWEnvironmentProduction error:&error];
-
+        
         dispatch_async(dispatch_get_main_queue(), ^{
             if (hub) {
                 NSString *summary = [NWSecTools summaryWithCertificate:blockCertificate];
@@ -89,18 +89,13 @@ static APNSPushService * sharedService = nil;
 -(NWEnvironment)preferredEnvironmentForCertificate:(NWCertificateRef)certificate
 {
     NWEnvironmentOptions environmentOptions = [NWSecTools environmentOptionsForCertificate:certificate];
-
+    
     return (environmentOptions & NWEnvironmentOptionSandbox) ? NWEnvironmentSandbox : NWEnvironmentProduction;
 }
 
 
-- (void)pushContent:(NSString *)pushContent token:(NSString *)pushToken{
-    NSLog(@"Pushing..");
-    NSLog(@"Push Content %@ With Token %@",pushContent,pushToken);
-
-    NSString *payload = [NSString stringWithFormat:@"{\"aps\":{\"alert\":\"%@\",\"badge\":1,\"sound\":\"default\"}}", pushContent];
-    
-    __block NSString * blockPayload = payload;
+- (void)pushContent:(NSString *)pushPayload token:(NSString *)pushToken{
+    __block NSString * blockPayload = pushPayload;
     __block NSString * blockToken = pushToken;
     __block NWHub * blockHub = _hub;
     __block NWCertificateRef blockCertificate = _certificate;
@@ -114,18 +109,16 @@ static APNSPushService * sharedService = nil;
         NSError *error = nil;
         NWEnvironment preferredEnvironment = [self preferredEnvironmentForCertificate:blockCertificate];
         blockHub = [NWHub connectWithDelegate:self identity:blockIdentity environment:NWEnvironmentProduction error:&error];
-
+        
         dispatch_async(dispatch_get_main_queue(), ^{
             if (blockHub) {
                 NSString *summary = [NWSecTools summaryWithCertificate:blockCertificate];
                 NSLog(@"Prepare to Send Message wire APNS: %@ (%@)", summary, descriptionForEnvironent(preferredEnvironment));
-            }
-            else
-            {
+            } else {
                 NSLog(@"Unable to connect: %@", error.localizedDescription);
             }
         });
-
+        
         NSUInteger failed = [blockHub pushPayload:blockPayload token:blockToken];
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC));
         dispatch_after(popTime, blockSerailQueue, ^(void){
@@ -137,8 +130,8 @@ static APNSPushService * sharedService = nil;
 
 - (void)notification:(NWNotification *)notification didFailWithError:(NSError *)error{
     dispatch_async(dispatch_get_main_queue(), ^{
-           //NSLog(@"failed notification: %@ %@ %lu %lu %lu", notification.payload, notification.token, notification.identifier, notification.expires, notification.priority);
-           NSLog(@"Notification error: %@", error.localizedDescription);
+        //NSLog(@"failed notification: %@ %@ %lu %lu %lu", notification.payload, notification.token, notification.identifier, notification.expires, notification.priority);
+        NSLog(@"Notification error: %@", error.localizedDescription);
         
     });
 }

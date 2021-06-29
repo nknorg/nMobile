@@ -59,10 +59,10 @@ class Common : ChannelBase, FlutterStreamHandler {
     private func sendPushAPNS(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let deviceToken = args["deviceToken"] as? String ?? ""
-        let pushContent = args["pushContent"] as? String ?? ""
+        let pushPayload = args["pushPayload"] as? String ?? ""
         
         commonQueue.async {
-            APNSPushService.shared().pushContent(pushContent, token: deviceToken)
+            APNSPushService.shared().pushContent(pushPayload, token: deviceToken)
             var resp: [String: Any] = [String: Any]()
             resp["event"] = "sendPushAPNS"
             self.resultSuccess(result: result, resp: resp)
