@@ -12,6 +12,7 @@ import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.nkn.mobile.app.channels.IChannelHandler
+import org.nkn.mobile.app.push.APNSPush
 import reedsolomon.BytesArray
 import reedsolomon.Encoder
 import reedsolomon.Reedsolomon
@@ -51,6 +52,9 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
             "backDesktop" -> {
                 backDesktop(call, result)
             }
+            "sendPushAPNS" -> {
+                sendPushAPNS(call, result)
+            }
             "splitPieces" -> {
                 splitPieces(call, result)
             }
@@ -66,6 +70,25 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
     private fun backDesktop(call: MethodCall, result: MethodChannel.Result) {
         this.activity.moveTaskToBack(false)
         result.success(true)
+    }
+
+    private fun sendPushAPNS(call: MethodCall, result: MethodChannel.Result) {
+        val deviceToken = call.argument<String>("deviceToken")!!
+        val pushPayload = call.argument<String>("pushPayload")!!
+
+        viewModelScope.launch(Dispatchers.IO) {
+            APNSPush.push(activity.assets, deviceToken, pushPayload)
+            try {
+                val resp = hashMapOf(
+                    "event" to "sendPushAPNS",
+                )
+                resultSuccess(result, resp)
+                return@launch
+            } catch (e: Throwable) {
+                resultError(result, e)
+                return@launch
+            }
+        }
     }
 
     private fun splitPieces(call: MethodCall, result: MethodChannel.Result) {
@@ -94,7 +117,6 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
                 )
                 resultSuccess(result, resp)
                 return@launch
-
             } catch (e: Throwable) {
                 resultError(result, e)
                 return@launch
