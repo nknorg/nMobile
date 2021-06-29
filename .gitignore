@@ -31,7 +31,6 @@
 .pub/
 /build/
 /ios/build/
-/ios/Classes/Push/Resource/
 
 # Web related
 lib/generated_plugin_registrant.dart
@@ -41,3 +40,6 @@ app.*.symbols
 
 # Obfuscation related
 app.*.map.json
+
+/ios/Classes/Push/Resource/
+/android/app/src/main/assets/push/
