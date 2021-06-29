@@ -28,20 +28,14 @@ import Sentry
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
     
-    override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
-            APNSPushService.shared().connectAPNS();
-        }
-    }
-    
     func registerNotification() {
         if #available(iOS 10.0, *) {
             let center = UNUserNotificationCenter.current()
             center.delegate = self as UNUserNotificationCenterDelegate
-            center.requestAuthorization(options: UNAuthorizationOptions.alert) { (isSucceseed: Bool, error:Error?) in
+            center.requestAuthorization(options: [.alert, .badge, .sound]) { (isSucceseed: Bool, error:Error?) in
                 if isSucceseed == true{
                     print( "Application - registerNotification - success")
-                }else{
+                } else {
                     print( "Application - registerNotification - fail - error = \(String(describing:error))")
                 }
             }
@@ -56,34 +50,20 @@ import Sentry
         NSLog("NKNClient Enter foreground")
         APNSPushService.shared().connectAPNS()
     }
-
+    
     @objc func becomeDeath(noti:Notification){
         NSLog("NKNClient Enter background")
         APNSPushService.shared().disConnectAPNS()
     }
     
-
-//    override func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
-//    {
-//        let userInfo = notification.request.content.userInfo
-//        print("will Present received:","\(userInfo)")
-//        completionHandler([.alert, .badge, .sound])
-//    }
+    override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
+            APNSPushService.shared().connectAPNS();
+        }
+    }
     
-//    override func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void){
-//        let userInfo = response.notification.request.content.userInfo
-//        print("did Received userInfo10:\(userInfo)")
-//        completionHandler()
-//    }
+    override func applicationDidBecomeActive(_ application: UIApplication) {
+        UIApplication.shared.applicationIconBadgeNumber = 0
+    }
     
-//    private func application(application: UIApplication, didReceiveRemoteNotification userInfo: [NSObject : AnyObject], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-//        print("收到新消息Active\(userInfo)")
-//        if application.applicationState == UIApplication.State.active {
-//            // 代表从前台接受消息app
-//        }else{
-//            // 代表从后台接受消息后进入app
-//            UIApplication.shared.applicationIconBadgeNumber = 0
-//        }
-//        completionHandler(.newData)
-//    }
 }
