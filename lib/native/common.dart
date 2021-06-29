@@ -18,11 +18,11 @@ class Common {
     return false;
   }
 
-  static Future sendPushAPNS(String deviceToken, String pushContent) async {
+  static Future sendPushAPNS(String deviceToken, String pushPayload) async {
     try {
       await _methodChannel.invokeMethod('sendPushAPNS', {
         'deviceToken': deviceToken,
-        'pushContent': pushContent,
+        'pushPayload': pushPayload,
       });
     } catch (e) {
       throw e;
