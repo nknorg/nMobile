@@ -95,13 +95,17 @@ android {
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/DEPENDENCIES.txt'
         exclude 'META-INF/dependencies.txt'
-        exclude 'META-INFTICE'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/license.txt'
         exclude 'META-INF/NOTICE'
-        exclude 'META-INF/notice.txt'
         exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INFTICE'
+        exclude 'META-INF/INDEX.LIST'
+        exclude 'META-INF/LGPL2.1'
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/io.netty.versions.properties'
     }
     lintOptions {
         disable 'MissingTranslation'
@@ -132,6 +136,7 @@ repositories {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(":golib")
+    implementation 'com.clevertap.apns:apns-http2:1.0.3'
     implementation 'io.sentry:sentry-android:4.3.0'
     implementation "org.bouncycastle:bcprov-jdk15on:1.64"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
