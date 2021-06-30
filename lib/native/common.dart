@@ -5,9 +5,32 @@ import 'package:flutter/services.dart';
 import '../utils/logger.dart';
 
 class Common {
-  static const MethodChannel _methodChannel = MethodChannel('org.nkn.mobile/native/common');
+  static const MethodChannel _methodChannel = MethodChannel('org.nkn.mobile/native/common_method');
+  static const EventChannel _eventChannel = EventChannel('org.nkn.mobile/native/common_event');
 
-  static install() {}
+  static install() {
+    _eventChannel.receiveBroadcastStream().listen((event) {
+      if (!(event is Map)) return;
+      String? name = event["event"];
+      if (name == null || name.isEmpty) return;
+      switch (name) {
+        case "onDeviceTokenRefresh":
+          String? token = event["result"];
+          logger.i("Common - onDeviceTokenRefresh - token:$token");
+          // TODO:GG refresh profileVersion
+          break;
+        case "onRemoteMessageReceived":
+          bool? isApplicationForeground = event["isApplicationForeground"];
+          String? title = event["title"];
+          String? content = event["content"];
+          logger.i("Common - onRemoteMessageReceived - isApplicationForeground:$isApplicationForeground - title:$title - content:$content");
+          if (!(isApplicationForeground ?? true)) {
+            // TODO:GG show localNotification
+          }
+          break;
+      }
+    });
+  }
 
   static Future<bool> backDesktop() async {
     try {
@@ -33,6 +56,15 @@ class Common {
     try {
       final Map resp = await _methodChannel.invokeMethod('isGoogleServiceAvailable', {});
       return resp['availability'] ?? false;
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  static Future<String?> getFCMToken() async {
+    try {
+      final Map resp = await _methodChannel.invokeMethod('getFCMToken', {});
+      return resp['token'];
     } catch (e) {
       throw e;
     }

@@ -9,6 +9,7 @@ import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/native/common.dart';
 import 'package:nmobile/routes/routes.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -32,6 +33,7 @@ void main() async {
   // nkn
   await Wallet.install();
   await Client.install();
+  await Common.install();
 
   // locator
   setupLocator();
