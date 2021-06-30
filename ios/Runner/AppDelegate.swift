@@ -65,16 +65,43 @@ import Sentry
         }
     }
     
-    override func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        print("Application - didReceiveRemoteNotification - userInfo = \(userInfo)")
+//    override func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+//        print("Application - didReceiveRemoteNotification - onReceive - userInfo = \(userInfo)")
+//        let aps = userInfo["aps"] as? [String: Any]
+//        let alert = aps?["alert"] as? [String: Any]
+//        var resultMap: [String: Any] = [String: Any]()
+//        resultMap["title"] = alert?["title"]
+//        resultMap["content"] = alert?["body"]
+//        resultMap["isApplicationForeground"] = application.applicationState == UIApplication.State.active
+//        Common.eventAdd(name: "onRemoteMessageReceived", map: resultMap)
+//    }
+    
+    override func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
+    {
+        let userInfo = notification.request.content.userInfo
+        print("Application - userNotificationCenter - onReceive - userInfo = \(userInfo)")
         let aps = userInfo["aps"] as? [String: Any]
         let alert = aps?["alert"] as? [String: Any]
         var resultMap: [String: Any] = [String: Any]()
         resultMap["title"] = alert?["title"]
         resultMap["content"] = alert?["body"]
-        resultMap["isApplicationForeground"] = application.applicationState == UIApplication.State.active
+        resultMap["isApplicationForeground"] = UIApplication.shared.applicationState == UIApplication.State.active
         Common.eventAdd(name: "onRemoteMessageReceived", map: resultMap)
+        // completionHandler([.alert, .badge, .sound]) // show notification on flutter, not here
     }
+    
+//    override func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+//        let userInfo = response.notification.request.content.userInfo
+//        print("Application - userNotificationCenter - onClick - userInfo = \(userInfo)")
+//        let aps = userInfo["aps"] as? [String: Any]
+//        let alert = aps?["alert"] as? [String: Any]
+//        var resultMap: [String: Any] = [String: Any]()
+//        resultMap["title"] = alert?["title"]
+//        resultMap["content"] = alert?["body"]
+//        resultMap["isApplicationForeground"] = UIApplication.shared.applicationState == UIApplication.State.active
+//        Common.eventAdd(name: "onNotificationClick", map: resultMap)
+//        completionHandler()
+//    }
     
     override func applicationDidBecomeActive(_ application: UIApplication) {
         UIApplication.shared.applicationIconBadgeNumber = 0
