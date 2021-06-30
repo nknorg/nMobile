@@ -29,7 +29,6 @@ if (keystorePropertiesFile.exists()) {
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdkVersion 30
@@ -136,7 +135,6 @@ repositories {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(":golib")
-    implementation 'com.clevertap.apns:apns-http2:1.0.3'
     implementation 'io.sentry:sentry-android:5.0.1'
     implementation "org.bouncycastle:bcprov-jdk15to18:1.68"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
@@ -144,5 +142,14 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1"
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
+    // sentry
+    implementation 'io.sentry:sentry-android:4.3.0'
+    // apns
+    implementation 'com.clevertap.apns:apns-http2:1.0.3'
+    // google
+    implementation 'com.google.firebase:firebase-core:19.0.0'
+    implementation 'com.google.firebase:firebase-messaging:22.0.0'
+    implementation 'com.google.firebase:firebase-iid:21.1.0'
     implementation "com.google.android.gms:play-services-base:17.6.0"
 }
+apply plugin: 'com.google.gms.google-services'
