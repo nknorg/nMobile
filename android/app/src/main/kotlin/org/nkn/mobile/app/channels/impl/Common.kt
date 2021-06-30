@@ -4,6 +4,8 @@ import android.app.Activity
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailabilityLight
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
@@ -55,6 +57,9 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
             "sendPushAPNS" -> {
                 sendPushAPNS(call, result)
             }
+            "isGoogleServiceAvailable" -> {
+                isGoogleServiceAvailable(call, result)
+            }
             "splitPieces" -> {
                 splitPieces(call, result)
             }
@@ -81,6 +86,30 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
             try {
                 val resp = hashMapOf(
                     "event" to "sendPushAPNS",
+                )
+                resultSuccess(result, resp)
+                return@launch
+            } catch (e: Throwable) {
+                resultError(result, e)
+                return@launch
+            }
+        }
+    }
+
+    private fun isGoogleServiceAvailable(call: MethodCall, result: MethodChannel.Result) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val code = GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(activity)
+            val availability = if (code == ConnectionResult.SUCCESS) {
+                Log.e("GoogleServiceCheck", "success")
+                true
+            } else {
+                Log.e("GoogleServiceCheck", "code:$code")
+                false
+            }
+            try {
+                val resp = hashMapOf(
+                    "event" to "isGoogleServiceAvailable",
+                    "availability" to availability,
                 )
                 resultSuccess(result, resp)
                 return@launch
