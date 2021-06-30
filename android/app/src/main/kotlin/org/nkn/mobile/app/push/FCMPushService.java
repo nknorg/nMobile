@@ -31,14 +31,12 @@ public class FCMPushService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(@NotNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-        Log.i(TAG, "onMessageReceived - Form:" + remoteMessage.getFrom());
-        Log.i(TAG, "onMessageReceived - payload: " + remoteMessage.getData());
+        Log.i(TAG, "onMessageReceived - Form:" + remoteMessage.getFrom() + " - payload: " + remoteMessage.getData());
         RemoteMessage.Notification notification = remoteMessage.getNotification();
         if (notification != null) {
             String title = notification.getTitle();
             String content = notification.getBody();
-            Log.i(TAG, "onMessageReceived - title: " + title);
-            Log.i(TAG, "onMessageReceived - content: " + content);
+            Log.i(TAG, "onMessageReceived - title: " + title + " - content:" + content);
             // notify flutter
             HashMap<String, Object> resultMap = new HashMap<String, Object>();
             resultMap.put("isApplicationForeground", Common.Companion.isApplicationForeground(MainActivity.Companion.getInstance()));
