@@ -144,4 +144,5 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1"
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
+    implementation "com.google.android.gms:play-services-base:17.6.0"
 }
