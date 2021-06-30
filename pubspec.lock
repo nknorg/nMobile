@@ -147,7 +147,7 @@ packages:
       name: convert
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "3.0.0"
+    version: "3.0.1"
   crypto:
     dependency: "direct main"
     description:
@@ -419,7 +419,7 @@ packages:
       name: image_picker
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.8.0+4"
+    version: "0.8.1+2"
   image_picker_for_web:
     dependency: transitive
     description:
@@ -524,7 +524,7 @@ packages:
       path: "plugins/nkn-sdk-flutter"
       relative: true
     source: path
-    version: "0.1.3"
+    version: "0.1.5"
   package_config:
     dependency: transitive
     description:
@@ -650,7 +650,7 @@ packages:
       name: permission_handler
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "8.1.1"
+    version: "8.1.2"
   permission_handler_platform_interface:
     dependency: transitive
     description:
@@ -755,14 +755,14 @@ packages:
       name: sentry
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "5.0.0"
+    version: "5.1.0"
   sentry_flutter:
     dependency: "direct main"
     description:
       name: sentry_flutter
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "5.0.0"
+    version: "5.1.0"
   shared_preferences:
     dependency: "direct main"
     description:
