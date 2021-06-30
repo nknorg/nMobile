@@ -8,7 +8,6 @@ import 'package:nmobile/generated/l10n.dart';
 
 import '../global.dart';
 
-@deprecated
 class LocalNotification {
   FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
