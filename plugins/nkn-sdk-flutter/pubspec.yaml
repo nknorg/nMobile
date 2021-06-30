@@ -1,6 +1,6 @@
 name: nkn_sdk_flutter
 description: Flutter NKN SDK. Send and receive data for free between any NKN clients regardless their network condition without setting up a server or relying on any third party services.
-version: 0.1.3
+version: 0.1.5
 homepage: https://github.com/nknorg/nkn-sdk-flutter
 repository: https://github.com/nknorg/nkn-sdk-flutter
 
@@ -12,7 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   crypto: ^3.0.1
-  convert: ^3.0.0
+  convert: ^3.0.1
   logger: ^1.0.0
 
 dev_dependencies:

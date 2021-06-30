@@ -137,11 +137,11 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(":golib")
     implementation 'com.clevertap.apns:apns-http2:1.0.3'
-    implementation 'io.sentry:sentry-android:4.3.0'
-    implementation "org.bouncycastle:bcprov-jdk15on:1.64"
+    implementation 'io.sentry:sentry-android:5.0.1'
+    implementation "org.bouncycastle:bcprov-jdk15to18:1.68"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1"
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
 }
