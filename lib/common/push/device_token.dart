@@ -1,6 +1,7 @@
 import 'dart:io';
 
-import 'package:firebase_messaging/firebase_messaging.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:nmobile/native/common.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class DeviceToken {
@@ -11,20 +12,25 @@ class DeviceToken {
   static const PREFIX_OPPO = "[OPPO]:";
   static const PREFIX_VIVO = "[VIVO]:";
 
+  // token
+
   static Future<String?> get() async {
-    String token = "";
+    String? token;
     if (Platform.isIOS) {
       token = await getAPNS();
     } else if (Platform.isAndroid) {
-      // TODO:GG googleServiceEnable ???
-      token = await getFCM();
+      if (await Common.isGoogleServiceAvailable()) {
+        token = await getFCM();
+      } else {
+        // other
+      }
     }
     logger.i("DeviceToken - getToken - $token");
     return token;
   }
 
   static Future<String> getAPNS() async {
-    String? token = await FirebaseMessaging.instance.getAPNSToken();
+    String? token = null; // await FirebaseMessaging.instance.getAPNSToken(); // TODO:GG native
     if (token?.isNotEmpty == true) {
       token = PREFIX_APNS + token!;
     }
@@ -35,7 +41,7 @@ class DeviceToken {
   }
 
   static Future<String> getFCM() async {
-    String? token = await FirebaseMessaging.instance.getToken();
+    String? token = await Common.getFCMToken();
     if (token?.isNotEmpty == true) {
       token = PREFIX_FCM + token!;
     }
