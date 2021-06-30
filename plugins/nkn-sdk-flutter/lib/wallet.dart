@@ -4,10 +4,10 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 
 class WalletConfig {
-  final String password;
+  final String? password;
   final List<String>? seedRPCServerAddr;
 
-  WalletConfig({required this.password, this.seedRPCServerAddr});
+  WalletConfig({this.password, this.seedRPCServerAddr});
 }
 
 class RpcConfig {
