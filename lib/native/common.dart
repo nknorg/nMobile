@@ -1,6 +1,10 @@
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
+import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/generated/l10n.dart';
+import 'package:uuid/uuid.dart';
 
 import '../utils/logger.dart';
 
@@ -21,11 +25,12 @@ class Common {
           break;
         case "onRemoteMessageReceived":
           bool? isApplicationForeground = event["isApplicationForeground"];
-          String? title = event["title"];
-          String? content = event["content"];
+          String title = event["title"] ?? S.of(Global.appContext).new_message;
+          String content = event["content"] ?? S.of(Global.appContext).you_have_new_message;
           logger.i("Common - onRemoteMessageReceived - isApplicationForeground:$isApplicationForeground - title:$title - content:$content");
           if (!(isApplicationForeground ?? true)) {
-            // TODO:GG show localNotification
+            // TODO:GG badge
+            localNotification.show(Uuid().v4(), title, content);
           }
           break;
       }
@@ -39,6 +44,16 @@ class Common {
       logger.e(e);
     }
     return false;
+  }
+
+  // TODO:GG impl
+  static Future<String?> getAPNSToken() async {
+    try {
+      final Map resp = await _methodChannel.invokeMethod('getAPNSToken', {});
+      return resp['token'];
+    } catch (e) {
+      throw e;
+    }
   }
 
   static Future sendPushAPNS(String deviceToken, String pushPayload) async {

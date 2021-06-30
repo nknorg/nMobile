@@ -2,7 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
-import 'package:nmobile/common/push/firebase_messaging.dart';
+import 'package:nmobile/common/push/local_notification.dart';
 import 'package:nmobile/common/session/session.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
 import 'package:nmobile/helpers/audio.dart';
@@ -20,8 +20,7 @@ late Application application;
 late TaskService taskService;
 late Authorization authorization;
 late AudioHelper audioHelper;
-// late LocalNotification localNotification;
-late FireBaseMessaging fireBaseMessaging;
+late LocalNotification localNotification;
 // late BackgroundFetchService backgroundFetchService;
 late MemoryCache memoryCache;
 
@@ -39,8 +38,7 @@ void setupLocator() {
   locator.registerSingleton(TaskService());
   locator.registerSingleton(Authorization());
   locator.registerSingleton(AudioHelper());
-  // locator.registerSingleton(LocalNotification());
-  locator.registerSingleton(FireBaseMessaging());
+  locator.registerSingleton(LocalNotification());
   // locator.registerSingleton(BackgroundFetchService());
   locator.registerSingleton(MemoryCache());
 
@@ -57,8 +55,7 @@ void setupLocator() {
   taskService = locator.get<TaskService>();
   authorization = locator.get<Authorization>();
   audioHelper = locator.get<AudioHelper>();
-  // localNotification = locator.get<LocalNotification>();
-  fireBaseMessaging = locator.get<FireBaseMessaging>();
+  localNotification = locator.get<LocalNotification>();
   // backgroundFetchService = locator.get<BackgroundFetchService>();
   memoryCache = locator.get<MemoryCache>();
 
