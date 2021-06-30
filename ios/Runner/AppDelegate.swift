@@ -34,9 +34,9 @@ import Sentry
             center.delegate = self as UNUserNotificationCenterDelegate
             center.requestAuthorization(options: [.alert, .badge, .sound]) { (isSucceseed: Bool, error:Error?) in
                 if isSucceseed == true{
-                    print( "Application - registerNotification - success")
+                    print("Application - registerNotification - success")
                 } else {
-                    print( "Application - registerNotification - fail - error = \(String(describing:error))")
+                    print("Application - registerNotification - fail - error = \(String(describing:error))")
                 }
             }
             UIApplication.shared.registerForRemoteNotifications()
@@ -46,20 +46,34 @@ import Sentry
         NotificationCenter.default.addObserver(self, selector:#selector(becomeDeath), name: UIApplication.didEnterBackgroundNotification, object: nil)
     }
     
-    @objc func becomeActive(noti:Notification){
-        NSLog("NKNClient Enter foreground")
+    @objc func becomeActive(noti:Notification) {
         APNSPushService.shared().connectAPNS()
     }
     
-    @objc func becomeDeath(noti:Notification){
-        NSLog("NKNClient Enter background")
+    @objc func becomeDeath(noti:Notification) {
         APNSPushService.shared().disConnectAPNS()
     }
     
     override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        // deviceToken = 32 bytes
+        let formatDeviceToken = deviceToken.map { String(format: "%02.2hhx", arguments: [$0]) }.joined()
+        print("Application - GetDeviceToken - token = \(formatDeviceToken)")
+        UserDefaults.standard.setValue(formatDeviceToken, forKey: "nkn_device_token")
+        
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
             APNSPushService.shared().connectAPNS();
         }
+    }
+    
+    override func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        print("Application - didReceiveRemoteNotification - userInfo = \(userInfo)")
+        let aps = userInfo["aps"] as? [String: Any]
+        let alert = aps?["alert"] as? [String: Any]
+        var resultMap: [String: Any] = [String: Any]()
+        resultMap["title"] = alert?["title"]
+        resultMap["content"] = alert?["body"]
+        resultMap["isApplicationForeground"] = application.applicationState == UIApplication.State.active
+        Common.eventAdd(name: "onRemoteMessageReceived", map: resultMap)
     }
     
     override func applicationDidBecomeActive(_ application: UIApplication) {
