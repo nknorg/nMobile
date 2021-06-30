@@ -29,6 +29,15 @@ class Common {
     }
   }
 
+  static Future<bool> isGoogleServiceAvailable() async {
+    try {
+      final Map resp = await _methodChannel.invokeMethod('isGoogleServiceAvailable', {});
+      return resp['availability'] ?? false;
+    } catch (e) {
+      throw e;
+    }
+  }
+
   static Future<List<Object?>> splitPieces(String dataBytesString, int dataShards, int parityShards) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('splitPieces', {

@@ -53,7 +53,7 @@ class APNSPush {
             val apsJson = rootMap["aps"] as? JSONObject
             val apsMap = getMap("{}", apsJson) ?: mapOf()
 
-            val badge = (apsMap["badge"] as? Int) ?: 0
+            val badge = (apsMap["badge"] as? Int) ?: -1
             val sound = (apsMap["sound"] as? String) ?: ""
 
             val alertJson = apsMap["alert"] as? JSONObject
@@ -62,12 +62,14 @@ class APNSPush {
             val body = (alertMap["body"] as? String) ?: ""
 
             try {
-                val n: Notification = Notification.Builder(deviceToken)
+                val builder = Notification.Builder(deviceToken)
                     .alertTitle(title)
                     .alertBody(body)
-                    .badge(badge)
                     .sound(sound)
-                    .build()
+                if (badge >= 0) {
+                    builder.badge(badge)
+                }
+                val n: Notification = builder.build()
                 apnsClient?.push(n, object : NotificationResponseListener {
                     override fun onSuccess(notification: Notification?) {
                         Log.d("SendPush", "push - success")
