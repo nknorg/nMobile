@@ -1,11 +1,15 @@
 package org.nkn.mobile.app.channels.impl
 
-import android.app.Activity
+import android.app.ActivityManager
+import android.app.KeyguardManager
+import android.content.Context
+import android.os.Handler
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailabilityLight
+import com.google.firebase.messaging.FirebaseMessaging
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
@@ -13,6 +17,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.nkn.mobile.app.MainActivity
 import org.nkn.mobile.app.channels.IChannelHandler
 import org.nkn.mobile.app.push.APNSPush
 import reedsolomon.BytesArray
@@ -20,25 +25,61 @@ import reedsolomon.Encoder
 import reedsolomon.Reedsolomon
 import kotlin.text.Charsets.UTF_8
 
-class Common(private var activity: Activity) : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.StreamHandler, ViewModel() {
+class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.StreamHandler, ViewModel() {
 
     companion object {
         lateinit var methodChannel: MethodChannel
-        var eventSink: EventChannel.EventSink? = null
-        val CHANNEL_NAME = "org.nkn.mobile/native/common"
+        const val METHOD_CHANNEL_NAME = "org.nkn.mobile/native/common_method"
 
-        fun register(activity: Activity, flutterEngine: FlutterEngine) {
-            Common(activity).install(flutterEngine.dartExecutor.binaryMessenger)
+        lateinit var eventChannel: EventChannel
+        const val EVENT_CHANNEL_NAME = "org.nkn.mobile/native/common_event"
+        private var eventSink: EventChannel.EventSink? = null
+
+        fun register(flutterEngine: FlutterEngine) {
+            Common().install(flutterEngine.dartExecutor.binaryMessenger)
+        }
+
+        fun eventAdd(name: String, map: HashMap<String, *>) {
+            val resultMap = hashMapOf<String, Any>()
+            resultMap["event"] = name
+            resultMap.putAll(map)
+            Handler(MainActivity.instance.mainLooper).post { eventSink?.success(resultMap) }
+        }
+
+        fun eventAdd(name: String, result: Any) {
+            val resultMap = hashMapOf<String, Any>()
+            resultMap["event"] = name
+            resultMap["result"] = result
+            Handler(MainActivity.instance.mainLooper).post { eventSink?.success(resultMap) }
+        }
+
+        fun isApplicationForeground(context: Context): Boolean {
+            val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+            if (keyguardManager != null && keyguardManager.isKeyguardLocked) {
+                return false
+            }
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return false
+            val appProcesses = activityManager.runningAppProcesses ?: return false
+            val packageName = context.packageName
+            for (appProcess in appProcesses) {
+                if (appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND && appProcess.processName == packageName) {
+                    return true
+                }
+            }
+            return false
         }
     }
 
     override fun install(binaryMessenger: BinaryMessenger) {
-        methodChannel = MethodChannel(binaryMessenger, CHANNEL_NAME)
+        methodChannel = MethodChannel(binaryMessenger, METHOD_CHANNEL_NAME)
         methodChannel.setMethodCallHandler(this)
+        eventChannel = EventChannel(binaryMessenger, EVENT_CHANNEL_NAME)
+        eventChannel.setStreamHandler(this)
     }
 
     override fun uninstall() {
         methodChannel.setMethodCallHandler(null)
+        eventChannel.setStreamHandler(null)
     }
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
@@ -60,6 +101,9 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
             "isGoogleServiceAvailable" -> {
                 isGoogleServiceAvailable(call, result)
             }
+            "getFCMToken" -> {
+                getFCMToken(call, result)
+            }
             "splitPieces" -> {
                 splitPieces(call, result)
             }
@@ -73,7 +117,7 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
     }
 
     private fun backDesktop(call: MethodCall, result: MethodChannel.Result) {
-        this.activity.moveTaskToBack(false)
+        MainActivity.instance.moveTaskToBack(false)
         result.success(true)
     }
 
@@ -82,7 +126,7 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
         val pushPayload = call.argument<String>("pushPayload")!!
 
         viewModelScope.launch(Dispatchers.IO) {
-            APNSPush.push(activity.assets, deviceToken, pushPayload)
+            APNSPush.push(MainActivity.instance.assets, deviceToken, pushPayload)
             try {
                 val resp = hashMapOf(
                     "event" to "sendPushAPNS",
@@ -98,18 +142,36 @@ class Common(private var activity: Activity) : IChannelHandler, MethodChannel.Me
 
     private fun isGoogleServiceAvailable(call: MethodCall, result: MethodChannel.Result) {
         viewModelScope.launch(Dispatchers.IO) {
-            val code = GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(activity)
+            val code = GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(MainActivity.instance)
             val availability = if (code == ConnectionResult.SUCCESS) {
-                Log.e("GoogleServiceCheck", "success")
+                Log.i("GoogleServiceCheck", "success")
                 true
             } else {
-                Log.e("GoogleServiceCheck", "code:$code")
+                Log.i("GoogleServiceCheck", "code:$code")
                 false
             }
             try {
                 val resp = hashMapOf(
                     "event" to "isGoogleServiceAvailable",
                     "availability" to availability,
+                )
+                resultSuccess(result, resp)
+                return@launch
+            } catch (e: Throwable) {
+                resultError(result, e)
+                return@launch
+            }
+        }
+    }
+
+    private fun getFCMToken(call: MethodCall, result: MethodChannel.Result) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val sharedPreferences = MainActivity.instance.getSharedPreferences("fcmToken", Context.MODE_PRIVATE)
+            val deviceToken = sharedPreferences.getString("token", null) ?: FirebaseMessaging.getInstance().token.result
+            try {
+                val resp = hashMapOf(
+                    "event" to "getFCMToken",
+                    "token" to deviceToken,
                 )
                 resultSuccess(result, resp)
                 return@launch

@@ -8,12 +8,17 @@ import org.nkn.mobile.app.push.APNSPush
 
 class MainActivity : FlutterFragmentActivity() {
 
+    companion object {
+        lateinit var instance: MainActivity
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        instance = this
         super.configureFlutterEngine(flutterEngine)
 
         GeneratedPluginRegistrant.registerWith(flutterEngine)
 
-        Common.register(this, flutterEngine)
+        Common.register(flutterEngine)
 
         APNSPush.openClient(assets)
     }
