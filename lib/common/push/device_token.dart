@@ -30,7 +30,7 @@ class DeviceToken {
   }
 
   static Future<String> getAPNS() async {
-    String? token = null; // await FirebaseMessaging.instance.getAPNSToken(); // TODO:GG native
+    String? token = await Common.getAPNSToken();
     if (token?.isNotEmpty == true) {
       token = PREFIX_APNS + token!;
     }
