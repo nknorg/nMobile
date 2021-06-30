@@ -8,23 +8,50 @@ import Nkn
 
 class Common : ChannelBase, FlutterStreamHandler {
     
+    static var instance: Common = Common()
     let commonQueue = DispatchQueue(label: "org.nkn.mobile/native/common/queue", qos: .default, attributes: .concurrent)
+    
     var methodChannel: FlutterMethodChannel?
+    let METHOD_CHANNEL_NAME = "org.nkn.mobile/native/common_method"
+    
     var eventChannel: FlutterEventChannel?
+    let EVENT_CHANNEL_NAME = "org.nkn.mobile/native/common_event"
     var eventSink: FlutterEventSink?
-    let CHANNEL_NAME = "org.nkn.mobile/native/common"
     
     public static func register(controller: FlutterViewController) {
-        Common().install(binaryMessenger: controller as! FlutterBinaryMessenger)
+        instance.install(binaryMessenger: controller as! FlutterBinaryMessenger)
+    }
+    
+    public static func eventAdd(name: String, map: [String: Any]) {
+        if(instance.eventSink == nil) {
+            return
+        }
+        var resultMap: [String: Any] = [String: Any]()
+        resultMap["event"] = name
+        resultMap.merge(map){ (current, _) in current }
+        instance.eventSink!(resultMap)
+    }
+    
+    public static func eventAdd(name: String, result: Any) {
+        if(instance.eventSink == nil) {
+            return
+        }
+        var resultMap: [String: Any] = [String: Any]()
+        resultMap["event"] = name
+        resultMap["result"] = result
+        instance.eventSink!(resultMap)
     }
     
     func install(binaryMessenger: FlutterBinaryMessenger) {
-        self.methodChannel = FlutterMethodChannel(name: CHANNEL_NAME, binaryMessenger: binaryMessenger)
+        self.methodChannel = FlutterMethodChannel(name: METHOD_CHANNEL_NAME, binaryMessenger: binaryMessenger)
         self.methodChannel?.setMethodCallHandler(handle)
+        self.eventChannel = FlutterEventChannel(name: EVENT_CHANNEL_NAME, binaryMessenger: binaryMessenger)
+        self.eventChannel?.setStreamHandler(self)
     }
     
     func uninstall() {
         self.methodChannel?.setMethodCallHandler(nil)
+        self.eventChannel?.setStreamHandler(nil)
     }
     
     func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
@@ -41,6 +68,8 @@ class Common : ChannelBase, FlutterStreamHandler {
         switch call.method{
         case "configure":
             create(call, result: result)
+        case "getAPNSToken":
+            getAPNSToken(call, result: result)
         case "sendPushAPNS":
             sendPushAPNS(call, result: result)
         case "splitPieces":
@@ -54,6 +83,17 @@ class Common : ChannelBase, FlutterStreamHandler {
     
     private func create(_ call: FlutterMethodCall, result: FlutterResult) {
         result(nil)
+    }
+    
+    private func getAPNSToken(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        commonQueue.async {
+            let deviceToken = UserDefaults.standard.object(forKey: "nkn_device_token");
+            var resp: [String: Any] = [String: Any]()
+            resp["event"] = "getAPNSToken"
+            resp["token"] = deviceToken
+            self.resultSuccess(result: result, resp: resp)
+            return
+        }
     }
     
     private func sendPushAPNS(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
