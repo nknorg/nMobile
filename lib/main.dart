@@ -43,15 +43,13 @@ void main() async {
     Routes.init();
     Global.init();
     Settings.init();
-    await fireBaseMessaging.init();
   });
   await application.initialize();
 
   // mounted
   application.registerMounted(() async {
-    // localNotification.init();
-    fireBaseMessaging.startListen();
     taskService.install();
+    localNotification.init();
     // backgroundFetchService.install();
   });
   application.registerMounted(() async {
