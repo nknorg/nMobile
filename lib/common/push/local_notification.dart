@@ -9,6 +9,10 @@ import 'package:nmobile/generated/l10n.dart';
 import '../global.dart';
 
 class LocalNotification {
+  static const String channel_id = "nmobile_d_chat";
+  static const String channel_name = "D-Chat";
+  static const String channel_desc = "D-Chat notification";
+
   FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   LocalNotification();
@@ -49,9 +53,9 @@ class LocalNotification {
     int notificationId = uuid.hashCode;
 
     var androidNotificationDetails = AndroidNotificationDetails(
-      'nmobile_d_chat',
-      'D-Chat',
-      'D-Chat notification',
+      channel_id,
+      channel_name,
+      channel_desc,
       importance: Importance.max,
       priority: Priority.high,
       autoCancel: true,
