@@ -293,6 +293,23 @@ class MessageStorage with Tag {
   //   return [];
   // }
 
+  Future<int> unReadCount() async {
+    try {
+      var res = await db?.query(
+        tableName,
+        columns: ['COUNT(id)'],
+        where: 'is_outbound = ? AND is_read = ?', // AND NOT type = ?', //  AND NOT type = ?',
+        whereArgs: [0, 0], // , ContentType.piece], // , ContentType.receipt],
+      );
+      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+      logger.d("$TAG - unReadCount - count:$count");
+      return count ?? 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return 0;
+  }
+
   Future<List<MessageSchema>> queryListUnReadByTargetId(String? targetId) async {
     if (targetId == null || targetId.isEmpty) return [];
     try {
