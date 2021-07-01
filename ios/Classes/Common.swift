@@ -116,8 +116,10 @@ class Common : ChannelBase, FlutterStreamHandler {
         let args = call.arguments as! [String: Any]
         let badgeCount = args["badge_count"] as? Int ?? 0
         
-        commonQueue.async {
+        DispatchQueue.main.async { // run on UIThread
             UIApplication.shared.applicationIconBadgeNumber = badgeCount
+        }
+        commonQueue.async {
             var resp: [String: Any] = [String: Any]()
             resp["event"] = "updateBadgeCount"
             self.resultSuccess(result: result, resp: resp)
