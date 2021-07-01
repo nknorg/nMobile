@@ -62,8 +62,9 @@ class ChatInCommon with Tag {
       case ContentType.contact:
         _receiveContact(received, contact: contact); // await
         break;
-      case ContentType.piece:
-        await _receivePiece(received);
+      case ContentType.contactOptions:
+        await _receiveContactOptions(received, contact: contact);
+        chatOutCommon.sendReceipt(received); // await
         break;
       case ContentType.text:
       case ContentType.textExtension:
@@ -80,15 +81,14 @@ class ChatInCommon with Tag {
         await _receiveAudio(received);
         chatOutCommon.sendReceipt(received); // await
         break;
-      case ContentType.eventContactOptions:
-        await _receiveContactOptions(received, contact: contact);
-        chatOutCommon.sendReceipt(received); // await
+      case ContentType.piece:
+        await _receivePiece(received);
         break;
       // TODO:GG receive contentType
       case ContentType.system:
-      case ContentType.eventSubscribe:
-      case ContentType.eventUnsubscribe:
-      case ContentType.eventChannelInvitation:
+      case ContentType.topicSubscribe:
+      case ContentType.topicUnsubscribe:
+      case ContentType.topicInvitation:
         break;
     }
     if (!received.canDisplayAndRead) {
@@ -176,84 +176,43 @@ class ChatInCommon with Tag {
     }
   }
 
-  // NO DB NO display
-  Future _receivePiece(MessageSchema received) async {
+  // NO topic (1 to 1)
+  Future _receiveContactOptions(MessageSchema received, {ContactSchema? contact}) async {
+    if (received.content == null) return; // received.isTopic (limit in out)
+    Map<String, dynamic> data = received.content; // == data
     // duplicated
-    List<MessageSchema> existsCombine = await _messageStorage.queryListByType(received.msgId, received.parentType);
-    if (existsCombine.isNotEmpty) {
-      logger.d("$TAG - receivePiece - duplicated - schema:$existsCombine");
+    ContactSchema? existContact = contact ?? await contactCommon.queryByClientAddress(received.from);
+    if (existContact == null) {
+      logger.w("$TAG - _receiveContactOptions - empty - received:$received");
       return;
     }
-    // piece
-    MessageSchema? piece = await _messageStorage.queryByPid(received.pid);
-    if (piece == null) {
-      received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: received.parentType);
-      piece = await _messageStorage.insert(received);
-    }
-    if (piece == null) return;
-    // pieces
-    int total = piece.total ?? ChatOutCommon.maxPiecesTotal;
-    int parity = piece.parity ?? (total ~/ ChatOutCommon.piecesParity);
-    int bytesLength = piece.bytesLength ?? 0;
-    int piecesCount = await _messageStorage.queryCountByType(piece.msgId, piece.contentType);
-    logger.d("$TAG - receivePiece - progress:$piecesCount/${piece.total}/${total + parity}");
-    if (piecesCount < total || bytesLength <= 0) return;
-    logger.d("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
-    List<MessageSchema> pieces = await _messageStorage.queryListByType(piece.msgId, piece.contentType);
-    pieces.sort((prev, next) => (prev.index ?? ChatOutCommon.maxPiecesTotal).compareTo((next.index ?? ChatOutCommon.maxPiecesTotal)));
-    // recover
-    List<Uint8List> recoverList = <Uint8List>[];
-    for (int index = 0; index < total + parity; index++) {
-      recoverList.add(Uint8List(0)); // fill
-    }
-    int recoverCount = 0;
-    for (int index = 0; index < pieces.length; index++) {
-      MessageSchema item = pieces[index];
-      File? file = item.content as File?;
-      if (file == null || !file.existsSync()) {
-        logger.w("$TAG - receivePiece - COMBINE:ERROR - file no exists - item:$item - file:${file?.path}");
-        continue;
-      }
-      Uint8List itemBytes = file.readAsBytesSync();
-      if (item.index != null && item.index! >= 0 && item.index! < recoverList.length) {
-        recoverList[item.index!] = itemBytes;
-        recoverCount++;
-      }
-    }
-    if (recoverCount < total) {
-      logger.w("$TAG - receivePiece - COMBINE:FAIL - recover_lost:${pieces.length - recoverCount}");
+    List<MessageSchema> existsMsg = await _messageStorage.queryList(received.msgId);
+    if (existsMsg.isNotEmpty) {
+      logger.d("$TAG - _receiveContactOptions - duplicated - schema:$existsMsg");
       return;
     }
-    // combine
-    String? base64String = await Common.combinePieces(recoverList, total, parity, bytesLength);
-    if (base64String == null || base64String.isEmpty) {
-      logger.w("$TAG - receivePiece - COMBINE:FAIL - base64String is empty");
-      return;
-    }
-    MessageSchema combine = MessageSchema.fromPieces(pieces, base64String);
-    // combine.content - handle later
-    logger.d("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
-    await onClientMessage(combine, needWait: true);
-    // delete
-    logger.d("$TAG - receivePiece - DELETE:START - pieces_count:${pieces.length}");
-    bool deleted = await _messageStorage.deleteByType(piece.msgId, piece.contentType);
-    if (deleted) {
-      pieces.forEach((MessageSchema element) {
-        if (element.content is File) {
-          if ((element.content as File).existsSync()) {
-            (element.content as File).delete(); // await
-            // logger.d("$TAG - receivePiece - DELETE:PROGRESS - path:${(element.content as File).path}");
-          } else {
-            logger.w("$TAG - receivePiece - DELETE:ERROR - NoExists - path:${(element.content as File).path}");
-          }
-        } else {
-          logger.w("$TAG - receivePiece - DELETE:ERROR - empty:${element.content?.toString()}");
-        }
-      });
-      logger.d("$TAG - receivePiece - DELETE:SUCCESS - count:${pieces.length}");
+    // options type
+    String? optionsType = data[MessageData.K_CONTACT_OPTIONS_TYPE]?.toString();
+    Map<String, dynamic> content = data['content'] ?? Map();
+    if (optionsType == null || optionsType.isEmpty) return;
+    if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_BURN_TIME) {
+      int burningSeconds = (content['deleteAfterSeconds'] as int?) ?? 0;
+      int updateTime = (content['updateBurnAfterTime'] as int?) ?? (DateTime.now().millisecondsSinceEpoch - 1000);
+      logger.d("$TAG - _receiveContactOptions - setBurn - burningSeconds:$burningSeconds - updateTIme:${DateTime.fromMillisecondsSinceEpoch(updateTime)} - data:$data");
+      contactCommon.setOptionsBurn(existContact, burningSeconds, updateTime, notify: true); // await
+    } else if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN) {
+      String deviceToken = (content['deviceToken']?.toString()) ?? "";
+      logger.d("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
+      contactCommon.setDeviceToken(existContact.id, deviceToken, notify: true); // await
     } else {
-      logger.w("$TAG - receivePiece - DELETE:FAIL - empty - pieces:$pieces");
+      logger.w("$TAG - _receiveContactOptions - setNothing - data:$data");
+      return;
     }
+    // DB
+    MessageSchema? schema = await _messageStorage.insert(received);
+    if (schema == null) return;
+    // display
+    _onSavedSink.add(schema);
   }
 
   Future _receiveText(MessageSchema received) async {
@@ -338,42 +297,83 @@ class ChatInCommon with Tag {
     _onSavedSink.add(schema);
   }
 
-  // NO topic (1 to 1)
-  Future _receiveContactOptions(MessageSchema received, {ContactSchema? contact}) async {
-    if (received.content == null) return; // received.isTopic (limit in out)
-    Map<String, dynamic> data = received.content; // == data
+  // NO DB NO display
+  Future _receivePiece(MessageSchema received) async {
     // duplicated
-    ContactSchema? existContact = contact ?? await contactCommon.queryByClientAddress(received.from);
-    if (existContact == null) {
-      logger.w("$TAG - _receiveContactOptions - empty - received:$received");
+    List<MessageSchema> existsCombine = await _messageStorage.queryListByType(received.msgId, received.parentType);
+    if (existsCombine.isNotEmpty) {
+      logger.d("$TAG - receivePiece - duplicated - schema:$existsCombine");
       return;
     }
-    List<MessageSchema> existsMsg = await _messageStorage.queryList(received.msgId);
-    if (existsMsg.isNotEmpty) {
-      logger.d("$TAG - receiveText - duplicated - schema:$existsMsg");
+    // piece
+    MessageSchema? piece = await _messageStorage.queryByPid(received.pid);
+    if (piece == null) {
+      received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: received.parentType);
+      piece = await _messageStorage.insert(received);
+    }
+    if (piece == null) return;
+    // pieces
+    int total = piece.total ?? ChatOutCommon.maxPiecesTotal;
+    int parity = piece.parity ?? (total ~/ ChatOutCommon.piecesParity);
+    int bytesLength = piece.bytesLength ?? 0;
+    int piecesCount = await _messageStorage.queryCountByType(piece.msgId, piece.contentType);
+    logger.d("$TAG - receivePiece - progress:$piecesCount/${piece.total}/${total + parity}");
+    if (piecesCount < total || bytesLength <= 0) return;
+    logger.d("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+    List<MessageSchema> pieces = await _messageStorage.queryListByType(piece.msgId, piece.contentType);
+    pieces.sort((prev, next) => (prev.index ?? ChatOutCommon.maxPiecesTotal).compareTo((next.index ?? ChatOutCommon.maxPiecesTotal)));
+    // recover
+    List<Uint8List> recoverList = <Uint8List>[];
+    for (int index = 0; index < total + parity; index++) {
+      recoverList.add(Uint8List(0)); // fill
+    }
+    int recoverCount = 0;
+    for (int index = 0; index < pieces.length; index++) {
+      MessageSchema item = pieces[index];
+      File? file = item.content as File?;
+      if (file == null || !file.existsSync()) {
+        logger.w("$TAG - receivePiece - COMBINE:ERROR - file no exists - item:$item - file:${file?.path}");
+        continue;
+      }
+      Uint8List itemBytes = file.readAsBytesSync();
+      if (item.index != null && item.index! >= 0 && item.index! < recoverList.length) {
+        recoverList[item.index!] = itemBytes;
+        recoverCount++;
+      }
+    }
+    if (recoverCount < total) {
+      logger.w("$TAG - receivePiece - COMBINE:FAIL - recover_lost:${pieces.length - recoverCount}");
       return;
     }
-    // options type
-    String? optionsType = data[MessageData.K_CONTACT_OPTIONS_TYPE]?.toString();
-    Map<String, dynamic> content = data['content'] ?? Map();
-    if (optionsType == null || optionsType.isEmpty) return;
-    if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_BURN_TIME) {
-      int burningSeconds = (content['deleteAfterSeconds'] as int?) ?? 0;
-      int updateTime = (content['updateBurnAfterTime'] as int?) ?? (DateTime.now().millisecondsSinceEpoch - 1000);
-      logger.d("$TAG - _receiveContactOptions - setBurn - burningSeconds:$burningSeconds - updateTIme:${DateTime.fromMillisecondsSinceEpoch(updateTime)} - data:$data");
-      contactCommon.setOptionsBurn(existContact, burningSeconds, updateTime, notify: true); // await
-    } else if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN) {
-      String deviceToken = (content['deviceToken']?.toString()) ?? "";
-      logger.d("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
-      contactCommon.setDeviceToken(existContact.id, deviceToken, notify: true); // await
+    // combine
+    String? base64String = await Common.combinePieces(recoverList, total, parity, bytesLength);
+    if (base64String == null || base64String.isEmpty) {
+      logger.w("$TAG - receivePiece - COMBINE:FAIL - base64String is empty");
+      return;
+    }
+    MessageSchema combine = MessageSchema.fromPieces(pieces, base64String);
+    // combine.content - handle later
+    logger.d("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
+    await onClientMessage(combine, needWait: true);
+    // delete
+    logger.d("$TAG - receivePiece - DELETE:START - pieces_count:${pieces.length}");
+    bool deleted = await _messageStorage.deleteByType(piece.msgId, piece.contentType);
+    if (deleted) {
+      pieces.forEach((MessageSchema element) {
+        if (element.content is File) {
+          if ((element.content as File).existsSync()) {
+            (element.content as File).delete(); // await
+            // logger.d("$TAG - receivePiece - DELETE:PROGRESS - path:${(element.content as File).path}");
+          } else {
+            logger.w("$TAG - receivePiece - DELETE:ERROR - NoExists - path:${(element.content as File).path}");
+          }
+        } else {
+          logger.w("$TAG - receivePiece - DELETE:ERROR - empty:${element.content?.toString()}");
+        }
+      });
+      logger.d("$TAG - receivePiece - DELETE:SUCCESS - count:${pieces.length}");
     } else {
-      logger.w("$TAG - _receiveContactOptions - setNothing - data:$data");
-      return;
+      logger.w("$TAG - receivePiece - DELETE:FAIL - empty - pieces:$pieces");
     }
-    // DB
-    MessageSchema? schema = await _messageStorage.insert(received);
-    if (schema == null) return;
-    // display
-    _onSavedSink.add(schema);
   }
 }

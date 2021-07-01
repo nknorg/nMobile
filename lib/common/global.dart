@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:io';
 
+import 'package:device_info/device_info.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info/package_info.dart';
 import 'package:path_provider/path_provider.dart';
@@ -16,6 +17,9 @@ class Global {
   static String build = '';
 
   static String get versionFormat => '${Global.version} + (Build ${Global.build})';
+
+  static String osName = Platform.isAndroid ? "android" : (Platform.isIOS ? "ios" : "");
+  static String osVersion = "";
 
   static List<String> defaultSeedRpcList = [
     'http://seed.nkn.org:30003',
@@ -38,5 +42,11 @@ class Global {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     Global.version = packageInfo.version;
     Global.build = packageInfo.buildNumber.replaceAll('.', '');
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    if (Platform.isAndroid) {
+      Global.osVersion = (await deviceInfo.androidInfo).version.release;
+    } else if (Platform.isIOS) {
+      Global.osVersion = (await deviceInfo.iosInfo).systemVersion; // TODO:GG test
+    }
   }
 }
