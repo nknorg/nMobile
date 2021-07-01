@@ -8,18 +8,18 @@ class DeviceInfoSchema {
   DateTime? createAt; // <-> create_at
   DateTime? updateAt; // <-> update_at
   int contactId; // (required) <-> contact_id
-  String? profileVersion; // <-> profile_version
-  String? deviceToken; //  <-> device_token
-  Map<String, dynamic>? extraInfo; // [*]<-> data[*, appName, appVersion, platform, platformVersion, ...]
+  String? deviceId; //  <-> device_id
+  Map<String, dynamic>? data; // [*]<-> data[*, appName, appVersion, platform, platformVersion, ...]
+  String? dataVersion; // <-> data_version
 
   DeviceInfoSchema({
     this.id,
     this.createAt,
     this.updateAt,
     required this.contactId,
-    this.profileVersion,
-    this.deviceToken,
-    this.extraInfo,
+    this.deviceId,
+    this.data,
+    this.dataVersion,
   }) {
     if (this.createAt == null) {
       this.createAt = DateTime.now();
@@ -30,16 +30,16 @@ class DeviceInfoSchema {
   }
 
   Map<String, dynamic> toMap() {
-    if (extraInfo == null) {
-      extraInfo = new Map<String, dynamic>();
+    if (data == null) {
+      data = new Map<String, dynamic>();
     }
     Map<String, dynamic> map = {
       'create_at': createAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'contact_id': contactId,
-      'profile_version': profileVersion ?? Uuid().v4(),
-      'device_token': deviceToken,
-      'data': extraInfo != null ? jsonEncode(extraInfo) : '{}',
+      'device_id': deviceId,
+      'data': data != null ? jsonEncode(data) : '{}',
+      'data_version': dataVersion ?? Uuid().v4(),
     };
     return map;
   }
@@ -50,18 +50,18 @@ class DeviceInfoSchema {
       createAt: e['create_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['create_at']) : null,
       updateAt: e['update_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['update_at']) : null,
       contactId: e['contact_id'] ?? 0,
-      profileVersion: e['profile_version'],
-      deviceToken: e['device_token'],
+      deviceId: e['device_id'],
+      dataVersion: e['data_version'],
     );
 
     if (e['data'] != null) {
       Map<String, dynamic>? data = jsonFormat(e['data']);
 
-      if (deviceInfo.extraInfo == null) {
-        deviceInfo.extraInfo = new Map<String, dynamic>();
+      if (deviceInfo.data == null) {
+        deviceInfo.data = new Map<String, dynamic>();
       }
       if (data != null) {
-        deviceInfo.extraInfo?.addAll(data);
+        deviceInfo.data?.addAll(data);
       }
     }
     return deviceInfo;
@@ -69,8 +69,8 @@ class DeviceInfoSchema {
 
   String get appName {
     String? appName;
-    if (extraInfo != null && extraInfo!.isNotEmpty) {
-      String? name = extraInfo!['appName']?.toString();
+    if (data != null && data!.isNotEmpty) {
+      String? name = data!['appName']?.toString();
       if (name?.isNotEmpty == true) {
         appName = name;
       }
@@ -80,8 +80,8 @@ class DeviceInfoSchema {
 
   int get appVersion {
     int? appVersion;
-    if (extraInfo != null && extraInfo!.isNotEmpty) {
-      String? version = extraInfo!['appVersion']?.toString();
+    if (data != null && data!.isNotEmpty) {
+      String? version = data!['appVersion']?.toString();
       if ((version?.isNotEmpty == true) && (version is int)) {
         appVersion = int.parse(version!);
       }
@@ -91,8 +91,8 @@ class DeviceInfoSchema {
 
   String get platform {
     String? platform;
-    if (extraInfo != null && extraInfo!.isNotEmpty) {
-      String? name = extraInfo!['platform']?.toString();
+    if (data != null && data!.isNotEmpty) {
+      String? name = data!['platform']?.toString();
       if (name?.isNotEmpty == true) {
         platform = name;
       }
@@ -102,8 +102,8 @@ class DeviceInfoSchema {
 
   int get platformVersion {
     int? platformVersion;
-    if (extraInfo != null && extraInfo!.isNotEmpty) {
-      String? version = extraInfo!['platformVersion']?.toString();
+    if (data != null && data!.isNotEmpty) {
+      String? version = data!['platformVersion']?.toString();
       if ((version?.isNotEmpty == true) && (version is int)) {
         platformVersion = int.parse(version!);
       }
@@ -113,6 +113,6 @@ class DeviceInfoSchema {
 
   @override
   String toString() {
-    return 'DeviceInfoSchema{id: $id, createAt: $createAt, updateAt: $updateAt, contactId: $contactId, profileVersion: $profileVersion, deviceToken: $deviceToken, extraInfo: $extraInfo}';
+    return 'DeviceInfoSchema{id: $id, createAt: $createAt, updateAt: $updateAt, contactId: $contactId, dataVersion: $dataVersion, deviceId: $deviceId, data: $data}';
   }
 }
