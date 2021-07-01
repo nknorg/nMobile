@@ -58,6 +58,11 @@ class ChatMessageItem extends StatelessWidget {
     }
 
     switch (this.message.contentType) {
+      // case ContentType.receipt:
+      // case ContentType.contact:
+      case ContentType.contactOptions:
+        contentsWidget.add(_contactOptionsWidget(context));
+        break;
       case ContentType.text:
       case ContentType.textExtension:
       case ContentType.media:
@@ -74,17 +79,12 @@ class ChatMessageItem extends StatelessWidget {
           ),
         );
         break;
-      case ContentType.eventContactOptions:
-        contentsWidget.add(_contactOptionsWidget(context));
-        break;
+      // case ContentType.piece:
       // TODO:GG messageItem contentType
       case ContentType.system:
-      case ContentType.eventSubscribe:
-      case ContentType.eventUnsubscribe:
-      case ContentType.eventChannelInvitation:
-        // case ContentType.receipt:
-        // case ContentType.contact:
-        // case ContentType.piece:
+      case ContentType.topicSubscribe:
+      case ContentType.topicUnsubscribe:
+      case ContentType.topicInvitation:
         break;
     }
 

@@ -7,7 +7,9 @@ import 'package:mime_type/mime_type.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/contact/contact.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
@@ -15,9 +17,12 @@ import 'package:uuid/uuid.dart';
 class ContentType {
   static const String system = 'system'; // visible // TODO:GG wait data
   static const String receipt = 'receipt'; // db
-  static const String contact = 'contact'; // .
 
-  static const String piece = 'nknOnePiece'; // db
+  static const String contact = 'contact'; // .
+  static const String contactOptions = 'event:contactOptions'; // db + visible
+
+  static const String deviceRequest = 'device:request'; // .
+  static const String deviceInfo = 'device:info'; // db
 
   static const String text = 'text'; // db + visible
   static const String textExtension = 'textExtension'; // db + visible
@@ -25,10 +30,11 @@ class ContentType {
   static const String image = 'image'; // db + visible
   static const String audio = 'audio'; // db + visible
 
-  static const String eventContactOptions = 'event:contactOptions'; // db + visible
-  static const String eventSubscribe = 'event:subscribe'; // TODO:GG wait handle
-  static const String eventUnsubscribe = 'event:unsubscribe'; // TODO:GG wait handle
-  static const String eventChannelInvitation = 'event:channelInvitation'; // TODO:GG wait data
+  static const String piece = 'nknOnePiece'; // db
+
+  static const String topicSubscribe = 'event:subscribe'; // TODO:GG wait handle
+  static const String topicUnsubscribe = 'event:unsubscribe'; // TODO:GG wait handle
+  static const String topicInvitation = 'event:channelInvitation'; // TODO:GG wait data
 
   // SUPPORT:START
   static const String nknImage = 'nknImage';
@@ -178,11 +184,11 @@ class MessageStatus {
 }
 
 class MessageData {
-  static const K_CONTACT_PIECE_SUPPORT = 'onePieceReady';
-  static const K_CONTACT_OPTIONS_TYPE = 'optionType';
+  static const K_CONTACT_PIECE_SUPPORT = 'onePieceReady'; // TODO:GG 优化
+  static const K_CONTACT_OPTIONS_TYPE = 'optionType'; // TODO:GG 优化
 
-  static const V_CONTACT_OPTIONS_TYPE_BURN_TIME = '0';
-  static const V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN = '1';
+  static const V_CONTACT_OPTIONS_TYPE_BURN_TIME = '0'; // TODO:GG 优化
+  static const V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN = '1'; // TODO:GG 优化
 
   static String getReceipt(String msgId) {
     Map map = {
@@ -244,24 +250,51 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getPiece(MessageSchema schema) {
+  static String getContactOptionsBurn(MessageSchema schema) {
+    List<int?> burningOptions = MessageOptions.getContactBurning(schema);
+    int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
+    int? updateBurnAfterTime = burningOptions.length >= 2 ? burningOptions[1] : null;
     Map data = {
       'id': schema.msgId,
       'contentType': schema.contentType,
-      'content': schema.content,
+      'content': {'deleteAfterSeconds': burnAfterSeconds, 'updateBurnAfterTime': updateBurnAfterTime},
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'parentType': schema.parentType ?? schema.contentType,
-      'bytesLength': schema.bytesLength,
-      'total': schema.total,
-      'parity': schema.parity,
-      'index': schema.index,
     };
-    if (schema.isTopic) {
-      data['topic'] = schema.topic;
-    }
-    if (schema.options != null && schema.options!.keys.length > 0) {
-      data['options'] = schema.options;
-    }
+    data[K_CONTACT_OPTIONS_TYPE] = V_CONTACT_OPTIONS_TYPE_BURN_TIME;
+    return jsonEncode(data);
+  }
+
+  static String getContactOptionsToken(MessageSchema schema) {
+    String? deviceToken = MessageOptions.getDeviceToken(schema);
+    Map data = {
+      'id': schema.msgId,
+      'contentType': schema.contentType,
+      'content': {'deviceToken': deviceToken},
+      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+    };
+    data[K_CONTACT_OPTIONS_TYPE] = V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN;
+    return jsonEncode(data);
+  }
+
+  static String getDeviceRequest(String? profileVersion) {
+    Map data = {
+      'id': Uuid().v4(),
+      'profileVersion': profileVersion,
+    };
+    return jsonEncode(data);
+  }
+
+  static String getDeviceInfo(String? deviceToken, String? profileVersion) {
+    Map data = {
+      'id': Uuid().v4(),
+      'appName': Settings.appName,
+      'appVersion': Global.build,
+      'platform': Global.osName,
+      'platformVersion': Global.osVersion,
+      'deviceToken': deviceToken,
+      'latestLoginAt': DateTime.now().millisecondsSinceEpoch,
+      'profileVersion': profileVersion,
+    };
     return jsonEncode(data);
   }
 
@@ -321,34 +354,29 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getEventContactOptionsBurn(MessageSchema schema) {
-    List<int?> burningOptions = MessageOptions.getContactBurning(schema);
-    int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
-    int? updateBurnAfterTime = burningOptions.length >= 2 ? burningOptions[1] : null;
+  static String getPiece(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
       'contentType': schema.contentType,
-      'content': {'deleteAfterSeconds': burnAfterSeconds, 'updateBurnAfterTime': updateBurnAfterTime},
+      'content': schema.content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'parentType': schema.parentType ?? schema.contentType,
+      'bytesLength': schema.bytesLength,
+      'total': schema.total,
+      'parity': schema.parity,
+      'index': schema.index,
     };
-    data[K_CONTACT_OPTIONS_TYPE] = V_CONTACT_OPTIONS_TYPE_BURN_TIME;
+    if (schema.isTopic) {
+      data['topic'] = schema.topic;
+    }
+    if (schema.options != null && schema.options!.keys.length > 0) {
+      data['options'] = schema.options;
+    }
     return jsonEncode(data);
   }
 
-  static String getEventContactOptionsToken(MessageSchema schema) {
-    String? deviceToken = MessageOptions.getDeviceToken(schema);
-    Map data = {
-      'id': schema.msgId,
-      'contentType': schema.contentType,
-      'content': {'deviceToken': deviceToken},
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-    };
-    data[K_CONTACT_OPTIONS_TYPE] = V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN;
-    return jsonEncode(data);
-  }
-
-  // TODO:GG wait call
-  String getEventSubscribe(MessageSchema schema) {
+  // TODO:GG topic wait call
+  String getTopicSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
       'contentType': schema.contentType,
@@ -359,8 +387,8 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  // TODO:GG wait call
-  String getEventUnSubscribe(MessageSchema schema) {
+  // TODO:GG topic wait call
+  String getTopicUnSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
       'contentType': schema.contentType,
@@ -429,24 +457,26 @@ class MessageSchema extends Equatable {
     );
 
     switch (schema.contentType) {
+      // case ContentType.system:
       case ContentType.receipt:
         schema.content = data['targetID'];
         break;
       case ContentType.contact:
-      case ContentType.eventContactOptions:
+      case ContentType.contactOptions:
+      case ContentType.deviceInfo:
+      case ContentType.deviceRequest:
         schema.content = data;
         break;
-      // case ContentType.system:
-      // case ContentType.piece:
       // case ContentType.text:
       // case ContentType.textExtension:
       // case ContentType.media:
       // case ContentType.image:
       // case ContentType.nknImage:
       // case ContentType.audio:
-      // case ContentType.eventSubscribe:
-      // case ContentType.eventUnsubscribe:
-      // case ContentType.eventChannelInvitation:
+      // case ContentType.piece:
+      // case ContentType.topicSubscribe:
+      // case ContentType.topicUnsubscribe:
+      // case ContentType.topicInvitation:
       default:
         schema.content = data['content'];
         break;
@@ -561,26 +591,28 @@ class MessageSchema extends Equatable {
 
     // content = String
     switch (contentType) {
-      case ContentType.piece:
+      // case ContentType.system:
+      // case ContentType.receipt:
+      case ContentType.contact:
+      case ContentType.contactOptions:
+      case ContentType.deviceRequest:
+      case ContentType.deviceInfo:
+        map['content'] = content is Map ? jsonEncode(content) : content;
+        break;
+      // case ContentType.text:
+      // case ContentType.textExtension:
       case ContentType.media:
       case ContentType.image:
       case ContentType.nknImage:
       case ContentType.audio:
+      case ContentType.piece:
         if (content is File) {
           map['content'] = Path.getLocalFile((content as File).path);
         }
         break;
-      case ContentType.contact:
-      case ContentType.eventContactOptions:
-        map['content'] = content is Map ? jsonEncode(content) : content;
-        break;
-      // case ContentType.system:
-      // case ContentType.receipt:
-      // case ContentType.text:
-      // case ContentType.textExtension:
-      // case ContentType.eventSubscribe:
-      // case ContentType.eventUnsubscribe:
-      // case ContentType.eventChannelInvitation:
+      // case ContentType.topicSubscribe:
+      // case ContentType.topicUnsubscribe:
+      // case ContentType.topicInvitation:
       default:
         map['content'] = content;
         break;
@@ -612,31 +644,33 @@ class MessageSchema extends Equatable {
 
     // content = File/Map/String...
     switch (schema.contentType) {
+      // case ContentType.system:
       case ContentType.receipt:
         schema.content = e['targetID'];
         break;
-      case ContentType.piece:
-      case ContentType.media:
-      case ContentType.image:
-      case ContentType.nknImage:
-      case ContentType.audio:
-        String? completePath = Path.getCompleteFile(e['content']);
-        schema.content = completePath != null ? File(completePath) : null;
-        break;
       case ContentType.contact:
-      case ContentType.eventContactOptions:
+      case ContentType.contactOptions:
+      case ContentType.deviceInfo:
+      case ContentType.deviceRequest:
         if (e['content'] != null && e['content'] is String && e[''].toString().isNotEmpty) {
           schema.content = jsonFormat(e['content']);
         } else {
           schema.content = e['content'];
         }
         break;
-      // case ContentType.system:
       // case ContentType.text:
       // case ContentType.textExtension:
-      // case ContentType.eventSubscribe:
-      // case ContentType.eventUnsubscribe:
-      // case ContentType.eventChannelInvitation:
+      case ContentType.media:
+      case ContentType.image:
+      case ContentType.nknImage:
+      case ContentType.audio:
+      case ContentType.piece:
+        String? completePath = Path.getCompleteFile(e['content']);
+        schema.content = completePath != null ? File(completePath) : null;
+        break;
+      // case ContentType.topicSubscribe:
+      // case ContentType.topicUnsubscribe:
+      // case ContentType.topicInvitation:
       default:
         schema.content = e['content'];
         break;
@@ -683,13 +717,13 @@ class MessageSchema extends Equatable {
 
   // ++ UnReadCount / Notification
   bool get canDisplayAndRead {
-    bool isEvent = contentType == ContentType.eventChannelInvitation;
+    bool isEvent = contentType == ContentType.topicInvitation;
     return canBurning || isEvent;
   }
 
   // ++ Session
   bool get canDisplay {
-    bool isEvent = contentType == ContentType.eventContactOptions; // || contentType == ContentType.eventSubscribe || contentType == ContentType.eventUnsubscribe;
+    bool isEvent = contentType == ContentType.contactOptions; // || contentType == ContentType.topicSubscribe || contentType == ContentType.topicUnsubscribe;
     return canDisplayAndRead || isEvent;
   }
 

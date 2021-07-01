@@ -193,12 +193,12 @@ class ChatOutCommon with Tag {
       MessageSchema send = MessageSchema.fromSend(
         Uuid().v4(),
         contactCommon.currentUser!.clientAddress,
-        ContentType.eventContactOptions,
+        ContentType.contactOptions,
         to: clientAddress,
         deleteAfterSeconds: deleteSeconds,
         burningUpdateTime: updateTime,
       );
-      send.content = MessageData.getEventContactOptionsBurn(send);
+      send.content = MessageData.getContactOptionsBurn(send);
       await _send(send, send.content, database: true, display: true);
       logger.d("$TAG - sendContactOptionsBurn - success - data:${send.content}");
     } catch (e) {
@@ -218,11 +218,11 @@ class ChatOutCommon with Tag {
       MessageSchema send = MessageSchema.fromSend(
         Uuid().v4(),
         contactCommon.currentUser!.clientAddress,
-        ContentType.eventContactOptions,
+        ContentType.contactOptions,
         to: clientAddress,
       );
       send = MessageOptions.setDeviceToken(send, deviceToken);
-      send.content = MessageData.getEventContactOptionsToken(send);
+      send.content = MessageData.getContactOptionsToken(send);
       await _send(send, send.content, database: true, display: true);
       logger.d("$TAG - sendContactOptionsToken - success - data:${send.content}");
     } catch (e) {
@@ -347,13 +347,9 @@ class ChatOutCommon with Tag {
     //     content = '[${localizations.audio}]';
     //     break;
     //   case ContentType.system:
-    //   case ContentType.eventSubscribe:
-    //   case ContentType.eventUnsubscribe:
-    //   case ContentType.eventChannelInvitation:
-    //     // case ContentType.contact:
-    //     // case ContentType.receipt:
-    //     // case ContentType.piece:
-    //     // case ContentType.eventContactOptions:
+    //   case ContentType.topicSubscribe:
+    //   case ContentType.topicUnsubscribe:
+    //   case ContentType.topicInvitation:
     //     break;
     // }
 
