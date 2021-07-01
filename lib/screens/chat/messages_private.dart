@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/chat/bottom_menu.dart';
@@ -128,6 +129,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
       // read
       schema = await chatCommon.updateMessageStatus(schema, MessageStatus.ReceivedRead);
       sessionCommon.setUnReadCount(_contact.clientAddress.toString(), 0, notify: true);
+      if (schema.canDisplayAndRead) Badge.onCountDown(1);
     }
     setState(() {
       logger.d("$TAG - messages insert 0:$schema");

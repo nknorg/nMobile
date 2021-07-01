@@ -22,9 +22,13 @@ class LocalNotification {
       '@mipmap/ic_launcher_round',
     );
     var initializationSettingsIOS = IOSInitializationSettings(
+      requestAlertPermission: true,
       requestSoundPermission: true,
       requestBadgePermission: true,
-      requestAlertPermission: true,
+      defaultPresentAlert: true,
+      defaultPresentSound: false,
+      defaultPresentBadge: true,
+      onDidReceiveLocalNotification: null,
     );
 
     var initializationSettings = InitializationSettings(
@@ -41,7 +45,6 @@ class LocalNotification {
     String uuid,
     String title,
     String content, {
-    FlutterLocalNotificationsPlugin? plugin,
     String? targetId,
     int? badgeNumber,
     String? payload,
@@ -77,13 +80,13 @@ class LocalNotification {
     S localizations = S.of(Global.appContext);
     switch (Settings.notificationType) {
       case NotificationType.only_name:
-        await (plugin ?? _flutterLocalNotificationsPlugin).show(notificationId, title, localizations.you_have_new_message, platformChannelSpecifics, payload: payload);
+        await _flutterLocalNotificationsPlugin.show(notificationId, title, localizations.you_have_new_message, platformChannelSpecifics, payload: payload);
         break;
       case NotificationType.name_and_message:
-        await (plugin ?? _flutterLocalNotificationsPlugin).show(notificationId, title, content, platformChannelSpecifics, payload: payload);
+        await _flutterLocalNotificationsPlugin.show(notificationId, title, content, platformChannelSpecifics, payload: payload);
         break;
       case NotificationType.none:
-        await (plugin ?? _flutterLocalNotificationsPlugin).show(notificationId, localizations.new_message, localizations.you_have_new_message, platformChannelSpecifics, payload: payload);
+        await _flutterLocalNotificationsPlugin.show(notificationId, localizations.new_message, localizations.you_have_new_message, platformChannelSpecifics, payload: payload);
         break;
     }
   }

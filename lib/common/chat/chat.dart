@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
@@ -141,6 +142,7 @@ class ChatCommon with Tag {
     // unread
     if (offset == 0 && (unread == null || unread > 0)) {
       _messageStorage.queryListUnReadByTargetId(targetId).then((List<MessageSchema> unreadList) {
+        int badgeDown = 0;
         unreadList.asMap().forEach((index, MessageSchema element) {
           if (index == 0) {
             sessionCommon.setUnReadCount(element.targetId, 0, notify: true); // await
@@ -149,7 +151,9 @@ class ChatCommon with Tag {
           // if (index >= unreadList.length - 1) {
           //   sessionCommon.setUnReadCount(element.targetId, 0, notify: true); // await
           // }
+          if (element.canDisplayAndRead) badgeDown++;
         });
+        Badge.onCountDown(badgeDown);
       });
       list = list.map((e) => e.isOutbound == false ? MessageStatus.set(e, MessageStatus.ReceivedRead) : e).toList(); // fake read
     }
@@ -162,6 +166,10 @@ class ChatCommon with Tag {
     await _messageStorage.updateMessageStatus(schema);
     if (notify) onUpdateSink.add(schema);
     return schema;
+  }
+
+  Future<int> unreadCount() {
+    return _messageStorage.unReadCount();
   }
 
   Future<bool> msgDelete(String msgId, {bool notify = false}) async {

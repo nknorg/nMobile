@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:uuid/uuid.dart';
 
@@ -28,12 +28,11 @@ class Common {
           bool? isApplicationForeground = event["isApplicationForeground"];
           String title = event["title"] ?? S.of(Global.appContext).new_message;
           String content = event["content"] ?? S.of(Global.appContext).you_have_new_message;
-          Toast.show("收到通知 - 前台:$isApplicationForeground - title:${event["title"]} - content:${event["content"]}"); // TODO:GG remove
           logger.i("Common - onRemoteMessageReceived - isApplicationForeground:$isApplicationForeground - title:$title - content:$content");
           if (!(isApplicationForeground ?? true)) {
-            // TODO:GG badge (receivePush + entryApp + readMessage)
             localNotification.show(Uuid().v4(), title, content);
           }
+          Badge.onCountUp(1);
           break;
       }
     });
@@ -81,6 +80,16 @@ class Common {
     try {
       final Map resp = await _methodChannel.invokeMethod('getFCMToken', {});
       return resp['token'];
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  static Future updateBadgeCount(int count) async {
+    try {
+      await _methodChannel.invokeMethod('updateBadgeCount', {
+        'badge_count': count,
+      });
     } catch (e) {
       throw e;
     }
