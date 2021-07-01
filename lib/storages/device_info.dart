@@ -28,6 +28,7 @@ class DeviceInfoStorage with Tag {
     await db.execute('CREATE INDEX index_contact_id ON $tableName (contact_id)');
     await db.execute('CREATE INDEX index_device_id ON $tableName (device_id)');
     await db.execute('CREATE INDEX index_contact_id_update_at ON $tableName (contact_id, update_at)');
+    await db.execute('CREATE INDEX index_contact_id_device_id_update_at ON $tableName (contact_id, device_id, update_at)');
   }
 
   Future<DeviceInfoSchema?> insert(DeviceInfoSchema? schema) async {
@@ -43,9 +44,7 @@ class DeviceInfoStorage with Tag {
       }
       logger.w("$TAG - insert - fail - schema:$schema");
     } catch (e) {
-      if (e.toString() != "contact duplicated!") {
-        handleError(e);
-      }
+      handleError(e);
     }
     return null;
   }
@@ -74,25 +73,49 @@ class DeviceInfoStorage with Tag {
     return null;
   }
 
-  Future<bool> setData(int? contactId, Map<String, dynamic>? newData) async {
-    if (contactId == null || contactId == 0 || newData == null) return false;
+  Future<DeviceInfoSchema?> queryByDeviceId(int? contactId, String? deviceId) async {
+    if (contactId == null || contactId == 0 || deviceId == null || deviceId.isEmpty) return null;
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['*'],
+        where: 'contact_id = ? AND device_id = ?',
+        whereArgs: [contactId, deviceId],
+        offset: 0,
+        limit: 1,
+        orderBy: 'update_at desc',
+      );
+      if (res != null && res.length > 0) {
+        DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
+        logger.d("$TAG - queryByDeviceId - success - contactId:$contactId - schema:$schema");
+        return schema;
+      }
+      logger.d("$TAG - queryByDeviceId - empty - contactId:$contactId");
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+  }
 
-    Map<String, dynamic> saveDataInfo = newData;
-    saveDataInfo['data_version'] = newData['data_version'] ?? Uuid().v4();
-    saveDataInfo['update_at'] = DateTime.now().millisecondsSinceEpoch;
-
+  Future<bool> update(int? contactId, Map<String, dynamic> newData, String? dataVersion) async {
+    if (contactId == null || contactId == 0) return false;
     try {
       int? count = await db?.update(
         tableName,
-        saveDataInfo,
+        {
+          'data': newData,
+          'data_version': dataVersion ?? Uuid().v4(),
+          'update_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        ,
         where: 'contact_id = ?',
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setData - success - contactId:$contactId - data:$saveDataInfo");
+        logger.d("$TAG - setData - success - contactId:$contactId - data:$newData");
         return true;
       }
-      logger.w("$TAG - setData - fail - contactId:$contactId - data:$saveDataInfo");
+      logger.w("$TAG - setData - fail - contactId:$contactId - data:$newData");
     } catch (e) {
       handleError(e);
     }
