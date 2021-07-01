@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
+import 'package:nmobile/common/device/device_info.dart';
 import 'package:nmobile/common/push/local_notification.dart';
 import 'package:nmobile/common/session/session.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
@@ -19,51 +20,54 @@ GetIt locator = GetIt.instance;
 late Application application;
 late TaskService taskService;
 late Authorization authorization;
-late AudioHelper audioHelper;
 late LocalNotification localNotification;
 // late BackgroundFetchService backgroundFetchService;
+late AudioHelper audioHelper;
 late MemoryCache memoryCache;
 
+late WalletCommon walletCommon;
 late ClientCommon clientCommon;
-late ChatCommon chatCommon;
+late ContactCommon contactCommon;
 late SessionCommon sessionCommon;
+late ChatCommon chatCommon;
 late ChatInCommon chatInCommon;
 late ChatOutCommon chatOutCommon;
-late ContactCommon contactCommon;
-late WalletCommon walletCommon;
+late DeviceInfoCommon deviceInfoCommon;
 
 void setupLocator() {
   // register
   locator.registerSingleton(Application());
   locator.registerSingleton(TaskService());
   locator.registerSingleton(Authorization());
-  locator.registerSingleton(AudioHelper());
   locator.registerSingleton(LocalNotification());
   // locator.registerSingleton(BackgroundFetchService());
+  locator.registerSingleton(AudioHelper());
   locator.registerSingleton(MemoryCache());
 
+  locator.registerSingleton(WalletCommon());
   locator.registerSingleton(ClientCommon());
-  locator.registerSingleton(ChatCommon());
+  locator.registerSingleton(ContactCommon());
   locator.registerSingleton(SessionCommon());
+  locator.registerSingleton(ChatCommon());
   locator.registerSingleton(ChatInCommon());
   locator.registerSingleton(ChatOutCommon());
-  locator.registerSingleton(ContactCommon());
-  locator.registerSingleton(WalletCommon());
+  locator.registerSingleton(DeviceInfoCommon());
 
   // instance
   application = locator.get<Application>();
   taskService = locator.get<TaskService>();
   authorization = locator.get<Authorization>();
-  audioHelper = locator.get<AudioHelper>();
   localNotification = locator.get<LocalNotification>();
   // backgroundFetchService = locator.get<BackgroundFetchService>();
+  audioHelper = locator.get<AudioHelper>();
   memoryCache = locator.get<MemoryCache>();
 
+  walletCommon = locator.get<WalletCommon>();
   clientCommon = locator.get<ClientCommon>();
-  chatCommon = locator.get<ChatCommon>();
+  contactCommon = locator.get<ContactCommon>();
   sessionCommon = locator.get<SessionCommon>();
+  chatCommon = locator.get<ChatCommon>();
   chatInCommon = locator.get<ChatInCommon>();
   chatOutCommon = locator.get<ChatOutCommon>();
-  contactCommon = locator.get<ContactCommon>();
-  walletCommon = locator.get<WalletCommon>();
+  deviceInfoCommon = locator.get<DeviceInfoCommon>();
 }
