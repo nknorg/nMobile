@@ -91,6 +91,8 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     packagingOptions {
+        exclude 'META-INFTICE'
+        exclude 'META-INF/INDEX.LIST'
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/DEPENDENCIES.txt'
         exclude 'META-INF/dependencies.txt'
@@ -100,8 +102,6 @@ android {
         exclude 'META-INF/NOTICE'
         exclude 'META-INF/NOTICE.txt'
         exclude 'META-INF/notice.txt'
-        exclude 'META-INFTICE'
-        exclude 'META-INF/INDEX.LIST'
         exclude 'META-INF/LGPL2.1'
         exclude 'META-INF/ASL2.0'
         exclude 'META-INF/io.netty.versions.properties'
@@ -143,7 +143,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1"
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
     // sentry
-    implementation 'io.sentry:sentry-android:4.3.0'
+    implementation 'io.sentry:sentry-android:5.0.1'
     // apns
     implementation 'com.clevertap.apns:apns-http2:1.0.3'
     // google
