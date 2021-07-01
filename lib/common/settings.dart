@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:nmobile/storages/settings.dart';
 
 class NotificationType {
@@ -6,17 +8,29 @@ class NotificationType {
   static const int none = 2;
 }
 
+class PlatformName {
+  static const String android = "android";
+  static const String ios = "ios";
+
+  static String get() {
+    return Platform.isAndroid ? android : (Platform.isIOS ? ios : "");
+  }
+}
+
 class Settings {
   static const bool debug = true;
   static const String appName = "nMobile";
   static const String sentryDSN = 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254';
   static const String fcmServerToken = "Add Your Firebase server token";
 
+  // notification
   static late String locale;
   static late int notificationType;
   static late bool biometricsAuthentication;
 
+  // duration
   static late Duration profileExpireDuration = Duration(hours: 1);
+  static late Duration deviceInfoExpireDuration = Duration(seconds: 10); // TODO:GG test
   static late Duration msgResendDuration = Duration(minutes: 3);
 
   static init() async {

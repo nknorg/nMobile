@@ -18,9 +18,8 @@ class Global {
 
   static String get versionFormat => '${Global.version} + (Build ${Global.build})';
 
-  static String platformName = Platform.isAndroid ? "android" : (Platform.isIOS ? "ios" : "");
-  static String platformVersion = "";
   static String deviceId = "";
+  static String deviceVersion = "";
 
   static List<String> defaultSeedRpcList = [
     'http://seed.nkn.org:30003',
@@ -45,11 +44,11 @@ class Global {
     Global.build = packageInfo.buildNumber.replaceAll('.', '');
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     if (Platform.isAndroid) {
-      Global.platformVersion = (await deviceInfo.androidInfo).version.release;
       Global.deviceId = (await deviceInfo.androidInfo).androidId;
+      Global.deviceVersion = (await deviceInfo.androidInfo).version.release;
     } else if (Platform.isIOS) {
-      Global.platformVersion = (await deviceInfo.iosInfo).systemVersion; // TODO:GG test
       Global.deviceId = (await deviceInfo.iosInfo).identifierForVendor; // TODO:GG test
+      Global.deviceVersion = (await deviceInfo.iosInfo).systemVersion; // TODO:GG test
     }
   }
 }

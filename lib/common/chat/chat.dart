@@ -5,6 +5,7 @@ import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -54,14 +55,14 @@ class ChatCommon with Tag {
     } else {
       if (exist.profileExpiresAt == null || DateTime.now().isAfter(exist.profileExpiresAt!.add(Settings.profileExpireDuration))) {
         logger.d("$TAG - contactHandle - sendRequestHeader - schema:$exist");
-        await chatOutCommon.sendContactRequest(exist, RequestType.header);
+        chatOutCommon.sendContactRequest(exist, RequestType.header); // await
       } else {
         double between = ((exist.profileExpiresAt?.add(Settings.profileExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG contactHandle - expiresAt - between:${between}s");
       }
     }
     // burning
-    if (exist != null && message.canBurning && !message.isTopic && message.contentType != ContentType.eventContactOptions) {
+    if (exist != null && message.canBurning && !message.isTopic && message.contentType != ContentType.contactOptions) {
       List<int?> burningOptions = MessageOptions.getContactBurning(message);
       int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
       int? updateBurnAfterTime = burningOptions.length >= 2 ? burningOptions[1] : null;
@@ -71,7 +72,7 @@ class ChatCommon with Tag {
           exist.options?.updateBurnAfterTime = updateBurnAfterTime;
           contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterTime, notify: true); // await
         } else if ((updateBurnAfterTime ?? 0) <= exist.options!.updateBurnAfterTime!) {
-          // TODO:GG 根据device协议来判断是不是回发burning，以保持一致
+          // TODO:GG  根据device协议来判断是不是回发burning，以保持一致
         }
       }
     }
@@ -117,6 +118,25 @@ class ChatCommon with Tag {
       await sessionCommon.setLastMessageAndUnReadCount(message.targetId, message, unreadCount, notify: true);
     }
     return exist;
+  }
+
+  Future<DeviceInfoSchema?> deviceInfoHandle(ContactSchema? contact) async {
+    if (contact == null || contact.id == 0) return null;
+    // duplicated
+    DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.id);
+    if (latest == null) {
+      logger.d("$TAG - deviceInfoHandle - new - request - contact:$contact");
+      await chatOutCommon.sendDeviceRequest(contact.clientAddress, null);
+    } else {
+      if (latest.updateAt == null || DateTime.now().isAfter(latest.updateAt!.add(Settings.deviceInfoExpireDuration))) {
+        logger.d("$TAG - deviceInfoHandle - expire - request - schema:$latest");
+        await chatOutCommon.sendDeviceRequest(contact.clientAddress, latest.dataVersion);
+      } else {
+        double between = ((latest.updateAt?.add(Settings.deviceInfoExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
+        logger.d("$TAG deviceInfoHandle - expire - between:${between}s");
+      }
+    }
+    return latest;
   }
 
   Future<MessageSchema> burningHandle(MessageSchema message) async {

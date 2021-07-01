@@ -2,6 +2,7 @@ import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
+import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/session.dart';
 import 'package:nmobile/storages/topic.dart';
@@ -30,10 +31,11 @@ class DB {
       onCreate: (Database db, int version) async {
         logger.i("DB - create - version:$version");
         await ContactStorage.create(db, version);
-        await MessageStorage.create(db, version);
         await TopicStorage.create(db, version);
         // await SubscriberRepo.create(db, version);
         await SessionStorage.create(db, version);
+        await MessageStorage.create(db, version);
+        await DeviceInfoStorage.create(db, version);
 
         // create contact me
         try {
@@ -49,6 +51,7 @@ class DB {
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - upgrade - old:$oldVersion - new:$newVersion");
         // TODO:GG index sync
+        // TODO:GG deviceInfo create
         // TODO:GG session data move
         // TODO:GG delete message(receipt) + read message(piece + contactOptions)
         // if (newVersion >= dataBaseVersionV2) {
