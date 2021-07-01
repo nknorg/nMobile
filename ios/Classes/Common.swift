@@ -72,6 +72,8 @@ class Common : ChannelBase, FlutterStreamHandler {
             getAPNSToken(call, result: result)
         case "sendPushAPNS":
             sendPushAPNS(call, result: result)
+        case "updateBadgeCount":
+            updateBadgeCount(call, result: result)
         case "splitPieces":
             splitPieces(call, result: result)
         case "combinePieces":
@@ -105,6 +107,19 @@ class Common : ChannelBase, FlutterStreamHandler {
             APNSPushService.shared().pushContent(pushPayload, token: deviceToken)
             var resp: [String: Any] = [String: Any]()
             resp["event"] = "sendPushAPNS"
+            self.resultSuccess(result: result, resp: resp)
+            return
+        }
+    }
+    
+    private func updateBadgeCount(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let badgeCount = args["badge_count"] as? Int ?? 0
+        
+        commonQueue.async {
+            UIApplication.shared.applicationIconBadgeNumber = badgeCount
+            var resp: [String: Any] = [String: Any]()
+            resp["event"] = "updateBadgeCount"
             self.resultSuccess(result: result, resp: resp)
             return
         }
