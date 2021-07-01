@@ -136,7 +136,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           ],
         ),
       );
-    } else if (msgType == ContentType.eventContactOptions) {
+    } else if (msgType == ContentType.contactOptions) {
       Map<String, dynamic> optionData = _lastMsg?.content ?? Map<String, dynamic>();
       Map<String, dynamic> content = optionData['content'] ?? Map<String, dynamic>();
       if (content.keys.length <= 0) return SizedBox.shrink();
@@ -170,14 +170,14 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           overflow: TextOverflow.ellipsis,
         );
       }
-    } else if (msgType == ContentType.eventSubscribe) {
+    } else if (msgType == ContentType.topicSubscribe) {
       contentWidget = Label(
         _localizations.joined_channel,
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
-    } else if (msgType == ContentType.eventChannelInvitation) {
+    } else if (msgType == ContentType.topicInvitation) {
       contentWidget = Label(
         _localizations.channel_invitation,
         type: LabelType.bodyRegular,
