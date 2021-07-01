@@ -184,11 +184,11 @@ class MessageStatus {
 }
 
 class MessageData {
-  static const K_CONTACT_PIECE_SUPPORT = 'onePieceReady'; // TODO:GG 优化
-  static const K_CONTACT_OPTIONS_TYPE = 'optionType'; // TODO:GG 优化
+  static const K_CONTACT_PIECE_SUPPORT = 'onePieceReady'; // TODO:GG  优化
+  static const K_CONTACT_OPTIONS_TYPE = 'optionType'; // TODO:GG  优化
 
-  static const V_CONTACT_OPTIONS_TYPE_BURN_TIME = '0'; // TODO:GG 优化
-  static const V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN = '1'; // TODO:GG 优化
+  static const V_CONTACT_OPTIONS_TYPE_BURN_TIME = '0'; // TODO:GG  优化
+  static const V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN = '1'; // TODO:GG  优化
 
   static String getReceipt(String msgId) {
     Map map = {
@@ -289,8 +289,8 @@ class MessageData {
       'id': Uuid().v4(),
       'appName': Settings.appName,
       'appVersion': Global.build,
-      'platform': Global.osName,
-      'platformVersion': Global.osVersion,
+      'platform': Global.platformName,
+      'platformVersion': Global.platformVersion,
       'deviceToken': deviceToken,
       'latestLoginAt': DateTime.now().millisecondsSinceEpoch,
       'profileVersion': profileVersion,

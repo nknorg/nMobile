@@ -18,7 +18,7 @@ class ContactSchema {
   String? firstName; // (required : name) <-> first_name
   String? lastName; // <-> last_name
   String? notes; // == extraInfo[notes] <-> data[notes]
-  Map<String, dynamic>? extraInfo; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ..., avatar, firstName]
+  Map<String, dynamic>? extraInfo; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
 
   File? avatar; // (local_path) <-> avatar
   OptionsSchema? options; // <-> options
