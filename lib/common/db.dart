@@ -39,11 +39,11 @@ class DB {
 
         // create contact me
         try {
-          ContactSchema? me = await ContactSchema.createByType(publicKey, ContactType.me);
-          if (me == null) return;
-          Map<String, dynamic> add = await me.toMap();
-          var count = await db.insert(ContactStorage.tableName, add);
-          logger.i("DB - contact me insert schema:${count > 0 ? me : null}");
+          ContactSchema? contactMe = await ContactSchema.createByType(publicKey, ContactType.me);
+          if (contactMe == null) return;
+          Map<String, dynamic> contactMap = await contactMe.toMap();
+          int id = await db.insert(ContactStorage.tableName, contactMap);
+          logger.i("DB - contact me insert schema:${id > 0 ? contactMe : null}");
         } catch (e) {
           handleError(e);
         }

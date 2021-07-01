@@ -3,7 +3,6 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'package:uuid/uuid.dart';
 
 class DeviceInfoStorage with Tag {
   static String get tableName => 'DeviceInfo';
@@ -19,7 +18,6 @@ class DeviceInfoStorage with Tag {
         contact_id INTEGER,
         device_id TEXT,
         data TEXT,
-        data_version TEXT,
       )''';
     // create table
     db.execute(createSql);
@@ -97,14 +95,13 @@ class DeviceInfoStorage with Tag {
     return null;
   }
 
-  Future<bool> update(int? contactId, Map<String, dynamic> newData, String? dataVersion) async {
+  Future<bool> update(int? contactId, Map<String, dynamic> newData) async {
     if (contactId == null || contactId == 0) return false;
     try {
       int? count = await db?.update(
         tableName,
         {
           'data': newData,
-          'data_version': dataVersion ?? Uuid().v4(),
           'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         ,

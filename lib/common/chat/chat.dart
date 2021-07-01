@@ -72,7 +72,7 @@ class ChatCommon with Tag {
           exist.options?.updateBurnAfterTime = updateBurnAfterTime;
           contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterTime, notify: true); // await
         } else if ((updateBurnAfterTime ?? 0) <= exist.options!.updateBurnAfterTime!) {
-          // TODO:GG  根据device协议来判断是不是回发burning，以保持一致
+          // TODO:GG 根据device协议来判断是不是回发burning，以保持一致
         }
       }
     }
@@ -126,11 +126,11 @@ class ChatCommon with Tag {
     DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.id);
     if (latest == null) {
       logger.d("$TAG - deviceInfoHandle - new - request - contact:$contact");
-      await chatOutCommon.sendDeviceRequest(contact.clientAddress, null);
+      await chatOutCommon.sendDeviceRequest(contact.clientAddress);
     } else {
       if (latest.updateAt == null || DateTime.now().isAfter(latest.updateAt!.add(Settings.deviceInfoExpireDuration))) {
         logger.d("$TAG - deviceInfoHandle - expire - request - schema:$latest");
-        await chatOutCommon.sendDeviceRequest(contact.clientAddress, latest.dataVersion);
+        await chatOutCommon.sendDeviceRequest(contact.clientAddress);
       } else {
         double between = ((latest.updateAt?.add(Settings.deviceInfoExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG deviceInfoHandle - expire - between:${between}s");
