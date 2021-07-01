@@ -276,23 +276,23 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getDeviceRequest(String? dataVersion) {
+  static String getDeviceRequest() {
     Map data = {
       'id': Uuid().v4(),
-      'dataVersion': dataVersion,
+      'contentType': ContentType.deviceRequest,
     };
     return jsonEncode(data);
   }
 
-  static String getDeviceInfo(String? dataVersion) {
+  static String getDeviceInfo() {
     Map data = {
       'id': Uuid().v4(),
+      'contentType': ContentType.deviceInfo,
+      'deviceId': Global.deviceId,
       'appName': Settings.appName,
       'appVersion': Global.build,
       'platform': PlatformName.get(),
       'platformVersion': Global.deviceVersion,
-      'deviceId': Global.deviceId,
-      'dataVersion': dataVersion,
     };
     return jsonEncode(data);
   }
