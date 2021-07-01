@@ -11,6 +11,7 @@ import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/routes/routes.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'app.dart';
@@ -70,6 +71,7 @@ void main() async {
       appRunner: () => runApp(Main()),
     );
   }, onZoneError: (Object error, StackTrace stack) async {
+    if (Settings.debug) logger.e(error, stack);
     await Sentry.captureException(error, stackTrace: stack);
   });
 }
