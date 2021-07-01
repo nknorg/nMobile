@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/chat/session_item.dart';
@@ -110,6 +111,9 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
         _isShowTip = !value;
       });
     });
+
+    // badge
+    Badge.refreshCount();
   }
 
   @override
