@@ -92,12 +92,13 @@ PODS:
   - SDWebImageWebPCoder (0.8.3):
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.10)
-  - Sentry (6.2.1):
-    - Sentry/Core (= 6.2.1)
-  - Sentry/Core (6.2.1)
+  - Sentry (7.1.3):
+    - Sentry/Core (= 7.1.3)
+  - Sentry/Core (7.1.3)
   - sentry_flutter (0.0.1):
     - Flutter
-    - Sentry (~> 6.2.1)
+    - FlutterMacOS
+    - Sentry (~> 7.1.3)
   - shared_preferences (0.0.1):
     - Flutter
   - sqflite_sqlcipher (0.0.1):
@@ -135,7 +136,7 @@ DEPENDENCIES:
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
   - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
   - qr_code_scanner (from `.symlinks/plugins/qr_code_scanner/ios`)
-  - Sentry (from `https://github.com/getsentry/sentry-cocoa.git`, tag `6.2.1`)
+  - Sentry (from `https://github.com/getsentry/sentry-cocoa.git`, tag `7.1.3`)
   - sentry_flutter (from `.symlinks/plugins/sentry_flutter/ios`)
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
   - sqflite_sqlcipher (from `.symlinks/plugins/sqflite_sqlcipher/ios`)
@@ -195,7 +196,7 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/qr_code_scanner/ios"
   Sentry:
     :git: https://github.com/getsentry/sentry-cocoa.git
-    :tag: 6.2.1
+    :tag: 7.1.3
   sentry_flutter:
     :path: ".symlinks/plugins/sentry_flutter/ios"
   shared_preferences:
@@ -210,7 +211,7 @@ EXTERNAL SOURCES:
 CHECKOUT OPTIONS:
   Sentry:
     :git: https://github.com/getsentry/sentry-cocoa.git
-    :tag: 6.2.1
+    :tag: 7.1.3
 
 SPEC CHECKSUMS:
   audioplayers: 455322b54050b30ea4b1af7cd9e9d105f74efa8c
@@ -239,8 +240,8 @@ SPEC CHECKSUMS:
   qr_code_scanner: bb67d64904c3b9658ada8c402e8b4d406d5d796e
   SDWebImage: c666b97e1fa9c64b4909816a903322018f0a9c84
   SDWebImageWebPCoder: bbf46e29fb8d1980a78ad3d5e9b4123c77f10ebc
-  Sentry: 9b922b396b0e0bca8516a10e36b0ea3ebea5faf7
-  sentry_flutter: 5b3c6d717db5b7482504a313c831b318297d4d37
+  Sentry: 6d963d64804dd06d96e778be729613f481394312
+  sentry_flutter: f20d4f199442900fbdab2b8496f1d2091d8b94d9
   shared_preferences: af6bfa751691cdc24be3045c43ec037377ada40d
   sqflite_sqlcipher: 70eb7fd8d4f0b0352d0bde5cf345b810737f54bb
   SQLCipher: 1ab0b9486a77d141e72e92ff30681926ed79c07a
@@ -250,6 +251,6 @@ SPEC CHECKSUMS:
   url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
   vibration: b5a33e764c3f609a975b9dca73dce20fdde627dc
 
-PODFILE CHECKSUM: 75f558b7927a6a46f7df9ec0f77b0642282697fd
+PODFILE CHECKSUM: 1c91cd50e849f7ebd0b243170ce89059f3faa477
 
 COCOAPODS: 1.10.1
