@@ -107,8 +107,9 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // tip
     _settingsStorage.getSettings(SettingsStorage.CHAT_TIP_STATUS).then((value) {
+      bool showed = value != null && value != "false" && value != false;
       setState(() {
-        _isShowTip = !value;
+        _isShowTip = !showed;
       });
     });
 
