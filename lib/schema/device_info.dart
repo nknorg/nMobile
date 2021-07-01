@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:nmobile/utils/utils.dart';
-import 'package:uuid/uuid.dart';
 
 class DeviceInfoSchema {
   int? id; // <- id
@@ -10,7 +9,6 @@ class DeviceInfoSchema {
   int contactId; // (required) <-> contact_id
   String? deviceId; //  <-> device_id
   Map<String, dynamic>? data; // [*]<-> data[*, appName, appVersion, platform, platformVersion, ...]
-  String? dataVersion; // <-> data_version
 
   DeviceInfoSchema({
     this.id,
@@ -19,7 +17,6 @@ class DeviceInfoSchema {
     required this.contactId,
     this.deviceId,
     this.data,
-    this.dataVersion,
   }) {
     if (this.createAt == null) {
       this.createAt = DateTime.now();
@@ -39,7 +36,6 @@ class DeviceInfoSchema {
       'contact_id': contactId,
       'device_id': deviceId,
       'data': data != null ? jsonEncode(data) : '{}',
-      'data_version': dataVersion ?? Uuid().v4(),
     };
     return map;
   }
@@ -51,7 +47,6 @@ class DeviceInfoSchema {
       updateAt: e['update_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['update_at']) : null,
       contactId: e['contact_id'] ?? 0,
       deviceId: e['device_id'],
-      dataVersion: e['data_version'],
     );
 
     if (e['data'] != null) {
@@ -113,6 +108,6 @@ class DeviceInfoSchema {
 
   @override
   String toString() {
-    return 'DeviceInfoSchema{id: $id, createAt: $createAt, updateAt: $updateAt, contactId: $contactId, dataVersion: $dataVersion, deviceId: $deviceId, data: $data}';
+    return 'DeviceInfoSchema{id: $id, createAt: $createAt, updateAt: $updateAt, contactId: $contactId, deviceId: $deviceId, data: $data}';
   }
 }

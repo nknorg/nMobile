@@ -7,6 +7,7 @@ import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
@@ -40,6 +41,8 @@ class ChatInCommon with Tag {
     await chatCommon.topicHandle(message);
     // session
     await chatCommon.sessionHandle(message);
+    // device_info
+    chatCommon.deviceInfoHandle(contact); // await
     // message
     if (needWait) {
       await _messageHandle(message, contact: contact);
@@ -65,6 +68,12 @@ class ChatInCommon with Tag {
       case ContentType.contactOptions:
         await _receiveContactOptions(received, contact: contact);
         chatOutCommon.sendReceipt(received); // await
+        break;
+      case ContentType.deviceRequest:
+        _receiveDeviceRequest(received, contact: contact); // await
+        break;
+      case ContentType.deviceInfo:
+        _receiveDeviceInfo(received, contact: contact); // await
         break;
       case ContentType.text:
       case ContentType.textExtension:
@@ -213,6 +222,41 @@ class ChatInCommon with Tag {
     if (schema == null) return;
     // display
     _onSavedSink.add(schema);
+  }
+
+  // NO DB NO display
+  Future _receiveDeviceRequest(MessageSchema received, {ContactSchema? contact}) async {
+    ContactSchema? exist = contact ?? await contactCommon.queryByClientAddress(received.from);
+    if (exist == null) {
+      logger.w("$TAG - _receiveDeviceRequest - contact - empty - data:${received.content}");
+      return;
+    }
+    chatOutCommon.sendDeviceInfo(exist.clientAddress);
+  }
+
+  // NO DB NO display
+  Future _receiveDeviceInfo(MessageSchema received, {ContactSchema? contact}) async {
+    if (received.content == null) return;
+    Map<String, dynamic> data = received.content; // == data
+    // duplicated
+    ContactSchema? exist = contact ?? await contactCommon.queryByClientAddress(received.from);
+    if (exist == null || exist.id == null) {
+      logger.w("$TAG - _receiveDeviceInfo - empty - received:$received");
+      return;
+    }
+    Map<String, dynamic> content = data['content'] ?? Map();
+    DeviceInfoSchema schema = DeviceInfoSchema(
+      contactId: exist.id!,
+      deviceId: content["deviceId"],
+      data: {
+        'appName': content["appName"],
+        'appVersion': content["appVersion"],
+        'platform': content["platform"],
+        'platformVersion': content["platformVersion"],
+      },
+    );
+    logger.d("$TAG - _receiveDeviceInfo - addOrUpdate - schema:$schema - content:$content");
+    await deviceInfoCommon.addOrUpdate(schema);
   }
 
   Future _receiveText(MessageSchema received) async {

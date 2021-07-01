@@ -155,35 +155,35 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future sendDeviceRequest(String? clientAddress, String? profileVersion, {int tryCount = 1}) async {
+  Future sendDeviceRequest(String? clientAddress, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if (tryCount > 3) return;
     try {
-      String data = MessageData.getDeviceRequest(profileVersion);
+      String data = MessageData.getDeviceRequest();
       await chatCommon.sendData(clientAddress, data);
       logger.d("$TAG - sendDeviceRequest - success - data:$data");
     } catch (e) {
       handleError(e);
       logger.w("$TAG - sendDeviceRequest - fail - tryCount:$tryCount - clientAddress:$clientAddress");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendDeviceRequest(clientAddress, profileVersion, tryCount: tryCount++);
+        return sendDeviceRequest(clientAddress, tryCount: tryCount++);
       });
     }
   }
 
   // NO DB NO display (1 to 1)
-  Future sendDeviceInfo(String? clientAddress, String? profileVersion, {int tryCount = 1}) async {
+  Future sendDeviceInfo(String? clientAddress, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if (tryCount > 3) return;
     try {
-      String data = MessageData.getDeviceInfo(profileVersion);
+      String data = MessageData.getDeviceInfo();
       await chatCommon.sendData(clientAddress, data);
       logger.d("$TAG - sendDeviceInfo - success - data:$data");
     } catch (e) {
       handleError(e);
       logger.w("$TAG - sendDeviceInfo - fail - tryCount:$tryCount - clientAddress:$clientAddress");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendDeviceInfo(clientAddress, profileVersion, tryCount: tryCount++);
+        return sendDeviceInfo(clientAddress, tryCount: tryCount++);
       });
     }
   }
@@ -329,6 +329,8 @@ class ChatOutCommon with Tag {
     TopicSchema? _topic = await chatCommon.topicHandle(schema);
     // session
     chatCommon.sessionHandle(schema); // await
+    // device_info
+    chatCommon.deviceInfoHandle(_contact); // await
     // fail
     if (pid == null || pid.isEmpty) {
       schema = MessageStatus.set(schema, MessageStatus.SendFail);
