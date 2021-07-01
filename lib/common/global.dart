@@ -20,6 +20,7 @@ class Global {
 
   static String platformName = Platform.isAndroid ? "android" : (Platform.isIOS ? "ios" : "");
   static String platformVersion = "";
+  static String deviceId = "";
 
   static List<String> defaultSeedRpcList = [
     'http://seed.nkn.org:30003',
@@ -45,8 +46,10 @@ class Global {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     if (Platform.isAndroid) {
       Global.platformVersion = (await deviceInfo.androidInfo).version.release;
+      Global.deviceId = (await deviceInfo.androidInfo).androidId;
     } else if (Platform.isIOS) {
       Global.platformVersion = (await deviceInfo.iosInfo).systemVersion; // TODO:GG test
+      Global.deviceId = (await deviceInfo.iosInfo).identifierForVendor; // TODO:GG test
     }
   }
 }
