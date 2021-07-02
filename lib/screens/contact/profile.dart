@@ -106,8 +106,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     }
   }
 
-  // static const fcmGapString = '__FCMToken__:';
-
   ContactSchema? _contactSchema;
   WalletSchema? _walletDefault;
 

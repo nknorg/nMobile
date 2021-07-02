@@ -46,9 +46,11 @@ class Global {
     if (Platform.isAndroid) {
       Global.deviceId = (await deviceInfo.androidInfo).androidId;
       Global.deviceVersion = (await deviceInfo.androidInfo).version.release;
+      Global.deviceVersion = Global.deviceVersion.split(".")[0];
     } else if (Platform.isIOS) {
       Global.deviceId = (await deviceInfo.iosInfo).identifierForVendor;
       Global.deviceVersion = (await deviceInfo.iosInfo).systemVersion;
+      Global.deviceVersion = Global.deviceVersion.split(".")[0];
     }
   }
 }
