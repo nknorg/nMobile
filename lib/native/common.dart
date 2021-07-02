@@ -22,7 +22,7 @@ class Common {
         case "onDeviceTokenRefresh":
           String? token = event["result"];
           logger.i("Common - onDeviceTokenRefresh - token:$token");
-          // TODO:GG refresh profileVersion
+          // need refresh profileVersion, but here no version judge diff, just expire
           break;
         case "onRemoteMessageReceived":
           bool? isApplicationForeground = event["isApplicationForeground"];
