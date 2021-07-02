@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/device_info.dart';
@@ -101,7 +103,7 @@ class DeviceInfoStorage with Tag {
       int? count = await db?.update(
         tableName,
         {
-          'data': newData,
+          'data': newData != null ? jsonEncode(newData) : null,
           'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'contact_id = ?',
