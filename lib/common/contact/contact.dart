@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:nkn_sdk_flutter/wallet.dart';
-import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -20,10 +19,7 @@ class RequestType {
 }
 
 class ContactCommon with Tag {
-  static const String KEY_PIECE_ENABLE = "PIECE_ENABLE";
-
   ContactSchema? currentUser;
-  LocalStorage _localStorage = LocalStorage();
   ContactStorage _contactStorage = ContactStorage();
 
   StreamController<ContactSchema> _addController = StreamController<ContactSchema>.broadcast();
@@ -110,12 +106,12 @@ class ContactCommon with Tag {
 
   Future<ContactSchema?> query(int? contactId) async {
     if (contactId == null || contactId == 0) return null;
-    return await _contactStorage.query(contactId); // CACHE
+    return await _contactStorage.query(contactId);
   }
 
   Future<ContactSchema?> queryByClientAddress(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    return await _contactStorage.queryByClientAddress(clientAddress); // CACHE
+    return await _contactStorage.queryByClientAddress(clientAddress);
   }
 
   Future<int> queryCountByClientAddress(String? clientAddress) {
@@ -251,16 +247,5 @@ class ContactCommon with Tag {
 
   bool isProfileVersionSame(String? v1, String? v2) {
     return v1 != null && v1.isNotEmpty && v1 == v2;
-  }
-
-  setSupportPiece(String? clientAddress, {String? value}) async {
-    if (clientAddress == null || clientAddress.isEmpty) return;
-    await _localStorage.set("$KEY_PIECE_ENABLE:$clientAddress", value ?? "1");
-  }
-
-  Future<bool> isSupportPiece(String? clientAddress) async {
-    if (clientAddress == null || clientAddress.isEmpty) return false;
-    String? value = await _localStorage.get("$KEY_PIECE_ENABLE:$clientAddress");
-    return value != null && value.isNotEmpty;
   }
 }

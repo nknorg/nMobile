@@ -37,12 +37,12 @@ class ChatInCommon with Tag {
     if (message == null) return;
     // contact
     ContactSchema? contact = await chatCommon.contactHandle(message);
+    // device_info
+    chatCommon.deviceInfoHandle(message, contact); // await
     // topic
     await chatCommon.topicHandle(message);
     // session
     await chatCommon.sessionHandle(message);
-    // device_info
-    chatCommon.deviceInfoHandle(message, contact); // await
     // message
     if (needWait) {
       await _messageHandle(message, contact: contact);
@@ -133,10 +133,10 @@ class ChatInCommon with Tag {
       return;
     }
     // D-Chat NO support piece
-    String? supportPiece = data[MessageData.K_CONTACT_PIECE_SUPPORT]?.toString();
-    if (supportPiece?.isNotEmpty == true) {
-      contactCommon.setSupportPiece(received.from, value: supportPiece); // await
-    }
+    // String? supportPiece = data['onePieceReady']?.toString();
+    // if (supportPiece?.isNotEmpty == true) {
+    //   contactCommon.setSupportPiece(received.from, value: supportPiece); // await
+    // }
     // D-Chat NO RequestType.header
     String? requestType = data['requestType']?.toString();
     String? responseType = data['responseType']?.toString();
@@ -201,15 +201,15 @@ class ChatInCommon with Tag {
       return;
     }
     // options type
-    String? optionsType = data[MessageData.K_CONTACT_OPTIONS_TYPE]?.toString();
+    String? optionsType = data['optionType']?.toString();
     Map<String, dynamic> content = data['content'] ?? Map();
     if (optionsType == null || optionsType.isEmpty) return;
-    if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_BURN_TIME) {
+    if (optionsType == '0') {
       int burningSeconds = (content['deleteAfterSeconds'] as int?) ?? 0;
       int updateTime = (content['updateBurnAfterTime'] as int?) ?? (DateTime.now().millisecondsSinceEpoch - 1000);
       logger.d("$TAG - _receiveContactOptions - setBurn - burningSeconds:$burningSeconds - updateTIme:${DateTime.fromMillisecondsSinceEpoch(updateTime)} - data:$data");
       contactCommon.setOptionsBurn(existContact, burningSeconds, updateTime, notify: true); // await
-    } else if (optionsType == MessageData.V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN) {
+    } else if (optionsType == '1') {
       String deviceToken = (content['deviceToken']?.toString()) ?? "";
       logger.d("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
       contactCommon.setDeviceToken(existContact.id, deviceToken, notify: true); // await

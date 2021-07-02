@@ -45,18 +45,12 @@ class DeviceInfoCommon with Tag {
   //     },
   //   );
   // }
-  //
-  // bool isSameByData(DeviceInfoSchema? d1, DeviceInfoSchema? d2) {
-  //   if (d1 == null || d2 == null || d1.data == null || d2.data == null || d1.data!.isEmpty || d2.data!.isEmpty) return false;
-  //   return d1.appName == d2.appName && d1.appVersion == d2.appVersion && d1.platform == d2.platform && d1.platformVersion == d2.platformVersion;
-  // }
-  //
-  // bool isSameByDataVersion(DeviceInfoSchema? d1, DeviceInfoSchema? d2) {
-  //   if (d1 == null || d2 == null || d1.dataVersion == null || d2.dataVersion == null || d1.dataVersion!.isEmpty || d2.dataVersion!.isEmpty) return false;
-  //   return d1.dataVersion == d2.dataVersion;
-  // }
 
-  // TODO:GG 其他兼容 做成func
-  static const List<String> piecePlatforms = [PlatformName.android, PlatformName.ios];
-  static const int pieceDeviceVersionMin = 224;
+  bool isMsgPieceEnable(String? platform, int? appVersion) {
+    if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
+    bool platformOK = false, versionOk = false;
+    platformOK = (platform == PlatformName.android) || (platform == PlatformName.ios);
+    versionOk = appVersion >= 224;
+    return platformOK && versionOk;
+  }
 }
