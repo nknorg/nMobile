@@ -63,6 +63,8 @@ class ChatMessageItem extends StatelessWidget {
       case ContentType.contactOptions:
         contentsWidget.add(_contactOptionsWidget(context));
         break;
+      // case ContentType.deviceRequest:
+      // case ContentType.deviceInfo:
       case ContentType.text:
       case ContentType.textExtension:
       case ContentType.media:

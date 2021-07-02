@@ -192,13 +192,10 @@ class AudioHelper with Tag {
     String? recordPath = Path.getCompleteFile(Path.createLocalFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, "${Uuid().v4()}.aac"));
     if (recordPath == null || recordPath.isEmpty) return null;
     var outputFile = File(recordPath);
-    if (Platform.isAndroid) {
-      if (await outputFile.exists()) {
-        await outputFile.delete();
-      }
-    } else {
-      await outputFile.create(recursive: true);
+    if (await outputFile.exists()) {
+      await outputFile.delete();
     }
+    await outputFile.create(recursive: true);
     return outputFile.path;
   }
 }
