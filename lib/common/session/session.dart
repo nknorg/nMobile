@@ -65,7 +65,7 @@ class SessionCommon with Tag {
 
   Future<SessionSchema?> query(String? targetId) async {
     if (targetId == null || targetId.isEmpty) return null;
-    return await _sessionStorage.query(targetId); // CACHE
+    return await _sessionStorage.query(targetId);
   }
 
   Future<List<SessionSchema>> queryListRecent({int? offset, int? limit}) {
@@ -74,7 +74,7 @@ class SessionCommon with Tag {
 
   Future<bool> setLastMessageAndUnReadCount(String? targetId, MessageSchema lastMessage, int? unread, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty) return false;
-    SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage)); // CACHE
+    SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage));
     session.lastMessageTime = lastMessage.sendTime;
     session.lastMessageOptions = lastMessage.toMap();
     session.unReadCount = unread ?? await _messageStorage.unReadCountByTargetId(targetId);
@@ -85,7 +85,7 @@ class SessionCommon with Tag {
 
   Future<bool> setLastMessage(String? targetId, MessageSchema lastMessage, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty) return false;
-    SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage)); // CACHE
+    SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage));
     session.lastMessageTime = lastMessage.sendTime;
     session.lastMessageOptions = lastMessage.toMap();
     bool success = await _sessionStorage.updateLastMessage(session);

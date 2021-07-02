@@ -184,12 +184,6 @@ class MessageStatus {
 }
 
 class MessageData {
-  static const K_CONTACT_PIECE_SUPPORT = 'onePieceReady'; // TODO:GG 优化
-  static const K_CONTACT_OPTIONS_TYPE = 'optionType'; // TODO:GG 优化
-
-  static const V_CONTACT_OPTIONS_TYPE_BURN_TIME = '0'; // TODO:GG 优化
-  static const V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN = '1'; // TODO:GG 优化
-
   static String getReceipt(String msgId) {
     Map map = {
       'id': Uuid().v4(),
@@ -219,7 +213,6 @@ class MessageData {
       'version': profileVersion,
       'expiresAt': expiresAt.millisecondsSinceEpoch,
     };
-    data[K_CONTACT_PIECE_SUPPORT] = '2'; // DChat no support pieces
     return jsonEncode(data);
   }
 
@@ -246,7 +239,6 @@ class MessageData {
       }
     }
     data['content'] = content;
-    data[K_CONTACT_PIECE_SUPPORT] = '2'; // DChat no support pieces
     return jsonEncode(data);
   }
 
@@ -260,7 +252,7 @@ class MessageData {
       'content': {'deleteAfterSeconds': burnAfterSeconds, 'updateBurnAfterTime': updateBurnAfterTime},
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
-    data[K_CONTACT_OPTIONS_TYPE] = V_CONTACT_OPTIONS_TYPE_BURN_TIME;
+    data['optionType'] = '0';
     return jsonEncode(data);
   }
 
@@ -272,7 +264,7 @@ class MessageData {
       'content': {'deviceToken': deviceToken},
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
-    data[K_CONTACT_OPTIONS_TYPE] = V_CONTACT_OPTIONS_TYPE_DEVICE_TOKEN;
+    data['optionType'] = '1';
     return jsonEncode(data);
   }
 
