@@ -53,6 +53,7 @@ class ChatCommon with Tag {
       logger.d("$TAG - contactHandle - new - clientAddress:$clientAddress");
       exist = await contactCommon.addByType(clientAddress, ContactType.stranger, checkDuplicated: false);
     } else {
+      // profile
       if (exist.profileExpiresAt == null || DateTime.now().isAfter(exist.profileExpiresAt!.add(Settings.profileExpireDuration))) {
         logger.d("$TAG - contactHandle - sendRequestHeader - schema:$exist");
         chatOutCommon.sendContactRequest(exist, RequestType.header); // await
@@ -68,11 +69,20 @@ class ChatCommon with Tag {
       int? updateBurnAfterTime = burningOptions.length >= 2 ? burningOptions[1] : null;
       if (burnAfterSeconds != null && burnAfterSeconds > 0 && exist.options?.deleteAfterSeconds != burnAfterSeconds) {
         if (exist.options?.updateBurnAfterTime == null || (updateBurnAfterTime ?? 0) > exist.options!.updateBurnAfterTime!) {
+          // side update latest
           exist.options?.deleteAfterSeconds = burnAfterSeconds;
           exist.options?.updateBurnAfterTime = updateBurnAfterTime;
           contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterTime, notify: true); // await
         } else if ((updateBurnAfterTime ?? 0) <= exist.options!.updateBurnAfterTime!) {
-          // TODO:GG  根据device协议来判断是不是回发burning，以保持一致
+          // mine update latest
+          DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(exist.id);
+          if (deviceInfoCommon.isBurningUpdateTimeEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
+            chatOutCommon.sendContactOptionsBurn(
+              exist.clientAddress,
+              exist.options!.deleteAfterSeconds!,
+              exist.options!.updateBurnAfterTime!,
+            );
+          }
         }
       }
     }
@@ -86,8 +96,6 @@ class ChatCommon with Tag {
     DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.id);
     if (latest == null) {
       logger.d("$TAG - deviceInfoHandle - new - request - contact:$contact");
-      var temp = DeviceInfoSchema(contactId: contact.id!, createAt: DateTime.now(), updateAt: DateTime.now().subtract(Settings.deviceInfoExpireDuration));
-      latest = await deviceInfoCommon.add(temp);
       await chatOutCommon.sendDeviceRequest(contact.clientAddress);
     } else {
       if (latest.updateAt == null || DateTime.now().isAfter(latest.updateAt!.add(Settings.deviceInfoExpireDuration))) {

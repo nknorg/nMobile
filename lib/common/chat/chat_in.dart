@@ -206,7 +206,7 @@ class ChatInCommon with Tag {
     if (optionsType == null || optionsType.isEmpty) return;
     if (optionsType == '0') {
       int burningSeconds = (content['deleteAfterSeconds'] as int?) ?? 0;
-      int updateTime = (content['updateBurnAfterTime'] as int?) ?? (DateTime.now().millisecondsSinceEpoch - 1000);
+      int updateTime = (content['updateBurnAfterTime'] as int?) ?? DateTime.now().millisecondsSinceEpoch;
       logger.d("$TAG - _receiveContactOptions - setBurn - burningSeconds:$burningSeconds - updateTIme:${DateTime.fromMillisecondsSinceEpoch(updateTime)} - data:$data");
       contactCommon.setOptionsBurn(existContact, burningSeconds, updateTime, notify: true); // await
     } else if (optionsType == '1') {
