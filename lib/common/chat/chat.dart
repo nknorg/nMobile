@@ -72,11 +72,33 @@ class ChatCommon with Tag {
           exist.options?.updateBurnAfterTime = updateBurnAfterTime;
           contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterTime, notify: true); // await
         } else if ((updateBurnAfterTime ?? 0) <= exist.options!.updateBurnAfterTime!) {
-          // TODO:GG 根据device协议来判断是不是回发burning，以保持一致
+          // TODO:GG  根据device协议来判断是不是回发burning，以保持一致
         }
       }
     }
     return exist;
+  }
+
+  Future<DeviceInfoSchema?> deviceInfoHandle(MessageSchema message, ContactSchema? contact) async {
+    if (message.contentType == ContentType.deviceRequest || message.contentType == ContentType.deviceInfo) return null;
+    if (contact == null || contact.id == null || contact.id == 0) return null;
+    // duplicated
+    DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.id);
+    if (latest == null) {
+      logger.d("$TAG - deviceInfoHandle - new - request - contact:$contact");
+      var temp = DeviceInfoSchema(contactId: contact.id!, createAt: DateTime.now(), updateAt: DateTime.now().subtract(Settings.deviceInfoExpireDuration));
+      latest = await deviceInfoCommon.add(temp);
+      await chatOutCommon.sendDeviceRequest(contact.clientAddress);
+    } else {
+      if (latest.updateAt == null || DateTime.now().isAfter(latest.updateAt!.add(Settings.deviceInfoExpireDuration))) {
+        logger.d("$TAG - deviceInfoHandle - exist - request - schema:$latest");
+        await chatOutCommon.sendDeviceRequest(contact.clientAddress);
+      } else {
+        double between = ((latest.updateAt?.add(Settings.deviceInfoExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
+        logger.d("$TAG deviceInfoHandle - expire - between:${between}s");
+      }
+    }
+    return latest;
   }
 
   Future<TopicSchema?> topicHandle(MessageSchema message) async {
@@ -118,27 +140,6 @@ class ChatCommon with Tag {
       await sessionCommon.setLastMessageAndUnReadCount(message.targetId, message, unreadCount, notify: true);
     }
     return exist;
-  }
-
-  Future deviceInfoHandle(MessageSchema message, ContactSchema? contact) async {
-    if (message.contentType == ContentType.deviceRequest || message.contentType == ContentType.deviceInfo) return;
-    if (contact == null || contact.id == null || contact.id == 0) return;
-    // duplicated
-    DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.id);
-    if (latest == null) {
-      logger.d("$TAG - deviceInfoHandle - new - request - contact:$contact");
-      var temp = DeviceInfoSchema(contactId: contact.id!, createAt: DateTime.now(), updateAt: DateTime.now().subtract(Settings.deviceInfoExpireDuration));
-      await deviceInfoCommon.add(temp);
-      await chatOutCommon.sendDeviceRequest(contact.clientAddress);
-    } else {
-      if (latest.updateAt == null || DateTime.now().isAfter(latest.updateAt!.add(Settings.deviceInfoExpireDuration))) {
-        logger.d("$TAG - deviceInfoHandle - exist - request - schema:$latest");
-        await chatOutCommon.sendDeviceRequest(contact.clientAddress);
-      } else {
-        double between = ((latest.updateAt?.add(Settings.deviceInfoExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
-        logger.d("$TAG deviceInfoHandle - expire - between:${between}s");
-      }
-    }
   }
 
   Future<MessageSchema> burningHandle(MessageSchema message) async {

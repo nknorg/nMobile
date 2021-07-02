@@ -11,6 +11,7 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
@@ -293,6 +294,14 @@ class ChatOutCommon with Tag {
     bool resend = false,
   }) async {
     if (schema == null || msgData == null) return null;
+    // contact
+    ContactSchema? _contact = await chatCommon.contactHandle(schema);
+    // device_info
+    DeviceInfoSchema? _deviceInfo = await chatCommon.deviceInfoHandle(schema, _contact);
+    // topic
+    TopicSchema? _topic = await chatCommon.topicHandle(schema);
+    // session
+    chatCommon.sessionHandle(schema); // await
     // DB
     if (resend) {
       schema.sendTime = DateTime.now();
@@ -306,7 +315,7 @@ class ChatOutCommon with Tag {
     // SDK
     Uint8List? pid;
     try {
-      pid = await _sendByPiecesIfNeed(schema);
+      pid = await _sendByPiecesIfNeed(schema, _deviceInfo);
       if (pid == null || pid.isEmpty) {
         if (schema.isTopic) {
           OnMessage? onResult = await chatCommon.publishData(schema.topic!, msgData);
@@ -323,14 +332,6 @@ class ChatOutCommon with Tag {
     } catch (e) {
       handleError(e);
     }
-    // contact
-    ContactSchema? _contact = await chatCommon.contactHandle(schema);
-    // topic
-    TopicSchema? _topic = await chatCommon.topicHandle(schema);
-    // session
-    chatCommon.sessionHandle(schema); // await
-    // device_info
-    chatCommon.deviceInfoHandle(schema, _contact); // await
     // fail
     if (pid == null || pid.isEmpty) {
       schema = MessageStatus.set(schema, MessageStatus.SendFail);
@@ -392,8 +393,8 @@ class ChatOutCommon with Tag {
     await SendPush.send(contact.deviceToken!, title, content);
   }
 
-  Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message) async {
-    if (!await contactCommon.isSupportPiece(message.to)) return null;
+  Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message, DeviceInfoSchema? deviceInfo) async {
+    if (!deviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) return null;
     List results = await _convert2Pieces(message);
     if (results.isEmpty) return null;
     String dataBytesString = results[0];
