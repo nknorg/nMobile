@@ -17,7 +17,7 @@ class DeviceInfoStorage with Tag {
         update_at INTEGER,
         contact_id INTEGER,
         device_id TEXT,
-        data TEXT,
+        data TEXT
       )''';
     // create table
     db.execute(createSql);
@@ -95,7 +95,7 @@ class DeviceInfoStorage with Tag {
     return null;
   }
 
-  Future<bool> update(int? contactId, Map<String, dynamic> newData) async {
+  Future<bool> update(int? contactId, Map<String, dynamic>? newData) async {
     if (contactId == null || contactId == 0) return false;
     try {
       int? count = await db?.update(
@@ -104,7 +104,6 @@ class DeviceInfoStorage with Tag {
           'data': newData,
           'update_at': DateTime.now().millisecondsSinceEpoch,
         },
-        ,
         where: 'contact_id = ?',
         whereArgs: [contactId],
       );

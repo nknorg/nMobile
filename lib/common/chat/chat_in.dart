@@ -42,7 +42,7 @@ class ChatInCommon with Tag {
     // session
     await chatCommon.sessionHandle(message);
     // device_info
-    chatCommon.deviceInfoHandle(contact); // await
+    chatCommon.deviceInfoHandle(message, contact); // await
     // message
     if (needWait) {
       await _messageHandle(message, contact: contact);
@@ -231,7 +231,7 @@ class ChatInCommon with Tag {
       logger.w("$TAG - _receiveDeviceRequest - contact - empty - data:${received.content}");
       return;
     }
-    chatOutCommon.sendDeviceInfo(exist.clientAddress);
+    await chatOutCommon.sendDeviceInfo(exist.clientAddress);
   }
 
   // NO DB NO display
@@ -241,22 +241,21 @@ class ChatInCommon with Tag {
     // duplicated
     ContactSchema? exist = contact ?? await contactCommon.queryByClientAddress(received.from);
     if (exist == null || exist.id == null) {
-      logger.w("$TAG - _receiveDeviceInfo - empty - received:$received");
+      logger.w("$TAG - _receiveDeviceInfo - contact - empty - received:$received");
       return;
     }
-    Map<String, dynamic> content = data['content'] ?? Map();
     DeviceInfoSchema schema = DeviceInfoSchema(
       contactId: exist.id!,
-      deviceId: content["deviceId"],
+      deviceId: data["deviceId"],
       data: {
-        'appName': content["appName"],
-        'appVersion': content["appVersion"],
-        'platform': content["platform"],
-        'platformVersion': content["platformVersion"],
+        'appName': data["appName"],
+        'appVersion': data["appVersion"],
+        'platform': data["platform"],
+        'platformVersion': data["platformVersion"],
       },
     );
-    logger.d("$TAG - _receiveDeviceInfo - addOrUpdate - schema:$schema - content:$content");
-    await deviceInfoCommon.addOrUpdate(schema);
+    logger.d("$TAG - _receiveDeviceInfo - addOrUpdate - schema:$schema - data:$data");
+    await deviceInfoCommon.add(schema, replace: true);
   }
 
   Future _receiveText(MessageSchema received) async {

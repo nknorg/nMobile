@@ -11,15 +11,14 @@ class DeviceInfoCommon with Tag {
 
   DeviceInfoCommon();
 
-  Future<DeviceInfoSchema?> addOrUpdate(DeviceInfoSchema? schema) async {
+  Future<DeviceInfoSchema?> add(DeviceInfoSchema? schema, {bool replace = false}) async {
     if (schema == null || schema.contactId == 0) return null;
-    DeviceInfoSchema? exist = await _deviceInfoStorage.queryByDeviceId(schema.contactId, schema.deviceId);
-    if (exist != null) {
-      if (schema.data == null || schema.data!.isEmpty) {
-        return exist;
+    if (replace) {
+      DeviceInfoSchema? exist = await _deviceInfoStorage.queryByDeviceId(schema.contactId, schema.deviceId);
+      if (exist != null) {
+        bool success = await _deviceInfoStorage.update(schema.contactId, schema.data);
+        return success ? schema : exist;
       }
-      bool success = await _deviceInfoStorage.update(schema.contactId, schema.data!);
-      return success ? schema : exist;
     }
     schema.createAt = schema.createAt ?? DateTime.now();
     schema.updateAt = schema.updateAt ?? DateTime.now();

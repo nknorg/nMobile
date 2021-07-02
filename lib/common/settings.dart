@@ -30,7 +30,7 @@ class Settings {
 
   // duration
   static late Duration profileExpireDuration = Duration(hours: 1);
-  static late Duration deviceInfoExpireDuration = Duration(seconds: 10); // TODO:GG test
+  static late Duration deviceInfoExpireDuration = Duration(hours: 1);
   static late Duration msgResendDuration = Duration(minutes: 3);
 
   static init() async {
