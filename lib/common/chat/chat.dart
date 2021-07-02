@@ -120,23 +120,25 @@ class ChatCommon with Tag {
     return exist;
   }
 
-  Future<DeviceInfoSchema?> deviceInfoHandle(ContactSchema? contact) async {
-    if (contact == null || contact.id == 0) return null;
+  Future deviceInfoHandle(MessageSchema message, ContactSchema? contact) async {
+    if (message.contentType == ContentType.deviceRequest || message.contentType == ContentType.deviceInfo) return;
+    if (contact == null || contact.id == null || contact.id == 0) return;
     // duplicated
     DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.id);
     if (latest == null) {
       logger.d("$TAG - deviceInfoHandle - new - request - contact:$contact");
+      var temp = DeviceInfoSchema(contactId: contact.id!, createAt: DateTime.now(), updateAt: DateTime.now().subtract(Settings.deviceInfoExpireDuration));
+      await deviceInfoCommon.add(temp);
       await chatOutCommon.sendDeviceRequest(contact.clientAddress);
     } else {
       if (latest.updateAt == null || DateTime.now().isAfter(latest.updateAt!.add(Settings.deviceInfoExpireDuration))) {
-        logger.d("$TAG - deviceInfoHandle - expire - request - schema:$latest");
+        logger.d("$TAG - deviceInfoHandle - exist - request - schema:$latest");
         await chatOutCommon.sendDeviceRequest(contact.clientAddress);
       } else {
         double between = ((latest.updateAt?.add(Settings.deviceInfoExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG deviceInfoHandle - expire - between:${between}s");
       }
     }
-    return latest;
   }
 
   Future<MessageSchema> burningHandle(MessageSchema message) async {

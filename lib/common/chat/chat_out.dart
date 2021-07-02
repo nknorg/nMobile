@@ -330,7 +330,7 @@ class ChatOutCommon with Tag {
     // session
     chatCommon.sessionHandle(schema); // await
     // device_info
-    chatCommon.deviceInfoHandle(_contact); // await
+    chatCommon.deviceInfoHandle(schema, _contact); // await
     // fail
     if (pid == null || pid.isEmpty) {
       schema = MessageStatus.set(schema, MessageStatus.SendFail);
