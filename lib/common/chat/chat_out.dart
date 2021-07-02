@@ -211,12 +211,12 @@ class ChatOutCommon with Tag {
       // Toast.show(S.of(Global.appContext).failure);
       return null;
     }
+    DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(contact.id);
+    String contentType = deviceInfoCommon.isMsgImageEnable(deviceInfo?.platform, deviceInfo?.appVersion) ? ContentType.image : ContentType.media;
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
       clientCommon.id ?? "",
-      // SUPPORT:START
-      ContentType.nknImage,
-      // SUPPORT:END
+      contentType,
       to: clientAddress,
       content: content,
       deleteAfterSeconds: contact.options?.deleteAfterSeconds,
