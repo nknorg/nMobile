@@ -1,6 +1,5 @@
 import 'dart:io';
 
-// import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -11,8 +10,6 @@ class DeviceToken {
   static const PREFIX_XIAOMI = "[XIAOMI]:";
   static const PREFIX_OPPO = "[OPPO]:";
   static const PREFIX_VIVO = "[VIVO]:";
-
-  // token
 
   static Future<String?> get() async {
     String? token;
@@ -29,14 +26,11 @@ class DeviceToken {
     return token;
   }
 
-  static Future<String> getAPNS() async {
+  static Future<String> getAPNS({String appVersionBuild = ""}) async {
     String? token = await Common.getAPNSToken();
     if (token?.isNotEmpty == true) {
       token = PREFIX_APNS + token!;
     }
-    // TODO:GG 根据deviceInfo协议来判断是否要拼接
-    // String? fcmToken = await FirebaseMessaging.instance.getToken();
-    // token = "$token'__FCMToken__:' $fcmToken";
     return token ?? "";
   }
 
@@ -70,6 +64,9 @@ class DeviceToken {
       return token.replaceAll(PREFIX_APNS, "");
     }
     // SUPPORT:START
+    if (token.startsWith(PREFIX_FCM) || token.startsWith(PREFIX_HUAWEI) || token.startsWith(PREFIX_XIAOMI) || token.startsWith(PREFIX_OPPO) || token.startsWith(PREFIX_VIVO)) {
+      return "";
+    }
     if (token.length == 64) {
       return token; // apns
     } else if (token.length > 163) {
@@ -88,6 +85,9 @@ class DeviceToken {
       return token.replaceAll(PREFIX_FCM, "");
     }
     // SUPPORT:START
+    if (token.startsWith(PREFIX_APNS) || token.startsWith(PREFIX_HUAWEI) || token.startsWith(PREFIX_XIAOMI) || token.startsWith(PREFIX_OPPO) || token.startsWith(PREFIX_VIVO)) {
+      return "";
+    }
     if (token.length == 163) {
       return token; // fcm
     }
