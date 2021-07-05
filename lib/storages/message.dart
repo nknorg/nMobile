@@ -40,15 +40,12 @@ class MessageStorage with Tag {
     // index
     await db.execute('CREATE INDEX index_messages_pid ON $tableName (pid)');
     await db.execute('CREATE INDEX index_messages_msg_id ON $tableName (msg_id)');
-    await db.execute('CREATE INDEX index_messages_sender ON $tableName (sender)');
-    await db.execute('CREATE INDEX index_messages_receiver ON $tableName (receiver)');
     await db.execute('CREATE INDEX index_messages_target_id ON $tableName (target_id)');
-    await db.execute('CREATE INDEX index_messages_receive_time ON $tableName (receive_time)');
-    await db.execute('CREATE INDEX index_messages_send_time ON $tableName (send_time)');
-    await db.execute('CREATE INDEX index_messages_delete_time ON $tableName (delete_time)');
     // query message
-    await db.execute('CREATE INDEX index_messages_target_id_is_outbound ON $tableName (target_id, is_outbound)');
-    await db.execute('CREATE INDEX index_messages_target_id_type ON $tableName (target_id, type)');
+    await db.execute('CREATE INDEX index_messages_msg_id_type ON $tableName (msg_id, type)');
+    await db.execute('CREATE INDEX index_messages_is_outbound_is_read ON $tableName (is_outbound, is_read)');
+    await db.execute('CREATE INDEX index_messages_target_id_is_outbound_is_read ON $tableName (target_id, is_outbound, is_read)');
+    await db.execute('CREATE INDEX index_messages_target_id_type_send_time ON $tableName (target_id, type, send_time)');
   }
 
   Future<MessageSchema?> insert(MessageSchema? schema) async {
@@ -241,9 +238,9 @@ class MessageStorage with Tag {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        orderBy: 'send_time desc',
         where: 'target_id = ? AND NOT type = ?', // AND NOT type = ?
         whereArgs: [targetId, ContentType.piece], // , ContentType.receipt],
+        orderBy: 'send_time desc',
         offset: offset,
         limit: limit,
       );
