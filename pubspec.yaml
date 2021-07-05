@@ -46,7 +46,7 @@ dependencies:
   vibration: ^1.7.3
   flutter_local_notifications: ^6.0.0
   background_fetch: ^1.0.1
-  flutter_aes_ecb_pkcs5: ^0.1.1
+  #  flutter_aes_ecb_pkcs5: ^0.1.1
 
   # locale
   intl: ^0.17.0
@@ -74,7 +74,7 @@ dependencies:
 
   # audio
   audioplayers: ^0.19.1
-  flutter_sound: ^8.1.9
+  flutter_sound: ^8.1.4
 
   # file
   path: ^1.8.0
