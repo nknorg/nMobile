@@ -115,7 +115,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
           stream: clientCommon.statusStream,
           initialData: clientCommon.status,
           builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
-            if (snapshot.data == ClientConnectStatus.disconnected) {
+            if (snapshot.data == ClientConnectStatus.disconnected || snapshot.data == ClientConnectStatus.stopping) {
               return ChatNoConnectLayout();
             } else {
               return StreamBuilder<ContactSchema?>(
@@ -139,19 +139,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
                                   stream: clientCommon.statusStream,
                                   initialData: clientCommon.status,
                                   builder: (context, snapshot) {
-                                    Widget statusWidget = Row(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: <Widget>[
-                                        Label(_localizations.connecting, type: LabelType.h4, color: application.theme.fontLightColor.withAlpha(200)),
-                                        Padding(
-                                          padding: const EdgeInsets.only(bottom: 2, left: 4),
-                                          child: SpinKitThreeBounce(
-                                            color: application.theme.fontLightColor.withAlpha(200),
-                                            size: 10,
-                                          ),
-                                        ),
-                                      ],
-                                    );
+                                    late Widget statusWidget;
                                     switch (snapshot.data) {
                                       case ClientConnectStatus.disconnected:
                                         statusWidget = Row(
@@ -166,6 +154,21 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
                                           crossAxisAlignment: CrossAxisAlignment.end,
                                           children: <Widget>[
                                             Label(_localizations.connected, type: LabelType.h4, color: application.theme.successColor),
+                                          ],
+                                        );
+                                        break;
+                                      default:
+                                        statusWidget = Row(
+                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          children: <Widget>[
+                                            Label(_localizations.connecting, type: LabelType.h4, color: application.theme.fontLightColor.withAlpha(200)),
+                                            Padding(
+                                              padding: const EdgeInsets.only(bottom: 2, left: 4),
+                                              child: SpinKitThreeBounce(
+                                                color: application.theme.fontLightColor.withAlpha(200),
+                                                size: 10,
+                                              ),
+                                            ),
                                           ],
                                         );
                                         break;
