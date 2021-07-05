@@ -4,7 +4,7 @@
     <item android:drawable="@android:color/white" />
     <item>
         <bitmap
-            android:gravity="bottom|center"
+            android:gravity="bottom|fill_horizontal"
             android:src="@drawable/splash" />
     </item>
     <!-- You can insert your own image assets here -->

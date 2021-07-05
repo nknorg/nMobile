@@ -43,8 +43,7 @@ android {
         ndk {
             abiFilters "arm64-v8a", "armeabi-v7a"
         }
-//        javaCompileOptions { annotationProcessorOptions { includeCompileClasspath = true } }
-
+        // javaCompileOptions { annotationProcessorOptions { includeCompileClasspath = true } }
     }
 
     signingConfigs {
@@ -61,7 +60,6 @@ android {
             minifyEnabled false
             zipAlignEnabled true
             shrinkResources false
-
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -72,7 +70,6 @@ android {
             zipAlignEnabled true
             shrinkResources false
             useProguard false
-
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -105,6 +102,12 @@ android {
         exclude 'META-INF/LGPL2.1'
         exclude 'META-INF/ASL2.0'
         exclude 'META-INF/io.netty.versions.properties'
+        exclude 'META-INF/native-image/io.netty/codec-http/native-image.properties'
+        exclude 'META-INF/native-image/io.netty/common/native-image.properties'
+        exclude 'META-INF/native-image/io.netty/transport/native-image.properties'
+        exclude 'META-INF/native-image/io.netty/transport/reflection-config.json'
+        exclude 'META-INF/native-image/io.netty/buffer/native-image.properties'
+        exclude 'META-INF/native-image/io.netty/handler/native-image.properties'
     }
     lintOptions {
         disable 'MissingTranslation'

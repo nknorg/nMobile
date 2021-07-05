@@ -29,6 +29,7 @@ class Global {
     'http://mainnet-seed-0009.nkn.org:30003',
   ];
 
+  // TODO:GG seedRpcAddress Nkn.measureSeedRPCServer(seedRpcArray, 1500)
   static Future<List<String>> getSeedRpcList() async {
     SettingsStorage settingsStorage = SettingsStorage();
     List<String> list = await settingsStorage.getSeedRpcServers();
