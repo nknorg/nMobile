@@ -28,8 +28,13 @@ class SessionSchema extends Equatable {
     this.isTop = false,
   });
 
-  @override
-  List<Object?> get props => [targetId];
+  bool get isContact {
+    return type == SessionType.CONTACT;
+  }
+
+  bool get isTopic {
+    return type == SessionType.TOPIC;
+  }
 
   Future<Map<String, dynamic>> toMap() async {
     Map<String, dynamic> map = {
@@ -65,13 +70,8 @@ class SessionSchema extends Equatable {
     }
   }
 
-  bool get isContact {
-    return type == SessionType.CONTACT;
-  }
-
-  bool get isTopic {
-    return type == SessionType.TOPIC;
-  }
+  @override
+  List<Object?> get props => [targetId];
 
   @override
   String toString() {

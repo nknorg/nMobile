@@ -55,6 +55,78 @@ class ContactSchema {
     }
   }
 
+  bool get isMe {
+    if (type == ContactType.me) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  String get fullName {
+    return firstName ?? "";
+  }
+
+  String get displayName {
+    String? displayName;
+
+    if (extraInfo != null && extraInfo!.isNotEmpty) {
+      if (extraInfo!['firstName'] != null && extraInfo!['firstName'].isNotEmpty) {
+        displayName = extraInfo!['firstName'];
+      }
+      // SUPPORT:START
+      else if (extraInfo!['remark_name'] != null && extraInfo!['remark_name'].isNotEmpty) {
+        displayName = extraInfo!['remark_name'];
+      } else if (extraInfo!['notes'] != null && extraInfo!['notes'].isNotEmpty) {
+        displayName = extraInfo!['notes'];
+      }
+      // SUPPORT:END
+    }
+
+    if (displayName == null || displayName.isEmpty) {
+      if (firstName != null && firstName!.isNotEmpty) {
+        displayName = firstName;
+      }
+    }
+
+    if (displayName == null || displayName.isEmpty) {
+      displayName = getDefaultName(clientAddress);
+    }
+    return displayName ?? "";
+  }
+
+  Future<File?> get displayAvatarFile async {
+    String? avatarLocalPath;
+
+    if (extraInfo != null && extraInfo!.isNotEmpty) {
+      if (extraInfo!['avatar'] != null && extraInfo!['avatar'].isNotEmpty) {
+        avatarLocalPath = extraInfo!['avatar'];
+      }
+      // SUPPORT:START
+      if (extraInfo!['remark_avatar'] != null && extraInfo!['remark_avatar'].isNotEmpty) {
+        avatarLocalPath = extraInfo!['remark_avatar'];
+      }
+      // SUPPORT:END
+    }
+
+    if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
+      avatarLocalPath = avatar?.path;
+    }
+    if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
+      return Future.value(null);
+    }
+    String? completePath = Path.getCompleteFile(avatarLocalPath);
+    if (completePath == null || completePath.isEmpty) {
+      return Future.value(null);
+    }
+    File avatarFile = File(completePath);
+    bool exits = await avatarFile.exists();
+    if (!exits) {
+      return Future.value(null);
+    }
+    return avatarFile;
+  }
+
   Future<Map<String, dynamic>> toMap() async {
     if (extraInfo == null) {
       extraInfo = new Map<String, dynamic>();
@@ -165,78 +237,6 @@ class ContactSchema {
       defaultName = clientAddress.substring(0, index + 7);
     }
     return defaultName;
-  }
-
-  bool get isMe {
-    if (type == ContactType.me) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  String get fullName {
-    return firstName ?? "";
-  }
-
-  String get displayName {
-    String? displayName;
-
-    if (extraInfo != null && extraInfo!.isNotEmpty) {
-      if (extraInfo!['firstName'] != null && extraInfo!['firstName'].isNotEmpty) {
-        displayName = extraInfo!['firstName'];
-      }
-      // SUPPORT:START
-      else if (extraInfo!['remark_name'] != null && extraInfo!['remark_name'].isNotEmpty) {
-        displayName = extraInfo!['remark_name'];
-      } else if (extraInfo!['notes'] != null && extraInfo!['notes'].isNotEmpty) {
-        displayName = extraInfo!['notes'];
-      }
-      // SUPPORT:END
-    }
-
-    if (displayName == null || displayName.isEmpty) {
-      if (firstName != null && firstName!.isNotEmpty) {
-        displayName = firstName;
-      }
-    }
-
-    if (displayName == null || displayName.isEmpty) {
-      displayName = getDefaultName(clientAddress);
-    }
-    return displayName ?? "";
-  }
-
-  Future<File?> get displayAvatarFile async {
-    String? avatarLocalPath;
-
-    if (extraInfo != null && extraInfo!.isNotEmpty) {
-      if (extraInfo!['avatar'] != null && extraInfo!['avatar'].isNotEmpty) {
-        avatarLocalPath = extraInfo!['avatar'];
-      }
-      // SUPPORT:START
-      if (extraInfo!['remark_avatar'] != null && extraInfo!['remark_avatar'].isNotEmpty) {
-        avatarLocalPath = extraInfo!['remark_avatar'];
-      }
-      // SUPPORT:END
-    }
-
-    if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
-      avatarLocalPath = avatar?.path;
-    }
-    if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
-      return Future.value(null);
-    }
-    String? completePath = Path.getCompleteFile(avatarLocalPath);
-    if (completePath == null || completePath.isEmpty) {
-      return Future.value(null);
-    }
-    File avatarFile = File(completePath);
-    bool exits = await avatarFile.exists();
-    if (!exits) {
-      return Future.value(null);
-    }
-    return avatarFile;
   }
 
   @override
