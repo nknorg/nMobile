@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validation.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/popular_channel.dart';
 import 'package:nmobile/utils/asset.dart';
+
+import 'messages.dart';
 
 class ChatNoMessageLayout extends BaseStateFulWidget {
   @override
@@ -151,7 +157,21 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
                     ],
                   ),
                   onPressed: () async {
-                    // TODO:GG new private chat
+                    String? address = await BottomDialog.of(context).showInput(
+                      title: S.of(context).new_whisper,
+                      inputTip: S.of(context).send_to,
+                      inputHint: S.of(context).enter_or_select_a_user_pubkey,
+                      validator: Validator.of(context).identifierNKN(),
+                      contactSelect: true,
+                    );
+                    if (address?.isNotEmpty == true) {
+                      // Navigator.of(context).pop();
+                      var contact = await ContactSchema.createByType(address, ContactType.stranger);
+                      await contactCommon.add(contact);
+                      await ChatMessagesScreen.go(context, contact);
+                    } else {
+                      // Navigator.of(context).pop();
+                    }
                   },
                 ),
               ),
