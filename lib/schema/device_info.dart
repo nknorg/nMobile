@@ -26,42 +26,6 @@ class DeviceInfoSchema {
     }
   }
 
-  Map<String, dynamic> toMap() {
-    if (data == null) {
-      data = new Map<String, dynamic>();
-    }
-    Map<String, dynamic> map = {
-      'create_at': createAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'update_at': updateAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'contact_id': contactId,
-      'device_id': deviceId,
-      'data': data != null ? jsonEncode(data) : '{}',
-    };
-    return map;
-  }
-
-  static DeviceInfoSchema fromMap(Map e) {
-    var deviceInfo = DeviceInfoSchema(
-      id: e['id'],
-      createAt: e['create_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['create_at']) : null,
-      updateAt: e['update_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['update_at']) : null,
-      contactId: e['contact_id'] ?? 0,
-      deviceId: e['device_id'],
-    );
-
-    if (e['data'] != null) {
-      Map<String, dynamic>? data = jsonFormat(e['data']);
-
-      if (deviceInfo.data == null) {
-        deviceInfo.data = new Map<String, dynamic>();
-      }
-      if (data != null) {
-        deviceInfo.data?.addAll(data);
-      }
-    }
-    return deviceInfo;
-  }
-
   String get appName {
     String? appName;
     if (data != null && data!.isNotEmpty) {
@@ -104,6 +68,42 @@ class DeviceInfoSchema {
       }
     }
     return platformVersion ?? 0;
+  }
+
+  Map<String, dynamic> toMap() {
+    if (data == null) {
+      data = new Map<String, dynamic>();
+    }
+    Map<String, dynamic> map = {
+      'create_at': createAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'update_at': updateAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'contact_id': contactId,
+      'device_id': deviceId,
+      'data': data != null ? jsonEncode(data) : '{}',
+    };
+    return map;
+  }
+
+  static DeviceInfoSchema fromMap(Map e) {
+    var deviceInfo = DeviceInfoSchema(
+      id: e['id'],
+      createAt: e['create_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['create_at']) : null,
+      updateAt: e['update_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['update_at']) : null,
+      contactId: e['contact_id'] ?? 0,
+      deviceId: e['device_id'],
+    );
+
+    if (e['data'] != null) {
+      Map<String, dynamic>? data = jsonFormat(e['data']);
+
+      if (deviceInfo.data == null) {
+        deviceInfo.data = new Map<String, dynamic>();
+      }
+      if (data != null) {
+        deviceInfo.data?.addAll(data);
+      }
+    }
+    return deviceInfo;
   }
 
   @override
