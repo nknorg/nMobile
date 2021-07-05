@@ -432,6 +432,38 @@ class MessageSchema extends Equatable {
     if (sendTime == null) sendTime = DateTime.now();
   }
 
+  String? get originalId {
+    return isOutbound ? from : (isTopic ? topic : to);
+  }
+
+  String? get targetId {
+    return isTopic ? topic : (isOutbound ? to : from);
+  }
+
+  bool get isTopic {
+    return topic?.isNotEmpty == true;
+  }
+
+  // Burning
+  bool get canBurning {
+    bool isText = contentType == ContentType.text || contentType == ContentType.textExtension;
+    bool isImage = contentType == ContentType.media || contentType == ContentType.image || contentType == ContentType.nknImage;
+    bool isAudio = contentType == ContentType.audio;
+    return isText || isImage || isAudio;
+  }
+
+  // ++ UnReadCount / Notification
+  bool get canDisplayAndRead {
+    bool isEvent = contentType == ContentType.topicInvitation;
+    return canBurning || isEvent;
+  }
+
+  // ++ Session
+  bool get canDisplay {
+    bool isEvent = contentType == ContentType.contactOptions; // || contentType == ContentType.topicSubscribe || contentType == ContentType.topicUnsubscribe;
+    return canDisplayAndRead || isEvent;
+  }
+
   /// from receive
   static MessageSchema? fromReceive(OnMessage? raw) {
     if (raw == null || raw.data == null || raw.src == null) return null;
@@ -686,43 +718,11 @@ class MessageSchema extends Equatable {
     return schema;
   }
 
-  String? get originalId {
-    return isOutbound ? from : (isTopic ? topic : to);
-  }
-
-  String? get targetId {
-    return isTopic ? topic : (isOutbound ? to : from);
-  }
-
-  bool get isTopic {
-    return topic?.isNotEmpty == true;
-  }
-
-  // Burning
-  bool get canBurning {
-    bool isText = contentType == ContentType.text || contentType == ContentType.textExtension;
-    bool isImage = contentType == ContentType.media || contentType == ContentType.image || contentType == ContentType.nknImage;
-    bool isAudio = contentType == ContentType.audio;
-    return isText || isImage || isAudio;
-  }
-
-  // ++ UnReadCount / Notification
-  bool get canDisplayAndRead {
-    bool isEvent = contentType == ContentType.topicInvitation;
-    return canBurning || isEvent;
-  }
-
-  // ++ Session
-  bool get canDisplay {
-    bool isEvent = contentType == ContentType.contactOptions; // || contentType == ContentType.topicSubscribe || contentType == ContentType.topicUnsubscribe;
-    return canDisplayAndRead || isEvent;
-  }
+  @override
+  List<Object?> get props => [pid];
 
   @override
   String toString() {
     return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, contentType: $contentType, content: ${(content is String && (content as String).length <= 1000) ? content : "~~~~~"}, options: $options, sendTime: $sendTime, receiveTime: $receiveTime, deleteTime: $deleteTime, isOutbound: $isOutbound, isSendError: $isSendError, isSuccess: $isSuccess, isRead: $isRead, parentType: $parentType, bytesLength: $bytesLength, total: $total, parity: $parity, index: $index}';
   }
-
-  @override
-  List<Object?> get props => [pid];
 }
