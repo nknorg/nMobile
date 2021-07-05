@@ -9,6 +9,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   SettingsBloc() : super(SettingsInitial());
 
   SettingsStorage _settingsStorage = SettingsStorage();
+
   @override
   Stream<SettingsState> mapEventToState(SettingsEvent event) async* {
     if (event is UpdateLanguage) {
