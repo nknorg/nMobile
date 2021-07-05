@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
+import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/push/send_push.dart';
@@ -190,8 +191,9 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> sendText(String? clientAddress, String? content, {required ContactSchema contact}) async {
-    if (clientCommon.id == null || clientAddress == null || content == null || content.isEmpty) {
-      // Toast.show(S.of(Global.appContext).failure);
+    if (content == null || content.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.id == null || clientCommon.id!.isEmpty) {
+      // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
       return null;
     }
     MessageSchema schema = MessageSchema.fromSend(
@@ -207,8 +209,9 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> sendImage(String? clientAddress, File? content, {required ContactSchema contact}) async {
-    if (clientCommon.id == null || clientAddress == null || content == null || (!await content.exists())) {
-      // Toast.show(S.of(Global.appContext).failure);
+    if (content == null || (!await content.exists()) || clientAddress == null || clientAddress.isEmpty) return null;
+    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.id == null || clientCommon.id!.isEmpty) {
+      // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
       return null;
     }
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(contact.id);
@@ -226,8 +229,9 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> sendAudio(String? clientAddress, File? content, double? durationS, {required ContactSchema contact}) async {
-    if (clientCommon.id == null || clientAddress == null || content == null || (!await content.exists())) {
-      // Toast.show(S.of(Global.appContext).failure);
+    if (content == null || (!await content.exists()) || clientAddress == null || clientAddress.isEmpty) return null;
+    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.id == null || clientCommon.id!.isEmpty) {
+      // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
       return null;
     }
     MessageSchema schema = MessageSchema.fromSend(
