@@ -5,11 +5,13 @@ import '../helpers/local_storage.dart';
 class SettingsStorage {
   static const String SETTINGS_KEY = 'SETTINGS';
   static const String LOCALE_KEY = 'locale';
-  static const String NOTIFICATION_TYPE_KEY = 'notification_type';
-  static const String BIOMETRICS_AUTHENTICATION = 'biometrics_authentication';
-  static const String SEED_RPC_SERVERS_KEY = 'seed_rpc_servers';
+  static const String NOTIFICATION_TYPE_KEY = 'notification_type'; // not support 'local_notification_type'
+  static const String BIOMETRICS_AUTHENTICATION = 'biometrics_authentication'; // not support 'auth'
 
-  static const String CHAT_TIP_STATUS = 'CHAT_TIP_STATUS';
+  static const String SEED_RPC_SERVERS_KEY = 'seed_rpc_servers'; // not support 'NKN_RPC_NODE_LIST'
+
+  static const String CHAT_TIP_STATUS = 'chat_tip_status'; // not support 'WALLET_TIP_STATUS'
+
   final LocalStorage _localStorage = LocalStorage();
 
   Future getSettings(String key) async {

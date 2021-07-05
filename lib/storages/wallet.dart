@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter_aes_ecb_pkcs5/flutter_aes_ecb_pkcs5.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/utils.dart';
 
@@ -48,6 +49,8 @@ class WalletStorage {
     if (password != null && password.isNotEmpty) {
       futures.add(_secureStorage.set('$KEY_PASSWORD:${walletSchema?.address}', password));
     }
+    // backup
+    futures.add(_localStorage.set('$KEY_BACKUP:${walletSchema?.address}', false));
     return Future.wait(futures);
   }
 
@@ -61,6 +64,7 @@ class WalletStorage {
         futures.add(_secureStorage.delete('$KEY_KEYSTORE:${walletSchema?.address}'));
       }
       futures.add(_secureStorage.delete('$KEY_PASSWORD:${walletSchema?.address}'));
+      // backup + default
       futures.add(_localStorage.remove('$KEY_BACKUP:${walletSchema?.address}'));
       if (await getDefaultAddress() == walletSchema?.address) {
         futures.add(_localStorage.remove('$KEY_DEFAULT_ADDRESS'));
@@ -101,7 +105,16 @@ class WalletStorage {
     if (keystore == null || keystore.isEmpty) {
       keystore = await _secureStorage.get('NKN_KEYSTORES:$address');
       if (keystore == null || keystore.isEmpty) {
-        if (Platform.isAndroid) {
+        String? decryptKey = await _localStorage.get("WALLET_KEYSTORE_AESVALUE_KEY");
+        if (decryptKey?.isNotEmpty == true) {
+          String? decodedValue = await _localStorage.get('WALLET_KEYSTORE_ENCRYPT_VALUE');
+          if (decodedValue == null || decodedValue.isEmpty) {
+            decodedValue = await _localStorage.get('WALLET_KEYSTORE_ENCRYPT_VALUE_$address');
+          }
+          if (decodedValue?.isNotEmpty == true) {
+            keystore = await FlutterAesEcbPkcs5.decryptString(decodedValue, decryptKey);
+          }
+        } else {
           keystore = await _localStorage.get('WALLET_KEYSTORE_ENCRYPT_VALUE_$address');
         }
       }
