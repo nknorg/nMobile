@@ -112,7 +112,7 @@ class ClientCommon with Tag {
       logger.i("$TAG - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");
       _statusSink.add(ClientConnectStatus.connected);
       SettingsStorage().addSeedRpcServers(event.rpcServers!);
-      completer.complete();
+      if (!completer.isCompleted) completer.complete();
     });
 
     // TODO:GG client disconnect/reconnect listen (action statusSink.add) (effect message send / receive)
