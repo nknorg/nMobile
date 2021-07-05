@@ -17,7 +17,7 @@ class TopicStorage with Tag {
         topic TEXT,
         count INTEGER,
         avatar TEXT,
-        last_updated_time INTEGER,
+        time_update INTEGER,
         expire_at INTEGER,
         is_top BOOLEAN DEFAULT 0,
         options TEXT,
