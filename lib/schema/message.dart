@@ -248,7 +248,7 @@ class MessageData {
     int? updateBurnAfterTime = burningOptions.length >= 2 ? burningOptions[1] : null;
     Map data = {
       'id': schema.msgId,
-      'contentType': schema.contentType,
+      'contentType': ContentType.contactOptions,
       'content': {'deleteAfterSeconds': burnAfterSeconds, 'updateBurnAfterTime': updateBurnAfterTime},
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -260,7 +260,7 @@ class MessageData {
     String? deviceToken = MessageOptions.getDeviceToken(schema);
     Map data = {
       'id': schema.msgId,
-      'contentType': schema.contentType,
+      'contentType': ContentType.contactOptions,
       'content': {'deviceToken': deviceToken},
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -370,7 +370,7 @@ class MessageData {
   String getTopicSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
-      'contentType': schema.contentType,
+      'contentType': ContentType.topicSubscribe,
       'content': schema.content,
       'topic': schema.topic,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
@@ -382,7 +382,7 @@ class MessageData {
   String getTopicUnSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
-      'contentType': schema.contentType,
+      'contentType': ContentType.topicUnsubscribe,
       'content': schema.content,
       'topic': schema.topic,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
