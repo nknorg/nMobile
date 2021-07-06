@@ -1,11 +1,7 @@
 import 'dart:convert';
-import 'dart:math';
-import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/db.dart';
-import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/option.dart';
@@ -220,21 +216,13 @@ class ContactStorage with Tag {
   }
 
   /// Profile
-
   Future<bool> setProfile(int? contactId, Map<String, dynamic>? newProfileInfo, {Map<String, dynamic>? oldProfileInfo}) async {
     if (contactId == null || contactId == 0 || newProfileInfo == null) return false;
 
     Map<String, dynamic> saveDataInfo = oldProfileInfo ?? Map<String, dynamic>();
-
-    if (newProfileInfo['avatar'] != null) {
-      saveDataInfo['avatar'] = newProfileInfo['avatar'];
-    }
-    if (newProfileInfo['first_name'] != null) {
-      saveDataInfo['first_name'] = newProfileInfo['first_name'];
-    }
-    if (newProfileInfo['last_name'] != null) {
-      saveDataInfo['last_name'] = newProfileInfo['last_name'];
-    }
+    saveDataInfo['avatar'] = newProfileInfo['avatar'];
+    saveDataInfo['first_name'] = newProfileInfo['first_name'];
+    saveDataInfo['last_name'] = newProfileInfo['last_name'];
     saveDataInfo['profile_version'] = newProfileInfo['profile_version'] ?? Uuid().v4();
     saveDataInfo['profile_expires_at'] = newProfileInfo['profile_expires_at'] ?? DateTime.now().millisecondsSinceEpoch;
     saveDataInfo['updated_time'] = DateTime.now().millisecondsSinceEpoch;
@@ -258,20 +246,13 @@ class ContactStorage with Tag {
   }
 
   /// RemarkProfile(Data)
-
   Future<bool> setRemarkProfile(int? contactId, Map<String, dynamic>? newExtraInfo, {Map<String, dynamic>? oldExtraInfo}) async {
     if (contactId == null || contactId == 0 || newExtraInfo == null) return false;
 
     Map<String, dynamic> dataInfo = oldExtraInfo ?? Map<String, dynamic>();
-    if (newExtraInfo['firstName'] != null) {
-      dataInfo['firstName'] = newExtraInfo['firstName'];
-    }
-    if (newExtraInfo['lastName'] != null) {
-      dataInfo['lastName'] = newExtraInfo['lastName'];
-    }
-    if (newExtraInfo['avatar'] != null) {
-      dataInfo['avatar'] = newExtraInfo['avatar'];
-    }
+    dataInfo['firstName'] = newExtraInfo['firstName'];
+    dataInfo['lastName'] = newExtraInfo['lastName'];
+    dataInfo['avatar'] = newExtraInfo['avatar'];
 
     Map<String, dynamic> saveDataInfo = Map<String, dynamic>();
     saveDataInfo['data'] = jsonEncode(dataInfo);
@@ -319,47 +300,11 @@ class ContactStorage with Tag {
     return false;
   }
 
-  Future<bool> randomOptionsColors(int? contactId, {OptionsSchema? old}) async {
-    if (contactId == null || contactId == 0) return false;
-
-    int random = Random().nextInt(application.theme.randomBackgroundColorList.length);
-    Color backgroundColor = application.theme.randomBackgroundColorList[random];
-    Color color = application.theme.randomColorList[random];
-
-    OptionsSchema options = old ?? OptionsSchema(backgroundColor: backgroundColor, color: color);
-    options.backgroundColor = backgroundColor;
-    options.color = color;
-
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'options': jsonEncode(options.toMap()),
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'id = ?',
-        whereArgs: [contactId],
-      );
-      if (count != null && count > 0) {
-        logger.d("$TAG - setOptionsColors - success - contactId:$contactId - options:$options");
-        return true;
-      }
-      logger.w("$TAG - setOptionsColors - fail - contactId:$contactId - options:$options");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
-
   Future<bool> setOptionsBurn(int? contactId, int? burningSeconds, int? updateTime, {OptionsSchema? old}) async {
     if (contactId == null || contactId == 0) return false;
     OptionsSchema options = old ?? OptionsSchema();
 
-    if (burningSeconds != null && burningSeconds > 0) {
-      options.deleteAfterSeconds = burningSeconds;
-    } else {
-      options.deleteAfterSeconds = 0;
-    }
+    options.deleteAfterSeconds = burningSeconds ?? 0;
     options.updateBurnAfterTime = updateTime ?? DateTime.now().millisecondsSinceEpoch;
 
     try {
@@ -404,7 +349,7 @@ class ContactStorage with Tag {
   }
 
   Future<bool> setDeviceToken(int? contactId, String? deviceToken) async {
-    if (contactId == null || contactId == 0 || deviceToken == null || deviceToken.isEmpty) return false;
+    if (contactId == null || contactId == 0) return false;
     try {
       int? count = await db?.update(
         tableName,
