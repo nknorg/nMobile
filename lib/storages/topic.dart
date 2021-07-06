@@ -76,19 +76,19 @@ class TopicStorage with Tag {
     return null;
   }
 
-  Future<bool> delete(String? topic) async {
-    if (topic == null || topic.isEmpty) return false;
+  Future<bool> delete(int? topicId) async {
+    if (topicId == null || topicId == 0) return false;
     try {
       int? count = await db?.delete(
         tableName,
-        where: 'topic = ?',
-        whereArgs: [topic],
+        where: 'id = ?',
+        whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - delete - success - topic:$topic");
+        logger.d("$TAG - delete - success - topicId:$topicId");
         return true;
       }
-      logger.w("$TAG - delete - fail - topic:$topic");
+      logger.w("$TAG - delete - fail - topicId:$topicId");
     } catch (e) {
       handleError(e);
     }
