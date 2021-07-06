@@ -75,9 +75,9 @@ class LocalStorage {
   setArray(String key, List<String> val) async {
     List<Future> futures = <Future>[];
     futures.add(set('$key:$LENGTH_SUFFIX', val.length.toString()));
-    val.map((v) {
-      futures.add(set('$key:$v', v));
-    });
+    for (var i = 0; i < val.length; i++) {
+      futures.add(set('$key:$i', val[i]));
+    }
     await Future.wait(futures);
   }
 

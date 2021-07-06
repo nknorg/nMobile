@@ -62,9 +62,9 @@ class SecureStorage {
   setArray(String key, List<String> val) async {
     List<Future> futures = <Future>[];
     futures.add(_storage.write(key: '$key:$LENGTH_SUFFIX', value: val.length.toString()));
-    val.map((v) {
-      futures.add(_storage.write(key: '$key:$v', value: v));
-    });
+    for (var i = 0; i < val.length; i++) {
+      futures.add(_storage.write(key: '$key:$i', value: val[i]));
+    }
     await Future.wait(futures);
   }
 
