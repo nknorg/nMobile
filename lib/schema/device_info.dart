@@ -28,7 +28,7 @@ class DeviceInfoSchema {
 
   String get appName {
     String? appName;
-    if (data != null && data!.isNotEmpty) {
+    if (data?.isNotEmpty == true) {
       String? name = data!['appName']?.toString();
       if (name?.isNotEmpty == true) {
         appName = name;
@@ -39,7 +39,7 @@ class DeviceInfoSchema {
 
   int get appVersion {
     int? appVersion;
-    if (data != null && data!.isNotEmpty) {
+    if (data?.isNotEmpty == true) {
       String? version = data!['appVersion']?.toString();
       if (version?.isNotEmpty == true) {
         appVersion = int.parse(version!);
@@ -50,7 +50,7 @@ class DeviceInfoSchema {
 
   String get platform {
     String? platform;
-    if (data != null && data!.isNotEmpty) {
+    if (data?.isNotEmpty == true) {
       String? name = data!['platform']?.toString();
       if (name?.isNotEmpty == true) {
         platform = name;
@@ -61,7 +61,7 @@ class DeviceInfoSchema {
 
   int get platformVersion {
     int? platformVersion;
-    if (data != null && data!.isNotEmpty) {
+    if (data?.isNotEmpty == true) {
       String? version = data!['platformVersion']?.toString();
       if (version?.isNotEmpty == true) {
         platformVersion = int.parse(version!);
@@ -79,7 +79,7 @@ class DeviceInfoSchema {
       'update_at': updateAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'contact_id': contactId,
       'device_id': deviceId,
-      'data': data != null ? jsonEncode(data) : '{}',
+      'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
     };
     return map;
   }
@@ -93,7 +93,7 @@ class DeviceInfoSchema {
       deviceId: e['device_id'],
     );
 
-    if (e['data'] != null) {
+    if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = jsonFormat(e['data']);
 
       if (deviceInfo.data == null) {

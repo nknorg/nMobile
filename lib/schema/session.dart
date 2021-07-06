@@ -42,10 +42,10 @@ class SessionSchema extends Equatable {
       'target_id': targetId,
       'type': type,
       'last_message_time': lastMessageTime?.millisecondsSinceEpoch,
+      'last_message_options': (lastMessageOptions?.isNotEmpty == true) ? jsonEncode(lastMessageOptions) : null,
       'un_read_count': unReadCount,
       'is_top': isTop ? 1 : 0,
     };
-    map["last_message_options"] = lastMessageOptions != null ? jsonEncode(lastMessageOptions) : null;
     return map;
   }
 
