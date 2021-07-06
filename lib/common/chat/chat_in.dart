@@ -159,8 +159,8 @@ class ChatInCommon with Tag {
             logger.w("$TAG - receiveContact - content is empty - data:$data");
             return;
           }
-          String firstName = content['first_name'] ?? content['name'] ?? "";
-          String lastName = content['last_name'] ?? "";
+          String? firstName = content['first_name'] ?? content['name'];
+          String? lastName = content['last_name'];
           File? avatar;
           String? avatarType = content['avatar'] != null ? content['avatar']['type'] : null;
           if (avatarType?.isNotEmpty == true) {
@@ -175,7 +175,7 @@ class ChatInCommon with Tag {
           // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {
           //   logger.i("$TAG - receiveContact - setProfile - NULL");
           // } else {
-          await contactCommon.setOtherProfile(exist, firstName, lastName, avatar?.path ?? "", version, notify: true);
+          await contactCommon.setOtherProfile(exist, firstName, lastName, Path.getLocalFile(avatar?.path), version, notify: true);
           logger.i("$TAG - receiveContact - setProfile - firstName:$firstName - avatar:${avatar?.path} - version:$version - data:$data");
           // }
         }
