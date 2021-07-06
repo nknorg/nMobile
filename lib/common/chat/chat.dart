@@ -10,7 +10,6 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
-import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
 
 import '../settings.dart';
@@ -29,7 +28,6 @@ class ChatCommon with Tag {
   Stream<String> get onDeleteStream => _onDeleteController.stream; // .distinct((prev, next) => prev.msgId == next.msgId)
 
   MessageStorage _messageStorage = MessageStorage();
-  TopicStorage _topicStorage = TopicStorage();
 
   Map<String, Map<String, DateTime>> deletedCache = Map<String, Map<String, DateTime>>();
 
@@ -113,9 +111,9 @@ class ChatCommon with Tag {
     if (!message.canDisplay) return null;
     // duplicated TODO:GG topic duplicated
     if (!message.isTopic) return null;
-    TopicSchema? exist = await _topicStorage.queryByTopic(message.topic);
+    TopicSchema? exist = await topicCommon.queryByTopic(message.topic);
     if (exist == null) {
-      exist = await _topicStorage.insert(TopicSchema(
+      exist = await topicCommon.add(TopicSchema(
         // TODO:GG topic get info
         // expireAt:
         // joined:
