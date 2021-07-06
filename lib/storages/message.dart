@@ -41,7 +41,6 @@ class MessageStorage with Tag {
     await db.execute('CREATE INDEX index_messages_pid ON $tableName (pid)');
     await db.execute('CREATE INDEX index_messages_msg_id ON $tableName (msg_id)');
     await db.execute('CREATE INDEX index_messages_target_id ON $tableName (target_id)');
-    // query message
     await db.execute('CREATE INDEX index_messages_msg_id_type ON $tableName (msg_id, type)');
     await db.execute('CREATE INDEX index_messages_is_outbound_is_read ON $tableName (is_outbound, is_read)');
     await db.execute('CREATE INDEX index_messages_target_id_is_outbound_is_read ON $tableName (target_id, is_outbound, is_read)');
@@ -240,9 +239,9 @@ class MessageStorage with Tag {
         columns: ['*'],
         where: 'target_id = ? AND NOT type = ?', // AND NOT type = ?
         whereArgs: [targetId, ContentType.piece], // , ContentType.receipt],
-        orderBy: 'send_time desc',
         offset: offset,
         limit: limit,
+        orderBy: 'send_time desc',
       );
       if (res == null || res.isEmpty) {
         logger.d("$TAG - queryListCanReadByTargetId - empty - targetId:$targetId");
