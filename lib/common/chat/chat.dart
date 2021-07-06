@@ -113,9 +113,9 @@ class ChatCommon with Tag {
     if (!message.canDisplay) return null;
     // duplicated TODO:GG topic duplicated
     if (!message.isTopic) return null;
-    TopicSchema? exist = await _topicStorage.queryTopicByTopicName(message.topic);
+    TopicSchema? exist = await _topicStorage.queryByTopic(message.topic);
     if (exist == null) {
-      exist = await _topicStorage.insertTopic(TopicSchema(
+      exist = await _topicStorage.insert(TopicSchema(
         // TODO:GG topic get info
         // expireAt:
         // joined:
