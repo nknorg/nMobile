@@ -322,7 +322,9 @@ class ContactStorage with Tag {
     try {
       int? count = await db?.update(
         tableName,
-        {'is_top': top ? 1 : 0},
+        {
+          'is_top': top ? 1 : 0,
+        },
         where: 'address = ?',
         whereArgs: [clientAddress],
       );
