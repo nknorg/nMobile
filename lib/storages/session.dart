@@ -112,9 +112,9 @@ class SessionStorage with Tag {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        orderBy: 'is_top desc, last_message_time desc',
         offset: offset ?? null,
         limit: limit ?? null,
+        orderBy: 'is_top desc, last_message_time desc',
       );
       if (res == null || res.isEmpty) {
         logger.d("$TAG - queryListRecent - empty");
