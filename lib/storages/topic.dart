@@ -146,8 +146,8 @@ class TopicStorage with Tag {
     return null;
   }
 
-  Future<bool> setExpireBlockHeight(String? topic, int? expireBlockHeight, {DateTime? subscribeAt}) async {
-    if (topic == null || topic.isEmpty || expireBlockHeight == null) return false;
+  Future<bool> setExpireBlockHeight(int? topicId, int? expireBlockHeight, {DateTime? subscribeAt}) async {
+    if (topicId == null || topicId == 0 || expireBlockHeight == null) return false;
     try {
       int? count = await db?.update(
         tableName,
@@ -155,102 +155,102 @@ class TopicStorage with Tag {
           'time_update': subscribeAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
           'expire_at': expireBlockHeight,
         },
-        where: 'topic = ?',
-        whereArgs: [topic],
+        where: 'id = ?',
+        whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setExpireBlockHeight - success - topic:$topic - expireBlockHeight:$expireBlockHeight");
+        logger.d("$TAG - setExpireBlockHeight - success - topicId:$topicId - expireBlockHeight:$expireBlockHeight");
         return true;
       }
-      logger.w("$TAG - setExpireBlockHeight - fail - topic:$topic - expireBlockHeight:$expireBlockHeight");
+      logger.w("$TAG - setExpireBlockHeight - fail - topicId:$topicId - expireBlockHeight:$expireBlockHeight");
     } catch (e) {
       handleError(e);
     }
     return false;
   }
 
-  Future<bool> setAvatar(String? topic, String? avatarPath) async {
-    if (topic == null || topic.isEmpty) return false;
+  Future<bool> setAvatar(int? topicId, String? avatarPath) async {
+    if (topicId == null || topicId == 0) return false;
     try {
       int? count = await db?.update(
         tableName,
         {
           'avatar': avatarPath,
         },
-        where: 'topic = ?',
-        whereArgs: [topic],
+        where: 'id = ?',
+        whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setAvatar - success - topic:$topic - avatarPath:$avatarPath");
+        logger.d("$TAG - setAvatar - success - topicId:$topicId - avatarPath:$avatarPath");
         return true;
       }
-      logger.w("$TAG - setAvatar - fail - topic:$topic - avatarPath:$avatarPath");
+      logger.w("$TAG - setAvatar - fail - topicId:$topicId - avatarPath:$avatarPath");
     } catch (e) {
       handleError(e);
     }
     return false;
   }
 
-  Future<bool> setJoined(String? topic, bool joined) async {
-    if (topic == null || topic.isEmpty) return false;
+  Future<bool> setJoined(int? topicId, bool joined) async {
+    if (topicId == null || topicId == 0) return false;
     try {
       int? count = await db?.update(
         tableName,
         {
           'joined': joined ? 1 : 0,
         },
-        where: 'topic = ?',
-        whereArgs: [topic],
+        where: 'id = ?',
+        whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setJoined - success - topic:$topic - joined:$joined");
+        logger.d("$TAG - setJoined - success - topicId:$topicId - joined:$joined");
         return true;
       }
-      logger.w("$TAG - setJoined - fail - topic:$topic - joined:$joined");
+      logger.w("$TAG - setJoined - fail - topicId:$topicId - joined:$joined");
     } catch (e) {
       handleError(e);
     }
     return false;
   }
 
-  Future<bool> setTop(String? topic, bool top) async {
-    if (topic == null || topic.isEmpty) return false;
+  Future<bool> setTop(int? topicId, bool top) async {
+    if (topicId == null || topicId == 0) return false;
     try {
       int? count = await db?.update(
         tableName,
         {
           'is_top': top ? 1 : 0,
         },
-        where: 'topic = ?',
-        whereArgs: [topic],
+        where: 'id = ?',
+        whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setTop - success - topic:$topic - top:$top");
+        logger.d("$TAG - setTop - success - topicId:$topicId - top:$top");
         return true;
       }
-      logger.w("$TAG - setTop - fail - topic:$topic - top:$top");
+      logger.w("$TAG - setTop - fail - topicId:$topicId - top:$top");
     } catch (e) {
       handleError(e);
     }
     return false;
   }
 
-  Future<bool> setData(String? topic, Map<String, dynamic>? newData) async {
-    if (topic == null || topic.isEmpty) return false;
+  Future<bool> setData(int? topicId, Map<String, dynamic>? newData) async {
+    if (topicId == null || topicId == 0) return false;
     try {
       int? count = await db?.update(
         tableName,
         {
           'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
         },
-        where: 'topic = ?',
-        whereArgs: [topic],
+        where: 'id = ?',
+        whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setData - success - newData:$newData");
+        logger.d("$TAG - setData - success - topicId:$topicId - newData:$newData");
         return true;
       }
-      logger.w("$TAG - setData - fail - newData:$newData");
+      logger.w("$TAG - setData - fail - topicId:$topicId - newData:$newData");
     } catch (e) {
       handleError(e);
     }
