@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 
@@ -14,14 +15,15 @@ class TopicType {
 class TopicSchema {
   int? id;
   String topic;
-  int? type; // TODO:GG 原版DB里没这个字段(原版最最后才加的)
+  int? type;
   DateTime? subscribeAt;
   DateTime? expireAt;
   File? avatar;
   int? count;
-  bool joined = false; // TODO:GG 原版没这个字段(原版最后才加的)
+  bool joined = false;
   bool isTop = false;
   OptionsSchema? options;
+  Map<String, dynamic>? data;
 
   TopicSchema({
     this.id,
@@ -34,7 +36,8 @@ class TopicSchema {
     this.joined = false,
     this.isTop = false,
     this.options,
-  }) : assert(topic.isNotEmpty) {
+    this.data,
+  }) {
     if (type == null) {
       type = isPrivateTopicReg(topic) ? TopicType.privateTopic : TopicType.publicTopic;
     }
@@ -47,7 +50,12 @@ class TopicSchema {
     return this.type != null && this.type == TopicType.privateTopic;
   }
 
-  String? get owner {
+  bool get isJoined {
+    var now = DateTime.now();
+    return joined && (expireAt ?? now).isAfter(now);
+  }
+
+  String? get ownerPubKey {
     String? owner;
     if (type == TopicType.privateTopic) {
       int index = topic.lastIndexOf('.');
@@ -70,16 +78,16 @@ class TopicSchema {
     return topicName;
   }
 
-  String get topicNameShort {
+  String get topicNameWithOwnerShort {
     String topicNameShort;
     if (type == TopicType.privateTopic) {
       int index = topic.lastIndexOf('.');
       String topicName = topic.substring(0, index);
-      if (owner?.isNotEmpty == true) {
-        if ((owner?.length ?? 0) > 8) {
-          topicNameShort = topicName + '.' + (owner?.substring(0, 8) ?? "");
+      if (ownerPubKey?.isNotEmpty == true) {
+        if ((ownerPubKey?.length ?? 0) > 8) {
+          topicNameShort = topicName + '.' + (ownerPubKey?.substring(0, 8) ?? "");
         } else {
-          topicNameShort = topicName + '.' + (owner ?? "");
+          topicNameShort = topicName + '.' + (ownerPubKey ?? "");
         }
       } else {
         topicNameShort = topicName;
@@ -106,6 +114,7 @@ class TopicSchema {
       'joined': joined ? 1 : 0,
       'is_top': isTop ? 1 : 0,
       'options': options != null ? jsonEncode(options!.toMap()) : null,
+      'data': data != null ? jsonEncode(data) : null,
     };
     return map;
   }
@@ -123,13 +132,14 @@ class TopicSchema {
       joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
       options: OptionsSchema.fromMap(jsonFormat(e['options']) ?? Map()),
+      data: (e['data']?.toString().isNotEmpty == true) ? jsonFormat(e['data']) : null,
     );
     if (topicSchema.options == null) {
       topicSchema.options = OptionsSchema();
     }
     // SUPPORT:START
-    if (topicSchema.options!.backgroundColor == null) {
-      topicSchema.options!.backgroundColor = e['theme_id'];
+    if (e['theme_id'] == null) {
+      topicSchema.options!.backgroundColor = Color(e['theme_id']);
     }
     // SUPPORT:END
     return topicSchema;
