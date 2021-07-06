@@ -17,7 +17,7 @@ class TopicSchema {
   String topic;
   int? type;
   DateTime? subscribeAt;
-  DateTime? expireAt;
+  int? expireBlockHeight;
   File? avatar;
   int? count;
   bool joined = false;
@@ -30,7 +30,7 @@ class TopicSchema {
     required this.topic,
     this.type,
     this.subscribeAt,
-    this.expireAt,
+    this.expireBlockHeight,
     this.avatar,
     this.count,
     this.joined = false,
@@ -48,10 +48,12 @@ class TopicSchema {
     return type == TopicType.privateTopic;
   }
 
-  bool get isJoined {
-    var now = DateTime.now();
-    return joined && (expireAt ?? now).isAfter(now);
+  Future<bool> get isJoined async {
+    // TODO:GG topic fetchBlockHeight
+    return joined; // && (expireBlockHeight ?? now).isAfter(now);
   }
+
+  bool isOwner(String accountPubKey) => accountPubKey == ownerPubKey;
 
   String? get ownerPubKey {
     String? owner;
@@ -106,7 +108,7 @@ class TopicSchema {
       'topic': topic,
       'type': isPrivate ? TopicType.privateTopic : TopicType.publicTopic,
       'time_update': subscribeAt?.millisecondsSinceEpoch,
-      'expire_at': expireAt?.millisecondsSinceEpoch,
+      'expire_at': expireBlockHeight,
       'avatar': (avatar is File?) ? Path.getLocalFile(avatar?.path) : null,
       'count': count,
       'joined': joined ? 1 : 0,
@@ -124,7 +126,7 @@ class TopicSchema {
       topic: e['topic'] ?? "",
       type: e['type'],
       subscribeAt: e['time_update'] != null ? DateTime.fromMillisecondsSinceEpoch(e['time_update']) : null,
-      expireAt: e['expire_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['expire_at']) : null,
+      expireBlockHeight: e['expire_at'],
       avatar: Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null,
       count: e['count'],
       joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,

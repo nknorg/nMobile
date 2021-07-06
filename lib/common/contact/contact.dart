@@ -188,13 +188,6 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> randomOptionsColors(ContactSchema? schema, {bool notify = false}) async {
-    if (schema == null || schema.id == null || schema.id == 0) return false;
-    bool success = await _contactStorage.randomOptionsColors(schema.id, old: schema.options);
-    if (success && notify) queryAndNotify(schema.id);
-    return success;
-  }
-
   Future<bool> setOptionsBurn(ContactSchema? schema, int? burningSeconds, int? updateTime, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
     bool success = await _contactStorage.setOptionsBurn(schema.id, burningSeconds, updateTime, old: schema.options);
