@@ -53,7 +53,9 @@ class DB {
         // TODO:GG index sync
         // TODO:GG deviceInfo create
         // TODO:GG session data move
+        // TODO:GG topic fields change
         // TODO:GG delete message(receipt) + read message(piece + contactOptions)
+        // TODO:GG take care old version any upgrade
         // if (newVersion >= dataBaseVersionV2) {
         //   await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
         //   await NKNDataManager.upgradeContactSchema2V3(db, dataBaseVersionV3);
