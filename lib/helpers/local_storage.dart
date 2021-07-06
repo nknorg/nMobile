@@ -104,7 +104,7 @@ class LocalStorage {
 
     for (var i = n; i < length - 1; i++) {
       var item = await getItem('$key', i + 1);
-      futures.add(set('$key:$n', item));
+      futures.add(set('$key:$i', item));
     }
     futures.add(remove('$key:${length - 1}'));
     await Future.wait(futures);
