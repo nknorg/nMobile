@@ -28,7 +28,7 @@ class ContactCommon with Tag {
   Stream<ContactSchema> get addStream => _addController.stream;
 
   // StreamController<int> _deleteController = StreamController<int>.broadcast();
-  // StreamSink<int> get deleteSink => _deleteController.sink;
+  // StreamSink<int> get _deleteSink => _deleteController.sink;
   // Stream<int> get deleteStream => _deleteController.stream;
 
   StreamController<ContactSchema> _updateController = StreamController<ContactSchema>.broadcast();
@@ -94,7 +94,7 @@ class ContactCommon with Tag {
   Future<bool> delete(int? contactId, {bool notify = false}) async {
     if (contactId == null || contactId == 0) return false;
     // bool deleted = await _contactStorage.delete(contactId);
-    // if (deleted) deleteSink.add(contactId);
+    // if (deleted) _deleteSink.add(contactId);
     // return deleted;
     bool success = await _contactStorage.setType(contactId, ContactType.stranger);
     if (success && notify) queryAndNotify(contactId);
@@ -121,7 +121,7 @@ class ContactCommon with Tag {
   }
 
   Future<bool> setType(int? contactId, String? contactType, {bool notify = false}) async {
-    if (contactType == null || contactType == ContactType.me) return false;
+    if (contactId == null || contactId == 0 || contactType == null || contactType == ContactType.me) return false;
     bool success = await _contactStorage.setType(contactId, contactType);
     if (success && notify) queryAndNotify(contactId);
     return success;
