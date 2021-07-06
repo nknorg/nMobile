@@ -333,14 +333,12 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> {
                                     validator: Validator.of(context).identifierNKN(),
                                     contactSelect: true,
                                   );
-                                  if (address != null) {
-                                    Navigator.of(context).pop();
+                                  if (address?.isNotEmpty == true) {
                                     var contact = await ContactSchema.createByType(address, ContactType.stranger);
                                     await contactCommon.add(contact);
                                     await ChatMessagesScreen.go(context, contact);
-                                  } else {
-                                    Navigator.of(context).pop();
                                   }
+                                  Navigator.of(context).pop(); // floatActionBtn
                                 },
                               ),
                             ],
