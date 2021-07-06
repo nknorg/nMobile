@@ -109,7 +109,7 @@ class TopicSchema {
       'type': isPrivate ? TopicType.privateTopic : TopicType.publicTopic,
       'time_update': subscribeAt?.millisecondsSinceEpoch,
       'expire_at': expireBlockHeight,
-      'avatar': (avatar is File?) ? Path.getLocalFile(avatar?.path) : null,
+      'avatar': Path.getLocalFile(avatar?.path),
       'count': count,
       'joined': joined ? 1 : 0,
       'is_top': isTop ? 1 : 0,

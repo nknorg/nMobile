@@ -4,6 +4,7 @@ import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
@@ -126,45 +127,49 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setSelfName(ContactSchema? old, String firstName, String lastName, {bool notify = false}) async {
-    if (old == null || old.id == 0) return false;
-    bool success = await _contactStorage.setProfile(
-      old.id,
-      {'first_name': firstName, 'last_name': lastName, 'profile_version': Uuid().v4()},
-      oldProfileInfo: {'first_name': old.firstName, 'profile_version': old.profileVersion},
-    );
-    if (success && notify) queryAndNotify(old.id);
-    return success;
-  }
-
   Future<bool> setSelfAvatar(ContactSchema? old, String avatarLocalPath, {bool notify = false}) async {
     if (old == null || old.id == 0) return false;
     bool success = await _contactStorage.setProfile(
       old.id,
-      {'avatar': avatarLocalPath, 'profile_version': Uuid().v4()},
-      oldProfileInfo: {'avatar': old.avatar?.path, 'profile_version': old.profileVersion},
+      {
+        'avatar': avatarLocalPath,
+        'first_name': old.firstName,
+        'last_name': old.lastName,
+        'profile_version': Uuid().v4(),
+        'profile_expires_at': DateTime.now().millisecondsSinceEpoch,
+      },
     );
     if (success && notify) queryAndNotify(old.id);
     return success;
   }
 
-  Future<bool> setOtherProfile(ContactSchema? old, String firstName, String lastName, String avatarLocalPath, String? profileVersion, {bool notify = false}) async {
+  Future<bool> setSelfName(ContactSchema? old, String firstName, String lastName, {bool notify = false}) async {
+    if (old == null || old.id == 0) return false;
+    bool success = await _contactStorage.setProfile(
+      old.id,
+      {
+        'avatar': Path.getLocalFile(old.avatar?.path),
+        'first_name': firstName,
+        'last_name': lastName,
+        'profile_version': Uuid().v4(),
+        'profile_expires_at': DateTime.now().millisecondsSinceEpoch,
+      },
+    );
+    if (success && notify) queryAndNotify(old.id);
+    return success;
+  }
+
+  Future<bool> setOtherProfile(ContactSchema? old, String? firstName, String? lastName, String? avatarLocalPath, String? profileVersion, {bool notify = false}) async {
     if (old == null || old.id == 0) return false; //  || name == null || name.isEmpty || avatarLocalPath == null || avatarLocalPath.isEmpty
     bool success = await _contactStorage.setProfile(
       old.id,
-      {'first_name': firstName, 'last_name': lastName, 'avatar': avatarLocalPath, 'profile_version': profileVersion ?? Uuid().v4()},
-      oldProfileInfo: {'first_name': old.firstName, 'avatar': old.avatar?.path, 'profile_version': old.profileVersion},
-    );
-    if (success && notify) queryAndNotify(old.id);
-    return success;
-  }
-
-  Future<bool> setRemarkName(ContactSchema? old, String firstName, String lastName, {bool notify = false}) async {
-    if (old == null || old.id == 0) return false;
-    bool success = await _contactStorage.setRemarkProfile(
-      old.id,
-      {'firstName': firstName, 'lasName': lastName},
-      oldExtraInfo: old.extraInfo,
+      {
+        'avatar': avatarLocalPath,
+        'first_name': firstName,
+        'last_name': lastName,
+        'profile_version': profileVersion ?? Uuid().v4(),
+        'profile_expires_at': DateTime.now().millisecondsSinceEpoch,
+      },
     );
     if (success && notify) queryAndNotify(old.id);
     return success;
@@ -174,8 +179,25 @@ class ContactCommon with Tag {
     if (old == null || old.id == 0) return Future.value(false);
     bool success = await _contactStorage.setRemarkProfile(
       old.id,
-      {'avatar': avatarLocalPath},
-      oldExtraInfo: old.extraInfo,
+      {
+        'firstName': old.extraInfo?['firstName'],
+        'lasName': old.extraInfo?['lasName'],
+        'avatar': avatarLocalPath,
+      },
+    );
+    if (success && notify) queryAndNotify(old.id);
+    return success;
+  }
+
+  Future<bool> setRemarkName(ContactSchema? old, String firstName, String lastName, {bool notify = false}) async {
+    if (old == null || old.id == 0) return false;
+    bool success = await _contactStorage.setRemarkProfile(
+      old.id,
+      {
+        'firstName': firstName,
+        'lasName': lastName,
+        'avatar': old.extraInfo?['avatar'],
+      },
     );
     if (success && notify) queryAndNotify(old.id);
     return success;
