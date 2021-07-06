@@ -215,60 +215,49 @@ class ContactStorage with Tag {
     return false;
   }
 
-  /// Profile
-  Future<bool> setProfile(int? contactId, Map<String, dynamic>? newProfileInfo, {Map<String, dynamic>? oldProfileInfo}) async {
-    if (contactId == null || contactId == 0 || newProfileInfo == null) return false;
-
-    Map<String, dynamic> saveDataInfo = oldProfileInfo ?? Map<String, dynamic>();
-    saveDataInfo['avatar'] = newProfileInfo['avatar'];
-    saveDataInfo['first_name'] = newProfileInfo['first_name'];
-    saveDataInfo['last_name'] = newProfileInfo['last_name'];
-    saveDataInfo['profile_version'] = newProfileInfo['profile_version'] ?? Uuid().v4();
-    saveDataInfo['profile_expires_at'] = newProfileInfo['profile_expires_at'] ?? DateTime.now().millisecondsSinceEpoch;
-    saveDataInfo['updated_time'] = DateTime.now().millisecondsSinceEpoch;
-
+  Future<bool> setProfile(int? contactId, Map<String, dynamic> profileInfo) async {
+    if (contactId == null || contactId == 0) return false;
     try {
       int? count = await db?.update(
         tableName,
-        saveDataInfo,
+        {
+          'avatar': profileInfo['avatar'],
+          'first_name': profileInfo['first_name'],
+          'last_name': profileInfo['last_name'],
+          'profile_version': profileInfo['profile_version'] ?? Uuid().v4(),
+          'profile_expires_at': profileInfo['profile_expires_at'] ?? DateTime.now().millisecondsSinceEpoch,
+          'updated_time': DateTime.now().millisecondsSinceEpoch,
+        },
         where: 'id = ?',
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setProfile - success - contactId:$contactId - update:$saveDataInfo - new:$newProfileInfo - old:$oldProfileInfo");
+        logger.d("$TAG - setProfile - success - contactId:$contactId - profileInfo:$profileInfo");
         return true;
       }
-      logger.w("$TAG - setProfile - fail - contactId:$contactId - update:$saveDataInfo - new:$newProfileInfo - old:$oldProfileInfo");
+      logger.w("$TAG - setProfile - fail - contactId:$contactId - profileInfo:$profileInfo");
     } catch (e) {
       handleError(e);
     }
     return false;
   }
 
-  /// RemarkProfile(Data)
-  Future<bool> setRemarkProfile(int? contactId, Map<String, dynamic>? newExtraInfo, {Map<String, dynamic>? oldExtraInfo}) async {
-    if (contactId == null || contactId == 0 || newExtraInfo == null) return false;
-
-    Map<String, dynamic> dataInfo = oldExtraInfo ?? Map<String, dynamic>();
-    dataInfo['firstName'] = newExtraInfo['firstName'];
-    dataInfo['lastName'] = newExtraInfo['lastName'];
-    dataInfo['avatar'] = newExtraInfo['avatar'];
-
-    Map<String, dynamic> saveDataInfo = Map<String, dynamic>();
-    saveDataInfo['data'] = jsonEncode(dataInfo);
-
+  Future<bool> setRemarkProfile(int? contactId, Map<String, dynamic>? extraInfo) async {
+    if (contactId == null || contactId == 0) return false;
     try {
       int? count = await db?.update(
         tableName,
-        saveDataInfo,
+        {
+          'data': (extraInfo?.isNotEmpty == true) ? jsonEncode(extraInfo) : null,
+        },
         where: 'id = ?',
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setRemarkProfile - success - contactId:$contactId - update:$dataInfo - new:$newExtraInfo - old:$oldExtraInfo");
+        logger.d("$TAG - setRemarkProfile - success - contactId:$contactId - extraInfo:$extraInfo");
         return true;
       }
-      logger.w("$TAG - setRemarkProfile - fail - contactId:$contactId - update:$dataInfo - new:$newExtraInfo - old:$oldExtraInfo");
+      logger.w("$TAG - setRemarkProfile - fail - contactId:$contactId - extraInfo:$extraInfo");
     } catch (e) {
       handleError(e);
     }
