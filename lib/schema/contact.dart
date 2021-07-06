@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/utils/path.dart';
@@ -15,13 +14,13 @@ class ContactSchema {
   String type; // (required) <-> type
   String clientAddress; // (required : (ID).PubKey) <-> address
   String? nknWalletAddress; // == extraInfo[nknWalletAddress] <-> data[nknWalletAddress]
+  File? avatar; // (local_path) <-> avatar
   String? firstName; // (required : name) <-> first_name
   String? lastName; // <-> last_name
   String? notes; // == extraInfo[notes] <-> data[notes]
+  OptionsSchema? options; // <-> options
   Map<String, dynamic>? extraInfo; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
 
-  File? avatar; // (local_path) <-> avatar
-  OptionsSchema? options; // <-> options
   DateTime? createdTime; // <-> created_time
   DateTime? updatedTime; // <-> updated_time
   String? profileVersion; // <-> profile_version
@@ -150,11 +149,11 @@ class ContactSchema {
     Map<String, dynamic> map = {
       'type': type,
       'address': clientAddress,
+      'avatar': Path.getLocalFile(avatar?.path),
       'first_name': firstName ?? getDefaultName(clientAddress),
       'last_name': lastName,
-      'data': (extraInfo?.isNotEmpty == true) ? jsonEncode(extraInfo) : '{}',
       'options': options != null ? jsonEncode(options!.toMap()) : null,
-      'avatar': Path.getLocalFile(avatar?.path),
+      'data': (extraInfo?.isNotEmpty == true) ? jsonEncode(extraInfo) : '{}',
       'created_time': createdTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'updated_time': updatedTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'profile_version': profileVersion ?? Uuid().v4(),
@@ -171,9 +170,9 @@ class ContactSchema {
       id: e['id'],
       type: e['type'] ?? ContactType.stranger,
       clientAddress: e['address'] ?? "",
+      avatar: Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null,
       firstName: e['first_name'] ?? getDefaultName(e['address']),
       lastName: e['last_name'],
-      avatar: Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null,
       createdTime: e['created_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['created_time']) : null,
       updatedTime: e['updated_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['updated_time']) : null,
       profileVersion: e['profile_version'],
@@ -201,12 +200,7 @@ class ContactSchema {
 
     if (e['options']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? options = jsonFormat(e['options']);
-      contact.options = OptionsSchema(
-        updateBurnAfterTime: options?['updateBurnAfterTime'],
-        deleteAfterSeconds: options?['deleteAfterSeconds'],
-        backgroundColor: Color(options?['backgroundColor']),
-        color: Color(options?['color']),
-      );
+      contact.options = OptionsSchema.fromMap(options ?? Map());
     }
     if (contact.options == null) {
       contact.options = OptionsSchema();
