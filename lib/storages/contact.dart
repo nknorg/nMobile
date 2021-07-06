@@ -38,7 +38,7 @@ class ContactStorage with Tag {
 
     // index
     await db.execute('CREATE INDEX index_contact_type ON $tableName (type)');
-    await db.execute('CREATE INDEX index_contact_address ON $tableName (address)');
+    await db.execute('CREATE UNIQUE INDEX unique_index_contact_address ON $tableName (address)');
     await db.execute('CREATE INDEX index_contact_first_name ON $tableName (first_name)');
     await db.execute('CREATE INDEX index_contact_last_name ON $tableName (last_name)');
     await db.execute('CREATE INDEX index_contact_created_time ON $tableName (created_time)');
@@ -107,11 +107,11 @@ class ContactStorage with Tag {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        orderBy: orderBy ?? 'updated_time desc',
         where: contactType != null ? 'type = ?' : null,
         whereArgs: contactType != null ? [contactType] : null,
         offset: offset ?? null,
         limit: limit ?? null,
+        orderBy: orderBy ?? 'updated_time desc',
       );
       if (res == null || res.isEmpty) {
         logger.d("$TAG - queryList - empty - contactType:$contactType");
