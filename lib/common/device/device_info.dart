@@ -16,7 +16,7 @@ class DeviceInfoCommon with Tag {
     if (replace) {
       DeviceInfoSchema? exist = await _deviceInfoStorage.queryByDeviceId(schema.contactId, schema.deviceId);
       if (exist != null) {
-        bool success = await _deviceInfoStorage.update(schema.contactId, schema.data);
+        bool success = await _deviceInfoStorage.update(exist.id, schema.data);
         return success ? schema : exist;
       }
     }
