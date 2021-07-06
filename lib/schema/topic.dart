@@ -38,16 +38,14 @@ class TopicSchema {
     this.options,
     this.data,
   }) {
-    if (type == null) {
-      type = isPrivateTopicReg(topic) ? TopicType.privateTopic : TopicType.publicTopic;
-    }
     if (options == null) {
       options = OptionsSchema();
     }
   }
 
   bool get isPrivate {
-    return this.type != null && this.type == TopicType.privateTopic;
+    int type = this.type ?? (isPrivateTopicReg(topic) ? TopicType.privateTopic : TopicType.publicTopic);
+    return type == TopicType.privateTopic;
   }
 
   bool get isJoined {
@@ -57,7 +55,7 @@ class TopicSchema {
 
   String? get ownerPubKey {
     String? owner;
-    if (type == TopicType.privateTopic) {
+    if (isPrivate) {
       int index = topic.lastIndexOf('.');
       owner = topic.substring(index + 1);
       if (owner.isEmpty) owner = null;
@@ -69,7 +67,7 @@ class TopicSchema {
 
   String get topicName {
     String topicName;
-    if (type == TopicType.privateTopic) {
+    if (isPrivate) {
       int index = topic.lastIndexOf('.');
       topicName = topic.substring(0, index);
     } else {
@@ -80,7 +78,7 @@ class TopicSchema {
 
   String get topicNameWithOwnerShort {
     String topicNameShort;
-    if (type == TopicType.privateTopic) {
+    if (isPrivate) {
       int index = topic.lastIndexOf('.');
       String topicName = topic.substring(0, index);
       if (ownerPubKey?.isNotEmpty == true) {
@@ -106,7 +104,7 @@ class TopicSchema {
     Map<String, dynamic> map = {
       'id': id,
       'topic': topic,
-      'type': type,
+      'type': isPrivate ? TopicType.privateTopic : TopicType.publicTopic,
       'time_update': subscribeAt?.millisecondsSinceEpoch,
       'expire_at': expireAt?.millisecondsSinceEpoch,
       'avatar': (avatar is File?) ? Path.getLocalFile(avatar?.path) : null,
