@@ -29,7 +29,6 @@ class SessionStorage with Tag {
     await db.execute('CREATE INDEX index_session_target_id ON $tableName (target_id)');
     await db.execute('CREATE INDEX index_session_type ON $tableName (type)');
     await db.execute('CREATE INDEX index_session_un_read_count ON $tableName (un_read_count)');
-    // query session
     await db.execute('CREATE INDEX index_session_top_last_message_time ON $tableName (is_top, last_message_time)');
   }
 
