@@ -58,7 +58,7 @@ class MessageStorage with Tag {
         logger.d("$TAG - insert - success - schema:$schema");
         return schema;
       }
-      logger.w("$TAG - $TAG - insert - empty - schema:$schema");
+      logger.w("$TAG - insert - empty - schema:$schema");
     } catch (e) {
       handleError(e);
     }
