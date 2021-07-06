@@ -33,7 +33,10 @@ class TopicStorage with Tag {
         data TEXT
       )''');
     // index
-    await db.execute('CREATE UNIQUE INDEX unique_index_topic_topic ON $tableName (topic);');
+    await db.execute('CREATE UNIQUE INDEX unique_index_topic ON $tableName (topic)');
+    await db.execute('CREATE INDEX index_type ON $tableName (type)');
+    await db.execute('CREATE INDEX index_time_update ON $tableName (time_update)');
+    await db.execute('CREATE INDEX index_type_time_update ON $tableName (type, time_update)');
   }
 
   Future<TopicSchema?> insert(TopicSchema? schema, {bool checkDuplicated = true}) async {
@@ -97,11 +100,11 @@ class TopicStorage with Tag {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        orderBy: orderBy ?? 'updated_time desc',
         where: topicType != null ? 'type = ?' : null,
         whereArgs: topicType != null ? [topicType] : null,
         offset: offset ?? null,
         limit: limit ?? null,
+        orderBy: orderBy ?? 'updated_time desc',
       );
       if (res == null || res.isEmpty) {
         logger.d("$TAG - queryList - empty - topicType:$topicType");
