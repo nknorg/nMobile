@@ -97,8 +97,8 @@ class DeviceInfoStorage with Tag {
     return null;
   }
 
-  Future<bool> update(int? contactId, Map<String, dynamic>? newData) async {
-    if (contactId == null || contactId == 0) return false;
+  Future<bool> update(int? deviceInfoId, Map<String, dynamic>? newData) async {
+    if (deviceInfoId == null || deviceInfoId == 0) return false;
     try {
       int? count = await db?.update(
         tableName,
@@ -106,14 +106,14 @@ class DeviceInfoStorage with Tag {
           'data': newData != null ? jsonEncode(newData) : null,
           'update_at': DateTime.now().millisecondsSinceEpoch,
         },
-        where: 'contact_id = ?',
-        whereArgs: [contactId],
+        where: 'id = ?',
+        whereArgs: [deviceInfoId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setData - success - contactId:$contactId - data:$newData");
+        logger.d("$TAG - setData - success - deviceInfoId:$deviceInfoId - data:$newData");
         return true;
       }
-      logger.w("$TAG - setData - fail - contactId:$contactId - data:$newData");
+      logger.w("$TAG - setData - fail - deviceInfoId:$deviceInfoId - data:$newData");
     } catch (e) {
       handleError(e);
     }
