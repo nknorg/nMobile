@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
 
-import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 
@@ -16,46 +14,80 @@ class TopicType {
 class TopicSchema {
   int? id;
   String topic;
+  int? type; // TODO:GG 原版DB里没这个字段(原版最最后才加的)
+  DateTime? subscribeAt;
+  DateTime? expireAt;
   File? avatar;
   int? count;
-  DateTime? lastUpdatedTime;
-  int? expireAt;
+  bool joined = false; // TODO:GG 原版没这个字段(原版最后才加的)
   bool isTop = false;
-  int? topicType;
-  bool? joined;
   OptionsSchema? options;
-  String? topicName;
-  String? owner;
-  String? topicShort;
 
   TopicSchema({
     this.id,
     required this.topic,
+    this.type,
+    this.subscribeAt,
+    this.expireAt,
     this.avatar,
     this.count,
-    this.lastUpdatedTime,
-    this.expireAt,
-    this.topicType,
-    this.isTop = false,
     this.joined = false,
+    this.isTop = false,
     this.options,
   }) : assert(topic.isNotEmpty) {
-    topicType = isPrivateTopicReg(topic) ? TopicType.privateTopic : TopicType.publicTopic;
+    if (type == null) {
+      type = isPrivateTopicReg(topic) ? TopicType.privateTopic : TopicType.publicTopic;
+    }
     if (options == null) {
       options = OptionsSchema();
     }
-    if (topicType == TopicType.privateTopic) {
+  }
+
+  bool get isPrivate {
+    return this.type != null && this.type == TopicType.privateTopic;
+  }
+
+  String? get owner {
+    String? owner;
+    if (type == TopicType.privateTopic) {
+      int index = topic.lastIndexOf('.');
+      owner = topic.substring(index + 1);
+      if (owner.isEmpty) owner = null;
+    } else {
+      owner = null;
+    }
+    return owner;
+  }
+
+  String get topicName {
+    String topicName;
+    if (type == TopicType.privateTopic) {
       int index = topic.lastIndexOf('.');
       topicName = topic.substring(0, index);
-      owner = topic.substring(index + 1);
-
-      topicShort = '$topicName.${owner?.substring(0, 8)}';
     } else {
       topicName = topic;
-      owner = null;
-
-      topicShort = topicName;
     }
+    return topicName;
+  }
+
+  String get topicNameShort {
+    String topicNameShort;
+    if (type == TopicType.privateTopic) {
+      int index = topic.lastIndexOf('.');
+      String topicName = topic.substring(0, index);
+      if (owner?.isNotEmpty == true) {
+        if ((owner?.length ?? 0) > 8) {
+          topicNameShort = topicName + '.' + (owner?.substring(0, 8) ?? "");
+        } else {
+          topicNameShort = topicName + '.' + (owner ?? "");
+        }
+      } else {
+        topicNameShort = topicName;
+      }
+    } else {
+      topicNameShort = topic;
+    }
+    return topicNameShort;
   }
 
   Map<String, dynamic> toMap() {
@@ -66,52 +98,40 @@ class TopicSchema {
     Map<String, dynamic> map = {
       'id': id,
       'topic': topic,
+      'type': type,
+      'time_update': subscribeAt?.millisecondsSinceEpoch,
+      'expire_at': expireAt?.millisecondsSinceEpoch,
+      'avatar': (avatar is File?) ? Path.getLocalFile(avatar?.path) : null,
       'count': count,
-      'avatar': Path.getLocalFile(avatar?.path),
-      'options': options != null ? jsonEncode(options!.toMap()) : null,
-      'last_updated_time': lastUpdatedTime?.millisecondsSinceEpoch,
+      'joined': joined ? 1 : 0,
       'is_top': isTop ? 1 : 0,
-      'expire_at': expireAt,
-      'type': topicType,
-      'joined': joined,
+      'options': options != null ? jsonEncode(options!.toMap()) : null,
     };
     return map;
   }
 
   static TopicSchema? fromMap(Map<String, dynamic>? e) {
-    if (e == null) {
-      return null;
-    }
+    if (e == null) return null;
     var topicSchema = TopicSchema(
       id: e['id'],
-      topic: e['topic'],
-      joined: e['joined'] == 1,
+      topic: e['topic'] ?? "",
+      type: e['type'],
+      subscribeAt: e['time_update'] != null ? DateTime.fromMillisecondsSinceEpoch(e['time_update']) : null,
+      expireAt: e['expire_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['expire_at']) : null,
+      avatar: Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null,
       count: e['count'],
-      topicType: e['type'],
-      lastUpdatedTime: e['time_update'] != null ? DateTime.fromMillisecondsSinceEpoch(e['time_update']) : null,
-      expireAt: e['expire_at'],
-      isTop: e['is_top'] == 1,
+      joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,
+      isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
+      options: OptionsSchema.fromMap(jsonFormat(e['options']) ?? Map()),
     );
-
-    if (e['avatar'] != null && e['avatar'].toString().length > 0) {
-      topicSchema.avatar = Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null;
-    }
-    if (e['options'] != null) {
-      try {
-        Map<String, dynamic>? options = jsonFormat(e['options']);
-        topicSchema.options = OptionsSchema(
-          updateBurnAfterTime: options?['updateBurnAfterTime'],
-          deleteAfterSeconds: options?['deleteAfterSeconds'],
-          backgroundColor: Color(options?['backgroundColor']),
-          color: Color(options?['color']),
-        );
-      } on FormatException catch (e) {
-        logger.e(e);
-      }
-    }
     if (topicSchema.options == null) {
       topicSchema.options = OptionsSchema();
     }
+    // SUPPORT:START
+    if (topicSchema.options!.backgroundColor == null) {
+      topicSchema.options!.backgroundColor = e['theme_id'];
+    }
+    // SUPPORT:END
     return topicSchema;
   }
 }

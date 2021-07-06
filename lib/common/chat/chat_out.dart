@@ -325,10 +325,12 @@ class ChatOutCommon with Tag {
           OnMessage? onResult = await chatCommon.publishData(schema.topic!, msgData);
           pid = onResult?.messageId;
           logger.d("$TAG - _send - topic - pid:$pid");
-        } else if (schema.to != null) {
+        } else if (schema.to?.isNotEmpty == true) {
           OnMessage? onResult = await chatCommon.sendData(schema.to!, msgData);
           pid = onResult?.messageId;
           logger.d("$TAG - _send - user - pid:$pid");
+        } else {
+          logger.e("$TAG - _send - null");
         }
       } else {
         logger.d("$TAG - _send - pieces - pid:$pid");

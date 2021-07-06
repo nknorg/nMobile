@@ -70,21 +70,21 @@ class ContactSchema {
   String get displayName {
     String? displayName;
 
-    if (extraInfo != null && extraInfo!.isNotEmpty) {
-      if (extraInfo!['firstName'] != null && extraInfo!['firstName'].isNotEmpty) {
+    if (extraInfo?.isNotEmpty == true) {
+      if (extraInfo!['firstName']?.toString().isNotEmpty == true) {
         displayName = extraInfo!['firstName'];
       }
       // SUPPORT:START
-      else if (extraInfo!['remark_name'] != null && extraInfo!['remark_name'].isNotEmpty) {
+      else if (extraInfo!['remark_name']?.toString().isNotEmpty == true) {
         displayName = extraInfo!['remark_name'];
-      } else if (extraInfo!['notes'] != null && extraInfo!['notes'].isNotEmpty) {
+      } else if (extraInfo!['notes']?.toString().isNotEmpty == true) {
         displayName = extraInfo!['notes'];
       }
       // SUPPORT:END
     }
 
     if (displayName == null || displayName.isEmpty) {
-      if (firstName != null && firstName!.isNotEmpty) {
+      if (firstName?.toString().isNotEmpty == true) {
         displayName = firstName;
       }
     }
@@ -98,12 +98,12 @@ class ContactSchema {
   Future<File?> get displayAvatarFile async {
     String? avatarLocalPath;
 
-    if (extraInfo != null && extraInfo!.isNotEmpty) {
-      if (extraInfo!['avatar'] != null && extraInfo!['avatar'].isNotEmpty) {
+    if (extraInfo?.toString().isNotEmpty == true) {
+      if (extraInfo!['avatar']?.toString().isNotEmpty == true) {
         avatarLocalPath = extraInfo!['avatar'];
       }
       // SUPPORT:START
-      if (extraInfo!['remark_avatar'] != null && extraInfo!['remark_avatar'].isNotEmpty) {
+      if (extraInfo!['remark_avatar']?.toString().isNotEmpty == true) {
         avatarLocalPath = extraInfo!['remark_avatar'];
       }
       // SUPPORT:END
@@ -131,12 +131,12 @@ class ContactSchema {
     if (extraInfo == null) {
       extraInfo = new Map<String, dynamic>();
     }
-    if (nknWalletAddress != null) {
+    if (nknWalletAddress?.isNotEmpty == true) {
       extraInfo?['nknWalletAddress'] = nknWalletAddress;
     } else {
       extraInfo?['nknWalletAddress'] = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
     }
-    if (notes != null) {
+    if (notes?.isNotEmpty == true) {
       extraInfo?['notes'] = notes;
     }
     if (extraInfo?.keys.length == 0) {
@@ -152,7 +152,7 @@ class ContactSchema {
       'address': clientAddress,
       'first_name': firstName ?? getDefaultName(clientAddress),
       'last_name': lastName,
-      'data': extraInfo != null ? jsonEncode(extraInfo) : '{}',
+      'data': (extraInfo?.isNotEmpty == true) ? jsonEncode(extraInfo) : '{}',
       'options': options != null ? jsonEncode(options!.toMap()) : null,
       'avatar': Path.getLocalFile(avatar?.path),
       'created_time': createdTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
@@ -183,7 +183,7 @@ class ContactSchema {
       notificationOpen: (e['notification_open'] != null && e['notification_open'].toString() == '1') ? true : false,
     );
 
-    if (e['data'] != null) {
+    if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = jsonFormat(e['data']);
 
       if (contact.extraInfo == null) {
@@ -199,7 +199,7 @@ class ContactSchema {
       contact.notes = data?['notes'];
     }
 
-    if (e['options'] != null) {
+    if (e['options']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? options = jsonFormat(e['options']);
       contact.options = OptionsSchema(
         updateBurnAfterTime: options?['updateBurnAfterTime'],

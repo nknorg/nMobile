@@ -662,7 +662,7 @@ class MessageSchema extends Equatable {
       pid: e['pid'] != null ? hexDecode(e['pid']) : null,
       to: e['receiver'],
       topic: e['topic'],
-      options: e['options'] != null ? jsonFormat(e['options']) : null,
+      options: (e['options']?.toString().isNotEmpty == true) ? jsonFormat(e['options']) : null,
     );
 
     // content = File/Map/String...
@@ -675,7 +675,7 @@ class MessageSchema extends Equatable {
       case ContentType.contactOptions:
       case ContentType.deviceInfo:
       case ContentType.deviceRequest:
-        if (e['content'] != null && e['content'] is String && e[''].toString().isNotEmpty) {
+        if ((e['content']?.toString().isNotEmpty == true) && (e['content'] is String)) {
           schema.content = jsonFormat(e['content']);
         } else {
           schema.content = e['content'];
@@ -689,7 +689,7 @@ class MessageSchema extends Equatable {
       case ContentType.audio:
       case ContentType.piece:
         String? completePath = Path.getCompleteFile(e['content']);
-        schema.content = completePath != null ? File(completePath) : null;
+        schema.content = (completePath?.isNotEmpty == true) ? File(completePath!) : null;
         break;
       // case ContentType.topicSubscribe:
       // case ContentType.topicUnsubscribe:
