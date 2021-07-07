@@ -54,6 +54,19 @@ class ContactSchema {
     }
   }
 
+  static Future<ContactSchema?> createByType(String? clientAddress, String contactType) async {
+    if (clientAddress == null || clientAddress.isEmpty) return null;
+    String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+    return ContactSchema(
+      type: contactType,
+      clientAddress: clientAddress,
+      nknWalletAddress: walletAddress,
+      createdTime: DateTime.now(),
+      updatedTime: DateTime.now(),
+      profileVersion: Uuid().v4(),
+    );
+  }
+
   bool get isMe {
     if (type == ContactType.me) {
       return true;
@@ -206,19 +219,6 @@ class ContactSchema {
       contact.options = OptionsSchema();
     }
     return contact;
-  }
-
-  static Future<ContactSchema?> createByType(String? clientAddress, String contactType) async {
-    if (clientAddress == null || clientAddress.isEmpty) return null;
-    String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
-    return ContactSchema(
-      type: contactType,
-      clientAddress: clientAddress,
-      nknWalletAddress: walletAddress,
-      createdTime: DateTime.now(),
-      updatedTime: DateTime.now(),
-      profileVersion: Uuid().v4(),
-    );
   }
 
   static getDefaultName(String? clientAddress) {
