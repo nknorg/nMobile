@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -46,7 +47,6 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
   TextEditingController _sendController = TextEditingController();
   FocusNode _sendFocusNode = FocusNode();
 
-  double? screenWidth;
   String? _draft;
   bool _canSendText = false;
 
@@ -116,7 +116,6 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
 
   @override
   Widget build(BuildContext context) {
-    if (screenWidth == null) screenWidth = MediaQuery.of(context).size.width;
     SkinTheme _theme = application.theme;
 
     Color? recordWidgetColor = _audioTextColorTween.transform(_audioDragPercent);
@@ -336,7 +335,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
             this._onRecordLockAndPercentChange(false, 1);
           }
         }
-      } else if (ActionWidth < offsetX && offsetX < (screenWidth! - ActionWidth)) {
+      } else if (ActionWidth < offsetX && offsetX < (Global.screenWidth - ActionWidth)) {
         // center
         if (!_audioRecordVisible) {
           // text editing
@@ -345,7 +344,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
           if (!isMove) {
             recordCancel?.call();
           } else {
-            double touchWidth = (screenWidth! - ActionWidth * 2);
+            double touchWidth = (Global.screenWidth - ActionWidth * 2);
             double percent = 1;
             if ((offsetX - ActionWidth) > (touchWidth / 2)) {
               percent = 1 - (((touchWidth / 2) - (offsetX - ActionWidth)) / (touchWidth / 2)).abs();
@@ -353,7 +352,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
             this._onRecordLockAndPercentChange(false, percent);
           }
         }
-      } else if ((screenWidth! - ActionWidth) <= offsetX && offsetX <= screenWidth!) {
+      } else if ((Global.screenWidth - ActionWidth) <= offsetX && offsetX <= Global.screenWidth) {
         // right
         if (_canSendText) {
           // text send
@@ -380,7 +379,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
       if (!_audioRecordVisible) {
         // nothing
       } else {
-        if ((screenWidth! - ChatSendBar.LockActionMargin - ChatSendBar.LockActionSize) <= offsetX && offsetX <= (screenWidth! - ChatSendBar.LockActionMargin)) {
+        if ((Global.screenWidth - ChatSendBar.LockActionMargin - ChatSendBar.LockActionSize) <= offsetX && offsetX <= (Global.screenWidth - ChatSendBar.LockActionMargin)) {
           // lock mode
           if (!isMove) {
             this._onRecordLockAndPercentChange(true, 0);
