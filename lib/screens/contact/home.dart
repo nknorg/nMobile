@@ -12,6 +12,7 @@ import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/topic/item.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -137,8 +138,8 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   _initData() async {
     List<ContactSchema> friends = await contactCommon.queryList(contactType: ContactType.friend);
     List<ContactSchema> strangers = await contactCommon.queryList(contactType: ContactType.stranger, limit: 20);
-    List<TopicSchema> topics = []; // widget.arguments ? <TopicSchema>[] : await TopicRepo().getAllTopics(); // TODO:GG contact topic
-    topics = (this._isSelect == true) ? [] : topics; // TODO:GG contact topic (can not write this line in state)
+    List<TopicSchema> topics = await topicCommon.queryList(limit: 20);
+    topics = (this._isSelect == true) ? [] : topics; // can not move this line to setState
 
     setState(() {
       _pageLoaded = true;
@@ -166,7 +167,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       setState(() {
         _searchStrangers = _allStrangers.where((ContactSchema e) => e.displayName.toLowerCase().contains(val.toLowerCase())).toList();
         _searchFriends = _allFriends.where((ContactSchema e) => e.displayName.toLowerCase().contains(val.toLowerCase())).toList();
-        // _searchTopics = _allTopics.where((Topic e) => e.topic.contains(val)).toList(); // TODO:GG contact topic
+        _searchTopics = _allTopics.where((TopicSchema e) => e.topic.contains(val)).toList();
       });
     }
   }
@@ -177,6 +178,11 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     } else {
       ContactProfileScreen.go(context, schema: item);
     }
+  }
+
+  _onTapTopicItem(TopicSchema item) async {
+    // TODO:GG
+    // ContactProfileScreen.go(context, schema: item);
   }
 
   @override
@@ -305,7 +311,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                         ),
                       );
                     }
-                    return SizedBox.shrink(); // TODO:GG contact topic
+                    return _getTopicItemView(_searchTopics[topicItemIndex]);
                   } else if (searchStrangerViewCount > 0 && index >= strangerStartIndex && index <= strangerEndIndex) {
                     if (index == strangerStartIndex) {
                       return Padding(
@@ -447,101 +453,26 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     );
   }
 
-// List<Widget> getTopicList() {
-//   List<Widget> topicList = [];
-//   if (_searchTopics.length > 0) {
-//     topicList.add(Padding(
-//       padding: const EdgeInsets.only(top: 32, bottom: 16),
-//       child: Label(
-//         '(${_searchTopics.length}) ${NL10ns.of(context).group_chat}',
-//         type: LabelType.h3,
-//         height: 1,
-//       ),
-//     ));
-//   }
-//
-//   for (var item in _searchTopics) {
-//     topicList.add(InkWell(
-//       onTap: () async {
-//         Topic topic = await TopicRepo().getTopicByName(item.topic);
-//         Navigator.of(context).pushNamed(MessageChatPage.routeName, arguments: topic);
-//       },
-//       child: Container(
-//         height: 72,
-//         padding: const EdgeInsets.only(),
-//         child: Flex(
-//           direction: Axis.horizontal,
-//           crossAxisAlignment: CrossAxisAlignment.stretch,
-//           children: <Widget>[
-//             Expanded(
-//               flex: 0,
-//               child: Container(
-//                 margin: const EdgeInsets.only(right: 8),
-//                 alignment: Alignment.center,
-//                 child: Container(
-//                   child: CommonUI.avatarWidget(
-//                     radiusSize: 24,
-//                     topic: item,
-//                   ),
-//                 ),
-//               ),
-//             ),
-//             Expanded(
-//               flex: 1,
-//               child: Container(
-//                 padding: const EdgeInsets.only(),
-//                 decoration: BoxDecoration(
-//                   border: Border(bottom: BorderSide(color: DefaultTheme.backgroundColor2)),
-//                 ),
-//                 child: Flex(
-//                   direction: Axis.horizontal,
-//                   children: <Widget>[
-//                     Expanded(
-//                       flex: 1,
-//                       child: Container(
-//                         alignment: Alignment.centerLeft,
-//                         height: 44,
-//                         child: Column(
-//                           mainAxisSize: MainAxisSize.max,
-//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                           crossAxisAlignment: CrossAxisAlignment.start,
-//                           children: <Widget>[
-//                             Row(
-//                               children: <Widget>[
-//                                 item.isPrivateTopic()
-//                                     ? loadAssetIconsImage(
-//                                         'lock',
-//                                         width: 18,
-//                                         color: DefaultTheme.primaryColor,
-//                                       )
-//                                     : Container(),
-//                                 Label(
-//                                   item.topicShort,
-//                                   type: LabelType.h3,
-//                                   overflow: TextOverflow.ellipsis,
-//                                 ),
-//                               ],
-//                             ),
-//                             Label(
-//                               item.topic,
-//                               height: 1,
-//                               type: LabelType.bodySmall,
-//                               overflow: TextOverflow.ellipsis,
-//                             ),
-//                           ],
-//                         ),
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     ));
-//   }
-//   return topicList;
-// }
-
+  Widget _getTopicItemView(TopicSchema item) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TopicItem(
+          topic: item,
+          onTap: () {
+            _onTapTopicItem(item);
+          },
+          bgColor: Colors.transparent,
+          bodyTitle: item.fullNameShort,
+          bodyDesc: item.fullName,
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        ),
+        Divider(
+          height: 1,
+          indent: 74,
+          endIndent: 16,
+        ),
+      ],
+    );
+  }
 }

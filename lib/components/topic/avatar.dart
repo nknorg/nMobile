@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/schema/Topic.dart';
+import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/asset.dart';
 
 class TopicAvatar extends BaseStateFulWidget {
@@ -42,7 +42,7 @@ class _TopicAvatarState extends BaseStateFulWidgetState<TopicAvatar> {
   @override
   Widget build(BuildContext context) {
     double radius = this.widget.radius ?? 24;
-    String name = widget.topic.topicNameWithOwnerShort;
+    String name = widget.topic.topicName;
 
     if (_avatarFile != null) {
       return CircleAvatar(
