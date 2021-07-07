@@ -24,7 +24,8 @@ class Global {
   static double screenWidth = 0;
   static double screenHeight = 0;
 
-  static int topicWarnBlockExpireHeight = 300000;
+  static int topicDefaultSubscribeDuration = 400000;
+  static int topicWarnBlockExpireHeight = 100000;
 
   static List<String> defaultSeedRpcList = [
     'http://seed.nkn.org:30003',

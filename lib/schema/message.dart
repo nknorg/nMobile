@@ -32,8 +32,8 @@ class ContentType {
 
   static const String piece = 'nknOnePiece'; // db
 
-  static const String topicSubscribe = 'event:subscribe'; // TODO:GG wait handle
-  static const String topicUnsubscribe = 'event:unsubscribe'; // TODO:GG wait handle
+  static const String topicSubscribe = 'event:subscribe';
+  static const String topicUnsubscribe = 'event:unsubscribe';
   static const String topicInvitation = 'event:channelInvitation'; // TODO:GG wait data
 
   // SUPPORT:START
@@ -366,8 +366,7 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  // TODO:GG topic wait call
-  String getTopicSubscribe(MessageSchema schema) {
+  static String getTopicSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
       'contentType': ContentType.topicSubscribe,
@@ -378,8 +377,7 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  // TODO:GG topic wait call
-  String getTopicUnSubscribe(MessageSchema schema) {
+  static String getTopicUnSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
       'contentType': ContentType.topicUnsubscribe,

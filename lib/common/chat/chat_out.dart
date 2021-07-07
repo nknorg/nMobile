@@ -49,7 +49,7 @@ class ChatOutCommon with Tag {
     if (tryCount > 3) return;
     try {
       String data = MessageData.getReceipt(received.msgId);
-      await chatCommon.sendData(received.from, data);
+      await chatCommon.clientSendData(received.from, data);
       logger.d("$TAG - sendReceipt - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -67,7 +67,7 @@ class ChatOutCommon with Tag {
     try {
       DateTime updateAt = DateTime.now();
       String data = MessageData.getContactRequest(requestType, target.profileVersion, updateAt);
-      await chatCommon.sendData(target.clientAddress, data);
+      await chatCommon.clientSendData(target.clientAddress, data);
       logger.d("$TAG - sendContactRequest - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -96,7 +96,7 @@ class ChatOutCommon with Tag {
           updateAt,
         );
       }
-      await chatCommon.sendData(target.clientAddress, data);
+      await chatCommon.clientSendData(target.clientAddress, data);
       logger.d("$TAG - sendContactResponse - success - requestType:$requestType - data:$data");
     } catch (e) {
       handleError(e);
@@ -121,7 +121,7 @@ class ChatOutCommon with Tag {
         burningUpdateTime: updateTime,
       );
       send.content = MessageData.getContactOptionsBurn(send);
-      await _send(send, send.content, database: true, display: true);
+      await _sendAndDisplay(send, send.content);
       logger.d("$TAG - sendContactOptionsBurn - success - data:${send.content}");
     } catch (e) {
       handleError(e);
@@ -145,7 +145,7 @@ class ChatOutCommon with Tag {
       );
       send = MessageOptions.setDeviceToken(send, deviceToken);
       send.content = MessageData.getContactOptionsToken(send);
-      await _send(send, send.content, database: true, display: true);
+      await _sendAndDisplay(send, send.content);
       logger.d("$TAG - sendContactOptionsToken - success - data:${send.content}");
     } catch (e) {
       handleError(e);
@@ -162,7 +162,7 @@ class ChatOutCommon with Tag {
     if (tryCount > 3) return;
     try {
       String data = MessageData.getDeviceRequest();
-      await chatCommon.sendData(clientAddress, data);
+      await chatCommon.clientSendData(clientAddress, data);
       logger.d("$TAG - sendDeviceRequest - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -179,7 +179,7 @@ class ChatOutCommon with Tag {
     if (tryCount > 3) return;
     try {
       String data = MessageData.getDeviceInfo();
-      await chatCommon.sendData(clientAddress, data);
+      await chatCommon.clientSendData(clientAddress, data);
       logger.d("$TAG - sendDeviceInfo - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -205,7 +205,7 @@ class ChatOutCommon with Tag {
       deleteAfterSeconds: contact.options?.deleteAfterSeconds,
       burningUpdateTime: contact.options?.updateBurnAfterTime,
     );
-    return _send(schema, MessageData.getText(schema));
+    return _sendAndDisplay(schema, MessageData.getText(schema));
   }
 
   Future<MessageSchema?> sendImage(String? clientAddress, File? content, {required ContactSchema contact}) async {
@@ -225,7 +225,7 @@ class ChatOutCommon with Tag {
       deleteAfterSeconds: contact.options?.deleteAfterSeconds,
       burningUpdateTime: contact.options?.updateBurnAfterTime,
     );
-    return _send(schema, await MessageData.getImage(schema));
+    return _sendAndDisplay(schema, await MessageData.getImage(schema));
   }
 
   Future<MessageSchema?> sendAudio(String? clientAddress, File? content, double? durationS, {required ContactSchema contact}) async {
@@ -244,7 +244,7 @@ class ChatOutCommon with Tag {
       deleteAfterSeconds: contact.options?.deleteAfterSeconds,
       burningUpdateTime: contact.options?.updateBurnAfterTime,
     );
-    return _send(schema, await MessageData.getAudio(schema));
+    return _sendAndDisplay(schema, await MessageData.getAudio(schema));
   }
 
   // NO DB NO display
@@ -254,10 +254,10 @@ class ChatOutCommon with Tag {
       await Future.delayed(Duration(milliseconds: (schema.sendTime ?? DateTime.now()).millisecondsSinceEpoch - DateTime.now().millisecondsSinceEpoch));
       String data = MessageData.getPiece(schema);
       if (schema.isTopic) {
-        OnMessage? onResult = await chatCommon.publishData(schema.topic!, data);
+        OnMessage? onResult = await chatCommon.clientPublishData(schema.topic!, data);
         schema.pid = onResult?.messageId;
       } else if (schema.to != null) {
-        OnMessage? onResult = await chatCommon.sendData(schema.to!, data);
+        OnMessage? onResult = await chatCommon.clientSendData(schema.to!, data);
         schema.pid = onResult?.messageId;
       }
       // logger.d("$TAG - sendPiece - success - index:${schema.index} - total:${schema.total} - time:${DateTime.now().millisecondsSinceEpoch} - schema:$schema - data:$data");
@@ -273,30 +273,70 @@ class ChatOutCommon with Tag {
     }
   }
 
+  // NO DB NO display NO single
+  Future sendTopicSubscribe(String? topicName, {int tryCount = 1}) async {
+    if (contactCommon.currentUser == null || topicName == null || topicName.isEmpty) return;
+    if (tryCount > 3) return;
+    try {
+      MessageSchema send = MessageSchema.fromSend(
+        Uuid().v4(),
+        contactCommon.currentUser!.clientAddress,
+        ContentType.topicSubscribe,
+        topic: topicName,
+      );
+      send.content = MessageData.getTopicSubscribe(send);
+      await chatCommon.clientPublishData(send.topic, send.content);
+      logger.d("$TAG - sendTopicSubscribe - success - data:${send.content}");
+    } catch (e) {
+      handleError(e);
+      logger.w("$TAG - sendTopicSubscribe - fail - tryCount:$tryCount - topicName:$topicName");
+      await Future.delayed(Duration(seconds: 2), () {
+        return sendTopicSubscribe(topicName, tryCount: tryCount++);
+      });
+    }
+  }
+
+  // NO DB NO display NO single
+  Future sendTopicUnSubscribe(String? topicName, {int tryCount = 1}) async {
+    if (contactCommon.currentUser == null || topicName == null || topicName.isEmpty) return;
+    if (tryCount > 3) return;
+    try {
+      MessageSchema send = MessageSchema.fromSend(
+        Uuid().v4(),
+        contactCommon.currentUser!.clientAddress,
+        ContentType.topicUnsubscribe,
+        topic: topicName,
+      );
+      send.content = MessageData.getTopicUnSubscribe(send);
+      await chatCommon.clientPublishData(send.topic, send.content);
+      logger.d("$TAG - sendTopicUnSubscribe - success - data:${send.content}");
+    } catch (e) {
+      handleError(e);
+      logger.w("$TAG - sendTopicUnSubscribe - fail - tryCount:$tryCount - topicName:$topicName");
+      await Future.delayed(Duration(seconds: 2), () {
+        return sendTopicUnSubscribe(topicName, tryCount: tryCount++);
+      });
+    }
+  }
+
   Future<MessageSchema?> resend(MessageSchema? schema) async {
     if (schema == null) return null;
     schema = await chatCommon.updateMessageStatus(schema, MessageStatus.Sending, notify: true);
     switch (schema.contentType) {
       case ContentType.text:
       case ContentType.textExtension:
-        return await _send(schema, MessageData.getText(schema), resend: true);
+        return await _sendAndDisplay(schema, MessageData.getText(schema), resend: true);
       case ContentType.media:
       case ContentType.image:
       case ContentType.nknImage:
-        return await _send(schema, await MessageData.getImage(schema), resend: true);
+        return await _sendAndDisplay(schema, await MessageData.getImage(schema), resend: true);
       case ContentType.audio:
-        return await _send(schema, await MessageData.getAudio(schema), resend: true);
+        return await _sendAndDisplay(schema, await MessageData.getAudio(schema), resend: true);
     }
     return schema;
   }
 
-  Future<MessageSchema?> _send(
-    MessageSchema? schema,
-    String? msgData, {
-    bool database = true,
-    bool display = true,
-    bool resend = false,
-  }) async {
+  Future<MessageSchema?> _sendAndDisplay(MessageSchema? schema, String? msgData, {bool resend = false}) async {
     if (schema == null || msgData == null) return null;
     // contact
     ContactSchema? _contact = await chatCommon.contactHandle(schema);
@@ -307,33 +347,33 @@ class ChatOutCommon with Tag {
     // session
     chatCommon.sessionHandle(schema); // await
     // DB
-    if (resend) {
+    if (!resend) {
+      schema = await _messageStorage.insert(schema);
+    } else {
       schema.sendTime = DateTime.now();
       await _messageStorage.updateSendTime(schema.msgId, schema.sendTime ?? DateTime.now());
-    } else if (database) {
-      schema = await _messageStorage.insert(schema);
     }
     if (schema == null) return null;
     // display
-    if (display) _onSavedSink.add(schema);
+    _onSavedSink.add(schema); // resend already delete fail item in listview
     // SDK
     Uint8List? pid;
     try {
       pid = await _sendByPiecesIfNeed(schema, _deviceInfo);
       if (pid == null || pid.isEmpty) {
         if (schema.isTopic) {
-          OnMessage? onResult = await chatCommon.publishData(schema.topic!, msgData);
+          OnMessage? onResult = await chatCommon.clientPublishData(schema.topic!, msgData);
           pid = onResult?.messageId;
-          logger.d("$TAG - _send - topic - pid:$pid");
+          logger.d("$TAG - _send - topic:${schema.topic} - pid:$pid");
         } else if (schema.to?.isNotEmpty == true) {
-          OnMessage? onResult = await chatCommon.sendData(schema.to!, msgData);
+          OnMessage? onResult = await chatCommon.clientSendData(schema.to!, msgData);
           pid = onResult?.messageId;
-          logger.d("$TAG - _send - user - pid:$pid");
+          logger.d("$TAG - _send - user:${schema.to} - pid:$pid");
         } else {
           logger.e("$TAG - _send - null");
         }
       } else {
-        logger.d("$TAG - _send - pieces - pid:$pid");
+        logger.d("$TAG - _send - pieces:$_deviceInfo - pid:$pid");
       }
     } catch (e) {
       handleError(e);
@@ -341,18 +381,18 @@ class ChatOutCommon with Tag {
     // fail
     if (pid == null || pid.isEmpty) {
       schema = MessageStatus.set(schema, MessageStatus.SendFail);
-      if (database || resend) _messageStorage.updateMessageStatus(schema); // await
-      if (display || resend) chatCommon.onUpdateSink.add(schema);
+      _messageStorage.updateMessageStatus(schema); // await
+      chatCommon.onUpdateSink.add(schema);
       return null;
     }
     // pid
     schema.pid = pid;
-    if (database || resend) _messageStorage.updatePid(schema.msgId, schema.pid); // await
+    _messageStorage.updatePid(schema.msgId, schema.pid); // await
     // status
     schema = MessageStatus.set(schema, MessageStatus.SendSuccess);
-    if (database || resend) _messageStorage.updateMessageStatus(schema); // await
+    _messageStorage.updateMessageStatus(schema); // await
     // display
-    if (display || resend) chatCommon.onUpdateSink.add(schema);
+    chatCommon.onUpdateSink.add(schema);
     // notification
     _sendPush(schema, _contact, _topic); // await
     return schema;
@@ -361,7 +401,7 @@ class ChatOutCommon with Tag {
   _sendPush(MessageSchema message, ContactSchema? contact, TopicSchema? topic) async {
     if (!message.canDisplayAndRead) return;
     if (topic != null) {
-      // TODO:GG topic get all subers token and list.send
+      // TODO:GG topic get all subscribe token and list.send
       return;
     }
     if (contact == null || contact.deviceToken == null || contact.deviceToken!.isEmpty) return;

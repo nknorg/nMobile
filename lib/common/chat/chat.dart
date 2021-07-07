@@ -33,11 +33,13 @@ class ChatCommon with Tag {
 
   ChatCommon();
 
-  Future<OnMessage?> sendData(String dest, String data) async {
+  Future<OnMessage?> clientSendData(String? dest, String data) async {
+    if (dest == null || dest.isEmpty) return null;
     return await clientCommon.client?.sendText([dest], data);
   }
 
-  Future<OnMessage?> publishData(String topic, String data) async {
+  Future<OnMessage?> clientPublishData(String? topic, String data) async {
+    if (topic == null || topic.isEmpty) return null;
     return await clientCommon.client?.publishText(topic, data);
   }
 
@@ -115,6 +117,7 @@ class ChatCommon with Tag {
     if (exist == null) {
       exist = await topicCommon.add(TopicSchema.create(message.topic));
     }
+    // TODO:GG how to update profile
     return exist;
   }
 
