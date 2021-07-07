@@ -98,7 +98,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                         padding: const EdgeInsets.only(top: 24, left: 20, right: 20),
                         child: WalletDropdown(
                           selectTitle: _localizations.select_asset_to_receive,
-                          schema: _wallet,
+                          wallet: _wallet,
                           onTapWave: false,
                           onSelected: (WalletSchema picked) {
                             logger.d("$TAG - wallet picked - $picked");

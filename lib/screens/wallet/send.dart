@@ -367,7 +367,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                   /// wallet
                                   WalletDropdown(
                                     selectTitle: _localizations.select_asset_to_send,
-                                    schema: _wallet,
+                                    wallet: _wallet,
                                     onTapWave: false,
                                     onSelected: (WalletSchema picked) {
                                       logger.d("$TAG - wallet picked - $picked");
