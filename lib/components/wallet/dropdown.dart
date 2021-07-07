@@ -8,14 +8,14 @@ import 'package:nmobile/utils/logger.dart';
 import 'item.dart';
 
 class WalletDropdown extends StatelessWidget with Tag {
-  final WalletSchema schema;
+  final WalletSchema wallet;
   final String? selectTitle;
   final Function(WalletSchema)? onSelected;
   final Color? bgColor;
   final bool onTapWave;
 
   WalletDropdown({
-    required this.schema,
+    required this.wallet,
     this.selectTitle,
     this.onSelected,
     this.bgColor,
@@ -27,8 +27,8 @@ class WalletDropdown extends StatelessWidget with Tag {
     S _localizations = S.of(context);
 
     return WalletItem(
-      walletType: this.schema.type,
-      wallet: this.schema,
+      walletType: this.wallet.type,
+      wallet: this.wallet,
       radius: BorderRadius.circular(8),
       padding: EdgeInsets.all(0),
       bgColor: Colors.transparent,

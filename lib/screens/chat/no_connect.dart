@@ -117,7 +117,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                           _selectWallet = v;
                         });
                       },
-                      schema: this._selectWallet!,
+                      wallet: this._selectWallet!,
                     ),
                   ),
             SizedBox(height: 20),
