@@ -296,6 +296,7 @@ class ChatOutCommon with Tag {
     }
   }
 
+  // TODO:GG call
   // NO DB NO display NO single
   Future sendTopicUnSubscribe(String? topicName, {int tryCount = 1}) async {
     if (contactCommon.currentUser == null || topicName == null || topicName.isEmpty) return;
