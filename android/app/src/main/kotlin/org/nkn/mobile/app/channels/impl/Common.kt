@@ -1,5 +1,6 @@
 package org.nkn.mobile.app.channels.impl
 
+import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.KeyguardManager
 import android.content.Context
@@ -142,15 +143,15 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
     private fun isGoogleServiceAvailable(call: MethodCall, result: MethodChannel.Result) {
         viewModelScope.launch(Dispatchers.IO) {
-            val code = GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(MainActivity.instance)
-            val availability = if (code == ConnectionResult.SUCCESS) {
-                Log.i("GoogleServiceCheck", "success")
-                true
-            } else {
-                Log.i("GoogleServiceCheck", "code:$code")
-                false
-            }
             try {
+                val code = GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(MainActivity.instance)
+                val availability = if (code == ConnectionResult.SUCCESS) {
+                    Log.i("GoogleServiceCheck", "success")
+                    true
+                } else {
+                    Log.i("GoogleServiceCheck", "code:$code")
+                    false
+                }
                 val resp = hashMapOf(
                     "event" to "isGoogleServiceAvailable",
                     "availability" to availability,
@@ -164,17 +165,51 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         }
     }
 
+    @SuppressLint("CommitPrefEdits")
     private fun getFCMToken(call: MethodCall, result: MethodChannel.Result) {
         viewModelScope.launch(Dispatchers.IO) {
-            val sharedPreferences = MainActivity.instance.getSharedPreferences("fcmToken", Context.MODE_PRIVATE)
-            val deviceToken = sharedPreferences.getString("token", null) ?: FirebaseMessaging.getInstance().token.result
             try {
-                val resp = hashMapOf(
-                    "event" to "getFCMToken",
-                    "token" to deviceToken,
-                )
-                resultSuccess(result, resp)
-                return@launch
+                val sharedPreferences = MainActivity.instance.getSharedPreferences("fcmToken", Context.MODE_PRIVATE)
+                val deviceToken = sharedPreferences.getString("token", null)
+                if (!deviceToken.isNullOrEmpty()) {
+                    val resp = hashMapOf(
+                        "event" to "getFCMToken",
+                        "token" to deviceToken,
+                    )
+                    resultSuccess(result, resp)
+                    return@launch
+                } else {
+                    val task = FirebaseMessaging.getInstance().token
+                    task.addOnSuccessListener { fetchToken ->
+                        sharedPreferences.edit().putString("token", fetchToken).apply()
+                        val resp = hashMapOf(
+                            "event" to "getFCMToken",
+                            "token" to fetchToken,
+                        )
+                        viewModelScope.launch(Dispatchers.IO) {
+                            resultSuccess(result, resp)
+                        }
+                        return@addOnSuccessListener
+                    }.addOnCanceledListener {
+                        val resp = hashMapOf(
+                            "event" to "getFCMToken",
+                            "token" to null,
+                        )
+                        viewModelScope.launch(Dispatchers.IO) {
+                            resultSuccess(result, resp)
+                        }
+                        return@addOnCanceledListener
+                    }.addOnFailureListener {
+                        val resp = hashMapOf(
+                            "event" to "getFCMToken",
+                            "token" to null,
+                        )
+                        viewModelScope.launch(Dispatchers.IO) {
+                            resultSuccess(result, resp)
+                        }
+                        return@addOnFailureListener
+                    }
+                }
             } catch (e: Throwable) {
                 resultError(result, e)
                 return@launch

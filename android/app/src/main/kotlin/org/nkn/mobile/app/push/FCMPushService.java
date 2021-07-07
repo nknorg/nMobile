@@ -22,8 +22,7 @@ public class FCMPushService extends FirebaseMessagingService {
         super.onNewToken(refreshToken);
         Log.i(TAG, "onNewToken: " + refreshToken);
         SharedPreferences.Editor editor = getSharedPreferences("fcmToken", MODE_PRIVATE).edit();
-        editor.putString("token", refreshToken);
-        editor.apply();
+        editor.putString("token", refreshToken).apply();
         // notify flutter
         Common.Companion.eventAdd("onDeviceTokenRefresh", refreshToken);
     }

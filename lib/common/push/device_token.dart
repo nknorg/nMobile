@@ -17,6 +17,7 @@ class DeviceToken {
       token = await getAPNS();
     } else if (Platform.isAndroid) {
       if (await Common.isGoogleServiceAvailable()) {
+        // chinese mobile phone maybe support google service, but token is null
         token = await getFCM();
       } else {
         // other
