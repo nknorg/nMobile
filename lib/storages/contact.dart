@@ -44,6 +44,7 @@ class ContactStorage with Tag {
     await db.execute('CREATE INDEX index_contact_created_time ON $tableName (created_time)');
     await db.execute('CREATE INDEX index_contact_updated_time ON $tableName (updated_time)');
     await db.execute('CREATE INDEX index_contact_type_created_time ON $tableName (type, created_time)');
+    await db.execute('CREATE INDEX index_contact_type_update_time ON $tableName (type, updated_time)');
   }
 
   Future<ContactSchema?> insert(ContactSchema? schema, {bool checkDuplicated = true}) async {
@@ -103,6 +104,7 @@ class ContactStorage with Tag {
   }
 
   Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? limit, int? offset}) async {
+    orderBy = orderBy ?? (contactType == ContactType.friend ? 'created_time desc' : 'updated_time desc');
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
@@ -111,7 +113,7 @@ class ContactStorage with Tag {
         whereArgs: contactType != null ? [contactType] : null,
         offset: offset ?? null,
         limit: limit ?? null,
-        orderBy: orderBy ?? 'created_time desc',
+        orderBy: orderBy,
       );
       if (res == null || res.isEmpty) {
         logger.d("$TAG - queryList - empty - contactType:$contactType");
