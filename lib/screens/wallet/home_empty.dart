@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -29,7 +30,7 @@ class _WalletHomeEmptyLayoutState extends BaseStateFulWidgetState<WalletHomeEmpt
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           Center(
-            child: Asset.image("wallet/pig.png", width: MediaQuery.of(context).size.width / 3),
+            child: Asset.image("wallet/pig.png", width: Global.screenWidth / 3),
           ),
           Expanded(
             flex: 0,

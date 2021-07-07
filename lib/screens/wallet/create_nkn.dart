@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -75,7 +76,7 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
-    double headIconSize = MediaQuery.of(context).size.width / 2.5;
+    double headIconSize = Global.screenWidth / 2.5;
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
@@ -105,7 +106,7 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
                 ),
               ),
               Container(
-                constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - Header.height - headIconSize - 24 * 2 - 30),
+                constraints: BoxConstraints.expand(height: Global.screenHeight - Header.height - headIconSize - 24 * 2 - 30),
                 decoration: BoxDecoration(
                   color: application.theme.backgroundLightColor,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(32)),

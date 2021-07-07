@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/button/button_icon.dart';
@@ -108,11 +109,11 @@ class ModalDialog extends StatelessWidget {
       child: Stack(
         children: [
           Container(
-            width: MediaQuery.of(context).size.width - 40,
+            width: Global.screenWidth - 40,
             height: this.height,
             constraints: BoxConstraints(
               minHeight: 150,
-              maxHeight: MediaQuery.of(context).size.height - 180,
+              maxHeight: Global.screenHeight - 180,
             ),
             child: SingleChildScrollView(
               child: Column(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -430,7 +431,7 @@ class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with Sing
     _dy = details.globalPosition.dy;
 
     setState(() {
-      _currentHeight = MediaQuery.of(context).size.height - _dy;
+      _currentHeight = Global.screenHeight - _dy;
     });
   }
 
@@ -483,7 +484,7 @@ class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with Sing
 
   @override
   Widget build(BuildContext context) {
-    _maxHeight = MediaQuery.of(context).size.height - 86 - 38;
+    _maxHeight = Global.screenHeight - 86 - 38;
 
     List<Widget> body = <Widget>[
       Expanded(
