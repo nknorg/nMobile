@@ -96,7 +96,7 @@ class TopicCommon with Tag {
     if (topicId == null || topicId == 0) return false;
     Map<String, dynamic> newData = {
       'permissions': "",
-    }; // TODO:GG convert
+    }; // TODO:GG topic data load
     bool success = await _topicStorage.setData(topicId, newData);
     if (success && notify) queryAndNotify(topicId);
     return success;
