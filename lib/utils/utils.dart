@@ -111,10 +111,7 @@ unLeadingHashIt(String str) {
   return str.replaceFirst(RegExp(r'^#*'), '');
 }
 
-String? genTopicHash(String? topic) {
-  if (topic == null || topic.isEmpty) {
-    return null;
-  }
+String genTopicHash(String topic) {
   var t = unLeadingHashIt(topic);
   return 'dchat' + hexEncode(Uint8List.fromList(sha1(t)));
 }
