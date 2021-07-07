@@ -15,6 +15,9 @@ class TopicStorage with Tag {
   // accept_all BOOLEAN // TODO:GG delete
   // type // TODO:GG add later (no product)
   // joined // TODO:GG add later (no product)
+  // subscribe_at // TODO:GG rename field
+  // expire_height // TODO:GG rename field
+  // create_at // TODO:GG new field
   // data // TODO:GG new field
   static create(Database db, int version) async {
     // create table
@@ -23,8 +26,9 @@ class TopicStorage with Tag {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         topic TEXT,
         type INTEGER DEFAULT 0,
-        time_update INTEGER,
-        expire_at INTEGER,
+        create_at INTEGER,
+        subscribe_at INTEGER,
+        expire_height INTEGER,
         avatar TEXT,
         count INTEGER,
         joined BOOLEAN DEFAULT 0,
@@ -33,10 +37,12 @@ class TopicStorage with Tag {
         data TEXT
       )''');
     // index
-    await db.execute('CREATE UNIQUE INDEX unique_index_topic ON $tableName (topic)');
-    await db.execute('CREATE INDEX index_type ON $tableName (type)');
-    await db.execute('CREATE INDEX index_time_update ON $tableName (time_update)');
-    await db.execute('CREATE INDEX index_type_time_update ON $tableName (type, time_update)');
+    await db.execute('CREATE UNIQUE INDEX unique_index_topic_topic ON $tableName (topic)');
+    await db.execute('CREATE INDEX index_topic_type ON $tableName (type)');
+    await db.execute('CREATE INDEX index_topic_create_at ON $tableName (create_at)');
+    await db.execute('CREATE INDEX index_topic_subscribe_at ON $tableName (subscribe_at)');
+    await db.execute('CREATE INDEX index_topic_type_created_time ON $tableName (type, created_at)');
+    await db.execute('CREATE INDEX index_topic_type_subscribe_at ON $tableName (type, subscribe_at)');
   }
 
   Future<TopicSchema?> insert(TopicSchema? schema, {bool checkDuplicated = true}) async {
@@ -104,7 +110,7 @@ class TopicStorage with Tag {
         whereArgs: topicType != null ? [topicType] : null,
         offset: offset ?? null,
         limit: limit ?? null,
-        orderBy: orderBy ?? 'updated_time desc',
+        orderBy: orderBy ?? 'create_at desc',
       );
       if (res == null || res.isEmpty) {
         logger.d("$TAG - queryList - empty - topicType:$topicType");
@@ -173,8 +179,8 @@ class TopicStorage with Tag {
       int? count = await db?.update(
         tableName,
         {
-          'time_update': subscribeAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-          'expire_at': expireBlockHeight,
+          'subscribe_at': subscribeAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+          'expire_height': expireBlockHeight,
         },
         where: 'id = ?',
         whereArgs: [topicId],

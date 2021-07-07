@@ -16,6 +16,7 @@ class TopicSchema {
   int? id;
   String topic;
   int? type;
+  DateTime? createAt;
   DateTime? subscribeAt;
   int? expireBlockHeight;
   File? avatar;
@@ -29,6 +30,7 @@ class TopicSchema {
     this.id,
     required this.topic,
     this.type,
+    this.createAt,
     this.subscribeAt,
     this.expireBlockHeight,
     this.avatar,
@@ -45,7 +47,7 @@ class TopicSchema {
 
   static TopicSchema? create(String? topic) {
     if (topic?.isNotEmpty == true) {
-      return TopicSchema(topic: topic!);
+      return TopicSchema(topic: topic!, createAt: DateTime.now());
     }
     return null;
   }
@@ -133,8 +135,9 @@ class TopicSchema {
       'id': id,
       'topic': topic,
       'type': isPrivate ? TopicType.privateTopic : TopicType.publicTopic,
-      'time_update': subscribeAt?.millisecondsSinceEpoch,
-      'expire_at': expireBlockHeight,
+      'create_at': createAt?.millisecondsSinceEpoch ?? DateTime.now(),
+      'subscribe_at': subscribeAt?.millisecondsSinceEpoch,
+      'expire_height': expireBlockHeight,
       'avatar': Path.getLocalFile(avatar?.path),
       'count': count,
       'joined': joined ? 1 : 0,
@@ -151,8 +154,9 @@ class TopicSchema {
       id: e['id'],
       topic: e['topic'] ?? "",
       type: e['type'],
-      subscribeAt: e['time_update'] != null ? DateTime.fromMillisecondsSinceEpoch(e['time_update']) : null,
-      expireBlockHeight: e['expire_at'],
+      createAt: e['create_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['create_at']) : DateTime.now(),
+      subscribeAt: e['subscribe_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['subscribe_at']) : null,
+      expireBlockHeight: e['expire_height'],
       avatar: Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null,
       count: e['count'],
       joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,
