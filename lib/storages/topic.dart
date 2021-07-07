@@ -125,6 +125,27 @@ class TopicStorage with Tag {
     return [];
   }
 
+  Future<TopicSchema?> query(int? topicId) async {
+    if (topicId == null || topicId == 0) return null;
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['*'],
+        where: 'id = ?',
+        whereArgs: [topicId],
+      );
+      if (res != null && res.length > 0) {
+        TopicSchema? schema = TopicSchema.fromMap(res.first);
+        logger.d("$TAG - query - success - topicId:$topicId - schema:$schema");
+        return schema;
+      }
+      logger.d("$TAG - query - empty - topicId:$topicId");
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+  }
+
   Future<TopicSchema?> queryByTopic(String? topic) async {
     if (topic == null || topic.isEmpty) return null;
     try {
@@ -169,22 +190,22 @@ class TopicStorage with Tag {
     return false;
   }
 
-  Future<bool> setAvatar(int? topicId, String? avatarPath) async {
+  Future<bool> setAvatar(int? topicId, String? avatarLocalPath) async {
     if (topicId == null || topicId == 0) return false;
     try {
       int? count = await db?.update(
         tableName,
         {
-          'avatar': avatarPath,
+          'avatar': avatarLocalPath,
         },
         where: 'id = ?',
         whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setAvatar - success - topicId:$topicId - avatarPath:$avatarPath");
+        logger.d("$TAG - setAvatar - success - topicId:$topicId - avatarLocalPath:$avatarLocalPath");
         return true;
       }
-      logger.w("$TAG - setAvatar - fail - topicId:$topicId - avatarPath:$avatarPath");
+      logger.w("$TAG - setAvatar - fail - topicId:$topicId - avatarLocalPath:$avatarLocalPath");
     } catch (e) {
       handleError(e);
     }
