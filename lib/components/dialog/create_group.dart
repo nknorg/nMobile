@@ -52,8 +52,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<CreateGroupDialog>
       onChanged: () {
         _formValid = (_formKey.currentState as FormState).validate();
       },
-      child: Flex(
-        direction: Axis.vertical,
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[

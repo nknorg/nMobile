@@ -73,8 +73,7 @@ class BottomDialog extends BaseStateFulWidget {
         onTap: () {
           FocusScope.of(context).requestFocus(FocusNode());
         },
-        child: Flex(
-          direction: Axis.vertical,
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Padding(
@@ -538,8 +537,7 @@ class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with Sing
         child: Container(
           height: _currentHeight,
           child: body.length > 1
-              ? Flex(
-                  direction: Axis.vertical,
+              ? Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: body,
