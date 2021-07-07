@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -30,7 +31,7 @@ class ChatBottomMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double btnSize = MediaQuery.of(context).size.width / 6;
+    double btnSize = Global.screenWidth / 6;
     double iconSize = btnSize / 2;
 
     return ExpansionLayout(

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -259,7 +260,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
-    double headIconHeight = MediaQuery.of(context).size.width / 5;
+    double headIconHeight = Global.screenWidth / 5;
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
@@ -330,7 +331,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                 ),
               ),
               Container(
-                constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - Header.height - headIconHeight - 10 - 20 - 30),
+                constraints: BoxConstraints.expand(height: Global.screenHeight - Header.height - headIconHeight - 10 - 20 - 30),
                 decoration: BoxDecoration(
                   color: application.theme.backgroundLightColor,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
@@ -512,7 +513,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                         ),
                                       ),
                                       SizedBox(
-                                        width: MediaQuery.of(context).size.width / 4,
+                                        width: Global.screenWidth / 4,
                                         child: FormText(
                                           padding: EdgeInsets.only(top: 10),
                                           controller: _feeController,

@@ -21,6 +21,11 @@ class Global {
   static String deviceId = "";
   static String deviceVersion = "";
 
+  static double screenWidth = 0;
+  static double screenHeight = 0;
+
+  static int topicWarnBlockExpireHeight = 300000;
+
   static List<String> defaultSeedRpcList = [
     'http://seed.nkn.org:30003',
     'http://mainnet-seed-0001.nkn.org:30003',
@@ -40,9 +45,11 @@ class Global {
 
   static init() async {
     Global.applicationRootDirectory = await getApplicationDocumentsDirectory();
+
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     Global.version = packageInfo.version;
     Global.build = packageInfo.buildNumber.replaceAll('.', '');
+
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     if (Platform.isAndroid) {
       Global.deviceId = (await deviceInfo.androidInfo).androidId;
@@ -53,5 +60,8 @@ class Global {
       Global.deviceVersion = (await deviceInfo.iosInfo).systemVersion;
       Global.deviceVersion = Global.deviceVersion.split(".")[0];
     }
+
+    Global.screenWidth = MediaQuery.of(appContext).size.width;
+    Global.screenHeight = MediaQuery.of(appContext).size.height;
   }
 }

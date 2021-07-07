@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -348,7 +349,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   Widget _getContent(BoxDecoration decoration, bool dark) {
-    double maxWidth = MediaQuery.of(context).size.width - 12 * 2 * 2 - (24 * 2) * 2 - 8 * 2;
+    double maxWidth = Global.screenWidth - 12 * 2 * 2 - (24 * 2) * 2 - 8 * 2;
 
     List<Widget> _bodyList = [SizedBox.shrink()];
     var onTap;
@@ -455,8 +456,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       return [SizedBox.shrink()];
     }
     File file = _message.content as File;
-    double maxWidth = MediaQuery.of(context).size.width * (widget.showProfile ? 0.5 : 0.55);
-    double maxHeight = MediaQuery.of(context).size.height * 0.3;
+    double maxWidth = Global.screenWidth * (widget.showProfile ? 0.5 : 0.55);
+    double maxHeight = Global.screenHeight * 0.3;
 
     return [
       Container(
@@ -482,8 +483,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double? durationS = MessageOptions.getAudioDuration(_message);
     double maxDurationS = AudioHelper.MessageRecordMaxDurationS;
     double durationRatio = ((durationS ?? (maxDurationS / 2)) > maxDurationS ? maxDurationS : (durationS ?? (maxDurationS / 2))) / maxDurationS;
-    double minWidth = MediaQuery.of(context).size.width * 0.1;
-    double maxWidth = MediaQuery.of(context).size.width * (widget.showProfile ? 0.35 : 0.4);
+    double minWidth = Global.screenWidth * 0.1;
+    double maxWidth = Global.screenWidth * (widget.showProfile ? 0.35 : 0.4);
     double progressWidth = minWidth + (maxWidth - minWidth) * durationRatio;
 
     num durationText = getNumByValueDouble(durationS ?? 0, 2) ?? 0;
