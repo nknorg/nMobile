@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/schema/Topic.dart';
+import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/utils/asset.dart';
 
 import 'avatar.dart';
 
@@ -75,10 +77,22 @@ class TopicItem extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Label(
-                        this.bodyTitle ?? "",
-                        type: LabelType.h3,
-                        fontWeight: FontWeight.bold,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          this.topic.isPrivate
+                              ? Asset.iconSvg(
+                                  'lock',
+                                  width: 18,
+                                  color: application.theme.primaryColor,
+                                )
+                              : SizedBox.shrink(),
+                          Label(
+                            this.bodyTitle ?? "",
+                            type: LabelType.h3,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ],
                       ),
                       SizedBox(height: 6),
                       Label(
