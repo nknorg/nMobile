@@ -163,8 +163,7 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
             child: Padding(
               padding: EdgeInsets.only(top: 0),
               child: SingleChildScrollView(
-                child: Flex(
-                  direction: Axis.vertical,
+                child: Column(
                   children: <Widget>[
                     Expanded(
                       flex: 0,

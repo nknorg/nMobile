@@ -84,103 +84,88 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              flex: 0,
-              child: Asset.image(
-                'chat/messages.png',
-                width: headImageWidth,
-                height: headImageHeight,
-              ),
+            Asset.image(
+              'chat/messages.png',
+              width: headImageWidth,
+              height: headImageHeight,
             ),
             SizedBox(height: 50),
-            Expanded(
-              flex: 0,
-              child: Column(
-                children: [
-                  Label(
-                    _localizations.chat_no_wallet_title,
-                    type: LabelType.h2,
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 5),
-                  Label(
-                    _localizations.click_connect,
-                    type: LabelType.bodyRegular,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+            Column(
+              children: [
+                Label(
+                  _localizations.chat_no_wallet_title,
+                  type: LabelType.h2,
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 5),
+                Label(
+                  _localizations.click_connect,
+                  type: LabelType.bodyRegular,
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
             SizedBox(height: 30),
             this._selectWallet == null || !loaded
                 ? SizedBox(height: 30)
-                : Expanded(
-                    flex: 0,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
-                      child: WalletDropdown(
-                        onTapWave: false,
-                        onSelected: (v) {
-                          setState(() {
-                            _selectWallet = v;
-                          });
-                        },
-                        schema: this._selectWallet!,
-                      ),
+                : Padding(
+                    padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+                    child: WalletDropdown(
+                      onTapWave: false,
+                      onSelected: (v) {
+                        setState(() {
+                          _selectWallet = v;
+                        });
+                      },
+                      schema: this._selectWallet!,
                     ),
                   ),
             SizedBox(height: 20),
             !loaded
                 ? SizedBox.shrink()
                 : this._selectWallet == null
-                    ? Expanded(
-                        flex: 0,
-                        child: Column(
-                          children: <Widget>[
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              child: Button(
-                                text: _localizations.no_wallet_create,
-                                width: double.infinity,
-                                fontColor: application.theme.fontLightColor,
-                                backgroundColor: application.theme.primaryColor,
-                                onPressed: () {
-                                  WalletCreateNKNScreen.go(context);
-                                },
-                              ),
+                    ? Column(
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Button(
+                              text: _localizations.no_wallet_create,
+                              width: double.infinity,
+                              fontColor: application.theme.fontLightColor,
+                              backgroundColor: application.theme.primaryColor,
+                              onPressed: () {
+                                WalletCreateNKNScreen.go(context);
+                              },
                             ),
-                            SizedBox(height: 12),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              child: Button(
-                                text: _localizations.no_wallet_import,
-                                width: double.infinity,
-                                fontColor: application.theme.fontLightColor,
-                                backgroundColor: application.theme.primaryColor.withAlpha(80),
-                                onPressed: () {
-                                  WalletImportScreen.go(context, WalletType.nkn);
-                                },
-                              ),
+                          ),
+                          SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Button(
+                              text: _localizations.no_wallet_import,
+                              width: double.infinity,
+                              fontColor: application.theme.fontLightColor,
+                              backgroundColor: application.theme.primaryColor.withAlpha(80),
+                              onPressed: () {
+                                WalletImportScreen.go(context, WalletType.nkn);
+                              },
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       )
-                    : Expanded(
-                        flex: 0,
-                        child: Column(
-                          children: <Widget>[
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              child: Button(
-                                width: double.infinity,
-                                text: _localizations.connect,
-                                onPressed: () async {
-                                  await clientCommon.signIn(this._selectWallet, walletDefault: true);
-                                },
-                              ),
-                            )
-                          ],
-                        ),
+                    : Column(
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Button(
+                              width: double.infinity,
+                              text: _localizations.connect,
+                              onPressed: () async {
+                                await clientCommon.signIn(this._selectWallet, walletDefault: true);
+                              },
+                            ),
+                          )
+                        ],
                       ),
           ],
         ),

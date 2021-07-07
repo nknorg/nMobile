@@ -51,8 +51,7 @@ class _SelectScreenState extends BaseStateFulWidgetState<SelectScreen> {
       ),
       body: Container(
         padding: const EdgeInsets.only(top: 12, left: 16, right: 16),
-        child: Flex(
-          direction: Axis.vertical,
+        child: Column(
           children: <Widget>[
             Expanded(
               flex: 1,

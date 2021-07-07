@@ -69,8 +69,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
       ),
       body: Container(
         padding: const EdgeInsets.only(top: 20, left: 16, right: 16),
-        child: Flex(
-          direction: Axis.vertical,
+        child: Column(
           children: <Widget>[
             Container(
               decoration: BoxDecoration(
