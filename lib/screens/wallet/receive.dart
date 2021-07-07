@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -175,7 +176,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                               child: QrImage(
                                 data: _wallet.address,
                                 version: QrVersions.auto,
-                                size: MediaQuery.of(context).size.width * 0.57,
+                                size: Global.screenWidth * 0.57,
                               ),
                             ),
                           ],

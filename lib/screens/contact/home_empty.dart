@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -22,7 +23,7 @@ class _ContactHomeEmptyLayoutState extends BaseStateFulWidgetState<ContactHomeEm
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
-    double imgSize = MediaQuery.of(context).size.width / 2;
+    double imgSize = Global.screenWidth / 2;
 
     return Layout(
       headerColor: application.theme.primaryColor,

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -60,7 +61,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
-    double headIconSize = MediaQuery.of(context).size.width / 3;
+    double headIconSize = Global.screenWidth / 3;
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
@@ -90,7 +91,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
                 ),
               ),
               Container(
-                constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height - Header.height - headIconSize - 24 * 2 - 30),
+                constraints: BoxConstraints.expand(height: Global.screenHeight - Header.height - headIconSize - 24 * 2 - 30),
                 decoration: BoxDecoration(
                   color: application.theme.backgroundLightColor,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
