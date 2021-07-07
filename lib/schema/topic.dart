@@ -43,6 +43,13 @@ class TopicSchema {
     }
   }
 
+  static TopicSchema? create(String? topic) {
+    if (topic?.isNotEmpty == true) {
+      return TopicSchema(topic: topic!);
+    }
+    return null;
+  }
+
   bool get isPrivate {
     int type = this.type ?? (isPrivateTopicReg(topic) ? TopicType.privateTopic : TopicType.publicTopic);
     return type == TopicType.privateTopic;
