@@ -43,7 +43,8 @@ class ModalDialog extends StatelessWidget {
     this.height = height;
     this.actions = actions ?? [];
     return showDialog(
-      context: context, //      barrierDismissible: false,
+      context: context,
+      // barrierDismissible: false,
       builder: (ctx) {
         return Container(
           alignment: Alignment.center,

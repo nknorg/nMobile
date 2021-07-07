@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -337,62 +338,10 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   Widget _getFriendItemView(ContactSchema item) {
     S _localizations = S.of(context);
 
-    return Dismissible(
+    return Slidable(
       key: ObjectKey(item),
-      direction: DismissDirection.endToStart,
-      confirmDismiss: (direction) async {
-        if (direction == DismissDirection.endToStart) {
-          return await ModalDialog.of(context).confirm(
-            title: _localizations.delete_contact_confirm_title,
-            contentWidget: ContactItem(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              contact: item,
-              bodyTitle: item.displayName,
-              bodyDesc: item.clientAddress,
-            ),
-            agree: Button(
-              text: _localizations.delete_contact,
-              backgroundColor: application.theme.strongColor,
-              width: double.infinity,
-              onPressed: () async {
-                Navigator.of(context).pop(true);
-              },
-            ),
-            reject: Button(
-              text: _localizations.cancel,
-              backgroundColor: application.theme.backgroundLightColor,
-              fontColor: application.theme.fontColor2,
-              width: double.infinity,
-              onPressed: () => Navigator.pop(context),
-            ),
-          );
-        }
-        return false;
-      },
-      onDismissed: (direction) async {
-        if (direction == DismissDirection.endToStart) {
-          await contactCommon.delete(item.id, notify: true);
-        }
-      },
-      background: Container(
-        color: Colors.green,
-        child: ListTile(
-          leading: Icon(
-            Icons.bookmark,
-            color: Colors.white,
-          ),
-        ),
-      ),
-      secondaryBackground: Container(
-        color: Colors.red,
-        alignment: Alignment.center,
-        child: ListTile(
-          trailing: Icon(
-            Icons.delete,
-            color: Colors.white,
-          ),
-        ),
-      ),
+      direction: Axis.horizontal,
+      actionPane: SlidableDrawerActionPane(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -413,13 +362,43 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
               ),
             ),
           ),
-          Divider(
-            height: 1,
-            indent: 74,
-            endIndent: 16,
-          ),
+          Divider(height: 1, indent: 74, endIndent: 16),
         ],
       ),
+      secondaryActions: [
+        IconSlideAction(
+          caption: _localizations.delete,
+          color: Colors.red,
+          icon: Icons.delete,
+          onTap: () => {
+            ModalDialog.of(context).confirm(
+              title: _localizations.delete_contact_confirm_title,
+              contentWidget: ContactItem(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                contact: item,
+                bodyTitle: item.displayName,
+                bodyDesc: item.clientAddress,
+              ),
+              agree: Button(
+                text: _localizations.delete_contact,
+                backgroundColor: application.theme.strongColor,
+                width: double.infinity,
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await contactCommon.delete(item.id, notify: true);
+                },
+              ),
+              reject: Button(
+                text: _localizations.cancel,
+                backgroundColor: application.theme.backgroundLightColor,
+                fontColor: application.theme.fontColor2,
+                width: double.infinity,
+                onPressed: () => Navigator.pop(context),
+              ),
+            )
+          },
+        ),
+      ],
     );
   }
 
