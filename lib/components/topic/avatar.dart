@@ -1,8 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/schema/Topic.dart';
 import 'package:nmobile/utils/asset.dart';
 
 class TopicAvatar extends BaseStateFulWidget {
@@ -11,29 +13,28 @@ class TopicAvatar extends BaseStateFulWidget {
   final bool? placeHolder;
 
   TopicAvatar({
-    required Key key,
     required this.topic,
     this.radius,
     this.placeHolder = false,
-  }) : super(key: key);
+  });
 
   @override
   _TopicAvatarState createState() => _TopicAvatarState();
 }
 
 class _TopicAvatarState extends BaseStateFulWidgetState<TopicAvatar> {
-  bool _avatarFileExits = false;
+  File? _avatarFile;
 
   @override
-  onRefreshArguments() {
+  void onRefreshArguments() {
     _checkAvatarFileExists();
   }
 
   _checkAvatarFileExists() async {
-    bool exists = await widget.topic.avatar?.exists() ?? false;
-    if (_avatarFileExits != exists) {
+    File? avatarFile = await widget.topic.displayAvatarFile;
+    if (_avatarFile?.path != avatarFile?.path) {
       setState(() {
-        _avatarFileExits = exists;
+        _avatarFile = avatarFile;
       });
     }
   }
@@ -41,12 +42,12 @@ class _TopicAvatarState extends BaseStateFulWidgetState<TopicAvatar> {
   @override
   Widget build(BuildContext context) {
     double radius = this.widget.radius ?? 24;
-    String name = widget.topic.topicName ?? "";
+    String name = widget.topic.topicNameWithOwnerShort;
 
-    if (_avatarFileExits) {
+    if (_avatarFile != null) {
       return CircleAvatar(
         radius: radius,
-        backgroundImage: FileImage(widget.topic.avatar!),
+        backgroundImage: FileImage(this._avatarFile!),
       );
     }
     if (widget.placeHolder == null || !widget.placeHolder!) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/schema/Topic.dart';
 
 import 'avatar.dart';
 
@@ -64,7 +64,6 @@ class TopicItem extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(right: 12),
             child: TopicAvatar(
-              key: ValueKey(this.topic.avatar?.path ?? ''),
               topic: this.topic,
             ),
           ),

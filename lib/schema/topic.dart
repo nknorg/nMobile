@@ -85,7 +85,9 @@ class TopicSchema {
     return topicName;
   }
 
-  String get topicNameWithOwnerShort {
+  String get fullName => topic;
+
+  String get fullNameShort {
     String topicNameShort;
     if (isPrivate) {
       int index = topic.lastIndexOf('.');
@@ -103,6 +105,23 @@ class TopicSchema {
       topicNameShort = topic;
     }
     return topicNameShort;
+  }
+
+  Future<File?> get displayAvatarFile async {
+    String? avatarLocalPath = avatar?.path;
+    if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
+      return Future.value(null);
+    }
+    String? completePath = Path.getCompleteFile(avatarLocalPath);
+    if (completePath == null || completePath.isEmpty) {
+      return Future.value(null);
+    }
+    File avatarFile = File(completePath);
+    bool exits = await avatarFile.exists();
+    if (!exits) {
+      return Future.value(null);
+    }
+    return avatarFile;
   }
 
   Map<String, dynamic> toMap() {

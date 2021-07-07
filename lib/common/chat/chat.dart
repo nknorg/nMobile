@@ -109,16 +109,11 @@ class ChatCommon with Tag {
 
   Future<TopicSchema?> topicHandle(MessageSchema message) async {
     if (!message.canDisplay) return null;
-    // duplicated TODO:GG topic duplicated
+    // duplicated
     if (!message.isTopic) return null;
     TopicSchema? exist = await topicCommon.queryByTopic(message.topic);
     if (exist == null) {
-      exist = await topicCommon.add(TopicSchema(
-        // TODO:GG topic get info
-        // expireAt:
-        // joined:
-        topic: message.topic!,
-      ));
+      exist = await topicCommon.add(TopicSchema.create(message.topic));
     }
     return exist;
   }
