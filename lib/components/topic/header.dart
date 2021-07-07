@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/schema/Topic.dart';
+import 'package:nmobile/schema/topic.dart';
 
 import 'avatar.dart';
 
@@ -19,7 +19,7 @@ class TopicHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String name = this.topic.topicNameWithOwnerShort;
+    String name = this.topic.fullNameShort;
     return GestureDetector(
       onTap: () {
         if (this.onTap != null) this.onTap!();
