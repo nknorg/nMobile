@@ -385,7 +385,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       clipAlias: false,
       header: Header(
         backgroundColor: application.theme.backgroundColor4,
-        title: _contactSchema?.displayName ?? "",
+        title: S.of(context).settings,
       ),
       body: _contactSchema?.isMe == true
           ? _getSelfView()
