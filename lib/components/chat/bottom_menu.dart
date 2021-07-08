@@ -31,7 +31,7 @@ class ChatBottomMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double btnSize = Global.screenWidth / 6;
+    double btnSize = Global.screenWidth() / 6;
     double iconSize = btnSize / 2;
 
     return ExpansionLayout(

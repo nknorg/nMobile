@@ -23,7 +23,7 @@ class _ContactHomeEmptyLayoutState extends BaseStateFulWidgetState<ContactHomeEm
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
-    double imgSize = Global.screenWidth / 2;
+    double imgSize = Global.screenWidth() / 2;
 
     return Layout(
       headerColor: application.theme.primaryColor,

@@ -21,8 +21,8 @@ class Global {
   static String deviceId = "";
   static String deviceVersion = "";
 
-  static double screenWidth = 0;
-  static double screenHeight = 0;
+  static double screenWidth({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.width;
+  static double screenHeight({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.height;
 
   static int topicDefaultSubscribeDuration = 400000;
   static int topicWarnBlockExpireHeight = 100000;
@@ -34,15 +34,6 @@ class Global {
     'http://mainnet-seed-0008.nkn.org:30003',
     'http://mainnet-seed-0009.nkn.org:30003',
   ];
-
-  // TODO:GG seedRpcAddress Nkn.measureSeedRPCServer(seedRpcArray, 1500)
-  static Future<List<String>> getSeedRpcList() async {
-    SettingsStorage settingsStorage = SettingsStorage();
-    List<String> list = await settingsStorage.getSeedRpcServers();
-    list.addAll(defaultSeedRpcList);
-    list = LinkedHashSet<String>.from(list).toList();
-    return list;
-  }
 
   static init() async {
     Global.applicationRootDirectory = await getApplicationDocumentsDirectory();
@@ -61,8 +52,14 @@ class Global {
       Global.deviceVersion = (await deviceInfo.iosInfo).systemVersion;
       Global.deviceVersion = Global.deviceVersion.split(".")[0];
     }
+  }
 
-    Global.screenWidth = MediaQuery.of(appContext).size.width;
-    Global.screenHeight = MediaQuery.of(appContext).size.height;
+  // TODO:GG seedRpcAddress Nkn.measureSeedRPCServer(seedRpcArray, 1500)
+  static Future<List<String>> getSeedRpcList() async {
+    SettingsStorage settingsStorage = SettingsStorage();
+    List<String> list = await settingsStorage.getSeedRpcServers();
+    list.addAll(defaultSeedRpcList);
+    list = LinkedHashSet<String>.from(list).toList();
+    return list;
   }
 }

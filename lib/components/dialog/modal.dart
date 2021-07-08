@@ -109,11 +109,11 @@ class ModalDialog extends StatelessWidget {
       child: Stack(
         children: [
           Container(
-            width: Global.screenWidth - 40,
+            width: Global.screenWidth() - 40,
             height: this.height,
             constraints: BoxConstraints(
               minHeight: 150,
-              maxHeight: Global.screenHeight - 180,
+              maxHeight: Global.screenHeight() - 180,
             ),
             child: SingleChildScrollView(
               child: Column(
