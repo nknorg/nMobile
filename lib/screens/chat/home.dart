@@ -4,12 +4,13 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/header.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
-import 'package:nmobile/components/dialog/create_group.dart';
+import 'package:nmobile/components/layout/chat_topic_search.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -225,10 +226,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
               padding: EdgeInsets.only(bottom: 67, right: 16),
               child: Row(
                 children: [
-                  Expanded(
-                    flex: 1,
-                    child: SizedBox.shrink(),
-                  ),
+                  Spacer(),
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -292,19 +290,10 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                           onPressed: () async {
                             Navigator.of(context).pop();
                             BottomDialog.of(context).showWithTitle(
-                              height: 650,
+                              height: Global.screenHeight() * 0.8,
                               title: S.of(context).create_channel,
-                              child: CreateGroupDialog(),
+                              child: ChatTopicSearchLayout(),
                             );
-                            // TODO:GG chat  1t9
-                            // showModalBottomSheet(
-                            //     context: context,
-                            //     isScrollControlled: true,
-                            //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12))),
-                            //     builder: (context) {
-                            //       return Container();
-                            //       // return CreateGroupDialog();
-                            //     });
                           },
                         ),
                         SizedBox(height: 10),
@@ -314,8 +303,20 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                           fontColor: application.theme.fontLightColor,
                           backgroundColor: application.theme.backgroundLightColor.withAlpha(77),
                           child: Asset.iconSvg('user', width: 24, color: application.theme.fontLightColor),
-                          onPressed: () {
-                            addContact();
+                          onPressed: () async {
+                            String? address = await BottomDialog.of(context).showInput(
+                              title: S.of(context).new_whisper,
+                              inputTip: S.of(context).send_to,
+                              inputHint: S.of(context).enter_or_select_a_user_pubkey,
+                              validator: Validator.of(context).identifierNKN(),
+                              contactSelect: true,
+                            );
+                            if (address?.isNotEmpty == true) {
+                              var contact = await ContactSchema.createByType(address, ContactType.stranger);
+                              await contactCommon.add(contact);
+                              await ChatMessagesScreen.go(context, contact);
+                            }
+                            Navigator.of(context).pop(); // floatActionBtn
                           },
                         ),
                       ],
@@ -328,25 +329,5 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         );
       },
     );
-  }
-
-  void addContact() async {
-    String? address = await BottomDialog.of(context).showInput(
-      title: S.of(context).new_whisper,
-      inputTip: S.of(context).send_to,
-      inputHint: S.of(context).enter_or_select_a_user_pubkey,
-      validator: Validator.of(context).identifierNKN(),
-      contactSelect: true,
-    );
-    if (address?.isNotEmpty == true) {
-      var contact = await ContactSchema.createByType(address, ContactType.stranger);
-      await contactCommon.add(contact);
-      await ChatMessagesScreen.go(context, contact);
-    }
-    Navigator.of(context).pop(); // floatActionBtn
-  }
-
-  void addTopic(String topicName) {
-    //TODO:GG
   }
 }
