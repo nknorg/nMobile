@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -115,7 +116,7 @@ class WalletCommon with Tag {
               _walletBloc.add(UpdateWallet(w));
             }
           }).catchError((e) {
-            logger.e(e);
+            handleError(e);
           });
         }
       });
