@@ -9,6 +9,7 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/popular_channel.dart';
+import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/asset.dart';
 
 import 'messages.dart';
@@ -68,12 +69,17 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
               width: 90,
               padding: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
               decoration: BoxDecoration(
-                color: Color(0xFF5458F7),
+                color: application.theme.badgeColor,
                 borderRadius: BorderRadius.circular(100),
               ),
               child: InkWell(
                 onTap: () {
-                  // TODO:GG topic join channel
+                  // TODO:GG auth
+                  // if (TimerAuth.authed) {
+                  addTopic(model.topic);
+                  // } else {
+                  //   widget.timerAuth.onCheckAuthGetPassword(context);
+                  // }
                 },
                 child: Center(
                   child: Text(
@@ -146,7 +152,11 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
               children: [
                 Padding(
                   padding: const EdgeInsets.only(right: 20),
-                  child: Asset.iconSvg('pencil', width: 24, color: application.theme.backgroundLightColor),
+                  child: Asset.iconSvg(
+                    'pencil',
+                    width: 24,
+                    color: application.theme.backgroundLightColor,
+                  ),
                 ),
                 Label(
                   _localizations.start_chat,
@@ -155,23 +165,33 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
                 ),
               ],
             ),
-            onPressed: () async {
-              String? address = await BottomDialog.of(context).showInput(
-                title: S.of(context).new_whisper,
-                inputTip: S.of(context).send_to,
-                inputHint: S.of(context).enter_or_select_a_user_pubkey,
-                validator: Validator.of(context).identifierNKN(),
-                contactSelect: true,
-              );
-              if (address?.isNotEmpty == true) {
-                var contact = await ContactSchema.createByType(address, ContactType.stranger);
-                await contactCommon.add(contact);
-                await ChatMessagesScreen.go(context, contact);
-              }
+            onPressed: () {
+              addContact();
             },
           ),
         ],
       ),
     );
+  }
+
+  void addContact() async {
+    String? address = await BottomDialog.of(context).showInput(
+      title: S.of(context).new_whisper,
+      inputTip: S.of(context).send_to,
+      inputHint: S.of(context).enter_or_select_a_user_pubkey,
+      validator: Validator.of(context).identifierNKN(),
+      contactSelect: true,
+    );
+    if (address?.isNotEmpty == true) {
+      var contact = await ContactSchema.createByType(address, ContactType.stranger);
+      await contactCommon.add(contact);
+      await ChatMessagesScreen.go(context, contact);
+    }
+  }
+
+  void addTopic(String? topicName) async {
+    if (topicName == null || topicName.isEmpty) return;
+    TopicSchema? _topic = await topicCommon.subscribe(topicName);
+    ChatMessagesScreen.go(context, _topic);
   }
 }
