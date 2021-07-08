@@ -27,7 +27,7 @@ class ChatSessionListLayout extends BaseStateFulWidget {
   _ChatSessionListLayoutState createState() => _ChatSessionListLayoutState();
 }
 
-class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionListLayout> with AutomaticKeepAliveClientMixin {
+class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionListLayout> {
   SettingsStorage _settingsStorage = SettingsStorage();
   StreamSubscription? _contactCurrentUpdateSubscription;
   StreamSubscription? _sessionAddSubscription;
@@ -317,7 +317,6 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     if (_sessionList.isEmpty) {
       return ChatNoMessageLayout();
     }
@@ -335,7 +334,4 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       return _sessionLiseView();
     }
   }
-
-  @override
-  bool get wantKeepAlive => true;
 }
