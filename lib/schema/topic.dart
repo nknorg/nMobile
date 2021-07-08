@@ -174,4 +174,9 @@ class TopicSchema {
     // SUPPORT:END
     return topicSchema;
   }
+
+  @override
+  String toString() {
+    return 'TopicSchema{id: $id, topic: $topic, type: $type, createAt: $createAt, subscribeAt: $subscribeAt, expireBlockHeight: $expireBlockHeight, avatar: $avatar, count: $count, joined: $joined, isTop: $isTop, options: $options, data: $data}';
+  }
 }
