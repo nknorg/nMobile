@@ -13,6 +13,7 @@ class SubDirType {
   static const String cache = "cache";
   static const String chat = "chat";
   static const String contact = "contact";
+  static const String topic = "topic";
 }
 
 class Path {

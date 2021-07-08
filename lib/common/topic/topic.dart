@@ -140,6 +140,10 @@ class TopicCommon with Tag {
     return deleted;
   }
 
+  Future<TopicSchema?> query(int? topicId) {
+    return _topicStorage.query(topicId);
+  }
+
   Future<List<TopicSchema>> queryList({String? topicType, String? orderBy, int? offset, int? limit}) {
     return _topicStorage.queryList(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
   }
