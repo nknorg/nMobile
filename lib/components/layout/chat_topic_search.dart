@@ -15,7 +15,6 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class ChatTopicSearchLayout extends BaseStateFulWidget {
@@ -23,7 +22,7 @@ class ChatTopicSearchLayout extends BaseStateFulWidget {
   _CreateGroupDialogState createState() => _CreateGroupDialogState();
 }
 
-class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLayout> with Tag {
+class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLayout> {
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
 
@@ -258,7 +257,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
               child: Button(
                 width: double.infinity,
                 text: _localizations.continue_text,
-                onPressed: () async {
+                onPressed: () {
                   if (_formValid) createOrJoinTopic(_topicController.text);
                 },
               ),
@@ -275,8 +274,13 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
 
     for (PopularChannel item in PopularChannel.defaultData()) {
       list.add(InkWell(
-        onTap: () async {
+        onTap: () {
+          // TODO:GG auth
+          // if (TimerAuth.authed) {
           createOrJoinTopic(item.topic);
+          // } else {
+          //   widget.timerAuth.onCheckAuthGetPassword(context);
+          // }
         },
         child: Container(
           width: double.infinity,
@@ -344,22 +348,16 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
 
     if (_privateSelected) {
       if (!isPrivateTopicReg(topicName)) {
-        if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) {
-          logger.w("$TAG - createOrJoinTopic - publicKey:empty - topicName:$topicName");
-          return false;
-        }
+        if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return false;
         topicName = '$topicName.${clientCommon.publicKey}';
       }
     }
 
     TopicSchema? _topic = await topicCommon.subscribe(topicName);
-    if (_topic == null) {
-      logger.w("$TAG - createOrJoinTopic - subscribe:fail - topicName:$topicName");
-      return false;
-    }
+    if (_topic == null) return false;
     Navigator.pop(context);
 
-    ChatMessagesScreen.go(context, _topic);
+    ChatMessagesScreen.go(Global.appContext, _topic);
     return true;
   }
 }

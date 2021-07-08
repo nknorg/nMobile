@@ -41,7 +41,7 @@ class TopicStorage with Tag {
     await db.execute('CREATE INDEX index_topic_type ON $tableName (type)');
     await db.execute('CREATE INDEX index_topic_create_at ON $tableName (create_at)');
     await db.execute('CREATE INDEX index_topic_subscribe_at ON $tableName (subscribe_at)');
-    await db.execute('CREATE INDEX index_topic_type_created_time ON $tableName (type, created_at)');
+    await db.execute('CREATE INDEX index_topic_type_created_time ON $tableName (type, create_at)');
     await db.execute('CREATE INDEX index_topic_type_subscribe_at ON $tableName (type, subscribe_at)');
   }
 
