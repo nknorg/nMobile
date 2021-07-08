@@ -1,10 +1,10 @@
 import 'package:get_it/get_it.dart';
 import 'package:nmobile/common/chat/chat_out.dart';
+import 'package:nmobile/common/chat/session.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
-import 'package:nmobile/common/device/device_info.dart';
+import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/push/local_notification.dart';
-import 'package:nmobile/common/session/session.dart';
 import 'package:nmobile/common/topic/topic.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
 import 'package:nmobile/helpers/audio.dart';
