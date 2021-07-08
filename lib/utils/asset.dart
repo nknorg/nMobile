@@ -2,6 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Asset {
+  static Image image(
+    String path, {
+    double? width,
+    double? height,
+    Color? color,
+    double scale = 1,
+    BoxFit fit = BoxFit.contain,
+    AlignmentGeometry align = Alignment.center,
+  }) {
+    return Image.asset(
+      'assets/$path',
+      width: width,
+      height: height,
+      color: color,
+      scale: scale,
+      fit: fit,
+      alignment: align,
+    );
+  }
+
   static SvgPicture svg(
     String path, {
     double? width,
@@ -39,26 +59,6 @@ class Asset {
       fit: fit,
       align: align,
       clip: clip,
-    );
-  }
-
-  static Image image(
-    String path, {
-    double? width,
-    double? height,
-    Color? color,
-    double scale = 1,
-    BoxFit fit = BoxFit.contain,
-    AlignmentGeometry align = Alignment.center,
-  }) {
-    return Image.asset(
-      'assets/$path',
-      width: width,
-      height: height,
-      color: color,
-      scale: scale,
-      fit: fit,
-      alignment: align,
     );
   }
 }
