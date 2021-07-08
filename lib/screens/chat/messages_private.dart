@@ -264,7 +264,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
                                 return false;
                               }).toList();
                             });
-                            await chatOutCommon.resend(find);
+                            await chatOutCommon.resend(find, contact: _contact);
                           },
                         );
                       },

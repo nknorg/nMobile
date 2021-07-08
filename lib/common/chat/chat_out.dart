@@ -225,7 +225,7 @@ class ChatOutCommon with Tag {
       deleteAfterSeconds: contact.options?.deleteAfterSeconds,
       burningUpdateTime: contact.options?.updateBurnAfterTime,
     );
-    return _sendAndDisplay(schema, await MessageData.getImage(schema));
+    return _sendAndDisplay(schema, await MessageData.getImage(schema), deviceInfo: deviceInfo);
   }
 
   Future<MessageSchema?> sendAudio(String? clientAddress, File? content, double? durationS, {required ContactSchema contact}) async {
@@ -257,7 +257,7 @@ class ChatOutCommon with Tag {
         OnMessage? onResult = await chatCommon.clientPublishData(schema.topic!, data);
         schema.pid = onResult?.messageId;
       } else if (schema.to != null) {
-        OnMessage? onResult = await chatCommon.clientSendData(schema.to!, data);
+        OnMessage? onResult = await chatCommon.clientSendData(schema.to, data);
         schema.pid = onResult?.messageId;
       }
       // logger.d("$TAG - sendPiece - success - index:${schema.index} - total:${schema.total} - time:${DateTime.now().millisecondsSinceEpoch} - schema:$schema - data:$data");
@@ -320,31 +320,79 @@ class ChatOutCommon with Tag {
     }
   }
 
-  Future<MessageSchema?> resend(MessageSchema? schema) async {
+  // NO topic (1 to 1)
+  Future sendTopicInvitee(String? clientAddress, String? topicName) async {
+    if (clientAddress == null || clientAddress.isEmpty || topicName == null || topicName.isEmpty) return;
+    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.id == null || clientCommon.id!.isEmpty) {
+      // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
+      return null;
+    }
+    MessageSchema schema = MessageSchema.fromSend(
+      Uuid().v4(),
+      contactCommon.currentUser!.clientAddress,
+      ContentType.topicInvitation,
+      to: clientAddress,
+    );
+    return _sendAndDisplay(schema, MessageData.getTopicInvitee(schema, topicName));
+  }
+
+  Future<MessageSchema?> resend(
+    MessageSchema? schema, {
+    ContactSchema? contact,
+    DeviceInfoSchema? deviceInfo,
+    TopicSchema? topic,
+  }) async {
     if (schema == null) return null;
     schema = await chatCommon.updateMessageStatus(schema, MessageStatus.Sending, notify: true);
     switch (schema.contentType) {
       case ContentType.text:
       case ContentType.textExtension:
-        return await _sendAndDisplay(schema, MessageData.getText(schema), resend: true);
+        return await _sendAndDisplay(
+          schema,
+          MessageData.getText(schema),
+          contact: contact,
+          topic: topic,
+          deviceInfo: deviceInfo,
+          resend: true,
+        );
       case ContentType.media:
       case ContentType.image:
       case ContentType.nknImage:
-        return await _sendAndDisplay(schema, await MessageData.getImage(schema), resend: true);
+        return await _sendAndDisplay(
+          schema,
+          await MessageData.getImage(schema),
+          contact: contact,
+          topic: topic,
+          deviceInfo: deviceInfo,
+          resend: true,
+        );
       case ContentType.audio:
-        return await _sendAndDisplay(schema, await MessageData.getAudio(schema), resend: true);
+        return await _sendAndDisplay(
+          schema,
+          await MessageData.getAudio(schema),
+          contact: contact,
+          topic: topic,
+          deviceInfo: deviceInfo,
+          resend: true,
+        );
     }
     return schema;
   }
 
-  Future<MessageSchema?> _sendAndDisplay(MessageSchema? schema, String? msgData, {bool resend = false}) async {
+  Future<MessageSchema?> _sendAndDisplay(
+    MessageSchema? schema,
+    String? msgData, {
+    ContactSchema? contact,
+    DeviceInfoSchema? deviceInfo,
+    TopicSchema? topic,
+    bool resend = false,
+  }) async {
     if (schema == null || msgData == null) return null;
     // contact
-    ContactSchema? _contact = await chatCommon.contactHandle(schema);
-    // device_info
-    DeviceInfoSchema? _deviceInfo = await chatCommon.deviceInfoHandle(schema, _contact);
+    ContactSchema? _contact = contact ?? await chatCommon.contactHandle(schema);
+    DeviceInfoSchema? _deviceInfo = deviceInfo ?? await chatCommon.deviceInfoHandle(schema, _contact);
     // topic
-    TopicSchema? _topic = await chatCommon.topicHandle(schema);
+    TopicSchema? _topic = topic ?? await chatCommon.topicHandle(schema);
     // session
     chatCommon.sessionHandle(schema); // await
     // DB

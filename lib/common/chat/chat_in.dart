@@ -9,6 +9,7 @@ import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -37,15 +38,14 @@ class ChatInCommon with Tag {
     if (message == null) return;
     // contact
     ContactSchema? contact = await chatCommon.contactHandle(message);
-    // device_info
     chatCommon.deviceInfoHandle(message, contact); // await
     // topic
-    await chatCommon.topicHandle(message);
+    TopicSchema? topic = await chatCommon.topicHandle(message);
     // session
     await chatCommon.sessionHandle(message);
     // message
     if (needWait) {
-      await _messageHandle(message, contact: contact);
+      await _messageHandle(message, contact: contact, topic: topic);
     } else {
       _onReceiveSink.add(message);
     }
@@ -57,7 +57,7 @@ class ChatInCommon with Tag {
     }
   }
 
-  Future _messageHandle(MessageSchema received, {ContactSchema? contact}) async {
+  Future _messageHandle(MessageSchema received, {ContactSchema? contact, TopicSchema? topic}) async {
     switch (received.contentType) {
       case ContentType.receipt:
         _receiveReceipt(received); // await
