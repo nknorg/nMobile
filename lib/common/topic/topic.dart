@@ -58,7 +58,7 @@ class TopicCommon with Tag {
       if (exists == null) {
         exists = await add(TopicSchema.create(topicName), checkDuplicated: false);
         logger.d("$TAG - subscribe - new - schema:$exists");
-        // TODO:GG insert subscriber
+        // TODO:GG subscriber insert
       }
       if (exists == null) return false;
 
@@ -77,7 +77,7 @@ class TopicCommon with Tag {
         }
       }
 
-      // TODO:GG Subscribers
+      // TODO:GG subscriber get
       if (exists.isPrivate) {
         // await GroupDataCenter.pullPrivateSubscribers(topicName);
       } else {
@@ -94,13 +94,13 @@ class TopicCommon with Tag {
         if (exists == null) {
           exists = await add(TopicSchema.create(topicName), checkDuplicated: false);
           logger.d("$TAG - subscribe - new - schema:$exists");
-          // TODO:GG insert subscriber
+          // TODO:GG subscriber insert
         }
         if (exists == null) return false;
 
         // just skip clientSubscribe
 
-        // TODO:GG Subscribers
+        // TODO:GG subscriber get
         if (exists.isPrivate) {
           // await GroupDataCenter.pullPrivateSubscribers(topicName);
         } else {
@@ -149,7 +149,6 @@ class TopicCommon with Tag {
 
   Future<bool> setExpireBlockHeight(int? topicId, int? expireBlockHeight, {DateTime? subscribeAt, bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
-    // TODO:GG 检测height的合法性
     bool success = await _topicStorage.setExpireBlockHeight(
       topicId,
       expireBlockHeight,
