@@ -4,8 +4,8 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validation.dart';
-import 'package:nmobile/utils/logger.dart';
 
 import 'global.dart';
 
@@ -35,9 +35,8 @@ class Authorization {
       );
       return success;
     } catch (e) {
-      logger.e(e);
+      handleError(e);
     }
-
     return false;
   }
 

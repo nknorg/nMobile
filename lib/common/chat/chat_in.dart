@@ -375,7 +375,7 @@ class ChatInCommon with Tag {
       MessageSchema item = pieces[index];
       File? file = item.content as File?;
       if (file == null || !file.existsSync()) {
-        logger.w("$TAG - receivePiece - COMBINE:ERROR - file no exists - item:$item - file:${file?.path}");
+        logger.e("$TAG - receivePiece - COMBINE:ERROR - file no exists - item:$item - file:${file?.path}");
         continue;
       }
       Uint8List itemBytes = file.readAsBytesSync();
@@ -391,7 +391,7 @@ class ChatInCommon with Tag {
     // combine
     String? base64String = await Common.combinePieces(recoverList, total, parity, bytesLength);
     if (base64String == null || base64String.isEmpty) {
-      logger.w("$TAG - receivePiece - COMBINE:FAIL - base64String is empty");
+      logger.e("$TAG - receivePiece - COMBINE:FAIL - base64String is empty");
       return;
     }
     MessageSchema combine = MessageSchema.fromPieces(pieces, base64String);
@@ -408,10 +408,10 @@ class ChatInCommon with Tag {
             (element.content as File).delete(); // await
             // logger.d("$TAG - receivePiece - DELETE:PROGRESS - path:${(element.content as File).path}");
           } else {
-            logger.w("$TAG - receivePiece - DELETE:ERROR - NoExists - path:${(element.content as File).path}");
+            logger.e("$TAG - receivePiece - DELETE:ERROR - NoExists - path:${(element.content as File).path}");
           }
         } else {
-          logger.w("$TAG - receivePiece - DELETE:ERROR - empty:${element.content?.toString()}");
+          logger.e("$TAG - receivePiece - DELETE:ERROR - empty:${element.content?.toString()}");
         }
       });
       logger.d("$TAG - receivePiece - DELETE:SUCCESS - count:${pieces.length}");

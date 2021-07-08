@@ -42,7 +42,7 @@ class Common {
     try {
       await _methodChannel.invokeMethod('backDesktop');
     } catch (e) {
-      logger.e(e);
+      throw e;
     }
     return false;
   }
