@@ -105,7 +105,7 @@ class SendPush {
         logger.d("SendPush - sendPushMessage - success - body:$body");
         return true;
       } else {
-        logger.w("SendPush - sendPushMessage - fail - code:${response.statusCode} - body:$body");
+        logger.e("SendPush - sendPushMessage - fail - code:${response.statusCode} - body:$body");
         return false;
       }
     } catch (e) {
