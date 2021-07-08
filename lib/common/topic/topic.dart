@@ -58,7 +58,7 @@ class TopicCommon with Tag {
       if (exists == null) {
         exists = await add(TopicSchema.create(topicName), checkDuplicated: false);
         logger.d("$TAG - subscribe - new - schema:$exists");
-        // TODO:GG subscriber insert
+        // TODO:GG subers insert
       }
       if (exists == null) return null;
 
@@ -78,7 +78,7 @@ class TopicCommon with Tag {
         }
       }
 
-      // TODO:GG subscriber get
+      // TODO:GG subers get
       if (exists.isPrivate) {
         // await GroupDataCenter.pullPrivateSubscribers(topicName);
         // TODO:GG topic permissions
@@ -96,13 +96,13 @@ class TopicCommon with Tag {
         if (exists == null) {
           exists = await add(TopicSchema.create(topicName), checkDuplicated: false);
           logger.d("$TAG - subscribe - new - schema:$exists");
-          // TODO:GG subscriber insert
+          // TODO:GG subers insert
         }
         if (exists == null) return null;
 
         // just skip clientSubscribe
 
-        // TODO:GG subscriber get
+        // TODO:GG subers get
         if (exists.isPrivate) {
           // await GroupDataCenter.pullPrivateSubscribers(topicName);
         } else {
