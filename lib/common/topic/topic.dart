@@ -52,7 +52,7 @@ class TopicCommon with Tag {
     return topicHash != null && topicHash.isNotEmpty;
   }
 
-  Future<bool> subscribe(String topicName) async {
+  Future<TopicSchema?> subscribe(String topicName) async {
     try {
       TopicSchema? exists = await queryByTopic(topicName);
       if (exists == null) {
@@ -60,18 +60,19 @@ class TopicCommon with Tag {
         logger.d("$TAG - subscribe - new - schema:$exists");
         // TODO:GG subscriber insert
       }
-      if (exists == null) return false;
+      if (exists == null) return null;
 
       int currentBlockHeight = 0; // TODO:GG await NKNClientCaller.fetchBlockHeight();
       if (exists.expireBlockHeight == null || exists.expireBlockHeight! <= 0 || (exists.expireBlockHeight! - currentBlockHeight > Global.topicWarnBlockExpireHeight)) {
         bool subSuccess = await clientSubscribe(topicName);
-        if (!subSuccess) return false;
-        var expireBlockHeight = currentBlockHeight + Global.topicDefaultSubscribeDuration;
+        if (!subSuccess) return null;
+
         var subscribeAt = DateTime.now();
+        var expireBlockHeight = currentBlockHeight + Global.topicDefaultSubscribeDuration;
         bool setSuccess = await setExpireBlockHeight(exists.id, expireBlockHeight, subscribeAt: subscribeAt, notify: true);
         if (setSuccess) {
-          exists.expireBlockHeight = expireBlockHeight;
           exists.subscribeAt = subscribeAt;
+          exists.expireBlockHeight = expireBlockHeight;
         } else {
           logger.e("$TAG - subscribe - setExpireBlockHeight:fail - exists:$exists");
         }
@@ -80,12 +81,13 @@ class TopicCommon with Tag {
       // TODO:GG subscriber get
       if (exists.isPrivate) {
         // await GroupDataCenter.pullPrivateSubscribers(topicName);
+        // TODO:GG topic permissions
       } else {
         // await GroupDataCenter.pullSubscribersPublicChannel(topicName);
       }
 
       chatOutCommon.sendTopicSubscribe(topicName); // await
-      return true;
+      return exists;
     } catch (e) {
       if (e.toString().contains('duplicate subscription exist in block')) {
         logger.i("$TAG - subscribe - duplicate - error:${e.toString()}");
@@ -96,7 +98,7 @@ class TopicCommon with Tag {
           logger.d("$TAG - subscribe - new - schema:$exists");
           // TODO:GG subscriber insert
         }
-        if (exists == null) return false;
+        if (exists == null) return null;
 
         // just skip clientSubscribe
 
@@ -108,10 +110,10 @@ class TopicCommon with Tag {
         }
 
         chatOutCommon.sendTopicSubscribe(topicName); // await
-        return true;
+        return exists;
       } else {
         handleError(e);
-        return false;
+        return null;
       }
     }
   }
