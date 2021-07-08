@@ -5,6 +5,7 @@ import 'chat.dart' as chat;
 import 'contact.dart' as contact;
 import 'home.dart' as home;
 import 'settings.dart' as settings;
+import 'topic.dart' as topic;
 import 'wallet.dart' as wallet;
 
 class Routes {
@@ -17,10 +18,11 @@ class Routes {
       AppScreen.routeName: (BuildContext context, {arguments}) => AppScreen(arguments: arguments),
     });
     home.init();
-    chat.init();
-    wallet.init();
     settings.init();
+    wallet.init();
     contact.init();
+    topic.init();
+    chat.init();
   }
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
