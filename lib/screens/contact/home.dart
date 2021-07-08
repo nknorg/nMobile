@@ -53,6 +53,10 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   // StreamSubscription? _deleteContactSubscription;
   StreamSubscription? _updateContactSubscription;
 
+  StreamSubscription? _addTopicSubscription;
+  StreamSubscription? _deleteTopicSubscription;
+  StreamSubscription? _updateTopicSubscription;
+
   TextEditingController _searchController = TextEditingController();
 
   List<ContactSchema> _allFriends = <ContactSchema>[];
@@ -71,7 +75,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   @override
   void initState() {
     super.initState();
-    // listen
+    // contact listen
     _addContactSubscription = contactCommon.addStream.listen((ContactSchema schema) {
       if (schema.type == ContactType.friend) {
         _allFriends.insert(0, schema);
@@ -125,6 +129,20 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       }
     });
 
+    // topic listen
+    _addTopicSubscription = topicCommon.addStream.listen((TopicSchema schema) {
+      _allTopics.insert(0, schema);
+      _searchAction(_searchController.text);
+    });
+    _deleteTopicSubscription = topicCommon.deleteStream.listen((int topicId) {
+      _allTopics = _allTopics.where((element) => element.id != topicId).toList();
+      _searchAction(_searchController.text);
+    });
+    _updateContactSubscription = topicCommon.updateStream.listen((TopicSchema event) {
+      _allTopics = _allTopics.map((e) => e.id == event.id ? event : e).toList();
+      _searchAction(_searchController.text);
+    });
+
     // init
     _initData();
   }
@@ -134,13 +152,16 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     _addContactSubscription?.cancel();
     // _deleteContactSubscription?.cancel();
     _updateContactSubscription?.cancel();
+    _addTopicSubscription?.cancel();
+    _deleteTopicSubscription?.cancel();
+    _updateTopicSubscription?.cancel();
     super.dispose();
   }
 
   _initData() async {
     List<ContactSchema> friends = await contactCommon.queryList(contactType: ContactType.friend);
     List<ContactSchema> strangers = await contactCommon.queryList(contactType: ContactType.stranger, limit: 20);
-    List<TopicSchema> topics = await topicCommon.queryList(limit: 20);
+    List<TopicSchema> topics = await topicCommon.queryList();
     topics = (this._isSelect == true) ? [] : topics; // can not move this line to setState
 
     setState(() {
