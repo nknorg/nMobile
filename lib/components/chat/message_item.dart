@@ -99,24 +99,17 @@ class ChatMessageItem extends StatelessWidget {
     Map<String, dynamic> optionData = this.message.content ?? Map<String, dynamic>();
     Map<String, dynamic> content = optionData['content'] ?? Map<String, dynamic>();
     if (content.keys.length <= 0) return SizedBox.shrink();
+    String? optionType = optionData['optionType']?.toString();
     String? deviceToken = content['deviceToken'] as String?;
     int? deleteAfterSeconds = content['deleteAfterSeconds'] as int?;
 
-    bool isDeviceToken = deviceToken != null;
-    bool isBurn = deleteAfterSeconds != null;
+    bool isBurn = (optionType == '0') || (deleteAfterSeconds != null);
+    bool isBurnOpen = deleteAfterSeconds != null && deleteAfterSeconds > 0;
 
-    // SUPPORT:START
-    isBurn = isBurn || !isDeviceToken;
-    if (isBurn) deleteAfterSeconds = deleteAfterSeconds ?? 0;
-    // SUPPORT:END
+    bool isDeviceToken = (optionType == '1') || (deviceToken?.isNotEmpty == true);
+    bool isDeviceTokenOpen = deviceToken?.isNotEmpty == true;
 
-    if (isDeviceToken) {
-      String deviceDesc = "";
-      if (deviceToken.length == 0) {
-        deviceDesc = ' ${_localizations.setting_deny_notification}';
-      } else {
-        deviceDesc = ' ${_localizations.setting_accept_notification}';
-      }
+    if (isBurn) {
       return Center(
         child: Container(
           padding: const EdgeInsets.only(left: 8, right: 8, top: 12, bottom: 8),
@@ -125,14 +118,46 @@ class ChatMessageItem extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Row(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  isBurnOpen
+                      ? Icon(
+                          Icons.alarm_off,
+                          size: 16,
+                          color: application.theme.fontColor2,
+                        )
+                      : Icon(
+                          Icons.alarm_on,
+                          size: 16,
+                          color: application.theme.fontColor2,
+                        ),
+                  SizedBox(width: 4),
+                  isBurnOpen
+                      ? Label(
+                          durationFormat(Duration(seconds: deleteAfterSeconds)),
+                          type: LabelType.bodySmall,
+                        )
+                      : Label(
+                          _localizations.off,
+                          type: LabelType.bodySmall,
+                          fontWeight: FontWeight.bold,
+                        ),
+                ],
+              ),
+              SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Label(
                     message.isOutbound ? _localizations.you : (this.contact?.displayName ?? " "),
                     type: LabelType.bodyRegular,
                     fontWeight: FontWeight.bold,
                   ),
-                  Label('$deviceDesc', type: LabelType.bodyRegular),
+                  Label(
+                    ' ${isBurnOpen ? _localizations.update_burn_after_reading : _localizations.close_burn_after_reading} ',
+                    type: LabelType.bodyRegular,
+                    softWrap: true,
+                  ),
                 ],
               ),
               SizedBox(height: 4),
@@ -150,7 +175,7 @@ class ChatMessageItem extends StatelessWidget {
           ),
         ),
       );
-    } else if (isBurn) {
+    } else if (isDeviceToken) {
       return Center(
         child: Container(
           padding: const EdgeInsets.only(left: 8, right: 8, top: 12, bottom: 8),
@@ -159,16 +184,7 @@ class ChatMessageItem extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  deleteAfterSeconds! > 0 ? Icon(Icons.alarm_off, size: 16, color: application.theme.fontColor2) : Icon(Icons.alarm_on, size: 16, color: application.theme.fontColor2),
-                  SizedBox(width: 4),
-                  deleteAfterSeconds > 0 ? Label(durationFormat(Duration(seconds: deleteAfterSeconds)), type: LabelType.bodySmall) : Label(_localizations.off, type: LabelType.bodySmall, fontWeight: FontWeight.bold),
-                ],
-              ),
-              SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Label(
                     message.isOutbound ? _localizations.you : (this.contact?.displayName ?? " "),
@@ -176,9 +192,8 @@ class ChatMessageItem extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                   Label(
-                    ' ${deleteAfterSeconds > 0 ? _localizations.update_burn_after_reading : _localizations.close_burn_after_reading} ',
+                    isDeviceTokenOpen ? ' ${_localizations.setting_accept_notification}' : ' ${_localizations.setting_deny_notification}',
                     type: LabelType.bodyRegular,
-                    softWrap: true,
                   ),
                 ],
               ),

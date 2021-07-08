@@ -249,10 +249,13 @@ class MessageData {
     Map data = {
       'id': schema.msgId,
       'contentType': ContentType.contactOptions,
-      'content': {'deleteAfterSeconds': burnAfterSeconds, 'updateBurnAfterTime': updateBurnAfterTime},
+      'optionType': '0',
+      'content': {
+        'deleteAfterSeconds': burnAfterSeconds,
+        'updateBurnAfterTime': updateBurnAfterTime,
+      },
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
-    data['optionType'] = '0';
     return jsonEncode(data);
   }
 
@@ -261,10 +264,12 @@ class MessageData {
     Map data = {
       'id': schema.msgId,
       'contentType': ContentType.contactOptions,
-      'content': {'deviceToken': deviceToken},
+      'optionType': '1',
+      'content': {
+        'deviceToken': deviceToken,
+      },
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
-    data['optionType'] = '1';
     return jsonEncode(data);
   }
 
