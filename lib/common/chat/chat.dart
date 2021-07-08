@@ -202,7 +202,7 @@ class ChatCommon with Tag {
   Future<bool> msgDelete(String msgId, {bool notify = false}) async {
     bool success = await _messageStorage.delete(msgId);
     if (success) {
-      String key = contactCommon.currentUser?.clientAddress ?? "";
+      String key = clientCommon.address ?? "";
       if (deletedCache[key] == null) deletedCache[key] = Map();
       deletedCache[key]![msgId] = DateTime.now();
     }

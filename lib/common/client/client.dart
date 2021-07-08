@@ -9,6 +9,7 @@ import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/settings.dart';
@@ -31,7 +32,7 @@ class ClientCommon with Tag {
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
   Client? client;
 
-  String? get id => client?.address;
+  String? get address => client?.address;
 
   Uint8List? get publicKey => client?.publicKey;
 
@@ -83,8 +84,9 @@ class ClientCommon with Tag {
 
       // open DB
       db = await DB.open(pubKey, password);
-      // set currentUser
-      await contactCommon.refreshCurrentUser(pubKey);
+      // set currentMe
+      ContactSchema? me = await contactCommon.getMe();
+      contactCommon.meUpdateSink.add(me);
       // start client connect (no await)
       _connect(wallet); // await
     } catch (e) {
@@ -134,8 +136,6 @@ class ClientCommon with Tag {
     await _onMessageStreamSubscription?.cancel();
     await client?.close();
     client = null;
-    // clear currentUser
-    await contactCommon.refreshCurrentUser(null, notify: true);
     // close DB
     await db?.close();
   }
