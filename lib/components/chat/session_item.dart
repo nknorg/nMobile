@@ -140,21 +140,28 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       Map<String, dynamic> optionData = _lastMsg?.content ?? Map<String, dynamic>();
       Map<String, dynamic> content = optionData['content'] ?? Map<String, dynamic>();
       if (content.keys.length <= 0) return SizedBox.shrink();
+      String? optionType = optionData['optionType']?.toString();
       String? deviceToken = content['deviceToken'] as String?;
       int? deleteAfterSeconds = content['deleteAfterSeconds'] as int?;
 
-      bool isDeviceToken = deviceToken != null;
-      bool isBurn = deleteAfterSeconds != null;
+      bool isBurn = (optionType == '0') || (deleteAfterSeconds != null);
+      bool isBurnOpen = deleteAfterSeconds != null && deleteAfterSeconds > 0;
+
+      bool isDeviceToken = (optionType == '1') || (deviceToken?.isNotEmpty == true);
+      bool isDeviceTokenOPen = deviceToken?.isNotEmpty == true;
 
       String who = (_lastMsg?.isOutbound == true) ? _localizations.you : (_contact?.displayName ?? " ");
 
-      // SUPPORT:START
-      isBurn = isBurn || !isDeviceToken;
-      if (isBurn) deleteAfterSeconds = deleteAfterSeconds ?? 0;
-      // SUPPORT:END
-
-      if (isDeviceToken) {
-        String deviceDesc = deviceToken.length == 0 ? ' ${_localizations.setting_deny_notification}' : ' ${_localizations.setting_accept_notification}';
+      if (isBurn) {
+        String burnDecs = ' ${isBurnOpen ? _localizations.update_burn_after_reading : _localizations.close_burn_after_reading} ';
+        contentWidget = Label(
+          who + burnDecs,
+          type: LabelType.bodyRegular,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        );
+      } else if (isDeviceToken) {
+        String deviceDesc = isDeviceTokenOPen ? ' ${_localizations.setting_accept_notification}' : ' ${_localizations.setting_deny_notification}';
         contentWidget = Label(
           who + deviceDesc,
           type: LabelType.bodyRegular,
@@ -162,13 +169,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           overflow: TextOverflow.ellipsis,
         );
       } else {
-        String burnDecs = ' ${deleteAfterSeconds != null && deleteAfterSeconds > 0 ? _localizations.update_burn_after_reading : _localizations.close_burn_after_reading} ';
-        contentWidget = Label(
-          who + burnDecs,
-          type: LabelType.bodyRegular,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        );
+        contentWidget = SizedBox.shrink();
       }
     } else if (msgType == ContentType.topicSubscribe) {
       contentWidget = Label(
