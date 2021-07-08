@@ -19,6 +19,7 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/add.dart';
 import 'package:nmobile/screens/contact/profile.dart';
+import 'package:nmobile/screens/topic/profile.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -182,8 +183,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   }
 
   _onTapTopicItem(TopicSchema item) async {
-    // TODO:GG
-    // ContactProfileScreen.go(context, schema: item);
+    TopicProfileScreen.go(context, schema: item);
   }
 
   @override
