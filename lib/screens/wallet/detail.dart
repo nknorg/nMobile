@@ -378,7 +378,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
               _walletBloc?.add(DeleteWallet(this._wallet!));
               // client close
               try {
-                String? clientAddress = contactCommon.currentUser?.clientAddress;
+                String? clientAddress = clientCommon.address;
                 if (clientAddress == null || clientAddress.isEmpty) return;
                 String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
                 if (this._wallet?.address == walletAddress) {

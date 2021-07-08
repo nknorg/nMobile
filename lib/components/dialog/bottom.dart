@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -337,7 +338,7 @@ class BottomDialog extends BaseStateFulWidget {
               suffixIcon: contactSelect
                   ? GestureDetector(
                       onTap: () async {
-                        if (contactCommon.currentUser != null) {
+                        if (clientCommon.status == ClientConnectStatus.connected) {
                           var contact = await ContactHomeScreen.go(context, isSelect: true);
                           if (contact != null && contact is ContactSchema) {
                             _inputController.text = contact.clientAddress;
