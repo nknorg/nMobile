@@ -176,7 +176,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                               child: QrImage(
                                 data: _wallet.address,
                                 version: QrVersions.auto,
-                                size: Global.screenWidth * 0.57,
+                                size: Global.screenWidth() * 0.57,
                               ),
                             ),
                           ],

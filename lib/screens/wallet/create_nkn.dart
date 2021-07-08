@@ -76,7 +76,7 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
-    double headIconSize = Global.screenWidth / 2.5;
+    double headIconSize = Global.screenWidth() / 2.5;
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
@@ -106,7 +106,7 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
                 ),
               ),
               Container(
-                constraints: BoxConstraints.expand(height: Global.screenHeight - Header.height - headIconSize - 24 * 2 - 30),
+                constraints: BoxConstraints.expand(height: Global.screenHeight() - Header.height - headIconSize - 24 * 2 - 30),
                 decoration: BoxDecoration(
                   color: application.theme.backgroundLightColor,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
