@@ -30,7 +30,7 @@ class _WalletHomeEmptyLayoutState extends BaseStateFulWidgetState<WalletHomeEmpt
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           Center(
-            child: Asset.image("wallet/pig.png", width: Global.screenWidth / 3),
+            child: Asset.image("wallet/pig.png", width: Global.screenWidth() / 3),
           ),
           Expanded(
             flex: 0,
