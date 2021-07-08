@@ -34,7 +34,7 @@ class ContentType {
 
   static const String topicSubscribe = 'event:subscribe';
   static const String topicUnsubscribe = 'event:unsubscribe';
-  static const String topicInvitation = 'event:channelInvitation'; // TODO:GG wait data
+  static const String topicInvitation = 'event:channelInvitation';
 
   // SUPPORT:START
   static const String nknImage = 'nknImage';
@@ -375,7 +375,6 @@ class MessageData {
     Map data = {
       'id': schema.msgId,
       'contentType': ContentType.topicSubscribe,
-      'content': schema.content,
       'topic': schema.topic,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -386,8 +385,17 @@ class MessageData {
     Map data = {
       'id': schema.msgId,
       'contentType': ContentType.topicUnsubscribe,
-      'content': schema.content,
       'topic': schema.topic,
+      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+    };
+    return jsonEncode(data);
+  }
+
+  static String getTopicInvitee(MessageSchema schema, String topicName) {
+    Map data = {
+      'id': schema.msgId,
+      'contentType': ContentType.topicInvitation,
+      'content': topicName,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
