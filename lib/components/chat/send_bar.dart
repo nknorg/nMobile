@@ -335,7 +335,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
             this._onRecordLockAndPercentChange(false, 1);
           }
         }
-      } else if (ActionWidth < offsetX && offsetX < (Global.screenWidth - ActionWidth)) {
+      } else if (ActionWidth < offsetX && offsetX < (Global.screenWidth() - ActionWidth)) {
         // center
         if (!_audioRecordVisible) {
           // text editing
@@ -344,7 +344,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
           if (!isMove) {
             recordCancel?.call();
           } else {
-            double touchWidth = (Global.screenWidth - ActionWidth * 2);
+            double touchWidth = (Global.screenWidth() - ActionWidth * 2);
             double percent = 1;
             if ((offsetX - ActionWidth) > (touchWidth / 2)) {
               percent = 1 - (((touchWidth / 2) - (offsetX - ActionWidth)) / (touchWidth / 2)).abs();
@@ -352,7 +352,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
             this._onRecordLockAndPercentChange(false, percent);
           }
         }
-      } else if ((Global.screenWidth - ActionWidth) <= offsetX && offsetX <= Global.screenWidth) {
+      } else if ((Global.screenWidth() - ActionWidth) <= offsetX && offsetX <= Global.screenWidth()) {
         // right
         if (_canSendText) {
           // text send
@@ -379,7 +379,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
       if (!_audioRecordVisible) {
         // nothing
       } else {
-        if ((Global.screenWidth - ChatSendBar.LockActionMargin - ChatSendBar.LockActionSize) <= offsetX && offsetX <= (Global.screenWidth - ChatSendBar.LockActionMargin)) {
+        if ((Global.screenWidth() - ChatSendBar.LockActionMargin - ChatSendBar.LockActionSize) <= offsetX && offsetX <= (Global.screenWidth() - ChatSendBar.LockActionMargin)) {
           // lock mode
           if (!isMove) {
             this._onRecordLockAndPercentChange(true, 0);

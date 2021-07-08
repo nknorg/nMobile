@@ -115,7 +115,7 @@ class ContactSchema {
         avatarLocalPath = extraInfo!['avatar'];
       }
       // SUPPORT:START
-      if (extraInfo!['remark_avatar']?.toString().isNotEmpty == true) {
+      else if (extraInfo!['remark_avatar']?.toString().isNotEmpty == true) {
         avatarLocalPath = extraInfo!['remark_avatar'];
       }
       // SUPPORT:END

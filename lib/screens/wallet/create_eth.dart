@@ -61,7 +61,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
-    double headIconSize = Global.screenWidth / 3;
+    double headIconSize = Global.screenWidth() / 3;
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
@@ -91,7 +91,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
                 ),
               ),
               Container(
-                constraints: BoxConstraints.expand(height: Global.screenHeight - Header.height - headIconSize - 24 * 2 - 30),
+                constraints: BoxConstraints.expand(height: Global.screenHeight() - Header.height - headIconSize - 24 * 2 - 30),
                 decoration: BoxDecoration(
                   color: application.theme.backgroundLightColor,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(32)),

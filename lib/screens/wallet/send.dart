@@ -260,7 +260,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
-    double headIconHeight = Global.screenWidth / 5;
+    double headIconHeight = Global.screenWidth() / 5;
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
@@ -331,7 +331,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                 ),
               ),
               Container(
-                constraints: BoxConstraints.expand(height: Global.screenHeight - Header.height - headIconHeight - 10 - 20 - 30),
+                constraints: BoxConstraints.expand(height: Global.screenHeight() - Header.height - headIconHeight - 10 - 20 - 30),
                 decoration: BoxDecoration(
                   color: application.theme.backgroundLightColor,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
@@ -513,7 +513,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                         ),
                                       ),
                                       SizedBox(
-                                        width: Global.screenWidth / 4,
+                                        width: Global.screenWidth() / 4,
                                         child: FormText(
                                           padding: EdgeInsets.only(top: 10),
                                           controller: _feeController,

@@ -431,7 +431,7 @@ class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with Sing
     _dy = details.globalPosition.dy;
 
     setState(() {
-      _currentHeight = Global.screenHeight - _dy;
+      _currentHeight = Global.screenHeight() - _dy;
     });
   }
 
@@ -484,7 +484,7 @@ class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with Sing
 
   @override
   Widget build(BuildContext context) {
-    _maxHeight = Global.screenHeight - 86 - 38;
+    _maxHeight = Global.screenHeight() - 86 - 38;
 
     List<Widget> body = <Widget>[
       Expanded(
