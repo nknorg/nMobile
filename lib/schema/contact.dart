@@ -12,7 +12,7 @@ import 'option.dart';
 class ContactSchema {
   int? id; // <- id
   String type; // (required) <-> type
-  String clientAddress; // (required : (ID).PubKey) <-> address
+  String clientAddress; // (required : (ID).PubKey) <-> address (same with client.address)
   String? nknWalletAddress; // == extraInfo[nknWalletAddress] <-> data[nknWalletAddress]
   File? avatar; // (local_path) <-> avatar
   String? firstName; // (required : name) <-> first_name

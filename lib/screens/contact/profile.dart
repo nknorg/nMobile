@@ -223,7 +223,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
       if (success) {
         // refresh state
-        await _refreshContactSchema(schema: contactCommon.currentUser);
+        ContactSchema? _me = await contactCommon.getMe();
+        await _refreshContactSchema(schema: _me);
         Toast.show(S.of(Global.appContext).tip_switch_success); // must global context
       } else {
         // pop

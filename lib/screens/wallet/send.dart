@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -468,7 +469,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                         ? SizedBox.shrink()
                                         : GestureDetector(
                                             onTap: () async {
-                                              if (contactCommon.currentUser != null) {
+                                              if (clientCommon.status == ClientConnectStatus.connected) {
                                                 var contact = await ContactHomeScreen.go(context, isSelect: true);
                                                 if (contact != null && contact is ContactSchema) {
                                                   _sendToController.text = contact.nknWalletAddress ?? "";

@@ -37,12 +37,23 @@ class ChatHomeScreen extends BaseStateFulWidget {
 class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with AutomaticKeepAliveClientMixin, RouteAware {
   GlobalKey _floatingActionKey = GlobalKey();
 
+  ContactSchema? _contactMe;
+
   @override
   void onRefreshArguments() {}
 
   @override
   void initState() {
     super.initState();
+    // listen
+    contactCommon.meUpdateStream.listen((event) {
+      setState(() {
+        _contactMe = event;
+      });
+    });
+
+    // me
+    _refreshContactMe();
   }
 
   @override
@@ -67,6 +78,13 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   void didPop() {
     // self pop out, self hide
     super.didPop();
+  }
+
+  _refreshContactMe() async {
+    ContactSchema? contact = await contactCommon.getMe();
+    setState(() {
+      _contactMe = contact;
+    });
   }
 
   @override
@@ -103,107 +121,94 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
             if (snapshot.data == ClientConnectStatus.disconnected || snapshot.data == ClientConnectStatus.stopping) {
               return ChatNoConnectLayout();
             }
-            return StreamBuilder<ContactSchema?>(
-              initialData: contactCommon.currentUser,
-              stream: contactCommon.currentUpdateStream,
-              builder: (BuildContext context, AsyncSnapshot<ContactSchema?> snapshot) {
-                ContactSchema? contact = snapshot.data ?? contactCommon.currentUser;
-                return Layout(
-                  headerColor: application.theme.primaryColor,
-                  bodyColor: application.theme.backgroundLightColor,
-                  header: Header(
-                    titleChild: Container(
-                      margin: EdgeInsets.only(left: 20),
-                      child: contact != null
-                          ? ContactHeader(
-                              contact: contact,
-                              onTap: () {
-                                ContactProfileScreen.go(context, contactId: contact.id);
-                              },
-                              body: StreamBuilder<int>(
-                                stream: clientCommon.statusStream,
-                                initialData: clientCommon.status,
-                                builder: (context, snapshot) {
-                                  late Widget statusWidget;
-                                  switch (snapshot.data) {
-                                    case ClientConnectStatus.disconnected:
-                                      statusWidget = Row(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: <Widget>[
-                                          Label(
-                                            _localizations.disconnect,
-                                            type: LabelType.h4,
-                                            color: application.theme.strongColor,
-                                          ),
-                                        ],
-                                      );
-                                      break;
-                                    case ClientConnectStatus.connected:
-                                      statusWidget = Row(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: <Widget>[
-                                          Label(
-                                            _localizations.connected,
-                                            type: LabelType.h4,
-                                            color: application.theme.successColor,
-                                          ),
-                                        ],
-                                      );
-                                      break;
-                                    default:
-                                      statusWidget = Row(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: <Widget>[
-                                          Label(
-                                            _localizations.connecting,
-                                            type: LabelType.h4,
-                                            color: application.theme.fontLightColor.withAlpha(200),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.only(bottom: 2, left: 4),
-                                            child: SpinKitThreeBounce(
-                                              color: application.theme.fontLightColor.withAlpha(200),
-                                              size: 10,
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                      break;
-                                  }
-                                  return statusWidget;
-                                },
-                              ),
-                            )
-                          : SizedBox.shrink(),
+            late Widget statusWidget;
+            switch (snapshot.data) {
+              case ClientConnectStatus.disconnected:
+                statusWidget = Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: <Widget>[
+                    Label(
+                      _localizations.disconnect,
+                      type: LabelType.h4,
+                      color: application.theme.strongColor,
                     ),
-                    actions: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: IconButton(
-                          icon: Asset.iconSvg('addbook', color: Colors.white, width: 24),
-                          onPressed: () {
-                            ContactHomeScreen.go(context);
+                  ],
+                );
+                break;
+              case ClientConnectStatus.connected:
+                statusWidget = Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: <Widget>[
+                    Label(
+                      _localizations.connected,
+                      type: LabelType.h4,
+                      color: application.theme.successColor,
+                    ),
+                  ],
+                );
+                break;
+              default:
+                statusWidget = Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: <Widget>[
+                    Label(
+                      _localizations.connecting,
+                      type: LabelType.h4,
+                      color: application.theme.fontLightColor.withAlpha(200),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 2, left: 4),
+                      child: SpinKitThreeBounce(
+                        color: application.theme.fontLightColor.withAlpha(200),
+                        size: 10,
+                      ),
+                    ),
+                  ],
+                );
+                break;
+            }
+            return Layout(
+              headerColor: application.theme.primaryColor,
+              bodyColor: application.theme.backgroundLightColor,
+              header: Header(
+                titleChild: Container(
+                  margin: EdgeInsets.only(left: 20),
+                  child: _contactMe != null
+                      ? ContactHeader(
+                          contact: _contactMe!,
+                          onTap: () {
+                            ContactProfileScreen.go(context, contactId: _contactMe!.id);
                           },
-                        ),
-                      )
-                    ],
-                  ),
-                  floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-                  floatingActionButton: Padding(
-                    padding: EdgeInsets.only(bottom: 60, right: 4),
-                    child: FloatingActionButton(
-                      key: _floatingActionKey,
-                      elevation: 12,
-                      backgroundColor: application.theme.primaryColor,
-                      child: Asset.iconSvg('pencil', width: 24),
+                          body: statusWidget,
+                        )
+                      : SizedBox.shrink(),
+                ),
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: IconButton(
+                      icon: Asset.iconSvg('addbook', color: Colors.white, width: 24),
                       onPressed: () {
-                        _showFloatActionMenu();
+                        ContactHomeScreen.go(context);
                       },
                     ),
-                  ),
-                  body: contact != null ? ChatSessionListLayout(contact) : SizedBox.shrink(),
-                );
-              },
+                  )
+                ],
+              ),
+              floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+              floatingActionButton: Padding(
+                padding: EdgeInsets.only(bottom: 60, right: 4),
+                child: FloatingActionButton(
+                  key: _floatingActionKey,
+                  elevation: 12,
+                  backgroundColor: application.theme.primaryColor,
+                  child: Asset.iconSvg('pencil', width: 24),
+                  onPressed: () {
+                    _showFloatActionMenu();
+                  },
+                ),
+              ),
+              body: _contactMe != null ? ChatSessionListLayout(_contactMe!) : SizedBox.shrink(),
             );
           },
         );

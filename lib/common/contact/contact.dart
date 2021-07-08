@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -20,7 +21,6 @@ class RequestType {
 }
 
 class ContactCommon with Tag {
-  ContactSchema? currentUser;
   ContactStorage _contactStorage = ContactStorage();
 
   StreamController<ContactSchema> _addController = StreamController<ContactSchema>.broadcast();
@@ -35,9 +35,9 @@ class ContactCommon with Tag {
   StreamSink<ContactSchema> get _updateSink => _updateController.sink;
   Stream<ContactSchema> get updateStream => _updateController.stream;
 
-  StreamController<ContactSchema?> _currentUpdateController = StreamController<ContactSchema?>.broadcast();
-  StreamSink<ContactSchema?> get _currentUpdateSink => _currentUpdateController.sink;
-  Stream<ContactSchema?> get currentUpdateStream => _currentUpdateController.stream;
+  StreamController<ContactSchema?> _meUpdateController = StreamController<ContactSchema?>.broadcast();
+  StreamSink<ContactSchema?> get meUpdateSink => _meUpdateController.sink;
+  Stream<ContactSchema?> get meUpdateStream => _meUpdateController.stream;
 
   ContactCommon();
 
@@ -45,27 +45,21 @@ class ContactCommon with Tag {
     _addController.close();
     // _deleteController.close();
     _updateController.close();
-    _currentUpdateController.close();
+    _meUpdateController.close();
   }
 
-  Future<ContactSchema?> refreshCurrentUser(String? clientAddress, {bool notify = true}) async {
-    if (clientAddress == null || clientAddress.isEmpty) {
-      currentUser = null;
-    } else {
-      ContactSchema? contact = await _contactStorage.queryByClientAddress(clientAddress);
-      if (contact == null) {
-        contact = await addByType(clientAddress, ContactType.me);
-      }
-      if (contact != null) {
-        if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
-          contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress));
-        }
-      }
-      currentUser = contact;
+  Future<ContactSchema?> getMe() async {
+    List<ContactSchema> contacts = await _contactStorage.queryList(contactType: ContactType.me, limit: 1);
+    ContactSchema? contact = contacts.isNotEmpty ? contacts[0] : await _contactStorage.queryByClientAddress(clientCommon.address);
+    if (contact == null) {
+      contact = await addByType(clientCommon.address, ContactType.me);
     }
-    _currentUpdateSink.add(currentUser);
-    if (notify && currentUser != null) _updateSink.add(currentUser!);
-    return currentUser;
+    if (contact != null) {
+      if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
+        contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress));
+      }
+    }
+    return contact;
   }
 
   Future<ContactSchema?> addByType(String? clientAddress, String contactType, {bool checkDuplicated = true}) async {
@@ -242,10 +236,10 @@ class ContactCommon with Tag {
     if (contactId == null || contactId == 0) return;
     ContactSchema? updated = await _contactStorage.query(contactId);
     if (updated != null) {
-      if (updated.type == ContactType.me) {
-        await refreshCurrentUser(updated.clientAddress, notify: false);
-      }
       _updateSink.add(updated);
+      if (updated.type == ContactType.me) {
+        meUpdateSink.add(updated);
+      }
     }
   }
 
@@ -253,10 +247,10 @@ class ContactCommon with Tag {
     if (clientAddress == null || clientAddress.isEmpty) return;
     ContactSchema? updated = await _contactStorage.queryByClientAddress(clientAddress);
     if (updated != null) {
-      if (updated.type == ContactType.me) {
-        await refreshCurrentUser(updated.clientAddress, notify: false);
-      }
       _updateSink.add(updated);
+      if (updated.type == ContactType.me) {
+        meUpdateSink.add(updated);
+      }
     }
   }
 

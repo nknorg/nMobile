@@ -143,7 +143,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       if (deleteTime.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch) {
         String taskKey = "${TaskService.KEY_MSG_BURNING}:${_message.msgId}";
         taskService.addTask1(taskKey, (String key) async {
-          if (_message.originalId != contactCommon.currentUser?.clientAddress) {
+          if (_message.originalId != clientCommon.address) {
             taskService.removeTask1(key);
             // onRefreshArguments(); // refresh task (will dead loop)
             return;

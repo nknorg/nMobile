@@ -260,7 +260,7 @@ class ChatInCommon with Tag {
 
   Future _receiveText(MessageSchema received) async {
     // deleted
-    String key = contactCommon.currentUser?.clientAddress ?? "";
+    String key = clientCommon.address ?? "";
     if (chatCommon.deletedCache[key] != null && chatCommon.deletedCache[key]![received.msgId] != null) {
       logger.d("$TAG - receiveText - duplicated - deleted:${received.msgId}");
       return;
@@ -280,7 +280,7 @@ class ChatInCommon with Tag {
 
   Future _receiveImage(MessageSchema received) async {
     // deleted
-    String key = contactCommon.currentUser?.clientAddress ?? "";
+    String key = clientCommon.address ?? "";
     if (chatCommon.deletedCache[key] != null && chatCommon.deletedCache[key]![received.msgId] != null) {
       logger.d("$TAG - receiveImage - duplicated - deleted:${received.msgId}");
       return;
@@ -311,7 +311,7 @@ class ChatInCommon with Tag {
 
   Future _receiveAudio(MessageSchema received) async {
     // deleted
-    String key = contactCommon.currentUser?.clientAddress ?? "";
+    String key = clientCommon.address ?? "";
     if (chatCommon.deletedCache[key] != null && chatCommon.deletedCache[key]![received.msgId] != null) {
       logger.d("$TAG - receiveAudio - duplicated - deleted:${received.msgId}");
       return;

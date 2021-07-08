@@ -79,22 +79,17 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future sendContactResponse(ContactSchema? target, String requestType, {int tryCount = 1}) async {
-    if (contactCommon.currentUser == null || target == null || target.clientAddress.isEmpty) return;
+  Future sendContactResponse(ContactSchema? target, String requestType, {ContactSchema? me, int tryCount = 1}) async {
+    if (clientCommon.address == null || clientCommon.address!.isEmpty || target == null || target.clientAddress.isEmpty) return;
     if (tryCount > 3) return;
+    ContactSchema? _me = me ?? await contactCommon.getMe();
     try {
       DateTime updateAt = DateTime.now();
       String data;
       if (requestType == RequestType.header) {
-        data = MessageData.getContactResponseHeader(contactCommon.currentUser?.profileVersion, updateAt);
+        data = MessageData.getContactResponseHeader(_me?.profileVersion, updateAt);
       } else {
-        data = await MessageData.getContactResponseFull(
-          contactCommon.currentUser?.firstName,
-          contactCommon.currentUser?.lastName,
-          contactCommon.currentUser?.avatar,
-          contactCommon.currentUser?.profileVersion,
-          updateAt,
-        );
+        data = await MessageData.getContactResponseFull(_me?.firstName, _me?.lastName, _me?.avatar, _me?.profileVersion, updateAt);
       }
       await chatCommon.clientSendData(target.clientAddress, data);
       logger.d("$TAG - sendContactResponse - success - requestType:$requestType - data:$data");
@@ -102,19 +97,19 @@ class ChatOutCommon with Tag {
       handleError(e);
       logger.w("$TAG - sendContactResponse - fail - tryCount:$tryCount - requestType:$requestType");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendContactResponse(target, requestType, tryCount: tryCount++);
+        return sendContactResponse(target, requestType, me: _me, tryCount: tryCount++);
       });
     }
   }
 
   // NO topic (1 to 1)
   Future sendContactOptionsBurn(String? clientAddress, int deleteSeconds, int updateTime, {int tryCount = 1}) async {
-    if (contactCommon.currentUser == null || clientAddress == null || clientAddress.isEmpty) return;
+    if (clientCommon.address == null || clientCommon.address!.isEmpty || clientAddress == null || clientAddress.isEmpty) return;
     if (tryCount > 3) return;
     try {
       MessageSchema send = MessageSchema.fromSend(
         Uuid().v4(),
-        contactCommon.currentUser!.clientAddress,
+        clientCommon.address!,
         ContentType.contactOptions,
         to: clientAddress,
         deleteAfterSeconds: deleteSeconds,
@@ -134,12 +129,12 @@ class ChatOutCommon with Tag {
 
   // NO topic (1 to 1)
   Future sendContactOptionsToken(String? clientAddress, String deviceToken, {int tryCount = 1}) async {
-    if (contactCommon.currentUser == null || clientAddress == null || clientAddress.isEmpty) return;
+    if (clientCommon.address == null || clientCommon.address!.isEmpty || clientAddress == null || clientAddress.isEmpty) return;
     if (tryCount > 3) return;
     try {
       MessageSchema send = MessageSchema.fromSend(
         Uuid().v4(),
-        contactCommon.currentUser!.clientAddress,
+        clientCommon.address!,
         ContentType.contactOptions,
         to: clientAddress,
       );
@@ -192,13 +187,13 @@ class ChatOutCommon with Tag {
 
   Future<MessageSchema?> sendText(String? clientAddress, String? content, {required ContactSchema contact}) async {
     if (content == null || content.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
-    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.id == null || clientCommon.id!.isEmpty) {
+    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
       // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
       return null;
     }
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
-      clientCommon.id ?? "",
+      clientCommon.address!,
       ContentType.text,
       to: clientAddress,
       content: content,
@@ -210,7 +205,7 @@ class ChatOutCommon with Tag {
 
   Future<MessageSchema?> sendImage(String? clientAddress, File? content, {required ContactSchema contact}) async {
     if (content == null || (!await content.exists()) || clientAddress == null || clientAddress.isEmpty) return null;
-    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.id == null || clientCommon.id!.isEmpty) {
+    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
       // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
       return null;
     }
@@ -218,7 +213,7 @@ class ChatOutCommon with Tag {
     String contentType = deviceInfoCommon.isMsgImageEnable(deviceInfo?.platform, deviceInfo?.appVersion) ? ContentType.image : ContentType.media;
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
-      clientCommon.id ?? "",
+      clientCommon.address!,
       contentType,
       to: clientAddress,
       content: content,
@@ -230,13 +225,13 @@ class ChatOutCommon with Tag {
 
   Future<MessageSchema?> sendAudio(String? clientAddress, File? content, double? durationS, {required ContactSchema contact}) async {
     if (content == null || (!await content.exists()) || clientAddress == null || clientAddress.isEmpty) return null;
-    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.id == null || clientCommon.id!.isEmpty) {
+    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
       // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
       return null;
     }
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
-      clientCommon.id ?? "",
+      clientCommon.address!,
       ContentType.audio,
       to: clientAddress,
       content: content,
@@ -275,12 +270,12 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display NO single
   Future sendTopicSubscribe(String? topicName, {int tryCount = 1}) async {
-    if (contactCommon.currentUser == null || topicName == null || topicName.isEmpty) return;
+    if (clientCommon.address == null || clientCommon.address!.isEmpty || topicName == null || topicName.isEmpty) return;
     if (tryCount > 3) return;
     try {
       MessageSchema send = MessageSchema.fromSend(
         Uuid().v4(),
-        contactCommon.currentUser!.clientAddress,
+        clientCommon.address!,
         ContentType.topicSubscribe,
         topic: topicName,
       );
@@ -299,12 +294,12 @@ class ChatOutCommon with Tag {
   // TODO:GG call
   // NO DB NO display NO single
   Future sendTopicUnSubscribe(String? topicName, {int tryCount = 1}) async {
-    if (contactCommon.currentUser == null || topicName == null || topicName.isEmpty) return;
+    if (clientCommon.address == null || clientCommon.address!.isEmpty || topicName == null || topicName.isEmpty) return;
     if (tryCount > 3) return;
     try {
       MessageSchema send = MessageSchema.fromSend(
         Uuid().v4(),
-        contactCommon.currentUser!.clientAddress,
+        clientCommon.address!,
         ContentType.topicUnsubscribe,
         topic: topicName,
       );
@@ -323,13 +318,13 @@ class ChatOutCommon with Tag {
   // NO topic (1 to 1)
   Future sendTopicInvitee(String? clientAddress, String? topicName) async {
     if (clientAddress == null || clientAddress.isEmpty || topicName == null || topicName.isEmpty) return;
-    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.id == null || clientCommon.id!.isEmpty) {
+    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
       // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
       return null;
     }
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
-      contactCommon.currentUser!.clientAddress,
+      clientCommon.address!,
       ContentType.topicInvitation,
       to: clientAddress,
     );
