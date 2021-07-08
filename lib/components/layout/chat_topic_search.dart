@@ -11,15 +11,19 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/popular_channel.dart';
+import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
+import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/utils.dart';
 
 class ChatTopicSearchLayout extends BaseStateFulWidget {
   @override
   _CreateGroupDialogState createState() => _CreateGroupDialogState();
 }
 
-class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLayout> {
+class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLayout> with Tag {
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
 
@@ -33,8 +37,6 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
   double _sliderFee = 0.1;
   double _sliderFeeMin = 0;
   double _sliderFeeMax = 10;
-
-  bool _loading = false;
 
   @override
   void onRefreshArguments() {}
@@ -255,10 +257,9 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
               padding: const EdgeInsets.only(left: 20, right: 20, top: 18, bottom: 18),
               child: Button(
                 width: double.infinity,
-                disabled: _loading,
                 text: _localizations.continue_text,
                 onPressed: () async {
-                  if (_formValid) createOrJoinGroup(_topicController.text);
+                  if (_formValid) createOrJoinTopic(_topicController.text);
                 },
               ),
             ),
@@ -275,7 +276,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     for (PopularChannel item in PopularChannel.defaultData()) {
       list.add(InkWell(
         onTap: () async {
-          createOrJoinGroup(item.topic);
+          createOrJoinTopic(item.topic);
         },
         child: Container(
           width: double.infinity,
@@ -338,59 +339,27 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     );
   }
 
-  createOrJoinGroup(topicName) async {
-    // TODO:GG topic
-    // if (isEmpty(topicName)) {
-    //   return;
-    // }
-    // if (_privateSelected) {
-    //   if (!isPrivateTopicReg(topicName)) {
-    //     String pubKey = NKNClientCaller.currentChatId;
-    //     topicName = '$topicName.$pubKey';
-    //   }
-    // }
-    // var group = await GroupChatHelper.fetchTopicInfoByName(topicName);
-    // if (group != null) {
-    //   _createOrJoinGroupSuccess(topicName);
-    // } else {
-    //   setState(() {
-    //     _loading = true;
-    //   });
-    //   EasyLoading.show();
-    //   await GroupDataCenter.subscribeTopic(
-    //       topicName: topicName,
-    //       chatBloc: _chatBloc,
-    //       callback: (success, e) async {
-    //         if (success) {
-    //           NLog.w('SubscriberTopic Success____'+topicName.toString());
-    //           final topicSpotName = Topic.spotName(name: topicName);
-    //           if (topicSpotName.isPrivate) {
-    //             GroupDataCenter.pullPrivateSubscribers(topicName);
-    //             GroupDataCenter.addPrivatePermissionList(topicName, NKNClientCaller.currentChatId);
-    //           } else {
-    //             GroupDataCenter.pullSubscribersPublicChannel(topicName);
-    //           }
-    //           _createOrJoinGroupSuccess(topicName);
-    //         } else {
-    //           if (e != null) {
-    //             NLog.w('Create Or join Group E:' + e.toString());
-    //           }
-    //           showToast('create_input_group topic failed');
-    //         }
-    //       });
-    //   EasyLoading.dismiss();
-    Navigator.pop(context);
-    setState(() {
-      _loading = false;
-    });
-  }
+  Future<bool> createOrJoinTopic(String? topicName) async {
+    if (topicName == null || topicName.isEmpty) return false;
 
-  _createOrJoinGroupSuccess(String topicName) async {
-    // TODO:GG topic
-    // await GroupChatHelper.insertTopicIfNotExists(topicName);
-    // var group = await GroupChatHelper.fetchTopicInfoByName(topicName);
-    //
-    // Navigator.of(context).pushNamed(MessageChatPage.routeName,
-    //     arguments: group);
+    if (_privateSelected) {
+      if (!isPrivateTopicReg(topicName)) {
+        if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) {
+          logger.w("$TAG - createOrJoinTopic - publicKey:empty - topicName:$topicName");
+          return false;
+        }
+        topicName = '$topicName.${clientCommon.publicKey}';
+      }
+    }
+
+    TopicSchema? _topic = await topicCommon.subscribe(topicName);
+    if (_topic == null) {
+      logger.w("$TAG - createOrJoinTopic - subscribe:fail - topicName:$topicName");
+      return false;
+    }
+    Navigator.pop(context);
+
+    ChatMessagesScreen.go(context, _topic);
+    return true;
   }
 }
