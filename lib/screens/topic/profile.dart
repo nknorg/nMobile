@@ -9,13 +9,17 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/topic/avatar_editable.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/media_picker.dart';
+import 'package:nmobile/helpers/validation.dart';
+import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/utils/asset.dart';
@@ -107,6 +111,24 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     await topicCommon.setAvatar(_topicSchema?.id, remarkAvatarLocalPath, notify: true);
   }
 
+  _invitee() async {
+    String? address = await BottomDialog.of(context).showInput(
+      title: S.of(context).invite_members,
+      inputTip: S.of(context).send_to,
+      inputHint: S.of(context).enter_or_select_a_user_pubkey,
+      validator: Validator.of(context).identifierNKN(),
+      contactSelect: true,
+    );
+    if (address == null || address.isEmpty) return;
+    MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(address, _topicSchema?.fullName);
+    if (_msg == null) return;
+    Toast.show(S.of(context).invitation_sent);
+    if (_topicSchema?.isPrivate == true && _topicSchema?.isOwner(clientCommon.address) == true) {
+      // TODO:GG topic permissions
+    }
+  }
+
+  // TODO:GG unsub
   _deleteAction() {
     S _localizations = S.of(this.context);
 
@@ -152,7 +174,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
   Widget build(BuildContext context) {
     S _localizations = S.of(this.context);
 
-    int membersCount = 0; // TODO:GG topic count
+    int membersCount = 0; // TODO:GG topic count(from subers table)
     bool isJoined = _topicSchema?.joined == true; // TODO:GG topic joined
 
     return Layout(
@@ -218,9 +240,9 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
                 /// count
                 TextButton(
-                  style: _buttonStyle(topRadius: false, botRadius: false, topPad: 10, botPad: 10),
+                  style: _buttonStyle(topRadius: false, botRadius: false, topPad: 12, botPad: 12),
                   onPressed: () {
-                    // TODO:GG subscriber screen
+                    // TODO:GG subers screen
                     // Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: widget.arguments);
                   },
                   child: Row(
@@ -235,7 +257,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                       SizedBox(width: 20),
                       Expanded(
                         child: Label(
-                          "$membersCount${_localizations.members}",
+                          "$membersCount ${_localizations.members}",
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor2,
                           overflow: TextOverflow.fade,
@@ -255,7 +277,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                 TextButton(
                   style: _buttonStyle(topRadius: false, botRadius: true, topPad: 10, botPad: 15),
                   onPressed: () {
-                    // TODO:GG invitee
+                    _invitee();
                   },
                   child: Row(
                     children: <Widget>[
