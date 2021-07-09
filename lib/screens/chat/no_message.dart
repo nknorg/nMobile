@@ -4,6 +4,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
@@ -42,7 +43,9 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
 
   void addTopic(String? topicName) async {
     if (topicName == null || topicName.isEmpty) return;
+    Loading.show();
     TopicSchema? _topic = await topicCommon.subscribe(topicName);
+    Loading.dismiss();
     ChatMessagesScreen.go(context, _topic);
   }
 

@@ -5,6 +5,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -48,6 +49,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
 
   Future<bool> createOrJoinTopic(String? topicName) async {
     if (topicName == null || topicName.isEmpty) return false;
+    Loading.show();
 
     if (_privateSelected) {
       if (!isPrivateTopicReg(topicName)) {
@@ -57,6 +59,8 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     }
 
     TopicSchema? _topic = await topicCommon.subscribe(topicName);
+    Loading.dismiss();
+
     if (_topic == null) return false;
     Navigator.pop(context);
 
