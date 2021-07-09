@@ -19,7 +19,7 @@ class SubscriberSchema {
   DateTime? updateAt; // <-> update_at
   int? status; // <-> status
   int? permPage; // <-> perm_page
-  Map<String, dynamic>? data; // <-> data[permissions, ...]
+  Map<String, dynamic>? data; // <-> data[...]
 
   SubscriberSchema({
     this.id,
@@ -34,6 +34,18 @@ class SubscriberSchema {
 
   bool get joined {
     return (status ?? SubscriberStatus.DefaultNotMember) > SubscriberStatus.MemberJoinedButNotInvited;
+  }
+
+  static SubscriberSchema? create(String? topic, String? clientAddress) {
+    if (topic?.isNotEmpty == true && clientAddress?.isNotEmpty == true) {
+      return SubscriberSchema(
+        topic: topic!,
+        clientAddress: clientAddress!,
+        createAt: DateTime.now(),
+        updateAt: DateTime.now(),
+      );
+    }
+    return null;
   }
 
   Map<String, dynamic> toMap() {
