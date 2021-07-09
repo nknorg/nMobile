@@ -52,7 +52,8 @@ class TopicCommon with Tag {
     return topicHash != null && topicHash.isNotEmpty;
   }
 
-  Future<TopicSchema?> subscribe(String topicName) async {
+  Future<TopicSchema?> subscribe(String? topicName) async {
+    if (topicName == null || topicName.isEmpty) return null;
     try {
       TopicSchema? exists = await queryByTopic(topicName);
       if (exists == null) {
