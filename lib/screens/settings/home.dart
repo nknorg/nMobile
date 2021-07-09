@@ -51,15 +51,6 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
     _biometricsSelected = Settings.biometricsAuthentication;
   }
 
-  _buttonStyle({bool top = false, bool bottom = false}) {
-    return ButtonStyle(
-      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16)),
-      shape: MaterialStateProperty.resolveWith(
-        (states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: top ? Radius.circular(12) : Radius.zero, bottom: bottom ? Radius.circular(12) : Radius.zero)),
-      ),
-    );
-  }
-
   _initData() {
     _languageList = <SelectListItem>[
       SelectListItem(
@@ -536,6 +527,15 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  _buttonStyle({bool top = false, bool bottom = false}) {
+    return ButtonStyle(
+      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16)),
+      shape: MaterialStateProperty.resolveWith(
+        (states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: top ? Radius.circular(12) : Radius.zero, bottom: bottom ? Radius.circular(12) : Radius.zero)),
       ),
     );
   }

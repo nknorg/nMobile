@@ -104,12 +104,13 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
         // ],
       ),
       body: InkWell(
-          onTap: () {
-            Navigator.pop(context);
-          },
-          child: PhotoView(
-            imageProvider: provider,
-          )),
+        onTap: () {
+          Navigator.pop(context);
+        },
+        child: PhotoView(
+          imageProvider: provider,
+        ),
+      ),
     );
   }
 }

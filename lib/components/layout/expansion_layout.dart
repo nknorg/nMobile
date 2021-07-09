@@ -60,17 +60,6 @@ class _ExpansionLayoutState extends BaseStateFulWidgetState<ExpansionLayout> wit
     if (widget.onExpansionChanged != null) widget.onExpansionChanged!(_isExpanded);
   }
 
-  Widget _buildChildren(BuildContext context, Widget? child) {
-    return Container(
-      child: ClipRect(
-        child: Align(
-          heightFactor: _heightFactor.value,
-          child: child,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     _handleTap();
@@ -79,6 +68,17 @@ class _ExpansionLayoutState extends BaseStateFulWidgetState<ExpansionLayout> wit
       animation: _controller.view,
       builder: _buildChildren,
       child: closed ? null : widget.child,
+    );
+  }
+
+  Widget _buildChildren(BuildContext context, Widget? child) {
+    return Container(
+      child: ClipRect(
+        child: Align(
+          heightFactor: _heightFactor.value,
+          child: child,
+        ),
+      ),
     );
   }
 }
