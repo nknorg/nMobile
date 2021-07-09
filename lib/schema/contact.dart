@@ -13,13 +13,11 @@ class ContactSchema {
   int? id; // <- id
   String type; // (required) <-> type
   String clientAddress; // (required : (ID).PubKey) <-> address (same with client.address)
-  String? nknWalletAddress; // == extraInfo[nknWalletAddress] <-> data[nknWalletAddress]
   File? avatar; // (local_path) <-> avatar
   String? firstName; // (required : name) <-> first_name
   String? lastName; // <-> last_name
-  String? notes; // == extraInfo[notes] <-> data[notes]
   OptionsSchema? options; // <-> options
-  Map<String, dynamic>? extraInfo; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
+  Map<String, dynamic>? data; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
 
   DateTime? createdAt; // <-> created_time
   DateTime? updatedAt; // <-> updated_time
@@ -30,17 +28,18 @@ class ContactSchema {
   String? deviceToken; // <-> device_token
   bool notificationOpen = false; // <-> notification_open
 
+  // extra
+  String? nknWalletAddress; // == extraInfo[nknWalletAddress] <-> data[nknWalletAddress]
+
   ContactSchema({
     this.id,
     required this.type,
     required this.clientAddress,
-    this.nknWalletAddress,
+    this.avatar,
     this.firstName,
     this.lastName,
-    this.notes,
-    this.extraInfo,
-    this.avatar,
     this.options,
+    this.data,
     this.createdAt,
     this.updatedAt,
     this.profileVersion,
@@ -48,6 +47,8 @@ class ContactSchema {
     this.isTop = false,
     this.deviceToken,
     this.notificationOpen = false,
+    // extra
+    this.nknWalletAddress,
   }) {
     if (options == null) {
       options = OptionsSchema();
@@ -60,10 +61,10 @@ class ContactSchema {
     return ContactSchema(
       type: contactType,
       clientAddress: clientAddress,
-      nknWalletAddress: walletAddress,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
       profileVersion: Uuid().v4(),
+      nknWalletAddress: walletAddress,
     );
   }
 
@@ -82,15 +83,15 @@ class ContactSchema {
   String get displayName {
     String? displayName;
 
-    if (extraInfo?.isNotEmpty == true) {
-      if (extraInfo!['firstName']?.toString().isNotEmpty == true) {
-        displayName = extraInfo!['firstName'];
+    if (data?.isNotEmpty == true) {
+      if (data!['firstName']?.toString().isNotEmpty == true) {
+        displayName = data!['firstName'];
       }
       // SUPPORT:START
-      else if (extraInfo!['remark_name']?.toString().isNotEmpty == true) {
-        displayName = extraInfo!['remark_name'];
-      } else if (extraInfo!['notes']?.toString().isNotEmpty == true) {
-        displayName = extraInfo!['notes'];
+      else if (data!['remark_name']?.toString().isNotEmpty == true) {
+        displayName = data!['remark_name'];
+      } else if (data!['notes']?.toString().isNotEmpty == true) {
+        displayName = data!['notes'];
       }
       // SUPPORT:END
     }
@@ -110,13 +111,13 @@ class ContactSchema {
   Future<File?> get displayAvatarFile async {
     String? avatarLocalPath;
 
-    if (extraInfo?.toString().isNotEmpty == true) {
-      if (extraInfo!['avatar']?.toString().isNotEmpty == true) {
-        avatarLocalPath = extraInfo!['avatar'];
+    if (data?.toString().isNotEmpty == true) {
+      if (data!['avatar']?.toString().isNotEmpty == true) {
+        avatarLocalPath = data!['avatar'];
       }
       // SUPPORT:START
-      else if (extraInfo!['remark_avatar']?.toString().isNotEmpty == true) {
-        avatarLocalPath = extraInfo!['remark_avatar'];
+      else if (data!['remark_avatar']?.toString().isNotEmpty == true) {
+        avatarLocalPath = data!['remark_avatar'];
       }
       // SUPPORT:END
     }
@@ -139,20 +140,24 @@ class ContactSchema {
     return avatarFile;
   }
 
+  String? get notes {
+    return data?['notes'];
+  }
+
   Future<Map<String, dynamic>> toMap() async {
-    if (extraInfo == null) {
-      extraInfo = new Map<String, dynamic>();
+    if (data == null) {
+      data = new Map<String, dynamic>();
     }
     if (nknWalletAddress?.isNotEmpty == true) {
-      extraInfo?['nknWalletAddress'] = nknWalletAddress;
+      data?['nknWalletAddress'] = nknWalletAddress;
     } else {
-      extraInfo?['nknWalletAddress'] = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+      data?['nknWalletAddress'] = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
     }
     if (notes?.isNotEmpty == true) {
-      extraInfo?['notes'] = notes;
+      data?['notes'] = notes;
     }
-    if (extraInfo?.keys.length == 0) {
-      extraInfo = null;
+    if (data?.keys.length == 0) {
+      data = null;
     }
 
     if (options == null) {
@@ -166,7 +171,7 @@ class ContactSchema {
       'first_name': firstName ?? getDefaultName(clientAddress),
       'last_name': lastName,
       'options': options != null ? jsonEncode(options!.toMap()) : null,
-      'data': (extraInfo?.isNotEmpty == true) ? jsonEncode(extraInfo) : '{}',
+      'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
       'created_time': createdAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'updated_time': updatedAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'profile_version': profileVersion ?? Uuid().v4(),
@@ -198,17 +203,16 @@ class ContactSchema {
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = jsonFormat(e['data']);
 
-      if (contact.extraInfo == null) {
-        contact.extraInfo = new Map<String, dynamic>();
+      if (contact.data == null) {
+        contact.data = new Map<String, dynamic>();
       }
       if (data != null) {
-        contact.extraInfo?.addAll(data);
+        contact.data?.addAll(data);
       }
       contact.nknWalletAddress = data?['nknWalletAddress'];
       if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
         contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress));
       }
-      contact.notes = data?['notes'];
     }
 
     if (e['options']?.toString().isNotEmpty == true) {
@@ -235,6 +239,6 @@ class ContactSchema {
 
   @override
   String toString() {
-    return 'ContactSchema{id: $id, type: $type, clientAddress: $clientAddress, nknWalletAddress: $nknWalletAddress, firstName: $firstName, lastName: $lastName, notes: $notes, extraInfo: $extraInfo, avatar: $avatar, options: $options, createdTime: $createdAt, updatedTime: $updatedAt, profileVersion: $profileVersion, profileUpdateAt: $profileUpdateAt, isTop: $isTop, deviceToken: $deviceToken, notificationOpen: $notificationOpen}';
+    return 'ContactSchema{id: $id, type: $type, clientAddress: $clientAddress, nknWalletAddress: $nknWalletAddress, firstName: $firstName, lastName: $lastName, notes: $notes, extraInfo: $data, avatar: $avatar, options: $options, createdTime: $createdAt, updatedTime: $updatedAt, profileVersion: $profileVersion, profileUpdateAt: $profileUpdateAt, isTop: $isTop, deviceToken: $deviceToken, notificationOpen: $notificationOpen}';
   }
 }

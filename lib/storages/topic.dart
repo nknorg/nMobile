@@ -26,7 +26,7 @@ class TopicStorage with Tag {
       CREATE TABLE $tableName (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         topic TEXT,
-        type INTEGER DEFAULT 0,
+        type INTEGER,
         create_at INTEGER,
         update_at INTEGER,
         subscribe_at INTEGER,
