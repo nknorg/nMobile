@@ -21,8 +21,8 @@ class ContactSchema {
   OptionsSchema? options; // <-> options
   Map<String, dynamic>? extraInfo; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
 
-  DateTime? createdTime; // <-> created_time
-  DateTime? updatedTime; // <-> updated_time
+  DateTime? createdAt; // <-> created_time
+  DateTime? updatedAt; // <-> updated_time
   String? profileVersion; // <-> profile_version
   DateTime? profileExpiresAt; // <-> profile_expires_at(long) == update_at
 
@@ -41,8 +41,8 @@ class ContactSchema {
     this.extraInfo,
     this.avatar,
     this.options,
-    this.createdTime,
-    this.updatedTime,
+    this.createdAt,
+    this.updatedAt,
     this.profileVersion,
     this.profileExpiresAt,
     this.isTop = false,
@@ -61,8 +61,8 @@ class ContactSchema {
       type: contactType,
       clientAddress: clientAddress,
       nknWalletAddress: walletAddress,
-      createdTime: DateTime.now(),
-      updatedTime: DateTime.now(),
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
       profileVersion: Uuid().v4(),
     );
   }
@@ -167,8 +167,8 @@ class ContactSchema {
       'last_name': lastName,
       'options': options != null ? jsonEncode(options!.toMap()) : null,
       'data': (extraInfo?.isNotEmpty == true) ? jsonEncode(extraInfo) : '{}',
-      'created_time': createdTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'updated_time': updatedTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'created_time': createdAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'updated_time': updatedAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'profile_version': profileVersion ?? Uuid().v4(),
       'profile_expires_at': profileExpiresAt?.millisecondsSinceEpoch,
       'is_top': isTop ? 1 : 0,
@@ -186,8 +186,8 @@ class ContactSchema {
       avatar: Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null,
       firstName: e['first_name'] ?? getDefaultName(e['address']),
       lastName: e['last_name'],
-      createdTime: e['created_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['created_time']) : null,
-      updatedTime: e['updated_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['updated_time']) : null,
+      createdAt: e['created_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['created_time']) : null,
+      updatedAt: e['updated_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['updated_time']) : null,
       profileVersion: e['profile_version'],
       profileExpiresAt: e['profile_expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['profile_expires_at']) : null,
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
@@ -235,6 +235,6 @@ class ContactSchema {
 
   @override
   String toString() {
-    return 'ContactSchema{id: $id, type: $type, clientAddress: $clientAddress, nknWalletAddress: $nknWalletAddress, firstName: $firstName, lastName: $lastName, notes: $notes, extraInfo: $extraInfo, avatar: $avatar, options: $options, createdTime: $createdTime, updatedTime: $updatedTime, profileVersion: $profileVersion, profileExpiresAt: $profileExpiresAt, isTop: $isTop, deviceToken: $deviceToken, notificationOpen: $notificationOpen}';
+    return 'ContactSchema{id: $id, type: $type, clientAddress: $clientAddress, nknWalletAddress: $nknWalletAddress, firstName: $firstName, lastName: $lastName, notes: $notes, extraInfo: $extraInfo, avatar: $avatar, options: $options, createdTime: $createdAt, updatedTime: $updatedAt, profileVersion: $profileVersion, profileExpiresAt: $profileExpiresAt, isTop: $isTop, deviceToken: $deviceToken, notificationOpen: $notificationOpen}';
   }
 }
