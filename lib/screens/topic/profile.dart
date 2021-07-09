@@ -10,6 +10,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -120,7 +121,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       contactSelect: true,
     );
     if (address == null || address.isEmpty) return;
-    MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(address, _topicSchema?.fullName);
+    MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(address, _topicSchema?.topic);
     if (_msg == null) return;
     Toast.show(S.of(context).invitation_sent);
     if (_topicSchema?.isPrivate == true && _topicSchema?.isOwner(clientCommon.address) == true) {
@@ -128,46 +129,36 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     }
   }
 
-  // TODO:GG unsub
-  _deleteAction() {
+  _statusAction(bool subscribe) async {
     S _localizations = S.of(this.context);
-
-    ModalDialog.of(this.context).confirm(
-      title: _localizations.tip,
-      content: _localizations.delete_friend_confirm_title,
-      agree: Button(
-        text: _localizations.unsubscribe,
-        backgroundColor: application.theme.strongColor,
-        width: double.infinity,
-        onPressed: () async {
-          topicCommon.delete(_topicSchema?.id, notify: true);
-          Navigator.pop(this.context);
-          Navigator.pop(this.context);
-        },
-      ),
-      reject: Button(
-        text: _localizations.cancel,
-        backgroundColor: application.theme.backgroundLightColor,
-        fontColor: application.theme.fontColor2,
-        width: double.infinity,
-        onPressed: () => Navigator.pop(this.context),
-      ),
-    );
-  }
-
-  _buttonStyle({bool topRadius = true, bool botRadius = true, double topPad = 12, double botPad = 12}) {
-    return ButtonStyle(
-      backgroundColor: MaterialStateProperty.resolveWith((state) => application.theme.backgroundLightColor),
-      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16, top: topPad, bottom: botPad)),
-      shape: MaterialStateProperty.resolveWith(
-        (states) => RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            top: topRadius ? Radius.circular(12) : Radius.zero,
-            bottom: botRadius ? Radius.circular(12) : Radius.zero,
-          ),
+    Loading.show();
+    if (subscribe) {
+      TopicSchema? schema = await topicCommon.subscribe(_topicSchema?.topic);
+      Toast.show(_localizations.subscribed);
+    } else {
+      ModalDialog.of(this.context).confirm(
+        title: _localizations.tip,
+        content: _localizations.leave_group_confirm_title,
+        agree: Button(
+          text: _localizations.unsubscribe,
+          backgroundColor: application.theme.strongColor,
+          width: double.infinity,
+          onPressed: () async {
+            // TODO:GG
+            // topicCommon.delete(_topicSchema?.id, notify: true);
+            // Navigator.pop(this.context);
+            // Navigator.pop(this.context);
+          },
         ),
-      ),
-    );
+        reject: Button(
+          text: _localizations.cancel,
+          backgroundColor: application.theme.backgroundLightColor,
+          fontColor: application.theme.fontColor2,
+          width: double.infinity,
+          onPressed: () => Navigator.pop(this.context),
+        ),
+      );
+    }
   }
 
   @override
@@ -208,7 +199,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                 TextButton(
                   style: _buttonStyle(topRadius: true, botRadius: false, topPad: 15, botPad: 10),
                   onPressed: () {
-                    copyText(_topicSchema?.fullName, context: context);
+                    copyText(_topicSchema?.topic, context: context);
                   },
                   child: Row(
                     children: <Widget>[
@@ -222,7 +213,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                       SizedBox(width: 20),
                       Expanded(
                         child: Label(
-                          _topicSchema?.fullName ?? "",
+                          _topicSchema?.topic ?? "",
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor2,
                           overflow: TextOverflow.fade,
@@ -332,18 +323,40 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
             TextButton(
               style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
               onPressed: () {
-                _deleteAction();
+                _statusAction(!isJoined);
               },
               child: Row(
                 children: <Widget>[
-                  Icon(Icons.delete, color: Colors.red),
+                  Icon(
+                    isJoined ? Icons.exit_to_app : Icons.person_add,
+                    color: isJoined ? Colors.red : application.theme.primaryColor,
+                  ),
                   SizedBox(width: 10),
-                  Label(_localizations.delete, type: LabelType.bodyRegular, color: Colors.red),
+                  Label(
+                    isJoined ? _localizations.unsubscribe : _localizations.subscribe,
+                    type: LabelType.bodyRegular,
+                    color: isJoined ? Colors.red : application.theme.primaryColor,
+                  ),
                   Spacer(),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  _buttonStyle({bool topRadius = true, bool botRadius = true, double topPad = 12, double botPad = 12}) {
+    return ButtonStyle(
+      backgroundColor: MaterialStateProperty.resolveWith((state) => application.theme.backgroundLightColor),
+      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16, top: topPad, bottom: botPad)),
+      shape: MaterialStateProperty.resolveWith(
+        (states) => RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: topRadius ? Radius.circular(12) : Radius.zero,
+            bottom: botRadius ? Radius.circular(12) : Radius.zero,
+          ),
         ),
       ),
     );

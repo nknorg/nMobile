@@ -167,7 +167,17 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     } else if (contactId != null && contactId != 0) {
       this._contactSchema = await contactCommon.query(contactId);
     }
-    if (this._contactSchema == null) return;
+    if (this._contactSchema == null || this._contactSchema!.clientAddress.isEmpty) return;
+
+    // exist
+    contactCommon.queryByClientAddress(this._contactSchema?.clientAddress).then((ContactSchema? exist) async {
+      if (exist != null) return;
+      ContactSchema? added = await contactCommon.add(this._contactSchema, checkDuplicated: false);
+      if (added == null) return;
+      setState(() {
+        this._contactSchema = added;
+      });
+    });
 
     // burn
     int? burnAfterSeconds = _contactSchema?.options?.deleteAfterSeconds;
