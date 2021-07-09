@@ -64,5 +64,5 @@ String? getErrorShow(dynamic error) {
   if (error.message == ksError || error.toString() == ksError) {
     return ksError;
   }
-  return Settings.debug ? error.message : _localizations.failure;
+  return Settings.debug ? error.message : _localizations.something_went_wrong;
 }

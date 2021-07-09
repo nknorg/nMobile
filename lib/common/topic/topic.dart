@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:nmobile/common/global.dart';
-import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -38,85 +37,108 @@ class TopicCommon with Tag {
     String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
     String metaString = (meta?.isNotEmpty == true) ? jsonEncode(meta) : "";
 
-    String? topicHash = await clientCommon.client?.subscribe(
-      topic: genTopicHash(topicName),
-      duration: duration ?? Global.topicDefaultSubscribeDuration,
-      identifier: identifier,
-      meta: metaString,
-    );
-    if (topicHash != null && topicHash.isNotEmpty) {
-      logger.d("$TAG - clientSubscribe - success - topicHash:$topicHash");
-    } else {
-      logger.e("$TAG - clientSubscribe - fail - topicHash:$topicHash");
+    bool success;
+    try {
+      String? topicHash = await clientCommon.client?.subscribe(
+        topic: genTopicHash(topicName),
+        duration: duration ?? Global.topicDefaultSubscribeDuration,
+        identifier: identifier,
+        meta: metaString,
+      );
+      if (topicHash != null && topicHash.isNotEmpty) {
+        logger.d("$TAG - clientSubscribe - success - topicHash:$topicHash");
+      } else {
+        logger.e("$TAG - clientSubscribe - fail - topicHash:$topicHash");
+      }
+      success = (topicHash != null) && (topicHash.isNotEmpty);
+    } catch (e) {
+      if (e.toString().contains('duplicate subscription exist in block')) {
+        success = true;
+      } else {
+        success = false;
+      }
     }
-    return topicHash != null && topicHash.isNotEmpty;
+    return success;
+  }
+
+  Future<bool> clientUnsubscribe(String? topicName, {int? duration, int? permissionPage}) async {
+    if (topicName == null || topicName.isEmpty) return false;
+    String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
+
+    bool success;
+    try {
+      String? topicHash = await clientCommon.client?.unsubscribe(
+        topic: genTopicHash(topicName),
+        identifier: identifier,
+      );
+      if (topicHash != null && topicHash.isNotEmpty) {
+        logger.d("$TAG - clientUnsubscribe - success - topicHash:$topicHash");
+      } else {
+        logger.e("$TAG - clientUnsubscribe - fail - topicHash:$topicHash");
+      }
+      success = (topicHash != null) && (topicHash.isNotEmpty);
+    } catch (e) {
+      if (e.toString().contains('duplicate subscription exist in block') || e.toString().contains('can not append tx to txpool')) {
+        success = true;
+      } else {
+        success = false;
+      }
+    }
+    return success;
   }
 
   Future<TopicSchema?> subscribe(String? topicName) async {
     if (topicName == null || topicName.isEmpty) return null;
-    try {
-      TopicSchema? exists = await queryByTopic(topicName);
-      if (exists == null) {
-        exists = await add(TopicSchema.create(topicName), checkDuplicated: false);
-        logger.d("$TAG - subscribe - new - schema:$exists");
-        // TODO:GG subers insert
-      }
-      if (exists == null) return null;
 
-      int currentBlockHeight = 0; // TODO:GG await NKNClientCaller.fetchBlockHeight();
-      if (exists.expireBlockHeight == null || exists.expireBlockHeight! <= 0 || (exists.expireBlockHeight! - currentBlockHeight > Global.topicWarnBlockExpireHeight)) {
-        bool subSuccess = await clientSubscribe(topicName);
-        if (!subSuccess) return null;
+    TopicSchema? exists = await queryByTopic(topicName);
+    if (exists == null) {
+      exists = await add(TopicSchema.create(topicName), checkDuplicated: false);
+      logger.d("$TAG - subscribe - new - schema:$exists");
+      // TODO:GG subers insert
+    }
+    if (exists == null) return null;
 
-        var subscribeAt = DateTime.now();
-        var expireBlockHeight = currentBlockHeight + Global.topicDefaultSubscribeDuration;
-        bool setSuccess = await setExpireBlockHeight(exists.id, expireBlockHeight, subscribeAt: subscribeAt, notify: true);
-        if (setSuccess) {
-          exists.subscribeAt = subscribeAt;
-          exists.expireBlockHeight = expireBlockHeight;
-        } else {
-          logger.e("$TAG - subscribe - setExpireBlockHeight:fail - exists:$exists");
-        }
-      }
+    int currentBlockHeight = 0; // TODO:GG await NKNClientCaller.fetchBlockHeight();
+    if (exists.expireBlockHeight == null || exists.expireBlockHeight! <= 0 || (exists.expireBlockHeight! - currentBlockHeight > Global.topicWarnBlockExpireHeight)) {
+      bool joinSuccess = await clientSubscribe(topicName); // TODO:GG topic params
+      if (!joinSuccess) return null;
 
-      // TODO:GG subers get
-      if (exists.isPrivate) {
-        // await GroupDataCenter.pullPrivateSubscribers(topicName);
-        // TODO:GG topic permissions
+      var subscribeAt = DateTime.now();
+      var expireBlockHeight = currentBlockHeight + Global.topicDefaultSubscribeDuration;
+      bool setSuccess = await setExpireBlockHeight(exists.id, expireBlockHeight, subscribeAt: subscribeAt, notify: true);
+      if (setSuccess) {
+        exists.subscribeAt = subscribeAt;
+        exists.expireBlockHeight = expireBlockHeight;
       } else {
-        // await GroupDataCenter.pullSubscribersPublicChannel(topicName);
-      }
-
-      chatOutCommon.sendTopicSubscribe(topicName); // await
-      return exists;
-    } catch (e) {
-      if (e.toString().contains('duplicate subscription exist in block')) {
-        logger.i("$TAG - subscribe - duplicate - error:${e.toString()}");
-
-        TopicSchema? exists = await queryByTopic(topicName);
-        if (exists == null) {
-          exists = await add(TopicSchema.create(topicName), checkDuplicated: false);
-          logger.d("$TAG - subscribe - new - schema:$exists");
-          // TODO:GG subers insert
-        }
-        if (exists == null) return null;
-
-        // just skip clientSubscribe
-
-        // TODO:GG subers get
-        if (exists.isPrivate) {
-          // await GroupDataCenter.pullPrivateSubscribers(topicName);
-        } else {
-          // await GroupDataCenter.pullSubscribersPublicChannel(topicName);
-        }
-
-        chatOutCommon.sendTopicSubscribe(topicName); // await
-        return exists;
-      } else {
-        handleError(e);
-        return null;
+        logger.e("$TAG - subscribe - setExpireBlockHeight:fail - exists:$exists");
       }
     }
+
+    // TODO:GG subers get
+    if (exists.isPrivate) {
+      // await GroupDataCenter.pullPrivateSubscribers(topicName);
+      // TODO:GG topic permissions
+    } else {
+      // await GroupDataCenter.pullSubscribersPublicChannel(topicName);
+    }
+
+    await chatOutCommon.sendTopicSubscribe(topicName);
+    return exists;
+  }
+
+  Future<TopicSchema?> unsubscribe(String? topicName, {bool deleteDB = false}) async {
+    if (topicName == null || topicName.isEmpty) return null;
+
+    bool exitSuccess = await clientUnsubscribe(topicName); // TODO:GG topic params
+    if (!exitSuccess) return null;
+
+    await chatOutCommon.sendTopicUnSubscribe(topicName);
+
+    // TODO:GG subers del
+
+    TopicSchema? schema = await topicCommon.queryByTopic(topicName);
+    if (deleteDB) await delete(schema?.id, notify: true);
+    return schema;
   }
 
   Future<TopicSchema?> add(TopicSchema? schema, {bool checkDuplicated = true}) async {
