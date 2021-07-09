@@ -24,7 +24,7 @@ class ContactSchema {
   DateTime? createdAt; // <-> created_time
   DateTime? updatedAt; // <-> updated_time
   String? profileVersion; // <-> profile_version
-  DateTime? profileExpiresAt; // <-> profile_expires_at(long) == update_at
+  DateTime? profileUpdateAt; // <-> profile_expires_at(long) == update_at
 
   bool isTop = false; // <-> is_top
   String? deviceToken; // <-> device_token
@@ -44,7 +44,7 @@ class ContactSchema {
     this.createdAt,
     this.updatedAt,
     this.profileVersion,
-    this.profileExpiresAt,
+    this.profileUpdateAt,
     this.isTop = false,
     this.deviceToken,
     this.notificationOpen = false,
@@ -170,7 +170,7 @@ class ContactSchema {
       'created_time': createdAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'updated_time': updatedAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'profile_version': profileVersion ?? Uuid().v4(),
-      'profile_expires_at': profileExpiresAt?.millisecondsSinceEpoch,
+      'profile_expires_at': profileUpdateAt?.millisecondsSinceEpoch,
       'is_top': isTop ? 1 : 0,
       'device_token': deviceToken,
       'notification_open': notificationOpen ? 1 : 0,
@@ -189,7 +189,7 @@ class ContactSchema {
       createdAt: e['created_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['created_time']) : null,
       updatedAt: e['updated_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['updated_time']) : null,
       profileVersion: e['profile_version'],
-      profileExpiresAt: e['profile_expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['profile_expires_at']) : null,
+      profileUpdateAt: e['profile_expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['profile_expires_at']) : null,
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
       deviceToken: e['device_token'],
       notificationOpen: (e['notification_open'] != null && e['notification_open'].toString() == '1') ? true : false,
@@ -235,6 +235,6 @@ class ContactSchema {
 
   @override
   String toString() {
-    return 'ContactSchema{id: $id, type: $type, clientAddress: $clientAddress, nknWalletAddress: $nknWalletAddress, firstName: $firstName, lastName: $lastName, notes: $notes, extraInfo: $extraInfo, avatar: $avatar, options: $options, createdTime: $createdAt, updatedTime: $updatedAt, profileVersion: $profileVersion, profileExpiresAt: $profileExpiresAt, isTop: $isTop, deviceToken: $deviceToken, notificationOpen: $notificationOpen}';
+    return 'ContactSchema{id: $id, type: $type, clientAddress: $clientAddress, nknWalletAddress: $nknWalletAddress, firstName: $firstName, lastName: $lastName, notes: $notes, extraInfo: $extraInfo, avatar: $avatar, options: $options, createdTime: $createdAt, updatedTime: $updatedAt, profileVersion: $profileVersion, profileUpdateAt: $profileUpdateAt, isTop: $isTop, deviceToken: $deviceToken, notificationOpen: $notificationOpen}';
   }
 }

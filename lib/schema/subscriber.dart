@@ -1,19 +1,21 @@
 class Subscriber {
   final int? id;
-  final String? topic;
-  final String? chatId;
-  final int? indexPermiPage;
-  final int? timeCreate;
-  final int? blockHeightExpireAt;
+  final String topic;
+  final String clientAddress;
+  final DateTime? createAt;
+  final DateTime? updateAt;
+  final int? expireBlockHeight;
   final int? memberStatus;
+  final int? permPage;
 
   const Subscriber({
     this.id,
-    this.topic,
-    this.chatId,
-    this.indexPermiPage,
-    this.timeCreate,
-    this.blockHeightExpireAt,
+    required this.topic,
+    required this.clientAddress,
+    this.createAt,
+    this.updateAt,
+    this.expireBlockHeight,
     this.memberStatus,
+    this.permPage,
   });
 }

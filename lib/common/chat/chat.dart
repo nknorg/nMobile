@@ -54,11 +54,11 @@ class ChatCommon with Tag {
       exist = await contactCommon.addByType(clientAddress, ContactType.stranger, checkDuplicated: false);
     } else {
       // profile
-      if (exist.profileExpiresAt == null || DateTime.now().isAfter(exist.profileExpiresAt!.add(Settings.profileExpireDuration))) {
+      if (exist.profileUpdateAt == null || DateTime.now().isAfter(exist.profileUpdateAt!.add(Settings.profileExpireDuration))) {
         logger.d("$TAG - contactHandle - sendRequestHeader - schema:$exist");
         chatOutCommon.sendContactRequest(exist, RequestType.header); // await
       } else {
-        double between = ((exist.profileExpiresAt?.add(Settings.profileExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
+        double between = ((exist.profileUpdateAt?.add(Settings.profileExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG contactHandle - expiresAt - between:${between}s");
       }
     }
