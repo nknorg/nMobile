@@ -32,62 +32,7 @@ class TopicCommon with Tag {
     _updateController.close();
   }
 
-  Future<bool> clientSubscribe(String? topicName, {int? duration, int? permissionPage, Map<String, dynamic>? meta}) async {
-    if (topicName == null || topicName.isEmpty) return false;
-    String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
-    String metaString = (meta?.isNotEmpty == true) ? jsonEncode(meta) : "";
-
-    bool success;
-    try {
-      String? topicHash = await clientCommon.client?.subscribe(
-        topic: genTopicHash(topicName),
-        duration: duration ?? Global.topicDefaultSubscribeDuration,
-        identifier: identifier,
-        meta: metaString,
-      );
-      if (topicHash != null && topicHash.isNotEmpty) {
-        logger.d("$TAG - clientSubscribe - success - topicHash:$topicHash");
-      } else {
-        logger.e("$TAG - clientSubscribe - fail - topicHash:$topicHash");
-      }
-      success = (topicHash != null) && (topicHash.isNotEmpty);
-    } catch (e) {
-      if (e.toString().contains('duplicate subscription exist in block')) {
-        success = true;
-      } else {
-        success = false;
-      }
-    }
-    return success;
-  }
-
-  Future<bool> clientUnsubscribe(String? topicName, {int? duration, int? permissionPage}) async {
-    if (topicName == null || topicName.isEmpty) return false;
-    String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
-
-    bool success;
-    try {
-      String? topicHash = await clientCommon.client?.unsubscribe(
-        topic: genTopicHash(topicName),
-        identifier: identifier,
-      );
-      if (topicHash != null && topicHash.isNotEmpty) {
-        logger.d("$TAG - clientUnsubscribe - success - topicHash:$topicHash");
-      } else {
-        logger.e("$TAG - clientUnsubscribe - fail - topicHash:$topicHash");
-      }
-      success = (topicHash != null) && (topicHash.isNotEmpty);
-    } catch (e) {
-      if (e.toString().contains('duplicate subscription exist in block') || e.toString().contains('can not append tx to txpool')) {
-        success = true;
-      } else {
-        success = false;
-      }
-    }
-    return success;
-  }
-
-  Future<TopicSchema?> subscribe(String? topicName) async {
+  Future<TopicSchema?> subscribe(String? topicName, {double fee = 0}) async {
     if (topicName == null || topicName.isEmpty) return null;
 
     // db exist
@@ -102,7 +47,7 @@ class TopicCommon with Tag {
     // client subscribe
     int currentBlockHeight = 0; // TODO:GG await NKNClientCaller.fetchBlockHeight();
     if (exists.expireBlockHeight == null || exists.expireBlockHeight! <= 0 || (exists.expireBlockHeight! - currentBlockHeight > Global.topicWarnBlockExpireHeight)) {
-      bool joinSuccess = await clientSubscribe(topicName); // TODO:GG topic params
+      bool joinSuccess = await _clientSubscribe(topicName); // TODO:GG topic params
       if (!joinSuccess) return null;
 
       // schema refresh
@@ -135,7 +80,7 @@ class TopicCommon with Tag {
     if (topicName == null || topicName.isEmpty) return null;
 
     // client unsubscribe
-    bool exitSuccess = await clientUnsubscribe(topicName); // TODO:GG topic params
+    bool exitSuccess = await _clientUnsubscribe(topicName); // TODO:GG topic params
     if (!exitSuccess) return null;
 
     // schema refresh
@@ -155,6 +100,82 @@ class TopicCommon with Tag {
     // db delete
     if (deleteDB) await delete(exists?.id, notify: true);
     return exists;
+  }
+
+  Future<bool> _clientSubscribe(
+    String? topicName, {
+    int? permissionPage,
+    Map<String, dynamic>? meta,
+    int? duration,
+    double fee = 0,
+  }) async {
+    if (topicName == null || topicName.isEmpty) return false;
+    String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
+    String metaString = (meta?.isNotEmpty == true) ? jsonEncode(meta) : "";
+
+    bool success;
+    try {
+      String? topicHash = await clientCommon.client?.subscribe(
+        topic: genTopicHash(topicName),
+        identifier: identifier,
+        meta: metaString,
+        duration: duration ?? Global.topicDefaultSubscribeDuration,
+        fee: fee.toString(),
+      );
+      if (topicHash != null && topicHash.isNotEmpty) {
+        logger.d("$TAG - clientSubscribe - success - topicHash:$topicHash");
+      } else {
+        logger.e("$TAG - clientSubscribe - fail - topicHash:$topicHash");
+      }
+      success = (topicHash != null) && (topicHash.isNotEmpty);
+    } catch (e) {
+      if (e.toString().contains('duplicate subscription exist in block')) {
+        success = true;
+      } else {
+        success = false;
+      }
+    }
+    return success;
+  }
+
+  Future<bool> _clientUnsubscribe(
+    String? topicName, {
+    int? permissionPage,
+    double fee = 0,
+  }) async {
+    if (topicName == null || topicName.isEmpty) return false;
+    String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
+
+    bool success;
+    try {
+      String? topicHash = await clientCommon.client?.unsubscribe(
+        topic: genTopicHash(topicName),
+        identifier: identifier,
+        fee: fee.toString(),
+      );
+      if (topicHash != null && topicHash.isNotEmpty) {
+        logger.d("$TAG - clientUnsubscribe - success - topicHash:$topicHash");
+      } else {
+        logger.e("$TAG - clientUnsubscribe - fail - topicHash:$topicHash");
+      }
+      success = (topicHash != null) && (topicHash.isNotEmpty);
+    } catch (e) {
+      if (e.toString().contains('duplicate subscription exist in block') || e.toString().contains('can not append tx to txpool')) {
+        success = true;
+      } else {
+        success = false;
+      }
+    }
+    return success;
+  }
+
+  // TODO:GG topic detail [meta, expiresAt, ...]
+  Future clientGetSubscription(String? topicName, String? clientAddress) async {
+    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return false;
+    Map<String, dynamic>? result = await clientCommon.client?.getSubscription(
+      topic: genTopicHash(topicName),
+      subscriber: clientAddress,
+    );
   }
 
   Future<TopicSchema?> add(TopicSchema? schema, {bool checkDuplicated = true}) async {

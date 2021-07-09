@@ -47,7 +47,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     _feeController.text = _fee.toString();
   }
 
-  Future<bool> createOrJoinTopic(String? topicName) async {
+  Future<bool> createOrJoinTopic(String? topicName, double fee) async {
     if (topicName == null || topicName.isEmpty) return false;
     Loading.show();
 
@@ -58,7 +58,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
       }
     }
 
-    TopicSchema? _topic = await topicCommon.subscribe(topicName);
+    TopicSchema? _topic = await topicCommon.subscribe(topicName, fee: fee);
     Loading.dismiss();
 
     if (_topic == null) return false;
@@ -280,7 +280,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                 width: double.infinity,
                 text: _localizations.continue_text,
                 onPressed: () {
-                  if (_formValid) createOrJoinTopic(_topicController.text);
+                  if (_formValid) createOrJoinTopic(_topicController.text, _fee);
                 },
               ),
             ),
@@ -299,7 +299,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
         onTap: () {
           // TODO:GG auth
           // if (TimerAuth.authed) {
-          createOrJoinTopic(item.topic);
+          createOrJoinTopic(item.topic, 0);
           // } else {
           //   widget.timerAuth.onCheckAuthGetPassword(context);
           // }
