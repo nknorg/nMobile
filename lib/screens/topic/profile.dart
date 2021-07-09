@@ -89,6 +89,17 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       this._topicSchema = await topicCommon.query(topicId);
     }
     if (this._topicSchema == null) return;
+
+    // exist
+    topicCommon.queryByTopic(this._topicSchema?.topic).then((TopicSchema? exist) async {
+      if (exist != null) return;
+      TopicSchema? added = await topicCommon.add(this._topicSchema, checkDuplicated: false);
+      if (added == null) return;
+      setState(() {
+        this._topicSchema = added;
+      });
+    });
+
     setState(() {});
   }
 
@@ -131,9 +142,10 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   _statusAction(bool subscribe) async {
     S _localizations = S.of(this.context);
-    Loading.show();
     if (subscribe) {
-      TopicSchema? schema = await topicCommon.subscribe(_topicSchema?.topic);
+      Loading.show();
+      await topicCommon.subscribe(_topicSchema?.topic);
+      Loading.dismiss();
       Toast.show(_localizations.subscribed);
     } else {
       ModalDialog.of(this.context).confirm(
@@ -144,10 +156,14 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
           backgroundColor: application.theme.strongColor,
           width: double.infinity,
           onPressed: () async {
-            // TODO:GG
-            // topicCommon.delete(_topicSchema?.id, notify: true);
-            // Navigator.pop(this.context);
-            // Navigator.pop(this.context);
+            Navigator.pop(this.context);
+            Loading.show();
+            TopicSchema? deleted = await topicCommon.unsubscribe(_topicSchema?.topic, deleteDB: true);
+            Loading.dismiss();
+            if (deleted != null) {
+              Toast.show(_localizations.unsubscribed);
+              Navigator.pop(this.context);
+            }
           },
         ),
         reject: Button(
