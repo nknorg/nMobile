@@ -46,6 +46,24 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     _feeController.text = _fee.toString();
   }
 
+  Future<bool> createOrJoinTopic(String? topicName) async {
+    if (topicName == null || topicName.isEmpty) return false;
+
+    if (_privateSelected) {
+      if (!isPrivateTopicReg(topicName)) {
+        if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return false;
+        topicName = '$topicName.${clientCommon.publicKey}';
+      }
+    }
+
+    TopicSchema? _topic = await topicCommon.subscribe(topicName);
+    if (_topic == null) return false;
+    Navigator.pop(context);
+
+    ChatMessagesScreen.go(Global.appContext, _topic);
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
@@ -341,23 +359,5 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
         children: list,
       ),
     );
-  }
-
-  Future<bool> createOrJoinTopic(String? topicName) async {
-    if (topicName == null || topicName.isEmpty) return false;
-
-    if (_privateSelected) {
-      if (!isPrivateTopicReg(topicName)) {
-        if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return false;
-        topicName = '$topicName.${clientCommon.publicKey}';
-      }
-    }
-
-    TopicSchema? _topic = await topicCommon.subscribe(topicName);
-    if (_topic == null) return false;
-    Navigator.pop(context);
-
-    ChatMessagesScreen.go(Global.appContext, _topic);
-    return true;
   }
 }

@@ -83,69 +83,6 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
     }
   }
 
-  _getItemWidgets(String icon, String title, String? value, {bool backupOk = false}) {
-    if (value == null || value.isEmpty) return SizedBox.shrink();
-    S _localizations = S.of(context);
-
-    return Material(
-      color: application.theme.backgroundColor1,
-      elevation: 0,
-      child: InkWell(
-        onTap: () {
-          copyText(value, context: context);
-          if (backupOk) {
-            _setBackupFlag();
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20, top: 15),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Asset.iconSvg(
-                icon,
-                width: 24,
-                color: application.theme.primaryColor,
-              ),
-              SizedBox(width: 20),
-              Expanded(
-                flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Label(
-                          title,
-                          type: LabelType.h4,
-                          textAlign: TextAlign.start,
-                        ),
-                        Label(
-                          _localizations.copy,
-                          color: application.theme.primaryColor,
-                          type: LabelType.bodyRegular,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 15),
-                    Label(
-                      value,
-                      type: LabelType.display,
-                      maxLines: 10,
-                    ),
-                    SizedBox(height: 15),
-                    Divider(height: 1),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
@@ -248,6 +185,69 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
                   ),
                 ),
         ],
+      ),
+    );
+  }
+
+  _getItemWidgets(String icon, String title, String? value, {bool backupOk = false}) {
+    if (value == null || value.isEmpty) return SizedBox.shrink();
+    S _localizations = S.of(context);
+
+    return Material(
+      color: application.theme.backgroundColor1,
+      elevation: 0,
+      child: InkWell(
+        onTap: () {
+          copyText(value, context: context);
+          if (backupOk) {
+            _setBackupFlag();
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, top: 15),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Asset.iconSvg(
+                icon,
+                width: 24,
+                color: application.theme.primaryColor,
+              ),
+              SizedBox(width: 20),
+              Expanded(
+                flex: 1,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Label(
+                          title,
+                          type: LabelType.h4,
+                          textAlign: TextAlign.start,
+                        ),
+                        Label(
+                          _localizations.copy,
+                          color: application.theme.primaryColor,
+                          type: LabelType.bodyRegular,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 15),
+                    Label(
+                      value,
+                      type: LabelType.display,
+                      maxLines: 10,
+                    ),
+                    SizedBox(height: 15),
+                    Divider(height: 1),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
