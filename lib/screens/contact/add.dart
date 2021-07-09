@@ -119,16 +119,16 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
 
       ContactSchema schema = ContactSchema(
         clientAddress: clientAddress,
-        nknWalletAddress: walletAddress,
         type: ContactType.friend,
-        notes: note,
         // avatar: defaultAvatar,
         firstName: defaultName,
-        extraInfo: {
+        data: {
           'firstName': remarkName,
           'lastName': "",
           'avatar': remarkAvatar,
+          "notes": note,
         },
+        nknWalletAddress: walletAddress,
       );
 
       ContactSchema? exist = await contactCommon.queryByClientAddress(schema.clientAddress);

@@ -174,8 +174,8 @@ class ContactCommon with Tag {
     bool success = await _contactStorage.setRemarkProfile(
       old.id,
       {
-        'firstName': old.extraInfo?['firstName'],
-        'lasName': old.extraInfo?['lasName'],
+        'firstName': old.data?['firstName'],
+        'lasName': old.data?['lasName'],
         'avatar': avatarLocalPath,
       },
     );
@@ -190,7 +190,7 @@ class ContactCommon with Tag {
       {
         'firstName': firstName,
         'lasName': lastName,
-        'avatar': old.extraInfo?['avatar'],
+        'avatar': old.data?['avatar'],
       },
     );
     if (success && notify) queryAndNotify(old.id);
@@ -199,7 +199,7 @@ class ContactCommon with Tag {
 
   Future<bool> setNotes(ContactSchema? schema, String? notes, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
-    bool success = await _contactStorage.setNotes(schema.id, notes, oldExtraInfo: schema.extraInfo);
+    bool success = await _contactStorage.setNotes(schema.id, notes, oldExtraInfo: schema.data);
     if (success && notify) queryAndNotify(schema.id);
     return success;
   }
