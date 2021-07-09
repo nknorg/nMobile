@@ -13,19 +13,19 @@ class TopicType {
 }
 
 class TopicSchema {
-  int? id;
-  String topic;
-  int? type;
-  DateTime? createAt;
-  DateTime? updateAt;
-  DateTime? subscribeAt;
-  int? expireBlockHeight;
-  File? avatar;
-  int? count;
-  bool joined = false;
-  bool isTop = false;
-  OptionsSchema? options;
-  Map<String, dynamic>? data;
+  int? id; // (required) <-> id
+  String topic; // (required) <-> topic
+  int? type; // (required) <-> type
+  DateTime? createAt; // <-> create_at
+  DateTime? updateAt; // <-> update_at
+  DateTime? subscribeAt; // <-> subscribe_at
+  int? expireBlockHeight; // <-> expire_height
+  File? avatar; // <-> avatar
+  int? count; // <-> count
+  bool joined = false; // <-> joined
+  bool isTop = false; // <-> is_top
+  OptionsSchema? options; // <-> options
+  Map<String, dynamic>? data; // <-> data[permissions, ...]
 
   TopicSchema({
     this.id,
@@ -49,7 +49,7 @@ class TopicSchema {
 
   static TopicSchema? create(String? topic) {
     if (topic?.isNotEmpty == true) {
-      return TopicSchema(topic: topic!, createAt: DateTime.now());
+      return TopicSchema(topic: topic!, createAt: DateTime.now(), updateAt: DateTime.now());
     }
     return null;
   }
