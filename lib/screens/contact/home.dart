@@ -463,8 +463,8 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
             _onTapTopicItem(item);
           },
           bgColor: Colors.transparent,
-          bodyTitle: item.fullNameShort,
-          bodyDesc: item.fullName,
+          bodyTitle: item.topicShort,
+          bodyDesc: item.topic,
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         ),
         Divider(

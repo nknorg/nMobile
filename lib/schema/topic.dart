@@ -87,9 +87,7 @@ class TopicSchema {
     return topicName;
   }
 
-  String get fullName => topic;
-
-  String get fullNameShort {
+  String get topicShort {
     String topicNameShort;
     if (isPrivate) {
       int index = topic.lastIndexOf('.');
