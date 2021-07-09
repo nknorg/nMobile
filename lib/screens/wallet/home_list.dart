@@ -80,6 +80,72 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
     super.dispose();
   }
 
+  _onNotBackedUpTipClicked() {
+    S _localizations = S.of(context);
+    ModalDialog dialog = ModalDialog.of(context);
+    dialog.show(
+      title: _localizations.d_not_backed_up_title,
+      content: _localizations.d_not_backed_up_desc,
+      hasCloseButton: false,
+      actions: [
+        Button(
+          text: _localizations.go_backup,
+          width: double.infinity,
+          onPressed: () async {
+            await dialog.close();
+            WalletSchema? result = await BottomDialog.of(context).showWalletSelect(title: _localizations.select_asset_to_backup);
+            _readyExport(result);
+          },
+        ),
+      ],
+    );
+  }
+
+  _readyExport(WalletSchema? schema) {
+    logger.d("$TAG - backup picked - $schema");
+    if (schema == null || schema.address.isEmpty) return;
+    S _localizations = S.of(context);
+
+    authorization.getWalletPassword(schema.address, context: context).then((String? password) async {
+      if (password == null || password.isEmpty) return;
+      String keystore = await walletCommon.getKeystoreByAddress(schema.address);
+
+      if (schema.type == WalletType.eth) {
+        // TODO:GG eth export
+        // String keyStore = await ws.getKeystore();
+        // EthWallet ethWallet = Ethereum.restoreWallet(
+        //     name: ws.name, keystore: keyStore, password: password);
+        // Navigator.of(context)
+        //     .pushNamed(NknWalletExportScreen.routeName, arguments: {
+        //   'wallet': null,
+        //   'keystore': ethWallet.keystore,
+        //   'address': (await ethWallet.address).hex,
+        //   'publicKey': ethWallet.pubkeyHex,
+        //   'seed': ethWallet.privateKeyHex,
+        //   'name': ethWallet.name,
+        // });
+      } else {
+        Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
+        if (restore.address.isEmpty || restore.address != schema.address) {
+          Toast.show(_localizations.password_wrong);
+          return;
+        }
+
+        WalletExportScreen.go(
+          context,
+          WalletType.nkn,
+          schema.name,
+          restore.address,
+          hexEncode(restore.publicKey),
+          hexEncode(restore.seed),
+          restore.keystore,
+        );
+      }
+    }).onError((error, stackTrace) {
+      handleError(error, stackTrace: stackTrace);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
@@ -194,71 +260,5 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
         },
       ),
     );
-  }
-
-  _onNotBackedUpTipClicked() {
-    S _localizations = S.of(context);
-    ModalDialog dialog = ModalDialog.of(context);
-    dialog.show(
-      title: _localizations.d_not_backed_up_title,
-      content: _localizations.d_not_backed_up_desc,
-      hasCloseButton: false,
-      actions: [
-        Button(
-          text: _localizations.go_backup,
-          width: double.infinity,
-          onPressed: () async {
-            await dialog.close();
-            WalletSchema? result = await BottomDialog.of(context).showWalletSelect(title: _localizations.select_asset_to_backup);
-            _readyExport(result);
-          },
-        ),
-      ],
-    );
-  }
-
-  _readyExport(WalletSchema? schema) {
-    logger.d("$TAG - backup picked - $schema");
-    if (schema == null || schema.address.isEmpty) return;
-    S _localizations = S.of(context);
-
-    authorization.getWalletPassword(schema.address, context: context).then((String? password) async {
-      if (password == null || password.isEmpty) return;
-      String keystore = await walletCommon.getKeystoreByAddress(schema.address);
-
-      if (schema.type == WalletType.eth) {
-        // TODO:GG eth export
-        // String keyStore = await ws.getKeystore();
-        // EthWallet ethWallet = Ethereum.restoreWallet(
-        //     name: ws.name, keystore: keyStore, password: password);
-        // Navigator.of(context)
-        //     .pushNamed(NknWalletExportScreen.routeName, arguments: {
-        //   'wallet': null,
-        //   'keystore': ethWallet.keystore,
-        //   'address': (await ethWallet.address).hex,
-        //   'publicKey': ethWallet.pubkeyHex,
-        //   'seed': ethWallet.privateKeyHex,
-        //   'name': ethWallet.name,
-        // });
-      } else {
-        Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
-        if (restore.address.isEmpty || restore.address != schema.address) {
-          Toast.show(_localizations.password_wrong);
-          return;
-        }
-
-        WalletExportScreen.go(
-          context,
-          WalletType.nkn,
-          schema.name,
-          restore.address,
-          hexEncode(restore.publicKey),
-          hexEncode(restore.seed),
-          restore.keystore,
-        );
-      }
-    }).onError((error, stackTrace) {
-      handleError(error, stackTrace: stackTrace);
-    });
   }
 }

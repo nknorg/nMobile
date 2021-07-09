@@ -49,15 +49,6 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     });
   }
 
-  _buttonStyle({bool top = false, bool bottom = false}) {
-    return ButtonStyle(
-      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16)),
-      shape: MaterialStateProperty.resolveWith(
-        (states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: top ? Radius.circular(12) : Radius.zero, bottom: bottom ? Radius.circular(12) : Radius.zero)),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
@@ -251,6 +242,15 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  _buttonStyle({bool top = false, bool bottom = false}) {
+    return ButtonStyle(
+      padding: MaterialStateProperty.resolveWith((states) => EdgeInsets.only(left: 16, right: 16)),
+      shape: MaterialStateProperty.resolveWith(
+        (states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: top ? Radius.circular(12) : Radius.zero, bottom: bottom ? Radius.circular(12) : Radius.zero)),
       ),
     );
   }

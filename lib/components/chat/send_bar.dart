@@ -114,6 +114,145 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
     super.dispose();
   }
 
+  _onGesture(
+    bool isMove,
+    double offsetX,
+    double offsetY, {
+    Function? menuToggle,
+    Function? sendText,
+    Function? recordStart,
+    Function? recordSuccess,
+    Function? recordCancel,
+  }) {
+    if (0 <= offsetY && offsetY <= ActionHeight) {
+      if (0 <= offsetX && offsetX <= ActionWidth) {
+        // left
+        if (!_audioRecordVisible) {
+          // menu toggle
+          menuToggle?.call();
+        } else {
+          // record info
+          if (!isMove) {
+            recordCancel?.call();
+          } else {
+            this._onRecordLockAndPercentChange(false, 1);
+          }
+        }
+      } else if (ActionWidth < offsetX && offsetX < (Global.screenWidth() - ActionWidth)) {
+        // center
+        if (!_audioRecordVisible) {
+          // text editing
+        } else {
+          // record cancel
+          if (!isMove) {
+            recordCancel?.call();
+          } else {
+            double touchWidth = (Global.screenWidth() - ActionWidth * 2);
+            double percent = 1;
+            if ((offsetX - ActionWidth) > (touchWidth / 2)) {
+              percent = 1 - (((touchWidth / 2) - (offsetX - ActionWidth)) / (touchWidth / 2)).abs();
+            }
+            this._onRecordLockAndPercentChange(false, percent);
+          }
+        }
+      } else if ((Global.screenWidth() - ActionWidth) <= offsetX && offsetX <= Global.screenWidth()) {
+        // right
+        if (_canSendText) {
+          // text send
+          if (!isMove) {
+            sendText?.call();
+          } else {}
+        } else {
+          if (!_audioRecordVisible) {
+            // record start
+            if (!isMove) {
+              recordStart?.call();
+            } else {}
+          } else {
+            // record success
+            if (!isMove) {
+              recordSuccess?.call();
+            } else {
+              this._onRecordLockAndPercentChange(false, 0);
+            }
+          }
+        }
+      }
+    } else if (-(ChatSendBar.LockActionMargin + ChatSendBar.LockActionSize) <= offsetY && offsetY <= -ChatSendBar.LockActionMargin) {
+      if (!_audioRecordVisible) {
+        // nothing
+      } else {
+        if ((Global.screenWidth() - ChatSendBar.LockActionMargin - ChatSendBar.LockActionSize) <= offsetX && offsetX <= (Global.screenWidth() - ChatSendBar.LockActionMargin)) {
+          // lock mode
+          if (!isMove) {
+            this._onRecordLockAndPercentChange(true, 0);
+          } else {
+            this._onRecordLockAndPercentChange(true, 0);
+          }
+        } else {
+          // record cancel
+          if (!isMove) {
+            recordCancel?.call();
+          } else {
+            this._onRecordLockAndPercentChange(false, 1);
+          }
+        }
+      }
+    } else {
+      if (!_audioRecordVisible) {
+        // nothing
+      } else {
+        if (!isMove) {
+          // record cancel
+          recordCancel?.call();
+        } else {
+          this._onRecordLockAndPercentChange(false, 1);
+        }
+      }
+    }
+  }
+
+  _onRecordLockAndPercentChange(bool lockMode, double percent) {
+    bool canLock = false;
+    bool lockModeChange = _audioLockedMode != lockMode;
+    if (lockModeChange) canLock = widget.onRecordLock?.call(true, lockMode);
+    if (_audioLockedMode != lockMode || _audioDragPercent != percent) {
+      setState(() {
+        _audioLockedMode = canLock && lockMode;
+        _audioDragPercent = percent > 1 ? 1 : percent;
+      });
+    }
+  }
+
+  _onSendText() {
+    String content = _sendController.text;
+    if (content.isEmpty) return;
+    _sendController.clear();
+    setState(() {
+      _canSendText = false;
+    });
+    memoryCache.removeDraft(widget.targetId);
+    widget.onSendPress?.call(content); // await
+  }
+
+  _setAudioRecordVisible(bool visible, bool complete) async {
+    if (visible == _audioRecordVisible) return;
+    var durationMs = visible ? 0 : _audioRecordDurationMs;
+    bool lockMode = visible ? _audioLockedMode : false;
+    double percent = visible ? _audioDragPercent : 0;
+    bool canLock = widget.onRecordLock?.call(visible, lockMode);
+    this.setState(() {
+      _audioRecordVisible = visible;
+      _audioRecordDurationMs = durationMs;
+      _audioLockedMode = canLock && lockMode;
+      _audioDragPercent = percent > 1 ? 1 : percent;
+    });
+    var result = await widget.onRecordTap?.call(visible, complete, _audioRecordDurationMs);
+    if (visible && result == false) {
+      _setAudioRecordVisible(false, false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     SkinTheme _theme = application.theme;
@@ -309,144 +448,5 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
         ),
       ),
     );
-  }
-
-  _onGesture(
-    bool isMove,
-    double offsetX,
-    double offsetY, {
-    Function? menuToggle,
-    Function? sendText,
-    Function? recordStart,
-    Function? recordSuccess,
-    Function? recordCancel,
-  }) {
-    if (0 <= offsetY && offsetY <= ActionHeight) {
-      if (0 <= offsetX && offsetX <= ActionWidth) {
-        // left
-        if (!_audioRecordVisible) {
-          // menu toggle
-          menuToggle?.call();
-        } else {
-          // record info
-          if (!isMove) {
-            recordCancel?.call();
-          } else {
-            this._onRecordLockAndPercentChange(false, 1);
-          }
-        }
-      } else if (ActionWidth < offsetX && offsetX < (Global.screenWidth() - ActionWidth)) {
-        // center
-        if (!_audioRecordVisible) {
-          // text editing
-        } else {
-          // record cancel
-          if (!isMove) {
-            recordCancel?.call();
-          } else {
-            double touchWidth = (Global.screenWidth() - ActionWidth * 2);
-            double percent = 1;
-            if ((offsetX - ActionWidth) > (touchWidth / 2)) {
-              percent = 1 - (((touchWidth / 2) - (offsetX - ActionWidth)) / (touchWidth / 2)).abs();
-            }
-            this._onRecordLockAndPercentChange(false, percent);
-          }
-        }
-      } else if ((Global.screenWidth() - ActionWidth) <= offsetX && offsetX <= Global.screenWidth()) {
-        // right
-        if (_canSendText) {
-          // text send
-          if (!isMove) {
-            sendText?.call();
-          } else {}
-        } else {
-          if (!_audioRecordVisible) {
-            // record start
-            if (!isMove) {
-              recordStart?.call();
-            } else {}
-          } else {
-            // record success
-            if (!isMove) {
-              recordSuccess?.call();
-            } else {
-              this._onRecordLockAndPercentChange(false, 0);
-            }
-          }
-        }
-      }
-    } else if (-(ChatSendBar.LockActionMargin + ChatSendBar.LockActionSize) <= offsetY && offsetY <= -ChatSendBar.LockActionMargin) {
-      if (!_audioRecordVisible) {
-        // nothing
-      } else {
-        if ((Global.screenWidth() - ChatSendBar.LockActionMargin - ChatSendBar.LockActionSize) <= offsetX && offsetX <= (Global.screenWidth() - ChatSendBar.LockActionMargin)) {
-          // lock mode
-          if (!isMove) {
-            this._onRecordLockAndPercentChange(true, 0);
-          } else {
-            this._onRecordLockAndPercentChange(true, 0);
-          }
-        } else {
-          // record cancel
-          if (!isMove) {
-            recordCancel?.call();
-          } else {
-            this._onRecordLockAndPercentChange(false, 1);
-          }
-        }
-      }
-    } else {
-      if (!_audioRecordVisible) {
-        // nothing
-      } else {
-        if (!isMove) {
-          // record cancel
-          recordCancel?.call();
-        } else {
-          this._onRecordLockAndPercentChange(false, 1);
-        }
-      }
-    }
-  }
-
-  _onRecordLockAndPercentChange(bool lockMode, double percent) {
-    bool canLock = false;
-    bool lockModeChange = _audioLockedMode != lockMode;
-    if (lockModeChange) canLock = widget.onRecordLock?.call(true, lockMode);
-    if (_audioLockedMode != lockMode || _audioDragPercent != percent) {
-      setState(() {
-        _audioLockedMode = canLock && lockMode;
-        _audioDragPercent = percent > 1 ? 1 : percent;
-      });
-    }
-  }
-
-  _onSendText() {
-    String content = _sendController.text;
-    if (content.isEmpty) return;
-    _sendController.clear();
-    setState(() {
-      _canSendText = false;
-    });
-    memoryCache.removeDraft(widget.targetId);
-    widget.onSendPress?.call(content); // await
-  }
-
-  _setAudioRecordVisible(bool visible, bool complete) async {
-    if (visible == _audioRecordVisible) return;
-    var durationMs = visible ? 0 : _audioRecordDurationMs;
-    bool lockMode = visible ? _audioLockedMode : false;
-    double percent = visible ? _audioDragPercent : 0;
-    bool canLock = widget.onRecordLock?.call(visible, lockMode);
-    this.setState(() {
-      _audioRecordVisible = visible;
-      _audioRecordDurationMs = durationMs;
-      _audioLockedMode = canLock && lockMode;
-      _audioDragPercent = percent > 1 ? 1 : percent;
-    });
-    var result = await widget.onRecordTap?.call(visible, complete, _audioRecordDurationMs);
-    if (visible && result == false) {
-      _setAudioRecordVisible(false, false);
-    }
   }
 }

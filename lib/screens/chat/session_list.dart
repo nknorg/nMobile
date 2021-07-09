@@ -209,6 +209,26 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     );
   }
 
+  @override
+  Widget build(BuildContext context) {
+    if (_sessionList.isEmpty) {
+      return ChatNoMessageLayout();
+    }
+    if (_isShowTip) {
+      return Column(
+        children: [
+          _getTipView(),
+          Expanded(
+            flex: 1,
+            child: _sessionLiseView(),
+          ),
+        ],
+      );
+    } else {
+      return _sessionLiseView();
+    }
+  }
+
   _getTipView() {
     return Expanded(
       flex: 0,
@@ -313,25 +333,5 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
         );
       },
     );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_sessionList.isEmpty) {
-      return ChatNoMessageLayout();
-    }
-    if (_isShowTip) {
-      return Column(
-        children: [
-          _getTipView(),
-          Expanded(
-            flex: 1,
-            child: _sessionLiseView(),
-          ),
-        ],
-      );
-    } else {
-      return _sessionLiseView();
-    }
   }
 }
