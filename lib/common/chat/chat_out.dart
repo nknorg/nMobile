@@ -316,8 +316,8 @@ class ChatOutCommon with Tag {
   }
 
   // NO topic (1 to 1)
-  Future sendTopicInvitee(String? clientAddress, String? topicName) async {
-    if (clientAddress == null || clientAddress.isEmpty || topicName == null || topicName.isEmpty) return;
+  Future<MessageSchema?> sendTopicInvitee(String? clientAddress, String? topicName) async {
+    if (clientAddress == null || clientAddress.isEmpty || topicName == null || topicName.isEmpty) return null;
     if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
       // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
       return null;

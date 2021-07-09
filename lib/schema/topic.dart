@@ -62,7 +62,7 @@ class TopicSchema {
     return joined; // && (expireBlockHeight ?? now).isAfter(now);
   }
 
-  bool isOwner(String accountPubKey) => accountPubKey == ownerPubKey;
+  bool isOwner(String? accountPubKey) => (accountPubKey?.isNotEmpty == true) && (accountPubKey == ownerPubKey);
 
   String? get ownerPubKey {
     String? owner;
