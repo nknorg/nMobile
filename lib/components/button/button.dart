@@ -33,6 +33,18 @@ class Button extends StatelessWidget {
     this.height,
   });
 
+  @override
+  Widget build(BuildContext context) {
+    if (this.width == null && this.height == null) {
+      return _getButton();
+    }
+    return SizedBox(
+      width: this.width,
+      height: this.height,
+      child: _getButton(),
+    );
+  }
+
   Widget _getButton() {
     Widget child = this.child != null
         ? this.child!
@@ -72,17 +84,5 @@ class Button extends StatelessWidget {
             onPressed: this.disabled ? null : this.onPressed,
             style: btnStyle,
           );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (this.width == null && this.height == null) {
-      return _getButton();
-    }
-    return SizedBox(
-      width: this.width,
-      height: this.height,
-      child: _getButton(),
-    );
   }
 }

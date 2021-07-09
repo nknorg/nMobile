@@ -25,76 +25,25 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
   @override
   void onRefreshArguments() {}
 
-  Widget _createPopularItemView(int index, int length, PopularChannel model) {
-    return UnconstrainedBox(
-      child: Container(
-        width: 120,
-        margin: EdgeInsets.only(
-          left: 20,
-          right: (index == length - 1) ? 20 : 12,
-          top: 8,
-          bottom: 8,
-        ),
-        decoration: BoxDecoration(
-          color: application.theme.backgroundColor2,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(height: 16),
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: model.titleBgColor,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: Label(
-                  model.title,
-                  type: LabelType.h3,
-                  color: model.titleColor,
-                ),
-              ),
-            ),
-            SizedBox(height: 6),
-            Label(
-              model.subTitle,
-              type: LabelType.h4,
-            ),
-            SizedBox(height: 16),
-            Container(
-              width: 90,
-              padding: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
-              decoration: BoxDecoration(
-                color: application.theme.badgeColor,
-                borderRadius: BorderRadius.circular(100),
-              ),
-              child: InkWell(
-                onTap: () {
-                  // TODO:GG auth
-                  // if (TimerAuth.authed) {
-                  addTopic(model.topic);
-                  // } else {
-                  //   widget.timerAuth.onCheckAuthGetPassword(context);
-                  // }
-                },
-                child: Center(
-                  child: Text(
-                    S.of(context).subscribe,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-          ],
-        ),
-      ),
+  void addContact() async {
+    String? address = await BottomDialog.of(context).showInput(
+      title: S.of(context).new_whisper,
+      inputTip: S.of(context).send_to,
+      inputHint: S.of(context).enter_or_select_a_user_pubkey,
+      validator: Validator.of(context).identifierNKN(),
+      contactSelect: true,
     );
+    if (address?.isNotEmpty == true) {
+      var contact = await ContactSchema.createByType(address, ContactType.stranger);
+      await contactCommon.add(contact);
+      await ChatMessagesScreen.go(context, contact);
+    }
+  }
+
+  void addTopic(String? topicName) async {
+    if (topicName == null || topicName.isEmpty) return;
+    TopicSchema? _topic = await topicCommon.subscribe(topicName);
+    ChatMessagesScreen.go(context, _topic);
   }
 
   @override
@@ -174,24 +123,75 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
     );
   }
 
-  void addContact() async {
-    String? address = await BottomDialog.of(context).showInput(
-      title: S.of(context).new_whisper,
-      inputTip: S.of(context).send_to,
-      inputHint: S.of(context).enter_or_select_a_user_pubkey,
-      validator: Validator.of(context).identifierNKN(),
-      contactSelect: true,
+  Widget _createPopularItemView(int index, int length, PopularChannel model) {
+    return UnconstrainedBox(
+      child: Container(
+        width: 120,
+        margin: EdgeInsets.only(
+          left: 20,
+          right: (index == length - 1) ? 20 : 12,
+          top: 8,
+          bottom: 8,
+        ),
+        decoration: BoxDecoration(
+          color: application.theme.backgroundColor2,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(height: 16),
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: model.titleBgColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: Label(
+                  model.title,
+                  type: LabelType.h3,
+                  color: model.titleColor,
+                ),
+              ),
+            ),
+            SizedBox(height: 6),
+            Label(
+              model.subTitle,
+              type: LabelType.h4,
+            ),
+            SizedBox(height: 16),
+            Container(
+              width: 90,
+              padding: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+              decoration: BoxDecoration(
+                color: application.theme.badgeColor,
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: InkWell(
+                onTap: () {
+                  // TODO:GG auth
+                  // if (TimerAuth.authed) {
+                  addTopic(model.topic);
+                  // } else {
+                  //   widget.timerAuth.onCheckAuthGetPassword(context);
+                  // }
+                },
+                child: Center(
+                  child: Text(
+                    S.of(context).subscribe,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+          ],
+        ),
+      ),
     );
-    if (address?.isNotEmpty == true) {
-      var contact = await ContactSchema.createByType(address, ContactType.stranger);
-      await contactCommon.add(contact);
-      await ChatMessagesScreen.go(context, contact);
-    }
-  }
-
-  void addTopic(String? topicName) async {
-    if (topicName == null || topicName.isEmpty) return;
-    TopicSchema? _topic = await topicCommon.subscribe(topicName);
-    ChatMessagesScreen.go(context, _topic);
   }
 }

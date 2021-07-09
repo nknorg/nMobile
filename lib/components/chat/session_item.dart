@@ -72,6 +72,22 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     super.dispose();
   }
 
+  @override
+  Widget build(BuildContext context) {
+    SessionSchema session = widget.session;
+    Widget contentWidget = session.isTopic ? _topicWidget(session) : _contactWidget(session);
+
+    return Material(
+      color: Colors.transparent,
+      elevation: 0,
+      child: InkWell(
+        onTap: () => widget.onTap?.call(_contact ?? _topic),
+        onLongPress: () => widget.onLongPress?.call(_contact ?? _topic),
+        child: contentWidget,
+      ),
+    );
+  }
+
   Widget _unReadWidget(SessionSchema session) {
     String countStr = session.unReadCount.toString();
     if ((session.unReadCount) > 999) {
@@ -328,22 +344,6 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    SessionSchema session = widget.session;
-    Widget contentWidget = session.isTopic ? _topicWidget(session) : _contactWidget(session);
-
-    return Material(
-      color: Colors.transparent,
-      elevation: 0,
-      child: InkWell(
-        onTap: () => widget.onTap?.call(_contact ?? _topic),
-        onLongPress: () => widget.onLongPress?.call(_contact ?? _topic),
-        child: contentWidget,
       ),
     );
   }

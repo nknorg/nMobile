@@ -85,30 +85,31 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
       ),
       body: SafeArea(
         child: GestureDetector(
-            onTap: () {
-              FocusScope.of(context).requestFocus(FocusNode());
-            },
-            child: Column(
-              children: <Widget>[
-                Expanded(
-                  flex: 0,
-                  child: Tabs(
-                    controller: _tabController,
-                    titles: tabTitles,
-                  ),
+          onTap: () {
+            FocusScope.of(context).requestFocus(FocusNode());
+          },
+          child: Column(
+            children: <Widget>[
+              Expanded(
+                flex: 0,
+                child: Tabs(
+                  controller: _tabController,
+                  titles: tabTitles,
                 ),
-                Expanded(
-                  flex: 1,
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: <Widget>[
-                      WalletImportByKeystoreLayout(walletType: this._walletType),
-                      WalletImportBySeedLayout(walletType: this._walletType, qrStream: _qrController.stream),
-                    ],
-                  ),
+              ),
+              Expanded(
+                flex: 1,
+                child: TabBarView(
+                  controller: _tabController,
+                  children: <Widget>[
+                    WalletImportByKeystoreLayout(walletType: this._walletType),
+                    WalletImportBySeedLayout(walletType: this._walletType, qrStream: _qrController.stream),
+                  ],
                 ),
-              ],
-            )),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
