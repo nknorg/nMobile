@@ -18,6 +18,7 @@ class TopicStorage with Tag {
   // subscribe_at // TODO:GG rename field
   // expire_height // TODO:GG rename field
   // create_at // TODO:GG new field
+  // update_at // TODO:GG new field
   // data // TODO:GG new field
   static create(Database db, int version) async {
     // create table
@@ -27,6 +28,7 @@ class TopicStorage with Tag {
         topic TEXT,
         type INTEGER DEFAULT 0,
         create_at INTEGER,
+        update_at INTEGER,
         subscribe_at INTEGER,
         expire_height INTEGER,
         avatar TEXT,
@@ -40,8 +42,10 @@ class TopicStorage with Tag {
     await db.execute('CREATE UNIQUE INDEX unique_index_topic_topic ON $tableName (topic)');
     await db.execute('CREATE INDEX index_topic_type ON $tableName (type)');
     await db.execute('CREATE INDEX index_topic_create_at ON $tableName (create_at)');
+    await db.execute('CREATE INDEX index_topic_update_at ON $tableName (update_at)');
     await db.execute('CREATE INDEX index_topic_subscribe_at ON $tableName (subscribe_at)');
     await db.execute('CREATE INDEX index_topic_type_created_time ON $tableName (type, create_at)');
+    await db.execute('CREATE INDEX index_topic_type_update_time ON $tableName (type, update_at)');
     await db.execute('CREATE INDEX index_topic_type_subscribe_at ON $tableName (type, subscribe_at)');
   }
 
@@ -173,29 +177,6 @@ class TopicStorage with Tag {
     return null;
   }
 
-  Future<bool> setExpireBlockHeight(int? topicId, int? expireBlockHeight, {DateTime? subscribeAt}) async {
-    if (topicId == null || topicId == 0 || expireBlockHeight == null) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'subscribe_at': subscribeAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-          'expire_height': expireBlockHeight,
-        },
-        where: 'id = ?',
-        whereArgs: [topicId],
-      );
-      if (count != null && count > 0) {
-        logger.d("$TAG - setExpireBlockHeight - success - topicId:$topicId - expireBlockHeight:$expireBlockHeight");
-        return true;
-      }
-      logger.w("$TAG - setExpireBlockHeight - fail - topicId:$topicId - expireBlockHeight:$expireBlockHeight");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
-
   Future<bool> setAvatar(int? topicId, String? avatarLocalPath) async {
     if (topicId == null || topicId == 0) return false;
     try {
@@ -203,6 +184,7 @@ class TopicStorage with Tag {
         tableName,
         {
           'avatar': avatarLocalPath,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [topicId],
@@ -218,22 +200,25 @@ class TopicStorage with Tag {
     return false;
   }
 
-  Future<bool> setJoined(int? topicId, bool joined) async {
-    if (topicId == null || topicId == 0) return false;
+  Future<bool> setJoined(int? topicId, bool joined, {DateTime? subscribeAt, int? expireBlockHeight}) async {
+    if (topicId == null || topicId == 0 || expireBlockHeight == null) return false;
     try {
       int? count = await db?.update(
         tableName,
         {
           'joined': joined ? 1 : 0,
+          'subscribe_at': subscribeAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+          'expire_height': expireBlockHeight,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setJoined - success - topicId:$topicId - joined:$joined");
+        logger.d("$TAG - setJoined - success - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
         return true;
       }
-      logger.w("$TAG - setJoined - fail - topicId:$topicId - joined:$joined");
+      logger.w("$TAG - setJoined - fail - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
     } catch (e) {
       handleError(e);
     }
@@ -247,6 +232,7 @@ class TopicStorage with Tag {
         tableName,
         {
           'is_top': top ? 1 : 0,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [topicId],
@@ -269,6 +255,7 @@ class TopicStorage with Tag {
         tableName,
         {
           'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [topicId],

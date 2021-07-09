@@ -90,6 +90,7 @@ class TopicCommon with Tag {
   Future<TopicSchema?> subscribe(String? topicName) async {
     if (topicName == null || topicName.isEmpty) return null;
 
+    // db exist
     TopicSchema? exists = await queryByTopic(topicName);
     if (exists == null) {
       exists = await add(TopicSchema.create(topicName), checkDuplicated: false);
@@ -98,17 +99,20 @@ class TopicCommon with Tag {
     }
     if (exists == null) return null;
 
+    // client subscribe
     int currentBlockHeight = 0; // TODO:GG await NKNClientCaller.fetchBlockHeight();
     if (exists.expireBlockHeight == null || exists.expireBlockHeight! <= 0 || (exists.expireBlockHeight! - currentBlockHeight > Global.topicWarnBlockExpireHeight)) {
       bool joinSuccess = await clientSubscribe(topicName); // TODO:GG topic params
       if (!joinSuccess) return null;
 
+      // schema refresh
       var subscribeAt = DateTime.now();
       var expireBlockHeight = currentBlockHeight + Global.topicDefaultSubscribeDuration;
-      bool setSuccess = await setExpireBlockHeight(exists.id, expireBlockHeight, subscribeAt: subscribeAt, notify: true);
+      bool setSuccess = await setJoined(exists.id, true, expireBlockHeight: expireBlockHeight, subscribeAt: subscribeAt, notify: true);
       if (setSuccess) {
         exists.subscribeAt = subscribeAt;
         exists.expireBlockHeight = expireBlockHeight;
+        exists.joined = true;
       } else {
         logger.e("$TAG - subscribe - setExpireBlockHeight:fail - exists:$exists");
       }
@@ -122,6 +126,7 @@ class TopicCommon with Tag {
       // await GroupDataCenter.pullSubscribersPublicChannel(topicName);
     }
 
+    // message
     await chatOutCommon.sendTopicSubscribe(topicName);
     return exists;
   }
@@ -129,16 +134,27 @@ class TopicCommon with Tag {
   Future<TopicSchema?> unsubscribe(String? topicName, {bool deleteDB = false}) async {
     if (topicName == null || topicName.isEmpty) return null;
 
+    // client unsubscribe
     bool exitSuccess = await clientUnsubscribe(topicName); // TODO:GG topic params
     if (!exitSuccess) return null;
 
+    // schema refresh
+    TopicSchema? exists = await topicCommon.queryByTopic(topicName);
+    bool setSuccess = await setJoined(exists?.id, false, notify: true);
+    if (setSuccess) {
+      exists?.joined = false;
+    } else {
+      logger.e("$TAG - unsubscribe - setJoined:fail - exists:$exists");
+    }
+
+    // message
     await chatOutCommon.sendTopicUnSubscribe(topicName);
 
     // TODO:GG subers del
 
-    TopicSchema? schema = await topicCommon.queryByTopic(topicName);
-    if (deleteDB) await delete(schema?.id, notify: true);
-    return schema;
+    // db delete
+    if (deleteDB) await delete(exists?.id, notify: true);
+    return exists;
   }
 
   Future<TopicSchema?> add(TopicSchema? schema, {bool checkDuplicated = true}) async {
@@ -176,17 +192,6 @@ class TopicCommon with Tag {
     return await _topicStorage.queryByTopic(topicName);
   }
 
-  Future<bool> setExpireBlockHeight(int? topicId, int? expireBlockHeight, {DateTime? subscribeAt, bool notify = false}) async {
-    if (topicId == null || topicId == 0) return false;
-    bool success = await _topicStorage.setExpireBlockHeight(
-      topicId,
-      expireBlockHeight,
-      subscribeAt: subscribeAt ?? DateTime.now(),
-    );
-    if (success && notify) queryAndNotify(topicId);
-    return success;
-  }
-
   Future<bool> setAvatar(int? topicId, String? avatarLocalPath, {bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
     bool success = await _topicStorage.setAvatar(topicId, avatarLocalPath);
@@ -194,9 +199,14 @@ class TopicCommon with Tag {
     return success;
   }
 
-  Future<bool> setJoined(int? topicId, bool joined, {bool notify = false}) async {
+  Future<bool> setJoined(int? topicId, bool joined, {DateTime? subscribeAt, int? expireBlockHeight, bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
-    bool success = await _topicStorage.setJoined(topicId, joined);
+    bool success = await _topicStorage.setJoined(
+      topicId,
+      joined,
+      subscribeAt: subscribeAt ?? DateTime.now(),
+      expireBlockHeight: expireBlockHeight,
+    );
     if (success && notify) queryAndNotify(topicId);
     return success;
   }

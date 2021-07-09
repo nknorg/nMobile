@@ -17,6 +17,7 @@ class TopicSchema {
   String topic;
   int? type;
   DateTime? createAt;
+  DateTime? updateAt;
   DateTime? subscribeAt;
   int? expireBlockHeight;
   File? avatar;
@@ -31,6 +32,7 @@ class TopicSchema {
     required this.topic,
     this.type,
     this.createAt,
+    this.updateAt,
     this.subscribeAt,
     this.expireBlockHeight,
     this.avatar,
@@ -134,6 +136,7 @@ class TopicSchema {
       'topic': topic,
       'type': isPrivate ? TopicType.privateTopic : TopicType.publicTopic,
       'create_at': createAt?.millisecondsSinceEpoch ?? DateTime.now(),
+      'update_at': updateAt?.millisecondsSinceEpoch ?? DateTime.now(),
       'subscribe_at': subscribeAt?.millisecondsSinceEpoch,
       'expire_height': expireBlockHeight,
       'avatar': Path.getLocalFile(avatar?.path),
@@ -153,6 +156,7 @@ class TopicSchema {
       topic: e['topic'] ?? "",
       type: e['type'],
       createAt: e['create_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['create_at']) : DateTime.now(),
+      updateAt: e['update_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['update_at']) : DateTime.now(),
       subscribeAt: e['subscribe_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['subscribe_at']) : null,
       expireBlockHeight: e['expire_height'],
       avatar: Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null,
@@ -175,6 +179,6 @@ class TopicSchema {
 
   @override
   String toString() {
-    return 'TopicSchema{id: $id, topic: $topic, type: $type, createAt: $createAt, subscribeAt: $subscribeAt, expireBlockHeight: $expireBlockHeight, avatar: $avatar, count: $count, joined: $joined, isTop: $isTop, options: $options, data: $data}';
+    return 'TopicSchema{id: $id, topic: $topic, type: $type, createAt: $createAt, updateAt: $updateAt, subscribeAt: $subscribeAt, expireBlockHeight: $expireBlockHeight, avatar: $avatar, count: $count, joined: $joined, isTop: $isTop, options: $options, data: $data}';
   }
 }
