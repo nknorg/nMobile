@@ -33,13 +33,15 @@ class TopicProfileScreen extends BaseStateFulWidget {
   static const String routeName = '/topic/profile';
   static final String argTopicSchema = "topic_schema";
   static final String argTopicId = "topic_id";
+  static final String argTopicTopic = "topic_topic";
 
-  static Future go(BuildContext context, {TopicSchema? schema, int? topicId}) {
-    logger.d("TopicProfileScreen - go - id:$topicId - schema:$schema");
+  static Future go(BuildContext context, {TopicSchema? schema, int? topicId, String? topic}) {
+    logger.d("TopicProfileScreen - go - id:$topicId - topic:$topic - schema:$schema");
     if (schema == null && (topicId == null || topicId == 0)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argTopicSchema: schema,
       argTopicId: topicId,
+      argTopicTopic: topic,
     });
   }
 
@@ -81,12 +83,15 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
   _refreshTopicSchema({TopicSchema? schema}) async {
     TopicSchema? topicSchema = widget.arguments![TopicProfileScreen.argTopicSchema];
     int? topicId = widget.arguments![TopicProfileScreen.argTopicId];
+    String? topicName = widget.arguments![TopicProfileScreen.argTopicTopic];
     if (schema != null) {
       this._topicSchema = schema;
     } else if (topicSchema != null && topicSchema.id != 0) {
       this._topicSchema = topicSchema;
     } else if (topicId != null && topicId != 0) {
       this._topicSchema = await topicCommon.query(topicId);
+    } else if (topicName?.isNotEmpty == true) {
+      this._topicSchema = await topicCommon.queryByTopic(topicName);
     }
     if (this._topicSchema == null) return;
 

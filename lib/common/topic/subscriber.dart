@@ -117,8 +117,8 @@ class SubscriberCommon with Tag {
     return await _subscriberStorage.queryByTopicChatId(topic, chatId);
   }
 
-  Future<List<SubscriberSchema>> queryList(String? topic, {int? statue, String? orderBy, int? offset, int? limit}) {
-    return _subscriberStorage.queryListByTopic(topic, status: statue, orderBy: orderBy, offset: offset, limit: limit);
+  Future<List<SubscriberSchema>> queryListByTopic(String? topic, {int? status, String? orderBy, int? offset, int? limit}) {
+    return _subscriberStorage.queryListByTopic(topic, status: status, orderBy: orderBy, offset: offset, limit: limit);
   }
 
   // TODO:GG call
