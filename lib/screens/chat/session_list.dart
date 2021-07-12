@@ -220,12 +220,12 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
           _getTipView(),
           Expanded(
             flex: 1,
-            child: _sessionLiseView(),
+            child: _sessionListView(),
           ),
         ],
       );
     } else {
-      return _sessionLiseView();
+      return _sessionListView();
     }
   }
 
@@ -310,9 +310,9 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     );
   }
 
-  Widget _sessionLiseView() {
+  Widget _sessionListView() {
     return ListView.builder(
-      padding: EdgeInsets.only(bottom: 72),
+      padding: EdgeInsets.only(bottom: 60),
       controller: _scrollController,
       itemCount: _sessionList.length,
       itemBuilder: (BuildContext context, int index) {
