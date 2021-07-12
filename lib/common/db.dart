@@ -5,6 +5,7 @@ import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/session.dart';
+import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:path/path.dart';
@@ -31,11 +32,11 @@ class DB {
       onCreate: (Database db, int version) async {
         logger.i("DB - create - version:$version");
         await ContactStorage.create(db, version);
+        await DeviceInfoStorage.create(db, version);
         await TopicStorage.create(db, version);
-        // await SubscriberRepo.create(db, version);
+        await SubscriberStorage.create(db, version);
         await SessionStorage.create(db, version);
         await MessageStorage.create(db, version);
-        await DeviceInfoStorage.create(db, version);
 
         // create contact me
         try {
