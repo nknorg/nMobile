@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:nmobile/utils/utils.dart';
 
+// TODO:GG ???
 class SubscriberStatus {
   static const int DefaultNotMember = 0;
   static const int MemberInvited = 1;
@@ -37,11 +38,12 @@ class SubscriberSchema {
     return (status ?? SubscriberStatus.DefaultNotMember) > SubscriberStatus.MemberJoinedButNotInvited;
   }
 
-  static SubscriberSchema? create(String? topic, String? clientAddress) {
+  static SubscriberSchema? create(String? topic, String? clientAddress, int? status) {
     if (topic?.isNotEmpty == true && clientAddress?.isNotEmpty == true) {
       return SubscriberSchema(
         topic: topic!,
         clientAddress: clientAddress!,
+        status: status,
         createAt: DateTime.now(),
         updateAt: DateTime.now(),
       );
