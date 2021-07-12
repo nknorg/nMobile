@@ -14,7 +14,7 @@ class SubscriberStorage with Tag {
   // create_at // TODO:GG rename field
   // update_at // TODO:GG new field
   // status // TODO:GG rename + retype field
-  // perm_page // TODO:GG rename field
+  // perm_page // TODO:GG rename field + 需要放进data里吗
   // data // TODO:GG new field
   // uploaded BOOLEAN, // TODO:GG replace by status
   // upload_done BOOLEAN, // TODO:GG replace by status
