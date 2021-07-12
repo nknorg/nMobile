@@ -114,7 +114,7 @@ class SessionStorage with Tag {
         columns: ['*'],
         offset: offset ?? null,
         limit: limit ?? null,
-        orderBy: 'is_top desc, last_message_time desc',
+        orderBy: 'is_top desc, last_message_time DESC',
       );
       if (res == null || res.isEmpty) {
         logger.d("$TAG - queryListRecent - empty");
