@@ -1,15 +1,18 @@
 import 'dart:convert';
 
+import 'package:nmobile/common/contact/contact.dart';
+import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/utils/utils.dart';
 
-// TODO:GG ???
 class SubscriberStatus {
-  static const int DefaultNotMember = 0;
-  static const int MemberInvited = 1;
-  static const int MemberPublished = 2;
-  static const int MemberSubscribed = 3;
-  static const int MemberPublishRejected = 4;
-  static const int MemberJoinedButNotInvited = 5;
+  static const int None = 0;
+  static const int InvitedSend = 1;
+  static const int InvitedReceive = 2;
+  static const int InvitedAccept = 3;
+  static const int InvitedRefuse = 4;
+  // static const int SelfLeveOut = 5;
+  // static const int OwnerKickOut = 6;
 }
 
 class SubscriberSchema {
@@ -34,8 +37,19 @@ class SubscriberSchema {
     this.data,
   });
 
-  bool get joined {
-    return (status ?? SubscriberStatus.DefaultNotMember) > SubscriberStatus.MemberJoinedButNotInvited;
+  bool get isJoined {
+    return (status ?? SubscriberStatus.None) == SubscriberStatus.InvitedAccept;
+  }
+
+  bool get canBeKick {
+    int _status = (status ?? SubscriberStatus.None);
+    return _status == SubscriberStatus.InvitedSend || _status == SubscriberStatus.InvitedReceive || _status == SubscriberStatus.InvitedAccept;
+  }
+
+  Future<ContactSchema?> get contact async {
+    ContactSchema? _contact = await contactCommon.queryByClientAddress(clientAddress);
+    if (_contact != null) return _contact;
+    return await contactCommon.addByType(clientAddress, ContactType.stranger, checkDuplicated: false);
   }
 
   static SubscriberSchema? create(String? topic, String? clientAddress, int? status) {

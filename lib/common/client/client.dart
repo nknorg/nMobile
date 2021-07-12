@@ -6,6 +6,7 @@ import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -84,9 +85,6 @@ class ClientCommon with Tag {
 
       // open DB
       db = await DB.open(pubKey, password);
-      // set currentMe
-      ContactSchema? me = await contactCommon.getMe();
-      contactCommon.meUpdateSink.add(me);
       // start client connect (no await)
       _connect(wallet); // await
     } catch (e) {
@@ -101,6 +99,10 @@ class ClientCommon with Tag {
     ClientConfig config = ClientConfig(seedRPCServerAddr: await Global.getSeedRpcList());
     _statusSink.add(ClientConnectStatus.connecting);
     client = await Client.create(wallet.seed, config: config);
+
+    // check contact me
+    ContactSchema? me = (await contactCommon.getMe()) ?? (await ContactSchema.createByType(client?.address, type: ContactType.me));
+    contactCommon.meUpdateSink.add(me);
 
     // client error
     _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
