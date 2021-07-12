@@ -36,6 +36,14 @@ class SessionSchema extends Equatable {
     return type == SessionType.TOPIC;
   }
 
+  static String getTypeByMessage(MessageSchema? msg) {
+    if (msg?.isTopic == true) {
+      return SessionType.TOPIC;
+    } else {
+      return SessionType.CONTACT;
+    }
+  }
+
   Future<Map<String, dynamic>> toMap() async {
     Map<String, dynamic> map = {
       'id': id,
@@ -60,14 +68,6 @@ class SessionSchema extends Equatable {
       isTop: (e['is_top'] != null && e['is_top'] == 1) ? true : false,
     );
     return schema;
-  }
-
-  static String getTypeByMessage(MessageSchema? msg) {
-    if (msg?.isTopic == true) {
-      return SessionType.TOPIC;
-    } else {
-      return SessionType.CONTACT;
-    }
   }
 
   @override

@@ -64,7 +64,7 @@ class ContactCommon with Tag {
 
   Future<ContactSchema?> addByType(String? clientAddress, String contactType, {bool checkDuplicated = true}) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    ContactSchema? schema = await ContactSchema.createByType(clientAddress, contactType);
+    ContactSchema? schema = await ContactSchema.createByType(clientAddress, type: contactType);
     return add(schema, checkDuplicated: checkDuplicated);
   }
 

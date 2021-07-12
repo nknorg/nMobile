@@ -12,15 +12,13 @@ import 'option.dart';
 class ContactSchema {
   int? id; // <- id
   String clientAddress; // (required : (ID).PubKey) <-> address (same with client.address)
-  String type; // (required) <-> type
+  String? type; // (required) <-> type
+  DateTime? createdAt; // <-> created_time
+  DateTime? updatedAt; // <-> updated_time
+
   File? avatar; // (local_path) <-> avatar
   String? firstName; // (required : name) <-> first_name
   String? lastName; // <-> last_name
-  OptionsSchema? options; // <-> options
-  Map<String, dynamic>? data; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
-
-  DateTime? createdAt; // <-> created_time
-  DateTime? updatedAt; // <-> updated_time
   String? profileVersion; // <-> profile_version
   DateTime? profileUpdateAt; // <-> profile_expires_at(long) == update_at
 
@@ -28,25 +26,28 @@ class ContactSchema {
   String? deviceToken; // <-> device_token
   bool notificationOpen = false; // <-> notification_open
 
+  OptionsSchema? options; // <-> options
+  Map<String, dynamic>? data; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
+
   // extra
   String? nknWalletAddress; // == extraInfo[nknWalletAddress] <-> data[nknWalletAddress]
 
   ContactSchema({
     this.id,
     required this.clientAddress,
-    required this.type,
+    this.type,
+    this.createdAt,
+    this.updatedAt,
     this.avatar,
     this.firstName,
     this.lastName,
-    this.options,
-    this.data,
-    this.createdAt,
-    this.updatedAt,
     this.profileVersion,
     this.profileUpdateAt,
     this.isTop = false,
     this.deviceToken,
     this.notificationOpen = false,
+    this.options,
+    this.data,
     // extra
     this.nknWalletAddress,
   }) {
@@ -55,17 +56,29 @@ class ContactSchema {
     }
   }
 
-  static Future<ContactSchema?> createByType(String? clientAddress, String contactType) async {
+  static Future<ContactSchema?> createByType(String? clientAddress, {String? type}) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
     return ContactSchema(
       clientAddress: clientAddress,
-      type: contactType,
+      type: type,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
       profileVersion: Uuid().v4(),
       nknWalletAddress: walletAddress,
     );
+  }
+
+  static getDefaultName(String? clientAddress) {
+    if (clientAddress == null || clientAddress.isEmpty) return null;
+    String defaultName;
+    var index = clientAddress.lastIndexOf('.');
+    if (index < 0) {
+      defaultName = clientAddress.substring(0, 6);
+    } else {
+      defaultName = clientAddress.substring(0, index + 7);
+    }
+    return defaultName;
   }
 
   bool get isMe {
@@ -167,18 +180,18 @@ class ContactSchema {
     Map<String, dynamic> map = {
       'address': clientAddress,
       'type': type,
+      'created_time': createdAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'updated_time': updatedAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'avatar': Path.getLocalFile(avatar?.path),
       'first_name': firstName ?? getDefaultName(clientAddress),
       'last_name': lastName,
-      'options': options != null ? jsonEncode(options!.toMap()) : null,
-      'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
-      'created_time': createdAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'updated_time': updatedAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       'profile_version': profileVersion ?? Uuid().v4(),
       'profile_expires_at': profileUpdateAt?.millisecondsSinceEpoch,
       'is_top': isTop ? 1 : 0,
       'device_token': deviceToken,
       'notification_open': notificationOpen ? 1 : 0,
+      'options': options != null ? jsonEncode(options!.toMap()) : null,
+      'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
     };
     return map;
   }
@@ -187,18 +200,26 @@ class ContactSchema {
     var contact = ContactSchema(
       id: e['id'],
       clientAddress: e['address'] ?? "",
-      type: e['type'] ?? ContactType.stranger,
+      type: e['type'],
+      createdAt: e['created_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['created_time']) : null,
+      updatedAt: e['updated_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['updated_time']) : null,
       avatar: Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null,
       firstName: e['first_name'] ?? getDefaultName(e['address']),
       lastName: e['last_name'],
-      createdAt: e['created_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['created_time']) : null,
-      updatedAt: e['updated_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['updated_time']) : null,
       profileVersion: e['profile_version'],
       profileUpdateAt: e['profile_expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['profile_expires_at']) : null,
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
       deviceToken: e['device_token'],
       notificationOpen: (e['notification_open'] != null && e['notification_open'].toString() == '1') ? true : false,
     );
+
+    if (e['options']?.toString().isNotEmpty == true) {
+      Map<String, dynamic>? options = jsonFormat(e['options']);
+      contact.options = OptionsSchema.fromMap(options ?? Map());
+    }
+    if (contact.options == null) {
+      contact.options = OptionsSchema();
+    }
 
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = jsonFormat(e['data']);
@@ -214,31 +235,11 @@ class ContactSchema {
         contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress));
       }
     }
-
-    if (e['options']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? options = jsonFormat(e['options']);
-      contact.options = OptionsSchema.fromMap(options ?? Map());
-    }
-    if (contact.options == null) {
-      contact.options = OptionsSchema();
-    }
     return contact;
-  }
-
-  static getDefaultName(String? clientAddress) {
-    if (clientAddress == null || clientAddress.isEmpty) return null;
-    String defaultName;
-    var index = clientAddress.lastIndexOf('.');
-    if (index < 0) {
-      defaultName = clientAddress.substring(0, 6);
-    } else {
-      defaultName = clientAddress.substring(0, index + 7);
-    }
-    return defaultName;
   }
 
   @override
   String toString() {
-    return 'ContactSchema{id: $id, type: $type, clientAddress: $clientAddress, nknWalletAddress: $nknWalletAddress, firstName: $firstName, lastName: $lastName, notes: $notes, extraInfo: $data, avatar: $avatar, options: $options, createdTime: $createdAt, updatedTime: $updatedAt, profileVersion: $profileVersion, profileUpdateAt: $profileUpdateAt, isTop: $isTop, deviceToken: $deviceToken, notificationOpen: $notificationOpen}';
+    return 'ContactSchema{id: $id, clientAddress: $clientAddress, type: $type, createdAt: $createdAt, updatedAt: $updatedAt, avatar: $avatar, firstName: $firstName, lastName: $lastName, profileVersion: $profileVersion, profileUpdateAt: $profileUpdateAt, isTop: $isTop, deviceToken: $deviceToken, notificationOpen: $notificationOpen, options: $options, data: $data, nknWalletAddress: $nknWalletAddress}';
   }
 }

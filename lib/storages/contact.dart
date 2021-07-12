@@ -20,18 +20,18 @@ class ContactStorage with Tag {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         address TEXT,
         type TEXT,
+        created_time INTEGER,
+        updated_time INTEGER,
         avatar TEXT,
         first_name TEXT,
         last_name TEXT,
-        options TEXT,
-        data TEXT,
-        created_time INTEGER,
-        updated_time INTEGER,
         profile_version TEXT,
         profile_expires_at INTEGER,
         is_top BOOLEAN DEFAULT 0,
         device_token TEXT,
-        notification_open BOOLEAN DEFAULT 0
+        notification_open BOOLEAN DEFAULT 0,
+        options TEXT,
+        data TEXT
       )''';
     // create table
     db.execute(createSql);
@@ -39,10 +39,10 @@ class ContactStorage with Tag {
     // index
     await db.execute('CREATE UNIQUE INDEX unique_index_contact_address ON $tableName (address)');
     await db.execute('CREATE INDEX index_contact_type ON $tableName (type)');
-    await db.execute('CREATE INDEX index_contact_first_name ON $tableName (first_name)');
-    await db.execute('CREATE INDEX index_contact_last_name ON $tableName (last_name)');
     await db.execute('CREATE INDEX index_contact_created_time ON $tableName (created_time)');
     await db.execute('CREATE INDEX index_contact_updated_time ON $tableName (updated_time)');
+    await db.execute('CREATE INDEX index_contact_first_name ON $tableName (first_name)');
+    await db.execute('CREATE INDEX index_contact_last_name ON $tableName (last_name)');
     await db.execute('CREATE INDEX index_contact_type_created_time ON $tableName (type, created_time)');
     await db.execute('CREATE INDEX index_contact_type_update_time ON $tableName (type, updated_time)');
   }
@@ -251,6 +251,7 @@ class ContactStorage with Tag {
         tableName,
         {
           'data': (extraInfo?.isNotEmpty == true) ? jsonEncode(extraInfo) : null,
+          'updated_time': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [contactId],
@@ -326,6 +327,7 @@ class ContactStorage with Tag {
         tableName,
         {
           'is_top': top ? 1 : 0,
+          'updated_time': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'address = ?',
         whereArgs: [clientAddress],
