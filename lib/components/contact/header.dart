@@ -8,13 +8,11 @@ class ContactHeader extends StatelessWidget {
   final ContactSchema contact;
   final Widget body;
   final GestureTapCallback? onTap;
-  final bool syncData;
 
   ContactHeader({
     required this.contact,
     required this.body,
     this.onTap,
-    this.syncData = true,
   });
 
   @override

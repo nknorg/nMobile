@@ -8,13 +8,11 @@ class TopicHeader extends StatelessWidget {
   final TopicSchema topic;
   final Widget body;
   final GestureTapCallback? onTap;
-  final bool syncData;
 
   TopicHeader({
     required this.topic,
     required this.body,
     this.onTap,
-    this.syncData = true,
   });
 
   @override
