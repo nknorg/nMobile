@@ -32,6 +32,7 @@ class TopicCommon with Tag {
     _updateController.close();
   }
 
+  // TODO:GG call in invitee
   Future<TopicSchema?> subscribe(String? topicName, {double fee = 0}) async {
     if (topicName == null || topicName.isEmpty) return null;
 
@@ -170,7 +171,7 @@ class TopicCommon with Tag {
   }
 
   // TODO:GG topic detail [meta, expiresAt, ...]
-  Future clientGetSubscription(String? topicName, String? clientAddress) async {
+  Future _clientGetSubscription(String? topicName, String? clientAddress) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return false;
     Map<String, dynamic>? result = await clientCommon.client?.getSubscription(
       topic: genTopicHash(topicName),
@@ -232,6 +233,7 @@ class TopicCommon with Tag {
     return success;
   }
 
+  // TODO:GG call
   Future<bool> setCount(int? topicId, int? count, {bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
     bool success = await _topicStorage.setCount(topicId, count ?? 0);
@@ -239,6 +241,7 @@ class TopicCommon with Tag {
     return success;
   }
 
+  // TODO:GG call
   Future<bool> setTop(int? topicId, bool top, {bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
     bool success = await _topicStorage.setTop(topicId, top);
@@ -246,6 +249,7 @@ class TopicCommon with Tag {
     return success;
   }
 
+  // TODO:GG call
   Future<bool> setPermission(int? topicId, String? avatarLocalPath, {bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
     Map<String, dynamic> newData = {
