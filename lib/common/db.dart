@@ -39,7 +39,7 @@ class DB {
 
         // create contact me
         try {
-          ContactSchema? contactMe = await ContactSchema.createByType(publicKey, ContactType.me);
+          ContactSchema? contactMe = await ContactSchema.createByType(publicKey, type: ContactType.me);
           if (contactMe == null) return;
           Map<String, dynamic> contactMap = await contactMe.toMap();
           int id = await db.insert(ContactStorage.tableName, contactMap);

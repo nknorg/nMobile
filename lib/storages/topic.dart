@@ -29,11 +29,11 @@ class TopicStorage with Tag {
         type INTEGER,
         create_at INTEGER,
         update_at INTEGER,
+        joined BOOLEAN DEFAULT 0,
         subscribe_at INTEGER,
         expire_height INTEGER,
         avatar TEXT,
         count INTEGER,
-        joined BOOLEAN DEFAULT 0,
         is_top BOOLEAN DEFAULT 0,
         options TEXT,
         data TEXT
@@ -177,6 +177,34 @@ class TopicStorage with Tag {
     return null;
   }
 
+  Future<bool> setJoined(int? topicId, bool joined, {DateTime? subscribeAt, int? expireBlockHeight}) async {
+    if (topicId == null || topicId == 0) return false;
+    var values = {
+      'joined': joined ? 1 : 0,
+      'update_at': DateTime.now().millisecondsSinceEpoch,
+    };
+    if (expireBlockHeight != null) {
+      values["subscribe_at"] = subscribeAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch;
+      values["expire_height"] = expireBlockHeight;
+    }
+    try {
+      int? count = await db?.update(
+        tableName,
+        values,
+        where: 'id = ?',
+        whereArgs: [topicId],
+      );
+      if (count != null && count > 0) {
+        logger.d("$TAG - setJoined - success - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
+        return true;
+      }
+      logger.w("$TAG - setJoined - fail - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
   Future<bool> setAvatar(int? topicId, String? avatarLocalPath) async {
     if (topicId == null || topicId == 0) return false;
     try {
@@ -200,25 +228,23 @@ class TopicStorage with Tag {
     return false;
   }
 
-  Future<bool> setJoined(int? topicId, bool joined, {DateTime? subscribeAt, int? expireBlockHeight}) async {
-    if (topicId == null || topicId == 0 || expireBlockHeight == null) return false;
+  Future<bool> setCount(int? topicId, int userCount) async {
+    if (topicId == null || topicId == 0) return false;
     try {
       int? count = await db?.update(
         tableName,
         {
-          'joined': joined ? 1 : 0,
-          'subscribe_at': subscribeAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-          'expire_height': expireBlockHeight,
+          'count': userCount,
           'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setJoined - success - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
+        logger.d("$TAG - setCount - success - topicId:$topicId - count:$count");
         return true;
       }
-      logger.w("$TAG - setJoined - fail - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
+      logger.w("$TAG - setCount - fail - topicId:$topicId - count:$count");
     } catch (e) {
       handleError(e);
     }

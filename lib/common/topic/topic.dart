@@ -213,13 +213,6 @@ class TopicCommon with Tag {
     return await _topicStorage.queryByTopic(topicName);
   }
 
-  Future<bool> setAvatar(int? topicId, String? avatarLocalPath, {bool notify = false}) async {
-    if (topicId == null || topicId == 0) return false;
-    bool success = await _topicStorage.setAvatar(topicId, avatarLocalPath);
-    if (success && notify) queryAndNotify(topicId);
-    return success;
-  }
-
   Future<bool> setJoined(int? topicId, bool joined, {DateTime? subscribeAt, int? expireBlockHeight, bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
     bool success = await _topicStorage.setJoined(
@@ -228,6 +221,20 @@ class TopicCommon with Tag {
       subscribeAt: subscribeAt ?? DateTime.now(),
       expireBlockHeight: expireBlockHeight,
     );
+    if (success && notify) queryAndNotify(topicId);
+    return success;
+  }
+
+  Future<bool> setAvatar(int? topicId, String? avatarLocalPath, {bool notify = false}) async {
+    if (topicId == null || topicId == 0) return false;
+    bool success = await _topicStorage.setAvatar(topicId, avatarLocalPath);
+    if (success && notify) queryAndNotify(topicId);
+    return success;
+  }
+
+  Future<bool> setCount(int? topicId, int? count, {bool notify = false}) async {
+    if (topicId == null || topicId == 0) return false;
+    bool success = await _topicStorage.setCount(topicId, count ?? 0);
     if (success && notify) queryAndNotify(topicId);
     return success;
   }
