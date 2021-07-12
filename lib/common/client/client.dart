@@ -66,35 +66,35 @@ class ClientCommon with Tag {
   /// ******************************************************   Client   ****************************************************** ///
 
   // need close
-  Future<bool> signIn(WalletSchema? schema, {bool walletDefault = false}) async {
-    if (schema == null) return false;
+  Future<Client?> signIn(WalletSchema? schema, {bool walletDefault = false}) async {
+    if (schema == null) return null;
     // if (client != null) await close(); // async boom!!!
     try {
       String? pwd = await authorization.getWalletPassword(schema.address);
-      if (pwd == null || pwd.isEmpty) return false;
+      if (pwd == null || pwd.isEmpty) return null;
       String keystore = await walletCommon.getKeystoreByAddress(schema.address);
 
       Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd));
-      if (wallet.address.isEmpty || wallet.keystore.isEmpty) return false;
+      if (wallet.address.isEmpty || wallet.keystore.isEmpty) return null;
 
       if (walletDefault) BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(schema.address));
 
       String pubKey = hexEncode(wallet.publicKey);
       String password = hexEncode(Uint8List.fromList(sha256(wallet.seed)));
-      if (pubKey.isEmpty || password.isEmpty) return false;
+      if (pubKey.isEmpty || password.isEmpty) return null;
 
       // open DB
       db = await DB.open(pubKey, password);
       // start client connect (no await)
-      _connect(wallet); // await
+      return _connect(wallet);
     } catch (e) {
       handleError(e);
     }
-    return true;
+    return null;
   }
 
-  Future _connect(Wallet? wallet) async {
-    if (wallet == null || wallet.seed.isEmpty) return;
+  Future<Client?> _connect(Wallet? wallet) async {
+    if (wallet == null || wallet.seed.isEmpty) return null;
     // client create
     ClientConfig config = ClientConfig(seedRPCServerAddr: await Global.getSeedRpcList());
     _statusSink.add(ClientConnectStatus.connecting);
@@ -126,10 +126,12 @@ class ClientCommon with Tag {
       logger.i("$TAG - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
       await chatInCommon.onClientMessage(MessageSchema.fromReceive(event));
     });
-    await completer.future;
+
+    // await completer.future;
+    return client;
   }
 
-  signOut() async {
+  Future signOut() async {
     // status
     _statusSink.add(ClientConnectStatus.disconnected);
     // client

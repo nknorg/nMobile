@@ -52,7 +52,7 @@ class ContactCommon with Tag {
     List<ContactSchema> contacts = await _contactStorage.queryList(contactType: ContactType.me, limit: 1);
     ContactSchema? contact = contacts.isNotEmpty ? contacts[0] : await _contactStorage.queryByClientAddress(clientCommon.address);
     if (contact == null) {
-      contact = await addByType(clientCommon.address, ContactType.me);
+      contact = await addByType(clientCommon.address, ContactType.me, checkDuplicated: false);
     }
     if (contact != null) {
       if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
