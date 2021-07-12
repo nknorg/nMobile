@@ -95,10 +95,6 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? offset, int? limit}) {
-    return _contactStorage.queryList(contactType: contactType, orderBy: orderBy, offset: offset, limit: limit);
-  }
-
   Future<ContactSchema?> query(int? contactId) async {
     if (contactId == null || contactId == 0) return null;
     return await _contactStorage.query(contactId);
@@ -107,6 +103,10 @@ class ContactCommon with Tag {
   Future<ContactSchema?> queryByClientAddress(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     return await _contactStorage.queryByClientAddress(clientAddress);
+  }
+
+  Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? offset, int? limit}) {
+    return _contactStorage.queryList(contactType: contactType, orderBy: orderBy, offset: offset, limit: limit);
   }
 
   Future<int> queryCountByClientAddress(String? clientAddress) {
