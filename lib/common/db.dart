@@ -1,6 +1,3 @@
-import 'package:nmobile/common/contact/contact.dart';
-import 'package:nmobile/helpers/error.dart';
-import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
@@ -37,17 +34,6 @@ class DB {
         await SubscriberStorage.create(db, version);
         await SessionStorage.create(db, version);
         await MessageStorage.create(db, version);
-
-        // create contact me
-        try {
-          ContactSchema? contactMe = await ContactSchema.createByType(publicKey, type: ContactType.me);
-          if (contactMe == null) return;
-          Map<String, dynamic> contactMap = await contactMe.toMap();
-          int id = await db.insert(ContactStorage.tableName, contactMap);
-          logger.i("DB - contact me insert schema:${id > 0 ? contactMe : null}");
-        } catch (e) {
-          handleError(e);
-        }
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - upgrade - old:$oldVersion - new:$newVersion");
