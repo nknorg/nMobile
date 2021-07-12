@@ -11,8 +11,8 @@ import 'option.dart';
 
 class ContactSchema {
   int? id; // <- id
-  String type; // (required) <-> type
   String clientAddress; // (required : (ID).PubKey) <-> address (same with client.address)
+  String type; // (required) <-> type
   File? avatar; // (local_path) <-> avatar
   String? firstName; // (required : name) <-> first_name
   String? lastName; // <-> last_name
@@ -33,8 +33,8 @@ class ContactSchema {
 
   ContactSchema({
     this.id,
-    required this.type,
     required this.clientAddress,
+    required this.type,
     this.avatar,
     this.firstName,
     this.lastName,
@@ -59,8 +59,8 @@ class ContactSchema {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
     return ContactSchema(
-      type: contactType,
       clientAddress: clientAddress,
+      type: contactType,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
       profileVersion: Uuid().v4(),
@@ -165,8 +165,8 @@ class ContactSchema {
     }
 
     Map<String, dynamic> map = {
-      'type': type,
       'address': clientAddress,
+      'type': type,
       'avatar': Path.getLocalFile(avatar?.path),
       'first_name': firstName ?? getDefaultName(clientAddress),
       'last_name': lastName,
@@ -186,8 +186,8 @@ class ContactSchema {
   static Future<ContactSchema> fromMap(Map e) async {
     var contact = ContactSchema(
       id: e['id'],
-      type: e['type'] ?? ContactType.stranger,
       clientAddress: e['address'] ?? "",
+      type: e['type'] ?? ContactType.stranger,
       avatar: Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null,
       firstName: e['first_name'] ?? getDefaultName(e['address']),
       lastName: e['last_name'],
