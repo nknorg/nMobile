@@ -156,7 +156,7 @@ class TopicStorage with Tag {
         whereArgs: topicType != null ? [topicType] : null,
         offset: offset ?? null,
         limit: limit ?? null,
-        orderBy: orderBy ?? 'create_at desc',
+        orderBy: orderBy ?? 'create_at DESC',
       );
       if (res == null || res.isEmpty) {
         logger.d("$TAG - queryList - empty - topicType:$topicType");

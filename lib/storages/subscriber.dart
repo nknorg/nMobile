@@ -42,6 +42,7 @@ class SubscriberStorage with Tag {
     await db.execute('CREATE INDEX index_subscriber_topic_update_at ON $tableName (topic, update_at)');
     await db.execute('CREATE INDEX index_subscriber_topic_status_created_at ON $tableName (topic, status, create_at)');
     await db.execute('CREATE INDEX index_subscriber_topic_status_update_at ON $tableName (topic, status, update_at)');
+    await db.execute('CREATE INDEX index_subscriber_topic_perm ON $tableName (topic, perm_page)');
   }
 
   Future<SubscriberSchema?> insert(SubscriberSchema? schema, {bool checkDuplicated = true}) async {
@@ -100,6 +101,25 @@ class SubscriberStorage with Tag {
     return false;
   }
 
+  Future<int> deleteByTopic(String? topic) async {
+    if (topic == null || topic.isEmpty) return 0;
+    try {
+      int? count = await db?.delete(
+        tableName,
+        where: 'topic = ?',
+        whereArgs: [topic],
+      );
+      if (count != null && count > 0) {
+        logger.d("$TAG - deleteByTopic - success - topic:$topic");
+        return count;
+      }
+      logger.w("$TAG - deleteByTopic - fail - topic:$topic");
+    } catch (e) {
+      handleError(e);
+    }
+    return 0;
+  }
+
   Future<SubscriberSchema?> query(int? subscriberId) async {
     if (subscriberId == null || subscriberId == 0) return null;
     try {
@@ -143,6 +163,7 @@ class SubscriberStorage with Tag {
   }
 
   Future<List<SubscriberSchema>> queryListByTopic(String? topic, {int? status, String? orderBy, int? limit, int? offset}) async {
+    if (topic == null || topic.isEmpty) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
@@ -151,7 +172,7 @@ class SubscriberStorage with Tag {
         whereArgs: status != null ? [topic, status] : [topic],
         offset: offset ?? null,
         limit: limit ?? null,
-        orderBy: orderBy ?? 'create_at asc',
+        orderBy: orderBy ?? 'create_at ASC',
       );
       if (res == null || res.isEmpty) {
         logger.d("$TAG - queryListByTopic - empty - topic:$topic - status:$status");
@@ -165,6 +186,34 @@ class SubscriberStorage with Tag {
         if (subscriber != null) results.add(subscriber);
       });
       logger.d("$TAG - queryListByTopic - items:$logText");
+      return results;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
+  }
+
+  Future<List<SubscriberSchema>> queryListByTopicPerm(String? topic, int? permPage) async {
+    if (topic == null || topic.isEmpty || permPage == null) return [];
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['*'],
+        where: 'topic = ? AND perm_page >= ?',
+        whereArgs: [topic, permPage],
+      );
+      if (res == null || res.isEmpty) {
+        logger.d("$TAG - queryListByTopicPerm - empty - topic:$topic - permPage:$permPage");
+        return [];
+      }
+      List<SubscriberSchema> results = <SubscriberSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        logText += "\n$map";
+        SubscriberSchema? subscriber = SubscriberSchema.fromMap(map);
+        if (subscriber != null) results.add(subscriber);
+      });
+      logger.d("$TAG - queryListByTopicPerm - items:$logText");
       return results;
     } catch (e) {
       handleError(e);

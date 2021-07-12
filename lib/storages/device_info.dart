@@ -59,7 +59,7 @@ class DeviceInfoStorage with Tag {
         whereArgs: [contactId],
         offset: 0,
         limit: 1,
-        orderBy: 'update_at desc',
+        orderBy: 'update_at DESC',
       );
       if (res != null && res.length > 0) {
         DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
@@ -83,7 +83,7 @@ class DeviceInfoStorage with Tag {
         whereArgs: [contactId, deviceId],
         offset: 0,
         limit: 1,
-        orderBy: 'update_at desc',
+        orderBy: 'update_at DESC',
       );
       if (res != null && res.length > 0) {
         DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);

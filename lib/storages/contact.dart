@@ -146,7 +146,7 @@ class ContactStorage with Tag {
   }
 
   Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? limit, int? offset}) async {
-    orderBy = orderBy ?? (contactType == ContactType.friend ? 'created_time desc' : 'updated_time desc');
+    orderBy = orderBy ?? (contactType == ContactType.friend ? 'created_time DESC' : 'updated_time DESC');
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,

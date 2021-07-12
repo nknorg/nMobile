@@ -108,6 +108,14 @@ class SubscriberCommon with Tag {
     return deleted;
   }
 
+  // TODO:GG call
+  Future<int> deleteByTopic(String? topic) async {
+    if (topic == null || topic.isEmpty) return 0;
+    int count = await _subscriberStorage.deleteByTopic(topic);
+    // if (deleted) _deleteSink.add(subscriberId);
+    return count;
+  }
+
   Future<SubscriberSchema?> query(int? subscriberId) {
     return _subscriberStorage.query(subscriberId);
   }
@@ -119,6 +127,10 @@ class SubscriberCommon with Tag {
 
   Future<List<SubscriberSchema>> queryListByTopic(String? topic, {int? status, String? orderBy, int? offset, int? limit}) {
     return _subscriberStorage.queryListByTopic(topic, status: status, orderBy: orderBy, offset: offset, limit: limit);
+  }
+
+  Future<List<SubscriberSchema>> queryListByTopicPerm(String? topic, int? permPage) {
+    return _subscriberStorage.queryListByTopicPerm(topic, permPage);
   }
 
   // TODO:GG call

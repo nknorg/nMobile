@@ -241,7 +241,7 @@ class MessageStorage with Tag {
         whereArgs: [targetId, ContentType.piece], // , ContentType.receipt],
         offset: offset,
         limit: limit,
-        orderBy: 'send_time desc',
+        orderBy: 'send_time DESC',
       );
       if (res == null || res.isEmpty) {
         logger.d("$TAG - queryListCanReadByTargetId - empty - targetId:$targetId");
