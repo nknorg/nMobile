@@ -250,7 +250,7 @@ class TopicCommon with Tag {
   }
 
   // TODO:GG call
-  Future<bool> setPermission(int? topicId, String? avatarLocalPath, {bool notify = false}) async {
+  Future<bool> setPermission(int? topicId, {bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
     Map<String, dynamic> newData = {
       'permissions': "",
