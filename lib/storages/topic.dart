@@ -105,36 +105,6 @@ class TopicStorage with Tag {
     return false;
   }
 
-  Future<List<TopicSchema>> queryList({String? topicType, String? orderBy, int? limit, int? offset}) async {
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        where: topicType != null ? 'type = ?' : null,
-        whereArgs: topicType != null ? [topicType] : null,
-        offset: offset ?? null,
-        limit: limit ?? null,
-        orderBy: orderBy ?? 'create_at desc',
-      );
-      if (res == null || res.isEmpty) {
-        logger.d("$TAG - queryList - empty - topicType:$topicType");
-        return [];
-      }
-      List<TopicSchema> results = <TopicSchema>[];
-      String logText = '';
-      res.forEach((map) {
-        logText += "\n$map";
-        TopicSchema? topic = TopicSchema.fromMap(map);
-        if (topic != null) results.add(topic);
-      });
-      logger.d("$TAG - queryList - items:$logText");
-      return results;
-    } catch (e) {
-      handleError(e);
-    }
-    return [];
-  }
-
   Future<TopicSchema?> query(int? topicId) async {
     if (topicId == null || topicId == 0) return null;
     try {
@@ -175,6 +145,36 @@ class TopicStorage with Tag {
       handleError(e);
     }
     return null;
+  }
+
+  Future<List<TopicSchema>> queryList({String? topicType, String? orderBy, int? limit, int? offset}) async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['*'],
+        where: topicType != null ? 'type = ?' : null,
+        whereArgs: topicType != null ? [topicType] : null,
+        offset: offset ?? null,
+        limit: limit ?? null,
+        orderBy: orderBy ?? 'create_at desc',
+      );
+      if (res == null || res.isEmpty) {
+        logger.d("$TAG - queryList - empty - topicType:$topicType");
+        return [];
+      }
+      List<TopicSchema> results = <TopicSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        logText += "\n$map";
+        TopicSchema? topic = TopicSchema.fromMap(map);
+        if (topic != null) results.add(topic);
+      });
+      logger.d("$TAG - queryList - items:$logText");
+      return results;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
   }
 
   Future<bool> setJoined(int? topicId, bool joined, {DateTime? subscribeAt, int? expireBlockHeight}) async {

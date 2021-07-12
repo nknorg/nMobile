@@ -103,37 +103,6 @@ class ContactStorage with Tag {
     return false;
   }
 
-  Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? limit, int? offset}) async {
-    orderBy = orderBy ?? (contactType == ContactType.friend ? 'created_time desc' : 'updated_time desc');
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        where: contactType != null ? 'type = ?' : null,
-        whereArgs: contactType != null ? [contactType] : null,
-        offset: offset ?? null,
-        limit: limit ?? null,
-        orderBy: orderBy,
-      );
-      if (res == null || res.isEmpty) {
-        logger.d("$TAG - queryList - empty - contactType:$contactType");
-        return [];
-      }
-      List<Future<ContactSchema>> futures = <Future<ContactSchema>>[];
-      String logText = '';
-      res.forEach((map) {
-        logText += "\n$map";
-        futures.add(ContactSchema.fromMap(map));
-      });
-      List<ContactSchema> results = await Future.wait(futures);
-      logger.d("$TAG - queryList - items:$logText");
-      return results;
-    } catch (e) {
-      handleError(e);
-    }
-    return [];
-  }
-
   Future<ContactSchema?> query(int? contactId) async {
     if (contactId == null || contactId == 0) return null;
     try {
@@ -174,6 +143,37 @@ class ContactStorage with Tag {
       handleError(e);
     }
     return null;
+  }
+
+  Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? limit, int? offset}) async {
+    orderBy = orderBy ?? (contactType == ContactType.friend ? 'created_time desc' : 'updated_time desc');
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['*'],
+        where: contactType != null ? 'type = ?' : null,
+        whereArgs: contactType != null ? [contactType] : null,
+        offset: offset ?? null,
+        limit: limit ?? null,
+        orderBy: orderBy,
+      );
+      if (res == null || res.isEmpty) {
+        logger.d("$TAG - queryList - empty - contactType:$contactType");
+        return [];
+      }
+      List<Future<ContactSchema>> futures = <Future<ContactSchema>>[];
+      String logText = '';
+      res.forEach((map) {
+        logText += "\n$map";
+        futures.add(ContactSchema.fromMap(map));
+      });
+      List<ContactSchema> results = await Future.wait(futures);
+      logger.d("$TAG - queryList - items:$logText");
+      return results;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
   }
 
   Future<int> queryCountByClientAddress(String? clientAddress) async {

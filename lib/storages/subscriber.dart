@@ -100,36 +100,6 @@ class SubscriberStorage with Tag {
     return false;
   }
 
-  Future<List<SubscriberSchema>> queryListByTopic(String? topic, {int? status, String? orderBy, int? limit, int? offset}) async {
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        where: status != null ? 'topic = ? AND status >= ?' : 'topic = ?',
-        whereArgs: status != null ? [topic, status] : [topic],
-        offset: offset ?? null,
-        limit: limit ?? null,
-        orderBy: orderBy ?? 'create_at asc',
-      );
-      if (res == null || res.isEmpty) {
-        logger.d("$TAG - queryListByTopic - empty - topic:$topic - status:$status");
-        return [];
-      }
-      List<SubscriberSchema> results = <SubscriberSchema>[];
-      String logText = '';
-      res.forEach((map) {
-        logText += "\n$map";
-        SubscriberSchema? subscriber = SubscriberSchema.fromMap(map);
-        if (subscriber != null) results.add(subscriber);
-      });
-      logger.d("$TAG - queryListByTopic - items:$logText");
-      return results;
-    } catch (e) {
-      handleError(e);
-    }
-    return [];
-  }
-
   Future<SubscriberSchema?> query(int? subscriberId) async {
     if (subscriberId == null || subscriberId == 0) return null;
     try {
@@ -170,6 +140,36 @@ class SubscriberStorage with Tag {
       handleError(e);
     }
     return null;
+  }
+
+  Future<List<SubscriberSchema>> queryListByTopic(String? topic, {int? status, String? orderBy, int? limit, int? offset}) async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['*'],
+        where: status != null ? 'topic = ? AND status >= ?' : 'topic = ?',
+        whereArgs: status != null ? [topic, status] : [topic],
+        offset: offset ?? null,
+        limit: limit ?? null,
+        orderBy: orderBy ?? 'create_at asc',
+      );
+      if (res == null || res.isEmpty) {
+        logger.d("$TAG - queryListByTopic - empty - topic:$topic - status:$status");
+        return [];
+      }
+      List<SubscriberSchema> results = <SubscriberSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        logText += "\n$map";
+        SubscriberSchema? subscriber = SubscriberSchema.fromMap(map);
+        if (subscriber != null) results.add(subscriber);
+      });
+      logger.d("$TAG - queryListByTopic - items:$logText");
+      return results;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
   }
 
   Future<bool> setStatus(int? subscriberId, int? status) async {
