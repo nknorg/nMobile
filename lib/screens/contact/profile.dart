@@ -39,13 +39,15 @@ class ContactProfileScreen extends BaseStateFulWidget {
   static const String routeName = '/contact/profile';
   static final String argContactSchema = "contact_schema";
   static final String argContactId = "contact_id";
+  static final String argContactClientAddress = "contact_client_address";
 
-  static Future go(BuildContext context, {ContactSchema? schema, int? contactId}) {
-    logger.d("ContactProfileScreen - go - id:$contactId - schema:$schema");
+  static Future go(BuildContext context, {ContactSchema? schema, int? contactId, String? clientAddress}) {
+    logger.d("ContactProfileScreen - go - id:$contactId - clientAddress:$clientAddress - schema:$schema");
     if (schema == null && (contactId == null || contactId == 0)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argContactSchema: schema,
       argContactId: contactId,
+      argContactClientAddress: clientAddress,
     });
   }
 
@@ -160,12 +162,15 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   _refreshContactSchema({ContactSchema? schema}) async {
     ContactSchema? contactSchema = widget.arguments![ContactProfileScreen.argContactSchema];
     int? contactId = widget.arguments![ContactProfileScreen.argContactId];
+    String? contactClientAddress = widget.arguments![ContactProfileScreen.argContactClientAddress];
     if (schema != null) {
       this._contactSchema = schema;
     } else if (contactSchema != null && contactSchema.id != 0) {
       this._contactSchema = contactSchema;
     } else if (contactId != null && contactId != 0) {
       this._contactSchema = await contactCommon.query(contactId);
+    } else if (contactClientAddress?.isNotEmpty == true) {
+      this._contactSchema = await contactCommon.queryByClientAddress(contactClientAddress);
     }
     if (this._contactSchema == null || this._contactSchema!.clientAddress.isEmpty) return;
 
