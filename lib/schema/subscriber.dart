@@ -17,6 +17,7 @@ class SubscriberSchema {
   String clientAddress; // (required) <-> chat_id
   DateTime? createAt; // <-> create_at
   DateTime? updateAt; // <-> update_at
+
   int? status; // <-> status
   int? permPage; // <-> perm_page
   Map<String, dynamic>? data; // <-> data[...]
@@ -72,8 +73,18 @@ class SubscriberSchema {
       updateAt: e['update_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['update_at']) : DateTime.now(),
       status: e['status'],
       permPage: e['perm_page'],
-      data: (e['data']?.toString().isNotEmpty == true) ? jsonFormat(e['data']) : null,
     );
+
+    if (e['data']?.toString().isNotEmpty == true) {
+      Map<String, dynamic>? data = jsonFormat(e['data']);
+
+      if (subscribeSchema.data == null) {
+        subscribeSchema.data = new Map<String, dynamic>();
+      }
+      if (data != null) {
+        subscribeSchema.data?.addAll(data);
+      }
+    }
     return subscribeSchema;
   }
 

@@ -53,7 +53,7 @@ class TopicCommon with Tag {
       // schema refresh
       var subscribeAt = DateTime.now();
       var expireBlockHeight = currentBlockHeight + Global.topicDefaultSubscribeDuration;
-      bool setSuccess = await setJoined(exists.id, true, expireBlockHeight: expireBlockHeight, subscribeAt: subscribeAt, notify: true);
+      bool setSuccess = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireBlockHeight, notify: true);
       if (setSuccess) {
         exists.subscribeAt = subscribeAt;
         exists.expireBlockHeight = expireBlockHeight;
@@ -123,9 +123,9 @@ class TopicCommon with Tag {
         fee: fee.toString(),
       );
       if (topicHash != null && topicHash.isNotEmpty) {
-        logger.d("$TAG - clientSubscribe - success - topicHash:$topicHash");
+        logger.d("$TAG - _clientSubscribe - success - topicHash:$topicHash");
       } else {
-        logger.e("$TAG - clientSubscribe - fail - topicHash:$topicHash");
+        logger.e("$TAG - _clientSubscribe - fail - topicHash:$topicHash");
       }
       success = (topicHash != null) && (topicHash.isNotEmpty);
     } catch (e) {
@@ -154,9 +154,9 @@ class TopicCommon with Tag {
         fee: fee.toString(),
       );
       if (topicHash != null && topicHash.isNotEmpty) {
-        logger.d("$TAG - clientUnsubscribe - success - topicHash:$topicHash");
+        logger.d("$TAG - _clientUnsubscribe - success - topicHash:$topicHash");
       } else {
-        logger.e("$TAG - clientUnsubscribe - fail - topicHash:$topicHash");
+        logger.e("$TAG - _clientUnsubscribe - fail - topicHash:$topicHash");
       }
       success = (topicHash != null) && (topicHash.isNotEmpty);
     } catch (e) {
