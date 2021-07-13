@@ -38,9 +38,9 @@ class SubscriberStorage with Tag {
     await db.execute('CREATE INDEX index_subscriber_topic ON $tableName (topic)');
     await db.execute('CREATE INDEX index_subscriber_create_at ON $tableName (create_at)');
     await db.execute('CREATE INDEX index_subscriber_update_at ON $tableName (update_at)');
-    await db.execute('CREATE INDEX index_subscriber_topic_created_at ON $tableName (topic, create_at)');
+    await db.execute('CREATE INDEX index_subscriber_topic_create_at ON $tableName (topic, create_at)');
     await db.execute('CREATE INDEX index_subscriber_topic_update_at ON $tableName (topic, update_at)');
-    await db.execute('CREATE INDEX index_subscriber_topic_status_created_at ON $tableName (topic, status, create_at)');
+    await db.execute('CREATE INDEX index_subscriber_topic_status_create_at ON $tableName (topic, status, create_at)');
     await db.execute('CREATE INDEX index_subscriber_topic_status_update_at ON $tableName (topic, status, update_at)');
     await db.execute('CREATE INDEX index_subscriber_topic_perm ON $tableName (topic, perm_page)');
   }
