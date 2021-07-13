@@ -2,22 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/contact/avatar.dart';
-import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
-import 'package:nmobile/utils/asset.dart';
 
 class SubscriberItem extends BaseStateFulWidget {
-  final TopicSchema topic;
   final SubscriberSchema subscriber;
+  final TopicSchema? topic;
   final Widget? body;
   final String? bodyTitle;
   final String? bodyDesc;
-  final GestureTapCallback? onTap;
+  final Function(ContactSchema?)? onTap;
   final bool onTapWave;
   final Color? bgColor;
   final BorderRadius? radius;
@@ -67,13 +64,17 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                 borderRadius: this.widget.radius,
                 child: InkWell(
                   borderRadius: this.widget.radius,
-                  onTap: this.widget.onTap,
+                  onTap: () {
+                    this.widget.onTap?.call(this.contact);
+                  },
                   child: _getItemBody(),
                 ),
               )
             : InkWell(
                 borderRadius: this.widget.radius,
-                onTap: this.widget.onTap,
+                onTap: () {
+                  this.widget.onTap?.call(this.contact);
+                },
                 child: _getItemBody(),
               )
         : _getItemBody();
@@ -117,7 +118,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                                 ),
                               ],
                             )
-                          : _getNameLabels(this.widget.topic, this.widget.subscriber, this.contact),
+                          : _getNameLabels(this.widget.subscriber, this.widget.topic, this.contact),
                       SizedBox(height: 6),
                       Label(
                         this.widget.bodyDesc ?? this.widget.subscriber.clientAddress,
@@ -134,7 +135,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     );
   }
 
-  Widget _getNameLabels(TopicSchema topic, SubscriberSchema subscriber, ContactSchema? contact) {
+  Widget _getNameLabels(SubscriberSchema subscriber, TopicSchema? topic, ContactSchema? contact) {
     S _localizations = S.of(context);
 
     String displayName = contact?.displayName ?? " ";
@@ -146,9 +147,9 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     if (clientAddress == clientCommon.address) {
       marks.add(_localizations.you);
     }
-    if (topic.isOwner(clientAddress)) {
+    if (topic?.isOwner(clientAddress) == true) {
       marks.add(_localizations.owner);
-    } else if (topic.isOwner(clientCommon.address)) {
+    } else if (topic?.isOwner(clientCommon.address) == true) {
       if (status == SubscriberStatus.InvitedSend) {
         marks.add(_localizations.invitation_sent);
       } else if (status == SubscriberStatus.InvitedReceive) {
@@ -181,57 +182,58 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     );
   }
 
-  Widget _getTailAction(TopicSchema topic, SubscriberSchema subscriber, ContactSchema? contact) {
-    if (!topic.isPrivate) return SizedBox.shrink();
-    if (!topic.isOwner(clientCommon.address)) return SizedBox.shrink();
-    if (subscriber.clientAddress == clientCommon.address) return SizedBox.shrink();
-    return InkWell(
-      child: Padding(
-        padding: EdgeInsets.only(left: 6, right: 16),
-        child: subscriber.canBeKick
-            ? Icon(
-                Icons.block,
-                size: 20,
-                color: application.theme.fallColor,
-              )
-            : Asset.iconSvg(
-                'check',
-                width: 20,
-                height: double.infinity,
-                color: application.theme.successColor,
-              ),
-      ),
-      onTap: () async {
-        if (subscriber.canBeKick) {
-          Loading.show();
-          bool rejectResult = await GroupDataCenter.updatePrivatePermissionList(widget.topic.topic, member.chatId, false);
-          if (rejectResult == false) {
-            Toast.show(S.of(context).something_went_wrong);
-            return;
-          }
-          Loading.dismiss();
-          Toast.show(S.of(context).rejected);
-          _refreshMemberList();
-        } else {
-          if (subscriber.status != SubscriberStatus.InvitedReceive) {
-            Loading.show();
-            bool acceptResult = await GroupDataCenter.updatePrivatePermissionList(widget.topic.topic, member.chatId, true);
-            if (acceptResult == false) {
-              Toast.show(S.of(context).something_went_wrong);
-              return;
-            }
-          }
-          Loading.dismiss();
-          chatOutCommon.sendTopicInvitee(subscriber.clientAddress, topic.topic).then((value) {
-            if (value != null) {
-              Toast.show(S.of(context).invitation_sent);
-            }
-          });
-
-          _refreshMemberList();
-        }
-      },
-      // onTap: canKick ? rejectAction : acceptAction,
-    );
-  }
+  // TODO:GG subers perm
+  // Widget _getTailAction(TopicSchema topic, SubscriberSchema subscriber, ContactSchema? contact) {
+  //   if (!topic.isPrivate) return SizedBox.shrink();
+  //   if (!topic.isOwner(clientCommon.address)) return SizedBox.shrink();
+  //   if (subscriber.clientAddress == clientCommon.address) return SizedBox.shrink();
+  //   return InkWell(
+  //     child: Padding(
+  //       padding: EdgeInsets.only(left: 6, right: 16),
+  //       child: subscriber.canBeKick
+  //           ? Icon(
+  //               Icons.block,
+  //               size: 20,
+  //               color: application.theme.fallColor,
+  //             )
+  //           : Asset.iconSvg(
+  //               'check',
+  //               width: 20,
+  //               height: double.infinity,
+  //               color: application.theme.successColor,
+  //             ),
+  //     ),
+  //     onTap: () async {
+  //       if (subscriber.canBeKick) {
+  //         Loading.show();
+  //         bool rejectResult = await GroupDataCenter.updatePrivatePermissionList(widget.topic.topic, member.chatId, false);
+  //         if (rejectResult == false) {
+  //           Toast.show(S.of(context).something_went_wrong);
+  //           return;
+  //         }
+  //         Loading.dismiss();
+  //         Toast.show(S.of(context).rejected);
+  //         _refreshMemberList();
+  //       } else {
+  //         if (subscriber.status != SubscriberStatus.InvitedReceive) {
+  //           Loading.show();
+  //           bool acceptResult = await GroupDataCenter.updatePrivatePermissionList(widget.topic.topic, member.chatId, true);
+  //           if (acceptResult == false) {
+  //             Toast.show(S.of(context).something_went_wrong);
+  //             return;
+  //           }
+  //         }
+  //         Loading.dismiss();
+  //         chatOutCommon.sendTopicInvitee(subscriber.clientAddress, topic.topic).then((value) {
+  //           if (value != null) {
+  //             Toast.show(S.of(context).invitation_sent);
+  //           }
+  //         });
+  //
+  //         _refreshMemberList();
+  //       }
+  //     },
+  //     // onTap: canKick ? rejectAction : acceptAction,
+  //   );
+  // }
 }

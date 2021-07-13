@@ -8,7 +8,9 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/topic/header.dart';
+import 'package:nmobile/components/topic/subscriber_item.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/profile.dart';
@@ -144,17 +146,13 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     }
     var messages = await subscriberCommon.queryListByTopic(
       this._topicSchema?.topic,
-      status: SubscriberStatus.MemberSubscribed,
+      // status: SubscriberStatus.InvitedAccept,
       offset: _offset,
       limit: 20,
     );
     setState(() {
       _subscriberList += messages;
     });
-  }
-
-  _onTapSubscriberItem(SubscriberSchema item) async {
-    ContactProfileScreen.go(context, clientAddress: item.clientAddress);
   }
 
   @override
@@ -235,18 +233,16 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
       controller: _scrollController,
       itemCount: _subscriberList.length,
       itemBuilder: (BuildContext context, int index) {
-        var session = _subscriberList[index];
+        var _subscriber = _subscriberList[index];
         return Column(
           children: [
-            // ChatSessionItem(
-            //   session: session,
-            //   onTap: (who) async {
-            //     await ChatMessagesScreen.go(context, who);
-            //   },
-            //   onLongPress: (who) {
-            //     _popItemMenu(session, index);
-            //   },
-            // ),
+            SubscriberItem(
+              subscriber: _subscriber,
+              topic: _topicSchema,
+              onTap: (ContactSchema? contact) {
+                ContactProfileScreen.go(context, schema: contact, clientAddress: _subscriber.clientAddress);
+              },
+            ),
             Divider(color: application.theme.dividerColor, height: 0, indent: 70, endIndent: 12),
           ],
         );
