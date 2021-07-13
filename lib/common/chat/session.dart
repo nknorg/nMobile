@@ -93,16 +93,16 @@ class SessionCommon with Tag {
     return success;
   }
 
-  Future<bool> setUnReadCount(String? targetId, int unread, {bool notify = false}) async {
+  Future<bool> setTop(String? targetId, bool top, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty) return false;
-    bool success = await _sessionStorage.updateUnReadCount(targetId, unread);
+    bool success = await _sessionStorage.updateIsTop(targetId, top);
     if (success && notify) queryAndNotify(targetId);
     return success;
   }
 
-  Future<bool> setTop(String? targetId, bool top, {bool notify = false}) async {
+  Future<bool> setUnReadCount(String? targetId, int unread, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty) return false;
-    bool success = await _sessionStorage.updateIsTop(targetId, top);
+    bool success = await _sessionStorage.updateUnReadCount(targetId, unread);
     if (success && notify) queryAndNotify(targetId);
     return success;
   }

@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:equatable/equatable.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/utils/utils.dart';
 
@@ -9,14 +8,16 @@ class SessionType {
   static const TOPIC = "topic";
 }
 
-class SessionSchema extends Equatable {
+class SessionSchema {
   int? id; // <-> id
   String targetId; // (required) <-> target_id
   String type; // (required) <-> type
+
   DateTime? lastMessageTime; // <-> last_message_time
   Map<String, dynamic>? lastMessageOptions; // <-> last_message_options
-  int unReadCount; // <-> un_read_count
+
   bool isTop; // <-> is_top
+  int unReadCount; // <-> un_read_count
 
   SessionSchema({
     this.id,
@@ -24,8 +25,8 @@ class SessionSchema extends Equatable {
     required this.type,
     this.lastMessageTime,
     this.lastMessageOptions,
-    this.unReadCount = 0,
     this.isTop = false,
+    this.unReadCount = 0,
   });
 
   bool get isContact {
@@ -51,8 +52,8 @@ class SessionSchema extends Equatable {
       'type': type,
       'last_message_time': lastMessageTime?.millisecondsSinceEpoch,
       'last_message_options': (lastMessageOptions?.isNotEmpty == true) ? jsonEncode(lastMessageOptions) : null,
-      'un_read_count': unReadCount,
       'is_top': isTop ? 1 : 0,
+      'un_read_count': unReadCount,
     };
     return map;
   }
@@ -64,14 +65,11 @@ class SessionSchema extends Equatable {
       type: e['type'] ?? "",
       lastMessageTime: e['last_message_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['last_message_time']) : null,
       lastMessageOptions: e['last_message_options'] != null ? jsonFormat(e['last_message_options']) : null,
-      unReadCount: e['un_read_count'] ?? 0,
       isTop: (e['is_top'] != null && e['is_top'] == 1) ? true : false,
+      unReadCount: e['un_read_count'] ?? 0,
     );
     return schema;
   }
-
-  @override
-  List<Object?> get props => [targetId];
 
   @override
   String toString() {
