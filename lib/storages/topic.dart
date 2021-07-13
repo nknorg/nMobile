@@ -44,8 +44,8 @@ class TopicStorage with Tag {
     await db.execute('CREATE INDEX index_topic_create_at ON $tableName (create_at)');
     await db.execute('CREATE INDEX index_topic_update_at ON $tableName (update_at)');
     await db.execute('CREATE INDEX index_topic_subscribe_at ON $tableName (subscribe_at)');
-    await db.execute('CREATE INDEX index_topic_type_created_time ON $tableName (type, create_at)');
-    await db.execute('CREATE INDEX index_topic_type_update_time ON $tableName (type, update_at)');
+    await db.execute('CREATE INDEX index_topic_type_create_at ON $tableName (type, create_at)');
+    await db.execute('CREATE INDEX index_topic_type_update_at ON $tableName (type, update_at)');
     await db.execute('CREATE INDEX index_topic_type_subscribe_at ON $tableName (type, subscribe_at)');
   }
 
@@ -177,14 +177,14 @@ class TopicStorage with Tag {
     return [];
   }
 
-  Future<bool> setJoined(int? topicId, bool joined, {DateTime? subscribeAt, int? expireBlockHeight}) async {
+  Future<bool> setJoined(int? topicId, bool joined, {int? subscribeAt, int? expireBlockHeight}) async {
     if (topicId == null || topicId == 0) return false;
     var values = {
       'joined': joined ? 1 : 0,
       'update_at': DateTime.now().millisecondsSinceEpoch,
     };
     if (expireBlockHeight != null) {
-      values["subscribe_at"] = subscribeAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch;
+      values["subscribe_at"] = subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
       values["expire_height"] = expireBlockHeight;
     }
     try {

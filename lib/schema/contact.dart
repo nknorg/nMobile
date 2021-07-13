@@ -13,8 +13,8 @@ class ContactSchema {
   int? id; // <- id
   String clientAddress; // (required : (ID).PubKey) <-> address (same with client.address)
   String? type; // (required) <-> type
-  int? createdAt; // <-> created_time
-  int? updatedAt; // <-> updated_time
+  int? createAt; // <-> create_at
+  int? updateAt; // <-> update_at
 
   File? avatar; // (local_path) <-> avatar
   String? firstName; // (required : name) <-> first_name
@@ -34,8 +34,8 @@ class ContactSchema {
     this.id,
     required this.clientAddress,
     this.type,
-    this.createdAt,
-    this.updatedAt,
+    this.createAt,
+    this.updateAt,
     this.avatar,
     this.firstName,
     this.lastName,
@@ -58,8 +58,8 @@ class ContactSchema {
     return ContactSchema(
       clientAddress: clientAddress,
       type: type,
-      createdAt: DateTime.now().millisecondsSinceEpoch,
-      updatedAt: DateTime.now().millisecondsSinceEpoch,
+      createAt: DateTime.now().millisecondsSinceEpoch,
+      updateAt: DateTime.now().millisecondsSinceEpoch,
       profileVersion: Uuid().v4(),
       nknWalletAddress: walletAddress,
     );
@@ -176,8 +176,8 @@ class ContactSchema {
     Map<String, dynamic> map = {
       'address': clientAddress,
       'type': type,
-      'created_time': createdAt ?? DateTime.now().millisecondsSinceEpoch,
-      'updated_time': updatedAt ?? DateTime.now().millisecondsSinceEpoch,
+      'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
+      'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
       'avatar': Path.getLocalFile(avatar?.path),
       'first_name': firstName ?? getDefaultName(clientAddress),
       'last_name': lastName,
@@ -195,8 +195,8 @@ class ContactSchema {
       id: e['id'],
       clientAddress: e['address'] ?? "",
       type: e['type'],
-      createdAt: e['created_time'],
-      updatedAt: e['updated_time'],
+      createAt: e['create_at'],
+      updateAt: e['update_at'],
       avatar: Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null,
       firstName: e['first_name'] ?? getDefaultName(e['address']),
       lastName: e['last_name'],
@@ -232,6 +232,6 @@ class ContactSchema {
 
   @override
   String toString() {
-    return 'ContactSchema{id: $id, clientAddress: $clientAddress, type: $type, createdAt: $createdAt, updatedAt: $updatedAt, avatar: $avatar, firstName: $firstName, lastName: $lastName, profileVersion: $profileVersion, profileUpdateAt: $profileUpdateAt, isTop: $isTop, options: $options, data: $data, nknWalletAddress: $nknWalletAddress}';
+    return 'ContactSchema{id: $id, clientAddress: $clientAddress, type: $type, createdAt: $createAt, updatedAt: $updateAt, avatar: $avatar, firstName: $firstName, lastName: $lastName, profileVersion: $profileVersion, profileUpdateAt: $profileUpdateAt, isTop: $isTop, options: $options, data: $data, nknWalletAddress: $nknWalletAddress}';
   }
 }

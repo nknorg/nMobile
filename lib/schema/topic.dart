@@ -16,11 +16,11 @@ class TopicSchema {
   int? id; // (required) <-> id
   String topic; // (required) <-> topic
   int? type; // (required) <-> type
-  DateTime? createAt; // <-> create_at
-  DateTime? updateAt; // <-> update_at
+  int? createAt; // <-> create_at
+  int? updateAt; // <-> update_at
 
   bool joined = false; // <-> joined
-  DateTime? subscribeAt; // <-> subscribe_at
+  int? subscribeAt; // <-> subscribe_at
   int? expireBlockHeight; // <-> expire_height
 
   File? avatar; // <-> avatar
@@ -57,8 +57,8 @@ class TopicSchema {
       return TopicSchema(
         topic: topic!,
         type: type,
-        createAt: DateTime.now(),
-        updateAt: DateTime.now(),
+        createAt: DateTime.now().millisecondsSinceEpoch,
+        updateAt: DateTime.now().millisecondsSinceEpoch,
       );
     }
     return null;
@@ -145,10 +145,10 @@ class TopicSchema {
       'id': id,
       'topic': topic,
       'type': isPrivate ? TopicType.privateTopic : TopicType.publicTopic,
-      'create_at': createAt?.millisecondsSinceEpoch ?? DateTime.now(),
-      'update_at': updateAt?.millisecondsSinceEpoch ?? DateTime.now(),
+      'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
+      'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
       'joined': joined ? 1 : 0,
-      'subscribe_at': subscribeAt?.millisecondsSinceEpoch,
+      'subscribe_at': subscribeAt,
       'expire_height': expireBlockHeight,
       'avatar': Path.getLocalFile(avatar?.path),
       'count': count,
@@ -165,10 +165,10 @@ class TopicSchema {
       id: e['id'],
       topic: e['topic'] ?? "",
       type: e['type'],
-      createAt: e['create_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['create_at']) : DateTime.now(),
-      updateAt: e['update_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['update_at']) : DateTime.now(),
+      createAt: e['create_at'],
+      updateAt: e['update_at'],
       joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,
-      subscribeAt: e['subscribe_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['subscribe_at']) : null,
+      subscribeAt: e['subscribe_at'],
       expireBlockHeight: e['expire_height'],
       avatar: Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null,
       count: e['count'],

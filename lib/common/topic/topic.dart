@@ -52,7 +52,7 @@ class TopicCommon with Tag {
       if (!joinSuccess) return null;
 
       // schema refresh
-      var subscribeAt = DateTime.now();
+      var subscribeAt = DateTime.now().millisecondsSinceEpoch;
       var expireBlockHeight = currentBlockHeight + Global.topicDefaultSubscribeDuration;
       bool setSuccess = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireBlockHeight, notify: true);
       if (setSuccess) {
@@ -214,12 +214,12 @@ class TopicCommon with Tag {
     return _topicStorage.queryList(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
   }
 
-  Future<bool> setJoined(int? topicId, bool joined, {DateTime? subscribeAt, int? expireBlockHeight, bool notify = false}) async {
+  Future<bool> setJoined(int? topicId, bool joined, {int? subscribeAt, int? expireBlockHeight, bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
     bool success = await _topicStorage.setJoined(
       topicId,
       joined,
-      subscribeAt: subscribeAt ?? DateTime.now(),
+      subscribeAt: subscribeAt ?? DateTime.now().millisecondsSinceEpoch,
       expireBlockHeight: expireBlockHeight,
     );
     if (success && notify) queryAndNotify(topicId);

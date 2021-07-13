@@ -20,8 +20,8 @@ class DeviceInfoCommon with Tag {
         return success ? schema : exist;
       }
     }
-    schema.createAt = schema.createAt ?? DateTime.now();
-    schema.updateAt = schema.updateAt ?? DateTime.now();
+    schema.createAt = schema.createAt ?? DateTime.now().millisecondsSinceEpoch;
+    schema.updateAt = schema.updateAt ?? DateTime.now().millisecondsSinceEpoch;
     DeviceInfoSchema? added = await _deviceInfoStorage.insert(schema);
     return added;
   }

@@ -65,7 +65,7 @@ class ChatOutCommon with Tag {
     if (target == null || target.clientAddress.isEmpty) return;
     if (tryCount > 3) return;
     try {
-      DateTime updateAt = DateTime.now();
+      int updateAt = DateTime.now().millisecondsSinceEpoch;
       String data = MessageData.getContactRequest(requestType, target.profileVersion, updateAt);
       await chatCommon.clientSendData(target.clientAddress, data);
       logger.d("$TAG - sendContactRequest - success - data:$data");
@@ -84,7 +84,7 @@ class ChatOutCommon with Tag {
     if (tryCount > 3) return;
     ContactSchema? _me = me ?? await contactCommon.getMe();
     try {
-      DateTime updateAt = DateTime.now();
+      int updateAt = DateTime.now().millisecondsSinceEpoch;
       String data;
       if (requestType == RequestType.header) {
         data = MessageData.getContactResponseHeader(_me?.profileVersion, updateAt);
@@ -246,7 +246,8 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendPiece(MessageSchema schema, {int tryCount = 1}) async {
     if (tryCount > 3) return null;
     try {
-      await Future.delayed(Duration(milliseconds: (schema.sendTime ?? DateTime.now()).millisecondsSinceEpoch - DateTime.now().millisecondsSinceEpoch));
+      DateTime timeNow = DateTime.now();
+      await Future.delayed(Duration(milliseconds: (schema.sendTime ?? timeNow).millisecondsSinceEpoch - timeNow.millisecondsSinceEpoch));
       String data = MessageData.getPiece(schema);
       if (schema.isTopic) {
         OnMessage? onResult = await chatCommon.clientPublishData(schema.topic!, data);
@@ -255,7 +256,7 @@ class ChatOutCommon with Tag {
         OnMessage? onResult = await chatCommon.clientSendData(schema.to, data);
         schema.pid = onResult?.messageId;
       }
-      // logger.d("$TAG - sendPiece - success - index:${schema.index} - total:${schema.total} - time:${DateTime.now().millisecondsSinceEpoch} - schema:$schema - data:$data");
+      // logger.d("$TAG - sendPiece - success - index:${schema.index} - total:${schema.total} - time:${timeNow.millisecondsSinceEpoch} - schema:$schema - data:$data");
       double percent = (schema.index ?? 0) / (schema.total ?? 1);
       _onPieceOutSink.add({"msg_id": schema.msgId, "percent": percent});
       return schema;

@@ -194,35 +194,35 @@ class MessageData {
     return jsonEncode(map);
   }
 
-  static String getContactRequest(String requestType, String? profileVersion, DateTime expiresAt) {
+  static String getContactRequest(String requestType, String? profileVersion, int expiresAt) {
     Map data = {
       'id': Uuid().v4(),
       'contentType': ContentType.contact,
       'requestType': requestType,
       'version': profileVersion,
-      'expiresAt': expiresAt.millisecondsSinceEpoch,
+      'expiresAt': expiresAt,
     };
     return jsonEncode(data);
   }
 
-  static String getContactResponseHeader(String? profileVersion, DateTime expiresAt) {
+  static String getContactResponseHeader(String? profileVersion, int expiresAt) {
     Map data = {
       'id': Uuid().v4(),
       'contentType': ContentType.contact,
       'responseType': RequestType.header,
       'version': profileVersion,
-      'expiresAt': expiresAt.millisecondsSinceEpoch,
+      'expiresAt': expiresAt,
     };
     return jsonEncode(data);
   }
 
-  static Future<String> getContactResponseFull(String? firstName, String? lastName, File? avatar, String? profileVersion, DateTime expiresAt) async {
+  static Future<String> getContactResponseFull(String? firstName, String? lastName, File? avatar, String? profileVersion, int expiresAt) async {
     Map data = {
       'id': Uuid().v4(),
       'contentType': ContentType.contact,
       'responseType': RequestType.full,
       'version': profileVersion,
-      'expiresAt': expiresAt.millisecondsSinceEpoch,
+      'expiresAt': expiresAt,
     };
     Map<String, dynamic> content = Map();
     if (firstName?.isNotEmpty == true) {
@@ -413,15 +413,18 @@ class MessageSchema extends Equatable {
   dynamic content; // <-> content
   Map<String, dynamic>? options; // <-> options
 
+  // TODO:GG time -> at
   DateTime? sendTime; // <-> send_time
   DateTime? receiveTime; // <-> receive_time
   DateTime? deleteTime; // <-> delete_time
 
+  // TODO:GG merge to one field (status)
   bool isOutbound = false; // <-> is_outbound
   bool isSendError = false; // <-> is_send_error
   bool isSuccess = false; // <-> is_success
   bool isRead = false; // <-> is_read
 
+  // TODO:GG move to options?
   String? parentType;
   int? bytesLength;
   int? total;
