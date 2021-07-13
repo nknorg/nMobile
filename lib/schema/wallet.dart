@@ -4,8 +4,9 @@ class WalletType {
 }
 
 class WalletSchema {
-  String type;
   String address;
+  String type;
+
   String? name;
   double? balance = 0;
   double? balanceEth = 0;
@@ -14,8 +15,8 @@ class WalletSchema {
   // bool isBackedUp = false;
 
   WalletSchema({
-    required this.type,
     required this.address,
+    required this.type,
     this.name,
     this.balance = 0,
     this.balanceEth = 0,
@@ -23,8 +24,8 @@ class WalletSchema {
 
   static WalletSchema fromMap(Map<String, dynamic> map) {
     return WalletSchema(
-      type: map['type'] ?? "",
       address: map['address'] ?? "",
+      type: map['type'] ?? "",
       name: map['name'],
       balance: map['balance'] ?? 0,
       balanceEth: map['balanceEth'] ?? 0,
@@ -33,8 +34,8 @@ class WalletSchema {
 
   Map<String, dynamic> toMap() {
     return {
-      'type': type,
       'address': address,
+      'type': type,
       'name': name,
       'balance': balance ?? 0,
       'balanceEth': balanceEth ?? 0,
