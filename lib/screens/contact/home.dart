@@ -373,7 +373,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
             },
             bgColor: Colors.transparent,
             bodyTitle: item.displayName,
-            bodyDesc: timeFormat(item.updatedAt),
+            bodyDesc: timeFormat(item.updatedAt != null ? DateTime.fromMillisecondsSinceEpoch(item.updatedAt!) : null),
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             tail: Padding(
               padding: const EdgeInsets.only(right: 8, left: 16),
@@ -434,7 +434,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           },
           bgColor: Colors.transparent,
           bodyTitle: item.displayName,
-          bodyDesc: timeFormat(item.updatedAt),
+          bodyDesc: timeFormat(item.updatedAt != null ? DateTime.fromMillisecondsSinceEpoch(item.updatedAt!) : null),
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           tail: Padding(
             padding: const EdgeInsets.only(right: 8, left: 16),

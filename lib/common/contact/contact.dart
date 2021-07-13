@@ -169,6 +169,34 @@ class ContactCommon with Tag {
     return success;
   }
 
+  Future<bool> setTop(String? clientAddress, bool top, {bool notify = false}) async {
+    if (clientAddress == null || clientAddress.isEmpty) return false;
+    bool success = await _contactStorage.setTop(clientAddress, top);
+    if (success && notify) queryAndNotifyByClientAddress(clientAddress);
+    return success;
+  }
+
+  Future<bool> setDeviceToken(ContactSchema? schema, String? deviceToken, {bool notify = false}) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    bool success = await _contactStorage.setDeviceToken(schema.id, deviceToken, old: schema.options);
+    if (success && notify) queryAndNotify(schema.id);
+    return success;
+  }
+
+  Future<bool> setNotificationOpen(ContactSchema? schema, bool open, {bool notify = false}) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    bool success = await _contactStorage.setNotificationOpen(schema.id, open, old: schema.options);
+    if (success && notify) queryAndNotify(schema.id);
+    return success;
+  }
+
+  Future<bool> setOptionsBurn(ContactSchema? schema, int? burningSeconds, int? updateTime, {bool notify = false}) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    bool success = await _contactStorage.setBurning(schema.id, burningSeconds, updateTime, old: schema.options);
+    if (success && notify) queryAndNotify(schema.id);
+    return success;
+  }
+
   Future<bool> setRemarkAvatar(ContactSchema? old, String avatarLocalPath, {bool notify = false}) async {
     if (old == null || old.id == 0) return Future.value(false);
     bool success = await _contactStorage.setRemarkProfile(
@@ -201,34 +229,6 @@ class ContactCommon with Tag {
     if (schema == null || schema.id == null || schema.id == 0) return false;
     bool success = await _contactStorage.setNotes(schema.id, notes, oldExtraInfo: schema.data);
     if (success && notify) queryAndNotify(schema.id);
-    return success;
-  }
-
-  Future<bool> setOptionsBurn(ContactSchema? schema, int? burningSeconds, int? updateTime, {bool notify = false}) async {
-    if (schema == null || schema.id == null || schema.id == 0) return false;
-    bool success = await _contactStorage.setOptionsBurn(schema.id, burningSeconds, updateTime, old: schema.options);
-    if (success && notify) queryAndNotify(schema.id);
-    return success;
-  }
-
-  Future<bool> setTop(String? clientAddress, bool top, {bool notify = false}) async {
-    if (clientAddress == null || clientAddress.isEmpty) return false;
-    bool success = await _contactStorage.setTop(clientAddress, top);
-    if (success && notify) queryAndNotifyByClientAddress(clientAddress);
-    return success;
-  }
-
-  Future<bool> setDeviceToken(int? contactId, String? deviceToken, {bool notify = false}) async {
-    if (contactId == null || contactId == 0) return false;
-    bool success = await _contactStorage.setDeviceToken(contactId, deviceToken);
-    if (success && notify) queryAndNotify(contactId);
-    return success;
-  }
-
-  Future<bool> setNotificationOpen(int? contactId, bool open, {bool notify = false}) async {
-    if (contactId == null || contactId == 0) return false;
-    bool success = await _contactStorage.setNotificationOpen(contactId, open);
-    if (success && notify) queryAndNotify(contactId);
     return success;
   }
 

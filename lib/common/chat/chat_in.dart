@@ -212,7 +212,7 @@ class ChatInCommon with Tag {
     } else if (optionsType == '1') {
       String deviceToken = (content['deviceToken']?.toString()) ?? "";
       logger.d("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
-      contactCommon.setDeviceToken(existContact.id, deviceToken, notify: true); // await
+      contactCommon.setDeviceToken(existContact, deviceToken, notify: true); // await
     } else {
       logger.w("$TAG - _receiveContactOptions - setNothing - data:$data");
       return;

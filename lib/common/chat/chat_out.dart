@@ -447,7 +447,7 @@ class ChatOutCommon with Tag {
       // TODO:GG topic get all subscribe token and list.send
       return;
     }
-    if (contact == null || contact.deviceToken == null || contact.deviceToken!.isEmpty) return;
+    if (contact?.options?.pushToken == null || contact!.options!.pushToken!.isEmpty) return;
 
     S localizations = S.of(Global.appContext);
 
@@ -479,7 +479,7 @@ class ChatOutCommon with Tag {
     //     break;
     // }
 
-    await SendPush.send(contact.deviceToken!, title, content);
+    await SendPush.send(contact.options!.pushToken!, title, content);
   }
 
   Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message, DeviceInfoSchema? deviceInfo) async {
