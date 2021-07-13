@@ -321,11 +321,11 @@ class ContactStorage with Tag {
     return false;
   }
 
-  Future<bool> setBurning(int? contactId, int? burningSeconds, int? updateTime, {OptionsSchema? old}) async {
+  Future<bool> setBurning(int? contactId, int? burningSeconds, int? updateAt, {OptionsSchema? old}) async {
     if (contactId == null || contactId == 0) return false;
     OptionsSchema options = old ?? OptionsSchema();
     options.deleteAfterSeconds = burningSeconds ?? 0;
-    options.updateBurnAfterAt = updateTime ?? DateTime.now().millisecondsSinceEpoch;
+    options.updateBurnAfterAt = updateAt ?? DateTime.now().millisecondsSinceEpoch;
     try {
       int? count = await db?.update(
         tableName,

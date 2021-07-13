@@ -190,9 +190,9 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setOptionsBurn(ContactSchema? schema, int? burningSeconds, int? updateTime, {bool notify = false}) async {
+  Future<bool> setOptionsBurn(ContactSchema? schema, int? burningSeconds, int? updateAt, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
-    bool success = await _contactStorage.setBurning(schema.id, burningSeconds, updateTime, old: schema.options);
+    bool success = await _contactStorage.setBurning(schema.id, burningSeconds, updateAt, old: schema.options);
     if (success && notify) queryAndNotify(schema.id);
     return success;
   }

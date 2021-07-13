@@ -126,6 +126,7 @@ class AudioHelper with Tag {
     if (status != PermissionStatus.granted) {
       throw RecordingPermissionException('Microphone permission not granted');
     }
+    if (status != PermissionStatus.granted) return null;
     // duplicated
     if (record.isRecording) {
       bool isSame = recordId == this.recordId;
