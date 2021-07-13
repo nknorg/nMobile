@@ -4,9 +4,9 @@ import 'package:nmobile/utils/utils.dart';
 
 class DeviceInfoSchema {
   int? id; // <- id
-  DateTime? createAt; // <-> create_at
-  DateTime? updateAt; // <-> update_at
   int contactId; // (required) <-> contact_id
+  int? createAt; // <-> create_at
+  int? updateAt; // <-> update_at
   String? deviceId; //  <-> device_id
   Map<String, dynamic>? data; // [*]<-> data[*, appName, appVersion, platform, platformVersion, ...]
 
@@ -19,10 +19,10 @@ class DeviceInfoSchema {
     this.data,
   }) {
     if (this.createAt == null) {
-      this.createAt = DateTime.now();
+      this.createAt = DateTime.now().millisecondsSinceEpoch;
     }
     if (this.updateAt == null) {
-      this.updateAt = DateTime.now();
+      this.updateAt = DateTime.now().millisecondsSinceEpoch;
     }
   }
 
@@ -75,8 +75,8 @@ class DeviceInfoSchema {
       data = new Map<String, dynamic>();
     }
     Map<String, dynamic> map = {
-      'create_at': createAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'update_at': updateAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
+      'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
       'contact_id': contactId,
       'device_id': deviceId,
       'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
@@ -87,8 +87,8 @@ class DeviceInfoSchema {
   static DeviceInfoSchema fromMap(Map e) {
     var deviceInfo = DeviceInfoSchema(
       id: e['id'],
-      createAt: e['create_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['create_at']) : null,
-      updateAt: e['update_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['update_at']) : null,
+      createAt: e['create_at'],
+      updateAt: e['update_at'],
       contactId: e['contact_id'] ?? 0,
       deviceId: e['device_id'],
     );

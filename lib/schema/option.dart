@@ -6,8 +6,10 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/path.dart';
 
 class OptionsSchema {
+  bool isBlack;
+
   bool notificationOpen;
-  String? deviceToken;
+  String? pushToken; // deviceToken or topicName
 
   int? deleteAfterSeconds;
   int? updateBurnAfterAt;
@@ -25,8 +27,9 @@ class OptionsSchema {
   Color? chatBubbleTextColor;
 
   OptionsSchema({
+    this.isBlack = false,
     this.notificationOpen = false,
-    this.deviceToken,
+    this.pushToken,
     this.deleteAfterSeconds,
     this.updateBurnAfterAt,
     this.avatarNameColor,
@@ -47,8 +50,9 @@ class OptionsSchema {
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {};
+    map['isBlack'] = isBlack;
     map['notificationOpen'] = notificationOpen;
-    map['deviceToken'] = deviceToken;
+    map['pushToken'] = pushToken;
     map['deleteAfterSeconds'] = deleteAfterSeconds;
     map['updateBurnAfterTime'] = updateBurnAfterAt;
     map['soundResource'] = soundResource;
@@ -64,8 +68,9 @@ class OptionsSchema {
 
   static OptionsSchema fromMap(Map map) {
     OptionsSchema schema = OptionsSchema();
+    schema.isBlack = map['isBlack'] ?? false;
     schema.notificationOpen = map['notificationOpen'] ?? false;
-    schema.deviceToken = map['deviceToken'];
+    schema.pushToken = map['pushToken'];
     schema.deleteAfterSeconds = map['deleteAfterSeconds'];
     schema.updateBurnAfterAt = map['updateBurnAfterTime'];
     schema.soundResource = map['soundResource'];
@@ -81,6 +86,6 @@ class OptionsSchema {
 
   @override
   String toString() {
-    return 'OptionsSchema{deleteAfterSeconds: $deleteAfterSeconds, updateBurnAfterTime: $updateBurnAfterAt, backgroundColor: $avatarBgColor, avatarNameColor: $avatarNameColor}';
+    return 'OptionsSchema{isBlack: $isBlack, notificationOpen: $notificationOpen, pushToken: $pushToken, deleteAfterSeconds: $deleteAfterSeconds, updateBurnAfterAt: $updateBurnAfterAt, soundResource: $soundResource, muteExpireAt: $muteExpireAt, avatarBgColor: $avatarBgColor, avatarNameColor: $avatarNameColor, chatBgFile: $chatBgFile, chatBgColor: $chatBgColor, chatBubbleBgColor: $chatBubbleBgColor, chatBubbleTextColor: $chatBubbleTextColor}';
   }
 }

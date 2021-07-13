@@ -98,11 +98,11 @@ class ChatCommon with Tag {
       logger.d("$TAG - deviceInfoHandle - new - request - contact:$contact");
       await chatOutCommon.sendDeviceRequest(contact.clientAddress);
     } else {
-      if (latest.updateAt == null || DateTime.now().isAfter(latest.updateAt!.add(Settings.deviceInfoExpireDuration))) {
+      if (latest.updateAt == null || DateTime.now().millisecondsSinceEpoch > (latest.updateAt! + Settings.deviceInfoExpireMs)) {
         logger.d("$TAG - deviceInfoHandle - exist - request - schema:$latest");
         await chatOutCommon.sendDeviceRequest(contact.clientAddress);
       } else {
-        double between = ((latest.updateAt?.add(Settings.deviceInfoExpireDuration).millisecondsSinceEpoch ?? 0) - DateTime.now().millisecondsSinceEpoch) / 1000;
+        double between = ((latest.updateAt! + Settings.deviceInfoExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG deviceInfoHandle - expire - between:${between}s");
       }
     }
