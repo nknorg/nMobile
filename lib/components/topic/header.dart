@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/utils/asset.dart';
 
 import 'avatar.dart';
 
@@ -36,7 +37,24 @@ class TopicHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Label(name, type: LabelType.h3, dark: true),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    this.topic.isPrivate
+                        ? Asset.iconSvg(
+                            'lock',
+                            width: 18,
+                            color: Colors.white,
+                          )
+                        : SizedBox.shrink(),
+                    Label(
+                      name,
+                      type: LabelType.h3,
+                      fontWeight: FontWeight.bold,
+                      dark: true,
+                    ),
+                  ],
+                ),
                 this.body,
               ],
             ),

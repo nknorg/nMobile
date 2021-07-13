@@ -146,7 +146,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     }
     var messages = await subscriberCommon.queryListByTopic(
       this._topicSchema?.topic,
-      // status: SubscriberStatus.InvitedAccept,
+      // status: SubscriberStatus.InvitedAccept, // TODO:GG ??
       offset: _offset,
       limit: 20,
     );

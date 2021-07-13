@@ -30,7 +30,7 @@ class ContentType {
   static const String image = 'image'; // db + visible
   static const String audio = 'audio'; // db + visible
 
-  static const String piece = 'nknOnePiece'; // db
+  static const String piece = 'piece'; // db
 
   static const String topicSubscribe = 'event:subscribe';
   static const String topicUnsubscribe = 'event:unsubscribe';
@@ -45,7 +45,7 @@ class MessageOptions {
   static const KEY_AUDIO_DURATION = "audioDuration";
 
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
-  static const KEY_UPDATE_BURNING_AFTER_TIME = "updateBurnAfterTime";
+  static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
   static const KEY_DEVICE_TOKEN = "deviceToken";
 
   static const KEY_PARENT_TYPE = "parentType";
@@ -69,17 +69,17 @@ class MessageOptions {
     return double.parse(duration);
   }
 
-  static MessageSchema setContactBurning(MessageSchema schema, int deleteTimeSec, int? updateTime) {
+  static MessageSchema setContactBurning(MessageSchema schema, int deleteTimeSec, int? updateAt) {
     if (schema.options == null) schema.options = Map<String, dynamic>();
     schema.options![MessageOptions.KEY_DELETE_AFTER_SECONDS] = deleteTimeSec;
-    schema.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_TIME] = updateTime;
+    schema.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_AT] = updateAt;
     return schema;
   }
 
   static List<int?> getContactBurning(MessageSchema? schema) {
     if (schema == null || schema.options == null || schema.options!.keys.length == 0) return [];
     var seconds = schema.options![MessageOptions.KEY_DELETE_AFTER_SECONDS]?.toString();
-    var update = schema.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_TIME]?.toString();
+    var update = schema.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_AT]?.toString();
     int? t1 = (seconds == null || seconds.isEmpty) ? null : int.parse(seconds);
     int? t2 = (update == null || update.isEmpty) ? null : int.parse(update);
     return [t1, t2];
@@ -245,14 +245,17 @@ class MessageData {
   static String getContactOptionsBurn(MessageSchema schema) {
     List<int?> burningOptions = MessageOptions.getContactBurning(schema);
     int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
-    int? updateBurnAfterTime = burningOptions.length >= 2 ? burningOptions[1] : null;
+    int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
     Map data = {
       'id': schema.msgId,
       'contentType': ContentType.contactOptions,
       'optionType': '0',
       'content': {
         'deleteAfterSeconds': burnAfterSeconds,
-        'updateBurnAfterTime': updateBurnAfterTime,
+        'updateBurnAfterAt': updateBurnAfterAt,
+        // SUPPORT:START
+        'updateBurnAfterTime': updateBurnAfterAt,
+        // SUPPORT:END
       },
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -584,7 +587,7 @@ class MessageSchema extends Equatable {
     this.index,
     double? audioDurationS,
     int? deleteAfterSeconds,
-    int? burningUpdateTime,
+    int? burningUpdateAt,
   }) {
     // pid (SDK create)
     if (msgId.isEmpty) msgId = Uuid().v4();
@@ -600,7 +603,7 @@ class MessageSchema extends Equatable {
       if (this.contentType == ContentType.text) {
         this.contentType = ContentType.textExtension;
       }
-      MessageOptions.setContactBurning(this, deleteAfterSeconds, burningUpdateTime);
+      MessageOptions.setContactBurning(this, deleteAfterSeconds, burningUpdateAt);
     }
     if (audioDurationS != null && audioDurationS > 0) {
       MessageOptions.setAudioDuration(this, audioDurationS);

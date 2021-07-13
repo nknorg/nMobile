@@ -54,7 +54,7 @@ class OptionsSchema {
     map['notificationOpen'] = notificationOpen ? 1 : 0;
     map['pushToken'] = pushToken;
     map['deleteAfterSeconds'] = deleteAfterSeconds;
-    map['updateBurnAfterTime'] = updateBurnAfterAt;
+    map['updateBurnAfterAt'] = updateBurnAfterAt;
     map['soundResource'] = soundResource;
     map['muteExpireAt'] = muteExpireAt;
     map['avatarBgColor'] = avatarBgColor?.value;
@@ -69,10 +69,10 @@ class OptionsSchema {
   static OptionsSchema fromMap(Map map) {
     OptionsSchema schema = OptionsSchema();
     schema.isBlack = (map['isBlack'] != null && map['isBlack'].toString() == '1') ? true : false;
-    schema.notificationOpen = (map['notification_open'] != null && map['notification_open'].toString() == '1') ? true : false;
+    schema.notificationOpen = (map['notificationOpen'] != null && map['notificationOpen'].toString() == '1') ? true : false;
     schema.pushToken = map['pushToken'];
     schema.deleteAfterSeconds = map['deleteAfterSeconds'];
-    schema.updateBurnAfterAt = map['updateBurnAfterTime'];
+    schema.updateBurnAfterAt = map['updateBurnAfterAt'];
     schema.soundResource = map['soundResource'];
     schema.muteExpireAt = map['muteExpireAt'];
     schema.avatarBgColor = map['avatarBgColor'] != null ? Color(map['avatarBgColor']) : schema.avatarBgColor;
