@@ -328,7 +328,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     }
     int timeNow = DateTime.now().millisecondsSinceEpoch;
     _contactSchema?.options?.deleteAfterSeconds = _burnValue;
-    _contactSchema?.options?.updateBurnAfterTime = timeNow;
+    _contactSchema?.options?.updateBurnAfterAt = timeNow;
     // inside update
     await contactCommon.setOptionsBurn(
       _contactSchema,

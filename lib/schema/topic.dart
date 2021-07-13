@@ -197,7 +197,7 @@ class TopicSchema {
 
     // SUPPORT:START
     if (e['theme_id'] != null && (e['theme_id'] is int) && e['theme_id'] != 0) {
-      topicSchema.options!.backgroundColor = Color(e['theme_id']);
+      topicSchema.options!.avatarBgColor = Color(e['theme_id']);
     }
     // SUPPORT:END
     return topicSchema;

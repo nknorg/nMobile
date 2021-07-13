@@ -297,7 +297,7 @@ class ContactStorage with Tag {
     OptionsSchema options = old ?? OptionsSchema();
 
     options.deleteAfterSeconds = burningSeconds ?? 0;
-    options.updateBurnAfterTime = updateTime ?? DateTime.now().millisecondsSinceEpoch;
+    options.updateBurnAfterAt = updateTime ?? DateTime.now().millisecondsSinceEpoch;
 
     try {
       int? count = await db?.update(

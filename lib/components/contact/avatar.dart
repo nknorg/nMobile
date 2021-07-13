@@ -53,10 +53,10 @@ class _ContactAvatarState extends BaseStateFulWidgetState<ContactAvatar> {
     if (widget.placeHolder == null || !widget.placeHolder!) {
       return CircleAvatar(
         radius: radius,
-        backgroundColor: widget.contact.options?.backgroundColor ?? application.theme.primaryColor.withAlpha(19),
+        backgroundColor: widget.contact.options?.avatarBgColor ?? application.theme.primaryColor.withAlpha(19),
         child: Label(
           name.length > 2 ? name.substring(0, 2).toUpperCase() : name,
-          color: widget.contact.options?.color ?? application.theme.fontLightColor,
+          color: widget.contact.options?.avatarNameColor ?? application.theme.fontLightColor,
           type: LabelType.h3,
           fontSize: radius / 3 * 2,
         ),
