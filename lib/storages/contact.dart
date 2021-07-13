@@ -16,14 +16,16 @@ class ContactStorage with Tag {
 
   // device_token TEXT // TODO:GG delete move to options
   // notification_open BOOLEAN DEFAULT 0 // TODO:GG delete move to options
+  // created_time INTEGER, // TODO:GG rename
+  // updated_time INTEGER, // TODO:GG rename
   static create(Database db, int version) async {
     final createSql = '''
       CREATE TABLE $tableName (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         address TEXT,
         type TEXT,
-        created_time INTEGER,
-        updated_time INTEGER,
+        create_at INTEGER,
+        update_at INTEGER,
         avatar TEXT,
         first_name TEXT,
         last_name TEXT,
@@ -39,12 +41,12 @@ class ContactStorage with Tag {
     // index
     await db.execute('CREATE UNIQUE INDEX unique_index_contact_address ON $tableName (address)');
     await db.execute('CREATE INDEX index_contact_type ON $tableName (type)');
-    await db.execute('CREATE INDEX index_contact_created_time ON $tableName (created_time)');
-    await db.execute('CREATE INDEX index_contact_updated_time ON $tableName (updated_time)');
+    await db.execute('CREATE INDEX index_contact_create_at ON $tableName (create_at)');
+    await db.execute('CREATE INDEX index_contact_update_at ON $tableName (update_at)');
     await db.execute('CREATE INDEX index_contact_first_name ON $tableName (first_name)');
     await db.execute('CREATE INDEX index_contact_last_name ON $tableName (last_name)');
-    await db.execute('CREATE INDEX index_contact_type_created_time ON $tableName (type, created_time)');
-    await db.execute('CREATE INDEX index_contact_type_update_time ON $tableName (type, updated_time)');
+    await db.execute('CREATE INDEX index_contact_type_create_at ON $tableName (type, create_at)');
+    await db.execute('CREATE INDEX index_contact_type_update_at ON $tableName (type, update_at)');
   }
 
   Future<ContactSchema?> insert(ContactSchema? schema, {bool checkDuplicated = true}) async {
@@ -146,7 +148,7 @@ class ContactStorage with Tag {
   }
 
   Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? limit, int? offset}) async {
-    orderBy = orderBy ?? (contactType == ContactType.friend ? 'created_time DESC' : 'updated_time DESC');
+    orderBy = orderBy ?? (contactType == ContactType.friend ? 'create_at DESC' : 'update_at DESC');
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
@@ -201,7 +203,7 @@ class ContactStorage with Tag {
         tableName,
         {
           'type': contactType,
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [contactId],
@@ -228,7 +230,7 @@ class ContactStorage with Tag {
           'last_name': profileInfo['last_name'],
           'profile_version': profileInfo['profile_version'] ?? Uuid().v4(),
           'profile_expires_at': profileInfo['profile_expires_at'] ?? DateTime.now().millisecondsSinceEpoch,
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [contactId],
@@ -251,7 +253,7 @@ class ContactStorage with Tag {
         tableName,
         {
           'is_top': top ? 1 : 0,
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'address = ?',
         whereArgs: [clientAddress],
@@ -276,7 +278,7 @@ class ContactStorage with Tag {
         tableName,
         {
           'options': jsonEncode(options.toMap()),
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [contactId],
@@ -302,7 +304,7 @@ class ContactStorage with Tag {
         tableName,
         {
           'options': jsonEncode(options.toMap()),
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [contactId],
@@ -329,7 +331,7 @@ class ContactStorage with Tag {
         tableName,
         {
           'options': jsonEncode(options.toMap()),
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [contactId],
@@ -352,7 +354,7 @@ class ContactStorage with Tag {
         tableName,
         {
           'data': (extraInfo?.isNotEmpty == true) ? jsonEncode(extraInfo) : null,
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [contactId],
@@ -377,7 +379,7 @@ class ContactStorage with Tag {
         tableName,
         {
           'data': jsonEncode(data),
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [contactId],
