@@ -11,16 +11,16 @@ class SubscriberStatus {
   static const int InvitedReceive = 2;
   static const int InvitedAccept = 3;
   static const int InvitedRefuse = 4;
-  // static const int SelfLeveOut = 5;
-  // static const int OwnerKickOut = 6;
+  static const int SelfLeveOut = 5;
+  static const int OwnerKickOut = 6;
 }
 
 class SubscriberSchema {
   int? id; // (required) <-> id
   String topic; // (required) <-> topic
   String clientAddress; // (required) <-> chat_id
-  DateTime? createAt; // <-> create_at
-  DateTime? updateAt; // <-> update_at
+  int? createAt; // <-> create_at
+  int? updateAt; // <-> update_at
 
   int? status; // <-> status
   int? permPage; // <-> perm_page
@@ -58,8 +58,8 @@ class SubscriberSchema {
         topic: topic!,
         clientAddress: clientAddress!,
         status: status,
-        createAt: DateTime.now(),
-        updateAt: DateTime.now(),
+        createAt: DateTime.now().millisecondsSinceEpoch,
+        updateAt: DateTime.now().millisecondsSinceEpoch,
       );
     }
     return null;
@@ -70,8 +70,8 @@ class SubscriberSchema {
       'id': id,
       'topic': topic,
       'chat_id': clientAddress,
-      'create_at': createAt?.millisecondsSinceEpoch ?? DateTime.now(),
-      'update_at': updateAt?.millisecondsSinceEpoch ?? DateTime.now(),
+      'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
+      'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
       'status': status,
       'perm_page': permPage,
       'data': data != null ? jsonEncode(data) : null,
@@ -85,8 +85,8 @@ class SubscriberSchema {
       id: e['id'],
       topic: e['topic'] ?? "",
       clientAddress: e['chat_id'] ?? "",
-      createAt: e['create_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['create_at']) : DateTime.now(),
-      updateAt: e['update_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['update_at']) : DateTime.now(),
+      createAt: e['create_at'],
+      updateAt: e['update_at'],
       status: e['status'],
       permPage: e['perm_page'],
     );
