@@ -232,13 +232,12 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         Navigator.pop(this.context);
         return;
       }
-      var result = await clientCommon.signIn(walletDefault);
-      Loading.show();
+      var client = await clientCommon.signIn(walletDefault, onWalletOk: () => Loading.show());
       await Future.delayed(Duration(seconds: 1)); // wait client create
 
-      if (result != null) {
+      if (client != null) {
         // refresh state
-        ContactSchema? _me = await contactCommon.getMe();
+        ContactSchema? _me = await contactCommon.getMe(canAdd: true);
         await _refreshContactSchema(schema: _me);
         Toast.show(S.of(Global.appContext).tip_switch_success); // must global context
       } else {

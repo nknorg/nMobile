@@ -6,7 +6,6 @@ import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
-import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -66,7 +65,7 @@ class ClientCommon with Tag {
   /// ******************************************************   Client   ****************************************************** ///
 
   // need close
-  Future<Client?> signIn(WalletSchema? schema, {bool walletDefault = false}) async {
+  Future<Client?> signIn(WalletSchema? schema, {bool walletDefault = false, Function? onWalletOk}) async {
     if (schema == null) return null;
     // if (client != null) await close(); // async boom!!!
     try {
@@ -83,10 +82,15 @@ class ClientCommon with Tag {
       String password = hexEncode(Uint8List.fromList(sha256(wallet.seed)));
       if (pubKey.isEmpty || password.isEmpty) return null;
 
+      onWalletOk?.call();
+
       // open DB
       db = await DB.open(pubKey, password);
+      ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true);
+      contactCommon.meUpdateSink.add(me);
+
       // start client connect (no await)
-      return _connect(wallet);
+      return await _connect(wallet);
     } catch (e) {
       handleError(e);
     }
@@ -99,10 +103,6 @@ class ClientCommon with Tag {
     ClientConfig config = ClientConfig(seedRPCServerAddr: await Global.getSeedRpcList());
     _statusSink.add(ClientConnectStatus.connecting);
     client = await Client.create(wallet.seed, config: config);
-
-    // check contact me
-    ContactSchema? me = (await contactCommon.getMe()) ?? (await ContactSchema.createByType(client?.address, type: ContactType.me));
-    contactCommon.meUpdateSink.add(me);
 
     // client error
     _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
