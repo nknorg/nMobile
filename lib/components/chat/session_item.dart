@@ -5,6 +5,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/contact/item.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/topic/item.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
@@ -30,6 +31,7 @@ class ChatSessionItem extends BaseStateFulWidget {
 }
 
 class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
+  StreamSubscription? _updateTopicSubscription;
   StreamSubscription? _updateContactSubscription;
 
   TopicSchema? _topic;
@@ -40,7 +42,11 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   void onRefreshArguments() {
     if (widget.session.isTopic) {
       if (_topic == null || widget.session.targetId != _topic?.id?.toString()) {
-        _topic = null; // TODO:GG topic session get
+        topicCommon.queryByTopic(widget.session.targetId).then((value) {
+          setState(() {
+            _topic = value;
+          });
+        });
       }
     } else {
       if (_contact == null || widget.session.targetId != _contact?.id?.toString()) {
@@ -57,17 +63,23 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   @override
   void initState() {
     super.initState();
+    // topic
+    _updateTopicSubscription = topicCommon.updateStream.where((event) => event.id == _topic?.id).listen((event) {
+      setState(() {
+        _topic = event;
+      });
+    });
     // contact
     _updateContactSubscription = contactCommon.updateStream.where((event) => event.id == _contact?.id).listen((event) {
       setState(() {
         _contact = event;
       });
     });
-    // topic TODO:GG topic session update
   }
 
   @override
   void dispose() {
+    _updateTopicSubscription?.cancel();
     _updateContactSubscription?.cancel();
     super.dispose();
   }
@@ -75,36 +87,105 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   @override
   Widget build(BuildContext context) {
     SessionSchema session = widget.session;
-    Widget contentWidget = session.isTopic ? _topicWidget(session) : _contactWidget(session);
 
     return Material(
       color: Colors.transparent,
       elevation: 0,
       child: InkWell(
-        onTap: () => widget.onTap?.call(_contact ?? _topic),
-        onLongPress: () => widget.onLongPress?.call(_contact ?? _topic),
-        child: contentWidget,
-      ),
-    );
-  }
-
-  Widget _unReadWidget(SessionSchema session) {
-    String countStr = session.unReadCount.toString();
-    if ((session.unReadCount) > 999) {
-      countStr = '999+';
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-      constraints: BoxConstraints(minWidth: 24, minHeight: 24),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: application.theme.badgeColor,
-      ),
-      child: Center(
-        child: Label(
-          countStr,
-          type: LabelType.bodySmall,
-          dark: true,
+        onTap: () => widget.onTap?.call(_topic ?? _contact),
+        onLongPress: () => widget.onLongPress?.call(_topic ?? _contact),
+        child: Container(
+          color: session.isTop ? application.theme.backgroundColor1 : Colors.transparent,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          height: 72,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(
+                flex: 1,
+                child: session.isTopic
+                    ? (_topic != null
+                        ? TopicItem(
+                            topic: _topic!,
+                            body: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    _topic?.isPrivate == true
+                                        ? Asset.iconSvg(
+                                            'lock',
+                                            width: 18,
+                                            color: application.theme.primaryColor,
+                                          )
+                                        : SizedBox.shrink(),
+                                    Label(
+                                      _topic?.topicShort ?? " ",
+                                      type: LabelType.h3,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: _contentWidget(session),
+                                ),
+                              ],
+                            ),
+                            onTapWave: false,
+                          )
+                        : SizedBox.shrink())
+                    : (_contact != null
+                        ? ContactItem(
+                            contact: _contact!,
+                            body: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Label(
+                                  _contact?.displayName ?? " ",
+                                  type: LabelType.h3,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: _contentWidget(session),
+                                ),
+                              ],
+                            ),
+                            onTapWave: false,
+                          )
+                        : SizedBox.shrink()),
+              ),
+              Container(
+                child: Row(
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 0, bottom: 6),
+                          child: Label(
+                            timeFormat(session.lastMessageTime),
+                            type: LabelType.bodyRegular,
+                          ),
+                        ),
+                        (session.unReadCount) > 0
+                            ? Padding(
+                                padding: const EdgeInsets.only(right: 0),
+                                child: _unReadWidget(session),
+                              )
+                            : SizedBox.shrink(),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -166,7 +247,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       bool isDeviceToken = (optionType == '1') || (deviceToken?.isNotEmpty == true);
       bool isDeviceTokenOPen = deviceToken?.isNotEmpty == true;
 
-      String who = (_lastMsg?.isOutbound == true) ? _localizations.you : (_contact?.displayName ?? " ");
+      String who = (_lastMsg?.isOutbound == true) ? _localizations.you : (_lastMsg?.isTopic == true ? "???" : (_contact?.displayName ?? " ")); // TODO:GG lastMsg contact?
 
       if (isBurn) {
         String burnDecs = ' ${isBurnOpen ? _localizations.update_burn_after_reading : _localizations.close_burn_after_reading} ';
@@ -212,138 +293,24 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     return contentWidget;
   }
 
-  Widget _topicWidget(SessionSchema session) {
-    // TODO:GG topic session item
-    return SizedBox.shrink();
-    //   List<Widget> topicNameWidget = [
-    //     Label(
-    //       model.topic!.topicName ?? "",
-    //       type: LabelType.h3,
-    //       fontWeight: FontWeight.bold,
-    //     ),
-    //   ];
-    //
-    //   if (model.topic!.topicType == TopicType.privateTopic) {
-    //     topicNameWidget.insert(0, Asset.iconSvg('lock', width: 18, color: application.theme.primaryColor));
-    //   }
-    //
-    //   return Container(
-    //     color: model.isTop ? application.theme.backgroundColor1 : Colors.transparent,
-    //     padding: const EdgeInsets.only(left: 12, right: 12),
-    //     height: 72,
-    //     child: Flex(
-    //       direction: Axis.horizontal,
-    //       children: [
-    //         Expanded(
-    //           flex: 1,
-    //           child: TopicItem(
-    //             topic: model.topic!,
-    //             body: Column(
-    //               crossAxisAlignment: CrossAxisAlignment.start,
-    //               mainAxisAlignment: MainAxisAlignment.center,
-    //               children: [
-    //                 Row(
-    //                   children: topicNameWidget,
-    //                 ),
-    //                 Padding(
-    //                   padding: const EdgeInsets.only(top: 6),
-    //                   child: contentWidget,
-    //                 ),
-    //               ],
-    //             ),
-    //           ),
-    //         ),
-    //         Expanded(
-    //           flex: 0,
-    //           child: Container(
-    //             child: Row(
-    //               children: [
-    //                 Column(
-    //                   mainAxisAlignment: MainAxisAlignment.center,
-    //                   crossAxisAlignment: CrossAxisAlignment.end,
-    //                   children: [
-    //                     Padding(
-    //                       padding: const EdgeInsets.only(right: 0, bottom: 6),
-    //                       child: Label(
-    //                         timeFormat(model.lastReceiveTime),
-    //                         type: LabelType.bodyRegular,
-    //                       ),
-    //                     ),
-    //                     (model.notReadCount ?? 0) > 0
-    //                         ? Padding(
-    //                             padding: const EdgeInsets.only(right: 0),
-    //                             child: _unReadWidget(SessionSchema(notReadCount: model.notReadCount)),
-    //                           )
-    //                         : SizedBox.shrink(),
-    //                   ],
-    //                 ),
-    //               ],
-    //             ),
-    //           ),
-    //         ),
-    //       ],
-    //     ),
-    //   );
-  }
-
-  Widget _contactWidget(SessionSchema session) {
+  Widget _unReadWidget(SessionSchema session) {
+    String countStr = session.unReadCount.toString();
+    if ((session.unReadCount) > 999) {
+      countStr = '999+';
+    }
     return Container(
-      color: session.isTop ? application.theme.backgroundColor1 : Colors.transparent,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      height: 72,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Expanded(
-            flex: 1,
-            child: _contact != null
-                ? ContactItem(
-                    contact: _contact!,
-                    body: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Label(
-                          _contact?.displayName ?? " ",
-                          type: LabelType.h3,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: _contentWidget(session),
-                        ),
-                      ],
-                    ),
-                    onTapWave: false,
-                  )
-                : SizedBox.shrink(),
-          ),
-          Container(
-            child: Row(
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 0, bottom: 6),
-                      child: Label(
-                        timeFormat(session.lastMessageTime),
-                        type: LabelType.bodyRegular,
-                      ),
-                    ),
-                    (session.unReadCount) > 0
-                        ? Padding(
-                            padding: const EdgeInsets.only(right: 0),
-                            child: _unReadWidget(session),
-                          )
-                        : SizedBox.shrink(),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+      constraints: BoxConstraints(minWidth: 24, minHeight: 24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: application.theme.badgeColor,
+      ),
+      child: Center(
+        child: Label(
+          countStr,
+          type: LabelType.bodySmall,
+          dark: true,
+        ),
       ),
     );
   }

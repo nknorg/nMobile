@@ -454,7 +454,7 @@ class MessageSchema extends Equatable {
   }
 
   String? get targetId {
-    return isTopic ? topic : (isOutbound ? to : from);
+    return isOutbound ? (isTopic ? topic : to) : from;
   }
 
   bool get isTopic {
