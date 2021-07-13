@@ -215,24 +215,6 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           ),
         ],
       );
-    } else if (msgType == ContentType.media || msgType == ContentType.image || msgType == ContentType.nknImage) {
-      contentWidget = Padding(
-        padding: const EdgeInsets.only(top: 0),
-        child: Row(
-          children: <Widget>[
-            Asset.iconSvg('image', width: 16, color: application.theme.fontColor2),
-          ],
-        ),
-      );
-    } else if (msgType == ContentType.audio) {
-      contentWidget = Padding(
-        padding: const EdgeInsets.only(top: 0),
-        child: Row(
-          children: <Widget>[
-            Asset.iconSvg('microphone', width: 16, color: application.theme.fontColor2),
-          ],
-        ),
-      );
     } else if (msgType == ContentType.contactOptions) {
       Map<String, dynamic> optionData = _lastMsg?.content ?? Map<String, dynamic>();
       Map<String, dynamic> content = optionData['content'] ?? Map<String, dynamic>();
@@ -268,6 +250,24 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       } else {
         contentWidget = SizedBox.shrink();
       }
+    } else if (msgType == ContentType.media || msgType == ContentType.image || msgType == ContentType.nknImage) {
+      contentWidget = Padding(
+        padding: const EdgeInsets.only(top: 0),
+        child: Row(
+          children: <Widget>[
+            Asset.iconSvg('image', width: 16, color: application.theme.fontColor2),
+          ],
+        ),
+      );
+    } else if (msgType == ContentType.audio) {
+      contentWidget = Padding(
+        padding: const EdgeInsets.only(top: 0),
+        child: Row(
+          children: <Widget>[
+            Asset.iconSvg('microphone', width: 16, color: application.theme.fontColor2),
+          ],
+        ),
+      );
     } else if (msgType == ContentType.topicSubscribe) {
       contentWidget = Label(
         _localizations.joined_channel,
@@ -283,6 +283,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         overflow: TextOverflow.ellipsis,
       );
     } else {
+      // system + ...
       contentWidget = Label(
         _lastMsg?.content ?? " ",
         type: LabelType.bodyRegular,
