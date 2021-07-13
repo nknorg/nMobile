@@ -7,7 +7,9 @@ class DeviceInfoSchema {
   int contactId; // (required) <-> contact_id
   int? createAt; // <-> create_at
   int? updateAt; // <-> update_at
+
   String? deviceId; //  <-> device_id
+
   Map<String, dynamic>? data; // [*]<-> data[*, appName, appVersion, platform, platformVersion, ...]
 
   DeviceInfoSchema({
