@@ -199,8 +199,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
     // notification
     if (_contactSchema?.isMe == false) {
-      if (_contactSchema?.notificationOpen != null) {
-        _notificationOpen = _contactSchema!.notificationOpen;
+      if (_contactSchema?.options?.notificationOpen != null) {
+        _notificationOpen = _contactSchema!.options!.notificationOpen;
       } else {
         _notificationOpen = false;
       }
@@ -354,9 +354,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       Toast.show(_localizations.unavailable_device);
       return;
     }
-    _contactSchema?.notificationOpen = _notificationOpen;
+    _contactSchema?.options?.notificationOpen = _notificationOpen;
     // inside update
-    contactCommon.setNotificationOpen(_contactSchema?.id, _notificationOpen, notify: true);
+    contactCommon.setNotificationOpen(_contactSchema, _notificationOpen, notify: true);
     // outside update
     await chatOutCommon.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken ?? "");
   }

@@ -14,6 +14,8 @@ class ContactStorage with Tag {
 
   Database? get db => DB.currentDatabase;
 
+  // device_token TEXT // TODO:GG delete move to options
+  // notification_open BOOLEAN DEFAULT 0 // TODO:GG delete move to options
   static create(Database db, int version) async {
     final createSql = '''
       CREATE TABLE $tableName (
@@ -28,8 +30,6 @@ class ContactStorage with Tag {
         profile_version TEXT,
         profile_expires_at INTEGER,
         is_top BOOLEAN DEFAULT 0,
-        device_token TEXT,
-        notification_open BOOLEAN DEFAULT 0,
         options TEXT,
         data TEXT
       )''';
@@ -244,6 +244,107 @@ class ContactStorage with Tag {
     return false;
   }
 
+  Future<bool> setTop(String? clientAddress, bool top) async {
+    if (clientAddress == null || clientAddress.isEmpty) return false;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'is_top': top ? 1 : 0,
+          'updated_time': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'address = ?',
+        whereArgs: [clientAddress],
+      );
+      if (count != null && count > 0) {
+        logger.d("$TAG - setTop - success - clientAddress:$clientAddress - top:$top");
+        return true;
+      }
+      logger.w("$TAG - setTop - fail - clientAddress:$clientAddress - top:$top");
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
+  Future<bool> setDeviceToken(int? contactId, String? deviceToken, {OptionsSchema? old}) async {
+    if (contactId == null || contactId == 0) return false;
+    OptionsSchema options = old ?? OptionsSchema();
+    options.pushToken = deviceToken;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'options': jsonEncode(options.toMap()),
+          'updated_time': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count != null && count > 0) {
+        logger.d("$TAG - setDeviceToken - success - contactId:$contactId - deviceToken:$deviceToken");
+        return true;
+      }
+      logger.w("$TAG - setDeviceToken - fail - contactId:$contactId - deviceToken:$deviceToken");
+      return false;
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
+  Future<bool> setNotificationOpen(int? contactId, bool open, {OptionsSchema? old}) async {
+    if (contactId == null || contactId == 0) return false;
+    OptionsSchema options = old ?? OptionsSchema();
+    options.notificationOpen = open;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'options': jsonEncode(options.toMap()),
+          'updated_time': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count != null && count > 0) {
+        logger.d("$TAG - setNotificationOpen - success - contactId:$contactId - open:$open");
+        return true;
+      }
+      logger.w("$TAG - setNotificationOpen - fail - contactId:$contactId - open:$open");
+      return false;
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
+  Future<bool> setBurning(int? contactId, int? burningSeconds, int? updateTime, {OptionsSchema? old}) async {
+    if (contactId == null || contactId == 0) return false;
+    OptionsSchema options = old ?? OptionsSchema();
+    options.deleteAfterSeconds = burningSeconds ?? 0;
+    options.updateBurnAfterAt = updateTime ?? DateTime.now().millisecondsSinceEpoch;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'options': jsonEncode(options.toMap()),
+          'updated_time': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count != null && count > 0) {
+        logger.d("$TAG - setOptionsBurn - success - contactId:$contactId - options:$options");
+        return true;
+      }
+      logger.w("$TAG - setOptionsBurn - fail - contactId:$contactId - options:$options");
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
   Future<bool> setRemarkProfile(int? contactId, Map<String, dynamic>? extraInfo) async {
     if (contactId == null || contactId == 0) return false;
     try {
@@ -286,105 +387,6 @@ class ContactStorage with Tag {
         return true;
       }
       logger.w("$TAG - setNotes - fail - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
-
-  Future<bool> setOptionsBurn(int? contactId, int? burningSeconds, int? updateTime, {OptionsSchema? old}) async {
-    if (contactId == null || contactId == 0) return false;
-    OptionsSchema options = old ?? OptionsSchema();
-
-    options.deleteAfterSeconds = burningSeconds ?? 0;
-    options.updateBurnAfterAt = updateTime ?? DateTime.now().millisecondsSinceEpoch;
-
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'options': jsonEncode(options.toMap()),
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'id = ?',
-        whereArgs: [contactId],
-      );
-      if (count != null && count > 0) {
-        logger.d("$TAG - setOptionsBurn - success - contactId:$contactId - options:$options");
-        return true;
-      }
-      logger.w("$TAG - setOptionsBurn - fail - contactId:$contactId - options:$options");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
-
-  Future<bool> setTop(String? clientAddress, bool top) async {
-    if (clientAddress == null || clientAddress.isEmpty) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'is_top': top ? 1 : 0,
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'address = ?',
-        whereArgs: [clientAddress],
-      );
-      if (count != null && count > 0) {
-        logger.d("$TAG - setTop - success - clientAddress:$clientAddress - top:$top");
-        return true;
-      }
-      logger.w("$TAG - setTop - fail - clientAddress:$clientAddress - top:$top");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
-
-  Future<bool> setDeviceToken(int? contactId, String? deviceToken) async {
-    if (contactId == null || contactId == 0) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'device_token': deviceToken,
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'id = ?',
-        whereArgs: [contactId],
-      );
-      if (count != null && count > 0) {
-        logger.d("$TAG - setDeviceToken - success - contactId:$contactId - deviceToken:$deviceToken");
-        return true;
-      }
-      logger.w("$TAG - setDeviceToken - fail - contactId:$contactId - deviceToken:$deviceToken");
-      return false;
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
-
-  Future<bool> setNotificationOpen(int? contactId, bool open) async {
-    if (contactId == null || contactId == 0) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'notification_open': open ? 1 : 0,
-          'updated_time': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'id = ?',
-        whereArgs: [contactId],
-      );
-      if (count != null && count > 0) {
-        logger.d("$TAG - setNotificationOpen - success - contactId:$contactId - open:$open");
-        return true;
-      }
-      logger.w("$TAG - setNotificationOpen - fail - contactId:$contactId - open:$open");
-      return false;
     } catch (e) {
       handleError(e);
     }

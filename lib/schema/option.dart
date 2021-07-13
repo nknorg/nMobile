@@ -50,8 +50,8 @@ class OptionsSchema {
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {};
-    map['isBlack'] = isBlack;
-    map['notificationOpen'] = notificationOpen;
+    map['isBlack'] = isBlack ? 1 : 0;
+    map['notificationOpen'] = notificationOpen ? 1 : 0;
     map['pushToken'] = pushToken;
     map['deleteAfterSeconds'] = deleteAfterSeconds;
     map['updateBurnAfterTime'] = updateBurnAfterAt;
@@ -68,8 +68,8 @@ class OptionsSchema {
 
   static OptionsSchema fromMap(Map map) {
     OptionsSchema schema = OptionsSchema();
-    schema.isBlack = map['isBlack'] ?? false;
-    schema.notificationOpen = map['notificationOpen'] ?? false;
+    schema.isBlack = (map['isBlack'] != null && map['isBlack'].toString() == '1') ? true : false;
+    schema.notificationOpen = (map['notification_open'] != null && map['notification_open'].toString() == '1') ? true : false;
     schema.pushToken = map['pushToken'];
     schema.deleteAfterSeconds = map['deleteAfterSeconds'];
     schema.updateBurnAfterAt = map['updateBurnAfterTime'];

@@ -153,17 +153,17 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
 
   _toggleNotificationOpen() async {
     S _localizations = S.of(this.context);
-    bool nextOpen = !_contact.notificationOpen;
+    bool nextOpen = !(_contact.options?.notificationOpen ?? false);
     String? deviceToken = nextOpen ? await DeviceToken.get() : null;
     if (nextOpen && (deviceToken == null || deviceToken.isEmpty)) {
       Toast.show(_localizations.unavailable_device);
       return;
     }
     setState(() {
-      _contact.notificationOpen = nextOpen;
+      _contact.options?.notificationOpen = nextOpen;
     });
     // inside update
-    contactCommon.setNotificationOpen(_contact.id, _contact.notificationOpen, notify: true);
+    contactCommon.setNotificationOpen(_contact, nextOpen, notify: true);
     // outside update
     await chatOutCommon.sendContactOptionsToken(_contact.clientAddress, deviceToken ?? "");
   }
@@ -173,7 +173,7 @@ class _ChatMessagesPrivateLayoutState extends BaseStateFulWidgetState<ChatMessag
     S _localizations = S.of(context);
     SkinTheme _theme = application.theme;
     int deleteAfterSeconds = _contact.options?.deleteAfterSeconds ?? 0;
-    Color notifyBellColor = _contact.notificationOpen ? application.theme.primaryColor : Colors.white38;
+    Color notifyBellColor = (_contact.options?.notificationOpen ?? false) ? application.theme.primaryColor : Colors.white38;
 
     return Layout(
       headerColor: _theme.headBarColor2,
