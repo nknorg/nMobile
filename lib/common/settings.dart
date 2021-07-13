@@ -29,8 +29,8 @@ class Settings {
   static late bool biometricsAuthentication;
 
   // duration
-  static late Duration profileExpireDuration = Duration(hours: 1);
-  static late Duration deviceInfoExpireDuration = Duration(hours: 1);
+  static late int profileExpireMs = 1 * 60 * 60 * 1000; // 1h
+  static late int deviceInfoExpireMs = 1 * 60 * 60 * 1000; // 1h
   static late Duration msgResendDuration = Duration(minutes: 3);
 
   static init() async {
