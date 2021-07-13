@@ -46,7 +46,7 @@ class ChatCommon with Tag {
   Future<ContactSchema?> contactHandle(MessageSchema message) async {
     if (!message.canDisplay) return null;
     // duplicated
-    String? clientAddress = message.isOutbound ? message.to : message.from;
+    String? clientAddress = message.isOutbound ? (message.isTopic ? null : message.to) : message.from;
     if (clientAddress == null || clientAddress.isEmpty) return null;
     ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
     if (exist == null) {
@@ -134,7 +134,7 @@ class ChatCommon with Tag {
         lastMessageTime: message.sendTime,
         lastMessageOptions: message.toMap(),
         isTop: false,
-        unReadCount: message.isOutbound || !message.canDisplayAndRead ? 0 : 1,
+        unReadCount: (message.isOutbound || !message.canDisplayAndRead) ? 0 : 1,
       ));
     }
     if (message.isOutbound) {
