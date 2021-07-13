@@ -198,7 +198,7 @@ class ChatOutCommon with Tag {
       to: clientAddress,
       content: content,
       deleteAfterSeconds: contact.options?.deleteAfterSeconds,
-      burningUpdateTime: contact.options?.updateBurnAfterTime,
+      burningUpdateTime: contact.options?.updateBurnAfterAt,
     );
     return _sendAndDisplay(schema, MessageData.getText(schema));
   }
@@ -218,7 +218,7 @@ class ChatOutCommon with Tag {
       to: clientAddress,
       content: content,
       deleteAfterSeconds: contact.options?.deleteAfterSeconds,
-      burningUpdateTime: contact.options?.updateBurnAfterTime,
+      burningUpdateTime: contact.options?.updateBurnAfterAt,
     );
     return _sendAndDisplay(schema, await MessageData.getImage(schema), deviceInfo: deviceInfo);
   }
@@ -237,7 +237,7 @@ class ChatOutCommon with Tag {
       content: content,
       audioDurationS: durationS,
       deleteAfterSeconds: contact.options?.deleteAfterSeconds,
-      burningUpdateTime: contact.options?.updateBurnAfterTime,
+      burningUpdateTime: contact.options?.updateBurnAfterAt,
     );
     return _sendAndDisplay(schema, await MessageData.getAudio(schema));
   }

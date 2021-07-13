@@ -68,19 +68,19 @@ class ChatCommon with Tag {
       int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
       int? updateBurnAfterTime = burningOptions.length >= 2 ? burningOptions[1] : null;
       if (burnAfterSeconds != null && burnAfterSeconds > 0 && exist.options?.deleteAfterSeconds != burnAfterSeconds) {
-        if (exist.options?.updateBurnAfterTime == null || (updateBurnAfterTime ?? 0) > exist.options!.updateBurnAfterTime!) {
+        if (exist.options?.updateBurnAfterAt == null || (updateBurnAfterTime ?? 0) > exist.options!.updateBurnAfterAt!) {
           // side update latest
           exist.options?.deleteAfterSeconds = burnAfterSeconds;
-          exist.options?.updateBurnAfterTime = updateBurnAfterTime;
+          exist.options?.updateBurnAfterAt = updateBurnAfterTime;
           contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterTime, notify: true); // await
-        } else if ((updateBurnAfterTime ?? 0) <= exist.options!.updateBurnAfterTime!) {
+        } else if ((updateBurnAfterTime ?? 0) <= exist.options!.updateBurnAfterAt!) {
           // mine update latest
           DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(exist.id);
           if (deviceInfoCommon.isBurningUpdateTimeEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
             chatOutCommon.sendContactOptionsBurn(
               exist.clientAddress,
               exist.options!.deleteAfterSeconds!,
-              exist.options!.updateBurnAfterTime!,
+              exist.options!.updateBurnAfterAt!,
             );
           }
         }
