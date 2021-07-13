@@ -5,6 +5,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/format.dart';
 
@@ -82,11 +83,13 @@ class ChatMessageItem extends StatelessWidget {
         );
         break;
       // case ContentType.piece:
+      case ContentType.topicInvitation:
+        contentsWidget.add(_topicInvitedWidget(context));
+        break;
       // TODO:GG messageItem contentType
       case ContentType.system:
       case ContentType.topicSubscribe:
       case ContentType.topicUnsubscribe:
-      case ContentType.topicInvitation:
         break;
     }
 
@@ -215,5 +218,49 @@ class ChatMessageItem extends StatelessWidget {
     } else {
       return SizedBox.shrink();
     }
+  }
+
+  Widget _topicInvitedWidget(BuildContext context) {
+    S _localizations = S.of(context);
+
+    String inviteDesc = message.isOutbound ? _localizations.invites_desc_other(message.to?.substring(0, 6) ?? " ") : _localizations.invites_desc_me(message.from.substring(0, 6));
+
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 20),
+      child: Column(
+        children: <Widget>[
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Label(inviteDesc, type: LabelType.bodyRegular, color: application.theme.fontColor2),
+              Label(TopicSchema(topic: message.content?.toString() ?? "").topicShort, type: LabelType.bodyRegular, color: application.theme.fontColor1),
+            ],
+          ),
+          SizedBox(width: 5),
+          message.isOutbound
+              ? SizedBox.shrink()
+              : InkWell(
+                  child: Label(
+                    _localizations.accept,
+                    type: LabelType.bodyRegular,
+                    fontWeight: FontWeight.bold,
+                    color: application.theme.primaryColor,
+                  ),
+                  onTap: () async {
+                    // String? topic = await BottomDialog.of(context).showInput(
+                    //   title: _localizations.accept_invitation,
+                    //   desc: inviteDesc,
+                    //   value: message.content?.toString() ?? "",
+                    //   actionText: _localizations.accept_invitation,
+                    //   enable: false,
+                    // );
+                    // if (topic?.isNotEmpty == true) {
+                    //   await topicCommon.subscribe(topic);
+                    // }
+                  },
+                )
+        ],
+      ),
+    );
   }
 }
