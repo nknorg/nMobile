@@ -66,17 +66,17 @@ class ChatCommon with Tag {
     if (exist != null && message.canBurning && !message.isTopic && message.contentType != ContentType.contactOptions) {
       List<int?> burningOptions = MessageOptions.getContactBurning(message);
       int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
-      int? updateBurnAfterTime = burningOptions.length >= 2 ? burningOptions[1] : null;
+      int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
       if (burnAfterSeconds != null && burnAfterSeconds > 0 && exist.options?.deleteAfterSeconds != burnAfterSeconds) {
-        if (exist.options?.updateBurnAfterAt == null || (updateBurnAfterTime ?? 0) > exist.options!.updateBurnAfterAt!) {
+        if (exist.options?.updateBurnAfterAt == null || (updateBurnAfterAt ?? 0) > exist.options!.updateBurnAfterAt!) {
           // side update latest
           exist.options?.deleteAfterSeconds = burnAfterSeconds;
-          exist.options?.updateBurnAfterAt = updateBurnAfterTime;
-          contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterTime, notify: true); // await
-        } else if ((updateBurnAfterTime ?? 0) <= exist.options!.updateBurnAfterAt!) {
+          exist.options?.updateBurnAfterAt = updateBurnAfterAt;
+          contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true); // await
+        } else if ((updateBurnAfterAt ?? 0) <= exist.options!.updateBurnAfterAt!) {
           // mine update latest
           DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(exist.id);
-          if (deviceInfoCommon.isBurningUpdateTimeEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
+          if (deviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
             chatOutCommon.sendContactOptionsBurn(
               exist.clientAddress,
               exist.options!.deleteAfterSeconds!,

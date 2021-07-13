@@ -103,7 +103,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO topic (1 to 1)
-  Future sendContactOptionsBurn(String? clientAddress, int deleteSeconds, int updateTime, {int tryCount = 1}) async {
+  Future sendContactOptionsBurn(String? clientAddress, int deleteSeconds, int updateAt, {int tryCount = 1}) async {
     if (clientCommon.address == null || clientCommon.address!.isEmpty || clientAddress == null || clientAddress.isEmpty) return;
     if (tryCount > 3) return;
     try {
@@ -113,7 +113,7 @@ class ChatOutCommon with Tag {
         ContentType.contactOptions,
         to: clientAddress,
         deleteAfterSeconds: deleteSeconds,
-        burningUpdateTime: updateTime,
+        burningUpdateAt: updateAt,
       );
       send.content = MessageData.getContactOptionsBurn(send);
       await _sendAndDisplay(send, send.content);
@@ -122,7 +122,7 @@ class ChatOutCommon with Tag {
       handleError(e);
       logger.w("$TAG - sendContactOptionsBurn - fail - tryCount:$tryCount - clientAddress:$clientAddress - deleteSeconds:$deleteSeconds");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendContactOptionsBurn(clientAddress, deleteSeconds, updateTime, tryCount: tryCount++);
+        return sendContactOptionsBurn(clientAddress, deleteSeconds, updateAt, tryCount: tryCount++);
       });
     }
   }
@@ -185,8 +185,9 @@ class ChatOutCommon with Tag {
     }
   }
 
-  Future<MessageSchema?> sendText(String? clientAddress, String? content, {required ContactSchema contact}) async {
-    if (content == null || content.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<MessageSchema?> sendText(String? content, {ContactSchema? contact, TopicSchema? topic}) async {
+    if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
+    if (content == null || content.isEmpty) return null;
     if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
       // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
       return null;
@@ -195,36 +196,40 @@ class ChatOutCommon with Tag {
       Uuid().v4(),
       clientCommon.address!,
       ContentType.text,
-      to: clientAddress,
+      to: contact?.clientAddress,
+      topic: topic?.topic,
       content: content,
-      deleteAfterSeconds: contact.options?.deleteAfterSeconds,
-      burningUpdateTime: contact.options?.updateBurnAfterAt,
+      deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
+      burningUpdateAt: contact?.options?.updateBurnAfterAt,
     );
     return _sendAndDisplay(schema, MessageData.getText(schema));
   }
 
-  Future<MessageSchema?> sendImage(String? clientAddress, File? content, {required ContactSchema contact}) async {
-    if (content == null || (!await content.exists()) || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<MessageSchema?> sendImage(File? content, {ContactSchema? contact, TopicSchema? topic}) async {
+    if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
+    if (content == null || (!await content.exists())) return null;
     if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
       // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
       return null;
     }
-    DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(contact.id);
+    DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(contact?.id);
     String contentType = deviceInfoCommon.isMsgImageEnable(deviceInfo?.platform, deviceInfo?.appVersion) ? ContentType.image : ContentType.media;
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
       clientCommon.address!,
       contentType,
-      to: clientAddress,
+      to: contact?.clientAddress,
+      topic: topic?.topic,
       content: content,
-      deleteAfterSeconds: contact.options?.deleteAfterSeconds,
-      burningUpdateTime: contact.options?.updateBurnAfterAt,
+      deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
+      burningUpdateAt: contact?.options?.updateBurnAfterAt,
     );
     return _sendAndDisplay(schema, await MessageData.getImage(schema), deviceInfo: deviceInfo);
   }
 
-  Future<MessageSchema?> sendAudio(String? clientAddress, File? content, double? durationS, {required ContactSchema contact}) async {
-    if (content == null || (!await content.exists()) || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<MessageSchema?> sendAudio(File? content, double? durationS, {ContactSchema? contact, TopicSchema? topic}) async {
+    if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
+    if (content == null || (!await content.exists())) return null;
     if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
       // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
       return null;
@@ -233,11 +238,12 @@ class ChatOutCommon with Tag {
       Uuid().v4(),
       clientCommon.address!,
       ContentType.audio,
-      to: clientAddress,
+      to: contact?.clientAddress,
+      topic: topic?.topic,
       content: content,
       audioDurationS: durationS,
-      deleteAfterSeconds: contact.options?.deleteAfterSeconds,
-      burningUpdateTime: contact.options?.updateBurnAfterAt,
+      deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
+      burningUpdateAt: contact?.options?.updateBurnAfterAt,
     );
     return _sendAndDisplay(schema, await MessageData.getAudio(schema));
   }
@@ -270,47 +276,47 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display NO single
-  Future sendTopicSubscribe(String? topicName, {int tryCount = 1}) async {
-    if (clientCommon.address == null || clientCommon.address!.isEmpty || topicName == null || topicName.isEmpty) return;
+  Future sendTopicSubscribe(String? topic, {int tryCount = 1}) async {
+    if (clientCommon.address == null || clientCommon.address!.isEmpty || topic == null || topic.isEmpty) return;
     if (tryCount > 3) return;
     try {
       MessageSchema send = MessageSchema.fromSend(
         Uuid().v4(),
         clientCommon.address!,
         ContentType.topicSubscribe,
-        topic: topicName,
+        topic: topic,
       );
       send.content = MessageData.getTopicSubscribe(send);
       await chatCommon.clientPublishData(send.topic, send.content);
       logger.d("$TAG - sendTopicSubscribe - success - data:${send.content}");
     } catch (e) {
       handleError(e);
-      logger.w("$TAG - sendTopicSubscribe - fail - tryCount:$tryCount - topicName:$topicName");
+      logger.w("$TAG - sendTopicSubscribe - fail - tryCount:$tryCount - topic:$topic");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendTopicSubscribe(topicName, tryCount: tryCount++);
+        return sendTopicSubscribe(topic, tryCount: tryCount++);
       });
     }
   }
 
   // NO DB NO display NO single
-  Future sendTopicUnSubscribe(String? topicName, {int tryCount = 1}) async {
-    if (clientCommon.address == null || clientCommon.address!.isEmpty || topicName == null || topicName.isEmpty) return;
+  Future sendTopicUnSubscribe(String? topic, {int tryCount = 1}) async {
+    if (clientCommon.address == null || clientCommon.address!.isEmpty || topic == null || topic.isEmpty) return;
     if (tryCount > 3) return;
     try {
       MessageSchema send = MessageSchema.fromSend(
         Uuid().v4(),
         clientCommon.address!,
         ContentType.topicUnsubscribe,
-        topic: topicName,
+        topic: topic,
       );
       send.content = MessageData.getTopicUnSubscribe(send);
       await chatCommon.clientPublishData(send.topic, send.content);
       logger.d("$TAG - sendTopicUnSubscribe - success - data:${send.content}");
     } catch (e) {
       handleError(e);
-      logger.w("$TAG - sendTopicUnSubscribe - fail - tryCount:$tryCount - topicName:$topicName");
+      logger.w("$TAG - sendTopicUnSubscribe - fail - tryCount:$tryCount - topic:$topic");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendTopicUnSubscribe(topicName, tryCount: tryCount++);
+        return sendTopicUnSubscribe(topic, tryCount: tryCount++);
       });
     }
   }
