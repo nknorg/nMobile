@@ -299,6 +299,7 @@ class BottomDialog extends BaseStateFulWidget {
     bool password = false,
     double height = 300,
     int maxLength = 10000,
+    bool enable = true,
     bool contactSelect = false,
   }) async {
     S _localizations = S.of(context);
@@ -335,6 +336,7 @@ class BottomDialog extends BaseStateFulWidget {
               validator: validator,
               password: password,
               maxLength: maxLength,
+              enabled: enable,
               suffixIcon: contactSelect
                   ? GestureDetector(
                       onTap: () async {

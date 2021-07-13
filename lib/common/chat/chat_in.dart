@@ -93,12 +93,14 @@ class ChatInCommon with Tag {
       case ContentType.piece:
         await _receivePiece(received);
         break;
+      case ContentType.topicInvitation:
+        await _receiveTopicInvitation(received);
+        chatOutCommon.sendReceipt(received); // await
+        break;
       // TODO:GG receive contentType
       case ContentType.system:
       case ContentType.topicSubscribe:
       case ContentType.topicUnsubscribe:
-      case ContentType.topicInvitation:
-        break;
     }
     if (!received.canDisplayAndRead) {
       chatCommon.updateMessageStatus(received, MessageStatus.ReceivedRead);
@@ -418,5 +420,20 @@ class ChatInCommon with Tag {
     } else {
       logger.w("$TAG - receivePiece - DELETE:FAIL - empty - pieces:$pieces");
     }
+  }
+
+  // NO topic (1 to 1)
+  Future _receiveTopicInvitation(MessageSchema received) async {
+    // duplicated
+    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
+    if (exists.isNotEmpty) {
+      logger.d("$TAG - _receiveTopicInvitation - duplicated - schema:$exists");
+      return;
+    }
+    // DB
+    MessageSchema? schema = await _messageStorage.insert(received);
+    if (schema == null) return;
+    // display
+    _onSavedSink.add(schema);
   }
 }
