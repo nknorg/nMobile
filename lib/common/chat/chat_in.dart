@@ -451,9 +451,9 @@ class ChatInCommon with Tag {
       return;
     }
     // subscriber
-    SubscriberSchema? subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.originalId);
+    SubscriberSchema? subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
     if (subscriber == null) {
-      subscriber = await subscriberCommon.add(SubscriberSchema.create(received.topic, received.originalId, SubscriberStatus.Subscribed));
+      subscriber = await subscriberCommon.add(SubscriberSchema.create(received.topic, received.from, SubscriberStatus.Subscribed));
     } else {
       bool success = await subscriberCommon.setStatus(subscriber.id, SubscriberStatus.Subscribed, notify: true);
       if (success) subscriber.status = SubscriberStatus.Subscribed;
@@ -475,9 +475,9 @@ class ChatInCommon with Tag {
       return;
     }
     // subscriber
-    SubscriberSchema? subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.originalId);
+    SubscriberSchema? subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
     if (subscriber == null) {
-      subscriber = await subscriberCommon.add(SubscriberSchema.create(received.topic, received.originalId, SubscriberStatus.Unsubscribed));
+      subscriber = await subscriberCommon.add(SubscriberSchema.create(received.topic, received.from, SubscriberStatus.Unsubscribed));
     } else {
       bool success = await subscriberCommon.setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
       if (success) subscriber.status = SubscriberStatus.Unsubscribed;
