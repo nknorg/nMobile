@@ -115,6 +115,8 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // badge
     Badge.refreshCount();
+
+    // TODO:GG auth
   }
 
   @override

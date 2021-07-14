@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 
@@ -70,23 +71,6 @@ class TopicSchema {
     return type == TopicType.privateTopic;
   }
 
-  Future<bool> get isJoined async {
-    // TODO:GG topic fetchBlockHeight
-    return joined; // && (expireBlockHeight ?? now).isAfter(now);
-  }
-
-  bool isOwner(String? accountPubKey) => (accountPubKey?.isNotEmpty == true) && (accountPubKey == ownerPubKey);
-
-  bool isSubscribeExpire({int? globalHeight}) {
-    bool isHeightEmpty = (expireBlockHeight == null) || (expireBlockHeight! <= 0);
-    if (isHeightEmpty) return true;
-    if (globalHeight != null && globalHeight > 0) {
-      return (expireBlockHeight! - globalHeight) > Global.topicWarnBlockExpireHeight;
-    } else {
-      return false;
-    }
-  }
-
   String? get ownerPubKey {
     String? owner;
     if (isPrivate) {
@@ -145,6 +129,30 @@ class TopicSchema {
       return Future.value(null);
     }
     return avatarFile;
+  }
+
+  bool isOwner(String? accountPubKey) => (accountPubKey?.isNotEmpty == true) && (accountPubKey == ownerPubKey);
+
+  Future<bool> isJoined({int? globalHeight}) async {
+    if (!joined) return false;
+    if (expireBlockHeight != null && expireBlockHeight! > 0) {
+      globalHeight = globalHeight ?? (await clientCommon.client?.getHeight());
+      if (expireBlockHeight! < (globalHeight ?? 0)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  Future<bool> shouldResubscribe({int? globalHeight}) async {
+    bool isHeightEmpty = (expireBlockHeight == null) || (expireBlockHeight! <= 0);
+    if (isHeightEmpty) return true;
+    globalHeight = globalHeight ?? (await clientCommon.client?.getHeight());
+    if (globalHeight != null && globalHeight > 0) {
+      return (expireBlockHeight! - globalHeight) < Global.topicWarnBlockExpireHeight;
+    } else {
+      return false;
+    }
   }
 
   Map<String, dynamic> toMap() {
