@@ -176,10 +176,10 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setDeviceToken(ContactSchema? schema, String? deviceToken, {bool notify = false}) async {
-    if (schema == null || schema.id == null || schema.id == 0) return false;
-    bool success = await _contactStorage.setDeviceToken(schema.id, deviceToken, old: schema.options);
-    if (success && notify) queryAndNotify(schema.id);
+  Future<bool> setDeviceToken(int? contactId, String? deviceToken, {bool notify = false}) async {
+    if (contactId == null || contactId == 0) return false;
+    bool success = await _contactStorage.setDeviceToken(contactId, deviceToken);
+    if (success && notify) queryAndNotify(contactId);
     return success;
   }
 

@@ -14,7 +14,6 @@ class ContactStorage with Tag {
 
   Database? get db => DB.currentDatabase;
 
-  // device_token TEXT // TODO:GG delete move to options
   // notification_open BOOLEAN DEFAULT 0 // TODO:GG delete move to options
   // created_time INTEGER, // TODO:GG rename
   // updated_time INTEGER, // TODO:GG rename
@@ -32,6 +31,7 @@ class ContactStorage with Tag {
         profile_version TEXT,
         profile_expires_at INTEGER,
         is_top BOOLEAN DEFAULT 0,
+        device_token TEXT,
         options TEXT,
         data TEXT
       )''';
@@ -269,16 +269,14 @@ class ContactStorage with Tag {
     return false;
   }
 
-  Future<bool> setDeviceToken(int? contactId, String? deviceToken, {OptionsSchema? old}) async {
+  Future<bool> setDeviceToken(int? contactId, String? deviceToken) async {
     if (contactId == null || contactId == 0) return false;
-    OptionsSchema options = old ?? OptionsSchema();
-    options.pushToken = deviceToken;
     try {
       int? count = await db?.update(
         tableName,
         {
-          'options': jsonEncode(options.toMap()),
-          'update_at': DateTime.now().millisecondsSinceEpoch,
+          'device_token': deviceToken,
+          'updated_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [contactId],
