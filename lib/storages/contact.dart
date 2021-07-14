@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
