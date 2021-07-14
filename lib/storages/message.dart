@@ -238,7 +238,7 @@ class MessageStorage with Tag {
         tableName,
         columns: ['*'],
         where: 'target_id = ? AND NOT type = ?', // AND NOT type = ?
-        whereArgs: [targetId, ContentType.piece], // , ContentType.receipt],
+        whereArgs: [targetId, MessageContentType.piece], // , ContentType.receipt],
         offset: offset,
         limit: limit,
         orderBy: 'send_time DESC',

@@ -9,17 +9,6 @@ import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
-class ContactType {
-  static const String stranger = 'stranger';
-  static const String friend = 'friend';
-  static const String me = 'me';
-}
-
-class RequestType {
-  static const String header = 'header';
-  static const String full = 'full';
-}
-
 class ContactCommon with Tag {
   ContactStorage _contactStorage = ContactStorage();
 

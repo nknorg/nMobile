@@ -2,12 +2,22 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:nkn_sdk_flutter/wallet.dart';
-import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
 import 'option.dart';
+
+class ContactType {
+  static const String stranger = 'stranger';
+  static const String friend = 'friend';
+  static const String me = 'me';
+}
+
+class RequestType {
+  static const String header = 'header';
+  static const String full = 'full';
+}
 
 class ContactSchema {
   int? id; // <- id

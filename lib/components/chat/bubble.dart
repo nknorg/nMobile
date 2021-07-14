@@ -354,21 +354,21 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     List<Widget> _bodyList = [SizedBox.shrink()];
     var onTap;
     switch (_message.contentType) {
-      case ContentType.text:
-      case ContentType.textExtension:
+      case MessageContentType.text:
+      case MessageContentType.textExtension:
         _bodyList = _getContentBodyText(dark);
         onTap = () => _onContentTextTap();
         break;
-      case ContentType.media:
-      case ContentType.image:
-      case ContentType.nknImage:
+      case MessageContentType.media:
+      case MessageContentType.image:
+      case MessageContentType.nknImage:
         _bodyList = _getContentBodyImage(dark);
         if (_message.content is File) {
           File file = _message.content as File;
           onTap = () => PhotoScreen.go(context, filePath: file.path);
         }
         break;
-      case ContentType.audio:
+      case MessageContentType.audio:
         _bodyList = _getContentBodyAudio(dark);
         if (_message.content is File) {
           double? durationS = MessageOptions.getAudioDuration(_message);

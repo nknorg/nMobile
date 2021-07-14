@@ -215,7 +215,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           ),
         ],
       );
-    } else if (msgType == ContentType.contactOptions) {
+    } else if (msgType == MessageContentType.contactOptions) {
       Map<String, dynamic> optionData = _lastMsg?.content ?? Map<String, dynamic>();
       Map<String, dynamic> content = optionData['content'] ?? Map<String, dynamic>();
       if (content.keys.length <= 0) return SizedBox.shrink();
@@ -250,7 +250,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       } else {
         contentWidget = SizedBox.shrink();
       }
-    } else if (msgType == ContentType.media || msgType == ContentType.image || msgType == ContentType.nknImage) {
+    } else if (msgType == MessageContentType.media || msgType == MessageContentType.image || msgType == MessageContentType.nknImage) {
       contentWidget = Padding(
         padding: const EdgeInsets.only(top: 0),
         child: Row(
@@ -259,7 +259,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           ],
         ),
       );
-    } else if (msgType == ContentType.audio) {
+    } else if (msgType == MessageContentType.audio) {
       contentWidget = Padding(
         padding: const EdgeInsets.only(top: 0),
         child: Row(
@@ -268,14 +268,14 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           ],
         ),
       );
-    } else if (msgType == ContentType.topicInvitation) {
+    } else if (msgType == MessageContentType.topicInvitation) {
       contentWidget = Label(
         _localizations.channel_invitation,
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
-    } else if (msgType == ContentType.topicSubscribe) {
+    } else if (msgType == MessageContentType.topicSubscribe) {
       contentWidget = Label(
         _localizations.joined_channel,
         type: LabelType.bodyRegular,

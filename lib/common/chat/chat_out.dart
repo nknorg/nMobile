@@ -110,7 +110,7 @@ class ChatOutCommon with Tag {
       MessageSchema send = MessageSchema.fromSend(
         Uuid().v4(),
         clientCommon.address!,
-        ContentType.contactOptions,
+        MessageContentType.contactOptions,
         to: clientAddress,
         deleteAfterSeconds: deleteSeconds,
         burningUpdateAt: updateAt,
@@ -135,7 +135,7 @@ class ChatOutCommon with Tag {
       MessageSchema send = MessageSchema.fromSend(
         Uuid().v4(),
         clientCommon.address!,
-        ContentType.contactOptions,
+        MessageContentType.contactOptions,
         to: clientAddress,
       );
       send = MessageOptions.setDeviceToken(send, deviceToken);
@@ -195,7 +195,7 @@ class ChatOutCommon with Tag {
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
       clientCommon.address!,
-      ContentType.text,
+      MessageContentType.text,
       to: contact?.clientAddress,
       topic: topic?.topic,
       content: content,
@@ -214,7 +214,7 @@ class ChatOutCommon with Tag {
       return null;
     }
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(contact?.id);
-    String contentType = deviceInfoCommon.isMsgImageEnable(deviceInfo?.platform, deviceInfo?.appVersion) ? ContentType.image : ContentType.media;
+    String contentType = deviceInfoCommon.isMsgImageEnable(deviceInfo?.platform, deviceInfo?.appVersion) ? MessageContentType.image : MessageContentType.media;
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
       clientCommon.address!,
@@ -239,7 +239,7 @@ class ChatOutCommon with Tag {
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
       clientCommon.address!,
-      ContentType.audio,
+      MessageContentType.audio,
       to: contact?.clientAddress,
       topic: topic?.topic,
       content: content,
@@ -288,7 +288,7 @@ class ChatOutCommon with Tag {
     MessageSchema schema = MessageSchema.fromSend(
       Uuid().v4(),
       clientCommon.address!,
-      ContentType.topicInvitation,
+      MessageContentType.topicInvitation,
       to: clientAddress,
     );
     String data = MessageData.getTopicInvitee(schema, topicName);
@@ -303,7 +303,7 @@ class ChatOutCommon with Tag {
       MessageSchema send = MessageSchema.fromSend(
         Uuid().v4(),
         clientCommon.address!,
-        ContentType.topicSubscribe,
+        MessageContentType.topicSubscribe,
         topic: topic,
       );
       String data = MessageData.getTopicSubscribe(send);
@@ -326,7 +326,7 @@ class ChatOutCommon with Tag {
       MessageSchema send = MessageSchema.fromSend(
         Uuid().v4(),
         clientCommon.address!,
-        ContentType.topicUnsubscribe,
+        MessageContentType.topicUnsubscribe,
         topic: topic,
       );
       String data = MessageData.getTopicUnSubscribe(send);
@@ -350,8 +350,8 @@ class ChatOutCommon with Tag {
     if (schema == null) return null;
     schema = await chatCommon.updateMessageStatus(schema, MessageStatus.Sending, notify: true);
     switch (schema.contentType) {
-      case ContentType.text:
-      case ContentType.textExtension:
+      case MessageContentType.text:
+      case MessageContentType.textExtension:
         return await _sendAndDisplay(
           schema,
           MessageData.getText(schema),
@@ -360,9 +360,9 @@ class ChatOutCommon with Tag {
           deviceInfo: deviceInfo,
           resend: true,
         );
-      case ContentType.media:
-      case ContentType.image:
-      case ContentType.nknImage:
+      case MessageContentType.media:
+      case MessageContentType.image:
+      case MessageContentType.nknImage:
         return await _sendAndDisplay(
           schema,
           await MessageData.getImage(schema),
@@ -371,7 +371,7 @@ class ChatOutCommon with Tag {
           deviceInfo: deviceInfo,
           resend: true,
         );
-      case ContentType.audio:
+      case MessageContentType.audio:
         return await _sendAndDisplay(
           schema,
           await MessageData.getAudio(schema),
@@ -513,7 +513,7 @@ class ChatOutCommon with Tag {
       MessageSchema send = MessageSchema.fromSend(
         message.msgId,
         message.from,
-        ContentType.piece,
+        MessageContentType.piece,
         to: message.to,
         topic: message.topic,
         content: base64Encode(data),
