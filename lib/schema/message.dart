@@ -451,12 +451,8 @@ class MessageSchema extends Equatable {
     if (sendTime == null) sendTime = DateTime.now();
   }
 
-  String? get originalId {
-    return isOutbound ? from : (isTopic ? topic : to);
-  }
-
   String? get targetId {
-    return isOutbound ? (isTopic ? topic : to) : from;
+    return isTopic ? topic : (isOutbound ? to : from);
   }
 
   bool get isTopic {
