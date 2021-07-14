@@ -153,6 +153,12 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             "getSubscription" -> {
                 getSubscription(call, result)
             }
+            "getHeight" -> {
+                getHeight(call, result)
+            }
+            "getNonce" -> {
+                getNonce(call, result)
+            }
             else -> {
                 result.notImplemented()
             }
@@ -355,7 +361,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val offset = call.argument<Int>("offset") ?: 0
         val limit = call.argument<Int>("limit") ?: 0
         val meta = call.argument<Boolean>("meta") ?: true
-        val txPool = call.argument<Boolean>("txPool") ?: false
+        val txPool = call.argument<Boolean>("txPool") ?: true
         val subscriberHashPrefix = call.argument<ByteArray>("subscriberHashPrefix")
 
         if (!clientMap.containsKey(_id)) {
@@ -426,6 +432,50 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             try {
                 val count = client!!.getSubscribersCount(topic, subscriberHashPrefix)
                 resultSuccess(result, count)
+                return@launch
+            } catch (e: Exception) {
+                resultError(result, e)
+                return@launch
+            }
+        }
+    }
+
+    private fun getHeight(call: MethodCall, result: MethodChannel.Result) {
+        val _id = call.argument<String>("_id")!!
+
+        if (!clientMap.containsKey(_id)) {
+            result.error("", "client is null", "")
+            return
+        }
+        val client = clientMap[_id]
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val height = client!!.height
+                resultSuccess(result, height)
+                return@launch
+            } catch (e: Exception) {
+                resultError(result, e)
+                return@launch
+            }
+        }
+    }
+
+    private fun getNonce(call: MethodCall, result: MethodChannel.Result) {
+        val _id = call.argument<String>("_id")!!
+        val address = call.argument<String>("address")
+        val txPool = call.argument<Boolean>("txPool") ?: true
+
+        if (!clientMap.containsKey(_id)) {
+            result.error("", "client is null", "")
+            return
+        }
+        val client = clientMap[_id]
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val nonce = client!!.getNonceByAddress(address, txPool)
+                resultSuccess(result, nonce)
                 return@launch
             } catch (e: Exception) {
                 resultError(result, e)

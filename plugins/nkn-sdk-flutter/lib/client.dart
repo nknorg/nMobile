@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nkn_sdk_flutter/wallet.dart';
 
 class MessageType {
   static const int BINARY = 0;
@@ -263,6 +265,44 @@ class Client {
         return null;
       }
       return Map<String, dynamic>.from(resp);
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  Future<int?> getHeight() async {
+    try {
+      int? resp = await _methodChannel.invokeMethod('getHeight', {
+        '_id': this.address
+      });
+      return resp;
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  Future<int?> getNonce({bool txPool = true}) async {
+    try {
+      String? walletAddr = await Wallet.pubKeyToWalletAddr(hexEncode(this.publicKey));
+      int? resp = await _methodChannel.invokeMethod('getNonce', {
+        '_id': this.address,
+        'address': walletAddr,
+        'txPool': txPool,
+      });
+      return resp;
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  Future<int?> getNonceByAddress(String address,{bool txPool = true}) async {
+    try {
+      int? resp = await _methodChannel.invokeMethod('getNonce', {
+        '_id': this.address,
+        'address': address,
+        'txPool': txPool,
+      });
+      return resp;
     } catch (e) {
       throw e;
     }

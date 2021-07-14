@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
+import 'package:nkn_sdk_flutter/configure.dart';
+
+const String DEFAULT_SEED_RPC_SERVER = 'http://seed.nkn.org:30003';
 
 class WalletConfig {
   final String? password;
@@ -13,7 +16,7 @@ class WalletConfig {
 class RpcConfig {
   final List<String>? seedRPCServerAddr;
 
-  RpcConfig({this.seedRPCServerAddr});
+  RpcConfig({this.seedRPCServerAddr = const [DEFAULT_SEED_RPC_SERVER]});
 }
 
 class Wallet {
@@ -68,7 +71,7 @@ class Wallet {
     try {
       return await _methodChannel.invokeMethod('getBalance', {
         'address': address,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : null,
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
     } catch (e) {
       throw e;
@@ -88,10 +91,22 @@ class Wallet {
         'fee': fee,
         'nonce': nonce,
         'attributes': attributes,
-        'seedRpc': this.walletConfig.seedRPCServerAddr,
+        'seedRpc': this.walletConfig.seedRPCServerAddr ?? [DEFAULT_SEED_RPC_SERVER],
       });
     } catch (e) {
-      return null;
+      throw e;
+    }
+  }
+
+  Future<int?> getNonce({bool txPool = true}) async {
+    try {
+      return await _methodChannel.invokeMethod('getNonce', {
+        'address': this.address,
+        'txPool': txPool,
+        'seedRpc': this.walletConfig.seedRPCServerAddr ?? [DEFAULT_SEED_RPC_SERVER],
+      });
+    } catch (e) {
+      throw e;
     }
   }
 
@@ -111,7 +126,7 @@ class Wallet {
       int count = await _methodChannel.invokeMethod('getSubscribersCount', {
         'topic': topic,
         'subscriberHashPrefix': subscriberHashPrefix,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : null,
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
       return count;
     } catch (e) {
@@ -124,7 +139,7 @@ class Wallet {
       Map? resp = await _methodChannel.invokeMethod('getSubscription', {
         'topic': topic,
         'subscriber': subscriber,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : null,
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
       if (resp == null) {
         return null;
@@ -152,12 +167,34 @@ class Wallet {
         'meta': meta,
         'txPool': txPool,
         'subscriberHashPrefix': subscriberHashPrefix,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : null,
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
       if (resp == null) {
         return null;
       }
       return Map<String, dynamic>.from(resp);
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  static Future<int?> getHeight({RpcConfig? config}) async {
+    try {
+      return await _methodChannel.invokeMethod('getHeight', {
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
+      });
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  static Future<int?> getNonceByAddress(String address, {bool txPool = true, RpcConfig? config}) async {
+    try {
+      return await _methodChannel.invokeMethod('getNonce', {
+        'address': address,
+        'txPool': txPool,
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
+      });
     } catch (e) {
       throw e;
     }
