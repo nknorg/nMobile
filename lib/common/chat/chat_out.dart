@@ -492,6 +492,7 @@ class ChatOutCommon with Tag {
     await SendPush.send(contact.deviceToken!, title, content);
   }
 
+  // TODO:GG topic???
   Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message, DeviceInfoSchema? deviceInfo) async {
     if (!deviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) return null;
     List results = await _convert2Pieces(message);
