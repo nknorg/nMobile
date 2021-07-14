@@ -278,6 +278,23 @@ class ChatOutCommon with Tag {
     }
   }
 
+  // NO topic (1 to 1)
+  Future<MessageSchema?> sendTopicInvitee(String? clientAddress, String? topicName) async {
+    if (clientAddress == null || clientAddress.isEmpty || topicName == null || topicName.isEmpty) return null;
+    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
+      return null;
+    }
+    MessageSchema schema = MessageSchema.fromSend(
+      Uuid().v4(),
+      clientCommon.address!,
+      ContentType.topicInvitation,
+      to: clientAddress,
+    );
+    String data = MessageData.getTopicInvitee(schema, topicName);
+    return _sendAndDisplay(schema, data);
+  }
+
   // NO DB NO display NO single
   Future sendTopicSubscribe(String? topic, {int tryCount = 1}) async {
     if (clientCommon.address == null || clientCommon.address!.isEmpty || topic == null || topic.isEmpty) return;
@@ -322,23 +339,6 @@ class ChatOutCommon with Tag {
         return sendTopicUnSubscribe(topic, tryCount: tryCount++);
       });
     }
-  }
-
-  // NO topic (1 to 1)
-  Future<MessageSchema?> sendTopicInvitee(String? clientAddress, String? topicName) async {
-    if (clientAddress == null || clientAddress.isEmpty || topicName == null || topicName.isEmpty) return null;
-    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
-      return null;
-    }
-    MessageSchema schema = MessageSchema.fromSend(
-      Uuid().v4(),
-      clientCommon.address!,
-      ContentType.topicInvitation,
-      to: clientAddress,
-    );
-    String data = MessageData.getTopicInvitee(schema, topicName);
-    return _sendAndDisplay(schema, data);
   }
 
   Future<MessageSchema?> resend(
@@ -483,10 +483,9 @@ class ChatOutCommon with Tag {
     //   case ContentType.audio:
     //     content = '[${localizations.audio}]';
     //     break;
-    //   case ContentType.system:
+    //   case ContentType.topicInvitation:
     //   case ContentType.topicSubscribe:
     //   case ContentType.topicUnsubscribe:
-    //   case ContentType.topicInvitation:
     //     break;
     // }
 

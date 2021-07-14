@@ -15,8 +15,9 @@ import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
 class ContentType {
-  static const String system = 'system'; // visible // TODO:GG wait data
+  // static const String system = 'system';
   static const String receipt = 'receipt'; // db
+  // static const String read = 'read'; // db
 
   static const String contact = 'contact'; // .
   static const String contactOptions = 'event:contactOptions'; // db + visible
@@ -32,9 +33,9 @@ class ContentType {
 
   static const String piece = 'piece'; // db
 
+  static const String topicInvitation = 'event:channelInvitation';
   static const String topicSubscribe = 'event:subscribe';
   static const String topicUnsubscribe = 'event:unsubscribe';
-  static const String topicInvitation = 'event:channelInvitation';
 
   // SUPPORT:START
   static const String nknImage = 'nknImage';
@@ -374,6 +375,16 @@ class MessageData {
     return jsonEncode(data);
   }
 
+  static String getTopicInvitee(MessageSchema schema, String topicName) {
+    Map data = {
+      'id': schema.msgId,
+      'contentType': ContentType.topicInvitation,
+      'content': topicName,
+      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+    };
+    return jsonEncode(data);
+  }
+
   static String getTopicSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
@@ -389,16 +400,6 @@ class MessageData {
       'id': schema.msgId,
       'contentType': ContentType.topicUnsubscribe,
       'topic': schema.topic,
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-    };
-    return jsonEncode(data);
-  }
-
-  static String getTopicInvitee(MessageSchema schema, String topicName) {
-    Map data = {
-      'id': schema.msgId,
-      'contentType': ContentType.topicInvitation,
-      'content': topicName,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
@@ -497,7 +498,6 @@ class MessageSchema extends Equatable {
     );
 
     switch (schema.contentType) {
-      // case ContentType.system:
       case ContentType.receipt:
         schema.content = data['targetID'];
         break;
@@ -514,9 +514,9 @@ class MessageSchema extends Equatable {
       // case ContentType.nknImage:
       // case ContentType.audio:
       // case ContentType.piece:
+      // case ContentType.topicInvitation:
       // case ContentType.topicSubscribe:
       // case ContentType.topicUnsubscribe:
-      // case ContentType.topicInvitation:
       default:
         schema.content = data['content'];
         break;
@@ -631,7 +631,6 @@ class MessageSchema extends Equatable {
 
     // content = String
     switch (contentType) {
-      // case ContentType.system:
       // case ContentType.receipt:
       case ContentType.contact:
       case ContentType.contactOptions:
@@ -650,9 +649,9 @@ class MessageSchema extends Equatable {
           map['content'] = Path.getLocalFile((content as File).path);
         }
         break;
+      // case ContentType.topicInvitation:
       // case ContentType.topicSubscribe:
       // case ContentType.topicUnsubscribe:
-      // case ContentType.topicInvitation:
       default:
         map['content'] = content;
         break;
@@ -684,7 +683,6 @@ class MessageSchema extends Equatable {
 
     // content = File/Map/String...
     switch (schema.contentType) {
-      // case ContentType.system:
       case ContentType.receipt:
         schema.content = e['targetID'];
         break;
@@ -708,9 +706,9 @@ class MessageSchema extends Equatable {
         String? completePath = Path.getCompleteFile(e['content']);
         schema.content = (completePath?.isNotEmpty == true) ? File(completePath!) : null;
         break;
+      // case ContentType.topicInvitation:
       // case ContentType.topicSubscribe:
       // case ContentType.topicUnsubscribe:
-      // case ContentType.topicInvitation:
       default:
         schema.content = e['content'];
         break;

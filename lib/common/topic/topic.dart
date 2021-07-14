@@ -41,6 +41,9 @@ class TopicCommon with Tag {
     if (exists == null) {
       logger.d("$TAG - subscribe - new - schema:$exists");
       exists = await add(TopicSchema.create(topicName), checkDuplicated: false);
+    } else {
+      SubscriberSchema? subscriber = SubscriberSchema.create(topicName, clientCommon.address, SubscriberStatus.Subscribed);
+      await subscriberCommon.add(subscriber);
     }
     if (exists == null) return null;
 

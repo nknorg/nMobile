@@ -98,7 +98,6 @@ class ChatInCommon with Tag {
         chatOutCommon.sendReceipt(received); // await
         break;
       // TODO:GG receive contentType
-      case ContentType.system:
       case ContentType.topicSubscribe:
       case ContentType.topicUnsubscribe:
     }

@@ -268,13 +268,6 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           ],
         ),
       );
-    } else if (msgType == ContentType.topicSubscribe) {
-      contentWidget = Label(
-        _localizations.joined_channel,
-        type: LabelType.bodyRegular,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      );
     } else if (msgType == ContentType.topicInvitation) {
       contentWidget = Label(
         _localizations.channel_invitation,
@@ -282,14 +275,21 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
-    } else {
-      // system + ...
+    } else if (msgType == ContentType.topicSubscribe) {
       contentWidget = Label(
-        _lastMsg?.content ?? " ",
+        _localizations.joined_channel,
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
+    } else {
+      contentWidget = SizedBox.shrink();
+      // contentWidget = Label(
+      //   _lastMsg?.content ?? " ",
+      //   type: LabelType.bodyRegular,
+      //   maxLines: 1,
+      //   overflow: TextOverflow.ellipsis,
+      // );
     }
     return contentWidget;
   }
