@@ -8,6 +8,7 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
+import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -63,7 +64,7 @@ class ChatCommon with Tag {
       }
     }
     // burning
-    if (exist != null && message.canBurning && !message.isTopic && message.contentType != ContentType.contactOptions) {
+    if (exist != null && message.canBurning && !message.isTopic && message.contentType != MessageContentType.contactOptions) {
       List<int?> burningOptions = MessageOptions.getContactBurning(message);
       int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
       int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
@@ -90,7 +91,7 @@ class ChatCommon with Tag {
   }
 
   Future<DeviceInfoSchema?> deviceInfoHandle(MessageSchema message, ContactSchema? contact) async {
-    if (message.contentType == ContentType.deviceRequest || message.contentType == ContentType.deviceInfo) return null;
+    if (message.contentType == MessageContentType.deviceRequest || message.contentType == MessageContentType.deviceInfo) return null;
     if (contact == null || contact.id == null || contact.id == 0) return null;
     // duplicated
     DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.id);
@@ -111,13 +112,24 @@ class ChatCommon with Tag {
 
   Future<TopicSchema?> topicHandle(MessageSchema message) async {
     if (!message.canDisplay) return null;
-    // duplicated
     if (!message.isTopic) return null;
+    // duplicated
     TopicSchema? exist = await topicCommon.queryByTopic(message.topic);
     if (exist == null) {
       exist = await topicCommon.add(TopicSchema.create(message.topic));
     }
-    // TODO:GG how to update profile
+    // TODO:GG topic how to update profile
+    return exist;
+  }
+
+  Future<SubscriberSchema?> subscriberHandle(MessageSchema message) async {
+    if (!message.isTopic) return null;
+    if (message.contentType == MessageContentType.topicSubscribe || message.contentType == MessageContentType.topicUnsubscribe) return null;
+    // duplicated
+    SubscriberSchema? exist = await subscriberCommon.queryByTopicChatId(message.topic, message.from);
+    if (exist == null) {
+      exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed));
+    }
     return exist;
   }
 
