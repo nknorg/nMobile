@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 
@@ -75,6 +76,16 @@ class TopicSchema {
   }
 
   bool isOwner(String? accountPubKey) => (accountPubKey?.isNotEmpty == true) && (accountPubKey == ownerPubKey);
+
+  bool isSubscribeExpire({int? globalHeight}) {
+    bool isHeightEmpty = (expireBlockHeight == null) || (expireBlockHeight! <= 0);
+    if (isHeightEmpty) return true;
+    if (globalHeight != null && globalHeight > 0) {
+      return (expireBlockHeight! - globalHeight) > Global.topicWarnBlockExpireHeight;
+    } else {
+      return false;
+    }
+  }
 
   String? get ownerPubKey {
     String? owner;
