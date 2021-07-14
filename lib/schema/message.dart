@@ -6,7 +6,6 @@ import 'package:equatable/equatable.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
@@ -14,7 +13,9 @@ import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
-class ContentType {
+import 'contact.dart';
+
+class MessageContentType {
   // static const String system = 'system';
   static const String receipt = 'receipt'; // db
   // static const String read = 'read'; // db
@@ -188,7 +189,7 @@ class MessageData {
   static String getReceipt(String msgId) {
     Map map = {
       'id': Uuid().v4(),
-      'contentType': ContentType.receipt,
+      'contentType': MessageContentType.receipt,
       'targetID': msgId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
@@ -198,7 +199,7 @@ class MessageData {
   static String getContactRequest(String requestType, String? profileVersion, int expiresAt) {
     Map data = {
       'id': Uuid().v4(),
-      'contentType': ContentType.contact,
+      'contentType': MessageContentType.contact,
       'requestType': requestType,
       'version': profileVersion,
       'expiresAt': expiresAt,
@@ -209,7 +210,7 @@ class MessageData {
   static String getContactResponseHeader(String? profileVersion, int expiresAt) {
     Map data = {
       'id': Uuid().v4(),
-      'contentType': ContentType.contact,
+      'contentType': MessageContentType.contact,
       'responseType': RequestType.header,
       'version': profileVersion,
       'expiresAt': expiresAt,
@@ -220,7 +221,7 @@ class MessageData {
   static Future<String> getContactResponseFull(String? firstName, String? lastName, File? avatar, String? profileVersion, int expiresAt) async {
     Map data = {
       'id': Uuid().v4(),
-      'contentType': ContentType.contact,
+      'contentType': MessageContentType.contact,
       'responseType': RequestType.full,
       'version': profileVersion,
       'expiresAt': expiresAt,
@@ -249,7 +250,7 @@ class MessageData {
     int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.contactOptions,
+      'contentType': MessageContentType.contactOptions,
       'optionType': '0',
       'content': {
         'deleteAfterSeconds': burnAfterSeconds,
@@ -267,7 +268,7 @@ class MessageData {
     String? deviceToken = MessageOptions.getDeviceToken(schema);
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.contactOptions,
+      'contentType': MessageContentType.contactOptions,
       'optionType': '1',
       'content': {
         'deviceToken': deviceToken,
@@ -280,7 +281,7 @@ class MessageData {
   static String getDeviceRequest() {
     Map data = {
       'id': Uuid().v4(),
-      'contentType': ContentType.deviceRequest,
+      'contentType': MessageContentType.deviceRequest,
     };
     return jsonEncode(data);
   }
@@ -288,7 +289,7 @@ class MessageData {
   static String getDeviceInfo() {
     Map data = {
       'id': Uuid().v4(),
-      'contentType': ContentType.deviceInfo,
+      'contentType': MessageContentType.deviceInfo,
       'deviceId': Global.deviceId,
       'appName': Settings.appName,
       'appVersion': Global.build,
@@ -378,7 +379,7 @@ class MessageData {
   static String getTopicInvitee(MessageSchema schema, String topicName) {
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.topicInvitation,
+      'contentType': MessageContentType.topicInvitation,
       'content': topicName,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -388,7 +389,7 @@ class MessageData {
   static String getTopicSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.topicSubscribe,
+      'contentType': MessageContentType.topicSubscribe,
       'topic': schema.topic,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -398,7 +399,7 @@ class MessageData {
   static String getTopicUnSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
-      'contentType': ContentType.topicUnsubscribe,
+      'contentType': MessageContentType.topicUnsubscribe,
       'topic': schema.topic,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
@@ -464,21 +465,21 @@ class MessageSchema extends Equatable {
 
   // Burning
   bool get canBurning {
-    bool isText = contentType == ContentType.text || contentType == ContentType.textExtension;
-    bool isImage = contentType == ContentType.media || contentType == ContentType.image || contentType == ContentType.nknImage;
-    bool isAudio = contentType == ContentType.audio;
+    bool isText = contentType == MessageContentType.text || contentType == MessageContentType.textExtension;
+    bool isImage = contentType == MessageContentType.media || contentType == MessageContentType.image || contentType == MessageContentType.nknImage;
+    bool isAudio = contentType == MessageContentType.audio;
     return isText || isImage || isAudio;
   }
 
   // ++ UnReadCount / Notification
   bool get canDisplayAndRead {
-    bool isEvent = contentType == ContentType.topicInvitation;
+    bool isEvent = contentType == MessageContentType.topicInvitation;
     return canBurning || isEvent;
   }
 
   // ++ Session
   bool get canDisplay {
-    bool isEvent = contentType == ContentType.contactOptions; // || contentType == ContentType.topicSubscribe || contentType == ContentType.topicUnsubscribe;
+    bool isEvent = contentType == MessageContentType.contactOptions; // || contentType == ContentType.topicSubscribe || contentType == ContentType.topicUnsubscribe;
     return canDisplayAndRead || isEvent;
   }
 
@@ -498,13 +499,13 @@ class MessageSchema extends Equatable {
     );
 
     switch (schema.contentType) {
-      case ContentType.receipt:
+      case MessageContentType.receipt:
         schema.content = data['targetID'];
         break;
-      case ContentType.contact:
-      case ContentType.contactOptions:
-      case ContentType.deviceInfo:
-      case ContentType.deviceRequest:
+      case MessageContentType.contact:
+      case MessageContentType.contactOptions:
+      case MessageContentType.deviceInfo:
+      case MessageContentType.deviceRequest:
         schema.content = data;
         break;
       // case ContentType.text:
@@ -600,8 +601,8 @@ class MessageSchema extends Equatable {
 
     // burn
     if (deleteAfterSeconds != null && deleteAfterSeconds > 0) {
-      if (this.contentType == ContentType.text) {
-        this.contentType = ContentType.textExtension;
+      if (this.contentType == MessageContentType.text) {
+        this.contentType = MessageContentType.textExtension;
       }
       MessageOptions.setContactBurning(this, deleteAfterSeconds, burningUpdateAt);
     }
@@ -632,19 +633,19 @@ class MessageSchema extends Equatable {
     // content = String
     switch (contentType) {
       // case ContentType.receipt:
-      case ContentType.contact:
-      case ContentType.contactOptions:
-      case ContentType.deviceRequest:
-      case ContentType.deviceInfo:
+      case MessageContentType.contact:
+      case MessageContentType.contactOptions:
+      case MessageContentType.deviceRequest:
+      case MessageContentType.deviceInfo:
         map['content'] = content is Map ? jsonEncode(content) : content;
         break;
       // case ContentType.text:
       // case ContentType.textExtension:
-      case ContentType.media:
-      case ContentType.image:
-      case ContentType.nknImage:
-      case ContentType.audio:
-      case ContentType.piece:
+      case MessageContentType.media:
+      case MessageContentType.image:
+      case MessageContentType.nknImage:
+      case MessageContentType.audio:
+      case MessageContentType.piece:
         if (content is File) {
           map['content'] = Path.getLocalFile((content as File).path);
         }
@@ -657,7 +658,7 @@ class MessageSchema extends Equatable {
         break;
     }
 
-    if (contentType == ContentType.piece) {
+    if (contentType == MessageContentType.piece) {
       if (options == null) {
         options = Map<String, dynamic>();
       }
@@ -683,13 +684,13 @@ class MessageSchema extends Equatable {
 
     // content = File/Map/String...
     switch (schema.contentType) {
-      case ContentType.receipt:
+      case MessageContentType.receipt:
         schema.content = e['targetID'];
         break;
-      case ContentType.contact:
-      case ContentType.contactOptions:
-      case ContentType.deviceInfo:
-      case ContentType.deviceRequest:
+      case MessageContentType.contact:
+      case MessageContentType.contactOptions:
+      case MessageContentType.deviceInfo:
+      case MessageContentType.deviceRequest:
         if ((e['content']?.toString().isNotEmpty == true) && (e['content'] is String)) {
           schema.content = jsonFormat(e['content']);
         } else {
@@ -698,11 +699,11 @@ class MessageSchema extends Equatable {
         break;
       // case ContentType.text:
       // case ContentType.textExtension:
-      case ContentType.media:
-      case ContentType.image:
-      case ContentType.nknImage:
-      case ContentType.audio:
-      case ContentType.piece:
+      case MessageContentType.media:
+      case MessageContentType.image:
+      case MessageContentType.nknImage:
+      case MessageContentType.audio:
+      case MessageContentType.piece:
         String? completePath = Path.getCompleteFile(e['content']);
         schema.content = (completePath?.isNotEmpty == true) ? File(completePath!) : null;
         break;
