@@ -42,6 +42,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   void onRefreshArguments() {
     if (widget.session.isTopic) {
       if (_topic == null || widget.session.targetId != _topic?.id?.toString()) {
+        _contact = null;
         topicCommon.queryByTopic(widget.session.targetId).then((value) {
           setState(() {
             _topic = value;
@@ -50,6 +51,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       }
     } else {
       if (_contact == null || widget.session.targetId != _contact?.id?.toString()) {
+        _topic = null;
         contactCommon.queryByClientAddress(widget.session.targetId).then((value) {
           setState(() {
             _contact = value;
@@ -282,14 +284,15 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
-    } else {
+    } else if (msgType == MessageContentType.topicUnsubscribe) {
       contentWidget = SizedBox.shrink();
-      // contentWidget = Label(
-      //   _lastMsg?.content ?? " ",
-      //   type: LabelType.bodyRegular,
-      //   maxLines: 1,
-      //   overflow: TextOverflow.ellipsis,
-      // );
+    } else {
+      contentWidget = Label(
+        _lastMsg?.content ?? " ",
+        type: LabelType.bodyRegular,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
     }
     return contentWidget;
   }

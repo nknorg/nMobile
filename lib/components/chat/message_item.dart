@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/chat/bubble.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
@@ -268,7 +269,9 @@ class ChatMessageItem extends StatelessWidget {
                       enable: false,
                     );
                     if (topic?.isNotEmpty == true) {
+                      Loading.show();
                       TopicSchema? result = await topicCommon.subscribe(topic);
+                      Loading.dismiss();
                       if (result != null) Toast.show(_localizations.subscribed);
                     }
                   },
