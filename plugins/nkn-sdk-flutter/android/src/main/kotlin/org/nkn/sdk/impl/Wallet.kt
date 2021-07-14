@@ -64,6 +64,12 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             "getSubscription" -> {
                 getSubscription(call, result)
             }
+            "getHeight" -> {
+                getHeight(call, result)
+            }
+            "getNonce" -> {
+                getNonce(call, result)
+            }
             else -> {
                 result.notImplemented()
             }
@@ -186,7 +192,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val offset = call.argument<Int>("offset") ?: 0
         val limit = call.argument<Int>("limit") ?: 0
         val meta = call.argument<Boolean>("meta") ?: true
-        val txPool = call.argument<Boolean>("txPool") ?: false
+        val txPool = call.argument<Boolean>("txPool") ?: true
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
         val subscriberHashPrefix = call.argument<ByteArray>("subscriberHashPrefix")
 
@@ -261,6 +267,53 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 }
                 val count = Nkn.getSubscribersCount(topic, subscriberHashPrefix, config)
                 resultSuccess(result, count)
+                return@launch
+            } catch (e: Exception) {
+                resultError(result, e)
+                return@launch
+            }
+        }
+    }
+
+    private fun getHeight(call: MethodCall, result: MethodChannel.Result) {
+        val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val config = RPCConfig()
+                if (seedRpc != null) {
+                    config.seedRPCServerAddr = StringArray(null)
+                    for (addr in seedRpc) {
+                        config.seedRPCServerAddr.append(addr)
+                    }
+                }
+
+                val height = Nkn.getHeight(config)
+                resultSuccess(result, height)
+                return@launch
+            } catch (e: Exception) {
+                resultError(result, e)
+                return@launch
+            }
+        }
+    }
+
+    private fun getNonce(call: MethodCall, result: MethodChannel.Result) {
+        val address = call.argument<String>("address")
+        val txPool = call.argument<Boolean>("txPool") ?: true
+        val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val config = RPCConfig()
+                if (seedRpc != null) {
+                    config.seedRPCServerAddr = StringArray(null)
+                    for (addr in seedRpc) {
+                        config.seedRPCServerAddr.append(addr)
+                    }
+                }
+
+                val nonce = Nkn.getNonce(address, txPool, config)
+                resultSuccess(result, nonce)
                 return@launch
             } catch (e: Exception) {
                 resultError(result, e)
