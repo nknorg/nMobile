@@ -276,7 +276,7 @@ class ContactStorage with Tag {
         tableName,
         {
           'device_token': deviceToken,
-          'updated_at': DateTime.now().millisecondsSinceEpoch,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
         whereArgs: [contactId],
