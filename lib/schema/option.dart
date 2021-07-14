@@ -6,10 +6,8 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/path.dart';
 
 class OptionsSchema {
-  bool isBlack;
-
+  bool receiveOpen;
   bool notificationOpen;
-  String? pushToken; // deviceToken or topicName
 
   int? deleteAfterSeconds;
   int? updateBurnAfterAt;
@@ -27,9 +25,8 @@ class OptionsSchema {
   Color? chatBubbleTextColor;
 
   OptionsSchema({
-    this.isBlack = false,
+    this.receiveOpen = false,
     this.notificationOpen = false,
-    this.pushToken,
     this.deleteAfterSeconds,
     this.updateBurnAfterAt,
     this.avatarNameColor,
@@ -50,9 +47,8 @@ class OptionsSchema {
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {};
-    map['isBlack'] = isBlack ? 1 : 0;
+    map['receiveOpen'] = receiveOpen ? 1 : 0;
     map['notificationOpen'] = notificationOpen ? 1 : 0;
-    map['pushToken'] = pushToken;
     map['deleteAfterSeconds'] = deleteAfterSeconds;
     map['updateBurnAfterAt'] = updateBurnAfterAt;
     map['soundResource'] = soundResource;
@@ -68,9 +64,8 @@ class OptionsSchema {
 
   static OptionsSchema fromMap(Map map) {
     OptionsSchema schema = OptionsSchema();
-    schema.isBlack = (map['isBlack'] != null && map['isBlack'].toString() == '1') ? true : false;
+    schema.receiveOpen = (map['receiveOpen'] != null && map['receiveOpen'].toString() == '1') ? true : false;
     schema.notificationOpen = (map['notificationOpen'] != null && map['notificationOpen'].toString() == '1') ? true : false;
-    schema.pushToken = map['pushToken'];
     schema.deleteAfterSeconds = map['deleteAfterSeconds'];
     schema.updateBurnAfterAt = map['updateBurnAfterAt'];
     schema.soundResource = map['soundResource'];
@@ -86,6 +81,6 @@ class OptionsSchema {
 
   @override
   String toString() {
-    return 'OptionsSchema{isBlack: $isBlack, notificationOpen: $notificationOpen, pushToken: $pushToken, deleteAfterSeconds: $deleteAfterSeconds, updateBurnAfterAt: $updateBurnAfterAt, soundResource: $soundResource, muteExpireAt: $muteExpireAt, avatarBgColor: $avatarBgColor, avatarNameColor: $avatarNameColor, chatBgFile: $chatBgFile, chatBgColor: $chatBgColor, chatBubbleBgColor: $chatBubbleBgColor, chatBubbleTextColor: $chatBubbleTextColor}';
+    return 'OptionsSchema{receiveOpen: $receiveOpen, notificationOpen: $notificationOpen, deleteAfterSeconds: $deleteAfterSeconds, updateBurnAfterAt: $updateBurnAfterAt, soundResource: $soundResource, muteExpireAt: $muteExpireAt, avatarBgColor: $avatarBgColor, avatarNameColor: $avatarNameColor, chatBgFile: $chatBgFile, chatBgColor: $chatBgColor, chatBubbleBgColor: $chatBubbleBgColor, chatBubbleTextColor: $chatBubbleTextColor}';
   }
 }

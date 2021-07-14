@@ -23,6 +23,7 @@ class ContactSchema {
   int? profileUpdateAt; // <-> profile_expires_at(long) == update_at
 
   bool isTop = false; // <-> is_top
+  String? deviceToken; // <-> device_token
 
   OptionsSchema? options; // <-> options
   Map<String, dynamic>? data; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
@@ -42,6 +43,7 @@ class ContactSchema {
     this.profileVersion,
     this.profileUpdateAt,
     this.isTop = false,
+    this.deviceToken,
     this.options,
     this.data,
     // extra
@@ -184,6 +186,7 @@ class ContactSchema {
       'profile_version': profileVersion ?? Uuid().v4(),
       'profile_expires_at': profileUpdateAt,
       'is_top': isTop ? 1 : 0,
+      'device_token': deviceToken,
       'options': options != null ? jsonEncode(options!.toMap()) : null,
       'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
     };
@@ -203,6 +206,7 @@ class ContactSchema {
       profileVersion: e['profile_version'],
       profileUpdateAt: e['profile_expires_at'],
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
+      deviceToken: e['device_token'],
     );
 
     if (e['options']?.toString().isNotEmpty == true) {
@@ -232,6 +236,6 @@ class ContactSchema {
 
   @override
   String toString() {
-    return 'ContactSchema{id: $id, clientAddress: $clientAddress, type: $type, createdAt: $createAt, updatedAt: $updateAt, avatar: $avatar, firstName: $firstName, lastName: $lastName, profileVersion: $profileVersion, profileUpdateAt: $profileUpdateAt, isTop: $isTop, options: $options, data: $data, nknWalletAddress: $nknWalletAddress}';
+    return 'ContactSchema{id: $id, clientAddress: $clientAddress, type: $type, createAt: $createAt, updateAt: $updateAt, avatar: $avatar, firstName: $firstName, lastName: $lastName, profileVersion: $profileVersion, profileUpdateAt: $profileUpdateAt, isTop: $isTop, deviceToken: $deviceToken, options: $options, data: $data, nknWalletAddress: $nknWalletAddress}';
   }
 }
