@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/chat/bubble.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
@@ -232,31 +234,44 @@ class ChatMessageItem extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Label(inviteDesc, type: LabelType.bodyRegular, color: application.theme.fontColor2),
-              Label(TopicSchema(topic: message.content?.toString() ?? "").topicShort, type: LabelType.bodyRegular, color: application.theme.fontColor1),
+              Label(
+                inviteDesc,
+                type: LabelType.bodyRegular,
+                color: application.theme.fontColor2,
+              ),
+              SizedBox(width: 2),
+              Label(
+                TopicSchema(topic: message.content?.toString() ?? " ").topicShort,
+                type: LabelType.bodyRegular,
+                fontWeight: FontWeight.bold,
+                color: application.theme.fontColor1,
+              ),
             ],
           ),
-          SizedBox(width: 5),
           message.isOutbound
               ? SizedBox.shrink()
               : InkWell(
-                  child: Label(
-                    _localizations.accept,
-                    type: LabelType.bodyRegular,
-                    fontWeight: FontWeight.bold,
-                    color: application.theme.primaryColor,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
+                    child: Label(
+                      _localizations.accept,
+                      type: LabelType.bodyRegular,
+                      fontWeight: FontWeight.bold,
+                      color: application.theme.primaryColor,
+                    ),
                   ),
                   onTap: () async {
-                    // String? topic = await BottomDialog.of(context).showInput(
-                    //   title: _localizations.accept_invitation,
-                    //   desc: inviteDesc,
-                    //   value: message.content?.toString() ?? "",
-                    //   actionText: _localizations.accept_invitation,
-                    //   enable: false,
-                    // );
-                    // if (topic?.isNotEmpty == true) {
-                    //   await topicCommon.subscribe(topic);
-                    // }
+                    String? topic = await BottomDialog.of(context).showInput(
+                      title: _localizations.accept_invitation,
+                      desc: inviteDesc,
+                      value: message.content?.toString() ?? "",
+                      actionText: _localizations.accept_invitation,
+                      enable: false,
+                    );
+                    if (topic?.isNotEmpty == true) {
+                      TopicSchema? result = await topicCommon.subscribe(topic);
+                      if (result != null) Toast.show(_localizations.subscribed);
+                    }
                   },
                 )
         ],

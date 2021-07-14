@@ -8,11 +8,9 @@ import 'package:nmobile/utils/utils.dart';
 class SubscriberStatus {
   static const int None = 0;
   static const int InvitedSend = 1;
-  static const int InvitedReceive = 2;
-  static const int InvitedAccept = 3;
-  static const int InvitedRefuse = 4;
-  static const int SelfLeveOut = 5;
-  static const int OwnerKickOut = 6;
+  static const int InvitedReceipt = 2;
+  static const int Subscribed = 3;
+  static const int Unsubscribed = 4;
 }
 
 class SubscriberSchema {
@@ -38,12 +36,12 @@ class SubscriberSchema {
   });
 
   bool get isJoined {
-    return (status ?? SubscriberStatus.None) == SubscriberStatus.InvitedAccept;
+    return (status ?? SubscriberStatus.None) == SubscriberStatus.Subscribed;
   }
 
   bool get canBeKick {
     int _status = (status ?? SubscriberStatus.None);
-    return _status == SubscriberStatus.InvitedSend || _status == SubscriberStatus.InvitedReceive || _status == SubscriberStatus.InvitedAccept;
+    return _status == SubscriberStatus.InvitedSend || _status == SubscriberStatus.InvitedReceipt || _status == SubscriberStatus.Subscribed;
   }
 
   Future<ContactSchema?> get contact async {

@@ -56,7 +56,7 @@ class TopicSchema {
     if (topic?.isNotEmpty == true) {
       return TopicSchema(
         topic: topic!,
-        type: type,
+        type: type ?? (isPrivateTopicReg(topic) ? TopicType.privateTopic : TopicType.publicTopic),
         createAt: DateTime.now().millisecondsSinceEpoch,
         updateAt: DateTime.now().millisecondsSinceEpoch,
       );
@@ -144,7 +144,7 @@ class TopicSchema {
     Map<String, dynamic> map = {
       'id': id,
       'topic': topic,
-      'type': isPrivate ? TopicType.privateTopic : TopicType.publicTopic,
+      'type': type,
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
       'joined': joined ? 1 : 0,

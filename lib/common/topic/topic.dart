@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:nmobile/common/global.dart';
+import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -32,35 +33,31 @@ class TopicCommon with Tag {
     _updateController.close();
   }
 
-  // TODO:GG call in invitee
   Future<TopicSchema?> subscribe(String? topicName, {double fee = 0}) async {
     if (topicName == null || topicName.isEmpty) return null;
 
     // db exist
     TopicSchema? exists = await queryByTopic(topicName);
     if (exists == null) {
-      exists = await add(TopicSchema.create(topicName), checkDuplicated: false);
       logger.d("$TAG - subscribe - new - schema:$exists");
-      // TODO:GG subers insert
+      exists = await add(TopicSchema.create(topicName), checkDuplicated: false);
     }
     if (exists == null) return null;
 
     // client subscribe
     int currentBlockHeight = 0; // TODO:GG await NKNClientCaller.fetchBlockHeight();
     if (exists.expireBlockHeight == null || exists.expireBlockHeight! <= 0 || (exists.expireBlockHeight! - currentBlockHeight > Global.topicWarnBlockExpireHeight)) {
-      bool joinSuccess = await _clientSubscribe(topicName); // TODO:GG topic params
+      bool joinSuccess = await _clientSubscribe(topicName, height: Global.topicDefaultSubscribeHeight); // TODO:GG topic params
       if (!joinSuccess) return null;
 
       // schema refresh
       var subscribeAt = DateTime.now().millisecondsSinceEpoch;
-      var expireBlockHeight = currentBlockHeight + Global.topicDefaultSubscribeDuration;
+      var expireBlockHeight = currentBlockHeight + Global.topicDefaultSubscribeHeight;
       bool setSuccess = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireBlockHeight, notify: true);
       if (setSuccess) {
         exists.subscribeAt = subscribeAt;
         exists.expireBlockHeight = expireBlockHeight;
         exists.joined = true;
-      } else {
-        logger.e("$TAG - subscribe - setExpireBlockHeight:fail - exists:$exists");
       }
     }
 
@@ -107,7 +104,7 @@ class TopicCommon with Tag {
     String? topicName, {
     int? permissionPage,
     Map<String, dynamic>? meta,
-    int? duration,
+    int? height,
     double fee = 0,
   }) async {
     if (topicName == null || topicName.isEmpty) return false;
@@ -120,7 +117,7 @@ class TopicCommon with Tag {
         topic: genTopicHash(topicName),
         identifier: identifier,
         meta: metaString,
-        duration: duration ?? Global.topicDefaultSubscribeDuration,
+        duration: height ?? Global.topicDefaultSubscribeHeight,
         fee: fee.toString(),
       );
       if (topicHash != null && topicHash.isNotEmpty) {
@@ -179,7 +176,7 @@ class TopicCommon with Tag {
     );
   }
 
-  Future<TopicSchema?> add(TopicSchema? schema, {bool checkDuplicated = true}) async {
+  Future<TopicSchema?> add(TopicSchema? schema, {bool addSubscriberByMe = true, bool checkDuplicated = true}) async {
     if (schema == null || schema.topic.isEmpty) return null;
     schema.type = schema.type ?? (isPrivateTopicReg(schema.topic) ? TopicType.privateTopic : TopicType.publicTopic);
     if (checkDuplicated) {
@@ -190,7 +187,15 @@ class TopicCommon with Tag {
       }
     }
     TopicSchema? added = await _topicStorage.insert(schema);
-    if (added != null) _addSink.add(added);
+    if (added != null) {
+      _addSink.add(added);
+
+      // subscriber
+      if (addSubscriberByMe) {
+        SubscriberSchema? subscriber = SubscriberSchema.create(schema.topic, clientCommon.address, SubscriberStatus.Subscribed);
+        await subscriberCommon.add(subscriber);
+      }
+    }
     return added;
   }
 
