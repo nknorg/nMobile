@@ -152,11 +152,11 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     } else if (topic?.isOwner(clientCommon.address) == true) {
       if (status == SubscriberStatus.InvitedSend) {
         marks.add(_localizations.invitation_sent);
-      } else if (status == SubscriberStatus.InvitedReceive) {
+      } else if (status == SubscriberStatus.InvitedReceipt) {
         marks.add(_localizations.invite_and_send_success);
-      } else if (status == SubscriberStatus.InvitedAccept) {
+      } else if (status == SubscriberStatus.Subscribed) {
         marks.add(_localizations.accepted);
-      } else if (status == SubscriberStatus.InvitedRefuse) {
+      } else if (status == SubscriberStatus.Unsubscribed) {
         marks.add(_localizations.rejected);
       } else {
         marks.add(_localizations.join_but_not_invite);
@@ -164,8 +164,8 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     }
     String marksText = marks.isNotEmpty ? "(${marks.join(", ")})" : " ";
 
-    bool successColor = status == SubscriberStatus.InvitedSend || status == SubscriberStatus.InvitedReceive || status == SubscriberStatus.InvitedAccept;
-    bool fallColor = status == SubscriberStatus.InvitedRefuse;
+    bool successColor = status == SubscriberStatus.InvitedSend || status == SubscriberStatus.InvitedReceipt || status == SubscriberStatus.Subscribed;
+    bool fallColor = status == SubscriberStatus.Unsubscribed;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
