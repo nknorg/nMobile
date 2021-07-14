@@ -63,17 +63,17 @@ class ChatMessageItem extends StatelessWidget {
     switch (this.message.contentType) {
       // case ContentType.receipt:
       // case ContentType.contact:
-      case ContentType.contactOptions:
+      case MessageContentType.contactOptions:
         contentsWidget.add(_contactOptionsWidget(context));
         break;
       // case ContentType.deviceRequest:
       // case ContentType.deviceInfo:
-      case ContentType.text:
-      case ContentType.textExtension:
-      case ContentType.media:
-      case ContentType.image:
-      case ContentType.nknImage:
-      case ContentType.audio:
+      case MessageContentType.text:
+      case MessageContentType.textExtension:
+      case MessageContentType.media:
+      case MessageContentType.image:
+      case MessageContentType.nknImage:
+      case MessageContentType.audio:
         contentsWidget.add(
           ChatBubble(
             message: this.message,
@@ -85,12 +85,12 @@ class ChatMessageItem extends StatelessWidget {
         );
         break;
       // case ContentType.piece:
-      case ContentType.topicInvitation:
+      case MessageContentType.topicInvitation:
         contentsWidget.add(_topicInvitedWidget(context));
         break;
-      // TODO:GG messageItem contentType
-      case ContentType.topicSubscribe:
-      case ContentType.topicUnsubscribe:
+      case MessageContentType.topicSubscribe:
+      case MessageContentType.topicUnsubscribe:
+        contentsWidget.add(_topicSubscribeWidget(context));
         break;
     }
 
@@ -274,6 +274,24 @@ class ChatMessageItem extends StatelessWidget {
                   },
                 )
         ],
+      ),
+    );
+  }
+
+  Widget _topicSubscribeWidget(BuildContext context) {
+    S _localizations = S.of(context);
+    if (message.contentType == MessageContentType.topicUnsubscribe) return SizedBox.shrink();
+
+    String who = message.isOutbound ? _localizations.you : message.from.substring(0, 6);
+    String content = who + _localizations.joined_channel;
+
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 6),
+      alignment: Alignment.center,
+      child: Label(
+        content,
+        type: LabelType.bodyRegular,
+        color: application.theme.fontColor2,
       ),
     );
   }
