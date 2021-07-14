@@ -23,6 +23,7 @@ import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
+import 'package:nmobile/screens/topic/subscribers.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -145,9 +146,9 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     }
   }
 
-  _statusAction(bool subscribe) async {
+  _statusAction(bool nextSubscribe) async {
     S _localizations = S.of(this.context);
-    if (subscribe) {
+    if (nextSubscribe) {
       Loading.show();
       await topicCommon.subscribe(_topicSchema?.topic);
       Loading.dismiss();
@@ -254,8 +255,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                 TextButton(
                   style: _buttonStyle(topRadius: false, botRadius: false, topPad: 12, botPad: 12),
                   onPressed: () {
-                    // TODO:GG subers screen
-                    // Navigator.of(context).pushNamed(ChannelMembersScreen.routeName, arguments: widget.arguments);
+                    TopicSubscribersScreen.go(context, schema: _topicSchema);
                   },
                   child: Row(
                     children: <Widget>[

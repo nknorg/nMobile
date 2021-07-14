@@ -32,9 +32,54 @@ class SubscriberCommon with Tag {
     _updateController.close();
   }
 
-  // TODO:GG call
-  Future getSubscribers() async {
-    // TODO:GG 根据subscribers表的成员来校准？
+  Future getSubscribers(
+    String? topicName, {
+    // bool checkJoined = false,
+    int offset = 0,
+    int limit = 1000,
+    bool meta = false,
+    bool txPool = true,
+    Uint8List? subscriberHashPrefix,
+  }) async {
+    List<SubscriberSchema> dbSubscribers = await queryListByTopic(topicName);
+    List<SubscriberSchema> nodeSubscribers = await _clientGetSubscribers(
+      topicName,
+      offset: offset,
+      limit: limit,
+      meta: meta,
+      txPool: txPool,
+      subscriberHashPrefix: subscriberHashPrefix,
+    );
+
+    // delete DB data
+    for (SubscriberSchema dbItem in dbSubscribers) {
+      bool dbFindInNode = false;
+      for (SubscriberSchema nodeItem in nodeSubscribers) {
+        if (dbItem.clientAddress == nodeItem.clientAddress) {
+          dbFindInNode = true;
+          break;
+        }
+      }
+      if (!dbFindInNode) {
+        await delete(dbItem.id);
+      }
+    }
+
+    // insert node data
+    for (SubscriberSchema nodeItem in nodeSubscribers) {
+      bool nodeFindInDB = false;
+      for (SubscriberSchema dbItem in dbSubscribers) {
+        if (dbItem.clientAddress == nodeItem.clientAddress) {
+          nodeFindInDB = true;
+          break;
+        }
+      }
+      if (!nodeFindInDB) {
+        await add(SubscriberSchema.create(topicName, nodeItem.clientAddress, nodeItem.status));
+      }
+    }
+
+    return await queryListByTopic(topicName, offset: offset, limit: limit);
   }
 
   // TODO:GG call
@@ -62,7 +107,11 @@ class SubscriberCommon with Tag {
         subscriberHashPrefix: subscriberHashPrefix,
       );
       logger.d("$TAG - _clientGetSubscribers - results:$results");
-      // TODO:GG 转化
+      results?.forEach((key, value) {
+        // TODO:GG subers ?? status + other
+        var item = SubscriberSchema.create(topicName, key, SubscriberStatus.None);
+        if (item != null) subscribers.add(item);
+      });
       logger.d("$TAG - _clientGetSubscribers - subscribers:$subscribers");
     } catch (e) {
       handleError(e);
