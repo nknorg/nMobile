@@ -5,7 +5,6 @@ import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/client/client.dart';
-import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/push/send_push.dart';
 import 'package:nmobile/generated/l10n.dart';
@@ -18,6 +17,7 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
 import '../locator.dart';
@@ -259,7 +259,7 @@ class ChatOutCommon with Tag {
       await Future.delayed(Duration(milliseconds: (schema.sendTime ?? timeNow).millisecondsSinceEpoch - timeNow.millisecondsSinceEpoch));
       String data = MessageData.getPiece(schema);
       if (schema.isTopic) {
-        OnMessage? onResult = await chatCommon.clientPublishData(schema.topic!, data);
+        OnMessage? onResult = await chatCommon.clientPublishData(genTopicHash(schema.topic!), data);
         schema.pid = onResult?.messageId;
       } else if (schema.to != null) {
         OnMessage? onResult = await chatCommon.clientSendData(schema.to, data);
@@ -307,7 +307,7 @@ class ChatOutCommon with Tag {
         topic: topic,
       );
       String data = MessageData.getTopicSubscribe(send);
-      await chatCommon.clientPublishData(send.topic, data);
+      await chatCommon.clientPublishData(genTopicHash(send.topic!), data);
       logger.d("$TAG - sendTopicSubscribe - success - data:${send.content}");
     } catch (e) {
       handleError(e);
@@ -330,7 +330,7 @@ class ChatOutCommon with Tag {
         topic: topic,
       );
       String data = MessageData.getTopicUnSubscribe(send);
-      await chatCommon.clientPublishData(send.topic, data);
+      await chatCommon.clientPublishData(genTopicHash(send.topic!), data);
       logger.d("$TAG - sendTopicUnSubscribe - success - data:${send.content}");
     } catch (e) {
       handleError(e);
@@ -416,7 +416,7 @@ class ChatOutCommon with Tag {
       pid = await _sendByPiecesIfNeed(schema, _deviceInfo);
       if (pid == null || pid.isEmpty) {
         if (schema.isTopic) {
-          OnMessage? onResult = await chatCommon.clientPublishData(schema.topic!, msgData);
+          OnMessage? onResult = await chatCommon.clientPublishData(genTopicHash(schema.topic!), msgData);
           pid = onResult?.messageId;
           logger.d("$TAG - _send - topic:${schema.topic} - pid:$pid");
         } else if (schema.to?.isNotEmpty == true) {

@@ -64,12 +64,22 @@ class TopicCommon with Tag {
       }
     }
 
-    // TODO:GG subers get
+    // subscribers
     if (exists.isPrivate) {
       // await GroupDataCenter.pullPrivateSubscribers(topicName);
-      // TODO:GG topic permissions
+      // TODO:GG subers get + topic permissions
     } else {
-      // await GroupDataCenter.pullSubscribersPublicChannel(topicName);
+      SubscriberSchema? me = await subscriberCommon.queryByTopicChatId(topicName, clientCommon.address);
+      if (me == null) {
+        await subscriberCommon.add(SubscriberSchema.create(topicName, clientCommon.address, SubscriberStatus.Subscribed));
+      } else {
+        if (me.status != SubscriberStatus.Subscribed) {
+          bool success = await subscriberCommon.setStatus(me.id, SubscriberStatus.Subscribed);
+          if (success) me.status = SubscriberStatus.Subscribed;
+        }
+      }
+      // others
+      subscriberCommon.getSubscribers(topicName); // await
     }
 
     // message
