@@ -24,7 +24,7 @@ class Global {
   static double screenWidth({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.width;
   static double screenHeight({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.height;
 
-  static int topicDefaultSubscribeDuration = 400000;
+  static int topicDefaultSubscribeHeight = 400000;
   static int topicWarnBlockExpireHeight = 100000;
 
   static List<String> defaultSeedRpcList = [
