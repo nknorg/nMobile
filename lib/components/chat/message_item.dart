@@ -89,7 +89,6 @@ class ChatMessageItem extends StatelessWidget {
         contentsWidget.add(_topicInvitedWidget(context));
         break;
       // TODO:GG messageItem contentType
-      case ContentType.system:
       case ContentType.topicSubscribe:
       case ContentType.topicUnsubscribe:
         break;
