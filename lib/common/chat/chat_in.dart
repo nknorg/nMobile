@@ -3,12 +3,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:nmobile/common/chat/chat_out.dart';
-import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
@@ -41,6 +41,7 @@ class ChatInCommon with Tag {
     chatCommon.deviceInfoHandle(message, contact); // await
     // topic
     TopicSchema? topic = await chatCommon.topicHandle(message);
+    chatCommon.subscriberHandle(message); // await
     // session
     await chatCommon.sessionHandle(message);
     // message
@@ -59,47 +60,52 @@ class ChatInCommon with Tag {
 
   Future _messageHandle(MessageSchema received, {ContactSchema? contact, TopicSchema? topic}) async {
     switch (received.contentType) {
-      case ContentType.receipt:
+      case MessageContentType.receipt:
         _receiveReceipt(received); // await
         break;
-      case ContentType.contact:
+      case MessageContentType.contact:
         _receiveContact(received, contact: contact); // await
         break;
-      case ContentType.contactOptions:
+      case MessageContentType.contactOptions:
         await _receiveContactOptions(received, contact: contact);
         chatOutCommon.sendReceipt(received); // await
         break;
-      case ContentType.deviceRequest:
+      case MessageContentType.deviceRequest:
         _receiveDeviceRequest(received, contact: contact); // await
         break;
-      case ContentType.deviceInfo:
+      case MessageContentType.deviceInfo:
         _receiveDeviceInfo(received, contact: contact); // await
         break;
-      case ContentType.text:
-      case ContentType.textExtension:
+      case MessageContentType.text:
+      case MessageContentType.textExtension:
         await _receiveText(received);
         chatOutCommon.sendReceipt(received); // await
         break;
-      case ContentType.media:
-      case ContentType.image:
-      case ContentType.nknImage:
+      case MessageContentType.media:
+      case MessageContentType.image:
+      case MessageContentType.nknImage:
         await _receiveImage(received);
         chatOutCommon.sendReceipt(received); // await
         break;
-      case ContentType.audio:
+      case MessageContentType.audio:
         await _receiveAudio(received);
         chatOutCommon.sendReceipt(received); // await
         break;
-      case ContentType.piece:
+      case MessageContentType.piece:
         await _receivePiece(received);
         break;
-      case ContentType.topicInvitation:
+      case MessageContentType.topicInvitation:
         await _receiveTopicInvitation(received);
         chatOutCommon.sendReceipt(received); // await
         break;
-      // TODO:GG receive contentType
-      case ContentType.topicSubscribe:
-      case ContentType.topicUnsubscribe:
+      case MessageContentType.topicSubscribe:
+        await _receiveTopicSubscribe(received);
+        chatOutCommon.sendReceipt(received); // await
+        break;
+      case MessageContentType.topicUnsubscribe:
+        await _receiveTopicUnsubscribe(received);
+        chatOutCommon.sendReceipt(received); // await
+        break;
     }
     if (!received.canDisplayAndRead) {
       chatCommon.updateMessageStatus(received, MessageStatus.ReceivedRead);
@@ -428,6 +434,54 @@ class ChatInCommon with Tag {
     if (exists.isNotEmpty) {
       logger.d("$TAG - _receiveTopicInvitation - duplicated - schema:$exists");
       return;
+    }
+    // DB
+    MessageSchema? schema = await _messageStorage.insert(received);
+    if (schema == null) return;
+    // display
+    _onSavedSink.add(schema);
+  }
+
+  // NO DB
+  Future _receiveTopicSubscribe(MessageSchema received) async {
+    // duplicated
+    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
+    if (exists.isNotEmpty) {
+      logger.d("$TAG - _receiveTopicSubscribed - duplicated - schema:$exists");
+      return;
+    }
+    // subscriber
+    SubscriberSchema? subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.originalId);
+    if (subscriber == null) {
+      subscriber = await subscriberCommon.add(SubscriberSchema.create(received.topic, received.originalId, SubscriberStatus.Subscribed));
+    } else {
+      bool success = await subscriberCommon.setStatus(subscriber.id, SubscriberStatus.Subscribed, notify: true);
+      if (success) subscriber.status = SubscriberStatus.Subscribed;
+      // TODO GG subers permission
+    }
+    // DB
+    MessageSchema? schema = await _messageStorage.insert(received);
+    if (schema == null) return;
+    // display
+    _onSavedSink.add(schema);
+  }
+
+  // NO DB
+  Future _receiveTopicUnsubscribe(MessageSchema received) async {
+    // duplicated
+    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
+    if (exists.isNotEmpty) {
+      logger.d("$TAG - _receiveTopicSubscribed - duplicated - schema:$exists");
+      return;
+    }
+    // subscriber
+    SubscriberSchema? subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.originalId);
+    if (subscriber == null) {
+      subscriber = await subscriberCommon.add(SubscriberSchema.create(received.topic, received.originalId, SubscriberStatus.Unsubscribed));
+    } else {
+      bool success = await subscriberCommon.setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
+      if (success) subscriber.status = SubscriberStatus.Unsubscribed;
+      // TODO GG subers permission + delete?
     }
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);
