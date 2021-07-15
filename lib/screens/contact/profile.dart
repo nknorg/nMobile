@@ -8,7 +8,6 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
-import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/device_token.dart';

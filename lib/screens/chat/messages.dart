@@ -342,7 +342,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           showProfile: !msg.isOutbound && msg.isTopic,
                           prevMessage: (index - 1) >= 0 ? _messages[index - 1] : null,
                           nextMessage: (index + 1) < _messages.length ? _messages[index + 1] : null,
-                          onLonePress: (ContactSchema contact, _) {
+                          onAvatarLonePress: (ContactSchema contact, _) {
                             _onInputChangeSink.add({"type": ChatSendBar.ChangeTypeAppend, "content": ' @${contact.fullName} '});
                           },
                           onResend: (String msgId) async {

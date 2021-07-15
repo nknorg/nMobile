@@ -34,14 +34,14 @@ class ChatBubble extends BaseStateFulWidget {
   final MessageSchema message;
   final ContactSchema? contact;
   final bool showProfile;
-  final Function(ContactSchema, MessageSchema)? onLonePress;
+  final Function(ContactSchema, MessageSchema)? onAvatarLonePress;
   final Function(String)? onResend;
 
   ChatBubble({
     required this.message,
     required this.contact,
     this.showProfile = false,
-    this.onLonePress,
+    this.onAvatarLonePress,
     this.onResend,
   });
 
@@ -128,6 +128,13 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   void onRefreshArguments() {
     _message = widget.message;
     _contact = widget.contact;
+    if (_contact == null) {
+      _message.getSender(emptyAdd: true).then((value) {
+        setState(() {
+          _contact = value;
+        });
+      });
+    }
     _msgStatus = MessageStatus.get(_message);
     _uploadProgress = ((_message.content is File) && (_msgStatus == MessageStatus.Sending)) ? (_uploadProgress == 1 ? 0 : _uploadProgress) : 1;
     // _playProgress = 0;
@@ -253,26 +260,28 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   Widget _getAvatar(bool self) {
-    return self || !widget.showProfile || _contact == null
+    return self || !widget.showProfile
         ? SizedBox.shrink()
         : GestureDetector(
             onTap: () async {
-              File? file = await _contact!.displayAvatarFile;
+              File? file = await _contact?.displayAvatarFile;
               PhotoScreen.go(context, filePath: file?.path);
             },
-            onLongPress: () => widget.onLonePress?.call(_contact!, _message),
-            child: ContactAvatar(
-              contact: _contact!,
-              radius: 24,
-            ),
+            onLongPress: () => widget.onAvatarLonePress?.call(_contact!, _message),
+            child: _contact != null
+                ? ContactAvatar(
+                    contact: _contact!,
+                    radius: 24,
+                  )
+                : SizedBox(width: 24 * 2, height: 24 * 2),
           );
   }
 
   Widget _getName(bool self) {
-    return self || !widget.showProfile || _contact == null
+    return self || !widget.showProfile
         ? SizedBox.shrink()
         : Label(
-            _contact!.displayName,
+            _contact?.displayName ?? " ",
             type: LabelType.h3,
             color: application.theme.primaryColor,
           );
