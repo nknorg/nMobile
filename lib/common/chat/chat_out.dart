@@ -307,7 +307,8 @@ class ChatOutCommon with Tag {
         topic: topic,
       );
       String data = MessageData.getTopicSubscribe(send);
-      await chatCommon.clientPublishData(genTopicHash(send.topic!), data);
+      await _sendAndDisplay(send, data);
+      // await chatCommon.clientPublishData(genTopicHash(send.topic!), data);
       logger.d("$TAG - sendTopicSubscribe - success - data:${send.content}");
     } catch (e) {
       handleError(e);
@@ -330,7 +331,8 @@ class ChatOutCommon with Tag {
         topic: topic,
       );
       String data = MessageData.getTopicUnSubscribe(send);
-      await chatCommon.clientPublishData(genTopicHash(send.topic!), data);
+      await _sendAndDisplay(send, data);
+      // await chatCommon.clientPublishData(genTopicHash(send.topic!), data);
       logger.d("$TAG - sendTopicUnSubscribe - success - data:${send.content}");
     } catch (e) {
       handleError(e);

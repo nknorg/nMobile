@@ -475,7 +475,7 @@ class MessageSchema extends Equatable {
 
   // ++ Session
   bool get canDisplay {
-    bool isEvent = contentType == MessageContentType.contactOptions; // || contentType == ContentType.topicSubscribe || contentType == ContentType.topicUnsubscribe;
+    bool isEvent = contentType == MessageContentType.contactOptions || contentType == MessageContentType.topicSubscribe || contentType == MessageContentType.topicUnsubscribe;
     return canDisplayAndRead || isEvent;
   }
 
