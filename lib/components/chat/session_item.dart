@@ -65,7 +65,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     MessageSchema? lastMsg = widget.session.lastMessageOptions != null ? MessageSchema.fromMap(widget.session.lastMessageOptions!) : null;
     if (_lastMsg?.msgId == null || _lastMsg?.msgId != lastMsg?.msgId || _lastMsg?.isSendError != lastMsg?.isSendError) {
       if (widget.session.isTopic && (_topicSender?.clientAddress == null || _topicSender?.clientAddress != lastMsg?.from)) {
-        lastMsg?.getSender().then((ContactSchema? value) {
+        lastMsg?.getSender(emptyAdd: true).then((ContactSchema? value) {
           setState(() {
             _lastMsg = lastMsg;
             _topicSender = value;
