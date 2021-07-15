@@ -9,12 +9,12 @@ import 'package:nmobile/utils/asset.dart';
 
 class TopicAvatar extends BaseStateFulWidget {
   final TopicSchema topic;
-  final double? radius;
-  final bool? placeHolder;
+  final double radius;
+  final bool placeHolder;
 
   TopicAvatar({
     required this.topic,
-    this.radius,
+    this.radius = 24,
     this.placeHolder = false,
   });
 
@@ -23,49 +23,51 @@ class TopicAvatar extends BaseStateFulWidget {
 }
 
 class _TopicAvatarState extends BaseStateFulWidgetState<TopicAvatar> {
-  File? _avatarFile;
+  // File? _avatarFile;
 
   @override
   void onRefreshArguments() {
-    _checkAvatarFileExists();
+    // _checkAvatarFileExists();
   }
 
-  _checkAvatarFileExists() async {
-    File? avatarFile = await widget.topic.displayAvatarFile;
-    if (_avatarFile?.path != avatarFile?.path) {
-      setState(() {
-        _avatarFile = avatarFile;
-      });
-    }
-  }
+  // _checkAvatarFileExists() async {
+  //   File? avatarFile = await widget.topic.displayAvatarFile;
+  //   if (_avatarFile?.path != avatarFile?.path) {
+  //     setState(() {
+  //       _avatarFile = avatarFile;
+  //     });
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
-    double radius = this.widget.radius ?? 24;
+    double radius = this.widget.radius;
     String name = widget.topic.topicName;
+    String? path = widget.topic.displayAvatarPath;
 
-    if (_avatarFile != null) {
+    if (path?.isNotEmpty == true) {
+      // _avatarFile != null
       return CircleAvatar(
         radius: radius,
-        backgroundImage: FileImage(this._avatarFile!),
+        backgroundImage: FileImage(File(path!)),
       );
     }
-    if (widget.placeHolder == null || !widget.placeHolder!) {
+    if (widget.placeHolder == true) {
       return CircleAvatar(
         radius: radius,
-        backgroundColor: widget.topic.options?.avatarBgColor ?? application.theme.primaryColor.withAlpha(19),
-        child: Label(
-          name.length > 2 ? name.substring(0, 2).toUpperCase() : name,
-          color: widget.topic.options?.avatarNameColor ?? application.theme.fontLightColor,
-          type: LabelType.h3,
-          fontSize: radius / 3 * 2,
-        ),
+        backgroundColor: application.theme.backgroundColor2,
+        child: Asset.iconSvg('user', color: application.theme.fontColor2),
       );
     }
     return CircleAvatar(
       radius: radius,
-      backgroundColor: application.theme.backgroundColor2,
-      child: Asset.iconSvg('user', color: application.theme.fontColor2),
+      backgroundColor: widget.topic.options?.avatarBgColor ?? application.theme.primaryColor.withAlpha(19),
+      child: Label(
+        name.length > 2 ? name.substring(0, 2).toUpperCase() : name,
+        color: widget.topic.options?.avatarNameColor ?? application.theme.fontLightColor,
+        type: LabelType.h3,
+        fontSize: radius / 3 * 2,
+      ),
     );
   }
 }
