@@ -43,9 +43,9 @@ class SubscriberSchema {
     return _status == SubscriberStatus.InvitedSend || _status == SubscriberStatus.InvitedReceipt || _status == SubscriberStatus.Subscribed;
   }
 
-  Future<ContactSchema?> get contact async {
+  Future<ContactSchema?> getContact({bool emptyAdd = false}) async {
     ContactSchema? _contact = await contactCommon.queryByClientAddress(clientAddress);
-    if (_contact != null) return _contact;
+    if (_contact != null || !emptyAdd) return _contact;
     return await contactCommon.addByType(clientAddress, ContactType.stranger, checkDuplicated: false);
   }
 

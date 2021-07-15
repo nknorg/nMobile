@@ -37,29 +37,46 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   TopicSchema? _topic;
   ContactSchema? _contact;
   MessageSchema? _lastMsg;
+  ContactSchema? _topicSender;
 
   @override
   void onRefreshArguments() {
     if (widget.session.isTopic) {
       if (_topic == null || widget.session.targetId != _topic?.id?.toString()) {
-        _contact = null;
         topicCommon.queryByTopic(widget.session.targetId).then((value) {
           setState(() {
             _topic = value;
+            _contact = null;
           });
         });
       }
     } else {
       if (_contact == null || widget.session.targetId != _contact?.id?.toString()) {
-        _topic = null;
         contactCommon.queryByClientAddress(widget.session.targetId).then((value) {
           setState(() {
+            _topic = null;
             _contact = value;
           });
         });
       }
     }
-    _lastMsg = widget.session.lastMessageOptions != null ? MessageSchema.fromMap(widget.session.lastMessageOptions!) : null;
+
+    // lastMsg + topicSender
+    MessageSchema? lastMsg = widget.session.lastMessageOptions != null ? MessageSchema.fromMap(widget.session.lastMessageOptions!) : null;
+    if (_lastMsg?.msgId == null || _lastMsg?.msgId != lastMsg?.msgId || _lastMsg?.isSendError != lastMsg?.isSendError) {
+      if (widget.session.isTopic && (_topicSender?.clientAddress == null || _topicSender?.clientAddress != lastMsg?.from)) {
+        lastMsg?.getSender().then((ContactSchema? value) {
+          setState(() {
+            _lastMsg = lastMsg;
+            _topicSender = value;
+          });
+        });
+      } else {
+        setState(() {
+          _lastMsg = lastMsg;
+        });
+      }
+    }
   }
 
   @override
@@ -105,40 +122,38 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
             children: [
               Expanded(
                 flex: 1,
-                child: session.isTopic
-                    ? (_topic != null
-                        ? TopicItem(
-                            topic: _topic!,
-                            body: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
+                child: _topic != null
+                    ? TopicItem(
+                        topic: _topic!,
+                        body: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    _topic?.isPrivate == true
-                                        ? Asset.iconSvg(
-                                            'lock',
-                                            width: 18,
-                                            color: application.theme.primaryColor,
-                                          )
-                                        : SizedBox.shrink(),
-                                    Label(
-                                      _topic?.topicShort ?? " ",
-                                      type: LabelType.h3,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: _contentWidget(session),
+                                _topic?.isPrivate == true
+                                    ? Asset.iconSvg(
+                                        'lock',
+                                        width: 18,
+                                        color: application.theme.primaryColor,
+                                      )
+                                    : SizedBox.shrink(),
+                                Label(
+                                  _topic?.topicShort ?? " ",
+                                  type: LabelType.h3,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ],
                             ),
-                            onTapWave: false,
-                          )
-                        : SizedBox.shrink())
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: _contentWidget(session),
+                            ),
+                          ],
+                        ),
+                        onTapWave: false,
+                      )
                     : (_contact != null
                         ? ContactItem(
                             contact: _contact!,
@@ -159,7 +174,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
                             ),
                             onTapWave: false,
                           )
-                        : SizedBox.shrink()),
+                        : SizedBox(width: 24 * 2, height: 24 * 2)),
               ),
               Container(
                 child: Row(
@@ -198,6 +213,9 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     String? msgType = _lastMsg?.contentType;
     String? draft = memoryCache.getDraft(session.targetId);
 
+    String topicSenderName = _topicSender?.displayName ?? " ";
+    String prefix = session.isTopic ? ((_lastMsg?.isOutbound == true) ? "" : "$topicSenderName: ") : "";
+
     Widget contentWidget;
     if (draft != null && draft.length > 0) {
       // draft
@@ -231,7 +249,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       bool isDeviceToken = (optionType == '1') || (deviceToken?.isNotEmpty == true);
       bool isDeviceTokenOPen = deviceToken?.isNotEmpty == true;
 
-      String who = (_lastMsg?.isOutbound == true) ? _localizations.you : (_lastMsg?.isTopic == true ? "???" : (_contact?.displayName ?? " ")); // TODO:GG lastMsg contact?
+      String who = (_lastMsg?.isOutbound == true) ? _localizations.you : (_lastMsg?.isTopic == true ? topicSenderName : (_contact?.displayName ?? " "));
 
       if (isBurn) {
         String burnDecs = ' ${isBurnOpen ? _localizations.update_burn_after_reading : _localizations.close_burn_after_reading} ';
@@ -257,6 +275,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         padding: const EdgeInsets.only(top: 0),
         child: Row(
           children: <Widget>[
+            Label(prefix, type: LabelType.bodyRegular, maxLines: 1, overflow: TextOverflow.ellipsis),
             Asset.iconSvg('image', width: 16, color: application.theme.fontColor2),
           ],
         ),
@@ -266,20 +285,21 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         padding: const EdgeInsets.only(top: 0),
         child: Row(
           children: <Widget>[
+            Label(prefix, type: LabelType.bodyRegular, maxLines: 1, overflow: TextOverflow.ellipsis),
             Asset.iconSvg('microphone', width: 16, color: application.theme.fontColor2),
           ],
         ),
       );
     } else if (msgType == MessageContentType.topicInvitation) {
       contentWidget = Label(
-        _localizations.channel_invitation,
+        prefix + _localizations.channel_invitation,
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
     } else if (msgType == MessageContentType.topicSubscribe) {
       contentWidget = Label(
-        _localizations.joined_channel,
+        prefix + _localizations.joined_channel,
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -288,7 +308,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       contentWidget = SizedBox.shrink();
     } else {
       contentWidget = Label(
-        _lastMsg?.content ?? " ",
+        prefix + (_lastMsg?.content ?? ""),
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
