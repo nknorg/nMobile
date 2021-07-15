@@ -168,7 +168,7 @@ class SubscriberStorage with Tag {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: status != null ? 'topic = ? AND status >= ?' : 'topic = ?',
+        where: status != null ? 'topic = ? AND status = ?' : 'topic = ?',
         whereArgs: status != null ? [topic, status] : [topic],
         offset: offset ?? null,
         limit: limit ?? null,
@@ -199,7 +199,7 @@ class SubscriberStorage with Tag {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: 'topic = ? AND perm_page >= ?',
+        where: 'topic = ? AND perm_page = ?',
         whereArgs: [topic, permPage],
       );
       if (res == null || res.isEmpty) {
@@ -219,6 +219,24 @@ class SubscriberStorage with Tag {
       handleError(e);
     }
     return [];
+  }
+
+  Future<int> queryCountByTopic(String? topic, {int? status}) async {
+    if (topic == null || topic.isEmpty) return 0;
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['COUNT(id)'],
+        where: status != null ? 'topic = ? AND status = ?' : 'topic = ?',
+        whereArgs: status != null ? [topic, status] : [topic],
+      );
+      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+      logger.d("$TAG - queryCountByTopic - topic:$topic - count:$status");
+      return count ?? 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return 0;
   }
 
   Future<bool> setStatus(int? subscriberId, int? status) async {

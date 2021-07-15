@@ -75,14 +75,16 @@ class ChatCommon with Tag {
           contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true); // await
         } else if ((updateBurnAfterAt ?? 0) <= exist.options!.updateBurnAfterAt!) {
           // mine update latest
-          DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(exist.id);
-          if (deviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-            chatOutCommon.sendContactOptionsBurn(
-              exist.clientAddress,
-              exist.options!.deleteAfterSeconds!,
-              exist.options!.updateBurnAfterAt!,
-            );
-          }
+          deviceInfoCommon.queryLatest(exist.id).then((deviceInfo) {
+            if (deviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
+              if (exist == null) return;
+              chatOutCommon.sendContactOptionsBurn(
+                exist.clientAddress,
+                exist.options!.deleteAfterSeconds!,
+                exist.options!.updateBurnAfterAt!,
+              );
+            }
+          });
         }
       }
     }
@@ -96,11 +98,11 @@ class ChatCommon with Tag {
     DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.id);
     if (latest == null) {
       logger.d("$TAG - deviceInfoHandle - new - request - contact:$contact");
-      await chatOutCommon.sendDeviceRequest(contact.clientAddress);
+      chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
     } else {
       if (latest.updateAt == null || DateTime.now().millisecondsSinceEpoch > (latest.updateAt! + Settings.deviceInfoExpireMs)) {
         logger.d("$TAG - deviceInfoHandle - exist - request - schema:$latest");
-        await chatOutCommon.sendDeviceRequest(contact.clientAddress);
+        chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
       } else {
         double between = ((latest.updateAt! + Settings.deviceInfoExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG deviceInfoHandle - expire - between:${between}s");
@@ -144,10 +146,15 @@ class ChatCommon with Tag {
       ));
     }
     if (message.isOutbound) {
-      await sessionCommon.setLastMessage(message.targetId, message, notify: true);
+      exist.lastMessageTime = message.sendTime;
+      exist.lastMessageOptions = message.toMap();
+      sessionCommon.setLastMessage(message.targetId, message, notify: true); // await
     } else {
       int unreadCount = message.canDisplayAndRead ? exist.unReadCount + 1 : exist.unReadCount;
-      await sessionCommon.setLastMessageAndUnReadCount(message.targetId, message, unreadCount, notify: true);
+      exist.unReadCount = unreadCount;
+      exist.lastMessageTime = message.sendTime;
+      exist.lastMessageOptions = message.toMap();
+      sessionCommon.setLastMessageAndUnReadCount(message.targetId, message, unreadCount, notify: true); // await
     }
     return exist;
   }
@@ -196,8 +203,8 @@ class ChatCommon with Tag {
   // receipt(receive) != read(look)
   Future<MessageSchema> updateMessageStatus(MessageSchema schema, int status, {bool notify = false}) async {
     schema = MessageStatus.set(schema, status);
-    await _messageStorage.updateMessageStatus(schema);
-    if (notify) onUpdateSink.add(schema);
+    bool success = await _messageStorage.updateMessageStatus(schema);
+    if (success && notify) onUpdateSink.add(schema);
     return schema;
   }
 
