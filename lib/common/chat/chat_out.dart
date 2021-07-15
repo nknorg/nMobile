@@ -115,8 +115,8 @@ class ChatOutCommon with Tag {
         deleteAfterSeconds: deleteSeconds,
         burningUpdateAt: updateAt,
       );
-      String data = MessageData.getContactOptionsBurn(send);
-      await _sendAndDisplay(send, data);
+      send.content = MessageData.getContactOptionsBurn(send);
+      await _sendAndDisplay(send, send.content);
       logger.d("$TAG - sendContactOptionsBurn - success - data:${send.content}");
     } catch (e) {
       handleError(e);
@@ -139,8 +139,8 @@ class ChatOutCommon with Tag {
         to: clientAddress,
       );
       send = MessageOptions.setDeviceToken(send, deviceToken);
-      String data = MessageData.getContactOptionsToken(send);
-      await _sendAndDisplay(send, data);
+      send.content = MessageData.getContactOptionsToken(send);
+      await _sendAndDisplay(send, send.content);
       logger.d("$TAG - sendContactOptionsToken - success - data:${send.content}");
     } catch (e) {
       handleError(e);
