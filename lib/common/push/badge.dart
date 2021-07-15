@@ -18,14 +18,14 @@ class Badge {
     if (!Platform.isIOS) return;
     _count += count;
     logger.d("Badge - onCountUp - $_count");
-    updateCount(_count);
+    await updateCount(_count);
   }
 
   static Future onCountDown(int count) async {
     if (!Platform.isIOS) return;
     _count -= count;
     logger.d("Badge - onCountDown - $_count");
-    updateCount(_count);
+    await updateCount(_count);
   }
 
   static Future updateCount(int count) async {

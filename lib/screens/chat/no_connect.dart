@@ -161,8 +161,8 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                             child: Button(
                               width: double.infinity,
                               text: _localizations.connect,
-                              onPressed: () async {
-                                await clientCommon.signIn(this._selectWallet, walletDefault: true);
+                              onPressed: () {
+                                clientCommon.signIn(this._selectWallet, walletDefault: true);
                               },
                             ),
                           )
