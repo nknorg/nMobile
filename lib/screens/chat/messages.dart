@@ -252,11 +252,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                               ),
                             ],
                           )
-                        : Label(
-                            " ", // FUTURE: topic burning permission?
-                            type: LabelType.h4,
-                            color: _theme.fontColor2,
-                          ),
+                        : SizedBox.shrink(),
                   ),
                 )
               : ContactHeader(
