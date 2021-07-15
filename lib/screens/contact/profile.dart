@@ -292,9 +292,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     }
 
     if (_contactSchema?.type == ContactType.me) {
-      await contactCommon.setSelfAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
+      contactCommon.setSelfAvatar(_contactSchema, remarkAvatarLocalPath, notify: true); // await
     } else {
-      await contactCommon.setRemarkAvatar(_contactSchema, remarkAvatarLocalPath, notify: true);
+      contactCommon.setRemarkAvatar(_contactSchema, remarkAvatarLocalPath, notify: true); // await
     }
   }
 
@@ -310,13 +310,13 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     );
     if (newName == null || newName.trim().isEmpty) return;
     if (_contactSchema?.type == ContactType.me) {
-      await contactCommon.setSelfName(_contactSchema, newName.trim(), "", notify: true);
+      contactCommon.setSelfName(_contactSchema, newName.trim(), "", notify: true); // await
     } else {
-      await contactCommon.setRemarkName(_contactSchema, newName.trim(), "", notify: true);
+      contactCommon.setRemarkName(_contactSchema, newName.trim(), "", notify: true); // await
     }
   }
 
-  _updateBurnIfNeed() async {
+  _updateBurnIfNeed() {
     if (_burnOpen == _initBurnOpen && _burnProgress == _initBurnProgress) return;
     int _burnValue;
     if (!_burnOpen || _burnProgress < 0) {
@@ -328,18 +328,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     _contactSchema?.options?.deleteAfterSeconds = _burnValue;
     _contactSchema?.options?.updateBurnAfterAt = timeNow;
     // inside update
-    await contactCommon.setOptionsBurn(
-      _contactSchema,
-      _burnValue,
-      timeNow,
-      notify: true,
-    );
+    contactCommon.setOptionsBurn(_contactSchema, _burnValue, timeNow, notify: true); // await
     // outside update
-    await chatOutCommon.sendContactOptionsBurn(
-      _contactSchema?.clientAddress,
-      _burnValue,
-      timeNow,
-    );
+    chatOutCommon.sendContactOptionsBurn(_contactSchema?.clientAddress, _burnValue, timeNow); // await
   }
 
   _updateNotificationAndDeviceToken() async {
@@ -354,9 +345,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     }
     _contactSchema?.options?.notificationOpen = _notificationOpen;
     // inside update
-    contactCommon.setNotificationOpen(_contactSchema, _notificationOpen, notify: true);
+    contactCommon.setNotificationOpen(_contactSchema, _notificationOpen, notify: true); // await
     // outside update
-    await chatOutCommon.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken ?? "");
+    chatOutCommon.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken ?? ""); // await
   }
 
   _addFriend() {
@@ -814,7 +805,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
           TextButton(
             style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
             onPressed: () {
-              _updateBurnIfNeed(); // await
+              _updateBurnIfNeed();
               ChatMessagesScreen.go(this.context, _contactSchema);
             },
             child: Row(
