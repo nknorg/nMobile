@@ -539,6 +539,12 @@ class MessageSchema extends Equatable {
     schema.parity = data['parity'];
     schema.index = data['index'];
 
+    // topic msg published callback can be used receipt
+    if (schema.isTopic && !schema.isOutbound && (schema.from == schema.to || schema.from == clientCommon.address)) {
+      schema.contentType = MessageContentType.receipt;
+      schema.content = schema.msgId;
+    }
+
     return schema;
   }
 
