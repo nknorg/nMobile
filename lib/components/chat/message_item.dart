@@ -14,21 +14,23 @@ import 'package:nmobile/utils/format.dart';
 
 class ChatMessageItem extends StatelessWidget {
   final MessageSchema message;
+  final TopicSchema? topic;
   final ContactSchema? contact;
   final MessageSchema? prevMessage;
   final MessageSchema? nextMessage;
   final bool showProfile;
-  final Function(ContactSchema, MessageSchema)? onLonePress;
+  final Function(ContactSchema, MessageSchema)? onAvatarLonePress;
   final Function(String)? onResend;
 
   ChatMessageItem({
     required this.message,
+    required this.topic,
     required this.contact,
     this.prevMessage,
     this.nextMessage,
     this.showProfile = false,
+    this.onAvatarLonePress,
     this.onResend,
-    this.onLonePress,
   });
 
   @override
@@ -80,8 +82,8 @@ class ChatMessageItem extends StatelessWidget {
             message: this.message,
             contact: this.contact,
             showProfile: this.showProfile,
+            onAvatarLonePress: this.onAvatarLonePress,
             onResend: this.onResend,
-            onLonePress: this.onLonePress,
           ),
         );
         break;
