@@ -479,6 +479,12 @@ class MessageSchema extends Equatable {
     return canDisplayAndRead || isEvent;
   }
 
+  Future<ContactSchema?> getSender({bool emptyAdd = false}) async {
+    ContactSchema? _contact = await contactCommon.queryByClientAddress(from);
+    if (_contact != null || !emptyAdd) return _contact;
+    return await contactCommon.addByType(from, ContactType.stranger, checkDuplicated: false);
+  }
+
   /// from receive
   static MessageSchema? fromReceive(OnMessage? raw) {
     if (raw == null || raw.data == null || raw.src == null) return null;
