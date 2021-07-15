@@ -77,8 +77,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   void onRefreshArguments() {
     dynamic who = widget.arguments![ChatMessagesScreen.argWho];
     if (who is TopicSchema) {
-      _topic = widget.arguments![ChatMessagesScreen.argWho] ?? _topic;
+      this._topic = widget.arguments![ChatMessagesScreen.argWho] ?? _topic;
+      this._contact = null;
     } else if (who is ContactSchema) {
+      this._topic = null;
       this._contact = widget.arguments![ChatMessagesScreen.argWho] ?? _contact;
     }
   }
@@ -86,7 +88,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   @override
   void initState() {
     super.initState();
-    chatCommon.currentTalkId = _topic?.topic ?? _contact?.clientAddress;
+    chatCommon.currentChatTargetId = _topic?.topic ?? _contact?.clientAddress;
 
     // topic
     _onTopicUpdateStreamSubscription = topicCommon.updateStream.where((event) => event.id == _topic?.id).listen((event) {
@@ -140,7 +142,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   @override
   void dispose() {
-    chatCommon.currentTalkId = null;
+    chatCommon.currentChatTargetId = null;
 
     audioHelper.playerRelease(); // await
     audioHelper.recordRelease(); // await
@@ -200,7 +202,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   _toggleNotificationOpen() async {
     S _localizations = S.of(this.context);
     if (this._topic != null) {
-      // TODO:GG topic
+      // FUTURE: topic notificationOpen
     } else {
       bool nextOpen = !(_contact?.options?.notificationOpen ?? false);
       String? deviceToken = nextOpen ? await DeviceToken.get() : null;
@@ -251,7 +253,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                             ],
                           )
                         : Label(
-                            _localizations.click_to_settings,
+                            " ", // FUTURE: topic burning permission?
                             type: LabelType.h4,
                             color: _theme.fontColor2,
                           ),
@@ -285,15 +287,17 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                 ),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: IconButton(
-              icon: Asset.iconSvg('notification-bell', color: notifyBellColor, width: 24),
-              onPressed: () {
-                _toggleNotificationOpen();
-              },
-            ),
-          ),
+          _topic != null
+              ? SizedBox.shrink() // FUTURE: topic notificationOpen
+              : Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: IconButton(
+                    icon: Asset.iconSvg('notification-bell', color: notifyBellColor, width: 24),
+                    onPressed: () {
+                      _toggleNotificationOpen();
+                    },
+                  ),
+                ),
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: _topic != null
@@ -330,10 +334,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                       padding: const EdgeInsets.only(bottom: 8, top: 16),
                       physics: const AlwaysScrollableScrollPhysics(),
                       itemBuilder: (BuildContext context, int index) {
+                        MessageSchema msg = _messages[index];
                         return ChatMessageItem(
-                          message: _messages[index],
-                          contact: _contact, // TODO:GG
-                          showProfile: false,
+                          message: msg,
+                          topic: _topic,
+                          contact: _contact,
+                          showProfile: !msg.isOutbound && msg.isTopic,
                           prevMessage: (index - 1) >= 0 ? _messages[index - 1] : null,
                           nextMessage: (index + 1) < _messages.length ? _messages[index + 1] : null,
                           onLonePress: (ContactSchema contact, _) {
