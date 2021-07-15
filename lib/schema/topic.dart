@@ -114,15 +114,24 @@ class TopicSchema {
     return topicNameShort;
   }
 
-  Future<File?> get displayAvatarFile async {
+  String? get displayAvatarPath {
     String? avatarLocalPath = avatar?.path;
     if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
-      return Future.value(null);
+      return null;
     }
     String? completePath = Path.getCompleteFile(avatarLocalPath);
     if (completePath == null || completePath.isEmpty) {
+      return null;
+    }
+    return completePath;
+  }
+
+  Future<File?> get displayAvatarFile async {
+    String? completePath = displayAvatarPath;
+    if (completePath == null || completePath.isEmpty) {
       return Future.value(null);
     }
+
     File avatarFile = File(completePath);
     bool exits = await avatarFile.exists();
     if (!exits) {
