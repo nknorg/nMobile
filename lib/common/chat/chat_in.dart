@@ -43,7 +43,7 @@ class ChatInCommon with Tag {
     TopicSchema? topic = await chatCommon.topicHandle(message);
     chatCommon.subscriberHandle(message); // await
     // session
-    await chatCommon.sessionHandle(message);
+    chatCommon.sessionHandle(message); // await
     // message
     if (needWait) {
       await _messageHandle(message, contact: contact, topic: topic);

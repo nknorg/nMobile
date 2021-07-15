@@ -407,7 +407,7 @@ class ChatOutCommon with Tag {
       schema = await _messageStorage.insert(schema);
     } else {
       schema.sendTime = DateTime.now();
-      await _messageStorage.updateSendTime(schema.msgId, schema.sendTime ?? DateTime.now());
+      _messageStorage.updateSendTime(schema.msgId, schema.sendTime); // await
     }
     if (schema == null) return null;
     // display
@@ -437,8 +437,8 @@ class ChatOutCommon with Tag {
     // fail
     if (pid == null || pid.isEmpty) {
       schema = MessageStatus.set(schema, MessageStatus.SendFail);
-      _messageStorage.updateMessageStatus(schema); // await
-      chatCommon.onUpdateSink.add(schema);
+      bool success = await _messageStorage.updateMessageStatus(schema);
+      if (success) chatCommon.onUpdateSink.add(schema);
       return null;
     }
     // pid
@@ -446,9 +446,8 @@ class ChatOutCommon with Tag {
     _messageStorage.updatePid(schema.msgId, schema.pid); // await
     // status
     schema = MessageStatus.set(schema, MessageStatus.SendSuccess);
-    _messageStorage.updateMessageStatus(schema); // await
-    // display
-    chatCommon.onUpdateSink.add(schema);
+    bool success = await _messageStorage.updateMessageStatus(schema);
+    if (success) chatCommon.onUpdateSink.add(schema);
     // notification
     _sendPush(schema, _contact, _topic); // await
     return schema;
