@@ -120,12 +120,12 @@ class ChatInCommon with Tag {
     List<MessageSchema> _schemaList = await _messageStorage.queryList(received.content);
     _schemaList.forEach((MessageSchema element) async {
       element = MessageStatus.set(element, MessageStatus.SendWithReceipt);
-      bool updated = await _messageStorage.updateMessageStatus(element);
-      if (updated) {
-        // update send by receipt
-        chatCommon.onUpdateSink.add(element);
-      }
-      logger.d("$TAG - receiveReceipt - updated:$element");
+      _messageStorage.updateMessageStatus(element).then((success) {
+        if (success) {
+          chatCommon.onUpdateSink.add(element);
+          logger.d("$TAG - receiveReceipt - updated:$element");
+        }
+      });
     });
   }
 
@@ -152,15 +152,15 @@ class ChatInCommon with Tag {
     if ((requestType?.isNotEmpty == true) || (requestType == null && responseType == null && version == null)) {
       // need reply
       if (requestType == RequestType.header) {
-        await chatOutCommon.sendContactResponse(exist, RequestType.header);
+        chatOutCommon.sendContactResponse(exist, RequestType.header); // await
       } else {
-        await chatOutCommon.sendContactResponse(exist, RequestType.full);
+        chatOutCommon.sendContactResponse(exist, RequestType.full); // await
       }
     } else {
       // need request/save
       if (!contactCommon.isProfileVersionSame(exist.profileVersion, version)) {
         if (responseType != RequestType.full && content == null) {
-          await chatOutCommon.sendContactRequest(exist, RequestType.full);
+          chatOutCommon.sendContactRequest(exist, RequestType.full); // await
         } else {
           if (content == null) {
             logger.w("$TAG - receiveContact - content is empty - data:$data");
@@ -182,7 +182,7 @@ class ChatInCommon with Tag {
           // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {
           //   logger.i("$TAG - receiveContact - setProfile - NULL");
           // } else {
-          await contactCommon.setOtherProfile(exist, firstName, lastName, Path.getLocalFile(avatar?.path), version, notify: true);
+          contactCommon.setOtherProfile(exist, firstName, lastName, Path.getLocalFile(avatar?.path), version, notify: true); // await
           logger.i("$TAG - receiveContact - setProfile - firstName:$firstName - avatar:${avatar?.path} - version:$version - data:$data");
           // }
         }
@@ -233,12 +233,12 @@ class ChatInCommon with Tag {
 
   // NO DB NO display
   Future _receiveDeviceRequest(MessageSchema received, {ContactSchema? contact}) async {
-    ContactSchema? exist = contact ?? await received.getSender();
+    ContactSchema? exist = contact ?? await received.getSender(emptyAdd: true);
     if (exist == null) {
       logger.w("$TAG - _receiveDeviceRequest - contact - empty - data:${received.content}");
       return;
     }
-    await chatOutCommon.sendDeviceInfo(exist.clientAddress);
+    chatOutCommon.sendDeviceInfo(exist.clientAddress); // await
   }
 
   // NO DB NO display
@@ -246,7 +246,7 @@ class ChatInCommon with Tag {
     if (received.content == null) return;
     Map<String, dynamic> data = received.content; // == data
     // duplicated
-    ContactSchema? exist = contact ?? await received.getSender();
+    ContactSchema? exist = contact ?? await received.getSender(emptyAdd: true);
     if (exist == null || exist.id == null) {
       logger.w("$TAG - _receiveDeviceInfo - contact - empty - received:$received");
       return;
@@ -262,7 +262,7 @@ class ChatInCommon with Tag {
       },
     );
     logger.d("$TAG - _receiveDeviceInfo - addOrUpdate - schema:$schema - data:$data");
-    await deviceInfoCommon.add(schema, replace: true);
+    deviceInfoCommon.add(schema, replace: true); // await
   }
 
   Future _receiveText(MessageSchema received) async {
@@ -463,7 +463,7 @@ class ChatInCommon with Tag {
     MessageSchema? schema = await _messageStorage.insert(received);
     if (schema == null) return;
     // display
-    _onSavedSink.add(schema); // TODO:GG db?
+    _onSavedSink.add(schema);
   }
 
   // NO DB NO single
@@ -485,6 +485,6 @@ class ChatInCommon with Tag {
     MessageSchema? schema = await _messageStorage.insert(received);
     if (schema == null) return;
     // display
-    _onSavedSink.add(schema); // TODO:GG db?
+    _onSavedSink.add(schema);
   }
 }
