@@ -295,7 +295,7 @@ class ChatOutCommon with Tag {
     return _sendAndDisplay(schema, data);
   }
 
-  // NO DB NO display NO single
+  // NO DB NO single
   Future sendTopicSubscribe(String? topic, {int tryCount = 1}) async {
     if (clientCommon.address == null || clientCommon.address!.isEmpty || topic == null || topic.isEmpty) return;
     if (tryCount > 3) return;
@@ -318,7 +318,7 @@ class ChatOutCommon with Tag {
     }
   }
 
-  // NO DB NO display NO single
+  // NO DB NO single
   Future sendTopicUnSubscribe(String? topic, {int tryCount = 1}) async {
     if (clientCommon.address == null || clientCommon.address!.isEmpty || topic == null || topic.isEmpty) return;
     if (tryCount > 3) return;
