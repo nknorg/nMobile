@@ -5,6 +5,7 @@ abstract class BaseStateFulWidget extends StatefulWidget {
 }
 
 abstract class BaseStateFulWidgetState<T extends StatefulWidget> extends State<T> {
+  // will rebuild views after onRefreshArguments call
   @protected
   void onRefreshArguments();
 

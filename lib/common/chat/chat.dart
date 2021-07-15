@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:nkn_sdk_flutter/client.dart';
-import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -16,7 +15,7 @@ import 'package:nmobile/utils/logger.dart';
 import '../settings.dart';
 
 class ChatCommon with Tag {
-  String? currentTalkId;
+  String? currentChatTargetId;
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onUpdateController = StreamController<MessageSchema>.broadcast();
@@ -113,13 +112,8 @@ class ChatCommon with Tag {
   Future<TopicSchema?> topicHandle(MessageSchema message) async {
     if (!message.canDisplay) return null;
     if (!message.isTopic) return null;
-    // duplicated
-    TopicSchema? exist = await topicCommon.queryByTopic(message.topic);
-    if (exist == null) {
-      exist = await topicCommon.add(TopicSchema.create(message.topic));
-    }
-    // TODO:GG topic how to update profile
-    return exist;
+    // TODO:GG topic permission update in where ???
+    return await topicCommon.checkExpireAndSubscribe(message.topic, emptyAdd: true);
   }
 
   Future<SubscriberSchema?> subscriberHandle(MessageSchema message) async {

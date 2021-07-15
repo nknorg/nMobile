@@ -134,7 +134,7 @@ class ChatInCommon with Tag {
     if (received.content == null) return;
     Map<String, dynamic> data = received.content; // == data
     // duplicated
-    ContactSchema? exist = contact ?? await contactCommon.queryByClientAddress(received.from);
+    ContactSchema? exist = contact ?? await received.getSender(emptyAdd: true);
     if (exist == null) {
       logger.w("$TAG - receiveContact - empty - data:$data");
       return;
@@ -197,7 +197,7 @@ class ChatInCommon with Tag {
     if (received.content == null) return; // received.isTopic (limit in out)
     Map<String, dynamic> data = received.content; // == data
     // duplicated
-    ContactSchema? existContact = contact ?? await contactCommon.queryByClientAddress(received.from);
+    ContactSchema? existContact = contact ?? await received.getSender(emptyAdd: true);
     if (existContact == null) {
       logger.w("$TAG - _receiveContactOptions - empty - received:$received");
       return;
@@ -233,7 +233,7 @@ class ChatInCommon with Tag {
 
   // NO DB NO display
   Future _receiveDeviceRequest(MessageSchema received, {ContactSchema? contact}) async {
-    ContactSchema? exist = contact ?? await contactCommon.queryByClientAddress(received.from);
+    ContactSchema? exist = contact ?? await received.getSender();
     if (exist == null) {
       logger.w("$TAG - _receiveDeviceRequest - contact - empty - data:${received.content}");
       return;
@@ -246,7 +246,7 @@ class ChatInCommon with Tag {
     if (received.content == null) return;
     Map<String, dynamic> data = received.content; // == data
     // duplicated
-    ContactSchema? exist = contact ?? await contactCommon.queryByClientAddress(received.from);
+    ContactSchema? exist = contact ?? await received.getSender();
     if (exist == null || exist.id == null) {
       logger.w("$TAG - _receiveDeviceInfo - contact - empty - received:$received");
       return;
@@ -442,7 +442,7 @@ class ChatInCommon with Tag {
     _onSavedSink.add(schema);
   }
 
-  // NO DB
+  // NO DB NO single
   Future _receiveTopicSubscribe(MessageSchema received) async {
     // duplicated
     List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
@@ -457,16 +457,16 @@ class ChatInCommon with Tag {
     } else {
       bool success = await subscriberCommon.setStatus(subscriber.id, SubscriberStatus.Subscribed, notify: true);
       if (success) subscriber.status = SubscriberStatus.Subscribed;
-      // TODO GG subers permission
+      // TODO:GG subers permission
     }
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);
     if (schema == null) return;
     // display
-    _onSavedSink.add(schema);
+    _onSavedSink.add(schema); // TODO:GG db?
   }
 
-  // NO DB
+  // NO DB NO single
   Future _receiveTopicUnsubscribe(MessageSchema received) async {
     // duplicated
     List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
@@ -476,17 +476,15 @@ class ChatInCommon with Tag {
     }
     // subscriber
     SubscriberSchema? subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
-    if (subscriber == null) {
-      subscriber = await subscriberCommon.add(SubscriberSchema.create(received.topic, received.from, SubscriberStatus.Unsubscribed));
-    } else {
+    if (subscriber != null) {
       bool success = await subscriberCommon.setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
       if (success) subscriber.status = SubscriberStatus.Unsubscribed;
-      // TODO GG subers permission + delete?
+      // TODO:GG subers permission + delete?
     }
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);
     if (schema == null) return;
     // display
-    _onSavedSink.add(schema);
+    _onSavedSink.add(schema); // TODO:GG db?
   }
 }
