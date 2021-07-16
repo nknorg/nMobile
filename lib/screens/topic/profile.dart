@@ -55,9 +55,11 @@ class TopicProfileScreen extends BaseStateFulWidget {
 }
 
 class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScreen> {
+  StreamSubscription? _updateTopicSubscription;
+
   TopicSchema? _topicSchema;
 
-  StreamSubscription? _updateTopicSubscription;
+  bool? _isJoined;
 
   @override
   void onRefreshArguments() {
@@ -73,6 +75,15 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
         _topicSchema = event;
       });
     });
+
+    // TODO:GG 更新群成员
+    // if (isPrivateTopicReg(message.topic)) {
+    //   await message.markMessageRead();
+    //   GroupDataCenter.pullPrivateSubscribers(message.topic);
+    // } else {
+    //   GroupDataCenter.pullSubscribersPublicChannel(message.topic);
+    // }
+    // TODO:GG count update in profile
   }
 
   @override
@@ -106,7 +117,26 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       });
     });
 
+    _refreshJoined();
+
+    _refreshMembersCount(); // await
+
     setState(() {});
+  }
+
+  _refreshJoined() async {
+    bool joined = await topicCommon.isJoined(_topicSchema?.topic, clientCommon.address);
+    // do not topic.setJoined because filed is_joined is action not a tag
+    setState(() {
+      _isJoined = joined;
+    });
+  }
+
+  _refreshMembersCount() async {
+    int count = await subscriberCommon.getSubscribersCount(_topicSchema?.topic);
+    if (_topicSchema?.count != count) {
+      topicCommon.setCount(_topicSchema?.id, count, notify: true); // await
+    }
   }
 
   _selectAvatarPicture() async {
@@ -126,7 +156,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       return;
     }
 
-    await topicCommon.setAvatar(_topicSchema?.id, remarkAvatarLocalPath, notify: true);
+    topicCommon.setAvatar(_topicSchema?.id, remarkAvatarLocalPath, notify: true); // await
   }
 
   _invitee() async {
@@ -186,9 +216,6 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(this.context);
-
-    int membersCount = 0; // TODO:GG topic count(from subers table)
-    bool isJoined = _topicSchema?.joined == true; // TODO:GG topic joined
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
@@ -269,7 +296,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                       SizedBox(width: 20),
                       Expanded(
                         child: Label(
-                          "$membersCount ${_localizations.members}",
+                          "${_topicSchema?.count ?? 0} ${_localizations.members}",
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor2,
                           overflow: TextOverflow.fade,
@@ -341,27 +368,29 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
             SizedBox(height: 28),
 
             /// status
-            TextButton(
-              style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
-              onPressed: () {
-                _statusAction(!isJoined);
-              },
-              child: Row(
-                children: <Widget>[
-                  Icon(
-                    isJoined ? Icons.exit_to_app : Icons.person_add,
-                    color: isJoined ? Colors.red : application.theme.primaryColor,
-                  ),
-                  SizedBox(width: 10),
-                  Label(
-                    isJoined ? _localizations.unsubscribe : _localizations.subscribe,
-                    type: LabelType.bodyRegular,
-                    color: isJoined ? Colors.red : application.theme.primaryColor,
-                  ),
-                  Spacer(),
-                ],
-              ),
-            ),
+            _isJoined != null
+                ? TextButton(
+                    style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
+                    onPressed: () {
+                      _statusAction(!(_isJoined!));
+                    },
+                    child: Row(
+                      children: <Widget>[
+                        Icon(
+                          _isJoined! ? Icons.exit_to_app : Icons.person_add,
+                          color: _isJoined! ? Colors.red : application.theme.primaryColor,
+                        ),
+                        SizedBox(width: 10),
+                        Label(
+                          _isJoined! ? _localizations.unsubscribe : _localizations.subscribe,
+                          type: LabelType.bodyRegular,
+                          color: _isJoined! ? Colors.red : application.theme.primaryColor,
+                        ),
+                        Spacer(),
+                      ],
+                    ),
+                  )
+                : SizedBox.shrink(),
           ],
         ),
       ),
