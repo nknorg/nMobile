@@ -110,7 +110,6 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
       child: Column(
         children: <Widget>[
           Expanded(
-            flex: 1,
             child: ListView(
               children: <Widget>[
                 Padding(

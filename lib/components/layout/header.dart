@@ -37,7 +37,6 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
         children: <Widget>[
           this.childLead ?? SizedBox.shrink(),
           Expanded(
-            flex: 1,
             child: (titleChild ??
                 Text(
                   title?.toUpperCase() ?? '',
