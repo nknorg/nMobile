@@ -187,25 +187,22 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
               ),
             ),
           ),
-          Expanded(
-            flex: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Column(
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 30),
-                      child: Button(
-                        text: _localizations.done,
-                        width: double.infinity,
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
+          SafeArea(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                children: <Widget>[
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 30),
+                    child: Button(
+                      text: _localizations.done,
+                      width: double.infinity,
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

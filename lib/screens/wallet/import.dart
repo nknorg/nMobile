@@ -90,12 +90,9 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
           },
           child: Column(
             children: <Widget>[
-              Expanded(
-                flex: 0,
-                child: Tabs(
-                  controller: _tabController,
-                  titles: tabTitles,
-                ),
+              Tabs(
+                controller: _tabController,
+                titles: tabTitles,
               ),
               Expanded(
                 child: TabBarView(

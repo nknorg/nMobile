@@ -32,56 +32,50 @@ class _WalletHomeEmptyLayoutState extends BaseStateFulWidgetState<WalletHomeEmpt
           Center(
             child: Asset.image("wallet/pig.png", width: Global.screenWidth() / 3),
           ),
-          Expanded(
-            flex: 0,
-            child: Column(
-              children: <Widget>[
-                Label(
-                  _localizations.no_wallet_title,
+          Column(
+            children: <Widget>[
+              Label(
+                _localizations.no_wallet_title,
+                color: application.theme.fontLightColor,
+                type: LabelType.h2,
+                dark: true,
+                textAlign: TextAlign.center,
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 16, left: 24, right: 24),
+                child: Label(
+                  _localizations.no_wallet_desc,
                   color: application.theme.fontLightColor,
-                  type: LabelType.h2,
+                  type: LabelType.h4,
                   dark: true,
+                  softWrap: true,
                   textAlign: TextAlign.center,
                 ),
-                Padding(
-                  padding: EdgeInsets.only(top: 16, left: 24, right: 24),
-                  child: Label(
-                    _localizations.no_wallet_desc,
-                    color: application.theme.fontLightColor,
-                    type: LabelType.h4,
-                    dark: true,
-                    softWrap: true,
-                    textAlign: TextAlign.center,
-                  ),
-                )
-              ],
-            ),
+              )
+            ],
           ),
-          Expanded(
-            flex: 0,
-            child: Column(
-              children: <Widget>[
-                Button(
-                  text: _localizations.no_wallet_create,
-                  width: double.infinity,
-                  fontColor: application.theme.fontLightColor,
-                  backgroundColor: application.theme.primaryColor,
-                  onPressed: () {
-                    WalletCreateNKNScreen.go(context);
-                  },
-                ),
-                SizedBox(height: 12),
-                Button(
-                  text: _localizations.no_wallet_import,
-                  width: double.infinity,
-                  fontColor: application.theme.fontLightColor,
-                  backgroundColor: application.theme.primaryColor.withAlpha(20),
-                  onPressed: () {
-                    WalletImportScreen.go(context, WalletType.nkn);
-                  },
-                ),
-              ],
-            ),
+          Column(
+            children: <Widget>[
+              Button(
+                text: _localizations.no_wallet_create,
+                width: double.infinity,
+                fontColor: application.theme.fontLightColor,
+                backgroundColor: application.theme.primaryColor,
+                onPressed: () {
+                  WalletCreateNKNScreen.go(context);
+                },
+              ),
+              SizedBox(height: 12),
+              Button(
+                text: _localizations.no_wallet_import,
+                width: double.infinity,
+                fontColor: application.theme.fontLightColor,
+                backgroundColor: application.theme.primaryColor.withAlpha(20),
+                onPressed: () {
+                  WalletImportScreen.go(context, WalletType.nkn);
+                },
+              ),
+            ],
           ),
         ],
       ),

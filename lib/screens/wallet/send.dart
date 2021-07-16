@@ -675,24 +675,21 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                               ),
                             ),
                           ),
-                          Expanded(
-                            flex: 0,
-                            child: SafeArea(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: 20),
-                                child: Column(
-                                  children: <Widget>[
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 30),
-                                      child: Button(
-                                        text: _localizations.continue_text,
-                                        width: double.infinity,
-                                        disabled: !_formValid,
-                                        onPressed: _readyTransfer,
-                                      ),
+                          SafeArea(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              child: Column(
+                                children: <Widget>[
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 30),
+                                    child: Button(
+                                      text: _localizations.continue_text,
+                                      width: double.infinity,
+                                      disabled: !_formValid,
+                                      onPressed: _readyTransfer,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),

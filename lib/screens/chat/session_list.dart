@@ -231,82 +231,79 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   }
 
   _getTipView() {
-    return Expanded(
-      flex: 0,
-      child: Container(
-        margin: const EdgeInsets.only(top: 25, bottom: 8, left: 20, right: 20),
-        padding: const EdgeInsets.only(bottom: 16),
-        width: double.infinity,
-        decoration: BoxDecoration(color: application.theme.backgroundColor2, borderRadius: BorderRadius.circular(8)),
-        child: Stack(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Container(
-                  width: 48,
-                  height: 48,
-                  margin: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Color(0x190F6EFF), borderRadius: BorderRadius.circular(8)),
-                  child: Center(child: Asset.iconSvg('lock', width: 24, color: application.theme.primaryColor)),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16),
+    return Container(
+      margin: const EdgeInsets.only(top: 25, bottom: 8, left: 20, right: 20),
+      padding: const EdgeInsets.only(bottom: 16),
+      width: double.infinity,
+      decoration: BoxDecoration(color: application.theme.backgroundColor2, borderRadius: BorderRadius.circular(8)),
+      child: Stack(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                width: 48,
+                height: 48,
+                margin: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: Color(0x190F6EFF), borderRadius: BorderRadius.circular(8)),
+                child: Center(child: Asset.iconSvg('lock', width: 24, color: application.theme.primaryColor)),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Label(
+                        S.of(context).private_messages,
+                        type: LabelType.h3,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Label(
+                        S.of(context).private_messages_desc,
+                        type: LabelType.bodyRegular,
+                        softWrap: true,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: GestureDetector(
+                        onTap: () {
+                          launchUrl('https://nmobile.nkn.org/');
+                        },
                         child: Label(
-                          S.of(context).private_messages,
-                          type: LabelType.h3,
+                          S.of(context).learn_more,
+                          type: LabelType.bodySmall,
+                          color: application.theme.primaryColor,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Label(
-                          S.of(context).private_messages_desc,
-                          type: LabelType.bodyRegular,
-                          softWrap: true,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: GestureDetector(
-                          onTap: () {
-                            launchUrl('https://nmobile.nkn.org/');
-                          },
-                          child: Label(
-                            S.of(context).learn_more,
-                            type: LabelType.bodySmall,
-                            color: application.theme.primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            Positioned(
-              right: 10,
-              top: 10,
-              child: InkWell(
-                onTap: () {
-                  _settingsStorage.setSettings(SettingsStorage.CHAT_TIP_STATUS, true);
-                  setState(() {
-                    _isShowTip = false;
-                  });
-                },
-                child: Asset.iconSvg(
-                  'close',
-                  width: 16,
+                    ),
+                  ],
                 ),
               ),
+            ],
+          ),
+          Positioned(
+            right: 10,
+            top: 10,
+            child: InkWell(
+              onTap: () {
+                _settingsStorage.setSettings(SettingsStorage.CHAT_TIP_STATUS, true);
+                setState(() {
+                  _isShowTip = false;
+                });
+              },
+              child: Asset.iconSvg(
+                'close',
+                width: 16,
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

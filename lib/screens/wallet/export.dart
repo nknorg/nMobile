@@ -101,37 +101,34 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
               child: SingleChildScrollView(
                 child: Column(
                   children: <Widget>[
-                    Expanded(
-                      flex: 0,
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 32),
-                        child: Column(
-                          children: <Widget>[
-                            Hero(
-                              tag: 'avatar:$_address',
-                              child: WalletAvatar(
-                                width: 48,
-                                height: 48,
-                                walletType: this._walletType ?? WalletType.nkn,
-                              ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 32),
+                      child: Column(
+                        children: <Widget>[
+                          Hero(
+                            tag: 'avatar:$_address',
+                            child: WalletAvatar(
+                              width: 48,
+                              height: 48,
+                              walletType: this._walletType ?? WalletType.nkn,
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 16, bottom: 40),
-                              child: Label(
-                                _name ?? '',
-                                type: LabelType.h2,
-                              ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16, bottom: 40),
+                            child: Label(
+                              _name ?? '',
+                              type: LabelType.h2,
                             ),
-                            Column(
-                              children: <Widget>[
-                                _getItemWidgets('wallet', _localizations.wallet_address, _address),
-                                _getItemWidgets('key', _localizations.public_key, _publicKey),
-                                _getItemWidgets('key', _localizations.seed, _seed, backupOk: true),
-                                _getItemWidgets('key', _localizations.keystore, _keystore, backupOk: true),
-                              ],
-                            )
-                          ],
-                        ),
+                          ),
+                          Column(
+                            children: <Widget>[
+                              _getItemWidgets('wallet', _localizations.wallet_address, _address),
+                              _getItemWidgets('key', _localizations.public_key, _publicKey),
+                              _getItemWidgets('key', _localizations.seed, _seed, backupOk: true),
+                              _getItemWidgets('key', _localizations.keystore, _keystore, backupOk: true),
+                            ],
+                          )
+                        ],
                       ),
                     ),
                   ],
@@ -141,36 +138,33 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
           ),
           _seed == null || _seed!.isEmpty
               ? SizedBox.shrink()
-              : Expanded(
-                  flex: 0,
-                  child: SafeArea(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                      child: Column(
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 30),
-                            child: Button(
-                              child: Label(
-                                _localizations.view_qrcode,
-                                type: LabelType.h3,
-                                color: application.theme.primaryColor,
-                              ),
-                              backgroundColor: application.theme.primaryColor.withAlpha(20),
-                              fontColor: application.theme.primaryColor,
-                              width: double.infinity,
-                              onPressed: () {
-                                BottomDialog.of(context).showQrcode(
-                                  title: _localizations.seed + _localizations.qrcode,
-                                  desc: _localizations.seed_qrcode_dec,
-                                  data: _seed!,
-                                );
-                                _setBackupFlag();
-                              },
+              : SafeArea(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 30),
+                          child: Button(
+                            child: Label(
+                              _localizations.view_qrcode,
+                              type: LabelType.h3,
+                              color: application.theme.primaryColor,
                             ),
+                            backgroundColor: application.theme.primaryColor.withAlpha(20),
+                            fontColor: application.theme.primaryColor,
+                            width: double.infinity,
+                            onPressed: () {
+                              BottomDialog.of(context).showQrcode(
+                                title: _localizations.seed + _localizations.qrcode,
+                                desc: _localizations.seed_qrcode_dec,
+                                data: _seed!,
+                              );
+                              _setBackupFlag();
+                            },
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
