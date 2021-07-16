@@ -171,11 +171,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
   }
 
-  _insertMessage(MessageSchema? schema) async {
+  _insertMessage(MessageSchema? schema) {
     if (schema == null) return;
     if (!schema.isOutbound) {
       // read
-      schema = await chatCommon.updateMessageStatus(schema, MessageStatus.ReceivedRead);
+      schema = chatCommon.updateMessageStatus(schema, MessageStatus.ReceivedRead);
       sessionCommon.setUnReadCount(_topic?.topic ?? _contact?.clientAddress, 0, notify: true); // await
       if (schema.canDisplayAndRead) Badge.onCountDown(1);
     }

@@ -118,13 +118,12 @@ class ChatInCommon with Tag {
     // if (received.isTopic) return; (limit in out)
     List<MessageSchema> _schemaList = await _messageStorage.queryList(received.content);
     _schemaList.forEach((MessageSchema element) async {
-      element = MessageStatus.set(element, MessageStatus.SendWithReceipt);
-      _messageStorage.updateMessageStatus(element).then((success) {
-        if (success) {
-          chatCommon.onUpdateSink.add(element);
-          logger.d("$TAG - receiveReceipt - updated:$element");
-        }
-      });
+      if (MessageStatus.get(received) == MessageStatus.SendWithReceipt) {
+        logger.d("$TAG - receiveReceipt - duplicated:$element");
+        return;
+      }
+      logger.d("$TAG - receiveReceipt - updated:$element");
+      chatCommon.updateMessageStatus(element, MessageStatus.SendWithReceipt, notify: true);
     });
   }
 
