@@ -115,7 +115,7 @@ class ChatOutCommon with Tag {
         deleteAfterSeconds: deleteSeconds,
         burningUpdateAt: updateAt,
       );
-      send.content = MessageData.getContactOptionsBurn(send);
+      send.content = MessageData.getContactOptionsBurn(send); // same with receive and old version
       await _sendAndDisplay(send, send.content);
       logger.d("$TAG - sendContactOptionsBurn - success - data:${send.content}");
     } catch (e) {
@@ -139,7 +139,7 @@ class ChatOutCommon with Tag {
         to: clientAddress,
       );
       send = MessageOptions.setDeviceToken(send, deviceToken);
-      send.content = MessageData.getContactOptionsToken(send);
+      send.content = MessageData.getContactOptionsToken(send); // same with receive and old version
       await _sendAndDisplay(send, send.content);
       logger.d("$TAG - sendContactOptionsToken - success - data:${send.content}");
     } catch (e) {
@@ -309,7 +309,7 @@ class ChatOutCommon with Tag {
       String data = MessageData.getTopicSubscribe(send);
       await _sendAndDisplay(send, data);
       // await chatCommon.clientPublishData(genTopicHash(send.topic!), data);
-      logger.d("$TAG - sendTopicSubscribe - success - data:${send.content}");
+      logger.d("$TAG - sendTopicSubscribe - success - data:$data");
     } catch (e) {
       handleError(e);
       logger.w("$TAG - sendTopicSubscribe - fail - tryCount:$tryCount - topic:$topic");
@@ -333,7 +333,7 @@ class ChatOutCommon with Tag {
       String data = MessageData.getTopicUnSubscribe(send);
       await _sendAndDisplay(send, data);
       // await chatCommon.clientPublishData(genTopicHash(send.topic!), data);
-      logger.d("$TAG - sendTopicUnSubscribe - success - data:${send.content}");
+      logger.d("$TAG - sendTopicUnSubscribe - success - data:$data");
     } catch (e) {
       handleError(e);
       logger.w("$TAG - sendTopicUnSubscribe - fail - tryCount:$tryCount - topic:$topic");
@@ -395,13 +395,6 @@ class ChatOutCommon with Tag {
     bool resend = false,
   }) async {
     if (schema == null || msgData == null) return null;
-    // contact
-    ContactSchema? _contact = contact ?? await chatCommon.contactHandle(schema);
-    DeviceInfoSchema? _deviceInfo = deviceInfo ?? await chatCommon.deviceInfoHandle(schema, _contact);
-    // topic
-    TopicSchema? _topic = topic ?? await chatCommon.topicHandle(schema);
-    // session
-    chatCommon.sessionHandle(schema); // await
     // DB
     if (!resend) {
       schema = await _messageStorage.insert(schema);
@@ -412,6 +405,14 @@ class ChatOutCommon with Tag {
     if (schema == null) return null;
     // display
     _onSavedSink.add(schema); // resend already delete fail item in listview
+    // contact
+    ContactSchema? _contact = contact ?? await chatCommon.contactHandle(schema);
+    DeviceInfoSchema? _deviceInfo = deviceInfo ?? await chatCommon.deviceInfoHandle(schema, _contact);
+    // topic
+    TopicSchema? _topic = topic ?? await chatCommon.topicHandle(schema);
+    // chatCommon.subscriberHandle(schema); // await
+    // session
+    chatCommon.sessionHandle(schema); // await
     // SDK
     Uint8List? pid;
     try {

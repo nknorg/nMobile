@@ -9,7 +9,6 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/subscriber.dart';
-import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -40,13 +39,13 @@ class ChatInCommon with Tag {
     ContactSchema? contact = await chatCommon.contactHandle(message);
     chatCommon.deviceInfoHandle(message, contact); // await
     // topic
-    TopicSchema? topic = await chatCommon.topicHandle(message);
+    chatCommon.topicHandle(message); // await
     chatCommon.subscriberHandle(message); // await
     // session
     chatCommon.sessionHandle(message); // await
     // message
     if (needWait) {
-      await _messageHandle(message, contact: contact, topic: topic);
+      await _messageHandle(message, contact: contact);
     } else {
       _onReceiveSink.add(message);
     }
@@ -58,7 +57,7 @@ class ChatInCommon with Tag {
     }
   }
 
-  Future _messageHandle(MessageSchema received, {ContactSchema? contact, TopicSchema? topic}) async {
+  Future _messageHandle(MessageSchema received, {ContactSchema? contact}) async {
     switch (received.contentType) {
       case MessageContentType.receipt:
         _receiveReceipt(received); // await
@@ -442,7 +441,7 @@ class ChatInCommon with Tag {
     _onSavedSink.add(schema);
   }
 
-  // NO DB NO single
+  // NO single
   Future _receiveTopicSubscribe(MessageSchema received) async {
     // duplicated
     List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
@@ -450,6 +449,7 @@ class ChatInCommon with Tag {
       logger.d("$TAG - _receiveTopicSubscribed - duplicated - schema:$exists");
       return;
     }
+    // no topic action
     // subscriber
     SubscriberSchema? subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
     if (subscriber == null) {
@@ -457,7 +457,7 @@ class ChatInCommon with Tag {
     } else {
       bool success = await subscriberCommon.setStatus(subscriber.id, SubscriberStatus.Subscribed, notify: true);
       if (success) subscriber.status = SubscriberStatus.Subscribed;
-      // TODO:GG subers permission
+      // TODO:GG subers permission(owner)
     }
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);
@@ -466,7 +466,7 @@ class ChatInCommon with Tag {
     _onSavedSink.add(schema);
   }
 
-  // NO DB NO single
+  // NO single
   Future _receiveTopicUnsubscribe(MessageSchema received) async {
     // duplicated
     List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
@@ -474,12 +474,13 @@ class ChatInCommon with Tag {
       logger.d("$TAG - _receiveTopicSubscribed - duplicated - schema:$exists");
       return;
     }
+    // no topic action
     // subscriber
     SubscriberSchema? subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
     if (subscriber != null) {
       bool success = await subscriberCommon.setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
       if (success) subscriber.status = SubscriberStatus.Unsubscribed;
-      // TODO:GG subers permission + delete?
+      // TODO:GG subers permission(owner) + delete?
     }
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);
