@@ -539,21 +539,21 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                         children: <Widget>[
                           Asset.iconSvg('wallet', color: application.theme.primaryColor, width: 24),
                           SizedBox(width: 10),
-                          Label(
-                            _walletDefault?.name ?? "--",
-                            type: LabelType.bodyRegular,
-                            color: application.theme.fontColor1,
-                          ),
-                          SizedBox(width: 20),
                           Expanded(
                             child: Label(
-                              _localizations.change_default_chat_wallet,
+                              _walletDefault?.name ?? "--",
                               type: LabelType.bodyRegular,
-                              color: application.theme.primaryColor,
-                              overflow: TextOverflow.fade,
-                              textAlign: TextAlign.right,
-                              fontWeight: FontWeight.w600,
+                              color: application.theme.fontColor1,
                             ),
+                          ),
+                          SizedBox(width: 20),
+                          Label(
+                            _localizations.change_default_chat_wallet,
+                            type: LabelType.bodyRegular,
+                            color: application.theme.primaryColor,
+                            overflow: TextOverflow.fade,
+                            textAlign: TextAlign.right,
+                            fontWeight: FontWeight.w600,
                           ),
                         ],
                       ),
@@ -704,7 +704,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                       children: [
                         Icon(Icons.alarm_on, size: 24, color: application.theme.primaryColor),
                         Expanded(
-                          flex: 1,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

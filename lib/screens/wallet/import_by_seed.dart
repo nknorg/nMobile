@@ -115,7 +115,6 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
       child: Column(
         children: <Widget>[
           Expanded(
-            flex: 1,
             child: ListView(
               children: <Widget>[
                 Padding(

@@ -280,7 +280,6 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                       ),
                     ),
                     Expanded(
-                      flex: 1,
                       child: TextField(
                         controller: _searchController,
                         onChanged: (val) {
@@ -302,7 +301,6 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
               ),
             ),
             Expanded(
-              flex: 1,
               child: ListView.builder(
                 padding: EdgeInsets.only(bottom: 60),
                 itemCount: listItemViewCount,

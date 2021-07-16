@@ -68,7 +68,6 @@ class ContactItem extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 1,
             child: this.body != null
                 ? this.body!
                 : Column(

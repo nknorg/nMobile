@@ -96,7 +96,6 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
       body: Column(
         children: <Widget>[
           Expanded(
-            flex: 1,
             child: Padding(
               padding: EdgeInsets.only(top: 0),
               child: SingleChildScrollView(
@@ -118,27 +117,18 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
                             ),
                             Padding(
                               padding: const EdgeInsets.only(top: 16, bottom: 40),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Label(
-                                    _name ?? '',
-                                    type: LabelType.h2,
-                                  ),
-                                ],
+                              child: Label(
+                                _name ?? '',
+                                type: LabelType.h2,
                               ),
                             ),
-                            Expanded(
-                              flex: 0,
-                              child: Column(
-                                children: <Widget>[
-                                  _getItemWidgets('wallet', _localizations.wallet_address, _address),
-                                  _getItemWidgets('key', _localizations.public_key, _publicKey),
-                                  _getItemWidgets('key', _localizations.seed, _seed, backupOk: true),
-                                  _getItemWidgets('key', _localizations.keystore, _keystore, backupOk: true),
-                                ],
-                              ),
+                            Column(
+                              children: <Widget>[
+                                _getItemWidgets('wallet', _localizations.wallet_address, _address),
+                                _getItemWidgets('key', _localizations.public_key, _publicKey),
+                                _getItemWidgets('key', _localizations.seed, _seed, backupOk: true),
+                                _getItemWidgets('key', _localizations.keystore, _keystore, backupOk: true),
+                              ],
                             )
                           ],
                         ),
@@ -215,7 +205,6 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
               ),
               SizedBox(width: 20),
               Expanded(
-                flex: 1,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[

@@ -360,7 +360,6 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                       child: Column(
                         children: <Widget>[
                           Expanded(
-                            flex: 1,
                             child: SingleChildScrollView(
                               padding: EdgeInsets.only(top: 24, left: 20, right: 20, bottom: 32),
                               child: Column(
@@ -433,6 +432,9 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                               decimalDigits: 8,
                                               symbol: useETH ? 'ETH' : 'NKN',
                                             ),
+                                            maxWidth: Global.screenWidth() * 0.5,
+                                            maxLines: 10,
+                                            softWrap: true,
                                             color: application.theme.fontColor1,
                                           ),
                                         ],
@@ -560,7 +562,6 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                                     ),
                                                   ),
                                                   Expanded(
-                                                    flex: 1,
                                                     child: Column(
                                                       children: [
                                                         Row(
@@ -602,7 +603,6 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                                     ),
                                                   ),
                                                   Expanded(
-                                                    flex: 1,
                                                     child: Column(
                                                       children: [
                                                         Row(

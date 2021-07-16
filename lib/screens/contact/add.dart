@@ -188,7 +188,6 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
         child: Column(
           children: <Widget>[
             Expanded(
-              flex: 1,
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 30),
                 child: Column(

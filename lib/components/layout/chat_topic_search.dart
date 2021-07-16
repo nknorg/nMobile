@@ -128,7 +128,6 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     Expanded(
-                      flex: 1,
                       child: FormText(
                         controller: _topicController,
                         hintText: _localizations.input_name,
@@ -272,7 +271,6 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
           ),
           SizedBox(height: 10),
           Expanded(
-            flex: 1,
             child: _getPopularListView(),
           ),
           SafeArea(
@@ -330,7 +328,6 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
               ),
               SizedBox(width: 10),
               Expanded(
-                flex: 1,
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

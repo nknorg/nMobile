@@ -99,7 +99,6 @@ class BottomDialog extends BaseStateFulWidget {
               );
             }),
             Expanded(
-              flex: 1,
               child: child ?? SizedBox.shrink(),
             ),
           ],
@@ -137,7 +136,6 @@ class BottomDialog extends BaseStateFulWidget {
                     ethBig: true,
                   ),
                   Expanded(
-                    flex: 1,
                     child: Label(
                       _localizations.nkn_mainnet,
                       type: LabelType.h3,
@@ -187,7 +185,6 @@ class BottomDialog extends BaseStateFulWidget {
                     ethBig: true,
                   ),
                   Expanded(
-                    flex: 1,
                     child: Label(
                       _localizations.ethereum,
                       type: LabelType.h3,
@@ -479,7 +476,6 @@ class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with Sing
 
     List<Widget> body = <Widget>[
       Expanded(
-        flex: 1,
         child: widget.builder(widget.context),
       ),
     ];
@@ -519,7 +515,6 @@ class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with Sing
       ),
       Expanded(
         key: _contentKey,
-        flex: 1,
         child: Container(
           height: _currentHeight,
           child: body.length > 1

@@ -314,7 +314,6 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
         child: Row(
           children: <Widget>[
             Expanded(
-              flex: 1,
               child: !_audioRecordVisible
                   ? Row(
                       children: [
@@ -330,7 +329,6 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                           ),
                         ),
                         Expanded(
-                          flex: 1,
                           child: Container(
                             decoration: BoxDecoration(
                               color: _theme.backgroundColor2,
@@ -340,7 +338,6 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: <Widget>[
                                 Expanded(
-                                  flex: 1,
                                   child: TextField(
                                     style: TextStyle(fontSize: 14, height: 1.4),
                                     decoration: InputDecoration(
@@ -391,7 +388,6 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                         ),
                         SizedBox(width: 8),
                         Expanded(
-                          flex: 1,
                           child: Container(
                             height: ActionHeight,
                             child: Center(

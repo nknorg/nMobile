@@ -221,7 +221,6 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
         children: [
           _getTipView(),
           Expanded(
-            flex: 1,
             child: _sessionListView(),
           ),
         ],

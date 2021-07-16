@@ -6,6 +6,7 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -173,7 +174,15 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _wallet != null ? Label(nknFormat(_wallet?.balance ?? 0, decimalDigits: 4), type: LabelType.h1) : Label('--', type: LabelType.h1),
+                          _wallet != null
+                              ? Label(
+                                  nknFormat(_wallet?.balance ?? 0, decimalDigits: 4),
+                                  maxWidth: Global.screenWidth() * 0.7,
+                                  type: LabelType.h1,
+                                  maxLines: 10,
+                                  softWrap: true,
+                                )
+                              : Label('--', type: LabelType.h1),
                           Label('NKN', type: LabelType.bodySmall, color: application.theme.fontColor1), // .pad(t: 4),
                         ],
                       ),
@@ -200,7 +209,6 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
               child: Row(
                 children: <Widget>[
                   Expanded(
-                    flex: 1,
                     child: Button(
                       text: _localizations.send,
                       onPressed: _send,
@@ -208,7 +216,6 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                   ),
                   SizedBox(width: 16),
                   Expanded(
-                    flex: 1,
                     child: Button(
                       text: _localizations.receive,
                       onPressed: _receive,
@@ -232,15 +239,10 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(height: 15),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Label(
-                                _localizations.wallet_name,
-                                type: LabelType.h3,
-                                textAlign: TextAlign.start,
-                              ),
-                            ],
+                          Label(
+                            _localizations.wallet_name,
+                            type: LabelType.h3,
+                            textAlign: TextAlign.start,
                           ),
                           SizedBox(height: 15),
                           Label(
