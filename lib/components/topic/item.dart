@@ -86,10 +86,12 @@ class TopicItem extends StatelessWidget {
                                   color: application.theme.primaryColor,
                                 )
                               : SizedBox.shrink(),
-                          Label(
-                            this.bodyTitle ?? "",
-                            type: LabelType.h3,
-                            fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: Label(
+                              this.bodyTitle ?? "",
+                              type: LabelType.h3,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
