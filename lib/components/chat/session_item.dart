@@ -139,10 +139,13 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
                                         color: application.theme.primaryColor,
                                       )
                                     : SizedBox.shrink(),
-                                Label(
-                                  _topic?.topicShort ?? " ",
-                                  type: LabelType.h3,
-                                  fontWeight: FontWeight.bold,
+                                Expanded(
+                                  flex: 1,
+                                  child: Label(
+                                    _topic?.topicShort ?? " ",
+                                    type: LabelType.h3,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ],
                             ),
