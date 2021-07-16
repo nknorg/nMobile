@@ -350,7 +350,7 @@ class ChatOutCommon with Tag {
     TopicSchema? topic,
   }) async {
     if (schema == null) return null;
-    schema = await chatCommon.updateMessageStatus(schema, MessageStatus.Sending, notify: true);
+    schema = chatCommon.updateMessageStatus(schema, MessageStatus.Sending);
     switch (schema.contentType) {
       case MessageContentType.text:
       case MessageContentType.textExtension:
@@ -437,18 +437,14 @@ class ChatOutCommon with Tag {
     }
     // fail
     if (pid == null || pid.isEmpty) {
-      schema = MessageStatus.set(schema, MessageStatus.SendFail);
-      bool success = await _messageStorage.updateMessageStatus(schema);
-      if (success) chatCommon.onUpdateSink.add(schema);
-      return null;
+      schema = chatCommon.updateMessageStatus(schema, MessageStatus.SendFail, notify: true);
+      return schema;
     }
     // pid
     schema.pid = pid;
     _messageStorage.updatePid(schema.msgId, schema.pid); // await
     // status
-    schema = MessageStatus.set(schema, MessageStatus.SendSuccess);
-    bool success = await _messageStorage.updateMessageStatus(schema);
-    if (success) chatCommon.onUpdateSink.add(schema);
+    schema = chatCommon.updateMessageStatus(schema, MessageStatus.SendSuccess, notify: true);
     // notification
     _sendPush(schema, _contact, _topic); // await
     return schema;

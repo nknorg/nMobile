@@ -178,7 +178,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     // resend
     int _status = MessageStatus.get(_message);
     if (_status == MessageStatus.Sending && _message.sendTime != null && DateTime.now().isAfter(_message.sendTime!.add(Settings.msgResendDuration))) {
-      chatCommon.updateMessageStatus(_message, MessageStatus.SendFail, notify: true); // await
+      chatCommon.updateMessageStatus(_message, MessageStatus.SendFail, notify: true);
     }
   }
 
