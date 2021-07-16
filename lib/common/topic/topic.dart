@@ -36,55 +36,33 @@ class TopicCommon with Tag {
   Future<TopicSchema?> subscribe(String? topicName, {double fee = 0}) async {
     if (topicName == null || topicName.isEmpty) return null;
 
-    // db exist
-    TopicSchema? exists = await queryByTopic(topicName);
-    if (exists == null) {
-      logger.d("$TAG - subscribe - new - schema:$exists");
-      exists = await add(TopicSchema.create(topicName), checkDuplicated: false);
-    } else {
+    // subscribe
+    TopicSchema? _topic = await checkExpireAndSubscribe(topicName);
+    if (_topic == null) return null;
+
+    // subscriber
+    SubscriberSchema? subscriber = await subscriberCommon.queryByTopicChatId(topicName, clientCommon.address);
+    if (subscriber == null) {
       SubscriberSchema? subscriber = SubscriberSchema.create(topicName, clientCommon.address, SubscriberStatus.Subscribed);
-      await subscriberCommon.add(subscriber);
-    }
-    if (exists == null) return null;
-
-    // client subscribe
-    int currentBlockHeight = 0; // TODO:GG await NKNClientCaller.fetchBlockHeight();
-    if (exists.expireBlockHeight == null || exists.expireBlockHeight! <= 0 || (exists.expireBlockHeight! - currentBlockHeight > Global.topicWarnBlockExpireHeight)) {
-      bool joinSuccess = await _clientSubscribe(topicName, height: Global.topicDefaultSubscribeHeight); // TODO:GG topic params
-      if (!joinSuccess) return null;
-
-      // schema refresh
-      var subscribeAt = DateTime.now().millisecondsSinceEpoch;
-      var expireBlockHeight = currentBlockHeight + Global.topicDefaultSubscribeHeight;
-      bool setSuccess = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireBlockHeight, notify: true);
-      if (setSuccess) {
-        exists.subscribeAt = subscribeAt;
-        exists.expireBlockHeight = expireBlockHeight;
-        exists.joined = true;
+      subscriberCommon.add(subscriber); // await
+    } else {
+      if (subscriber.status != SubscriberStatus.Subscribed) {
+        bool success = await subscriberCommon.setStatus(subscriber.id, SubscriberStatus.Subscribed);
+        if (success) subscriber.status = SubscriberStatus.Subscribed;
       }
     }
 
     // subscribers
-    if (exists.isPrivate) {
+    if (_topic.isPrivate) {
       // await GroupDataCenter.pullPrivateSubscribers(topicName);
       // TODO:GG subers get + topic permissions
     } else {
-      SubscriberSchema? me = await subscriberCommon.queryByTopicChatId(topicName, clientCommon.address);
-      if (me == null) {
-        await subscriberCommon.add(SubscriberSchema.create(topicName, clientCommon.address, SubscriberStatus.Subscribed));
-      } else {
-        if (me.status != SubscriberStatus.Subscribed) {
-          bool success = await subscriberCommon.setStatus(me.id, SubscriberStatus.Subscribed);
-          if (success) me.status = SubscriberStatus.Subscribed;
-        }
-      }
-      // others
       subscriberCommon.getSubscribers(topicName); // await
     }
 
     // message
-    await chatOutCommon.sendTopicSubscribe(topicName);
-    return exists;
+    chatOutCommon.sendTopicSubscribe(topicName); // await
+    return _topic;
   }
 
   Future<TopicSchema?> unsubscribe(String? topicName, {bool deleteDB = false}) async {
@@ -104,13 +82,76 @@ class TopicCommon with Tag {
     }
 
     // message
-    await chatOutCommon.sendTopicUnSubscribe(topicName);
+    chatOutCommon.sendTopicUnSubscribe(topicName); // await
 
     // TODO:GG subers del
 
     // db delete
     if (deleteDB) await delete(exists?.id, notify: true);
     return exists;
+  }
+
+  Future<TopicSchema?> checkExpireAndSubscribe(String? topicName, {bool emptyAdd = true, double fee = 0}) async {
+    if (topicName == null || topicName.isEmpty) return null;
+
+    // db exist
+    TopicSchema? exists = await queryByTopic(topicName);
+    if (exists == null && emptyAdd) {
+      logger.d("$TAG - checkExpireAndSubscribe - new - schema:$exists");
+      exists = await add(TopicSchema.create(topicName), checkDuplicated: false);
+    }
+    if (exists == null) return null;
+
+    // empty height
+    bool noSubscribed = false;
+    if (!exists.joined || exists.subscribeAt == null || exists.subscribeAt! <= 0 || exists.expireBlockHeight == null || exists.expireBlockHeight! <= 0) {
+      int subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
+      int expireHeight = await _getExpireAt(topicName, clientCommon.address);
+      if (expireHeight > 0) {
+        // sync node info
+        bool success = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireHeight, notify: true);
+        if (success) {
+          exists.joined = true;
+          exists.subscribeAt = subscribeAt;
+          exists.expireBlockHeight = expireHeight;
+        }
+      } else {
+        // no subscribe history
+        noSubscribed = true;
+      }
+    }
+
+    // check expire
+    int? globalHeight = await clientCommon.client?.getHeight();
+    if (noSubscribed || (await exists.shouldResubscribe(globalHeight: globalHeight))) {
+      bool joinSuccess = await _clientSubscribe(
+        topicName,
+        height: Global.topicDefaultSubscribeHeight,
+        // meta: , // TODO:GG topic params
+        // permissionPage: , // TODO:GG topic params
+        fee: fee,
+      );
+      if (!joinSuccess) return null;
+
+      // db update
+      var subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
+      var expireHeight = (globalHeight ?? exists.expireBlockHeight ?? 0) + Global.topicDefaultSubscribeHeight;
+      bool setSuccess = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireHeight, notify: true);
+      if (setSuccess) {
+        exists.joined = true;
+        exists.subscribeAt = subscribeAt;
+        exists.expireBlockHeight = expireHeight;
+      }
+    }
+    return exists;
+  }
+
+  Future<bool> isJoined(String? topicName, String? clientAddress, {int? globalHeight}) async {
+    int expireHeight = await _getExpireAt(topicName, clientCommon.address);
+    if (expireHeight <= 0) return false;
+    globalHeight = globalHeight ?? await clientCommon.client?.getHeight();
+    if (globalHeight == null || globalHeight <= 0) return false;
+    return expireHeight >= globalHeight;
   }
 
   Future<bool> _clientSubscribe(
@@ -180,16 +221,36 @@ class TopicCommon with Tag {
     return success;
   }
 
-  // TODO:GG topic detail [meta, expiresAt, ...]
-  Future _clientGetSubscription(String? topicName, String? clientAddress) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return false;
+  // TODO:GG call
+  Future<Map<String, dynamic>> getMeta(String? topicName, String? clientAddress) async {
+    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return Map();
+    Map<String, dynamic> result = await _clientGetSubscription(topicName, clientAddress);
+    var meta = result['meta']; // TODO:GG 转化成map
+    return Map();
+  }
+
+  Future<int> _getExpireAt(String? topicName, String? clientAddress) async {
+    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return 0;
+    Map<String, dynamic> result = await _clientGetSubscription(topicName, clientAddress);
+    String? expiresAt = result['expiresAt']?.toString() ?? "0";
+    return int.parse(expiresAt);
+  }
+
+  Future<Map<String, dynamic>> _clientGetSubscription(String? topicName, String? clientAddress) async {
+    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return Map();
     Map<String, dynamic>? result = await clientCommon.client?.getSubscription(
       topic: genTopicHash(topicName),
       subscriber: clientAddress,
     );
+    if (result?.isNotEmpty == true) {
+      logger.d("$TAG - _clientGetSubscription - success - topicName:$topicName - clientAddress:$clientAddress - result:$result}");
+    } else {
+      logger.w("$TAG - _clientGetSubscription - fail - topicName:$topicName - clientAddress:$clientAddress");
+    }
+    return result ?? Map();
   }
 
-  Future<TopicSchema?> add(TopicSchema? schema, {bool addSubscriberByMe = true, bool checkDuplicated = true}) async {
+  Future<TopicSchema?> add(TopicSchema? schema, {bool checkDuplicated = true}) async {
     if (schema == null || schema.topic.isEmpty) return null;
     schema.type = schema.type ?? (isPrivateTopicReg(schema.topic) ? TopicType.privateTopic : TopicType.publicTopic);
     if (checkDuplicated) {
@@ -202,12 +263,6 @@ class TopicCommon with Tag {
     TopicSchema? added = await _topicStorage.insert(schema);
     if (added != null) {
       _addSink.add(added);
-
-      // subscriber
-      if (addSubscriberByMe) {
-        SubscriberSchema? subscriber = SubscriberSchema.create(schema.topic, clientCommon.address, SubscriberStatus.Subscribed);
-        await subscriberCommon.add(subscriber);
-      }
     }
     return added;
   }
@@ -251,7 +306,6 @@ class TopicCommon with Tag {
     return success;
   }
 
-  // TODO:GG call
   Future<bool> setCount(int? topicId, int? count, {bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
     bool success = await _topicStorage.setCount(topicId, count ?? 0);
@@ -259,7 +313,6 @@ class TopicCommon with Tag {
     return success;
   }
 
-  // TODO:GG call
   Future<bool> setTop(int? topicId, bool top, {bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
     bool success = await _topicStorage.setTop(topicId, top);
