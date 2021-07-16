@@ -121,7 +121,6 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Expanded(
-                flex: 1,
                 child: _topic != null
                     ? TopicItem(
                         topic: _topic!,
@@ -140,7 +139,6 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
                                       )
                                     : SizedBox.shrink(),
                                 Expanded(
-                                  flex: 1,
                                   child: Label(
                                     _topic?.topicShort ?? " ",
                                     type: LabelType.h3,

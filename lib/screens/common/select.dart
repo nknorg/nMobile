@@ -54,7 +54,6 @@ class _SelectScreenState extends BaseStateFulWidgetState<SelectScreen> {
         child: Column(
           children: <Widget>[
             Expanded(
-              flex: 1,
               child: Container(
                 child: ListView.separated(
                   itemBuilder: (BuildContext context, int index) {

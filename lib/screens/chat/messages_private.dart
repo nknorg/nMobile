@@ -236,8 +236,7 @@
 //           child: Column(
 //             children: [
 //               Expanded(
-//                 flex: 1,
-//                 child: Stack(
+//                 //                 child: Stack(
 //                   children: [
 //                     ListView.builder(
 //                       controller: _scrollController,

@@ -83,7 +83,6 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
       body: Column(
         children: <Widget>[
           Expanded(
-            flex: 1,
             child: SingleChildScrollView(
               child: BlocBuilder<WalletBloc, WalletState>(
                 builder: (context, state) {

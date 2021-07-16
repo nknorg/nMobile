@@ -73,7 +73,6 @@ class NotificationDialog extends StatelessWidget {
                   child: (this.headIcon ?? Asset.iconSvg('check', color: Colors.white)),
                 ),
                 Expanded(
-                  flex: 1,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,

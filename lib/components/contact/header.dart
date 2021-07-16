@@ -32,7 +32,6 @@ class ContactHeader extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 1,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
