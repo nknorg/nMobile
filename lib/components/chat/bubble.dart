@@ -56,8 +56,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   StreamSubscription? _onPlayPositionChangedSubscription;
 
   late MessageSchema _message;
-  ContactSchema? _contact;
   late int _msgStatus;
+
+  ContactSchema? _contact;
 
   double _uploadProgress = 1;
 
@@ -127,15 +128,20 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   @override
   void onRefreshArguments() {
     _message = widget.message;
-    _contact = widget.contact;
-    if (_contact == null) {
+    _msgStatus = MessageStatus.get(_message);
+    // contact
+    if (widget.contact != null) {
+      _contact = widget.contact;
+    } else {
       _message.getSender(emptyAdd: true).then((value) {
-        setState(() {
-          _contact = value;
-        });
+        if (_contact?.clientAddress == null || _contact?.clientAddress != value?.clientAddress) {
+          setState(() {
+            _contact = value;
+          });
+        }
       });
     }
-    _msgStatus = MessageStatus.get(_message);
+    // progress
     _uploadProgress = ((_message.content is File) && (_msgStatus == MessageStatus.Sending)) ? (_uploadProgress == 1 ? 0 : _uploadProgress) : 1;
     // _playProgress = 0;
     // burn
