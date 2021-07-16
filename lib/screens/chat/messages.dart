@@ -176,7 +176,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (!schema.isOutbound) {
       // read
       schema = await chatCommon.updateMessageStatus(schema, MessageStatus.ReceivedRead);
-      sessionCommon.setUnReadCount(_topic?.topic ?? _contact?.clientAddress, 0, notify: true);
+      sessionCommon.setUnReadCount(_topic?.topic ?? _contact?.clientAddress, 0, notify: true); // await
       if (schema.canDisplayAndRead) Badge.onCountDown(1);
     }
     setState(() {
