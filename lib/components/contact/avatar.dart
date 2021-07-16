@@ -23,10 +23,12 @@ class ContactAvatar extends BaseStateFulWidget {
 }
 
 class _ContactAvatarState extends BaseStateFulWidgetState<ContactAvatar> {
+  bool _fileError = false;
   // File? _avatarFile;
 
   @override
   void onRefreshArguments() {
+    _fileError = false;
     // _checkAvatarFileExists();
   }
 
@@ -45,11 +47,16 @@ class _ContactAvatarState extends BaseStateFulWidgetState<ContactAvatar> {
     String name = widget.contact.displayName;
     String? path = widget.contact.displayAvatarPath;
 
-    if (path?.isNotEmpty == true) {
+    if (_fileError || path?.isNotEmpty == true) {
       // _avatarFile != null
       return CircleAvatar(
         radius: radius,
         backgroundImage: FileImage(File(path!)),
+        onBackgroundImageError: (Object exception, StackTrace? stackTrace) {
+          setState(() {
+            _fileError = true;
+          });
+        },
       );
     }
     if (widget.placeHolder == true) {

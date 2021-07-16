@@ -58,6 +58,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   late MessageSchema _message;
   late int _msgStatus;
 
+  late bool _showProfile;
   ContactSchema? _contact;
 
   double _uploadProgress = 1;
@@ -130,16 +131,21 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _message = widget.message;
     _msgStatus = MessageStatus.get(_message);
     // contact
-    if (widget.contact != null) {
-      _contact = widget.contact;
+    _showProfile = widget.showProfile;
+    if (_showProfile) {
+      if (widget.contact != null) {
+        _contact = widget.contact;
+      } else {
+        _message.getSender(emptyAdd: true).then((value) {
+          if (_contact?.clientAddress == null || _contact?.clientAddress != value?.clientAddress) {
+            setState(() {
+              _contact = value;
+            });
+          }
+        });
+      }
     } else {
-      _message.getSender(emptyAdd: true).then((value) {
-        if (_contact?.clientAddress == null || _contact?.clientAddress != value?.clientAddress) {
-          setState(() {
-            _contact = value;
-          });
-        }
-      });
+      _contact = null;
     }
     // progress
     _uploadProgress = ((_message.content is File) && (_msgStatus == MessageStatus.Sending)) ? (_uploadProgress == 1 ? 0 : _uploadProgress) : 1;
@@ -234,7 +240,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          isSendOut ? SizedBox.shrink() : _getAvatar(isSendOut),
+          isSendOut ? SizedBox.shrink() : _getAvatar(),
           Expanded(
             flex: 1,
             child: Container(
@@ -244,7 +250,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                 crossAxisAlignment: isSendOut ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: 4),
-                  _getName(isSendOut),
+                  _getName(),
                   SizedBox(height: 4),
                   Row(
                     mainAxisSize: MainAxisSize.max,
@@ -259,16 +265,15 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               ),
             ),
           ),
-          isSendOut ? _getAvatar(isSendOut) : SizedBox.shrink(),
+          isSendOut ? _getAvatar() : SizedBox.shrink(),
         ],
       ),
     );
   }
 
-  Widget _getAvatar(bool self) {
-    return self || !widget.showProfile
-        ? SizedBox.shrink()
-        : GestureDetector(
+  Widget _getAvatar() {
+    return _showProfile
+        ? GestureDetector(
             onTap: () async {
               File? file = await _contact?.displayAvatarFile;
               PhotoScreen.go(context, filePath: file?.path);
@@ -280,17 +285,18 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                     radius: 24,
                   )
                 : SizedBox(width: 24 * 2, height: 24 * 2),
-          );
+          )
+        : SizedBox.shrink();
   }
 
-  Widget _getName(bool self) {
-    return self || !widget.showProfile
-        ? SizedBox.shrink()
-        : Label(
+  Widget _getName() {
+    return _showProfile
+        ? Label(
             _contact?.displayName ?? " ",
             type: LabelType.h3,
             color: application.theme.primaryColor,
-          );
+          )
+        : SizedBox.shrink();
   }
 
   Widget _getTip(bool self) {
