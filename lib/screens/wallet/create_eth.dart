@@ -107,7 +107,6 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
                   child: Column(
                     children: <Widget>[
                       Expanded(
-                        flex: 1,
                         child: ListView(
                           children: [
                             Padding(

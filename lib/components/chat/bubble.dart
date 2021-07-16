@@ -242,7 +242,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         children: [
           isSendOut ? SizedBox.shrink() : _getAvatar(),
           Expanded(
-            flex: 1,
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 8),
               child: Column(
@@ -310,7 +309,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool showFail = _msgStatus == MessageStatus.SendFail;
 
     return Expanded(
-      flex: 1,
       child: Row(
         mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: self ? MainAxisAlignment.end : MainAxisAlignment.start,

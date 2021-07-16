@@ -98,7 +98,6 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
                 ),
               ),
               Expanded(
-                flex: 1,
                 child: TabBarView(
                   controller: _tabController,
                   children: <Widget>[

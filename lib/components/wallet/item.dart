@@ -72,7 +72,6 @@ class WalletItem extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 1,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
