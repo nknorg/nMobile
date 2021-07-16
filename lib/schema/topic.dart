@@ -142,16 +142,16 @@ class TopicSchema {
 
   bool isOwner(String? accountPubKey) => (accountPubKey?.isNotEmpty == true) && (accountPubKey == ownerPubKey);
 
-  Future<bool> isJoined({int? globalHeight}) async {
-    if (!joined) return false;
-    if (expireBlockHeight != null && expireBlockHeight! > 0) {
-      globalHeight = globalHeight ?? (await clientCommon.client?.getHeight());
-      if (expireBlockHeight! < (globalHeight ?? 0)) {
-        return false;
-      }
-    }
-    return true;
-  }
+  // Future<bool> isJoined({int? globalHeight}) async {
+  //   if (!joined) return false;
+  //   if (expireBlockHeight != null && expireBlockHeight! > 0) {
+  //     globalHeight = globalHeight ?? (await clientCommon.client?.getHeight());
+  //     if (expireBlockHeight! < (globalHeight ?? 0)) {
+  //       return false;
+  //     }
+  //   }
+  //   return true;
+  // }
 
   Future<bool> shouldResubscribe({int? globalHeight}) async {
     bool isHeightEmpty = (expireBlockHeight == null) || (expireBlockHeight! <= 0);
