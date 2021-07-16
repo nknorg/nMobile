@@ -46,11 +46,13 @@ class TopicHeader extends StatelessWidget {
                             color: Colors.white,
                           )
                         : SizedBox.shrink(),
-                    Label(
-                      name,
-                      type: LabelType.h3,
-                      fontWeight: FontWeight.bold,
-                      dark: true,
+                    Expanded(
+                      child: Label(
+                        name,
+                        type: LabelType.h3,
+                        fontWeight: FontWeight.bold,
+                        dark: true,
+                      ),
                     ),
                   ],
                 ),

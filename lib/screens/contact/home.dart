@@ -389,10 +389,10 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
             ModalDialog.of(context).confirm(
               title: _localizations.delete_contact_confirm_title,
               contentWidget: ContactItem(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                 contact: item,
                 bodyTitle: item.displayName,
                 bodyDesc: item.clientAddress,
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               ),
               agree: Button(
                 text: _localizations.delete_contact,
@@ -448,23 +448,64 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   }
 
   Widget _getTopicItemView(TopicSchema item) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TopicItem(
-          topic: item,
-          onTap: () {
-            _onTapTopicItem(item);
+    S _localizations = S.of(context);
+
+    return Slidable(
+      key: ObjectKey(item),
+      direction: Axis.horizontal,
+      actionPane: SlidableDrawerActionPane(),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TopicItem(
+            topic: item,
+            onTap: () {
+              _onTapTopicItem(item);
+            },
+            bgColor: Colors.transparent,
+            bodyTitle: item.topicShort,
+            bodyDesc: item.topic,
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          ),
+          Divider(
+            height: 1,
+            indent: 74,
+            endIndent: 16,
+          ),
+        ],
+      ),
+      secondaryActions: [
+        IconSlideAction(
+          caption: _localizations.delete,
+          color: Colors.red,
+          icon: Icons.delete,
+          onTap: () => {
+            ModalDialog.of(context).confirm(
+              title: "删除群聊吗?", // TODO:GG locale delete topic
+              contentWidget: TopicItem(
+                topic: item,
+                bodyTitle: item.topicShort,
+                bodyDesc: item.topic,
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+              agree: Button(
+                text: _localizations.delete,
+                backgroundColor: application.theme.strongColor,
+                width: double.infinity,
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await topicCommon.delete(item.id, notify: true);
+                },
+              ),
+              reject: Button(
+                text: _localizations.cancel,
+                backgroundColor: application.theme.backgroundLightColor,
+                fontColor: application.theme.fontColor2,
+                width: double.infinity,
+                onPressed: () => Navigator.pop(context),
+              ),
+            )
           },
-          bgColor: Colors.transparent,
-          bodyTitle: item.topicShort,
-          bodyDesc: item.topic,
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        ),
-        Divider(
-          height: 1,
-          indent: 74,
-          endIndent: 16,
         ),
       ],
     );
