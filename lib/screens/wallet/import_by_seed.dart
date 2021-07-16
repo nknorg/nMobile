@@ -196,24 +196,21 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
               ],
             ),
           ),
-          Expanded(
-            flex: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Column(
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 30),
-                      child: Button(
-                        text: widget.walletType == WalletType.nkn ? _localizations.import_nkn_wallet : _localizations.import_ethereum_wallet,
-                        width: double.infinity,
-                        disabled: !_formValid,
-                        onPressed: _import,
-                      ),
+          SafeArea(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                children: <Widget>[
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 30),
+                    child: Button(
+                      text: widget.walletType == WalletType.nkn ? _localizations.import_nkn_wallet : _localizations.import_ethereum_wallet,
+                      width: double.infinity,
+                      disabled: !_formValid,
+                      onPressed: _import,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

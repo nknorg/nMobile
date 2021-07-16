@@ -267,16 +267,13 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 ),
                 child: Row(
                   children: <Widget>[
-                    Expanded(
-                      flex: 0,
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        alignment: Alignment.center,
-                        child: Asset.iconSvg(
-                          'search',
-                          color: application.theme.fontColor2,
-                        ),
+                    Container(
+                      width: 48,
+                      height: 48,
+                      alignment: Alignment.center,
+                      child: Asset.iconSvg(
+                        'search',
+                        color: application.theme.fontColor2,
                       ),
                     ),
                     Expanded(
