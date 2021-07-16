@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -54,7 +55,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     if (_privateSelected) {
       if (!isPrivateTopicReg(topicName)) {
         if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return false;
-        topicName = '$topicName.${clientCommon.publicKey}';
+        topicName = '$topicName.${hexEncode(clientCommon.publicKey!)}';
       }
     }
 
@@ -127,6 +128,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     Expanded(
+                      flex: 1,
                       child: FormText(
                         controller: _topicController,
                         hintText: _localizations.input_name,

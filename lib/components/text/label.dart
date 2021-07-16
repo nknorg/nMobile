@@ -28,6 +28,7 @@ class Label extends StatelessWidget {
   final TextDecoration? decoration;
   final FontStyle? fontStyle;
   final double? textScaleFactor;
+  final double? maxWidth;
 
   Label(
     this.text, {
@@ -44,6 +45,7 @@ class Label extends StatelessWidget {
     this.decoration,
     this.fontStyle,
     this.textScaleFactor = 1.0,
+    this.maxWidth,
   }) {
     overflow ??= softWrap ? null : TextOverflow.ellipsis;
   }
@@ -115,14 +117,27 @@ class Label extends StatelessWidget {
       textStyle = textStyle.copyWith(fontStyle: fontStyle);
     }
 
-    return Text(
-      text,
-      style: textStyle,
-      textAlign: textAlign,
-      maxLines: maxLines ?? defaultTextStyle.maxLines,
-      softWrap: softWrap,
-      overflow: overflow,
-      textScaleFactor: textScaleFactor,
-    );
+    return this.maxWidth != null
+        ? ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: this.maxWidth!),
+            child: Text(
+              text,
+              style: textStyle,
+              textAlign: textAlign,
+              maxLines: maxLines ?? defaultTextStyle.maxLines,
+              softWrap: softWrap,
+              overflow: overflow,
+              textScaleFactor: textScaleFactor,
+            ),
+          )
+        : Text(
+            text,
+            style: textStyle,
+            textAlign: textAlign,
+            maxLines: maxLines ?? defaultTextStyle.maxLines,
+            softWrap: softWrap,
+            overflow: overflow,
+            textScaleFactor: textScaleFactor,
+          );
   }
 }

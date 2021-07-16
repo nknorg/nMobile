@@ -293,6 +293,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     return _showProfile
         ? Label(
             _contact?.displayName ?? " ",
+            maxWidth: Global.screenWidth() * 0.5,
             type: LabelType.h3,
             color: application.theme.primaryColor,
           )
