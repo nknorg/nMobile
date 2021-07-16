@@ -129,15 +129,12 @@ class BottomDialog extends BaseStateFulWidget {
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  Expanded(
-                    flex: 0,
-                    child: WalletAvatar(
-                      width: 48,
-                      height: 48,
-                      walletType: WalletType.nkn,
-                      padding: EdgeInsets.only(right: 20, top: 16, bottom: 16),
-                      ethBig: true,
-                    ),
+                  WalletAvatar(
+                    width: 48,
+                    height: 48,
+                    walletType: WalletType.nkn,
+                    padding: EdgeInsets.only(right: 20, top: 16, bottom: 16),
+                    ethBig: true,
                   ),
                   Expanded(
                     flex: 1,
@@ -146,31 +143,28 @@ class BottomDialog extends BaseStateFulWidget {
                       type: LabelType.h3,
                     ),
                   ),
-                  Expanded(
-                    flex: 0,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(9)),
-                            color: application.theme.successColor.withAlpha(25),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(9)),
+                          color: application.theme.successColor.withAlpha(25),
+                        ),
+                        child: Text(
+                          _localizations.mainnet,
+                          style: TextStyle(
+                            color: application.theme.successColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            height: 1.2,
                           ),
-                          child: Text(
-                            _localizations.mainnet,
-                            style: TextStyle(
-                              color: application.theme.successColor,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              height: 1.2,
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
+                        ),
+                      )
+                    ],
                   ),
                 ],
               ),
@@ -185,15 +179,12 @@ class BottomDialog extends BaseStateFulWidget {
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  Expanded(
-                    flex: 0,
-                    child: WalletAvatar(
-                      width: 48,
-                      height: 48,
-                      walletType: WalletType.eth,
-                      padding: EdgeInsets.only(right: 20, top: 16, bottom: 16),
-                      ethBig: true,
-                    ),
+                  WalletAvatar(
+                    width: 48,
+                    height: 48,
+                    walletType: WalletType.eth,
+                    padding: EdgeInsets.only(right: 20, top: 16, bottom: 16),
+                    ethBig: true,
                   ),
                   Expanded(
                     flex: 1,
@@ -202,31 +193,28 @@ class BottomDialog extends BaseStateFulWidget {
                       type: LabelType.h3,
                     ),
                   ),
-                  Expanded(
-                    flex: 0,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(9)),
-                            color: application.theme.ethLogoBackground.withAlpha(25),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(9)),
+                          color: application.theme.ethLogoBackground.withAlpha(25),
+                        ),
+                        child: Text(
+                          _localizations.ERC_20,
+                          style: TextStyle(
+                            color: application.theme.ethLogoBackground,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            height: 1.2,
                           ),
-                          child: Text(
-                            _localizations.ERC_20,
-                            style: TextStyle(
-                              color: application.theme.ethLogoBackground,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              height: 1.2,
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
+                        ),
+                      )
+                    ],
                   ),
                 ],
               ),
@@ -497,41 +485,35 @@ class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with Sing
     ];
 
     if (widget.action != null) {
-      body.add(Expanded(
-        flex: 0,
-        child: widget.action!,
-      ));
+      body.add(widget.action!);
     }
 
     List<Widget> content = <Widget>[
-      Expanded(
-        flex: 0,
-        child: Center(
-          child: GestureDetector(
-            onVerticalDragUpdate: _handleDragUpdate,
-            onVerticalDragEnd: _handleDragEnd,
-            onTapDown: _handleTapDown,
-            onTapUp: _handleTapUp,
-            child: LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints constraints) {
-                // logger.i("$TAG - ---> ${constraints}");
-                return Container(
-                  width: constraints.maxWidth - 32 * 2,
-                  height: _dragHeight,
-                  decoration: BoxDecoration(),
-                  child: UnconstrainedBox(
-                    child: Container(
-                      width: 80,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(4)),
-                        color: _dragColor,
-                      ),
+      Center(
+        child: GestureDetector(
+          onVerticalDragUpdate: _handleDragUpdate,
+          onVerticalDragEnd: _handleDragEnd,
+          onTapDown: _handleTapDown,
+          onTapUp: _handleTapUp,
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              // logger.i("$TAG - ---> ${constraints}");
+              return Container(
+                width: constraints.maxWidth - 32 * 2,
+                height: _dragHeight,
+                decoration: BoxDecoration(),
+                child: UnconstrainedBox(
+                  child: Container(
+                    width: 80,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(4)),
+                      color: _dragColor,
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),

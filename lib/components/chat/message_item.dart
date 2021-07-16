@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/chat/bubble.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -162,6 +163,7 @@ class ChatMessageItem extends StatelessWidget {
                   ),
                   Label(
                     ' ${isBurnOpen ? _localizations.update_burn_after_reading : _localizations.close_burn_after_reading} ',
+                    maxWidth: Global.screenWidth() * 0.7,
                     type: LabelType.bodyRegular,
                     softWrap: true,
                   ),
@@ -195,11 +197,13 @@ class ChatMessageItem extends StatelessWidget {
                 children: [
                   Label(
                     message.isOutbound ? _localizations.you : (this.contact?.displayName ?? " "),
+                    maxWidth: Global.screenWidth() * 0.3,
                     type: LabelType.bodyRegular,
                     fontWeight: FontWeight.bold,
                   ),
                   Label(
                     isDeviceTokenOpen ? ' ${_localizations.setting_accept_notification}' : ' ${_localizations.setting_deny_notification}',
+                    maxWidth: Global.screenWidth() * 0.7,
                     type: LabelType.bodyRegular,
                   ),
                 ],
@@ -244,6 +248,7 @@ class ChatMessageItem extends StatelessWidget {
               SizedBox(width: 2),
               Label(
                 TopicSchema(topic: message.content?.toString() ?? " ").topicShort,
+                maxWidth: Global.screenWidth() * 0.5,
                 type: LabelType.bodyRegular,
                 fontWeight: FontWeight.bold,
                 color: application.theme.fontColor1,
