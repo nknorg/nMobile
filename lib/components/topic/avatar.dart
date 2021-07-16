@@ -23,10 +23,12 @@ class TopicAvatar extends BaseStateFulWidget {
 }
 
 class _TopicAvatarState extends BaseStateFulWidgetState<TopicAvatar> {
+  bool _fileError = false;
   // File? _avatarFile;
 
   @override
   void onRefreshArguments() {
+    _fileError = false;
     // _checkAvatarFileExists();
   }
 
@@ -45,11 +47,16 @@ class _TopicAvatarState extends BaseStateFulWidgetState<TopicAvatar> {
     String name = widget.topic.topicName;
     String? path = widget.topic.displayAvatarPath;
 
-    if (path?.isNotEmpty == true) {
+    if (_fileError || path?.isNotEmpty == true) {
       // _avatarFile != null
       return CircleAvatar(
         radius: radius,
         backgroundImage: FileImage(File(path!)),
+        onBackgroundImageError: (Object exception, StackTrace? stackTrace) {
+          setState(() {
+            _fileError = true;
+          });
+        },
       );
     }
     if (widget.placeHolder == true) {
