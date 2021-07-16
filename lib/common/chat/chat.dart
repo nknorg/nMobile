@@ -112,10 +112,15 @@ class ChatCommon with Tag {
   }
 
   Future<TopicSchema?> topicHandle(MessageSchema message) async {
-    if (!message.canDisplay) return null;
     if (!message.isTopic) return null;
-    // TODO:GG topic permission update in where ???
-    return topicCommon.checkExpireAndSubscribe(message.topic, emptyAdd: true);
+    if (!message.canDisplay) return null;
+    // duplicated
+    TopicSchema? exists = await topicCommon.queryByTopic(message.topic);
+    if (exists == null) {
+      logger.d("$TAG - topicHandle - new - topic:${message.topic} ");
+      exists = await topicCommon.add(TopicSchema.create(message.topic), checkDuplicated: false);
+    }
+    return exists;
   }
 
   Future<SubscriberSchema?> subscriberHandle(MessageSchema message) async {
@@ -124,7 +129,8 @@ class ChatCommon with Tag {
     // duplicated
     SubscriberSchema? exist = await subscriberCommon.queryByTopicChatId(message.topic, message.from);
     if (exist == null) {
-      exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed));
+      logger.d("$TAG - subscriberHandle - new - topic:${message.topic} - from:${message.from}");
+      exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None));
     }
     return exist;
   }
