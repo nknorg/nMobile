@@ -115,7 +115,7 @@ class ChatCommon with Tag {
     if (!message.canDisplay) return null;
     if (!message.isTopic) return null;
     // TODO:GG topic permission update in where ???
-    return await topicCommon.checkExpireAndSubscribe(message.topic, emptyAdd: true);
+    return topicCommon.checkExpireAndSubscribe(message.topic, emptyAdd: true);
   }
 
   Future<SubscriberSchema?> subscriberHandle(MessageSchema message) async {
@@ -187,7 +187,7 @@ class ChatCommon with Tag {
           if (index == 0) {
             sessionCommon.setUnReadCount(element.targetId, 0, notify: true); // await
           }
-          updateMessageStatus(element, MessageStatus.ReceivedRead); // await
+          updateMessageStatus(element, MessageStatus.ReceivedRead);
           // if (index >= unreadList.length - 1) {
           //   sessionCommon.setUnReadCount(element.targetId, 0, notify: true); // await
           // }
@@ -201,10 +201,11 @@ class ChatCommon with Tag {
   }
 
   // receipt(receive) != read(look)
-  Future<MessageSchema> updateMessageStatus(MessageSchema schema, int status, {bool notify = false}) async {
+  MessageSchema updateMessageStatus(MessageSchema schema, int status, {bool notify = false}) {
     schema = MessageStatus.set(schema, status);
-    bool success = await _messageStorage.updateMessageStatus(schema);
-    if (success && notify) onUpdateSink.add(schema);
+    _messageStorage.updateMessageStatus(schema).then((success) {
+      if (success && notify) onUpdateSink.add(schema);
+    });
     return schema;
   }
 
@@ -212,6 +213,7 @@ class ChatCommon with Tag {
     return _messageStorage.unReadCount();
   }
 
+  // TODO:GG refactor
   Future<bool> msgDelete(String msgId, {bool notify = false}) async {
     bool success = await _messageStorage.delete(msgId);
     if (success) {
