@@ -50,7 +50,6 @@ class ChatMessagesScreen extends BaseStateFulWidget {
 
 class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScreen> with Tag {
   TopicSchema? _topic;
-  bool? _isJoined;
   ContactSchema? _contact;
 
   StreamController<Map<String, String>> _onInputChangeController = StreamController<Map<String, String>>.broadcast();
@@ -96,7 +95,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       setState(() {
         _topic = event;
       });
-      _refreshTopicJoined();
     });
 
     // contact
@@ -140,9 +138,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // read
     sessionCommon.setUnReadCount(_topic?.topic ?? _contact?.clientAddress, 0, notify: true); // await
-
-    // topic
-    _refreshTopicJoined();
   }
 
   @override
@@ -190,16 +185,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
   }
 
-  _refreshTopicJoined() async {
-    if (_topic == null || clientCommon.address == null || clientCommon.address!.isEmpty) return;
-    bool isJoined = await topicCommon.isJoined(_topic?.topic, clientCommon.address);
-    if (_isJoined != isJoined) {
-      setState(() {
-        _isJoined = isJoined;
-      });
-    }
-  }
-
   _toggleBottomMenu() async {
     FocusScope.of(context).requestFocus(FocusNode());
     setState(() {
@@ -242,8 +227,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     int deleteAfterSeconds = (_topic != null ? _topic?.options?.deleteAfterSeconds : _contact?.options?.deleteAfterSeconds) ?? 0;
     Color notifyBellColor = ((_topic != null ? _topic?.options?.notificationOpen : _contact?.options?.notificationOpen) ?? false) ? application.theme.primaryColor : Colors.white38;
 
-    String topicHeaderTip = (_isJoined != null && _isJoined == false) ? "未订阅" : _localizations.click_to_settings; // TODO:GG show + locale
-
     return Layout(
       headerColor: _theme.headBarColor2,
       header: Header(
@@ -270,7 +253,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                             ],
                           )
                         : Label(
-                            topicHeaderTip,
+                            _localizations.click_to_settings, // TODO:GG showWhat + locale
                             type: LabelType.h4,
                             color: _theme.fontColor2,
                           ),

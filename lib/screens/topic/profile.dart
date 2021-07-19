@@ -112,8 +112,6 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
     _refreshMembersCount(); // await
 
-    topicCommon.refreshPermission(this._topicSchema?.topic); // TODO:GG test permission
-
     setState(() {});
   }
 
