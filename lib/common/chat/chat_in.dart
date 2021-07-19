@@ -124,6 +124,10 @@ class ChatInCommon with Tag {
       logger.d("$TAG - receiveReceipt - updated:$element");
       chatCommon.updateMessageStatus(element, MessageStatus.SendWithReceipt, notify: true);
     });
+    // topicInvitation
+    if (_schemaList.length == 1 && _schemaList[0].contentType == MessageContentType.topicInvitation) {
+      subscriberCommon.onInvitedReceipt(_schemaList[0].topic, received.from); // await
+    }
   }
 
   // NO DB NO display (1 to 1)
