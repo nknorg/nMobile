@@ -75,15 +75,6 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
         _topicSchema = event;
       });
     });
-
-    // TODO:GG 更新群成员
-    // if (isPrivateTopicReg(message.topic)) {
-    //   await message.markMessageRead();
-    //   GroupDataCenter.pullPrivateSubscribers(message.topic);
-    // } else {
-    //   GroupDataCenter.pullSubscribersPublicChannel(message.topic);
-    // }
-    // TODO:GG count update in profile
   }
 
   @override
@@ -110,16 +101,18 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     // exist
     topicCommon.queryByTopic(this._topicSchema?.topic).then((TopicSchema? exist) async {
       if (exist != null) return;
-      TopicSchema? added = await topicCommon.add(this._topicSchema, checkDuplicated: false);
+      TopicSchema? added = await topicCommon.add(this._topicSchema, notify: true, checkDuplicated: false);
       if (added == null) return;
       setState(() {
         this._topicSchema = added;
       });
     });
 
-    _refreshJoined();
+    _refreshJoined(); // await
 
     _refreshMembersCount(); // await
+
+    topicCommon.refreshPermission(this._topicSchema?.topic); // TODO:GG test permission
 
     setState(() {});
   }
@@ -170,10 +163,9 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     if (address == null || address.isEmpty) return;
     MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(address, _topicSchema?.topic);
     if (_msg == null) return;
+
     Toast.show(S.of(context).invitation_sent);
-    if (_topicSchema?.isPrivate == true && _topicSchema?.isOwner(clientCommon.address) == true) {
-      // TODO:GG topic permissions
-    }
+    subscriberCommon.onInvitee(_topicSchema?.topic, address); // await
   }
 
   _statusAction(bool nextSubscribe) async {
@@ -296,7 +288,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                       SizedBox(width: 20),
                       Expanded(
                         child: Label(
-                          "${_topicSchema?.count ?? 0} ${_localizations.members}",
+                          "${_topicSchema?.count ?? "--"} ${_localizations.members}",
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor2,
                           overflow: TextOverflow.fade,
