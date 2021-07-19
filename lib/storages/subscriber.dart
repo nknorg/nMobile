@@ -239,6 +239,29 @@ class SubscriberStorage with Tag {
     return 0;
   }
 
+  Future<int> queryMaxPermPageByTopic(String? topic) async {
+    if (topic == null || topic.isEmpty) return 0;
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['*'],
+        where: 'topic = ?',
+        whereArgs: [topic],
+        orderBy: 'perm_page DESC',
+      );
+      if (res != null && res.length > 0) {
+        SubscriberSchema? schema = SubscriberSchema.fromMap(res.first);
+        logger.d("$TAG - queryMaxPermPageByTopic - success - topic:$topic - schema:$schema");
+        return schema?.permPage ?? 0;
+      }
+      logger.d("$TAG - queryMaxPermPageByTopic - empty - topic:$topic");
+      return 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return 0;
+  }
+
   Future<bool> setStatus(int? subscriberId, int? status) async {
     if (subscriberId == null || subscriberId == 0 || status == null) return false;
     try {
