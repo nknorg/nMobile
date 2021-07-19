@@ -126,7 +126,7 @@ class ChatInCommon with Tag {
     });
     // topicInvitation
     if (_schemaList.length == 1 && _schemaList[0].contentType == MessageContentType.topicInvitation) {
-      subscriberCommon.onInvitedReceipt(_schemaList[0].topic, received.from); // await
+      subscriberCommon.onInvitedReceipt(_schemaList[0].content, received.from); // await
     }
   }
 
