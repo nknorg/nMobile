@@ -8,7 +8,6 @@ import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -448,16 +447,8 @@ class ChatInCommon with Tag {
       logger.d("$TAG - _receiveTopicSubscribed - duplicated - schema:$exists");
       return;
     }
-    // no topic action
     // subscriber
-    SubscriberSchema? subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
-    if (subscriber == null) {
-      subscriber = await subscriberCommon.add(SubscriberSchema.create(received.topic, received.from, SubscriberStatus.Subscribed));
-    } else {
-      bool success = await subscriberCommon.setStatus(subscriber.id, SubscriberStatus.Subscribed, notify: true);
-      if (success) subscriber.status = SubscriberStatus.Subscribed;
-      // TODO:GG subers permission(owner)
-    }
+    subscriberCommon.onSubscribe(received.topic, received.from); // await
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);
     if (schema == null) return;
@@ -473,14 +464,8 @@ class ChatInCommon with Tag {
       logger.d("$TAG - _receiveTopicSubscribed - duplicated - schema:$exists");
       return;
     }
-    // no topic action
     // subscriber
-    SubscriberSchema? subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
-    if (subscriber != null) {
-      bool success = await subscriberCommon.setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
-      if (success) subscriber.status = SubscriberStatus.Unsubscribed;
-      // TODO:GG subers permission(owner) + delete?
-    }
+    subscriberCommon.onUnsubscribe(received.topic, received.from); // await
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);
     if (schema == null) return;

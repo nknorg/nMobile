@@ -140,7 +140,11 @@ class TopicSchema {
     return avatarFile;
   }
 
-  bool isOwner(String? accountPubKey) => (accountPubKey?.isNotEmpty == true) && (accountPubKey == ownerPubKey);
+  bool isOwner(String? clientAddress) {
+    if (clientAddress == null || clientAddress.isEmpty) return false;
+    String? accountPubKey = getPubKeyFromTopicOrChatId(clientAddress);
+    return accountPubKey?.isNotEmpty == true && accountPubKey == ownerPubKey;
+  }
 
   // Future<bool> isJoined({int? globalHeight}) async {
   //   if (!joined) return false;
