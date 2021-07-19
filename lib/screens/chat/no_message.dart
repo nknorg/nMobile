@@ -35,7 +35,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
     );
     if (address?.isNotEmpty == true) {
       var contact = await ContactSchema.createByType(address, type: ContactType.stranger);
-      await contactCommon.add(contact);
+      await contactCommon.add(contact, notify: true);
       await ChatMessagesScreen.go(context, contact);
     }
   }

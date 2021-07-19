@@ -30,7 +30,7 @@ class SessionCommon with Tag {
     _updateController.close();
   }
 
-  Future<SessionSchema?> add(SessionSchema? schema, {bool checkDuplicated = true}) async {
+  Future<SessionSchema?> add(SessionSchema? schema, {bool notify = false, bool checkDuplicated = true}) async {
     if (schema == null || schema.targetId.isEmpty) return null;
     // lastMessage
     if (schema.lastMessageTime == null || schema.lastMessageOptions == null) {
@@ -52,15 +52,15 @@ class SessionCommon with Tag {
     }
     // insert
     SessionSchema? added = await _sessionStorage.insert(schema);
-    if (added != null) _addSink.add(added);
+    if (added != null && notify) _addSink.add(added);
     return added;
   }
 
   Future<bool> delete(String? targetId, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty) return false;
-    bool deleted = await _sessionStorage.delete(targetId);
-    if (deleted && notify) _deleteSink.add(targetId);
-    return deleted;
+    bool success = await _sessionStorage.delete(targetId);
+    if (success && notify) _deleteSink.add(targetId);
+    return success;
   }
 
   Future<SessionSchema?> query(String? targetId) async {
@@ -109,7 +109,7 @@ class SessionCommon with Tag {
 
   Future queryAndNotify(String? targetId) async {
     if (targetId == null || targetId.isEmpty) return;
-    SessionSchema? updated = await _sessionStorage.query(targetId);
+    SessionSchema? updated = await query(targetId);
     if (updated != null) {
       _updateSink.add(updated);
     }
