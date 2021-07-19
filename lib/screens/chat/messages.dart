@@ -253,7 +253,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                             ],
                           )
                         : Label(
-                            _localizations.click_to_settings, // TODO:GG showWhat + locale
+                            _localizations.click_to_settings, // TODO:GG topic + locale
                             type: LabelType.h4,
                             color: _theme.fontColor2,
                           ),
