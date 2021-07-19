@@ -482,7 +482,7 @@ class MessageSchema extends Equatable {
   Future<ContactSchema?> getSender({bool emptyAdd = false}) async {
     ContactSchema? _contact = await contactCommon.queryByClientAddress(from);
     if (_contact != null || !emptyAdd) return _contact;
-    return await contactCommon.addByType(from, ContactType.stranger, checkDuplicated: false);
+    return await contactCommon.addByType(from, ContactType.stranger, notify: true, checkDuplicated: false);
   }
 
   /// from receive
