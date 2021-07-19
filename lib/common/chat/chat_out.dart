@@ -410,7 +410,7 @@ class ChatOutCommon with Tag {
     DeviceInfoSchema? _deviceInfo = deviceInfo ?? await chatCommon.deviceInfoHandle(schema, _contact);
     // topic
     TopicSchema? _topic = topic ?? await chatCommon.topicHandle(schema);
-    // chatCommon.subscriberHandle(schema); // await
+    chatCommon.subscriberHandle(schema); // await
     // session
     chatCommon.sessionHandle(schema); // await
     // SDK
