@@ -41,16 +41,18 @@ class TopicSubscribersScreen extends BaseStateFulWidget {
 }
 
 class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscribersScreen> {
+  StreamSubscription? _updateTopicSubscription;
+  StreamSubscription? _addSubscriberSubscription;
+  StreamSubscription? _deleteSubscriberSubscription;
+  StreamSubscription? _updateSubscriberSubscription;
+
   TopicSchema? _topicSchema;
 
   ScrollController _scrollController = ScrollController();
   bool _moreLoading = false;
   List<SubscriberSchema> _subscriberList = [];
 
-  StreamSubscription? _updateTopicSubscription;
-  StreamSubscription? _addSubscriberSubscription;
-  StreamSubscription? _deleteSubscriberSubscription;
-  StreamSubscription? _updateSubscriberSubscription;
+  bool? _isJoined; // TODO:GG joined
 
   @override
   void onRefreshArguments() {
@@ -95,6 +97,14 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
         });
       }
     });
+
+    // TODO:GG 更新群成员
+    // if (isPrivateTopicReg(message.topic)) {
+    //   await message.markMessageRead();
+    //   GroupDataCenter.pullPrivateSubscribers(message.topic);
+    // } else {
+    //   GroupDataCenter.pullSubscribersPublicChannel(message.topic);
+    // }
   }
 
   @override
@@ -124,17 +134,43 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     // exist
     topicCommon.queryByTopic(this._topicSchema?.topic).then((TopicSchema? exist) async {
       if (exist != null) return;
-      TopicSchema? added = await topicCommon.add(this._topicSchema, checkDuplicated: false);
+      TopicSchema? added = await topicCommon.add(this._topicSchema, notify: true, checkDuplicated: false);
       if (added == null) return;
       setState(() {
         this._topicSchema = added;
       });
     });
 
+    _refreshJoined(); // await
+
+    _refreshMembersCount(); // await
+
+    if (this._topicSchema?.isPrivate == true) {
+      topicCommon.refreshPermission(this._topicSchema?.topic); // await
+    }
+
     setState(() {});
 
     // subscribers
+    subscriberCommon.refreshSubscribers(this._topicSchema?.topic).then((value) {
+      _getDataSubscribers(true);
+    });
     _getDataSubscribers(true);
+  }
+
+  _refreshJoined() async {
+    bool joined = await topicCommon.isJoined(_topicSchema?.topic, clientCommon.address);
+    // do not topic.setJoined because filed is_joined is action not a tag
+    setState(() {
+      _isJoined = joined;
+    });
+  }
+
+  _refreshMembersCount() async {
+    int count = await subscriberCommon.getSubscribersCount(_topicSchema?.topic);
+    if (_topicSchema?.count != count) {
+      topicCommon.setCount(_topicSchema?.id, count, notify: true); // await
+    }
   }
 
   _getDataSubscribers(bool refresh) async {
@@ -158,9 +194,6 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(this.context);
-
-    int membersCount = 0; // TODO:GG subers count(from subers table)
-    bool isJoined = _topicSchema?.joined == true; // TODO:GG subers joined
 
     int invitedCount = 0; // TODO:GG subers
     int joinedCount = 0; // TODO:GG subers
@@ -203,12 +236,12 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
                                 rejectContent,
                                 type: LabelType.bodyRegular,
                                 color: application.theme.fallColor,
-                              )
+                              ),
                             ],
                           );
                         } else {
                           return Label(
-                            '${(membersCount < 0) ? '--' : membersCount} ' + _localizations.members,
+                            '${_topicSchema?.count ?? '--'} ' + _localizations.members,
                             type: LabelType.bodyRegular,
                             color: application.theme.successColor,
                           );
@@ -219,7 +252,6 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
                 : SizedBox.shrink(),
           ),
           Expanded(
-            flex: 1,
             child: _subscriberListView(),
           ),
         ],
@@ -239,6 +271,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
             SubscriberItem(
               subscriber: _subscriber,
               topic: _topicSchema,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               onTap: (ContactSchema? contact) {
                 ContactProfileScreen.go(context, schema: contact, clientAddress: _subscriber.clientAddress);
               },

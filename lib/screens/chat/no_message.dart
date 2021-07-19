@@ -44,6 +44,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
     if (topicName == null || topicName.isEmpty) return;
     Loading.show();
     TopicSchema? _topic = await topicCommon.subscribe(topicName);
+    await Future.delayed(Duration(seconds: 2));
     Loading.dismiss();
     ChatMessagesScreen.go(context, _topic);
   }
