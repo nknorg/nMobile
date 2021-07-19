@@ -423,7 +423,7 @@ class MessageSchema extends Equatable {
   DateTime? receiveTime; // <-> receive_time
   DateTime? deleteTime; // <-> delete_time
 
-  // TODO:GG merge to one field (status)
+  // TODO:GG merge to one field ??? (status)
   bool isOutbound = false; // <-> is_outbound
   bool isSendError = false; // <-> is_send_error
   bool isSuccess = false; // <-> is_success
