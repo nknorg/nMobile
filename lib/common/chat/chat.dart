@@ -19,12 +19,12 @@ class ChatCommon with Tag {
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onUpdateController = StreamController<MessageSchema>.broadcast();
-  StreamSink<MessageSchema> get onUpdateSink => _onUpdateController.sink;
+  StreamSink<MessageSchema> get _onUpdateSink => _onUpdateController.sink;
   Stream<MessageSchema> get onUpdateStream => _onUpdateController.stream; // .distinct((prev, next) => prev.msgId == next.msgId)
 
   // ignore: close_sinks
   StreamController<String> _onDeleteController = StreamController<String>.broadcast();
-  StreamSink<String> get onDeleteSink => _onDeleteController.sink;
+  StreamSink<String> get _onDeleteSink => _onDeleteController.sink;
   Stream<String> get onDeleteStream => _onDeleteController.stream; // .distinct((prev, next) => prev.msgId == next.msgId)
 
   MessageStorage _messageStorage = MessageStorage();
@@ -51,7 +51,7 @@ class ChatCommon with Tag {
     ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
     if (exist == null) {
       logger.d("$TAG - contactHandle - new - clientAddress:$clientAddress");
-      exist = await contactCommon.addByType(clientAddress, ContactType.stranger, checkDuplicated: false);
+      exist = await contactCommon.addByType(clientAddress, ContactType.stranger, notify: true, checkDuplicated: false);
     } else {
       // profile
       if (exist.profileUpdateAt == null || DateTime.now().millisecondsSinceEpoch > (exist.profileUpdateAt! + Settings.profileExpireMs)) {
@@ -118,7 +118,7 @@ class ChatCommon with Tag {
     TopicSchema? exists = await topicCommon.queryByTopic(message.topic);
     if (exists == null) {
       logger.d("$TAG - topicHandle - new - topic:${message.topic} ");
-      exists = await topicCommon.add(TopicSchema.create(message.topic), checkDuplicated: false);
+      exists = await topicCommon.add(TopicSchema.create(message.topic), notify: true, checkDuplicated: false);
     }
     return exists;
   }
@@ -143,14 +143,17 @@ class ChatCommon with Tag {
     SessionSchema? exist = await sessionCommon.query(message.targetId);
     if (exist == null) {
       logger.d("$TAG - sessionHandle - new - targetId:${message.targetId}");
-      return await sessionCommon.add(SessionSchema(
-        targetId: message.targetId!,
-        type: SessionSchema.getTypeByMessage(message),
-        lastMessageTime: message.sendTime,
-        lastMessageOptions: message.toMap(),
-        isTop: false,
-        unReadCount: (message.isOutbound || !message.canDisplayAndRead) ? 0 : 1,
-      ));
+      return await sessionCommon.add(
+        SessionSchema(
+          targetId: message.targetId!,
+          type: SessionSchema.getTypeByMessage(message),
+          lastMessageTime: message.sendTime,
+          lastMessageOptions: message.toMap(),
+          isTop: false,
+          unReadCount: (message.isOutbound || !message.canDisplayAndRead) ? 0 : 1,
+        ),
+        notify: true,
+      );
     }
     if (message.isOutbound) {
       exist.lastMessageTime = message.sendTime;
@@ -173,7 +176,7 @@ class ChatCommon with Tag {
     if (burnAfterSeconds != null && burnAfterSeconds > 0) {
       message.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
       bool success = await _messageStorage.updateDeleteTime(message.msgId, message.deleteTime);
-      if (success) onUpdateSink.add(message);
+      if (success) _onUpdateSink.add(message);
     }
     return message;
   }
@@ -211,7 +214,7 @@ class ChatCommon with Tag {
   MessageSchema updateMessageStatus(MessageSchema schema, int status, {bool notify = false}) {
     schema = MessageStatus.set(schema, status);
     _messageStorage.updateMessageStatus(schema).then((success) {
-      if (success && notify) onUpdateSink.add(schema);
+      if (success && notify) _onUpdateSink.add(schema);
     });
     return schema;
   }
@@ -228,7 +231,7 @@ class ChatCommon with Tag {
       if (deletedCache[key] == null) deletedCache[key] = Map();
       deletedCache[key]![msgId] = DateTime.now();
     }
-    if (success && notify) onDeleteSink.add(msgId);
+    if (success && notify) _onDeleteSink.add(msgId);
     return success;
   }
 }

@@ -317,7 +317,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                             );
                             if (address?.isNotEmpty == true) {
                               var contact = await ContactSchema.createByType(address, type: ContactType.stranger);
-                              await contactCommon.add(contact);
+                              await contactCommon.add(contact, notify: true);
                               await ChatMessagesScreen.go(context, contact);
                             }
                             Navigator.of(context).pop(); // floatActionBtn

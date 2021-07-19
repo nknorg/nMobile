@@ -46,7 +46,7 @@ class SubscriberSchema {
   Future<ContactSchema?> getContact({bool emptyAdd = false}) async {
     ContactSchema? _contact = await contactCommon.queryByClientAddress(clientAddress);
     if (_contact != null || !emptyAdd) return _contact;
-    return await contactCommon.addByType(clientAddress, ContactType.stranger, checkDuplicated: false);
+    return await contactCommon.addByType(clientAddress, ContactType.stranger, notify: true, checkDuplicated: false);
   }
 
   static SubscriberSchema? create(String? topic, String? clientAddress, int? status) {

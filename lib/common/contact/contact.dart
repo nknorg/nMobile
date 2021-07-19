@@ -41,7 +41,7 @@ class ContactCommon with Tag {
     List<ContactSchema> contacts = await _contactStorage.queryList(contactType: ContactType.me, limit: 1);
     ContactSchema? contact = contacts.isNotEmpty ? contacts[0] : await _contactStorage.queryByClientAddress(clientAddress ?? clientCommon.address);
     if (contact == null && canAdd) {
-      contact = await addByType(clientAddress ?? clientCommon.address, ContactType.me, checkDuplicated: false);
+      contact = await addByType(clientAddress ?? clientCommon.address, ContactType.me, notify: true, checkDuplicated: false);
     }
     if (contact != null) {
       if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
@@ -51,13 +51,13 @@ class ContactCommon with Tag {
     return contact;
   }
 
-  Future<ContactSchema?> addByType(String? clientAddress, String contactType, {bool checkDuplicated = true}) async {
+  Future<ContactSchema?> addByType(String? clientAddress, String contactType, {bool notify = false, bool checkDuplicated = true}) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     ContactSchema? schema = await ContactSchema.createByType(clientAddress, type: contactType);
-    return add(schema, checkDuplicated: checkDuplicated);
+    return add(schema, notify: notify, checkDuplicated: checkDuplicated);
   }
 
-  Future<ContactSchema?> add(ContactSchema? schema, {bool checkDuplicated = true}) async {
+  Future<ContactSchema?> add(ContactSchema? schema, {bool notify = false, bool checkDuplicated = true}) async {
     if (schema == null || schema.clientAddress.isEmpty) return null;
     if (schema.nknWalletAddress == null || schema.nknWalletAddress!.isEmpty) {
       schema.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(schema.clientAddress));
@@ -70,15 +70,15 @@ class ContactCommon with Tag {
       }
     }
     ContactSchema? added = await _contactStorage.insert(schema);
-    if (added != null) _addSink.add(added);
+    if (added != null && notify) _addSink.add(added);
     return added;
   }
 
   Future<bool> delete(int? contactId, {bool notify = false}) async {
     if (contactId == null || contactId == 0) return false;
-    // bool deleted = await _contactStorage.delete(contactId);
-    // if (deleted) _deleteSink.add(contactId);
-    // return deleted;
+    // bool success = await _contactStorage.delete(contactId);
+    // if (success) _deleteSink.add(contactId);
+    // return success;
     bool success = await _contactStorage.setType(contactId, ContactType.stranger);
     if (success && notify) queryAndNotify(contactId);
     return success;
@@ -234,7 +234,7 @@ class ContactCommon with Tag {
 
   Future queryAndNotifyByClientAddress(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
-    ContactSchema? updated = await _contactStorage.queryByClientAddress(clientAddress);
+    ContactSchema? updated = await queryByClientAddress(clientAddress);
     if (updated != null) {
       _updateSink.add(updated);
       if (updated.type == ContactType.me) {
