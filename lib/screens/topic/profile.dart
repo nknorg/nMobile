@@ -163,7 +163,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     if (_msg == null) return;
 
     Toast.show(S.of(context).invitation_sent);
-    subscriberCommon.onInvitee(_topicSchema?.topic, address); // await
+    subscriberCommon.onInvitedSend(_topicSchema?.topic, address); // await
   }
 
   _statusAction(bool nextSubscribe) async {
