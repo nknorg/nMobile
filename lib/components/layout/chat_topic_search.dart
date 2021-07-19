@@ -60,6 +60,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     }
 
     TopicSchema? _topic = await topicCommon.subscribe(topicName, fee: fee);
+    await Future.delayed(Duration(seconds: 2));
     Loading.dismiss();
 
     if (_topic == null) return false;

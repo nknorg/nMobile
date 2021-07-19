@@ -36,6 +36,10 @@ class ChatMessageItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (message.contentType == MessageContentType.topicUnsubscribe) {
+      return SizedBox.shrink();
+    }
+
     List<Widget> contentsWidget = <Widget>[];
 
     bool showTime = false;
@@ -93,8 +97,9 @@ class ChatMessageItem extends StatelessWidget {
         contentsWidget.add(_topicInvitedWidget(context));
         break;
       case MessageContentType.topicSubscribe:
-      case MessageContentType.topicUnsubscribe:
         contentsWidget.add(_topicSubscribeWidget(context));
+        break;
+      case MessageContentType.topicUnsubscribe:
         break;
     }
 
@@ -290,8 +295,6 @@ class ChatMessageItem extends StatelessWidget {
 
   Widget _topicSubscribeWidget(BuildContext context) {
     S _localizations = S.of(context);
-    if (message.contentType == MessageContentType.topicUnsubscribe) return SizedBox.shrink();
-
     String who = message.isOutbound ? _localizations.you : message.from.substring(0, 6);
     String content = who + _localizations.joined_channel;
 

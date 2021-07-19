@@ -244,7 +244,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         Navigator.pop(this.context);
       }
 
-      // TimerAuth.instance.enableAuth(); // TODO:GG contact auth
+      // TimerAuth.instance.enableAuth(); // TODO:GG auth
     } catch (e) {
       handleError(e);
       Loading.dismiss();
