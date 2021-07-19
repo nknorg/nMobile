@@ -8,6 +8,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/item.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -494,7 +495,10 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 width: double.infinity,
                 onPressed: () async {
                   Navigator.pop(context);
+                  Loading.show();
                   await topicCommon.delete(item.id, notify: true);
+                  await subscriberCommon.deleteByTopic(item.topic);
+                  Loading.dismiss();
                 },
               ),
               reject: Button(
