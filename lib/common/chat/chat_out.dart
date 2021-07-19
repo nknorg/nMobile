@@ -290,6 +290,7 @@ class ChatOutCommon with Tag {
       clientCommon.address!,
       MessageContentType.topicInvitation,
       to: clientAddress,
+      content: topicName,
     );
     String data = MessageData.getTopicInvitee(schema, topicName);
     return _sendAndDisplay(schema, data);
