@@ -8,11 +8,15 @@ import 'avatar.dart';
 class TopicHeader extends StatelessWidget {
   final TopicSchema topic;
   final Widget body;
+  final double avatarRadius;
+  final bool dark;
   final GestureTapCallback? onTap;
 
   TopicHeader({
     required this.topic,
     required this.body,
+    this.avatarRadius = 24,
+    this.dark = true,
     this.onTap,
   });
 
@@ -30,6 +34,7 @@ class TopicHeader extends StatelessWidget {
             margin: const EdgeInsets.only(right: 12),
             child: TopicAvatar(
               topic: this.topic,
+              radius: this.avatarRadius,
             ),
           ),
           Expanded(
@@ -51,7 +56,7 @@ class TopicHeader extends StatelessWidget {
                         name,
                         type: LabelType.h3,
                         fontWeight: FontWeight.bold,
-                        dark: true,
+                        dark: this.dark,
                       ),
                     ),
                   ],
