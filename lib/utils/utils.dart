@@ -116,6 +116,12 @@ String genTopicHash(String topic) {
   return 'dchat' + hexEncode(Uint8List.fromList(sha1(t)));
 }
 
+String? getPubKeyFromTopicOrChatId(String s) {
+  final i = s.lastIndexOf('.');
+  final pubKey = i > 0 ? s.substring(i + 1) : s;
+  return RegExp("[0-9A-Fa-f]{64}").hasMatch(pubKey) ? pubKey : null;
+}
+
 num? getNumByValueDouble(double? value, int fractionDigits) {
   if (value == null) return null;
   String valueStr = value.toStringAsFixed(fractionDigits);

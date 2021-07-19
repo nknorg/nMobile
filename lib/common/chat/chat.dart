@@ -92,8 +92,8 @@ class ChatCommon with Tag {
   }
 
   Future<DeviceInfoSchema?> deviceInfoHandle(MessageSchema message, ContactSchema? contact) async {
-    if (message.contentType == MessageContentType.deviceRequest || message.contentType == MessageContentType.deviceInfo) return null;
     if (contact == null || contact.id == null || contact.id == 0) return null;
+    if (message.contentType == MessageContentType.deviceRequest || message.contentType == MessageContentType.deviceInfo) return null;
     // duplicated
     DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.id);
     if (latest == null) {
@@ -124,15 +124,16 @@ class ChatCommon with Tag {
   }
 
   Future<SubscriberSchema?> subscriberHandle(MessageSchema message) async {
-    if (!message.isTopic) return null;
-    if (message.contentType == MessageContentType.topicSubscribe || message.contentType == MessageContentType.topicUnsubscribe) return null;
-    // duplicated
-    SubscriberSchema? exist = await subscriberCommon.queryByTopicChatId(message.topic, message.from);
-    if (exist == null) {
-      logger.d("$TAG - subscriberHandle - new - topic:${message.topic} - from:${message.from}");
-      exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None));
-    }
-    return exist;
+    return null;
+    // if (!message.isTopic) return null;
+    // if (message.contentType == MessageContentType.topicSubscribe || message.contentType == MessageContentType.topicUnsubscribe) return null;
+    // // duplicated
+    // SubscriberSchema? exist = await subscriberCommon.queryByTopicChatId(message.topic, message.from);
+    // if (exist == null) {
+    //   logger.d("$TAG - subscriberHandle - new - topic:${message.topic} - from:${message.from}");
+    //   exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None));
+    // }
+    // return exist;
   }
 
   Future<SessionSchema?> sessionHandle(MessageSchema message) async {
