@@ -13,6 +13,8 @@ class SubscriberStatus {
 }
 
 class SubscriberSchema {
+  static const int PermPageSize = 10;
+
   int? id; // (required) <-> id
   String topic; // (required) <-> topic
   String clientAddress; // (required) <-> chat_id
@@ -34,7 +36,7 @@ class SubscriberSchema {
     this.data,
   });
 
-  bool get isJoined {
+  bool get isSubscribed {
     return (status ?? SubscriberStatus.None) == SubscriberStatus.Subscribed;
   }
 
