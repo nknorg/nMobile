@@ -113,7 +113,7 @@ class TopicCommon with Tag {
         // private + owner
         SubscriberSchema? _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage: 0);
         Map<String, dynamic> meta = await subscriberCommon.getPermissionsMetaByPage(topicName, _subscriberMe, appendPermPage: 0);
-        subscribeSuccess = await clientSubscribe(
+        subscribeSuccess = await _clientSubscribe(
           topicName,
           height: Global.topicDefaultSubscribeHeight,
           fee: fee,
@@ -122,7 +122,7 @@ class TopicCommon with Tag {
         );
       } else {
         // publish / private normal member
-        subscribeSuccess = await clientSubscribe(
+        subscribeSuccess = await _clientSubscribe(
           topicName,
           height: Global.topicDefaultSubscribeHeight,
           fee: fee,
@@ -143,7 +143,8 @@ class TopicCommon with Tag {
     return exists;
   }
 
-  Future<bool> clientSubscribe(String? topicName, {int? height, double fee = 0, int? permissionPage, Map<String, dynamic>? meta}) async {
+  // publish(meta = null) / private(meta != null)(owner_create / invitee / kick)
+  Future<bool> _clientSubscribe(String? topicName, {int? height, double fee = 0, int? permissionPage, Map<String, dynamic>? meta}) async {
     if (topicName == null || topicName.isEmpty) return false;
     String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
     String metaString = (meta?.isNotEmpty == true) ? jsonEncode(meta) : "";
@@ -211,7 +212,7 @@ class TopicCommon with Tag {
 
     // client subscribe
     Map<String, dynamic> meta = await subscriberCommon.getPermissionsMetaByPage(topicName, _subscriber, appendPermPage: appendPermPage);
-    bool subscribeSuccess = await clientSubscribe(
+    bool subscribeSuccess = await _clientSubscribe(
       topicName,
       height: Global.topicDefaultSubscribeHeight,
       fee: 0,
@@ -301,7 +302,7 @@ class TopicCommon with Tag {
 
       meta["accept"] = accepts;
       meta["reject"] = rejects;
-      bool subscribeSuccess = await clientSubscribe(
+      bool subscribeSuccess = await _clientSubscribe(
         topicName,
         height: Global.topicDefaultSubscribeHeight,
         fee: 0,
