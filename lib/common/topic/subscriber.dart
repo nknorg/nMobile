@@ -7,7 +7,6 @@ import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
-import '../global.dart';
 import '../locator.dart';
 
 class SubscriberCommon with Tag {
@@ -205,7 +204,7 @@ class SubscriberCommon with Tag {
   /// ***********************************************************************************************************
 
   // status: InvitedSend (caller = owner)
-  Future<SubscriberSchema?> onInvitedSend(String? topicName, String? clientAddress) async {
+  Future<SubscriberSchema?> onInvitedSend(String? topicName, String? clientAddress, {int? permPage}) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
     SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
@@ -219,24 +218,9 @@ class SubscriberCommon with Tag {
       if (success) subscriber.status = SubscriberStatus.InvitedSend;
     }
     // permPage
-    int appendPermPage = await queryMaxPermPageByTopic(topicName);
-    if (subscriber.permPage != appendPermPage) {
-      bool success = await setPermPage(subscriber.id, appendPermPage, notify: true);
-      if (success) subscriber.permPage = appendPermPage;
-    }
-    // meta_permission(owner)
-    Map<String, dynamic>? meta = await getPermissionsMetaByPage(topicName, subscriber, appendPermPage: appendPermPage);
-    bool joinSuccess = await topicCommon.clientSubscribe(
-      topicName,
-      height: Global.topicDefaultSubscribeHeight,
-      fee: 0,
-      permissionPage: appendPermPage,
-      meta: meta,
-    );
-    // check
-    if (!joinSuccess) {
-      await delete(subscriber.id, notify: true);
-      return null;
+    if (subscriber.permPage != permPage && permPage != null) {
+      bool success = await setPermPage(subscriber.id, permPage, notify: true);
+      if (success) subscriber.permPage = permPage;
     }
     return subscriber;
   }
@@ -385,7 +369,7 @@ class SubscriberCommon with Tag {
   }
 
   // caller = everyone
-  Future<Map<String, dynamic>?> getPermissionsMetaByPage(String? topicName, SubscriberSchema? append, {int? appendPermPage}) async {
+  Future<Map<String, dynamic>> getPermissionsMetaByPage(String? topicName, SubscriberSchema? append, {int? appendPermPage}) async {
     if (topicName == null || topicName.isEmpty || append == null) return null;
     // appendPermPage
     if (appendPermPage == null) {
