@@ -82,8 +82,8 @@ class MessageOptions {
     if (schema == null || schema.options == null || schema.options!.keys.length == 0) return [];
     var seconds = schema.options![MessageOptions.KEY_DELETE_AFTER_SECONDS]?.toString();
     var update = schema.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_AT]?.toString();
-    int? t1 = (seconds == null || seconds.isEmpty) ? null : int.parse(seconds);
-    int? t2 = (update == null || update.isEmpty) ? null : int.parse(update);
+    int? t1 = (seconds == null || seconds.isEmpty) ? null : int.tryParse(seconds);
+    int? t2 = (update == null || update.isEmpty) ? null : int.tryParse(update);
     return [t1, t2];
   }
 
