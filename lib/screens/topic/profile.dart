@@ -20,7 +20,6 @@ import 'package:nmobile/components/topic/avatar_editable.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validation.dart';
-import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/topic/subscribers.dart';
@@ -109,24 +108,24 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     });
 
     _refreshJoined(); // await
-
     _refreshMembersCount(); // await
-
     setState(() {});
   }
 
   _refreshJoined() async {
     bool joined = await topicCommon.isJoined(_topicSchema?.topic, clientCommon.address);
     // do not topic.setJoined because filed is_joined is action not a tag
-    setState(() {
-      _isJoined = joined;
-    });
+    if (_isJoined != joined) {
+      setState(() {
+        _isJoined = joined;
+      });
+    }
   }
 
   _refreshMembersCount() async {
     int count = await subscriberCommon.getSubscribersCount(_topicSchema?.topic);
     if (_topicSchema?.count != count) {
-      topicCommon.setCount(_topicSchema?.id, count, notify: true); // await
+      await topicCommon.setCount(_topicSchema?.id, count, notify: true);
     }
   }
 
@@ -158,12 +157,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
-    if (address == null || address.isEmpty) return;
-    MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(address, _topicSchema?.topic);
-    if (_msg == null) return;
-
-    Toast.show(S.of(context).invitation_sent);
-    subscriberCommon.onInvitedSend(_topicSchema?.topic, address); // await
+    await topicCommon.invitee(_topicSchema?.topic, address);
   }
 
   _statusAction(bool nextSubscribe) async {
