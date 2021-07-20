@@ -370,7 +370,7 @@ class SubscriberCommon with Tag {
 
   // caller = everyone
   Future<Map<String, dynamic>> getPermissionsMetaByPage(String? topicName, SubscriberSchema? append, {int? appendPermPage}) async {
-    if (topicName == null || topicName.isEmpty || append == null) return null;
+    if (topicName == null || topicName.isEmpty || append == null) return Map();
     // appendPermPage
     if (appendPermPage == null) {
       appendPermPage = await queryMaxPermPageByTopic(topicName);
