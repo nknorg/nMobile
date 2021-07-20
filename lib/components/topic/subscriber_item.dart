@@ -1,12 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/contact/avatar.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/utils/asset.dart';
 
 class SubscriberItem extends BaseStateFulWidget {
   final SubscriberSchema subscriber;
@@ -40,6 +45,8 @@ class SubscriberItem extends BaseStateFulWidget {
 }
 
 class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
+  StreamSubscription? _updateContactSubscription;
+
   ContactSchema? contact;
 
   @override
@@ -47,11 +54,30 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     _refreshContact();
   }
 
-  _refreshContact() async {
-    ContactSchema? _contact = await widget.subscriber.contact;
-    setState(() {
-      contact = _contact;
+  @override
+  void initState() {
+    super.initState();
+    // listen
+    _updateContactSubscription = contactCommon.updateStream.where((event) => event.id == contact?.id).listen((ContactSchema event) {
+      setState(() {
+        contact = event;
+      });
     });
+  }
+
+  _refreshContact() async {
+    if (contact?.clientAddress == null || contact?.clientAddress.isEmpty == true || contact?.clientAddress != widget.subscriber.clientAddress) {
+      ContactSchema? _contact = await widget.subscriber.getContact(emptyAdd: true);
+      setState(() {
+        contact = _contact;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _updateContactSubscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -100,7 +126,6 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                 : SizedBox(width: 24, height: 24),
           ),
           Expanded(
-            flex: 1,
             child: this.widget.body != null
                 ? this.widget.body!
                 : Column(
@@ -108,17 +133,12 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       this.widget.bodyTitle != null
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Label(
-                                  this.widget.bodyTitle ?? "",
-                                  type: LabelType.h3,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ],
+                          ? Label(
+                              this.widget.bodyTitle ?? "",
+                              type: LabelType.h3,
+                              fontWeight: FontWeight.bold,
                             )
-                          : _getNameLabels(this.widget.subscriber, this.widget.topic, this.contact),
+                          : _getNameLabels(this.widget.topic, this.widget.subscriber, this.contact),
                       SizedBox(height: 6),
                       Label(
                         this.widget.bodyDesc ?? this.widget.subscriber.clientAddress,
@@ -129,13 +149,13 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                     ],
                   ),
           ),
-          this.widget.tail != null ? this.widget.tail! : SizedBox(),
+          this.widget.tail != null ? this.widget.tail! : _getTailAction(this.widget.topic, this.widget.subscriber, this.contact),
         ],
       ),
     );
   }
 
-  Widget _getNameLabels(SubscriberSchema subscriber, TopicSchema? topic, ContactSchema? contact) {
+  Widget _getNameLabels(TopicSchema? topic, SubscriberSchema subscriber, ContactSchema? contact) {
     S _localizations = S.of(context);
 
     String displayName = contact?.displayName ?? " ";
@@ -172,68 +192,52 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
       children: [
         Label(displayName, type: LabelType.h4, overflow: TextOverflow.ellipsis),
         SizedBox(width: 4),
-        Label(
-          marksText,
-          type: LabelType.bodySmall,
-          color: successColor ? application.theme.successColor : (fallColor ? application.theme.fallColor : application.theme.fontColor2),
-          fontWeight: FontWeight.w600,
+        Expanded(
+          child: Label(
+            marksText,
+            type: LabelType.bodySmall,
+            color: successColor ? application.theme.successColor : (fallColor ? application.theme.fallColor : application.theme.fontColor2),
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
   }
 
-  // TODO:GG subers perm
-  // Widget _getTailAction(TopicSchema topic, SubscriberSchema subscriber, ContactSchema? contact) {
-  //   if (!topic.isPrivate) return SizedBox.shrink();
-  //   if (!topic.isOwner(clientCommon.address)) return SizedBox.shrink();
-  //   if (subscriber.clientAddress == clientCommon.address) return SizedBox.shrink();
-  //   return InkWell(
-  //     child: Padding(
-  //       padding: EdgeInsets.only(left: 6, right: 16),
-  //       child: subscriber.canBeKick
-  //           ? Icon(
-  //               Icons.block,
-  //               size: 20,
-  //               color: application.theme.fallColor,
-  //             )
-  //           : Asset.iconSvg(
-  //               'check',
-  //               width: 20,
-  //               height: double.infinity,
-  //               color: application.theme.successColor,
-  //             ),
-  //     ),
-  //     onTap: () async {
-  //       if (subscriber.canBeKick) {
-  //         Loading.show();
-  //         bool rejectResult = await GroupDataCenter.updatePrivatePermissionList(widget.topic.topic, member.chatId, false);
-  //         if (rejectResult == false) {
-  //           Toast.show(S.of(context).something_went_wrong);
-  //           return;
-  //         }
-  //         Loading.dismiss();
-  //         Toast.show(S.of(context).rejected);
-  //         _refreshMemberList();
-  //       } else {
-  //         if (subscriber.status != SubscriberStatus.InvitedReceive) {
-  //           Loading.show();
-  //           bool acceptResult = await GroupDataCenter.updatePrivatePermissionList(widget.topic.topic, member.chatId, true);
-  //           if (acceptResult == false) {
-  //             Toast.show(S.of(context).something_went_wrong);
-  //             return;
-  //           }
-  //         }
-  //         Loading.dismiss();
-  //         chatOutCommon.sendTopicInvitee(subscriber.clientAddress, topic.topic).then((value) {
-  //           if (value != null) {
-  //             Toast.show(S.of(context).invitation_sent);
-  //           }
-  //         });
-  //
-  //         _refreshMemberList();
-  //       }
-  //     },
-  //     // onTap: canKick ? rejectAction : acceptAction,
-  //   );
-  // }
+  Widget _getTailAction(TopicSchema? topic, SubscriberSchema subscriber, ContactSchema? contact) {
+    if (topic == null || !topic.isPrivate) return SizedBox.shrink();
+    if (!topic.isOwner(clientCommon.address)) return SizedBox.shrink();
+    if (subscriber.clientAddress == clientCommon.address) return SizedBox.shrink();
+
+    return InkWell(
+      child: Padding(
+        padding: EdgeInsets.only(left: 6, right: 16),
+        child: subscriber.canBeKick
+            ? Icon(
+                Icons.block,
+                size: 20,
+                color: application.theme.fallColor,
+              )
+            : Asset.iconSvg(
+                'check',
+                width: 20,
+                height: double.infinity,
+                color: application.theme.successColor,
+              ),
+      ),
+      onTap: () async {
+        if (subscriber.canBeKick) {
+          Loading.show();
+          await topicCommon.kick(topic.topic, subscriber.clientAddress);
+          Loading.dismiss();
+          Toast.show(S.of(context).rejected);
+        } else {
+          Loading.show();
+          await topicCommon.invitee(topic.topic, subscriber.clientAddress);
+          Loading.dismiss();
+          Toast.show(S.of(context).invitation_sent);
+        }
+      },
+    );
+  }
 }
