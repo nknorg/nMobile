@@ -52,6 +52,10 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   bool _moreLoading = false;
   List<SubscriberSchema> _subscriberList = [];
 
+  int? _invitedSendCount;
+  int? _invitedReceiptCount;
+  int? _subscriberCount;
+
   bool? _isJoined; // TODO:GG joined
 
   @override
@@ -97,14 +101,6 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
         });
       }
     });
-
-    // TODO:GG 更新群成员
-    // if (isPrivateTopicReg(message.topic)) {
-    //   await message.markMessageRead();
-    //   GroupDataCenter.pullPrivateSubscribers(message.topic);
-    // } else {
-    //   GroupDataCenter.pullSubscribersPublicChannel(message.topic);
-    // }
   }
 
   @override
@@ -142,35 +138,47 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     });
 
     _refreshJoined(); // await
-
     _refreshMembersCount(); // await
-
-    if (this._topicSchema?.isPrivate == true) {
-      topicCommon.refreshPermission(this._topicSchema?.topic); // await
-    }
-
     setState(() {});
 
-    // subscribers
-    subscriberCommon.refreshSubscribers(this._topicSchema?.topic).then((value) {
-      _getDataSubscribers(true);
+    // topic permission
+    topicCommon.checkExpireAndSubscribe(_topicSchema?.topic, subscribeFirst: false, emptyAdd: false).then((value) {
+      if (value == null) return Future.value(null);
+      if (value.isOwner(clientCommon.address)) {
+        // TODO:GG 要不要和下面一样？
+        return topicCommon.refreshSubscribersByOwner(value.topic, allPermPage: true).then((value) {
+          return _getDataSubscribers(true);
+        });
+      } else {
+        return subscriberCommon.refreshSubscribers(this._topicSchema?.topic, meta: this._topicSchema?.isPrivate == true).then((value) {
+          return _getDataSubscribers(true);
+        });
+      }
     });
+
+    // subscribers
     _getDataSubscribers(true);
   }
 
   _refreshJoined() async {
     bool joined = await topicCommon.isJoined(_topicSchema?.topic, clientCommon.address);
     // do not topic.setJoined because filed is_joined is action not a tag
-    setState(() {
-      _isJoined = joined;
-    });
+    if (_isJoined != joined) {
+      setState(() {
+        _isJoined = joined;
+      });
+    }
   }
 
   _refreshMembersCount() async {
     int count = await subscriberCommon.getSubscribersCount(_topicSchema?.topic);
     if (_topicSchema?.count != count) {
-      topicCommon.setCount(_topicSchema?.id, count, notify: true); // await
+      await topicCommon.setCount(_topicSchema?.id, count, notify: true);
     }
+    _invitedSendCount = await subscriberCommon.queryCountByTopic(_topicSchema?.topic, status: SubscriberStatus.InvitedSend);
+    _invitedReceiptCount = await subscriberCommon.queryCountByTopic(_topicSchema?.topic, status: SubscriberStatus.InvitedReceipt);
+    _subscriberCount = await subscriberCommon.queryCountByTopic(_topicSchema?.topic, status: SubscriberStatus.Subscribed);
+    setState(() {});
   }
 
   _getDataSubscribers(bool refresh) async {
@@ -180,9 +188,9 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     } else {
       _offset = _subscriberList.length;
     }
+    // TODO:GG topic owner first
     var messages = await subscriberCommon.queryListByTopic(
       this._topicSchema?.topic,
-      // status: SubscriberStatus.InvitedAccept, // TODO:GG ??
       offset: _offset,
       limit: 20,
     );
@@ -195,12 +203,10 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   Widget build(BuildContext context) {
     S _localizations = S.of(this.context);
 
-    int invitedCount = 0; // TODO:GG subers
-    int joinedCount = 0; // TODO:GG subers
-    int rejectCount = 0; // TODO:GG subers
+    String invitedCount = (_invitedSendCount != null && _invitedReceiptCount != null) ? (_invitedSendCount! + _invitedReceiptCount!).toString() : "--";
+    String joinedCount = _subscriberCount?.toString() ?? "--";
     String inviteContent = '$invitedCount' + _localizations.members + ':' + _localizations.invitation_sent;
     String joinedContent = '$joinedCount' + _localizations.members + ':' + _localizations.joined_channel;
-    String rejectContent = '$rejectCount' + _localizations.members + ':' + _localizations.rejected;
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
@@ -213,40 +219,39 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding: EdgeInsets.only(bottom: 20, left: 16, right: 16),
+            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
             child: _topicSchema != null
-                ? TopicHeader(
-                    topic: _topicSchema!,
-                    body: Builder(
-                      builder: (BuildContext context) {
-                        if (_topicSchema?.isPrivate == true && _topicSchema?.isOwner(clientCommon.address) == true) {
-                          return Column(
-                            children: [
-                              Label(
-                                inviteContent,
-                                type: LabelType.bodyRegular,
-                                color: application.theme.successColor,
-                              ),
-                              Label(
-                                joinedContent,
-                                type: LabelType.bodyRegular,
-                                color: application.theme.successColor,
-                              ),
-                              Label(
-                                rejectContent,
-                                type: LabelType.bodyRegular,
-                                color: application.theme.fallColor,
-                              ),
-                            ],
-                          );
-                        } else {
-                          return Label(
-                            '${_topicSchema?.count ?? '--'} ' + _localizations.members,
-                            type: LabelType.bodyRegular,
-                            color: application.theme.successColor,
-                          );
-                        }
-                      },
+                ? Center(
+                    child: TopicHeader(
+                      topic: _topicSchema!,
+                      avatarRadius: 36,
+                      dark: false,
+                      body: Builder(
+                        builder: (BuildContext context) {
+                          if (_topicSchema?.isOwner(clientCommon.address) == true) {
+                            return Column(
+                              children: [
+                                Label(
+                                  inviteContent,
+                                  type: LabelType.bodyRegular,
+                                  color: application.theme.successColor,
+                                ),
+                                Label(
+                                  joinedContent,
+                                  type: LabelType.bodyRegular,
+                                  color: application.theme.successColor,
+                                ),
+                              ],
+                            );
+                          } else {
+                            return Label(
+                              '${_topicSchema?.count ?? '--'} ' + _localizations.members,
+                              type: LabelType.bodyRegular,
+                              color: application.theme.successColor,
+                            );
+                          }
+                        },
+                      ),
                     ),
                   )
                 : SizedBox.shrink(),

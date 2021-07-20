@@ -50,6 +50,7 @@ class ChatMessagesScreen extends BaseStateFulWidget {
 
 class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScreen> with Tag {
   TopicSchema? _topic;
+  bool? _isJoined; // TODO:GG topic
   ContactSchema? _contact;
 
   StreamController<Map<String, String>> _onInputChangeController = StreamController<Map<String, String>>.broadcast();
@@ -95,6 +96,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       setState(() {
         _topic = event;
       });
+      _refreshTopicJoined();
     });
 
     // contact
@@ -138,6 +140,15 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // read
     sessionCommon.setUnReadCount(_topic?.topic ?? _contact?.clientAddress, 0, notify: true); // await
+
+    // topic
+    topicCommon.checkExpireAndSubscribe(_topic?.topic, subscribeFirst: false, emptyAdd: false).then((value) {
+      if (value == null) return Future.value(null);
+      if (value.isOwner(clientCommon.address)) {
+        return topicCommon.refreshSubscribersByOwner(value.topic, allPermPage: true);
+      }
+    });
+    _refreshTopicJoined(); // await
   }
 
   @override
@@ -183,6 +194,16 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       logger.d("$TAG - messages insert 0:$schema");
       _messages.insert(0, schema!);
     });
+  }
+
+  _refreshTopicJoined() async {
+    if (_topic == null || clientCommon.address == null || clientCommon.address!.isEmpty) return;
+    bool joined = await topicCommon.isJoined(_topic?.topic, clientCommon.address);
+    if (_isJoined != joined) {
+      setState(() {
+        _isJoined = joined;
+      });
+    }
   }
 
   _toggleBottomMenu() async {
