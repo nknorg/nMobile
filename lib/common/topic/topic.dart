@@ -108,12 +108,12 @@ class TopicCommon with Tag {
     // check expire
     int? globalHeight = await clientCommon.client?.getHeight();
     if (noSubscribed || (await exists.shouldResubscribe(globalHeight: globalHeight))) {
-      bool joinSuccess;
+      bool subscribeSuccess;
       if (exists.isOwner(clientCommon.address)) {
         // private + owner
         SubscriberSchema? _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage: 0);
-        Map<String, dynamic>? meta = await subscriberCommon.getPermissionsMetaByPage(topicName, _subscriberMe, appendPermPage: 0);
-        joinSuccess = await clientSubscribe(
+        Map<String, dynamic> meta = await subscriberCommon.getPermissionsMetaByPage(topicName, _subscriberMe, appendPermPage: 0);
+        subscribeSuccess = await clientSubscribe(
           topicName,
           height: Global.topicDefaultSubscribeHeight,
           fee: fee,
@@ -122,13 +122,13 @@ class TopicCommon with Tag {
         );
       } else {
         // publish / private normal member
-        joinSuccess = await clientSubscribe(
+        subscribeSuccess = await clientSubscribe(
           topicName,
           height: Global.topicDefaultSubscribeHeight,
           fee: fee,
         );
       }
-      if (!joinSuccess) return null;
+      if (!subscribeSuccess) return null;
 
       // db update
       var subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
@@ -174,36 +174,148 @@ class TopicCommon with Tag {
   }
 
   /// ***********************************************************************************************************
-  /// ************************************************ invitee **************************************************
+  /// ************************************************ members **************************************************
   /// ***********************************************************************************************************
 
   // caller = owner
   Future<SubscriberSchema?> invitee(String? topicName, String? clientAddress) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
-    TopicSchema? exists = await queryByTopic(topicName);
-    if (exists == null) return null;
-
     if (clientAddress == clientCommon.address) {
       Toast.show(S.of(Global.appContext).invite_yourself_error);
       return null;
     }
 
-    if (exists.isOwner(clientCommon.address) != true) {
+    // topic owner
+    TopicSchema? _topic = await queryByTopic(topicName);
+    if (_topic == null) return null;
+    if (_topic.isOwner(clientCommon.address) != true) {
       Toast.show(S.of(Global.appContext).member_no_auth_invite);
       return null;
     }
 
-    SubscriberSchema? exist = await subscriberCommon.queryByTopicChatId(topicName, clientAddress);
-    if (exist?.isSubscribed == true) {
+    // subscriber status
+    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topicName, clientAddress);
+    if (_subscriber != null && _subscriber.isSubscribed == true) {
       Toast.show(S.of(Global.appContext).group_member_already);
       return null;
     }
 
+    // send message
     MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(clientAddress, topicName);
     if (_msg == null) return null;
 
-    Toast.show(S.of(Global.appContext).invitation_sent);
-    return await subscriberCommon.onInvitedSend(topicName, clientAddress);
+    // subscriber update
+    int appendPermPage = await subscriberCommon.queryMaxPermPageByTopic(topicName);
+    _subscriber = await subscriberCommon.onInvitedSend(topicName, clientAddress, permPage: appendPermPage);
+    if (_subscriber == null) return null;
+
+    // client subscribe
+    Map<String, dynamic> meta = await subscriberCommon.getPermissionsMetaByPage(topicName, _subscriber, appendPermPage: appendPermPage);
+    bool subscribeSuccess = await clientSubscribe(
+      topicName,
+      height: Global.topicDefaultSubscribeHeight,
+      fee: 0,
+      permissionPage: appendPermPage,
+      meta: meta,
+    );
+    if (subscribeSuccess) {
+      Toast.show(S.of(Global.appContext).invitation_sent);
+      return _subscriber;
+    } else {
+      await subscriberCommon.delete(_subscriber.id, notify: true);
+      return null;
+    }
+  }
+
+  // caller = owner
+  Future<SubscriberSchema?> kick(String? topicName, String? clientAddress) async {
+    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+    if (clientAddress == clientCommon.address) return null;
+
+    // topic owner
+    TopicSchema? _topic = await queryByTopic(topicName);
+    if (_topic == null) return null;
+    if (_topic.isOwner(clientCommon.address) != true) return null;
+
+    // subscriber status
+    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topicName, clientAddress);
+    if (_subscriber == null) return null;
+    if (_subscriber.canBeKick == false) return null;
+
+    // permPage find
+    int? permPage = _subscriber.permPage;
+    Completer completer = Completer();
+    if (permPage == null || permPage < 0) {
+      int maxPermPage = await subscriberCommon.queryMaxPermPageByTopic(topicName);
+      for (int i = 0; i <= maxPermPage; i++) {
+        Map<String, dynamic> meta = await _getMeta(topicName, i);
+        // find in accepts
+        List<dynamic> accepts = meta["accept"] ?? [];
+        accepts.forEach((element) {
+          if (permPage == null || permPage! <= 0) {
+            if (element.toString().contains(clientAddress)) {
+              permPage = i;
+              if (!completer.isCompleted) completer.complete();
+            }
+          }
+        });
+        // find in rejects
+        List<dynamic> rejects = meta["reject"] ?? [];
+        rejects.forEach((element) {
+          if (permPage == null || permPage! <= 0) {
+            if (element.toString().contains(clientAddress)) {
+              permPage = i;
+              if (!completer.isCompleted) completer.complete();
+            }
+          }
+        });
+      }
+    }
+    await completer.future;
+
+    // meta update
+    if (permPage != null) {
+      Map<String, dynamic> meta = await _getMeta(topicName, permPage!);
+      // remove at accept
+      int? findAcceptIndex;
+      List<dynamic> accepts = meta["accept"] ?? [];
+      accepts.asMap().forEach((key, value) {
+        if (findAcceptIndex == null) {
+          if (value.toString().contains(clientAddress)) {
+            findAcceptIndex = key;
+          }
+        }
+      });
+      if (findAcceptIndex != null) accepts.removeAt(findAcceptIndex!);
+      // add in reject
+      int? findRejectIndex;
+      List<dynamic> rejects = meta["reject"] ?? [];
+      rejects.asMap().forEach((key, value) {
+        if (findRejectIndex == null) {
+          if (value.toString().contains(clientAddress)) {
+            findRejectIndex = key;
+          }
+        }
+      });
+      if (findRejectIndex == null) rejects.add({'addr': clientAddress});
+
+      meta["accept"] = accepts;
+      meta["reject"] = rejects;
+      bool subscribeSuccess = await clientSubscribe(
+        topicName,
+        height: Global.topicDefaultSubscribeHeight,
+        fee: 0,
+        permissionPage: permPage,
+        meta: meta,
+      );
+      if (!subscribeSuccess) {
+        logger.w("$TAG - kick - clientSubscribe error - permPage:$permPage - meta:$meta");
+        return null;
+      }
+    }
+
+    // subscriber update
+    return await subscriberCommon.onUnsubscribe(topicName, clientAddress, permPage: _subscriber.permPage);
   }
 
   /// ***********************************************************************************************************
@@ -222,7 +334,7 @@ class TopicCommon with Tag {
     await chatOutCommon.sendTopicUnSubscribe(topicName);
 
     // schema refresh
-    TopicSchema? exists = await topicCommon.queryByTopic(topicName);
+    TopicSchema? exists = await queryByTopic(topicName);
     bool setSuccess = await setJoined(exists?.id, false, notify: true);
     if (setSuccess) exists?.joined = false;
 
