@@ -141,7 +141,7 @@ class TopicSchema {
   }
 
   bool isOwner(String? clientAddress) {
-    if (clientAddress == null || clientAddress.isEmpty) return false;
+    if (!isPrivate || clientAddress == null || clientAddress.isEmpty) return false;
     String? accountPubKey = getPubKeyFromTopicOrChatId(clientAddress);
     return accountPubKey?.isNotEmpty == true && accountPubKey == ownerPubKey;
   }

@@ -44,7 +44,7 @@ class DeviceInfoSchema {
     if (data?.isNotEmpty == true) {
       String? version = data!['appVersion']?.toString();
       if (version?.isNotEmpty == true) {
-        appVersion = int.parse(version!);
+        appVersion = int.tryParse(version!);
       }
     }
     return appVersion ?? 0;
@@ -66,7 +66,7 @@ class DeviceInfoSchema {
     if (data?.isNotEmpty == true) {
       String? version = data!['platformVersion']?.toString();
       if (version?.isNotEmpty == true) {
-        platformVersion = int.parse(version!);
+        platformVersion = int.tryParse(version!);
       }
     }
     return platformVersion ?? 0;

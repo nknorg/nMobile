@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/subscriber.dart';
@@ -239,6 +237,24 @@ class SubscriberStorage with Tag {
     return 0;
   }
 
+  Future<int> queryCountByTopicPermPage(String? topic, int permPage, {int? status}) async {
+    if (topic == null || topic.isEmpty) return 0;
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['COUNT(id)'],
+        where: status != null ? 'topic = ? AND perm_page = ? AND status = ?' : 'topic = ? AND perm_page = ?',
+        whereArgs: status != null ? [topic, permPage, status] : [topic, permPage],
+      );
+      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+      logger.d("$TAG - queryCountByTopicPermPage - topic:$topic - permPage:$permPage - count:$status");
+      return count ?? 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return 0;
+  }
+
   Future<int> queryMaxPermPageByTopic(String? topic) async {
     if (topic == null || topic.isEmpty) return 0;
     try {
@@ -260,6 +276,30 @@ class SubscriberStorage with Tag {
       handleError(e);
     }
     return 0;
+  }
+
+  Future<bool> setStatusAndPermPageByTopic(String? topic, int? status, int? permPage) async {
+    if (topic == null || topic.isEmpty || status == null) return false;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'status': status,
+          'perm_page': permPage,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'topic = ?',
+        whereArgs: [topic],
+      );
+      if (count != null && count > 0) {
+        logger.d("$TAG - setStatusAndPermPageByTopic - success - topic:$topic - status:$status - permPage:$permPage");
+        return true;
+      }
+      logger.w("$TAG - setStatusAndPermPageByTopic - fail - topic:$topic - status:$status - permPage:$permPage");
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
   }
 
   Future<bool> setStatus(int? subscriberId, int? status) async {
@@ -308,26 +348,26 @@ class SubscriberStorage with Tag {
     return false;
   }
 
-  Future<bool> setData(int? subscriberId, Map<String, dynamic>? newData) async {
-    if (subscriberId == null || subscriberId == 0) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
-          'update_at': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'id = ?',
-        whereArgs: [subscriberId],
-      );
-      if (count != null && count > 0) {
-        logger.d("$TAG - setData - success - subscriberId:$subscriberId - newData:$newData");
-        return true;
-      }
-      logger.w("$TAG - setData - fail - subscriberId:$subscriberId - newData:$newData");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
+  // Future<bool> setData(int? subscriberId, Map<String, dynamic>? newData) async {
+  //   if (subscriberId == null || subscriberId == 0) return false;
+  //   try {
+  //     int? count = await db?.update(
+  //       tableName,
+  //       {
+  //         'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
+  //         'update_at': DateTime.now().millisecondsSinceEpoch,
+  //       },
+  //       where: 'id = ?',
+  //       whereArgs: [subscriberId],
+  //     );
+  //     if (count != null && count > 0) {
+  //       logger.d("$TAG - setData - success - subscriberId:$subscriberId - newData:$newData");
+  //       return true;
+  //     }
+  //     logger.w("$TAG - setData - fail - subscriberId:$subscriberId - newData:$newData");
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return false;
+  // }
 }
