@@ -37,6 +37,7 @@ class SubscriberCommon with Tag {
   /// ********************************************** subscribers ************************************************
   /// ***********************************************************************************************************
 
+  // caller = everyone, meta = isPrivate
   Future<List<SubscriberSchema>> refreshSubscribers(
     String? topicName, {
     int offset = 0,
@@ -120,6 +121,7 @@ class SubscriberCommon with Tag {
     return await queryListByTopic(topicName, offset: offset, limit: limit);
   }
 
+  // caller = everyone
   Future<int> getSubscribersCount(String? topicName, {bool? isPrivate, Uint8List? subscriberHashPrefix}) async {
     if (topicName == null || topicName.isEmpty) return 0;
     bool isPublic = !(isPrivate ?? isPrivateTopicReg(topicName));
@@ -202,7 +204,7 @@ class SubscriberCommon with Tag {
   /// ************************************************** status *************************************************
   /// ***********************************************************************************************************
 
-  // status: InvitedSend (must be owner)
+  // status: InvitedSend (caller = owner)
   Future<SubscriberSchema?> onInvitedSend(String? topicName, String? clientAddress) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
@@ -239,7 +241,7 @@ class SubscriberCommon with Tag {
     return subscriber;
   }
 
-  // status: InvitedReceipt
+  // status: InvitedReceipt (caller = owner)
   Future<SubscriberSchema?> onInvitedReceipt(String? topicName, String? clientAddress, {int? permPage}) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
@@ -261,7 +263,7 @@ class SubscriberCommon with Tag {
     return subscriber;
   }
 
-  // status: Subscribed
+  // status: Subscribed (caller = everyone)
   Future<SubscriberSchema?> onSubscribe(String? topicName, String? clientAddress, {int? permPage}) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
@@ -283,7 +285,7 @@ class SubscriberCommon with Tag {
     return subscriber;
   }
 
-  // status: Unsubscribed
+  // status: Unsubscribed (caller = everyone)
   Future<SubscriberSchema?> onUnsubscribe(String? topicName, String? clientAddress, {int? permPage}) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
@@ -311,6 +313,7 @@ class SubscriberCommon with Tag {
   /// ************************************************ permission ***********************************************
   /// ***********************************************************************************************************
 
+  // caller = everyone, meta = subscription.meta(owner) / subscribers[x](everyone)
   Future refreshSubscribersByMeta(String? topicName, Map<String, dynamic>? meta, {int permPage = 0}) {
     if (topicName == null || topicName.isEmpty || meta == null || meta.isEmpty) return Future.value(null);
     List<Future> futures = [];
@@ -381,6 +384,7 @@ class SubscriberCommon with Tag {
     return Future.wait(futures);
   }
 
+  // caller = everyone
   Future<Map<String, dynamic>?> getPermissionsMetaByPage(String? topicName, SubscriberSchema? append, {int? appendPermPage}) async {
     if (topicName == null || topicName.isEmpty || append == null) return null;
     // appendPermPage
@@ -434,18 +438,6 @@ class SubscriberCommon with Tag {
     }
     SubscriberSchema? added = await _subscriberStorage.insert(schema);
     if (added != null && notify) _addSink.add(added);
-
-    // topic count
-    if (topicCountCheck) {
-      topicCommon.queryByTopic(schema.topic).then((value) async {
-        if (value != null) {
-          // int count = await getSubscribersCount(schema.topic);
-          // if (value.count != count) {
-          //   topicCommon.setCount(value.id, count); // await
-          // }
-        }
-      });
-    }
     return added;
   }
 
