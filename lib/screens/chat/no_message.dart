@@ -40,7 +40,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
     }
   }
 
-  void addTopic(String? topicName) async {
+  void subscribePopularTopic(String? topicName) async {
     if (topicName == null || topicName.isEmpty) return;
     Loading.show();
     TopicSchema? _topic = await topicCommon.subscribe(topicName);
@@ -177,7 +177,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
                 onTap: () {
                   // TODO:GG auth
                   // if (TimerAuth.authed) {
-                  addTopic(model.topic);
+                  subscribePopularTopic(model.topic);
                   // } else {
                   //   widget.timerAuth.onCheckAuthGetPassword(context);
                   // }
