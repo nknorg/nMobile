@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
+import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/audio.dart';
@@ -18,6 +19,7 @@ class ChatSendBar extends BaseStateFulWidget {
   static const double LockActionMargin = 20;
 
   final String? targetId;
+  final bool? enable;
   final VoidCallback? onMenuPressed;
   final Function(String)? onSendPress;
   final Function(bool, bool, int)? onRecordTap;
@@ -27,6 +29,7 @@ class ChatSendBar extends BaseStateFulWidget {
   ChatSendBar({
     Key? key,
     required this.targetId,
+    this.enable,
     this.onMenuPressed,
     this.onSendPress,
     this.onRecordTap,
@@ -264,6 +267,23 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
     String recordMin = "${recordDuration.inMinutes < 10 ? 0 : ""}${recordDuration.inMinutes}";
     String recordSec = "${recordDuration.inSeconds < 10 ? 0 : ""}${recordDuration.inSeconds}";
     String recordDurationText = "$recordMin:$recordSec";
+
+    if (widget.enable == false) {
+      return Container(
+        margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+        child: Button(
+          child: Label(
+            "不在此群", // TODO:GG locale
+            type: LabelType.h4,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            color: application.theme.strongColor,
+          ),
+          backgroundColor: application.theme.backgroundLightColor,
+          width: double.infinity,
+        ),
+      );
+    }
 
     return GestureDetector(
       onTapDown: (TapDownDetails details) {

@@ -177,7 +177,7 @@ class TopicStorage with Tag {
     return [];
   }
 
-  Future<bool> setJoined(int? topicId, bool joined, {int? subscribeAt, int? expireBlockHeight}) async {
+  Future<bool> setJoined(int? topicId, bool joined, {int? subscribeAt, int? expireBlockHeight, int? createAt}) async {
     if (topicId == null || topicId == 0) return false;
     var values = {
       'joined': joined ? 1 : 0,
@@ -186,6 +186,9 @@ class TopicStorage with Tag {
     if (expireBlockHeight != null) {
       values["subscribe_at"] = subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
       values["expire_height"] = expireBlockHeight;
+    }
+    if (createAt != null) {
+      values["create_at"] = createAt;
     }
     try {
       int? count = await db?.update(

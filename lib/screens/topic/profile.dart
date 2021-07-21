@@ -55,6 +55,7 @@ class TopicProfileScreen extends BaseStateFulWidget {
 
 class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScreen> {
   StreamSubscription? _updateTopicSubscription;
+  StreamSubscription? _deleteTopicSubscription;
 
   TopicSchema? _topicSchema;
 
@@ -73,12 +74,18 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       setState(() {
         _topicSchema = event;
       });
+      _refreshJoined(); // await
+      _refreshMembersCount(); // await
+    });
+    _deleteTopicSubscription = topicCommon.deleteStream.where((event) => event == _topicSchema?.topic).listen((String topic) {
+      Navigator.of(context).pop();
     });
   }
 
   @override
   void dispose() {
     _updateTopicSubscription?.cancel();
+    _deleteTopicSubscription?.cancel();
     super.dispose();
   }
 
@@ -96,6 +103,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       this._topicSchema = await topicCommon.queryByTopic(topicName);
     }
     if (this._topicSchema == null) return;
+    setState(() {});
 
     // exist
     topicCommon.queryByTopic(this._topicSchema?.topic).then((TopicSchema? exist) async {
@@ -109,7 +117,6 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
     _refreshJoined(); // await
     _refreshMembersCount(); // await
-    setState(() {});
   }
 
   _refreshJoined() async {
@@ -182,7 +189,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
             Loading.dismiss();
             if (deleted != null) {
               Toast.show(_localizations.unsubscribed);
-              Navigator.pop(this.context);
+              // Navigator.pop(this.context);
             }
           },
         ),

@@ -37,7 +37,7 @@ class SubscriberCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone, meta = isPrivate
-  Future<List<SubscriberSchema>> refreshSubscribers(
+  Future refreshSubscribers(
     String? topicName, {
     int offset = 0,
     int limit = 10000,
@@ -98,7 +98,7 @@ class SubscriberCommon with Tag {
           logger.w("$TAG - refreshSubscribers - nodeSub temp_meta is null - nodeSub:$nodeItem");
           continue;
         }
-        futures.add(refreshSubscribersByMeta(topicName, nodeItem.data, permPage: nodeItem.permPage ?? 0));
+        futures.add(refreshSubscribersByMeta(topicName, nodeItem.data, permPage: nodeItem.permPage ?? 0)); // TODO:GG 注意一下
         continue;
       }
 
@@ -116,8 +116,7 @@ class SubscriberCommon with Tag {
       }
     }
 
-    Future.wait(futures);
-    return await queryListByTopic(topicName, offset: offset, limit: limit);
+    await Future.wait(futures);
   }
 
   // caller = everyone
@@ -130,9 +129,9 @@ class SubscriberCommon with Tag {
       count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
     } else {
       count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
-      // TODO:GG 到底准不准
-      // count = await this.queryCountByTopic(topicName);
-      // logger.i("$TAG - getSubscribersCount - node:$test - DB:$count");
+      // TODO:GG 到底准不准?
+      int count2 = await this.queryCountByTopic(topicName);
+      logger.w("$TAG - getSubscribersCount - node:$count - DB:$count2");
     }
     return count;
   }
@@ -172,7 +171,7 @@ class SubscriberCommon with Tag {
           if (meta) {
             item = SubscriberSchema.create(topicName, key, SubscriberStatus.Subscribed);
           } else {
-            item = SubscriberSchema.create(topicName, key, SubscriberStatus.None);
+            item = SubscriberSchema.create(topicName, key, SubscriberStatus.Subscribed);
           }
           if (item != null) subscribers.add(item);
         }
@@ -247,7 +246,7 @@ class SubscriberCommon with Tag {
     return subscriber;
   }
 
-  // status: Subscribed (caller = everyone)
+  // status: Subscribed (caller = self + other)
   Future<SubscriberSchema?> onSubscribe(String? topicName, String? clientAddress, {int? permPage}) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
@@ -269,7 +268,7 @@ class SubscriberCommon with Tag {
     return subscriber;
   }
 
-  // status: Unsubscribed (caller = everyone)
+  // status: Unsubscribed (caller = other)
   Future<SubscriberSchema?> onUnsubscribe(String? topicName, String? clientAddress, {int? permPage}) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
@@ -297,7 +296,7 @@ class SubscriberCommon with Tag {
   /// ************************************************ permission ***********************************************
   /// ***********************************************************************************************************
 
-  // caller = everyone, meta = subscription.meta(owner) / subscribers[x](everyone)
+  // caller = everyone, meta = subscription.meta(owner) / subscribers[x](everyone)  TODO:GG 源有什么不同
   Future refreshSubscribersByMeta(String? topicName, Map<String, dynamic>? meta, {int permPage = 0}) {
     if (topicName == null || topicName.isEmpty || meta == null || meta.isEmpty) return Future.value(null);
     List<Future> futures = [];
@@ -369,12 +368,12 @@ class SubscriberCommon with Tag {
   }
 
   // caller = everyone
-  Future<Map<String, dynamic>> getPermissionsMetaByPage(String? topicName, SubscriberSchema? append, {int? appendPermPage}) async {
+  Future<Map<String, dynamic>> createMetaByDB(String? topicName, SubscriberSchema? append, {int? appendPermPage}) async {
     if (topicName == null || topicName.isEmpty || append == null) return Map();
     // appendPermPage
     if (appendPermPage == null) {
       appendPermPage = await queryMaxPermPageByTopic(topicName);
-      logger.d("$TAG - getPermissionsMetaByPage - get max perm page - appendPermPage:$appendPermPage");
+      logger.d("$TAG - createMetaByDB - get max perm page - appendPermPage:$appendPermPage");
     }
 
     // me
@@ -386,7 +385,12 @@ class SubscriberCommon with Tag {
     // subscribers
     List<SubscriberSchema> subscribers = await queryListByTopicPerm(topicName, appendPermPage);
     List<SubscriberSchema> finds = subscribers.where((element) => element.clientAddress == append.clientAddress).toList();
-    if (finds.isEmpty) subscribers.add(append);
+    if (finds.isEmpty) {
+      logger.d("$TAG - getMetaByDB - exist subscriber - topicName:$topicName - subscriber:$append");
+      subscribers.add(append);
+    } else {
+      logger.d("$TAG - getMetaByDB - new subscriber - topicName:$topicName - subscriber:$append");
+    }
 
     // meta
     List<Map<String, String>> acceptList = [];
@@ -403,7 +407,7 @@ class SubscriberCommon with Tag {
     meta['accept'] = acceptList;
     meta['reject'] = rejectList;
 
-    logger.i("$TAG - _getPermissionMeta - meta:${meta.toString()}");
+    logger.d("$TAG - getMetaByDB - meta:${meta.toString()}");
     return meta;
   }
 
