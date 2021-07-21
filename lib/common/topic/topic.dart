@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/message.dart';
@@ -37,9 +38,13 @@ class TopicCommon with Tag {
   }
 
   checkAllTopics() async {
+    if (clientCommon.address == null || clientCommon.address!.isEmpty) return null;
     List<TopicSchema> topics = await queryList();
-    topics.forEach((TopicSchema topic) {
-      checkExpireAndSubscribe(topic.topic, subscribeFirst: false, emptyAdd: false);
+    topics.forEach((TopicSchema topic) async {
+      await checkExpireAndSubscribe(topic.topic, subscribeFirst: false, emptyAdd: false);
+      if (topic.isOwner(clientCommon.address)) {
+        await topicCommon.refreshSubscribersByOwner(topic.topic, allPermPage: true);
+      }
     });
   }
 
@@ -49,7 +54,7 @@ class TopicCommon with Tag {
 
   // caller = self
   Future<TopicSchema?> subscribe(String? topicName, {double fee = 0}) async {
-    if (topicName == null || topicName.isEmpty) return null;
+    if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
     // subscribe/expire
     TopicSchema? _topic = await checkExpireAndSubscribe(topicName, subscribeFirst: true, emptyAdd: true);
     if (_topic == null) return null;
@@ -74,7 +79,7 @@ class TopicCommon with Tag {
 
   // caller = self
   Future<TopicSchema?> checkExpireAndSubscribe(String? topicName, {bool subscribeFirst = false, bool emptyAdd = false, double fee = 0}) async {
-    if (topicName == null || topicName.isEmpty) return null;
+    if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
 
     // topic exist
     TopicSchema? exists = await queryByTopic(topicName);
@@ -90,16 +95,10 @@ class TopicCommon with Tag {
     // empty height
     bool noSubscribed = false;
     if (!exists.joined || exists.subscribeAt == null || exists.subscribeAt! <= 0 || exists.expireBlockHeight == null || exists.expireBlockHeight! <= 0) {
-      if (exists.expireBlockHeight == null || exists.expireBlockHeight! <= 0) {
-        if (!subscribeFirst) {
-          logger.i("$TAG - checkExpireAndSubscribe - can not subscribeFirst - topic:$exists"); // TODO:GG 退订是不是0
-          return null;
-        }
-      }
-      int expireHeight = await _getExpireAt(topicName, clientCommon.address);
+      int expireHeight = await _getExpireAt(exists.topicName, clientCommon.address);
       if (expireHeight > 0) {
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-        if ((DateTime.now().millisecondsSinceEpoch - createAt).abs() > 1000 * 60) {
+        if ((DateTime.now().millisecondsSinceEpoch - createAt).abs() > Settings.txPoolDelayMs) {
           logger.d("$TAG - checkExpireAndSubscribe - DB expire but node not expire - topic:$exists");
           int subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
           bool success = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireHeight, notify: true);
@@ -113,29 +112,40 @@ class TopicCommon with Tag {
           noSubscribed = true;
         }
       } else {
-        logger.d("$TAG - checkExpireAndSubscribe - no subscribe history - topic:$exists");
-        noSubscribed = true;
+        if (!subscribeFirst) {
+          logger.i("$TAG - checkExpireAndSubscribe - can not subscribeFirst - topic:$exists");
+          return null;
+        } else {
+          logger.d("$TAG - checkExpireAndSubscribe - no subscribe history - topic:$exists");
+          noSubscribed = true;
+        }
       }
     } else {
       int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-      int expireHeight = await _getExpireAt(topicName, clientCommon.address);
-      if (expireHeight <= 0 && exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt).abs() > 1000 * 60) {
-        logger.i("$TAG - checkExpireAndSubscribe - db no expire but node expire - topic:$exists");
-        bool success = await setJoined(exists.id, false, notify: true);
-        if (success) exists.joined = false;
+      int expireHeight = await _getExpireAt(exists.topicName, clientCommon.address);
+      if (expireHeight <= 0) {
+        if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt).abs() > Settings.txPoolDelayMs) {
+          logger.i("$TAG - checkExpireAndSubscribe - db no expire but node expire - topic:$exists");
+          bool success = await setJoined(exists.id, false, notify: true);
+          if (success) exists.joined = false;
+        } else {
+          logger.d("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool - topic:$exists");
+        }
       } else {
-        logger.d("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool - topic:$exists");
+        logger.d("$TAG - checkExpireAndSubscribe - DB not expire and node no expire, its OK - topic:$exists");
       }
     }
 
     // check expire
     int? globalHeight = await clientCommon.client?.getHeight();
-    if (noSubscribed) {
+    bool shouldResubscribe = await exists.shouldResubscribe(globalHeight: globalHeight);
+    if (noSubscribed || shouldResubscribe) {
       bool subscribeSuccess;
       if (exists.isOwner(clientCommon.address)) {
         // private + owner
         SubscriberSchema? _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage: 0);
-        Map<String, dynamic> meta = await subscriberCommon.createMetaByDB(topicName, _subscriberMe, appendPermPage: 0);
+        Map<String, dynamic> meta = await _getMeta(topicName, 0);
+        meta = await _buildNewMeta(topicName, meta, _subscriberMe, 0);
         subscribeSuccess = await _clientSubscribe(
           topicName,
           height: Global.topicDefaultSubscribeHeight,
@@ -144,7 +154,7 @@ class TopicCommon with Tag {
           meta: meta,
         );
       } else {
-        // publish / private normal member // TODO:GG 私有群普通成员不用meta吧
+        // publish / private normal member
         subscribeSuccess = await _clientSubscribe(
           topicName,
           height: Global.topicDefaultSubscribeHeight,
@@ -198,6 +208,61 @@ class TopicCommon with Tag {
   }
 
   /// ***********************************************************************************************************
+  /// ********************************************** unsubscribe ************************************************
+  /// ***********************************************************************************************************
+
+  // caller = self
+  Future<TopicSchema?> unsubscribe(String? topicName, {double fee = 0, int? permissionPage, bool deleteDB = false}) async {
+    if (topicName == null || topicName.isEmpty) return null;
+
+    // client unsubscribe
+    bool exitSuccess = await _clientUnsubscribe(topicName, fee: fee, permissionPage: permissionPage);
+    if (!exitSuccess) return null;
+
+    // message unsubscribe
+    await chatOutCommon.sendTopicUnSubscribe(topicName);
+
+    // schema refresh
+    TopicSchema? exists = await queryByTopic(topicName);
+    bool setSuccess = await setJoined(exists?.id, false, notify: true);
+    if (setSuccess) exists?.joined = false;
+
+    // DB delete
+    if (deleteDB) await delete(exists?.id, notify: true);
+    if (deleteDB) await subscriberCommon.deleteByTopic(topicName);
+
+    await Future.delayed(Duration(seconds: 3));
+    return exists;
+  }
+
+  Future<bool> _clientUnsubscribe(String? topicName, {double fee = 0, int? permissionPage}) async {
+    if (topicName == null || topicName.isEmpty) return false;
+    String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
+
+    bool success;
+    try {
+      String? topicHash = await clientCommon.client?.unsubscribe(
+        topic: genTopicHash(topicName),
+        identifier: identifier,
+        fee: fee.toString(),
+      );
+      if (topicHash != null && topicHash.isNotEmpty) {
+        logger.d("$TAG - _clientUnsubscribe - success - topicHash:$topicHash");
+      } else {
+        logger.e("$TAG - _clientUnsubscribe - fail - topicHash:$topicHash");
+      }
+      success = (topicHash != null) && (topicHash.isNotEmpty);
+    } catch (e) {
+      if (e.toString().contains('duplicate subscription exist in block') || e.toString().contains('can not append tx to txpool')) {
+        success = true;
+      } else {
+        success = false;
+      }
+    }
+    return success;
+  }
+
+  /// ***********************************************************************************************************
   /// ************************************************ members **************************************************
   /// ***********************************************************************************************************
 
@@ -219,7 +284,7 @@ class TopicCommon with Tag {
 
     // subscriber status
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topicName, clientAddress);
-    if (_subscriber != null && _subscriber.isSubscribed == true) {
+    if (_subscriber != null && _subscriber.status == SubscriberStatus.Subscribed) {
       Toast.show(S.of(Global.appContext).group_member_already);
       return null;
     }
@@ -233,9 +298,10 @@ class TopicCommon with Tag {
     _subscriber = await subscriberCommon.onInvitedSend(topicName, clientAddress, permPage: appendPermPage);
     if (_subscriber == null) return null;
 
-    if (_topic.isPrivate) {
+    if (_topic.isPrivate && appendPermPage != null) {
       // client subscribe
-      Map<String, dynamic> meta = await subscriberCommon.createMetaByDB(topicName, _subscriber, appendPermPage: appendPermPage);
+      Map<String, dynamic> meta = await _getMeta(topicName, appendPermPage);
+      meta = await _buildNewMeta(topicName, meta, _subscriber, appendPermPage);
       bool subscribeSuccess = await _clientSubscribe(
         topicName,
         height: Global.topicDefaultSubscribeHeight,
@@ -303,31 +369,7 @@ class TopicCommon with Tag {
     // meta update
     if (permPage != null) {
       Map<String, dynamic> meta = await _getMeta(topicName, permPage!);
-      // remove at accept
-      int? findAcceptIndex;
-      List<dynamic> accepts = meta["accept"] ?? [];
-      accepts.asMap().forEach((key, value) {
-        if (findAcceptIndex == null) {
-          if (value.toString().contains(clientAddress)) {
-            findAcceptIndex = key;
-          }
-        }
-      });
-      if (findAcceptIndex != null) accepts.removeAt(findAcceptIndex!);
-      // add in reject
-      int? findRejectIndex;
-      List<dynamic> rejects = meta["reject"] ?? [];
-      rejects.asMap().forEach((key, value) {
-        if (findRejectIndex == null) {
-          if (value.toString().contains(clientAddress)) {
-            findRejectIndex = key;
-          }
-        }
-      });
-      if (findRejectIndex == null) rejects.add({'addr': clientAddress});
-
-      meta["accept"] = accepts;
-      meta["reject"] = rejects;
+      meta = await _buildNewMeta(topicName, meta, _subscriber, permPage!);
       bool subscribeSuccess = await _clientSubscribe(
         topicName,
         height: Global.topicDefaultSubscribeHeight,
@@ -345,59 +387,49 @@ class TopicCommon with Tag {
     return await subscriberCommon.onUnsubscribe(topicName, clientAddress, permPage: _subscriber.permPage);
   }
 
-  /// ***********************************************************************************************************
-  /// ********************************************** unsubscribe ************************************************
-  /// ***********************************************************************************************************
+  // caller = everyone
+  Future<Map<String, dynamic>> _buildNewMeta(String? topicName, Map<String, dynamic>? meta, SubscriberSchema? append, int appendPermPage) async {
+    if (topicName == null || topicName.isEmpty || meta == null || append == null) return Map();
 
-  // caller = self
-  Future<TopicSchema?> unsubscribe(String? topicName, {double fee = 0, int? permissionPage, bool deleteDB = false}) async {
-    if (topicName == null || topicName.isEmpty) return null;
-
-    // client unsubscribe
-    bool exitSuccess = await _clientUnsubscribe(topicName, fee: fee, permissionPage: permissionPage);
-    if (!exitSuccess) return null;
-
-    // message unsubscribe
-    await chatOutCommon.sendTopicUnSubscribe(topicName);
-
-    // schema refresh
-    TopicSchema? exists = await queryByTopic(topicName);
-    bool setSuccess = await setJoined(exists?.id, false, notify: true);
-    if (setSuccess) exists?.joined = false;
-
-    // DB delete
-    if (deleteDB) await delete(exists?.id, notify: true);
-    if (deleteDB) await subscriberCommon.deleteByTopic(topicName);
-
-    await Future.delayed(Duration(seconds: 3));
-    return exists;
-  }
-
-  Future<bool> _clientUnsubscribe(String? topicName, {double fee = 0, int? permissionPage}) async {
-    if (topicName == null || topicName.isEmpty) return false;
-    String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
-
-    bool success;
-    try {
-      String? topicHash = await clientCommon.client?.unsubscribe(
-        topic: genTopicHash(topicName),
-        identifier: identifier,
-        fee: fee.toString(),
-      );
-      if (topicHash != null && topicHash.isNotEmpty) {
-        logger.d("$TAG - _clientUnsubscribe - success - topicHash:$topicHash");
-      } else {
-        logger.e("$TAG - _clientUnsubscribe - fail - topicHash:$topicHash");
-      }
-      success = (topicHash != null) && (topicHash.isNotEmpty);
-    } catch (e) {
-      if (e.toString().contains('duplicate subscription exist in block') || e.toString().contains('can not append tx to txpool')) {
-        success = true;
-      } else {
-        success = false;
-      }
+    // append_permPage
+    if (append.permPage != appendPermPage) {
+      bool success = await subscriberCommon.setPermPage(append.id, appendPermPage, notify: true);
+      if (success) append.permPage = appendPermPage;
     }
-    return success;
+
+    // old meta
+    List<Map<String, String>> acceptList = meta['accept'] ?? [];
+    List<Map<String, String>> rejectList = meta['reject'] ?? [];
+    if (append.status == SubscriberStatus.InvitedSend || append.status == SubscriberStatus.InvitedReceipt || append.status == SubscriberStatus.Subscribed) {
+      int findIndex = -1;
+      rejectList.asMap().forEach((key, value) {
+        if (value.toString().contains(append.clientAddress)) {
+          findIndex = key;
+        }
+      });
+      if (findIndex >= 0) {
+        rejectList.removeAt(findIndex);
+      }
+      acceptList.add({'addr': append.clientAddress});
+    } else {
+      int findIndex = -1;
+      acceptList.asMap().forEach((key, value) {
+        if (value.toString().contains(append.clientAddress)) {
+          findIndex = key;
+        }
+      });
+      if (findIndex >= 0) {
+        acceptList.removeAt(findIndex);
+      }
+      rejectList.add({'addr': append.clientAddress});
+    }
+
+    // new meta
+    meta['accept'] = acceptList;
+    meta['reject'] = rejectList;
+
+    logger.d("$TAG - _buildNewMeta - meta:${meta.toString()}");
+    return meta;
   }
 
   /// ***********************************************************************************************************
@@ -409,10 +441,10 @@ class TopicCommon with Tag {
     if (topicName == null || topicName.isEmpty) return false;
     TopicSchema? exists = await queryByTopic(topicName);
     int createAt = exists?.createAt ?? DateTime.now().millisecondsSinceEpoch;
-    if (exists != null && (DateTime.now().millisecondsSinceEpoch - createAt).abs() < 1000 * 60) {
+    if (exists != null && (DateTime.now().millisecondsSinceEpoch - createAt).abs() < Settings.txPoolDelayMs) {
       return exists.joined; // maybe in txPool
     }
-    int expireHeight = await _getExpireAt(topicName, clientAddress);
+    int expireHeight = await _getExpireAt(exists?.topicName, clientAddress);
     if (expireHeight <= 0) {
       logger.d("$TAG - isJoined - expireHeight <= 0 - topicName:$topicName - clientAddress:$clientAddress");
       return false;
@@ -425,22 +457,89 @@ class TopicCommon with Tag {
     return expireHeight >= globalHeight;
   }
 
-  // caller = private + owner TODO:GG 别人调用会有返回吗？
+  // caller = private + owner TODO:GG 私有群里的别人调用会有返回吗
   Future refreshSubscribersByOwner(String? topicName, {bool allPermPage = false, int permPage = 0, int? maxPage}) async {
     if (topicName == null || topicName.isEmpty) return;
+
+    // meta
     Map<String, dynamic> meta = await _getMeta(topicName, permPage);
     maxPage = maxPage ?? await subscriberCommon.queryMaxPermPageByTopic(topicName);
-    await subscriberCommon.refreshSubscribersByMeta(topicName, meta, permPage: permPage);
-    if (allPermPage && permPage <= maxPage) {
-      return refreshSubscribersByOwner(topicName, allPermPage: true, permPage: permPage++, maxPage: maxPage);
+    List<dynamic> accepts = meta["accept"] ?? [];
+    List<dynamic> rejects = meta["reject"] ?? [];
+    if (accepts.isEmpty && rejects.isEmpty) {
+      logger.w("$TAG - refreshSubscribersByMeta - meta is null - meta:$meta");
+      return;
+    }
+
+    // accept
+    List<Future> futures = [];
+    for (dynamic accept in accepts) {
+      if (accept is Map) {
+        if (accept.isNotEmpty == true) {
+          String? address = accept["addr"];
+          if (address == null || address.isEmpty || address.length < 64 || address.contains(".__permission__.")) {
+            logger.w("$TAG - refreshSubscribersByMeta - accept address is wrong - accept:$accept");
+            continue;
+          }
+          futures.add(subscriberCommon.queryByTopicChatId(topicName, address).then((value) {
+            if ((value?.status ?? SubscriberStatus.None) < SubscriberStatus.InvitedReceipt) {
+              return subscriberCommon.onInvitedReceipt(topicName, address, permPage: permPage);
+            } else if (value?.permPage != permPage) {
+              return subscriberCommon.setPermPage(value?.id, permPage, notify: true);
+            }
+          }));
+        } else {
+          logger.w("$TAG - refreshSubscribersByMeta - accept is empty - accept:$accept");
+        }
+      } else if (accept is String) {
+        if (accept.trim() == "*") {
+          logger.i("$TAG - refreshSubscribersByMeta - accept all - accept:$accept");
+          futures.add(subscriberCommon.setStatusAndPermPageByTopic(topicName, SubscriberStatus.Subscribed, null));
+          break;
+        } else {
+          logger.w("$TAG - refreshSubscribersByMeta - accept content error - accept:$accept");
+        }
+      } else {
+        logger.w("$TAG - refreshSubscribersByMeta - accept type error - accept:$accept");
+      }
+    }
+
+    // reject
+    for (dynamic reject in rejects) {
+      if (reject is Map) {
+        if (reject.isNotEmpty == true) {
+          String? address = reject["addr"];
+          if (address == null || address.isEmpty || address.length < 64 || address.contains(".__permission__.")) {
+            logger.w("$TAG - refreshSubscribersByMeta - reject address is wrong - reject:$reject");
+            continue;
+          }
+          futures.add(subscriberCommon.queryByTopicChatId(topicName, address).then((value) {
+            if (value?.status == null || value?.status != SubscriberStatus.Unsubscribed) {
+              return subscriberCommon.onUnsubscribe(topicName, address, permPage: permPage);
+            } else if (value?.permPage != permPage) {
+              return subscriberCommon.setPermPage(value?.id, permPage, notify: true);
+            }
+          }));
+        } else {
+          logger.w("$TAG - refreshSubscribersByMeta - reject is empty - reject:$reject");
+        }
+      } else {
+        logger.w("$TAG - refreshSubscribersByMeta - reject type error - reject:$reject");
+      }
+    }
+    await Future.wait(futures);
+
+    // loop
+    if (allPermPage && ++permPage <= maxPage) {
+      return refreshSubscribersByOwner(topicName, allPermPage: true, permPage: permPage, maxPage: maxPage);
     }
     return;
   }
 
-  Future<int> _getExpireAt(String? topicName, String? clientAddress) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return 0;
+  Future<int> _getExpireAt(String? reallyTopicName, String? clientAddress) async {
+    if (reallyTopicName == null || reallyTopicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return 0;
     String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
-    Map<String, dynamic> result = await _clientGetSubscription(topicName, pubKey);
+    Map<String, dynamic> result = await _clientGetSubscription(reallyTopicName, pubKey);
     String? expiresAt = result['expiresAt']?.toString() ?? "0";
     return int.tryParse(expiresAt) ?? 0;
   }

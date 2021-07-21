@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/storages/subscriber.dart';
@@ -53,27 +54,15 @@ class SubscriberCommon with Tag {
 
     // delete DB data
     for (SubscriberSchema dbItem in dbSubscribers) {
-      // delete wrong subscriber
-      if (dbItem.clientAddress.contains('.__permission__.')) {
-        futures.add(queryByTopicChatId(topicName, dbItem.clientAddress).then((value) {
-          if (value == null) return Future.value(null);
-          logger.i("$TAG - refreshSubscribers - dbSub address contains permission - dbSub:$dbItem");
-          return delete(value.id, notify: true);
-        }));
-        continue;
-      }
-      // filter not in txPool
-      if (dbItem.updateAt != null && dbItem.updateAt! >= DateTime.now().subtract(Duration(seconds: 30)).millisecondsSinceEpoch) {
-        logger.i("$TAG - refreshSubscribers - dbSub update just now - dbSub:$dbItem");
+      // filter in txPool
+      int createAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
+      if ((DateTime.now().millisecondsSinceEpoch - createAt).abs() < Settings.txPoolDelayMs) {
+        logger.i("$TAG - refreshSubscribers - dbSub update just now, maybe in tx pool - dbSub:$dbItem");
         continue;
       }
       // different with node in DB
       SubscriberSchema? findSubscriber;
       for (SubscriberSchema nodeItem in nodeSubscribers) {
-        if (nodeItem.clientAddress.contains('.__permission__.')) {
-          logger.d("$TAG - refreshSubscribers - dbSub handle later - dbSub:$nodeItem");
-          continue;
-        }
         if (dbItem.clientAddress == nodeItem.clientAddress) {
           findSubscriber = nodeItem;
           break;
@@ -83,7 +72,7 @@ class SubscriberCommon with Tag {
         logger.i("$TAG - refreshSubscribers - dbSub deleted because node empty - dbSub:$dbItem");
         futures.add(delete(dbItem.id, notify: true));
       } else {
-        if (dbItem.status != findSubscriber.status) {
+        if ((dbItem.status ?? SubscriberStatus.None) < (findSubscriber.status ?? SubscriberStatus.None)) {
           logger.i("$TAG - refreshSubscribers - dbSub set status sync node - dbSub:$dbItem - nodeSub:$findSubscriber");
           futures.add(setStatus(dbItem.id, findSubscriber.status, notify: true));
         }
@@ -92,16 +81,6 @@ class SubscriberCommon with Tag {
 
     // insert node data
     for (SubscriberSchema nodeItem in nodeSubscribers) {
-      // permission
-      if (nodeItem.clientAddress.contains('.__permission__.')) {
-        if (nodeItem.data == null || nodeItem.data!.isEmpty) {
-          logger.w("$TAG - refreshSubscribers - nodeSub temp_meta is null - nodeSub:$nodeItem");
-          continue;
-        }
-        futures.add(refreshSubscribersByMeta(topicName, nodeItem.data, permPage: nodeItem.permPage ?? 0)); // TODO:GG 注意一下
-        continue;
-      }
-
       // different with DB in node
       SubscriberSchema? findSubscriber;
       for (SubscriberSchema dbItem in dbSubscribers) {
@@ -129,9 +108,6 @@ class SubscriberCommon with Tag {
       count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
     } else {
       count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
-      // TODO:GG 到底准不准?
-      int count2 = await this.queryCountByTopic(topicName);
-      logger.w("$TAG - getSubscribersCount - node:$count - DB:$count2");
     }
     return count;
   }
@@ -159,20 +135,34 @@ class SubscriberCommon with Tag {
 
       results?.forEach((key, value) {
         if (key.contains('.__permission__.')) {
+          // permPage
           String prefix = key.split("__.__permission__.")[0];
           String permIndex = prefix.split("__")[prefix.split("__").length - 1];
           int permPage = int.tryParse(permIndex) ?? 0;
-          SubscriberSchema? item = SubscriberSchema.create(topicName, key, SubscriberStatus.None);
-          item?.permPage = permPage < 0 ? 0 : permPage;
-          item?.data = jsonFormat(value);
-          if (item != null) subscribers.add(item);
+          // meta (same with subscription meta)
+          Map<String, dynamic>? meta = jsonFormat(value);
+          List<Map<String, String>> acceptList = meta?['accept'] ?? [];
+          acceptList.forEach((element) {
+            if (element is Map) {
+              SubscriberSchema? item = SubscriberSchema.create(topicName, element["addr"], SubscriberStatus.InvitedReceipt);
+              item?.permPage = permPage < 0 ? 0 : permPage;
+              if (item != null) subscribers.add(item);
+            } else {
+              logger.w("$TAG - _clientGetSubscribers - accept type error - accept:$element");
+            }
+          });
+          List<Map<String, String>> rejectList = meta?['reject'] ?? [];
+          rejectList.forEach((element) {
+            if (element is Map) {
+              SubscriberSchema? item = SubscriberSchema.create(topicName, element["addr"], SubscriberStatus.Unsubscribed);
+              item?.permPage = permPage < 0 ? 0 : permPage;
+              if (item != null) subscribers.add(item);
+            } else {
+              logger.w("$TAG - _clientGetSubscribers - reject type error - accept:$element");
+            }
+          });
         } else {
-          SubscriberSchema? item;
-          if (meta) {
-            item = SubscriberSchema.create(topicName, key, SubscriberStatus.Subscribed);
-          } else {
-            item = SubscriberSchema.create(topicName, key, SubscriberStatus.Subscribed);
-          }
+          SubscriberSchema? item = SubscriberSchema.create(topicName, key, SubscriberStatus.Subscribed);
           if (item != null) subscribers.add(item);
         }
       });
@@ -290,125 +280,6 @@ class SubscriberCommon with Tag {
     // delete
     bool success = await delete(subscriber.id, notify: true);
     return success ? subscriber : null;
-  }
-
-  /// ***********************************************************************************************************
-  /// ************************************************ permission ***********************************************
-  /// ***********************************************************************************************************
-
-  // caller = everyone, meta = subscription.meta(owner) / subscribers[x](everyone)  TODO:GG 源有什么不同
-  Future refreshSubscribersByMeta(String? topicName, Map<String, dynamic>? meta, {int permPage = 0}) {
-    if (topicName == null || topicName.isEmpty || meta == null || meta.isEmpty) return Future.value(null);
-    List<Future> futures = [];
-
-    List<dynamic> accepts = meta["accept"] ?? [];
-    List<dynamic> rejects = meta["reject"] ?? [];
-    if (accepts.isEmpty && rejects.isEmpty) {
-      logger.w("$TAG - refreshSubscribersByMeta - meta is null - meta:$meta");
-      return Future.value(null);
-    }
-
-    // accept
-    for (dynamic accept in accepts) {
-      if (accept is Map<String, String>) {
-        if (accept.isNotEmpty == true) {
-          String? address = accept["addr"];
-          if (address == null || address.isEmpty || address.length < 64 || address.contains(".__permission__.")) {
-            logger.w("$TAG - refreshSubscribersByMeta - accept address is wrong - accept:$accept");
-            continue;
-          }
-          futures.add(queryByTopicChatId(topicName, address).then((value) {
-            if (value?.isSubscribed != true) {
-              return onSubscribe(topicName, address, permPage: permPage);
-            } else if (value?.permPage != permPage) {
-              return setPermPage(value?.id, permPage, notify: true);
-            }
-          }));
-        } else {
-          logger.w("$TAG - refreshSubscribersByMeta - accept is empty - accept:$accept");
-        }
-      } else if (accept is String) {
-        if (accept.trim() == "*") {
-          logger.i("$TAG - refreshSubscribersByMeta - accept all - accept:$accept");
-          futures.add(setStatusAndPermPageByTopic(topicName, SubscriberStatus.Subscribed, null));
-          break;
-        } else {
-          logger.w("$TAG - refreshSubscribersByMeta - accept content error - accept:$accept");
-        }
-      } else {
-        logger.w("$TAG - refreshSubscribersByMeta - accept type error - accept:$accept");
-      }
-    }
-
-    // reject
-    for (dynamic reject in rejects) {
-      if (reject is Map<String, String>) {
-        if (reject.isNotEmpty == true) {
-          String? address = reject["addr"];
-          if (address == null || address.isEmpty || address.length < 64 || address.contains(".__permission__.")) {
-            logger.w("$TAG - refreshSubscribersByMeta - reject address is wrong - reject:$reject");
-            continue;
-          }
-          queryByTopicChatId(topicName, address).then((value) {
-            if (value?.isSubscribed == true) {
-              return onUnsubscribe(topicName, address, permPage: permPage);
-            } else if (value?.permPage != permPage) {
-              return setPermPage(value?.id, permPage, notify: true);
-            }
-          });
-        } else {
-          logger.w("$TAG - refreshSubscribersByMeta - reject is empty - reject:$reject");
-        }
-      } else {
-        logger.w("$TAG - refreshSubscribersByMeta - reject type error - reject:$reject");
-      }
-    }
-
-    return Future.wait(futures);
-  }
-
-  // caller = everyone
-  Future<Map<String, dynamic>> createMetaByDB(String? topicName, SubscriberSchema? append, {int? appendPermPage}) async {
-    if (topicName == null || topicName.isEmpty || append == null) return Map();
-    // appendPermPage
-    if (appendPermPage == null) {
-      appendPermPage = await queryMaxPermPageByTopic(topicName);
-      logger.d("$TAG - createMetaByDB - get max perm page - appendPermPage:$appendPermPage");
-    }
-
-    // me
-    if (append.permPage != appendPermPage) {
-      bool success = await setPermPage(append.id, appendPermPage, notify: true);
-      if (success) append.permPage = appendPermPage;
-    }
-
-    // subscribers
-    List<SubscriberSchema> subscribers = await queryListByTopicPerm(topicName, appendPermPage);
-    List<SubscriberSchema> finds = subscribers.where((element) => element.clientAddress == append.clientAddress).toList();
-    if (finds.isEmpty) {
-      logger.d("$TAG - getMetaByDB - exist subscriber - topicName:$topicName - subscriber:$append");
-      subscribers.add(append);
-    } else {
-      logger.d("$TAG - getMetaByDB - new subscriber - topicName:$topicName - subscriber:$append");
-    }
-
-    // meta
-    List<Map<String, String>> acceptList = [];
-    List<Map<String, String>> rejectList = [];
-    subscribers.forEach((element) {
-      int? _status = element.status;
-      if (_status == SubscriberStatus.InvitedSend || _status == SubscriberStatus.InvitedReceipt || _status == SubscriberStatus.Subscribed) {
-        acceptList.add({'addr': element.clientAddress});
-      } else {
-        rejectList.add({'addr': element.clientAddress});
-      }
-    });
-    Map<String, dynamic> meta = Map();
-    meta['accept'] = acceptList;
-    meta['reject'] = rejectList;
-
-    logger.d("$TAG - getMetaByDB - meta:${meta.toString()}");
-    return meta;
   }
 
   /// ***********************************************************************************************************
