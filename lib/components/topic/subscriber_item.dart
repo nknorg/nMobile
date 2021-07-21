@@ -184,8 +184,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     }
     String marksText = marks.isNotEmpty ? "(${marks.join(", ")})" : " ";
 
-    bool successColor = status == SubscriberStatus.InvitedSend || status == SubscriberStatus.InvitedReceipt || status == SubscriberStatus.Subscribed;
-    bool fallColor = status == SubscriberStatus.Unsubscribed;
+    Color textColor = !(topic?.isPrivate == true) ? application.theme.successColor : ((status == SubscriberStatus.InvitedSend || status == SubscriberStatus.InvitedReceipt || status == SubscriberStatus.Subscribed) ? application.theme.successColor : ((status == SubscriberStatus.Unsubscribed) ? application.theme.fallColor : application.theme.fontColor2));
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -196,7 +195,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
           child: Label(
             marksText,
             type: LabelType.bodySmall,
-            color: successColor ? application.theme.successColor : (fallColor ? application.theme.fallColor : application.theme.fontColor2),
+            color: textColor,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -206,8 +205,9 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
 
   Widget _getTailAction(TopicSchema? topic, SubscriberSchema subscriber, ContactSchema? contact) {
     if (topic == null || !topic.isPrivate) return SizedBox.shrink();
-    if (!topic.isOwner(clientCommon.address)) return SizedBox.shrink();
+    if (clientCommon.address == null || clientCommon.address!.isEmpty) return SizedBox.shrink();
     if (subscriber.clientAddress == clientCommon.address) return SizedBox.shrink();
+    if (!topic.isOwner(clientCommon.address)) return SizedBox.shrink();
 
     return InkWell(
       child: Padding(

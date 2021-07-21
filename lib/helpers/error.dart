@@ -7,6 +7,10 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 
 catchGlobalError(Function? callback, {Function(Object error, StackTrace stack)? onZoneError}) {
+  if (!Global.isRelease) {
+    callback?.call();
+    return;
+  }
   // zone
   runZonedGuarded(() async {
     await callback?.call();
