@@ -36,10 +36,6 @@ class SubscriberSchema {
     this.data,
   });
 
-  bool get isSubscribed {
-    return (status ?? SubscriberStatus.None) == SubscriberStatus.Subscribed;
-  }
-
   bool get canBeKick {
     int _status = (status ?? SubscriberStatus.None);
     return _status == SubscriberStatus.InvitedSend || _status == SubscriberStatus.InvitedReceipt || _status == SubscriberStatus.Subscribed;

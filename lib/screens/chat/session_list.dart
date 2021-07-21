@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -30,6 +31,7 @@ class ChatSessionListLayout extends BaseStateFulWidget {
 class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionListLayout> {
   SettingsStorage _settingsStorage = SettingsStorage();
   StreamSubscription? _appLifeChangeSubscription;
+  StreamSubscription? _clientStatusChangeSubscription;
   StreamSubscription? _contactCurrentUpdateSubscription;
   StreamSubscription? _sessionAddSubscription;
   StreamSubscription? _sessionDeleteSubscription;
@@ -50,7 +52,6 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     bool sameUser = _current?.id == widget.current.id;
     _current = widget.current;
     if (!sameUser) {
-      topicCommon.checkAllTopics();
       _getDataSessions(true);
     }
   }
@@ -61,7 +62,12 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
-      if (states[1] == AppLifecycleState.resumed) {
+      // do something
+    });
+
+    // client
+    _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
+      if (status == ClientConnectStatus.connected) {
         topicCommon.checkAllTopics();
       }
     });
@@ -144,6 +150,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   @override
   void dispose() {
     _appLifeChangeSubscription?.cancel();
+    _clientStatusChangeSubscription?.cancel();
     _contactCurrentUpdateSubscription?.cancel();
     _sessionAddSubscription?.cancel();
     _sessionDeleteSubscription?.cancel();

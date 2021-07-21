@@ -55,7 +55,7 @@ class ChatOutCommon with Tag {
       handleError(e);
       logger.w("$TAG - sendReceipt - fail - tryCount:$tryCount - received:$received");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendReceipt(received, tryCount: tryCount++);
+        return sendReceipt(received, tryCount: ++tryCount);
       });
     }
   }
@@ -73,7 +73,7 @@ class ChatOutCommon with Tag {
       handleError(e);
       logger.w("$TAG - sendContactRequest - fail - tryCount:$tryCount - requestType:$requestType - target:$target");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendContactRequest(target, requestType, tryCount: tryCount++);
+        return sendContactRequest(target, requestType, tryCount: ++tryCount);
       });
     }
   }
@@ -97,7 +97,7 @@ class ChatOutCommon with Tag {
       handleError(e);
       logger.w("$TAG - sendContactResponse - fail - tryCount:$tryCount - requestType:$requestType");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendContactResponse(target, requestType, me: _me, tryCount: tryCount++);
+        return sendContactResponse(target, requestType, me: _me, tryCount: ++tryCount);
       });
     }
   }
@@ -122,7 +122,7 @@ class ChatOutCommon with Tag {
       handleError(e);
       logger.w("$TAG - sendContactOptionsBurn - fail - tryCount:$tryCount - clientAddress:$clientAddress - deleteSeconds:$deleteSeconds");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendContactOptionsBurn(clientAddress, deleteSeconds, updateAt, tryCount: tryCount++);
+        return sendContactOptionsBurn(clientAddress, deleteSeconds, updateAt, tryCount: ++tryCount);
       });
     }
   }
@@ -146,7 +146,7 @@ class ChatOutCommon with Tag {
       handleError(e);
       logger.w("$TAG - sendContactOptionsToken - fail - tryCount:$tryCount - clientAddress:$clientAddress - deviceToken:$deviceToken");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendContactOptionsToken(clientAddress, deviceToken, tryCount: tryCount++);
+        return sendContactOptionsToken(clientAddress, deviceToken, tryCount: ++tryCount);
       });
     }
   }
@@ -163,7 +163,7 @@ class ChatOutCommon with Tag {
       handleError(e);
       logger.w("$TAG - sendDeviceRequest - fail - tryCount:$tryCount - clientAddress:$clientAddress");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendDeviceRequest(clientAddress, tryCount: tryCount++);
+        return sendDeviceRequest(clientAddress, tryCount: ++tryCount);
       });
     }
   }
@@ -180,7 +180,7 @@ class ChatOutCommon with Tag {
       handleError(e);
       logger.w("$TAG - sendDeviceInfo - fail - tryCount:$tryCount - clientAddress:$clientAddress");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendDeviceInfo(clientAddress, tryCount: tryCount++);
+        return sendDeviceInfo(clientAddress, tryCount: ++tryCount);
       });
     }
   }
@@ -273,7 +273,7 @@ class ChatOutCommon with Tag {
       handleError(e);
       logger.w("$TAG - sendPiece - fail - tryCount:$tryCount - schema:$schema");
       return await Future.delayed(Duration(seconds: 2), () {
-        return sendPiece(schema, tryCount: tryCount++);
+        return sendPiece(schema, tryCount: ++tryCount);
       });
     }
   }
@@ -315,7 +315,7 @@ class ChatOutCommon with Tag {
       handleError(e);
       logger.w("$TAG - sendTopicSubscribe - fail - tryCount:$tryCount - topic:$topic");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendTopicSubscribe(topic, tryCount: tryCount++);
+        return sendTopicSubscribe(topic, tryCount: ++tryCount);
       });
     }
   }
@@ -339,7 +339,7 @@ class ChatOutCommon with Tag {
       handleError(e);
       logger.w("$TAG - sendTopicUnSubscribe - fail - tryCount:$tryCount - topic:$topic");
       await Future.delayed(Duration(seconds: 2), () {
-        return sendTopicUnSubscribe(topic, tryCount: tryCount++);
+        return sendTopicUnSubscribe(topic, tryCount: ++tryCount);
       });
     }
   }
@@ -491,7 +491,7 @@ class ChatOutCommon with Tag {
     await SendPush.send(contact.deviceToken!, title, content);
   }
 
-  // TODO:GG topic???
+  // TODO:GG topic ???
   Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message, DeviceInfoSchema? deviceInfo) async {
     if (!deviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) return null;
     List results = await _convert2Pieces(message);
