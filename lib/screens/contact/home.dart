@@ -134,8 +134,8 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       _allTopics.insert(0, schema);
       _searchAction(_searchController.text);
     });
-    _deleteTopicSubscription = topicCommon.deleteStream.listen((int topicId) {
-      _allTopics = _allTopics.where((element) => element.id != topicId).toList();
+    _deleteTopicSubscription = topicCommon.deleteStream.listen((String topic) {
+      _allTopics = _allTopics.where((element) => element.topic != topic).toList();
       _searchAction(_searchController.text);
     });
     _updateContactSubscription = topicCommon.updateStream.listen((TopicSchema event) {

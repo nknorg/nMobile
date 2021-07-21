@@ -29,10 +29,12 @@ class ChatSessionListLayout extends BaseStateFulWidget {
 
 class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionListLayout> {
   SettingsStorage _settingsStorage = SettingsStorage();
+  StreamSubscription? _appLifeChangeSubscription;
   StreamSubscription? _contactCurrentUpdateSubscription;
   StreamSubscription? _sessionAddSubscription;
   StreamSubscription? _sessionDeleteSubscription;
   StreamSubscription? _sessionUpdateSubscription;
+  StreamSubscription? _onTopicDeleteStreamSubscription;
   StreamSubscription? _onMessageDeleteStreamSubscription;
 
   ContactSchema? _current;
@@ -48,6 +50,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     bool sameUser = _current?.id == widget.current.id;
     _current = widget.current;
     if (!sameUser) {
+      topicCommon.checkAllTopics();
       _getDataSessions(true);
     }
   }
@@ -55,6 +58,13 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   @override
   void initState() {
     super.initState();
+
+    // appLife
+    _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
+      if (states[1] == AppLifecycleState.resumed) {
+        topicCommon.checkAllTopics();
+      }
+    });
 
     // session
     _sessionAddSubscription = sessionCommon.addStream.listen((SessionSchema event) {
@@ -67,8 +77,20 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       });
     });
     _sessionUpdateSubscription = sessionCommon.updateStream.listen((SessionSchema event) {
-      _sessionList = _sessionList.map((SessionSchema e) => e.targetId != event.targetId ? e : event).toList();
+      var finds = _sessionList.where((element) => element.targetId == event.targetId).toList();
+      if (finds.isEmpty) {
+        _sessionList.insert(0, event);
+      } else {
+        _sessionList = _sessionList.map((SessionSchema e) => e.targetId != event.targetId ? e : event).toList();
+      }
       _sortMessages();
+    });
+
+    // topic
+    _onTopicDeleteStreamSubscription = topicCommon.deleteStream.listen((String topic) {
+      setState(() {
+        _sessionList = _sessionList.where((element) => element.targetId != topic).toList();
+      });
     });
 
     // message
@@ -121,10 +143,12 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
   @override
   void dispose() {
+    _appLifeChangeSubscription?.cancel();
     _contactCurrentUpdateSubscription?.cancel();
     _sessionAddSubscription?.cancel();
     _sessionDeleteSubscription?.cancel();
     _sessionUpdateSubscription?.cancel();
+    _onTopicDeleteStreamSubscription?.cancel();
     _onMessageDeleteStreamSubscription?.cancel();
     super.dispose();
   }
