@@ -277,9 +277,9 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
             type: LabelType.h4,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            color: application.theme.strongColor,
+            color: application.theme.backgroundColor5,
           ),
-          backgroundColor: application.theme.backgroundLightColor,
+          backgroundColor: application.theme.backgroundColor3,
           width: double.infinity,
         ),
       );
