@@ -50,7 +50,7 @@ class ChatMessagesScreen extends BaseStateFulWidget {
 
 class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScreen> with Tag {
   TopicSchema? _topic;
-  bool? _isJoined; // TODO:GG topic
+  bool? _isJoined;
   ContactSchema? _contact;
 
   StreamController<Map<String, String>> _onInputChangeController = StreamController<Map<String, String>>.broadcast();
@@ -58,6 +58,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   Stream<Map<String, String>> get _onInputChangeStream => _onInputChangeController.stream; // .distinct((prev, next) => prev == next);
 
   StreamSubscription? _onTopicUpdateStreamSubscription;
+  StreamSubscription? _onTopicDeleteStreamSubscription;
   StreamSubscription? _onContactUpdateStreamSubscription;
 
   StreamSubscription? _onMessageReceiveStreamSubscription;
@@ -97,6 +98,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         _topic = event;
       });
       _refreshTopicJoined();
+    });
+    _onTopicDeleteStreamSubscription = topicCommon.deleteStream.where((event) => event == _topic?.topic).listen((String topic) {
+      Navigator.of(context).pop();
     });
 
     // contact
@@ -138,17 +142,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     // messages
     _getDataMessages(true);
 
+    // topic
+    _refreshTopicJoined(); // await
+
     // read
     sessionCommon.setUnReadCount(_topic?.topic ?? _contact?.clientAddress, 0, notify: true); // await
-
-    // topic
-    topicCommon.checkExpireAndSubscribe(_topic?.topic, subscribeFirst: false, emptyAdd: false).then((value) {
-      if (value == null) return Future.value(null);
-      if (value.isOwner(clientCommon.address)) {
-        return topicCommon.refreshSubscribersByOwner(value.topic, allPermPage: true);
-      }
-    });
-    _refreshTopicJoined(); // await
   }
 
   @override
@@ -159,6 +157,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     audioHelper.recordRelease(); // await
 
     _onTopicUpdateStreamSubscription?.cancel();
+    _onTopicDeleteStreamSubscription?.cancel();
     _onContactUpdateStreamSubscription?.cancel();
 
     _onInputChangeController.close();
@@ -408,6 +407,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
               Divider(height: 1, color: _theme.backgroundColor2),
               ChatSendBar(
                 targetId: _topic?.topic ?? _contact?.clientAddress,
+                enable: _isJoined,
                 onMenuPressed: () {
                   _toggleBottomMenu();
                 },
