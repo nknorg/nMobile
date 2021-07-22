@@ -69,7 +69,7 @@ class SubscriberCommon with Tag {
         }
       }
       if (findSubscriber == null) {
-        logger.i("$TAG - refreshSubscribers - dbSub deleted because node empty - dbSub:$dbItem");
+        logger.i("$TAG - refreshSubscribers - dbSub delete because node no find - dbSub:$dbItem");
         futures.add(delete(dbItem.id, notify: true));
       } else {
         if ((dbItem.status ?? SubscriberStatus.None) < (findSubscriber.status ?? SubscriberStatus.None)) {
@@ -90,7 +90,7 @@ class SubscriberCommon with Tag {
         }
       }
       if (findSubscriber == null) {
-        logger.i("$TAG - refreshSubscribers - nodeSub added because DB empty - nodeSub:$nodeItem");
+        logger.i("$TAG - refreshSubscribers - nodeSub add because DB no find - nodeSub:$nodeItem");
         futures.add(add(SubscriberSchema.create(topicName, nodeItem.clientAddress, nodeItem.status), notify: true));
       }
     }
@@ -101,10 +101,8 @@ class SubscriberCommon with Tag {
   // caller = everyone
   Future<int> getSubscribersCount(String? topicName, {bool? isPrivate, Uint8List? subscriberHashPrefix}) async {
     if (topicName == null || topicName.isEmpty) return 0;
-    bool isPublic = !(isPrivate ?? isPrivateTopicReg(topicName));
-
     int count = 0;
-    if (isPublic) {
+    if (isPrivate ?? isPrivateTopicReg(topicName)) {
       count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
     } else {
       count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
@@ -141,17 +139,27 @@ class SubscriberCommon with Tag {
           int permPage = int.tryParse(permIndex) ?? 0;
           // meta (same with subscription meta)
           Map<String, dynamic>? meta = jsonFormat(value);
-          List<Map<String, String>> acceptList = meta?['accept'] ?? [];
+          bool _acceptAll = false;
+          // accept
+          List<dynamic> acceptList = meta?['accept'] ?? [];
           acceptList.forEach((element) {
             if (element is Map) {
               SubscriberSchema? item = SubscriberSchema.create(topicName, element["addr"], SubscriberStatus.InvitedReceipt);
               item?.permPage = permPage < 0 ? 0 : permPage;
               if (item != null) subscribers.add(item);
+            } else if (element is String) {
+              if (element.trim() == "*") {
+                logger.i("$TAG - _clientGetSubscribers - accept all - accept:$element");
+                _acceptAll = true;
+              } else {
+                logger.w("$TAG - _clientGetSubscribers - accept content error - accept:$element");
+              }
             } else {
               logger.w("$TAG - _clientGetSubscribers - accept type error - accept:$element");
             }
           });
-          List<Map<String, String>> rejectList = meta?['reject'] ?? [];
+          // reject
+          List<dynamic> rejectList = meta?['reject'] ?? [];
           rejectList.forEach((element) {
             if (element is Map) {
               SubscriberSchema? item = SubscriberSchema.create(topicName, element["addr"], SubscriberStatus.Unsubscribed);
@@ -161,6 +169,13 @@ class SubscriberCommon with Tag {
               logger.w("$TAG - _clientGetSubscribers - reject type error - accept:$element");
             }
           });
+          // accept all
+          if (_acceptAll) {
+            subscribers = subscribers.map((e) {
+              e.status = SubscriberStatus.Subscribed;
+              return e;
+            }).toList();
+          }
         } else {
           SubscriberSchema? item = SubscriberSchema.create(topicName, key, SubscriberStatus.Subscribed);
           if (item != null) subscribers.add(item);
@@ -193,7 +208,7 @@ class SubscriberCommon with Tag {
   /// ***********************************************************************************************************
 
   // status: InvitedSend (caller = owner)
-  Future<SubscriberSchema?> onInvitedSend(String? topicName, String? clientAddress, {int? permPage}) async {
+  Future<SubscriberSchema?> onInvitedSend(String? topicName, String? clientAddress, int? permPage) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
     SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
@@ -258,8 +273,8 @@ class SubscriberCommon with Tag {
     return subscriber;
   }
 
-  // status: Unsubscribed (caller = other)
-  Future<SubscriberSchema?> onUnsubscribe(String? topicName, String? clientAddress, {int? permPage}) async {
+  // status: Unsubscribed (caller = self + other)
+  Future<SubscriberSchema?> onUnsubscribe(String? topicName, String? clientAddress) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
     SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
@@ -268,18 +283,24 @@ class SubscriberCommon with Tag {
       return null;
     }
     // status
-    if (subscriber.status != SubscriberStatus.Unsubscribed) {
-      bool success = await setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
-      if (success) subscriber.status = SubscriberStatus.Unsubscribed;
-    }
+    // if (subscriber.status != SubscriberStatus.Unsubscribed) {
+    //   bool success = await setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
+    //   if (success) subscriber.status = SubscriberStatus.Unsubscribed;
+    // }
     // permPage
-    if (subscriber.permPage != permPage && permPage != null) {
-      bool success = await setPermPage(subscriber.id, permPage, notify: true);
-      if (success) subscriber.permPage = permPage;
-    }
+    // if (subscriber.permPage != permPage && permPage != null) {
+    //   bool success = await setPermPage(subscriber.id, permPage, notify: true);
+    //   if (success) subscriber.permPage = permPage;
+    // }
     // delete
     bool success = await delete(subscriber.id, notify: true);
     return success ? subscriber : null;
+  }
+
+  // status: Kick (caller = owner)
+  Future<SubscriberSchema?> onKick(String? topicName, String? clientAddress, {int? permPage}) async {
+    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+    // TODO:GG topic kick
   }
 
   /// ***********************************************************************************************************
