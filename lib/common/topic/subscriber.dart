@@ -75,6 +75,12 @@ class SubscriberCommon with Tag {
         if ((dbItem.status ?? SubscriberStatus.None) < (findSubscriber.status ?? SubscriberStatus.None)) {
           logger.i("$TAG - refreshSubscribers - dbSub set status sync node - dbSub:$dbItem - nodeSub:$findSubscriber");
           futures.add(setStatus(dbItem.id, findSubscriber.status, notify: true));
+        } else if (findSubscriber.status == SubscriberStatus.InvitedReceipt) {
+          logger.i("$TAG - refreshSubscribers - dbSub set receipt sync node - dbSub:$dbItem - nodeSub:$findSubscriber");
+          futures.add(setStatus(dbItem.id, findSubscriber.status, notify: true));
+        } else if (dbItem.permPage != findSubscriber.permPage && findSubscriber.permPage != null) {
+          logger.i("$TAG - refreshSubscribers - dbSub set permPage sync node - dbSub:$dbItem - nodeSub:$findSubscriber");
+          futures.add(setPermPage(dbItem.id, findSubscriber.permPage, notify: true));
         }
       }
     }
@@ -91,7 +97,9 @@ class SubscriberCommon with Tag {
       }
       if (findSubscriber == null) {
         logger.i("$TAG - refreshSubscribers - nodeSub add because DB no find - nodeSub:$nodeItem");
-        futures.add(add(SubscriberSchema.create(topicName, nodeItem.clientAddress, nodeItem.status), notify: true));
+        SubscriberSchema? subscriber = SubscriberSchema.create(topicName, nodeItem.clientAddress, nodeItem.status);
+        subscriber?.permPage = nodeItem.permPage;
+        futures.add(add(subscriber, notify: true));
       }
     }
 
@@ -122,8 +130,10 @@ class SubscriberCommon with Tag {
     Uint8List? subscriberHashPrefix,
   }) async {
     if (topicName == null || topicName.isEmpty) return [];
-    List<SubscriberSchema> subscribers = [];
+    List<SubscriberSchema> list = [];
+
     try {
+      // meta + subscribers
       Map<String, dynamic>? results = await clientCommon.client?.getSubscribers(
         topic: genTopicHash(topicName),
         offset: offset,
@@ -134,22 +144,34 @@ class SubscriberCommon with Tag {
       );
       logger.d("$TAG - _clientGetSubscribers - results:$results");
 
+      // subscribers
+      List<SubscriberSchema> subscribers = [];
       results?.forEach((key, value) {
-        if (key.contains('.__permission__.')) {
+        if (key.isNotEmpty && !key.contains('.__permission__.')) {
+          SubscriberSchema? item = SubscriberSchema.create(topicName, key, SubscriberStatus.None);
+          if (item != null) subscribers.add(item);
+        }
+      });
+      logger.d("$TAG - _clientGetSubscribers - subscribers:$subscribers");
+
+      // meta
+      List<SubscriberSchema> metas = [];
+      bool _acceptAll = false;
+      results?.forEach((key, value) {
+        if (!_acceptAll && key.contains('.__permission__.')) {
           // permPage
           String prefix = key.split("__.__permission__.")[0];
           String permIndex = prefix.split("__")[prefix.split("__").length - 1];
           int permPage = int.tryParse(permIndex) ?? 0;
           // meta (same with subscription meta)
           Map<String, dynamic>? meta = jsonFormat(value);
-          bool _acceptAll = false;
           // accept
           List<dynamic> acceptList = meta?['accept'] ?? [];
           acceptList.forEach((element) {
             if (element is Map) {
               SubscriberSchema? item = SubscriberSchema.create(topicName, element["addr"], SubscriberStatus.InvitedReceipt);
               item?.permPage = permPage < 0 ? 0 : permPage;
-              if (item != null) subscribers.add(item);
+              if (item != null) metas.add(item);
             } else if (element is String) {
               if (element.trim() == "*") {
                 logger.i("$TAG - _clientGetSubscribers - accept all - accept:$element");
@@ -167,30 +189,46 @@ class SubscriberCommon with Tag {
             if (element is Map) {
               SubscriberSchema? item = SubscriberSchema.create(topicName, element["addr"], SubscriberStatus.Unsubscribed);
               item?.permPage = permPage < 0 ? 0 : permPage;
-              if (item != null) subscribers.add(item);
+              if (item != null) metas.add(item);
             } else {
               logger.w("$TAG - _clientGetSubscribers - reject type error - accept:$element");
             }
           });
-          // accept all
-          if (_acceptAll) {
-            subscribers = subscribers.map((e) {
-              e.status = SubscriberStatus.Subscribed;
-              return e;
-            }).toList();
-          }
-        } else if (!meta) {
-          SubscriberSchema? item = SubscriberSchema.create(topicName, key, SubscriberStatus.Subscribed);
-          if (item != null) subscribers.add(item);
-        } else {
-          logger.w("$TAG - _clientGetSubscribers - result wrong - key:$key - value:$value");
         }
       });
-      logger.d("$TAG - _clientGetSubscribers - subscribers:$subscribers");
+      logger.d("$TAG - _clientGetSubscribers - metas:$metas");
+
+      // merge
+      if (_acceptAll) {
+        list = subscribers;
+      } else {
+        for (int i = 0; i < subscribers.length; i++) {
+          var subscriber = subscribers[i];
+          for (int j = 0; j < metas.length; j++) {
+            SubscriberSchema meta = metas[j];
+            if (subscriber.clientAddress.isNotEmpty && subscriber.clientAddress == meta.clientAddress) {
+              logger.d("$TAG - _clientGetSubscribers - sub + meta - meta:$meta");
+              if (meta.status == SubscriberStatus.InvitedReceipt) meta.status = SubscriberStatus.Subscribed;
+              list.add(meta);
+              break;
+            }
+          }
+        }
+        List<SubscriberSchema> noFindMetas = [];
+        for (int i = 0; i < metas.length; i++) {
+          SubscriberSchema meta = metas[i];
+          if (subscribers.where((element) => element.clientAddress.isNotEmpty && element.clientAddress == meta.clientAddress).toList().isEmpty) {
+            logger.d("$TAG - _clientGetSubscribers - no find meta - meta:$meta");
+            noFindMetas.add(meta);
+          }
+        }
+        list.addAll(noFindMetas);
+      }
+      logger.d("$TAG - _clientGetSubscribers - list:$list");
     } catch (e) {
       handleError(e);
     }
-    return subscribers;
+    return list;
   }
 
   Future<int> _clientGetSubscribersCount(String? topicName, {Uint8List? subscriberHashPrefix}) async {
@@ -288,24 +326,32 @@ class SubscriberCommon with Tag {
       return null;
     }
     // status
-    // if (subscriber.status != SubscriberStatus.Unsubscribed) {
-    //   bool success = await setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
-    //   if (success) subscriber.status = SubscriberStatus.Unsubscribed;
-    // }
-    // permPage
-    // if (subscriber.permPage != permPage && permPage != null) {
-    //   bool success = await setPermPage(subscriber.id, permPage, notify: true);
-    //   if (success) subscriber.permPage = permPage;
-    // }
+    if (subscriber.status != SubscriberStatus.Unsubscribed) {
+      bool success = await setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
+      if (success) subscriber.status = SubscriberStatus.Unsubscribed;
+    }
     // delete
     bool success = await delete(subscriber.id, notify: true);
     return success ? subscriber : null;
   }
 
   // status: Kick (caller = owner)
-  Future<SubscriberSchema?> onKick(String? topicName, String? clientAddress, {int? permPage}) async {
+  Future<SubscriberSchema?> onKick(String? topicName, String? clientAddress) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
-    // TODO:GG topic kick
+    // subscriber
+    SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
+    if (subscriber == null) {
+      logger.d("$TAG - onKick - subscriber is null - topicName:$topicName - clientAddress:$clientAddress");
+      return null;
+    }
+    // status
+    if (subscriber.status != SubscriberStatus.Unsubscribed) {
+      bool success = await setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
+      if (success) subscriber.status = SubscriberStatus.Unsubscribed;
+    }
+    // delete
+    bool success = await delete(subscriber.id, notify: true);
+    return success ? subscriber : null;
   }
 
   /// ***********************************************************************************************************

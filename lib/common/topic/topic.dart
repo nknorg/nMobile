@@ -45,7 +45,7 @@ class TopicCommon with Tag {
       await checkExpireAndSubscribe(topic.topic, subscribeFirst: false, emptyAdd: false);
       if (topic.isOwner(clientCommon.address)) {
         // TODO:GG 非群主/公有群能不能call，?能的话和refreshSubscriber有啥区别
-        //  await topicCommon.refreshSubscribersByOwner(topic.topic, allPermPage: true);
+        // await topicCommon.refreshSubscribersByOwner(topic.topic, allPermPage: true);
       }
     });
   }
@@ -134,7 +134,7 @@ class TopicCommon with Tag {
           logger.d("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool - topic:$exists");
         }
       } else {
-        logger.d("$TAG - checkExpireAndSubscribe - DB not expire and node no expire, its OK - topic:$exists");
+        logger.d("$TAG - checkExpireAndSubscribe - OK OK OK OK OK - topic:$exists");
       }
     }
 
@@ -324,8 +324,8 @@ class TopicCommon with Tag {
     // TODO:GG topic need new protocol(event:channelKick)
 
     // subscriber update TODO:GG topic kick
-    // _subscriber = await subscriberCommon.onKick(topicName, clientAddress, permPage: _subscriber.permPage);
-    // if (_subscriber == null) return null;
+    _subscriber = await subscriberCommon.onKick(topicName, clientAddress);
+    if (_subscriber == null) return null;
 
     // client subscribe (meta update)
     int? status = _subscriber.status;
@@ -455,33 +455,31 @@ class TopicCommon with Tag {
   // caller = private + everyone
   Future<int> _findMetaPermissionPage(String? topicName, String? clientAddress) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return -1;
-    int? permPage;
     Completer completer = Completer();
-    if (permPage == null || permPage < 0) {
-      int maxPermPage = await subscriberCommon.queryMaxPermPageByTopic(topicName);
-      for (int i = 0; i <= maxPermPage; i++) {
-        Map<String, dynamic> meta = await _getMeta(topicName, i);
-        // find in accepts
-        List<dynamic> accepts = meta["accept"] ?? [];
-        accepts.forEach((element) {
-          if (permPage == null || permPage! <= 0) {
-            if (element.toString().contains(clientAddress)) {
-              permPage = i;
-              if (!completer.isCompleted) completer.complete();
-            }
+    int? permPage;
+    int maxPermPage = await subscriberCommon.queryMaxPermPageByTopic(topicName);
+    for (int i = 0; i <= maxPermPage; i++) {
+      Map<String, dynamic> meta = await _getMeta(topicName, i);
+      // find in accepts
+      List<dynamic> accepts = meta["accept"] ?? [];
+      accepts.forEach((element) {
+        if (permPage == null || permPage! <= 0) {
+          if (element.toString().contains(clientAddress)) {
+            permPage = i;
+            if (!completer.isCompleted) completer.complete();
           }
-        });
-        // find in rejects
-        List<dynamic> rejects = meta["reject"] ?? [];
-        rejects.forEach((element) {
-          if (permPage == null || permPage! <= 0) {
-            if (element.toString().contains(clientAddress)) {
-              permPage = i;
-              if (!completer.isCompleted) completer.complete();
-            }
+        }
+      });
+      // find in rejects
+      List<dynamic> rejects = meta["reject"] ?? [];
+      rejects.forEach((element) {
+        if (permPage == null || permPage! <= 0) {
+          if (element.toString().contains(clientAddress)) {
+            permPage = i;
+            if (!completer.isCompleted) completer.complete();
           }
-        });
-      }
+        }
+      });
     }
     await completer.future;
     if (permPage != null && permPage! >= 0) {
@@ -520,7 +518,7 @@ class TopicCommon with Tag {
     return expireHeight >= globalHeight;
   }
 
-  // caller = owner
+  // caller = owner TODO:GG 还有用吗
   Future refreshSubscribersByOwner(String? topicName, {bool allPermPage = false, int permPage = 0, int? maxPage}) async {
     if (topicName == null || topicName.isEmpty) return;
 
@@ -614,7 +612,7 @@ class TopicCommon with Tag {
     return int.tryParse(expiresAt) ?? 0;
   }
 
-  // TODO:GG meta只能群主获取？ 有的在txPool中
+  // TODO:GG meta只能群主获取？
   Future<Map<String, dynamic>> _getMeta(String? topicName, int permPage) async {
     if (topicName == null || topicName.isEmpty) return Map();
     String? ownerPubKey = getPubKeyFromTopicOrChatId(topicName);

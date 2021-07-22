@@ -465,7 +465,7 @@ class ChatInCommon with Tag {
     // duplicated
     List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
     if (exists.isNotEmpty) {
-      logger.d("$TAG - _receiveTopicSubscribed - duplicated - schema:$exists");
+      logger.d("$TAG - _receiveTopicUnsubscribe - duplicated - schema:$exists");
       return;
     }
     // subscriber
