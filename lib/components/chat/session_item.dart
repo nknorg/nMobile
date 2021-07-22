@@ -39,25 +39,34 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   MessageSchema? _lastMsg;
   ContactSchema? _topicSender;
 
+  bool loaded = false;
+
   @override
   void onRefreshArguments() {
+    loaded = false;
     if (widget.session.isTopic) {
       if (_topic == null || widget.session.targetId != _topic?.id?.toString()) {
         topicCommon.queryByTopic(widget.session.targetId).then((value) {
           setState(() {
+            loaded = true;
             _topic = value;
             _contact = null;
           });
         });
+      } else {
+        loaded = true;
       }
     } else {
       if (_contact == null || widget.session.targetId != _contact?.id?.toString()) {
         contactCommon.queryByClientAddress(widget.session.targetId).then((value) {
           setState(() {
+            loaded = true;
             _topic = null;
             _contact = value;
           });
         });
+      } else {
+        loaded = true;
       }
     }
 
@@ -105,7 +114,10 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
 
   @override
   Widget build(BuildContext context) {
-    if (_topic == null && _contact == null) return SizedBox.shrink();
+    if (_topic == null && _contact == null && loaded) {
+      sessionCommon.delete(widget.session.targetId);
+      return SizedBox.shrink();
+    }
     SessionSchema session = widget.session;
 
     return Material(

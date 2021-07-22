@@ -228,12 +228,22 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
       onTap: () async {
         if (subscriber.canBeKick) {
           Loading.show();
-          await topicCommon.kick(topic.topic, subscriber.clientAddress);
+          await topicCommon.kick(
+            topic.topic,
+            subscriber.clientAddress,
+            topic.isPrivate,
+            topic.isOwner(clientCommon.address),
+          );
           Loading.dismiss();
           Toast.show(S.of(context).rejected);
         } else {
           Loading.show();
-          await topicCommon.invitee(topic.topic, subscriber.clientAddress);
+          await topicCommon.invitee(
+            topic.topic,
+            subscriber.clientAddress,
+            topic.isPrivate,
+            topic.isOwner(clientCommon.address),
+          );
           Loading.dismiss();
           Toast.show(S.of(context).invitation_sent);
         }
