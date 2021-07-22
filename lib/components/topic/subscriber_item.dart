@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
+import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/avatar.dart';
+import 'package:nmobile/components/contact/item.dart';
 import 'package:nmobile/components/dialog/loading.dart';
+import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
@@ -209,45 +212,76 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     if (subscriber.clientAddress == clientCommon.address) return SizedBox.shrink();
     if (!topic.isOwner(clientCommon.address)) return SizedBox.shrink();
 
-    return InkWell(
-      child: Padding(
-        padding: EdgeInsets.only(left: 6, right: 16),
-        child: subscriber.canBeKick
-            ? Icon(
-                Icons.block,
-                size: 20,
-                color: application.theme.fallColor,
-              )
-            : Asset.iconSvg(
-                'check',
-                width: 20,
-                height: double.infinity,
-                color: application.theme.successColor,
+    return SizedBox(
+      width: 20 + 16 + 6,
+      height: 20 + 16 + 6,
+      child: InkWell(
+        child: Padding(
+          padding: EdgeInsets.only(left: 6, right: 16),
+          child: subscriber.canBeKick
+              ? Icon(
+                  Icons.block,
+                  size: 20,
+                  color: application.theme.fallColor,
+                )
+              : Asset.image(
+                  'chat/invisit-blue.png',
+                  width: 20,
+                  height: double.infinity,
+                  color: application.theme.successColor,
+                ),
+        ),
+        onTap: () async {
+          S _localizations = S.of(context);
+          if (subscriber.canBeKick) {
+            ModalDialog.of(this.context).confirm(
+              title: "确定要踢掉她吗", // TODO:GG locale kick
+              contentWidget: contact != null
+                  ? ContactItem(
+                      contact: contact,
+                      bodyTitle: contact.displayName,
+                      bodyDesc: contact.clientAddress,
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    )
+                  : SizedBox.shrink(),
+              agree: Button(
+                text: _localizations.ok,
+                backgroundColor: application.theme.strongColor,
+                width: double.infinity,
+                onPressed: () async {
+                  Navigator.pop(this.context);
+                  Loading.show();
+                  await topicCommon.kick(
+                    topic.topic,
+                    subscriber.clientAddress,
+                    topic.isPrivate,
+                    topic.isOwner(clientCommon.address),
+                  );
+                  Loading.dismiss();
+                  Toast.show(S.of(context).rejected);
+                },
               ),
+              reject: Button(
+                text: _localizations.cancel,
+                backgroundColor: application.theme.backgroundLightColor,
+                fontColor: application.theme.fontColor2,
+                width: double.infinity,
+                onPressed: () => Navigator.pop(this.context),
+              ),
+            );
+          } else {
+            Loading.show();
+            await topicCommon.invitee(
+              topic.topic,
+              subscriber.clientAddress,
+              topic.isPrivate,
+              topic.isOwner(clientCommon.address),
+            );
+            Loading.dismiss();
+            Toast.show(S.of(context).invitation_sent);
+          }
+        },
       ),
-      onTap: () async {
-        if (subscriber.canBeKick) {
-          Loading.show();
-          await topicCommon.kick(
-            topic.topic,
-            subscriber.clientAddress,
-            topic.isPrivate,
-            topic.isOwner(clientCommon.address),
-          );
-          Loading.dismiss();
-          Toast.show(S.of(context).rejected);
-        } else {
-          Loading.show();
-          await topicCommon.invitee(
-            topic.topic,
-            subscriber.clientAddress,
-            topic.isPrivate,
-            topic.isOwner(clientCommon.address),
-          );
-          Loading.dismiss();
-          Toast.show(S.of(context).invitation_sent);
-        }
-      },
     );
   }
 }
