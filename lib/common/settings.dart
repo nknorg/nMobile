@@ -31,6 +31,7 @@ class Settings {
   // duration
   static late int profileExpireMs = 1 * 60 * 60 * 1000; // 1h
   static late int deviceInfoExpireMs = 1 * 60 * 60 * 1000; // 1h
+  static late int txPoolDelayMs = 1 * 60 * 1000; // 1m
   static late Duration msgResendDuration = Duration(minutes: 3);
 
   static init() async {
