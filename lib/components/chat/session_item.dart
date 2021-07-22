@@ -105,6 +105,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
 
   @override
   Widget build(BuildContext context) {
+    if (_topic == null && _contact == null) return SizedBox.shrink();
     SessionSchema session = widget.session;
 
     return Material(
@@ -291,13 +292,6 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           ],
         ),
       );
-    } else if (msgType == MessageContentType.topicInvitation) {
-      contentWidget = Label(
-        prefix + _localizations.channel_invitation,
-        type: LabelType.bodyRegular,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      );
     } else if (msgType == MessageContentType.topicSubscribe) {
       contentWidget = Label(
         prefix + _localizations.joined_channel,
@@ -307,6 +301,13 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       );
     } else if (msgType == MessageContentType.topicUnsubscribe) {
       contentWidget = SizedBox.shrink();
+    } else if (msgType == MessageContentType.topicInvitation) {
+      contentWidget = Label(
+        prefix + _localizations.channel_invitation,
+        type: LabelType.bodyRegular,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
     } else {
       contentWidget = Label(
         prefix + (_lastMsg?.content ?? ""),

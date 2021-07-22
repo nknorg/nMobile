@@ -92,16 +92,16 @@ class ChatInCommon with Tag {
       case MessageContentType.piece:
         await _receivePiece(received);
         break;
-      case MessageContentType.topicInvitation:
-        await _receiveTopicInvitation(received);
-        chatOutCommon.sendReceipt(received); // await
-        break;
       case MessageContentType.topicSubscribe:
         await _receiveTopicSubscribe(received);
         chatOutCommon.sendReceipt(received); // await
         break;
       case MessageContentType.topicUnsubscribe:
         await _receiveTopicUnsubscribe(received);
+        chatOutCommon.sendReceipt(received); // await
+        break;
+      case MessageContentType.topicInvitation:
+        await _receiveTopicInvitation(received);
         chatOutCommon.sendReceipt(received); // await
         break;
     }
