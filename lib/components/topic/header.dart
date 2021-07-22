@@ -48,7 +48,7 @@ class TopicHeader extends StatelessWidget {
                         ? Asset.iconSvg(
                             'lock',
                             width: 18,
-                            color: Colors.white,
+                            color: this.dark ? Colors.white : Colors.black54,
                           )
                         : SizedBox.shrink(),
                     Expanded(

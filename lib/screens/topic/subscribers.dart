@@ -42,6 +42,7 @@ class TopicSubscribersScreen extends BaseStateFulWidget {
 
 class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscribersScreen> {
   StreamSubscription? _updateTopicSubscription;
+  StreamSubscription? _deleteTopicSubscription;
   StreamSubscription? _addSubscriberSubscription;
   StreamSubscription? _deleteSubscriberSubscription;
   StreamSubscription? _updateSubscriberSubscription;
@@ -56,8 +57,6 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   int? _invitedReceiptCount;
   int? _subscriberCount;
 
-  bool? _isJoined; // TODO:GG joined
-
   @override
   void onRefreshArguments() {
     _refreshTopicSchema();
@@ -71,6 +70,10 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
       setState(() {
         _topicSchema = event;
       });
+      _refreshMembersCount(); // await
+    });
+    _deleteTopicSubscription = topicCommon.deleteStream.where((event) => event == _topicSchema?.topic).listen((String topic) {
+      Navigator.of(context).pop();
     });
 
     // subscriber listen
@@ -106,6 +109,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   @override
   void dispose() {
     _updateTopicSubscription?.cancel();
+    _deleteTopicSubscription?.cancel();
     _addSubscriberSubscription?.cancel();
     _deleteSubscriberSubscription?.cancel();
     _updateSubscriberSubscription?.cancel();
@@ -126,6 +130,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
       this._topicSchema = await topicCommon.queryByTopic(topicName);
     }
     if (this._topicSchema == null) return;
+    setState(() {});
 
     // exist
     topicCommon.queryByTopic(this._topicSchema?.topic).then((TopicSchema? exist) async {
@@ -137,37 +142,14 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
       });
     });
 
-    _refreshJoined(); // await
+    // topic
     _refreshMembersCount(); // await
-    setState(() {});
-
-    // topic permission
-    topicCommon.checkExpireAndSubscribe(_topicSchema?.topic, subscribeFirst: false, emptyAdd: false).then((value) {
-      if (value == null) return Future.value(null);
-      if (value.isOwner(clientCommon.address)) {
-        // TODO:GG 要不要和下面一样？
-        return topicCommon.refreshSubscribersByOwner(value.topic, allPermPage: true).then((value) {
-          return _getDataSubscribers(true);
-        });
-      } else {
-        return subscriberCommon.refreshSubscribers(this._topicSchema?.topic, meta: this._topicSchema?.isPrivate == true).then((value) {
-          return _getDataSubscribers(true);
-        });
-      }
-    });
 
     // subscribers
+    subscriberCommon.refreshSubscribers(this._topicSchema?.topic, meta: this._topicSchema?.isPrivate == true).then((value) async {
+      await _getDataSubscribers(true);
+    });
     _getDataSubscribers(true);
-  }
-
-  _refreshJoined() async {
-    bool joined = await topicCommon.isJoined(_topicSchema?.topic, clientCommon.address);
-    // do not topic.setJoined because filed is_joined is action not a tag
-    if (_isJoined != joined) {
-      setState(() {
-        _isJoined = joined;
-      });
-    }
   }
 
   _refreshMembersCount() async {
@@ -188,14 +170,14 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     } else {
       _offset = _subscriberList.length;
     }
-    // TODO:GG topic owner first
     var messages = await subscriberCommon.queryListByTopic(
       this._topicSchema?.topic,
       offset: _offset,
       limit: 20,
     );
+    messages.sort((a, b) => (_topicSchema?.isPrivate == true) ? (_topicSchema?.isOwner(b.clientAddress) == true ? 1 : (b.clientAddress == clientCommon.address ? 1 : -1)) : (b.clientAddress == clientCommon.address ? 1 : -1));
     setState(() {
-      _subscriberList += messages;
+      _subscriberList = refresh ? messages : _subscriberList + messages; // maybe addStream
     });
   }
 
@@ -229,19 +211,25 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
                       body: Builder(
                         builder: (BuildContext context) {
                           if (_topicSchema?.isOwner(clientCommon.address) == true) {
-                            return Column(
-                              children: [
-                                Label(
-                                  inviteContent,
-                                  type: LabelType.bodyRegular,
-                                  color: application.theme.successColor,
-                                ),
-                                Label(
-                                  joinedContent,
-                                  type: LabelType.bodyRegular,
-                                  color: application.theme.successColor,
-                                ),
-                              ],
+                            return Container(
+                              padding: EdgeInsets.only(left: 3),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Label(
+                                    inviteContent,
+                                    textAlign: TextAlign.start,
+                                    type: LabelType.bodyRegular,
+                                    color: application.theme.successColor,
+                                  ),
+                                  Label(
+                                    joinedContent,
+                                    textAlign: TextAlign.start,
+                                    type: LabelType.bodyRegular,
+                                    color: application.theme.successColor,
+                                  ),
+                                ],
+                              ),
                             );
                           } else {
                             return Label(
