@@ -164,7 +164,12 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
-    await topicCommon.invitee(_topicSchema?.topic, address);
+    await topicCommon.invitee(
+      _topicSchema?.topic,
+      address,
+      _topicSchema?.isPrivate == true,
+      _topicSchema?.isOwner(clientCommon.address) == true,
+    );
   }
 
   _statusAction(bool nextSubscribe) async {
@@ -185,7 +190,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
           onPressed: () async {
             Navigator.pop(this.context);
             Loading.show();
-            TopicSchema? deleted = await topicCommon.unsubscribe(_topicSchema?.topic, deleteDB: true);
+            TopicSchema? deleted = await topicCommon.unsubscribe(_topicSchema?.topic);
             Loading.dismiss();
             if (deleted != null) {
               Toast.show(_localizations.unsubscribed);
