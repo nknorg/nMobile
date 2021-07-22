@@ -103,7 +103,10 @@ class SubscriberCommon with Tag {
     if (topicName == null || topicName.isEmpty) return 0;
     int count = 0;
     if (isPrivate ?? isPrivateTopicReg(topicName)) {
-      count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
+      int count1 = await queryCountByTopic(topicName, status: SubscriberStatus.InvitedSend);
+      int count2 = await queryCountByTopic(topicName, status: SubscriberStatus.InvitedReceipt);
+      int count3 = await queryCountByTopic(topicName, status: SubscriberStatus.Subscribed);
+      count = count1 + count2 + count3;
     } else {
       count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
     }
@@ -176,9 +179,11 @@ class SubscriberCommon with Tag {
               return e;
             }).toList();
           }
-        } else {
+        } else if (!meta) {
           SubscriberSchema? item = SubscriberSchema.create(topicName, key, SubscriberStatus.Subscribed);
           if (item != null) subscribers.add(item);
+        } else {
+          logger.w("$TAG - _clientGetSubscribers - result wrong - key:$key - value:$value");
         }
       });
       logger.d("$TAG - _clientGetSubscribers - subscribers:$subscribers");
@@ -300,7 +305,7 @@ class SubscriberCommon with Tag {
   // status: Kick (caller = owner)
   Future<SubscriberSchema?> onKick(String? topicName, String? clientAddress, {int? permPage}) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
-    // TODO:GG topic  kick
+    // TODO:GG topic kick
   }
 
   /// ***********************************************************************************************************
