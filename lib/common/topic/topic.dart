@@ -44,8 +44,8 @@ class TopicCommon with Tag {
       // TODO:GG 测试续订
       await checkExpireAndSubscribe(topic.topic, subscribeFirst: false, emptyAdd: false);
       if (topic.isOwner(clientCommon.address)) {
-        // TODO:GG 非群主能不能call，公有群，能的话和refreshSubscriber有啥区别
-        await topicCommon.refreshSubscribersByOwner(topic.topic, allPermPage: true);
+        // TODO:GG 非群主/公有群能不能call，?能的话和refreshSubscriber有啥区别
+        // await topicCommon.refreshSubscribersByOwner(topic.topic, allPermPage: true);
       }
     });
   }
@@ -110,8 +110,8 @@ class TopicCommon with Tag {
             exists.expireBlockHeight = expireHeight;
           }
         } else {
-          logger.d("$TAG - checkExpireAndSubscribe - DB expire but node not expire, maybe in txPool - topic:$exists");
-          noSubscribed = true;
+          logger.w("$TAG - checkExpireAndSubscribe - DB expire but node not expire, maybe in txPool - topic:$exists");
+          return null;
         }
       } else {
         if (!subscribeFirst) {
@@ -142,28 +142,12 @@ class TopicCommon with Tag {
     int? globalHeight = await clientCommon.client?.getHeight();
     bool shouldResubscribe = await exists.shouldResubscribe(globalHeight: globalHeight);
     if (noSubscribed || shouldResubscribe) {
-      bool subscribeSuccess;
-      if (exists.isOwner(clientCommon.address)) {
-        // private + owner
-        SubscriberSchema? _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage: 0);
-        Map<String, dynamic> meta = await _getMeta(topicName, 0);
-        meta = await _buildNewMeta(topicName, meta, _subscriberMe, 0);
-        subscribeSuccess = await _clientSubscribe(
-          topicName,
-          height: Global.topicDefaultSubscribeHeight,
-          fee: fee,
-          permissionPage: 0,
-          meta: meta,
-        );
-      } else {
-        // publish / private normal member
-        subscribeSuccess = await _clientSubscribe(
-          topicName,
-          height: Global.topicDefaultSubscribeHeight,
-          fee: fee,
-        );
+      // client subscribe
+      bool subscribeSuccess = await _clientSubscribe(topicName, height: Global.topicDefaultSubscribeHeight, fee: fee);
+      if (!subscribeSuccess) {
+        logger.w("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - topic:$exists");
+        return null;
       }
-      if (!subscribeSuccess) return null;
 
       // db update
       var subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
@@ -173,6 +157,24 @@ class TopicCommon with Tag {
         exists.joined = true;
         exists.subscribeAt = subscribeAt;
         exists.expireBlockHeight = expireHeight;
+      }
+
+      // private + owner
+      if (exists.isOwner(clientCommon.address)) {
+        SubscriberSchema? _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage: 0);
+        Map<String, dynamic> meta = await _getMeta(topicName, 0);
+        meta = await _buildNewMeta(topicName, meta, _subscriberMe, 0);
+        bool permissionSuccess = await _clientSubscribe(
+          topicName,
+          height: Global.topicDefaultSubscribeHeight,
+          fee: fee,
+          permissionPage: 0,
+          meta: meta,
+        );
+        if (!permissionSuccess) {
+          logger.w("$TAG - checkExpireAndSubscribe - _clientPermission fail - topic:$exists");
+          return null;
+        }
       }
     }
     return exists;
@@ -230,7 +232,7 @@ class TopicCommon with Tag {
     if (setSuccess) exists?.joined = false;
 
     // DB delete
-    await subscriberCommon.onUnsubscribe(topicName, clientCommon.address);
+    await delete(exists?.id, notify: true);
     await subscriberCommon.deleteByTopic(topicName);
 
     await Future.delayed(Duration(seconds: 3));
@@ -337,30 +339,26 @@ class TopicCommon with Tag {
     // _subscriber = await subscriberCommon.onKick(topicName, clientAddress, permPage: _subscriber.permPage);
     // if (_subscriber == null) return null;
 
-    // meta update
+    // client subscribe (meta update)
     int? status = _subscriber.status;
     int? permPage = _subscriber.permPage ?? await _findMetaPermissionPage(topicName, clientAddress);
-    if (isPrivate && permPage != null) {
-      Map<String, dynamic> meta = await _getMeta(topicName, permPage);
-      meta = await _buildNewMeta(topicName, meta, _subscriber, permPage);
-      bool subscribeSuccess = await _clientSubscribe(
-        topicName,
-        height: Global.topicDefaultSubscribeHeight,
-        fee: 0,
-        permissionPage: permPage,
-        meta: meta,
-      );
-      if (subscribeSuccess) {
-        Toast.show("已提出"); // TODO:GG local kick
-        return _subscriber;
-      } else if (!subscribeSuccess) {
-        logger.w("$TAG - kick - clientSubscribe error - permPage:$permPage - meta:$meta");
-        _subscriber = SubscriberSchema.create(topicName, clientAddress, status);
-        _subscriber?.permPage = permPage;
-        await subscriberCommon.add(_subscriber);
-        return null;
-      }
+    Map<String, dynamic> meta = await _getMeta(topicName, permPage);
+    meta = await _buildNewMeta(topicName, meta, _subscriber, permPage);
+    bool subscribeSuccess = await _clientSubscribe(
+      topicName,
+      height: Global.topicDefaultSubscribeHeight,
+      fee: 0,
+      permissionPage: permPage,
+      meta: meta,
+    );
+    if (!subscribeSuccess) {
+      logger.w("$TAG - kick - clientSubscribe error - permPage:$permPage - meta:$meta");
+      _subscriber = SubscriberSchema.create(topicName, clientAddress, status);
+      _subscriber?.permPage = permPage;
+      await subscriberCommon.add(_subscriber);
+      return null;
     }
+    Toast.show("已提出"); // TODO:GG local kick
     return _subscriber;
   }
 
@@ -373,9 +371,9 @@ class TopicCommon with Tag {
       if (success) append.permPage = permPage;
     }
 
-    // old meta
-    List<Map<String, dynamic>> acceptList = meta['accept'] ?? [];
-    List<Map<String, dynamic>> rejectList = meta['reject'] ?? [];
+    // node meta
+    List<dynamic> acceptList = meta['accept'] ?? [];
+    List<dynamic> rejectList = meta['reject'] ?? [];
     if (append.status == SubscriberStatus.InvitedSend || append.status == SubscriberStatus.InvitedReceipt || append.status == SubscriberStatus.Subscribed) {
       int removeIndex = -1;
       rejectList.asMap().forEach((key, value) {
@@ -416,6 +414,54 @@ class TopicCommon with Tag {
       }
     }
 
+    // DB meta
+    List<SubscriberSchema> subscribers = await subscriberCommon.queryListByTopicPerm(topicName, permPage);
+    subscribers.forEach((SubscriberSchema element) {
+      int updateAt = element.updateAt ?? DateTime.now().millisecondsSinceEpoch;
+      if ((DateTime.now().millisecondsSinceEpoch - updateAt).abs() < Settings.txPoolDelayMs) {
+        logger.d("$TAG - _buildNewMeta - subscriber update just now - element:$element");
+        if (append.status == SubscriberStatus.InvitedSend || append.status == SubscriberStatus.InvitedReceipt || append.status == SubscriberStatus.Subscribed) {
+          int removeIndex = -1;
+          rejectList.asMap().forEach((key, value) {
+            if (value.toString().contains(append.clientAddress)) {
+              removeIndex = key;
+            }
+          });
+          if (removeIndex >= 0) {
+            rejectList.removeAt(removeIndex);
+          }
+          int addIndex = -1;
+          acceptList.asMap().forEach((key, value) {
+            if (value.toString().contains(append.clientAddress)) {
+              addIndex = key;
+            }
+          });
+          if (addIndex < 0) {
+            acceptList.add({'addr': append.clientAddress});
+          }
+        } else {
+          int removeIndex = -1;
+          acceptList.asMap().forEach((key, value) {
+            if (value.toString().contains(append.clientAddress)) {
+              removeIndex = key;
+            }
+          });
+          if (removeIndex >= 0) {
+            acceptList.removeAt(removeIndex);
+          }
+          int addIndex = -1;
+          rejectList.asMap().forEach((key, value) {
+            if (value.toString().contains(append.clientAddress)) {
+              addIndex = key;
+            }
+          });
+          if (addIndex < 0) {
+            rejectList.add({'addr': append.clientAddress});
+          }
+        }
+      }
+    });
+
     // new meta
     meta['accept'] = acceptList;
     meta['reject'] = rejectList;
@@ -425,8 +471,8 @@ class TopicCommon with Tag {
   }
 
   // caller = private + everyone
-  Future<int?> _findMetaPermissionPage(String? topicName, String? clientAddress) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<int> _findMetaPermissionPage(String? topicName, String? clientAddress) async {
+    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return -1;
     int? permPage;
     Completer completer = Completer();
     if (permPage == null || permPage < 0) {
@@ -461,7 +507,9 @@ class TopicCommon with Tag {
     } else {
       logger.w("$TAG - _findMetaPermissionPage - permPage:$permPage");
     }
-    return permPage;
+    permPage = permPage ?? await subscriberCommon.queryMaxPermPageByTopic(topicName);
+    logger.w("$TAG - _findMetaPermissionPage - last - permPage:$permPage");
+    return permPage!;
   }
 
   /// ***********************************************************************************************************
@@ -584,6 +632,7 @@ class TopicCommon with Tag {
     return int.tryParse(expiresAt) ?? 0;
   }
 
+  // TODO:GG meta只能群主获取？ 有的在txPool中
   Future<Map<String, dynamic>> _getMeta(String? topicName, int permPage) async {
     if (topicName == null || topicName.isEmpty) return Map();
     String? ownerPubKey = getPubKeyFromTopicOrChatId(topicName);
