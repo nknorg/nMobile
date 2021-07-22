@@ -5,6 +5,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/utils/logger.dart';
 
 catchGlobalError(Function? callback, {Function(Object error, StackTrace stack)? onZoneError}) {
   if (!Global.isRelease) {
@@ -38,6 +39,10 @@ void handleError(
   StackTrace? stackTrace,
   String? toast,
 }) {
+  if (!Global.isRelease) {
+    logger.e(error);
+    debugPrintStack(maxFrames: 100);
+  }
   String? show = getErrorShow(error);
   if (show != null && show.isNotEmpty) {
     Toast.show(show);

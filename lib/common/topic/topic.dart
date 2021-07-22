@@ -41,8 +41,10 @@ class TopicCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty) return null;
     List<TopicSchema> topics = await queryList();
     topics.forEach((TopicSchema topic) async {
+      // TODO:GG 测试续订
       await checkExpireAndSubscribe(topic.topic, subscribeFirst: false, emptyAdd: false);
       if (topic.isOwner(clientCommon.address)) {
+        // TODO:GG 非群主能不能call，公有群，能的话和refreshSubscriber有啥区别
         await topicCommon.refreshSubscribersByOwner(topic.topic, allPermPage: true);
       }
     });
@@ -65,7 +67,7 @@ class TopicCommon with Tag {
       await chatOutCommon.sendTopicSubscribe(topicName);
     }
 
-    // subscribers_check
+    // subscribers_check (page used owner meta, not here)
     await subscriberCommon.onSubscribe(topicName, clientCommon.address);
     if (_topic.isPrivate) {
       await subscriberCommon.refreshSubscribers(topicName, meta: true);
@@ -212,8 +214,8 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = self
-  Future<TopicSchema?> unsubscribe(String? topicName, {double fee = 0, int? permissionPage, bool deleteDB = false}) async {
-    if (topicName == null || topicName.isEmpty) return null;
+  Future<TopicSchema?> unsubscribe(String? topicName, {double fee = 0, int? permissionPage}) async {
+    if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
 
     // client unsubscribe
     bool exitSuccess = await _clientUnsubscribe(topicName, fee: fee, permissionPage: permissionPage);
@@ -228,8 +230,8 @@ class TopicCommon with Tag {
     if (setSuccess) exists?.joined = false;
 
     // DB delete
-    if (deleteDB) await delete(exists?.id, notify: true);
-    if (deleteDB) await subscriberCommon.deleteByTopic(topicName);
+    await subscriberCommon.onUnsubscribe(topicName, clientCommon.address);
+    await subscriberCommon.deleteByTopic(topicName);
 
     await Future.delayed(Duration(seconds: 3));
     return exists;
@@ -266,18 +268,14 @@ class TopicCommon with Tag {
   /// ************************************************ members **************************************************
   /// ***********************************************************************************************************
 
-  // caller = public / private + owner
-  Future<SubscriberSchema?> invitee(String? topicName, String? clientAddress) async {
+  // caller = public / owner
+  Future<SubscriberSchema?> invitee(String? topicName, String? clientAddress, bool isPrivate, bool isOwner) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     if (clientAddress == clientCommon.address) {
       Toast.show(S.of(Global.appContext).invite_yourself_error);
       return null;
     }
-
-    // topic owner
-    TopicSchema? _topic = await queryByTopic(topicName);
-    if (_topic == null) return null;
-    if (_topic.isPrivate && !_topic.isOwner(clientCommon.address)) {
+    if (isPrivate && !isOwner) {
       Toast.show(S.of(Global.appContext).member_no_auth_invite);
       return null;
     }
@@ -294,12 +292,12 @@ class TopicCommon with Tag {
     if (_msg == null) return null;
 
     // subscriber update
-    int? appendPermPage = _topic.isPrivate ? await subscriberCommon.queryMaxPermPageByTopic(topicName) : null;
-    _subscriber = await subscriberCommon.onInvitedSend(topicName, clientAddress, permPage: appendPermPage);
+    int? appendPermPage = isPrivate ? await subscriberCommon.queryMaxPermPageByTopic(topicName) : null;
+    _subscriber = await subscriberCommon.onInvitedSend(topicName, clientAddress, appendPermPage);
     if (_subscriber == null) return null;
 
-    if (_topic.isPrivate && appendPermPage != null) {
-      // client subscribe
+    // client subscribe
+    if (isPrivate && appendPermPage != null) {
       Map<String, dynamic> meta = await _getMeta(topicName, appendPermPage);
       meta = await _buildNewMeta(topicName, meta, _subscriber, appendPermPage);
       bool subscribeSuccess = await _clientSubscribe(
@@ -313,6 +311,7 @@ class TopicCommon with Tag {
         Toast.show(S.of(Global.appContext).invitation_sent);
         return _subscriber;
       } else {
+        logger.w("$TAG - invitee - clientSubscribe error - permPage:$appendPermPage - meta:$meta");
         await subscriberCommon.delete(_subscriber.id, notify: true);
         return null;
       }
@@ -320,23 +319,115 @@ class TopicCommon with Tag {
     return _subscriber;
   }
 
-  // caller = private + owner TODO:GG 缺个协议
-  Future<SubscriberSchema?> kick(String? topicName, String? clientAddress) async {
+  // caller = owner
+  Future<SubscriberSchema?> kick(String? topicName, String? clientAddress, bool isPrivate, bool isOwner) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     if (clientAddress == clientCommon.address) return null;
-
-    // topic owner
-    TopicSchema? _topic = await queryByTopic(topicName);
-    if (_topic == null) return null;
-    if (!_topic.isOwner(clientCommon.address)) return null;
+    if (!isPrivate || !isOwner) return null; // now just private owner
 
     // subscriber status
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topicName, clientAddress);
     if (_subscriber == null) return null;
     if (_subscriber.canBeKick == false) return null;
 
-    // permPage find
-    int? permPage = _subscriber.permPage;
+    // send message
+    // TODO:GG topic need new protocol(event:channelKick)
+
+    // subscriber update TODO:GG topic kick
+    // _subscriber = await subscriberCommon.onKick(topicName, clientAddress, permPage: _subscriber.permPage);
+    // if (_subscriber == null) return null;
+
+    // meta update
+    int? status = _subscriber.status;
+    int? permPage = _subscriber.permPage ?? await _findMetaPermissionPage(topicName, clientAddress);
+    if (isPrivate && permPage != null) {
+      Map<String, dynamic> meta = await _getMeta(topicName, permPage);
+      meta = await _buildNewMeta(topicName, meta, _subscriber, permPage);
+      bool subscribeSuccess = await _clientSubscribe(
+        topicName,
+        height: Global.topicDefaultSubscribeHeight,
+        fee: 0,
+        permissionPage: permPage,
+        meta: meta,
+      );
+      if (subscribeSuccess) {
+        Toast.show("已提出"); // TODO:GG local kick
+        return _subscriber;
+      } else if (!subscribeSuccess) {
+        logger.w("$TAG - kick - clientSubscribe error - permPage:$permPage - meta:$meta");
+        _subscriber = SubscriberSchema.create(topicName, clientAddress, status);
+        _subscriber?.permPage = permPage;
+        await subscriberCommon.add(_subscriber);
+        return null;
+      }
+    }
+    return _subscriber;
+  }
+
+  // caller = everyone
+  Future<Map<String, dynamic>> _buildNewMeta(String? topicName, Map<String, dynamic>? meta, SubscriberSchema? append, int permPage) async {
+    if (topicName == null || topicName.isEmpty || meta == null || append == null) return Map();
+    // append_permPage
+    if (append.permPage != permPage) {
+      bool success = await subscriberCommon.setPermPage(append.id, permPage, notify: true);
+      if (success) append.permPage = permPage;
+    }
+
+    // old meta
+    List<Map<String, dynamic>> acceptList = meta['accept'] ?? [];
+    List<Map<String, dynamic>> rejectList = meta['reject'] ?? [];
+    if (append.status == SubscriberStatus.InvitedSend || append.status == SubscriberStatus.InvitedReceipt || append.status == SubscriberStatus.Subscribed) {
+      int removeIndex = -1;
+      rejectList.asMap().forEach((key, value) {
+        if (value.toString().contains(append.clientAddress)) {
+          removeIndex = key;
+        }
+      });
+      if (removeIndex >= 0) {
+        rejectList.removeAt(removeIndex);
+      }
+      int addIndex = -1;
+      acceptList.asMap().forEach((key, value) {
+        if (value.toString().contains(append.clientAddress)) {
+          addIndex = key;
+        }
+      });
+      if (addIndex < 0) {
+        acceptList.add({'addr': append.clientAddress});
+      }
+    } else {
+      int removeIndex = -1;
+      acceptList.asMap().forEach((key, value) {
+        if (value.toString().contains(append.clientAddress)) {
+          removeIndex = key;
+        }
+      });
+      if (removeIndex >= 0) {
+        acceptList.removeAt(removeIndex);
+      }
+      int addIndex = -1;
+      rejectList.asMap().forEach((key, value) {
+        if (value.toString().contains(append.clientAddress)) {
+          addIndex = key;
+        }
+      });
+      if (addIndex < 0) {
+        rejectList.add({'addr': append.clientAddress});
+      }
+    }
+
+    // new meta
+    meta['accept'] = acceptList;
+    meta['reject'] = rejectList;
+
+    logger.d("$TAG - _buildNewMeta - meta:${meta.toString()}");
+    return meta;
+  }
+
+  // caller = private + everyone
+  Future<int?> _findMetaPermissionPage(String? topicName, String? clientAddress) async {
+    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+    int? permPage;
     Completer completer = Completer();
     if (permPage == null || permPage < 0) {
       int maxPermPage = await subscriberCommon.queryMaxPermPageByTopic(topicName);
@@ -365,71 +456,12 @@ class TopicCommon with Tag {
       }
     }
     await completer.future;
-
-    // meta update
-    if (permPage != null) {
-      Map<String, dynamic> meta = await _getMeta(topicName, permPage!);
-      meta = await _buildNewMeta(topicName, meta, _subscriber, permPage!);
-      bool subscribeSuccess = await _clientSubscribe(
-        topicName,
-        height: Global.topicDefaultSubscribeHeight,
-        fee: 0,
-        permissionPage: permPage,
-        meta: meta,
-      );
-      if (!subscribeSuccess) {
-        logger.w("$TAG - kick - clientSubscribe error - permPage:$permPage - meta:$meta");
-        return null;
-      }
-    }
-
-    // subscriber update
-    return await subscriberCommon.onUnsubscribe(topicName, clientAddress, permPage: _subscriber.permPage);
-  }
-
-  // caller = everyone
-  Future<Map<String, dynamic>> _buildNewMeta(String? topicName, Map<String, dynamic>? meta, SubscriberSchema? append, int appendPermPage) async {
-    if (topicName == null || topicName.isEmpty || meta == null || append == null) return Map();
-
-    // append_permPage
-    if (append.permPage != appendPermPage) {
-      bool success = await subscriberCommon.setPermPage(append.id, appendPermPage, notify: true);
-      if (success) append.permPage = appendPermPage;
-    }
-
-    // old meta
-    List<Map<String, String>> acceptList = meta['accept'] ?? [];
-    List<Map<String, String>> rejectList = meta['reject'] ?? [];
-    if (append.status == SubscriberStatus.InvitedSend || append.status == SubscriberStatus.InvitedReceipt || append.status == SubscriberStatus.Subscribed) {
-      int findIndex = -1;
-      rejectList.asMap().forEach((key, value) {
-        if (value.toString().contains(append.clientAddress)) {
-          findIndex = key;
-        }
-      });
-      if (findIndex >= 0) {
-        rejectList.removeAt(findIndex);
-      }
-      acceptList.add({'addr': append.clientAddress});
+    if (permPage != null && permPage! >= 0) {
+      logger.d("$TAG - _findMetaPermissionPage - permPage:$permPage");
     } else {
-      int findIndex = -1;
-      acceptList.asMap().forEach((key, value) {
-        if (value.toString().contains(append.clientAddress)) {
-          findIndex = key;
-        }
-      });
-      if (findIndex >= 0) {
-        acceptList.removeAt(findIndex);
-      }
-      rejectList.add({'addr': append.clientAddress});
+      logger.w("$TAG - _findMetaPermissionPage - permPage:$permPage");
     }
-
-    // new meta
-    meta['accept'] = acceptList;
-    meta['reject'] = rejectList;
-
-    logger.d("$TAG - _buildNewMeta - meta:${meta.toString()}");
-    return meta;
+    return permPage;
   }
 
   /// ***********************************************************************************************************
@@ -442,6 +474,7 @@ class TopicCommon with Tag {
     TopicSchema? exists = await queryByTopic(topicName);
     int createAt = exists?.createAt ?? DateTime.now().millisecondsSinceEpoch;
     if (exists != null && (DateTime.now().millisecondsSinceEpoch - createAt).abs() < Settings.txPoolDelayMs) {
+      logger.i("$TAG - isJoined - createAt just now, maybe in txPool - topicName:$topicName - clientAddress:$clientAddress");
       return exists.joined; // maybe in txPool
     }
     int expireHeight = await _getExpireAt(exists?.topicName, clientAddress);
@@ -457,7 +490,7 @@ class TopicCommon with Tag {
     return expireHeight >= globalHeight;
   }
 
-  // caller = private + owner TODO:GG 私有群里的别人调用会有返回吗
+  // caller = owner
   Future refreshSubscribersByOwner(String? topicName, {bool allPermPage = false, int permPage = 0, int? maxPage}) async {
     if (topicName == null || topicName.isEmpty) return;
 
@@ -467,18 +500,19 @@ class TopicCommon with Tag {
     List<dynamic> accepts = meta["accept"] ?? [];
     List<dynamic> rejects = meta["reject"] ?? [];
     if (accepts.isEmpty && rejects.isEmpty) {
-      logger.w("$TAG - refreshSubscribersByMeta - meta is null - meta:$meta");
+      logger.w("$TAG - refreshSubscribersByOwner - meta is null - meta:$meta");
       return;
     }
 
     // accept
     List<Future> futures = [];
+    bool _acceptAll = false;
     for (dynamic accept in accepts) {
       if (accept is Map) {
         if (accept.isNotEmpty == true) {
           String? address = accept["addr"];
           if (address == null || address.isEmpty || address.length < 64 || address.contains(".__permission__.")) {
-            logger.w("$TAG - refreshSubscribersByMeta - accept address is wrong - accept:$accept");
+            logger.w("$TAG - refreshSubscribersByOwner - accept address is wrong - accept:$accept");
             continue;
           }
           futures.add(subscriberCommon.queryByTopicChatId(topicName, address).then((value) {
@@ -489,18 +523,17 @@ class TopicCommon with Tag {
             }
           }));
         } else {
-          logger.w("$TAG - refreshSubscribersByMeta - accept is empty - accept:$accept");
+          logger.w("$TAG - refreshSubscribersByOwner - accept is empty - accept:$accept");
         }
       } else if (accept is String) {
         if (accept.trim() == "*") {
-          logger.i("$TAG - refreshSubscribersByMeta - accept all - accept:$accept");
-          futures.add(subscriberCommon.setStatusAndPermPageByTopic(topicName, SubscriberStatus.Subscribed, null));
-          break;
+          logger.i("$TAG - refreshSubscribersByOwner - accept all - accept:$accept");
+          _acceptAll = true;
         } else {
-          logger.w("$TAG - refreshSubscribersByMeta - accept content error - accept:$accept");
+          logger.w("$TAG - refreshSubscribersByOwner - accept content error - accept:$accept");
         }
       } else {
-        logger.w("$TAG - refreshSubscribersByMeta - accept type error - accept:$accept");
+        logger.w("$TAG - refreshSubscribersByOwner - accept type error - accept:$accept");
       }
     }
 
@@ -510,29 +543,36 @@ class TopicCommon with Tag {
         if (reject.isNotEmpty == true) {
           String? address = reject["addr"];
           if (address == null || address.isEmpty || address.length < 64 || address.contains(".__permission__.")) {
-            logger.w("$TAG - refreshSubscribersByMeta - reject address is wrong - reject:$reject");
+            logger.w("$TAG - refreshSubscribersByOwner - reject address is wrong - reject:$reject");
             continue;
           }
           futures.add(subscriberCommon.queryByTopicChatId(topicName, address).then((value) {
             if (value?.status == null || value?.status != SubscriberStatus.Unsubscribed) {
-              return subscriberCommon.onUnsubscribe(topicName, address, permPage: permPage);
+              return subscriberCommon.onUnsubscribe(topicName, address);
             } else if (value?.permPage != permPage) {
               return subscriberCommon.setPermPage(value?.id, permPage, notify: true);
             }
           }));
         } else {
-          logger.w("$TAG - refreshSubscribersByMeta - reject is empty - reject:$reject");
+          logger.w("$TAG - refreshSubscribersByOwner - reject is empty - reject:$reject");
         }
       } else {
-        logger.w("$TAG - refreshSubscribersByMeta - reject type error - reject:$reject");
+        logger.w("$TAG - refreshSubscribersByOwner - reject type error - reject:$reject");
       }
     }
     await Future.wait(futures);
 
+    // accept all
+    if (_acceptAll) {
+      subscriberCommon.setStatusAndPermPageByTopic(topicName, SubscriberStatus.Subscribed, null);
+    }
+
     // loop
     if (allPermPage && ++permPage <= maxPage) {
+      logger.d("$TAG - refreshSubscribersByOwner - loop - progress:$permPage/$maxPage");
       return refreshSubscribersByOwner(topicName, allPermPage: true, permPage: permPage, maxPage: maxPage);
     }
+    logger.d("$TAG - refreshSubscribersByOwner - loop - progress:$permPage/$maxPage");
     return;
   }
 
