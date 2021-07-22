@@ -50,9 +50,9 @@ class SubscriberCommon with Tag {
 
     List<SubscriberSchema> dbSubscribers = await queryListByTopic(topicName);
     List<SubscriberSchema> nodeSubscribers = await _clientGetSubscribers(topicName, offset: offset, limit: limit, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix);
-    List<Future> futures = [];
 
     // delete DB data
+    List<Future> futures = [];
     for (SubscriberSchema dbItem in dbSubscribers) {
       // filter in txPool
       int updateAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
@@ -72,20 +72,24 @@ class SubscriberCommon with Tag {
         logger.i("$TAG - refreshSubscribers - dbSub delete because node no find - dbSub:$dbItem");
         futures.add(delete(dbItem.id, notify: true));
       } else {
-        if ((dbItem.status ?? SubscriberStatus.None) < (findSubscriber.status ?? SubscriberStatus.None)) {
-          logger.i("$TAG - refreshSubscribers - dbSub set status sync node - dbSub:$dbItem - nodeSub:$findSubscriber");
-          futures.add(setStatus(dbItem.id, findSubscriber.status, notify: true));
-        } else if (findSubscriber.status == SubscriberStatus.InvitedReceipt) {
-          logger.i("$TAG - refreshSubscribers - dbSub set receipt sync node - dbSub:$dbItem - nodeSub:$findSubscriber");
-          futures.add(setStatus(dbItem.id, findSubscriber.status, notify: true));
+        if (dbItem.status != findSubscriber.status) {
+          if (findSubscriber.status == SubscriberStatus.Subscribed || findSubscriber.status == SubscriberStatus.Unsubscribed) {
+            logger.i("$TAG - refreshSubscribers - dbSub set status sync node - dbSub:$dbItem - nodeSub:$findSubscriber");
+            futures.add(setStatus(dbItem.id, findSubscriber.status, notify: true));
+          } else if (findSubscriber.status == SubscriberStatus.InvitedReceipt && (dbItem.status ?? SubscriberStatus.None) > (findSubscriber.status ?? SubscriberStatus.None)) {
+            logger.i("$TAG - refreshSubscribers - dbSub set receipt sync node - dbSub:$dbItem - nodeSub:$findSubscriber");
+            futures.add(setStatus(dbItem.id, findSubscriber.status, notify: true));
+          }
         } else if (dbItem.permPage != findSubscriber.permPage && findSubscriber.permPage != null) {
           logger.i("$TAG - refreshSubscribers - dbSub set permPage sync node - dbSub:$dbItem - nodeSub:$findSubscriber");
           futures.add(setPermPage(dbItem.id, findSubscriber.permPage, notify: true));
         }
       }
     }
+    await Future.wait(futures);
 
     // insert node data
+    futures.clear();
     for (SubscriberSchema nodeItem in nodeSubscribers) {
       // different with DB in node
       SubscriberSchema? findSubscriber;
@@ -102,7 +106,6 @@ class SubscriberCommon with Tag {
         futures.add(add(subscriber, notify: true));
       }
     }
-
     await Future.wait(futures);
   }
 
@@ -154,7 +157,7 @@ class SubscriberCommon with Tag {
       });
       logger.d("$TAG - _clientGetSubscribers - subscribers:$subscribers");
 
-      // meta
+      // metas
       List<SubscriberSchema> metas = [];
       bool _acceptAll = false;
       results?.forEach((key, value) {
