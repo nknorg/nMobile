@@ -47,16 +47,16 @@ class SubscriberCommon with Tag {
     Uint8List? subscriberHashPrefix,
   }) async {
     if (topicName == null || topicName.isEmpty) return [];
-    List<Future> futures = [];
 
     List<SubscriberSchema> dbSubscribers = await queryListByTopic(topicName);
     List<SubscriberSchema> nodeSubscribers = await _clientGetSubscribers(topicName, offset: offset, limit: limit, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix);
+    List<Future> futures = [];
 
     // delete DB data
     for (SubscriberSchema dbItem in dbSubscribers) {
       // filter in txPool
-      int createAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-      if ((DateTime.now().millisecondsSinceEpoch - createAt).abs() < Settings.txPoolDelayMs) {
+      int updateAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
+      if ((DateTime.now().millisecondsSinceEpoch - updateAt).abs() < Settings.txPoolDelayMs) {
         logger.i("$TAG - refreshSubscribers - dbSub update just now, maybe in tx pool - dbSub:$dbItem");
         continue;
       }
@@ -300,7 +300,7 @@ class SubscriberCommon with Tag {
   // status: Kick (caller = owner)
   Future<SubscriberSchema?> onKick(String? topicName, String? clientAddress, {int? permPage}) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
-    // TODO:GG topic kick
+    // TODO:GG topic  kick
   }
 
   /// ***********************************************************************************************************

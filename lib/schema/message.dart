@@ -34,9 +34,9 @@ class MessageContentType {
 
   static const String piece = 'piece'; // db
 
-  static const String topicInvitation = 'event:channelInvitation';
   static const String topicSubscribe = 'event:subscribe';
   static const String topicUnsubscribe = 'event:unsubscribe';
+  static const String topicInvitation = 'event:channelInvitation';
 
   // SUPPORT:START
   static const String nknImage = 'nknImage';
@@ -376,16 +376,6 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getTopicInvitee(MessageSchema schema, String topicName) {
-    Map data = {
-      'id': schema.msgId,
-      'contentType': MessageContentType.topicInvitation,
-      'content': topicName,
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-    };
-    return jsonEncode(data);
-  }
-
   static String getTopicSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
@@ -401,6 +391,16 @@ class MessageData {
       'id': schema.msgId,
       'contentType': MessageContentType.topicUnsubscribe,
       'topic': schema.topic,
+      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+    };
+    return jsonEncode(data);
+  }
+
+  static String getTopicInvitee(MessageSchema schema, String topicName) {
+    Map data = {
+      'id': schema.msgId,
+      'contentType': MessageContentType.topicInvitation,
+      'content': topicName,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
@@ -517,9 +517,9 @@ class MessageSchema extends Equatable {
       // case ContentType.nknImage:
       // case ContentType.audio:
       // case ContentType.piece:
-      // case ContentType.topicInvitation:
       // case ContentType.topicSubscribe:
       // case ContentType.topicUnsubscribe:
+      // case ContentType.topicInvitation:
       default:
         schema.content = data['content'];
         break;
@@ -658,9 +658,9 @@ class MessageSchema extends Equatable {
           map['content'] = Path.getLocalFile((content as File).path);
         }
         break;
-      // case ContentType.topicInvitation:
       // case ContentType.topicSubscribe:
       // case ContentType.topicUnsubscribe:
+      // case ContentType.topicInvitation:
       default:
         map['content'] = content;
         break;
@@ -715,9 +715,9 @@ class MessageSchema extends Equatable {
         String? completePath = Path.getCompleteFile(e['content']);
         schema.content = (completePath?.isNotEmpty == true) ? File(completePath!) : null;
         break;
-      // case ContentType.topicInvitation:
       // case ContentType.topicSubscribe:
       // case ContentType.topicUnsubscribe:
+      // case ContentType.topicInvitation:
       default:
         schema.content = e['content'];
         break;

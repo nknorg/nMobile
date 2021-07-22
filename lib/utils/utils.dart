@@ -107,12 +107,8 @@ bool isPrivateTopicReg(String topic) {
   return privateTopicRegExp.hasMatch(topic);
 }
 
-unLeadingHashIt(String str) {
-  return str.replaceFirst(RegExp(r'^#*'), '');
-}
-
 String genTopicHash(String topic) {
-  var t = unLeadingHashIt(topic);
+  var t = topic.replaceFirst(RegExp(r'^#*'), '');
   return 'dchat' + hexEncode(Uint8List.fromList(sha1(t)));
 }
 

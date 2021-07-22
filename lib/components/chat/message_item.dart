@@ -93,13 +93,13 @@ class ChatMessageItem extends StatelessWidget {
         );
         break;
       // case ContentType.piece:
-      case MessageContentType.topicInvitation:
-        contentsWidget.add(_topicInvitedWidget(context));
-        break;
       case MessageContentType.topicSubscribe:
         contentsWidget.add(_topicSubscribeWidget(context));
         break;
       case MessageContentType.topicUnsubscribe:
+        break;
+      case MessageContentType.topicInvitation:
+        contentsWidget.add(_topicInvitedWidget(context));
         break;
     }
 
@@ -233,6 +233,22 @@ class ChatMessageItem extends StatelessWidget {
     }
   }
 
+  Widget _topicSubscribeWidget(BuildContext context) {
+    S _localizations = S.of(context);
+    String who = message.isOutbound ? _localizations.you : message.from.substring(0, 6);
+    String content = who + _localizations.joined_channel;
+
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 6),
+      alignment: Alignment.center,
+      child: Label(
+        content,
+        type: LabelType.bodyRegular,
+        color: application.theme.fontColor2,
+      ),
+    );
+  }
+
   Widget _topicInvitedWidget(BuildContext context) {
     S _localizations = S.of(context);
 
@@ -289,22 +305,6 @@ class ChatMessageItem extends StatelessWidget {
                   },
                 )
         ],
-      ),
-    );
-  }
-
-  Widget _topicSubscribeWidget(BuildContext context) {
-    S _localizations = S.of(context);
-    String who = message.isOutbound ? _localizations.you : message.from.substring(0, 6);
-    String content = who + _localizations.joined_channel;
-
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 6),
-      alignment: Alignment.center,
-      child: Label(
-        content,
-        type: LabelType.bodyRegular,
-        color: application.theme.fontColor2,
       ),
     );
   }
