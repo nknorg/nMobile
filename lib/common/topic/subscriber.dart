@@ -38,51 +38,43 @@ class SubscriberCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone, meta = isPrivate
-  Future refreshSubscribers(
-    String? topicName, {
-    int offset = 0,
-    int limit = 10000,
-    bool meta = false,
-    bool txPool = true,
-    Uint8List? subscriberHashPrefix,
-  }) async {
+  Future refreshSubscribers(String? topicName, {bool meta = false, bool txPool = true, Uint8List? subscriberHashPrefix}) async {
     if (topicName == null || topicName.isEmpty) return [];
 
     List<SubscriberSchema> dbSubscribers = await queryListByTopic(topicName);
-    List<SubscriberSchema> nodeSubscribers = await _clientGetSubscribers(topicName, offset: offset, limit: limit, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix);
+    List<SubscriberSchema> nodeSubscribers = await _mergePermissionsAndSubscribers(topicName, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix);
 
-    // delete DB data
+    // delete/update DB data
     List<Future> futures = [];
     for (SubscriberSchema dbItem in dbSubscribers) {
       // filter in txPool
       int updateAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
       if ((DateTime.now().millisecondsSinceEpoch - updateAt).abs() < Settings.txPoolDelayMs) {
-        logger.i("$TAG - refreshSubscribers - dbSub update just now, maybe in tx pool - dbSub:$dbItem");
+        logger.i("$TAG - refreshSubscribers - DB update just now, maybe in tx pool - dbSub:$dbItem");
         continue;
       }
-      // different with node in DB
-      SubscriberSchema? findSubscriber;
+      SubscriberSchema? findNode;
       for (SubscriberSchema nodeItem in nodeSubscribers) {
         if (dbItem.clientAddress == nodeItem.clientAddress) {
-          findSubscriber = nodeItem;
+          findNode = nodeItem;
           break;
         }
       }
-      if (findSubscriber == null) {
-        logger.i("$TAG - refreshSubscribers - dbSub delete because node no find - dbSub:$dbItem");
+      // different with node in DB
+      if (findNode == null) {
+        logger.i("$TAG - refreshSubscribers - DB delete because node no find - DB:$dbItem");
         futures.add(delete(dbItem.id, notify: true));
       } else {
-        if (dbItem.status != findSubscriber.status) {
-          if (findSubscriber.status == SubscriberStatus.Subscribed || findSubscriber.status == SubscriberStatus.Unsubscribed) {
-            logger.i("$TAG - refreshSubscribers - dbSub set status sync node - dbSub:$dbItem - nodeSub:$findSubscriber");
-            futures.add(setStatus(dbItem.id, findSubscriber.status, notify: true));
-          } else if (findSubscriber.status == SubscriberStatus.InvitedReceipt && (dbItem.status ?? SubscriberStatus.None) > (findSubscriber.status ?? SubscriberStatus.None)) {
-            logger.i("$TAG - refreshSubscribers - dbSub set receipt sync node - dbSub:$dbItem - nodeSub:$findSubscriber");
-            futures.add(setStatus(dbItem.id, findSubscriber.status, notify: true));
+        if (dbItem.status != findNode.status) {
+          if (findNode.status == SubscriberStatus.InvitedSend && dbItem.status == SubscriberStatus.InvitedReceipt) {
+            logger.i("$TAG - refreshSubscribers - DB is receive invited so no update - DB:$dbItem - node:$findNode");
+          } else {
+            logger.i("$TAG - refreshSubscribers - DB set receipt to sync node - DB:$dbItem - node:$findNode");
+            futures.add(setStatus(dbItem.id, findNode.status, notify: true));
           }
-        } else if (dbItem.permPage != findSubscriber.permPage && findSubscriber.permPage != null) {
-          logger.i("$TAG - refreshSubscribers - dbSub set permPage sync node - dbSub:$dbItem - nodeSub:$findSubscriber");
-          futures.add(setPermPage(dbItem.id, findSubscriber.permPage, notify: true));
+        } else if (dbItem.permPage != findNode.permPage && findNode.permPage != null) {
+          logger.i("$TAG - refreshSubscribers - DB set permPage to sync node - DB:$dbItem - node:$findNode");
+          futures.add(setPermPage(dbItem.id, findNode.permPage, notify: true));
         }
       }
     }
@@ -91,28 +83,176 @@ class SubscriberCommon with Tag {
     // insert node data
     futures.clear();
     for (SubscriberSchema nodeItem in nodeSubscribers) {
-      // different with DB in node
-      SubscriberSchema? findSubscriber;
+      bool find = false;
       for (SubscriberSchema dbItem in dbSubscribers) {
         if (dbItem.clientAddress == nodeItem.clientAddress) {
-          findSubscriber = dbItem;
+          find = true;
           break;
         }
       }
-      if (findSubscriber == null) {
-        logger.i("$TAG - refreshSubscribers - nodeSub add because DB no find - nodeSub:$nodeItem");
-        SubscriberSchema? subscriber = SubscriberSchema.create(topicName, nodeItem.clientAddress, nodeItem.status);
-        subscriber?.permPage = nodeItem.permPage;
-        futures.add(add(subscriber, notify: true));
+      // different with DB in node
+      if (!find) {
+        logger.i("$TAG - refreshSubscribers - node add because DB no find - nodeSub:$nodeItem");
+        futures.add(add(nodeItem, notify: true));
       }
     }
     await Future.wait(futures);
   }
 
+  Future<List<SubscriberSchema>> _mergePermissionsAndSubscribers(String? topicName, {bool meta = false, bool txPool = true, Uint8List? subscriberHashPrefix}) async {
+    if (topicName == null || topicName.isEmpty) return [];
+    // permissions + subscribers
+    Map<String, dynamic> noMergeResults = await _clientGetSubscribers(topicName, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix);
+
+    // subscribers
+    List<SubscriberSchema> subscribers = [];
+    noMergeResults.forEach((key, value) {
+      if (key.isNotEmpty && !key.contains('.__permission__.')) {
+        SubscriberSchema? item = SubscriberSchema.create(topicName, key, SubscriberStatus.None, null);
+        if (item != null) subscribers.add(item);
+      }
+    });
+    logger.d("$TAG - _mergePermissionsAndSubscribers - subscribers:$subscribers");
+
+    // permissions
+    List<SubscriberSchema> permissions = [];
+    bool _acceptAll = false;
+    noMergeResults.forEach((key, value) {
+      if (!_acceptAll && key.contains('.__permission__.')) {
+        // permPage
+        String prefix = key.split("__.__permission__.")[0];
+        String permIndex = prefix.split("__")[prefix.split("__").length - 1];
+        int permPage = int.tryParse(permIndex) ?? 0;
+        // meta (same with client_subscription[meta])
+        Map<String, dynamic>? meta = jsonFormat(value);
+        // accept
+        List<dynamic> acceptList = meta?['accept'] ?? [];
+        for (int i = 0; i < acceptList.length; i++) {
+          var element = acceptList[i];
+          if (element is Map) {
+            SubscriberSchema? item = SubscriberSchema.create(topicName, element["addr"], SubscriberStatus.InvitedSend, permPage);
+            if (item != null) permissions.add(item);
+          } else if (element is String) {
+            if (element.trim() == "*") {
+              logger.i("$TAG - _mergePermissionsAndSubscribers - accept all - accept:$element");
+              _acceptAll = true;
+              break;
+            } else {
+              logger.w("$TAG - _mergePermissionsAndSubscribers - accept content error - accept:$element");
+            }
+          } else {
+            logger.w("$TAG - _mergePermissionsAndSubscribers - accept type error - accept:$element");
+          }
+        }
+        // reject
+        List<dynamic> rejectList = meta?['reject'] ?? [];
+        if (!_acceptAll) {
+          rejectList.forEach((element) {
+            if (element is Map) {
+              SubscriberSchema? item = SubscriberSchema.create(topicName, element["addr"], SubscriberStatus.Unsubscribed, permPage);
+              if (item != null) permissions.add(item);
+            } else {
+              logger.w("$TAG - _mergePermissionsAndSubscribers - reject type error - accept:$element");
+            }
+          });
+        }
+      }
+    });
+    logger.d("$TAG - _mergePermissionsAndSubscribers - permissions:$permissions");
+
+    // merge
+    List<SubscriberSchema> results = [];
+    if (_acceptAll) {
+      results = subscribers;
+      results = results.map((e) {
+        e.status = SubscriberStatus.Subscribed;
+        return e;
+      }).toList();
+    } else {
+      for (int i = 0; i < subscribers.length; i++) {
+        var subscriber = subscribers[i];
+        bool find = false;
+        for (int j = 0; j < permissions.length; j++) {
+          SubscriberSchema permission = permissions[j];
+          if (subscriber.clientAddress.isNotEmpty && subscriber.clientAddress == permission.clientAddress) {
+            logger.d("$TAG - _mergePermissionsAndSubscribers - subscribers && permission - permission:$permission");
+            if (permission.status == SubscriberStatus.InvitedSend) {
+              // same with up line accept status
+              permission.status = SubscriberStatus.Subscribed;
+            }
+            results.add(permission);
+            find = true;
+            break;
+          }
+        }
+        if (!find) {
+          results.add(subscriber);
+        }
+      }
+      List<SubscriberSchema> noFindMetas = [];
+      for (int i = 0; i < permissions.length; i++) {
+        SubscriberSchema permission = permissions[i];
+        if (subscribers.where((element) => element.clientAddress.isNotEmpty && element.clientAddress == permission.clientAddress).toList().isEmpty) {
+          logger.d("$TAG - _mergePermissionsAndSubscribers - subscribers !! permission - permission:$permission");
+          if (permission.status != SubscriberStatus.Unsubscribed) {
+            // same with up line reject status
+            noFindMetas.add(permission);
+          }
+        }
+      }
+      results.addAll(noFindMetas);
+    }
+    logger.d("$TAG - _mergePermissionsAndSubscribers - results:$results");
+    return results;
+  }
+
+  Future<Map<String, dynamic>> _clientGetSubscribers(
+    String? topicName, {
+    int offset = 0,
+    int limit = 10000,
+    bool meta = false,
+    bool txPool = true,
+    Uint8List? subscriberHashPrefix,
+    Map<String, dynamic>? prefixResult,
+  }) async {
+    if (topicName == null || topicName.isEmpty) return prefixResult ?? Map();
+    Map<String, dynamic>? results = await clientCommon.client?.getSubscribers(
+      topic: genTopicHash(topicName),
+      offset: offset,
+      limit: limit,
+      meta: meta,
+      txPool: txPool,
+      subscriberHashPrefix: subscriberHashPrefix,
+    );
+    if (results?.isNotEmpty == true) {
+      results?.addAll(prefixResult ?? Map());
+      try {
+        return _clientGetSubscribers(
+          topicName,
+          offset: offset + limit,
+          limit: limit,
+          meta: meta,
+          txPool: txPool,
+          subscriberHashPrefix: subscriberHashPrefix,
+          prefixResult: results,
+        );
+      } catch (e) {
+        handleError(e);
+        return prefixResult ?? Map();
+      }
+    }
+    logger.d("$TAG - _clientGetSubscribers - offset:$offset - limit:$limit - results:$prefixResult");
+    return prefixResult ?? Map();
+  }
+
+  /// ***********************************************************************************************************
+  /// ************************************************** count **************************************************
+  /// ***********************************************************************************************************
+
   // caller = everyone
   Future<int> getSubscribersCount(String? topicName, {bool? isPrivate, Uint8List? subscriberHashPrefix}) async {
     if (topicName == null || topicName.isEmpty) return 0;
-    int count = 0;
+    int count = 0; // TODO:GG 要修改
     if (isPrivate ?? isPrivateTopicReg(topicName)) {
       int count1 = await queryCountByTopic(topicName, status: SubscriberStatus.InvitedSend);
       int count2 = await queryCountByTopic(topicName, status: SubscriberStatus.InvitedReceipt);
@@ -122,116 +262,6 @@ class SubscriberCommon with Tag {
       count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
     }
     return count;
-  }
-
-  Future<List<SubscriberSchema>> _clientGetSubscribers(
-    String? topicName, {
-    int offset = 0,
-    int limit = 10000,
-    bool meta = false,
-    bool txPool = true,
-    Uint8List? subscriberHashPrefix,
-  }) async {
-    if (topicName == null || topicName.isEmpty) return [];
-    List<SubscriberSchema> list = [];
-
-    try {
-      // meta + subscribers
-      Map<String, dynamic>? results = await clientCommon.client?.getSubscribers(
-        topic: genTopicHash(topicName),
-        offset: offset,
-        limit: limit,
-        meta: meta,
-        txPool: txPool,
-        subscriberHashPrefix: subscriberHashPrefix,
-      );
-      logger.d("$TAG - _clientGetSubscribers - results:$results");
-
-      // subscribers
-      List<SubscriberSchema> subscribers = [];
-      results?.forEach((key, value) {
-        if (key.isNotEmpty && !key.contains('.__permission__.')) {
-          SubscriberSchema? item = SubscriberSchema.create(topicName, key, SubscriberStatus.None);
-          if (item != null) subscribers.add(item);
-        }
-      });
-      logger.d("$TAG - _clientGetSubscribers - subscribers:$subscribers");
-
-      // metas
-      List<SubscriberSchema> metas = [];
-      bool _acceptAll = false;
-      results?.forEach((key, value) {
-        if (!_acceptAll && key.contains('.__permission__.')) {
-          // permPage
-          String prefix = key.split("__.__permission__.")[0];
-          String permIndex = prefix.split("__")[prefix.split("__").length - 1];
-          int permPage = int.tryParse(permIndex) ?? 0;
-          // meta (same with subscription meta)
-          Map<String, dynamic>? meta = jsonFormat(value);
-          // accept
-          List<dynamic> acceptList = meta?['accept'] ?? [];
-          acceptList.forEach((element) {
-            if (element is Map) {
-              SubscriberSchema? item = SubscriberSchema.create(topicName, element["addr"], SubscriberStatus.InvitedReceipt);
-              item?.permPage = permPage < 0 ? 0 : permPage;
-              if (item != null) metas.add(item);
-            } else if (element is String) {
-              if (element.trim() == "*") {
-                logger.i("$TAG - _clientGetSubscribers - accept all - accept:$element");
-                _acceptAll = true;
-              } else {
-                logger.w("$TAG - _clientGetSubscribers - accept content error - accept:$element");
-              }
-            } else {
-              logger.w("$TAG - _clientGetSubscribers - accept type error - accept:$element");
-            }
-          });
-          // reject
-          List<dynamic> rejectList = meta?['reject'] ?? [];
-          rejectList.forEach((element) {
-            if (element is Map) {
-              SubscriberSchema? item = SubscriberSchema.create(topicName, element["addr"], SubscriberStatus.Unsubscribed);
-              item?.permPage = permPage < 0 ? 0 : permPage;
-              if (item != null) metas.add(item);
-            } else {
-              logger.w("$TAG - _clientGetSubscribers - reject type error - accept:$element");
-            }
-          });
-        }
-      });
-      logger.d("$TAG - _clientGetSubscribers - metas:$metas");
-
-      // merge
-      if (_acceptAll) {
-        list = subscribers;
-      } else {
-        for (int i = 0; i < subscribers.length; i++) {
-          var subscriber = subscribers[i];
-          for (int j = 0; j < metas.length; j++) {
-            SubscriberSchema meta = metas[j];
-            if (subscriber.clientAddress.isNotEmpty && subscriber.clientAddress == meta.clientAddress) {
-              logger.d("$TAG - _clientGetSubscribers - sub + meta - meta:$meta");
-              if (meta.status == SubscriberStatus.InvitedReceipt) meta.status = SubscriberStatus.Subscribed;
-              list.add(meta);
-              break;
-            }
-          }
-        }
-        List<SubscriberSchema> noFindMetas = [];
-        for (int i = 0; i < metas.length; i++) {
-          SubscriberSchema meta = metas[i];
-          if (subscribers.where((element) => element.clientAddress.isNotEmpty && element.clientAddress == meta.clientAddress).toList().isEmpty) {
-            logger.d("$TAG - _clientGetSubscribers - no find meta - meta:$meta");
-            noFindMetas.add(meta);
-          }
-        }
-        list.addAll(noFindMetas);
-      }
-      logger.d("$TAG - _clientGetSubscribers - list:$list");
-    } catch (e) {
-      handleError(e);
-    }
-    return list;
   }
 
   Future<int> _clientGetSubscribersCount(String? topicName, {Uint8List? subscriberHashPrefix}) async {
@@ -259,7 +289,7 @@ class SubscriberCommon with Tag {
     // subscriber
     SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
     if (subscriber == null) {
-      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.InvitedSend), notify: true);
+      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.InvitedSend, permPage), notify: true);
     }
     if (subscriber == null) return null;
     // status
@@ -281,7 +311,7 @@ class SubscriberCommon with Tag {
     // subscriber
     SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
     if (subscriber == null) {
-      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.InvitedReceipt), notify: true);
+      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.InvitedReceipt, permPage), notify: true);
     }
     if (subscriber == null) return null;
     // status
@@ -303,7 +333,7 @@ class SubscriberCommon with Tag {
     // subscriber
     SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
     if (subscriber == null) {
-      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.Subscribed), notify: true);
+      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.Subscribed, permPage), notify: true);
     }
     if (subscriber == null) return null;
     // status
@@ -320,7 +350,7 @@ class SubscriberCommon with Tag {
   }
 
   // status: Unsubscribed (caller = self + other)
-  Future<SubscriberSchema?> onUnsubscribe(String? topicName, String? clientAddress) async {
+  Future<SubscriberSchema?> onUnsubscribe(String? topicName, String? clientAddress, {int? permPage}) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
     SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
@@ -333,24 +363,34 @@ class SubscriberCommon with Tag {
       bool success = await setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
       if (success) subscriber.status = SubscriberStatus.Unsubscribed;
     }
+    // permPage
+    if (subscriber.permPage != permPage && permPage != null) {
+      bool success = await setPermPage(subscriber.id, permPage, notify: true);
+      if (success) subscriber.permPage = permPage;
+    }
     // delete
     bool success = await delete(subscriber.id, notify: true);
     return success ? subscriber : null;
   }
 
   // status: Kick (caller = owner)
-  Future<SubscriberSchema?> onKick(String? topicName, String? clientAddress) async {
+  Future<SubscriberSchema?> onKickOut(String? topicName, String? clientAddress, {int? permPage}) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
     SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
     if (subscriber == null) {
-      logger.d("$TAG - onKick - subscriber is null - topicName:$topicName - clientAddress:$clientAddress");
+      logger.d("$TAG - onKickOut - subscriber is null - topicName:$topicName - clientAddress:$clientAddress");
       return null;
     }
     // status
     if (subscriber.status != SubscriberStatus.Unsubscribed) {
       bool success = await setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
       if (success) subscriber.status = SubscriberStatus.Unsubscribed;
+    }
+    // permPage
+    if (subscriber.permPage != permPage && permPage != null) {
+      bool success = await setPermPage(subscriber.id, permPage, notify: true);
+      if (success) subscriber.permPage = permPage;
     }
     // delete
     bool success = await delete(subscriber.id, notify: true);
@@ -421,13 +461,6 @@ class SubscriberCommon with Tag {
       mexPermPage++;
     }
     return mexPermPage;
-  }
-
-  Future<bool> setStatusAndPermPageByTopic(String? topic, int? status, int? permPage) async {
-    if (topic == null || topic.isEmpty || status == null) return false;
-    bool success = await _subscriberStorage.setStatusAndPermPageByTopic(topic, status, permPage);
-    // if (success && notify) queryAndNotify(subscriberId);
-    return success;
   }
 
   Future<bool> setStatus(int? subscriberId, int? status, {bool notify = false}) async {
