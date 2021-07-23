@@ -5,12 +5,11 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class SubscriberStatus {
-  static const int KickOut = -2;
-  static const int Unsubscribed = -1;
   static const int None = 0;
   static const int InvitedSend = 1;
   static const int InvitedReceipt = 2;
   static const int Subscribed = 3;
+  static const int Unsubscribed = 4;
 }
 
 class SubscriberSchema {
@@ -37,11 +36,6 @@ class SubscriberSchema {
     this.data,
   });
 
-  bool get canBeInvited {
-    int _status = (status ?? SubscriberStatus.None);
-    return _status != SubscriberStatus.Subscribed;
-  }
-
   bool get canBeKick {
     int _status = (status ?? SubscriberStatus.None);
     return _status == SubscriberStatus.InvitedSend || _status == SubscriberStatus.InvitedReceipt || _status == SubscriberStatus.Subscribed;
@@ -53,14 +47,15 @@ class SubscriberSchema {
     return await contactCommon.addByType(clientAddress, ContactType.stranger, notify: true, checkDuplicated: false);
   }
 
-  static SubscriberSchema? create(String? topic, String? clientAddress, int? status) {
+  static SubscriberSchema? create(String? topic, String? clientAddress, int? status, int? permPage) {
     if (topic?.isNotEmpty == true && clientAddress?.isNotEmpty == true) {
       return SubscriberSchema(
         topic: topic!,
         clientAddress: clientAddress!,
-        status: status,
         createAt: DateTime.now().millisecondsSinceEpoch,
         updateAt: DateTime.now().millisecondsSinceEpoch,
+        status: status,
+        permPage: permPage,
       );
     }
     return null;
