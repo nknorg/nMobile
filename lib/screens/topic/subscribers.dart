@@ -153,7 +153,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   }
 
   _refreshMembersCount() async {
-    int count = await subscriberCommon.getSubscribersCount(_topicSchema?.topic);
+    int count = await subscriberCommon.getSubscribersCount(_topicSchema?.topic, _topicSchema?.isPrivate == true);
     if (_topicSchema?.count != count) {
       await topicCommon.setCount(_topicSchema?.id, count, notify: true);
     }

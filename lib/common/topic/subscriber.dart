@@ -34,38 +34,6 @@ class SubscriberCommon with Tag {
   }
 
   /// ***********************************************************************************************************
-  /// ************************************************** count **************************************************
-  /// ***********************************************************************************************************
-
-  // caller = everyone
-  Future<int> getSubscribersCount(String? topicName, {bool? isPrivate, Uint8List? subscriberHashPrefix}) async {
-    if (topicName == null || topicName.isEmpty) return 0;
-    int count = 0;
-    if (isPrivate ?? isPrivateTopicReg(topicName)) {
-      // count = (await _mergePermissionsAndSubscribers(topicName, meta: true, txPool: true, subscriberHashPrefix: subscriberHashPrefix)).length;
-      count = await queryCountByTopic(topicName); // maybe wrong but subscribers screen will check it
-    } else {
-      count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
-    }
-    logger.d("$TAG - getSubscribersCount - topicName:$topicName - isPrivate:${isPrivate ?? isPrivateTopicReg(topicName)} - count:$count");
-    return count;
-  }
-
-  Future<int> _clientGetSubscribersCount(String? topicName, {Uint8List? subscriberHashPrefix}) async {
-    if (topicName == null || topicName.isEmpty) return 0;
-    int? count;
-    try {
-      count = await clientCommon.client?.getSubscribersCount(
-        topic: genTopicHash(topicName),
-        subscriberHashPrefix: subscriberHashPrefix,
-      );
-    } catch (e) {
-      handleError(e);
-    }
-    return count ?? 0;
-  }
-
-  /// ***********************************************************************************************************
   /// ********************************************** subscribers ************************************************
   /// ***********************************************************************************************************
 
@@ -74,7 +42,7 @@ class SubscriberCommon with Tag {
     if (topicName == null || topicName.isEmpty) return [];
 
     List<SubscriberSchema> dbSubscribers = await queryListByTopic(topicName);
-    List<SubscriberSchema> nodeSubscribers = await _mergePermissionsAndSubscribers(topicName, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix);
+    List<SubscriberSchema> nodeSubscribers = await getPermissionsMergeSubscribers(topicName, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix);
 
     // delete/update DB data
     List<Future> futures = [];
@@ -131,10 +99,15 @@ class SubscriberCommon with Tag {
     await Future.wait(futures);
   }
 
-  Future<List<SubscriberSchema>> _mergePermissionsAndSubscribers(String? topicName, {bool meta = false, bool txPool = true, Uint8List? subscriberHashPrefix}) async {
+  Future<List<SubscriberSchema>> getPermissionsMergeSubscribers(String? topicName, {bool meta = false, bool txPool = true, Uint8List? subscriberHashPrefix}) async {
     if (topicName == null || topicName.isEmpty) return [];
     // permissions + subscribers
-    Map<String, dynamic> noMergeResults = await _clientGetSubscribers(topicName, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix);
+    Map<String, dynamic> noMergeResults = await _clientGetSubscribers(
+      topicName,
+      meta: meta,
+      txPool: txPool,
+      subscriberHashPrefix: subscriberHashPrefix,
+    );
 
     // subscribers
     List<SubscriberSchema> subscribers = [];
@@ -144,7 +117,100 @@ class SubscriberCommon with Tag {
         if (item != null) subscribers.add(item);
       }
     });
-    logger.d("$TAG - _mergePermissionsAndSubscribers - subscribers:$subscribers");
+
+    // permissions
+    List<dynamic> permissionsResult = await _getPermissionsByClientSubscribers(
+      topicName,
+      clientGetSubscribers: noMergeResults,
+      meta: meta,
+      txPool: txPool,
+      subscriberHashPrefix: subscriberHashPrefix,
+    );
+    List<SubscriberSchema> permissions = permissionsResult[0];
+    bool _acceptAll = permissionsResult[1];
+
+    // merge
+    List<SubscriberSchema> results = [];
+    if (_acceptAll) {
+      results = subscribers;
+      results = results.map((e) {
+        e.status = SubscriberStatus.Subscribed;
+        return e;
+      }).toList();
+    } else {
+      for (int i = 0; i < subscribers.length; i++) {
+        var subscriber = subscribers[i];
+        bool find = false;
+        for (int j = 0; j < permissions.length; j++) {
+          SubscriberSchema permission = permissions[j];
+          if (subscriber.clientAddress.isNotEmpty && subscriber.clientAddress == permission.clientAddress) {
+            logger.d("$TAG - getPermissionsMergeSubscribers - subscribers && permission - permission:$permission");
+            if (permission.status == SubscriberStatus.InvitedSend) {
+              // same with up line accept status
+              permission.status = SubscriberStatus.Subscribed;
+            }
+            results.add(permission);
+            find = true;
+            break;
+          }
+        }
+        if (!find) {
+          results.add(subscriber);
+        }
+      }
+      List<SubscriberSchema> noFindMetas = [];
+      for (int i = 0; i < permissions.length; i++) {
+        SubscriberSchema permission = permissions[i];
+        if (subscribers.where((element) => element.clientAddress.isNotEmpty && element.clientAddress == permission.clientAddress).toList().isEmpty) {
+          logger.d("$TAG - getPermissionsMergeSubscribers - subscribers !! permission - permission:$permission");
+          if (permission.status != SubscriberStatus.Unsubscribed) {
+            // same with up line reject status
+            noFindMetas.add(permission);
+          }
+        }
+      }
+      results.addAll(noFindMetas);
+    }
+    logger.d("$TAG - getPermissionsMergeSubscribers - results:$results");
+    return results;
+  }
+
+  /// ***********************************************************************************************************
+  /// ********************************************** permission *************************************************
+  /// ***********************************************************************************************************
+
+  Future<List<dynamic>> findPermission(String? topicName, String? clientAddress) async {
+    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return [null, null];
+    // permissions
+    List<dynamic> result = await subscriberCommon._getPermissionsByClientSubscribers(topicName, meta: true);
+    List<SubscriberSchema> subscribers = result[0];
+    bool _acceptAll = result[0];
+    if (_acceptAll) {
+      logger.i("$TAG - findPermission - acceptAll = true");
+      return [null, true];
+    }
+    // find
+    List<SubscriberSchema> finds = subscribers.where((element) => element.clientAddress == clientAddress).toList();
+    if (finds.isNotEmpty) {
+      int? permPage = finds[0].permPage;
+      bool isAccept = finds[0].status == SubscriberStatus.Subscribed;
+      logger.d("$TAG - findPermission - permPage:$permPage - isAccept:$isAccept");
+      return [permPage, isAccept];
+    }
+    logger.i("$TAG - findPermission - null");
+    return [null, null];
+  }
+
+  Future<List<dynamic>> _getPermissionsByClientSubscribers(String? topicName, {bool meta = false, bool txPool = true, Uint8List? subscriberHashPrefix, Map<String, dynamic>? clientGetSubscribers}) async {
+    if (topicName == null || topicName.isEmpty) return [];
+    // permissions + subscribers
+    Map<String, dynamic> noMergeResults = clientGetSubscribers ??
+        await _clientGetSubscribers(
+          topicName,
+          meta: meta,
+          txPool: txPool,
+          subscriberHashPrefix: subscriberHashPrefix,
+        );
 
     // permissions
     List<SubscriberSchema> permissions = [];
@@ -166,14 +232,14 @@ class SubscriberCommon with Tag {
             if (item != null) permissions.add(item);
           } else if (element is String) {
             if (element.trim() == "*") {
-              logger.i("$TAG - _mergePermissionsAndSubscribers - accept all - accept:$element");
+              logger.i("$TAG - _getPermissionsByClientSubscribers - accept all - accept:$element");
               _acceptAll = true;
               break;
             } else {
-              logger.w("$TAG - _mergePermissionsAndSubscribers - accept content error - accept:$element");
+              logger.w("$TAG - _getPermissionsByClientSubscribers - accept content error - accept:$element");
             }
           } else {
-            logger.w("$TAG - _mergePermissionsAndSubscribers - accept type error - accept:$element");
+            logger.w("$TAG - _getPermissionsByClientSubscribers - accept type error - accept:$element");
           }
         }
         // reject
@@ -184,58 +250,14 @@ class SubscriberCommon with Tag {
               SubscriberSchema? item = SubscriberSchema.create(topicName, element["addr"], SubscriberStatus.Unsubscribed, permPage);
               if (item != null) permissions.add(item);
             } else {
-              logger.w("$TAG - _mergePermissionsAndSubscribers - reject type error - accept:$element");
+              logger.w("$TAG - _getPermissionsByClientSubscribers - reject type error - accept:$element");
             }
           });
         }
       }
     });
-    logger.d("$TAG - _mergePermissionsAndSubscribers - permissions:$permissions");
-
-    // merge
-    List<SubscriberSchema> results = [];
-    if (_acceptAll) {
-      results = subscribers;
-      results = results.map((e) {
-        e.status = SubscriberStatus.Subscribed;
-        return e;
-      }).toList();
-    } else {
-      for (int i = 0; i < subscribers.length; i++) {
-        var subscriber = subscribers[i];
-        bool find = false;
-        for (int j = 0; j < permissions.length; j++) {
-          SubscriberSchema permission = permissions[j];
-          if (subscriber.clientAddress.isNotEmpty && subscriber.clientAddress == permission.clientAddress) {
-            logger.d("$TAG - _mergePermissionsAndSubscribers - subscribers && permission - permission:$permission");
-            if (permission.status == SubscriberStatus.InvitedSend) {
-              // same with up line accept status
-              permission.status = SubscriberStatus.Subscribed;
-            }
-            results.add(permission);
-            find = true;
-            break;
-          }
-        }
-        if (!find) {
-          results.add(subscriber);
-        }
-      }
-      List<SubscriberSchema> noFindMetas = [];
-      for (int i = 0; i < permissions.length; i++) {
-        SubscriberSchema permission = permissions[i];
-        if (subscribers.where((element) => element.clientAddress.isNotEmpty && element.clientAddress == permission.clientAddress).toList().isEmpty) {
-          logger.d("$TAG - _mergePermissionsAndSubscribers - subscribers !! permission - permission:$permission");
-          if (permission.status != SubscriberStatus.Unsubscribed) {
-            // same with up line reject status
-            noFindMetas.add(permission);
-          }
-        }
-      }
-      results.addAll(noFindMetas);
-    }
-    logger.d("$TAG - _mergePermissionsAndSubscribers - results:$results");
-    return results;
+    logger.d("$TAG - _getPermissionsByClientSubscribers - acceptAll:$_acceptAll - permissions:$permissions");
+    return [permissions, _acceptAll];
   }
 
   Future<Map<String, dynamic>> _clientGetSubscribers(
@@ -275,6 +297,38 @@ class SubscriberCommon with Tag {
     }
     logger.d("$TAG - _clientGetSubscribers - offset:$offset - limit:$limit - results:$prefixResult");
     return prefixResult ?? Map();
+  }
+
+  /// ***********************************************************************************************************
+  /// ************************************************** count **************************************************
+  /// ***********************************************************************************************************
+
+  // caller = everyone
+  Future<int> getSubscribersCount(String? topicName, bool isPrivate, {Uint8List? subscriberHashPrefix}) async {
+    if (topicName == null || topicName.isEmpty) return 0;
+    int count = 0;
+    if (isPrivate) {
+      // count = (await _mergePermissionsAndSubscribers(topicName, meta: true, txPool: true, subscriberHashPrefix: subscriberHashPrefix)).length;
+      count = await queryCountByTopic(topicName); // maybe wrong but subscribers screen will check it
+    } else {
+      count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
+    }
+    logger.d("$TAG - getSubscribersCount - topicName:$topicName - isPrivate:$isPrivate - count:$count");
+    return count;
+  }
+
+  Future<int> _clientGetSubscribersCount(String? topicName, {Uint8List? subscriberHashPrefix}) async {
+    if (topicName == null || topicName.isEmpty) return 0;
+    int? count;
+    try {
+      count = await clientCommon.client?.getSubscribersCount(
+        topic: genTopicHash(topicName),
+        subscriberHashPrefix: subscriberHashPrefix,
+      );
+    } catch (e) {
+      handleError(e);
+    }
+    return count ?? 0;
   }
 
   /// ***********************************************************************************************************
