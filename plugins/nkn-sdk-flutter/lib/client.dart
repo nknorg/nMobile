@@ -157,13 +157,14 @@ class Client {
     }
   }
 
-  Future<OnMessage> publishText(String topic, String data, {int maxHoldingSeconds = 8640000}) async {
+  Future<OnMessage> publishText(String topic, String data, {int maxHoldingSeconds = 8640000, bool txPool = false}) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('publishText', {
         '_id': this.address,
         'topic': topic,
         'data': data,
         'maxHoldingSeconds': maxHoldingSeconds,
+        'txPool': txPool,
       });
       OnMessage message = OnMessage(
         messageId: resp['messageId'],
