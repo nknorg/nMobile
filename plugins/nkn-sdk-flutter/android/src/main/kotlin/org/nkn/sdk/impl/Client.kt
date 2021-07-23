@@ -272,6 +272,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val topic = call.argument<String>("topic")!!
         val data = call.argument<String>("data")!!
         val maxHoldingSeconds = call.argument<Int>("maxHoldingSeconds") ?: 0
+        val txPool = call.argument<Boolean>("txPool") ?: false
 
         if (!clientMap.containsKey(_id)) {
             result.error("", "client is null", "")
@@ -282,6 +283,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val config = MessageConfig()
         config.maxHoldingSeconds = if (maxHoldingSeconds < 0) 0 else maxHoldingSeconds
         config.messageID = Nkn.randomBytes(Nkn.MessageIDSize)
+        config.txPool = txPool
 
         viewModelScope.launch {
             try {
