@@ -40,7 +40,7 @@ class SubscriberStorage with Tag {
     await db.execute('CREATE INDEX index_subscriber_topic_update_at ON $tableName (topic, update_at)');
     await db.execute('CREATE INDEX index_subscriber_topic_status_create_at ON $tableName (topic, status, create_at)');
     await db.execute('CREATE INDEX index_subscriber_topic_status_update_at ON $tableName (topic, status, update_at)');
-    await db.execute('CREATE INDEX index_subscriber_topic_perm ON $tableName (topic, perm_page)');
+    await db.execute('CREATE INDEX index_subscriber_topic_perm_status ON $tableName (topic, perm_page, status)');
   }
 
   Future<SubscriberSchema?> insert(SubscriberSchema? schema, {bool checkDuplicated = true}) async {
@@ -276,30 +276,6 @@ class SubscriberStorage with Tag {
       handleError(e);
     }
     return 0;
-  }
-
-  Future<bool> setStatusAndPermPageByTopic(String? topic, int? status, int? permPage) async {
-    if (topic == null || topic.isEmpty || status == null) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'status': status,
-          'perm_page': permPage,
-          'update_at': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'topic = ?',
-        whereArgs: [topic],
-      );
-      if (count != null && count > 0) {
-        logger.d("$TAG - setStatusAndPermPageByTopic - success - topic:$topic - status:$status - permPage:$permPage");
-        return true;
-      }
-      logger.w("$TAG - setStatusAndPermPageByTopic - fail - topic:$topic - status:$status - permPage:$permPage");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
   }
 
   Future<bool> setStatus(int? subscriberId, int? status) async {
