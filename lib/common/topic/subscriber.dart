@@ -42,7 +42,8 @@ class SubscriberCommon with Tag {
     if (topicName == null || topicName.isEmpty) return 0;
     int count = 0;
     if (isPrivate ?? isPrivateTopicReg(topicName)) {
-      count = (await _mergePermissionsAndSubscribers(topicName, meta: true, txPool: true, subscriberHashPrefix: subscriberHashPrefix)).length;
+      // count = (await _mergePermissionsAndSubscribers(topicName, meta: true, txPool: true, subscriberHashPrefix: subscriberHashPrefix)).length;
+      count = await queryCountByTopic(topicName); // maybe wrong but subscribers screen will check it
     } else {
       count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
     }
