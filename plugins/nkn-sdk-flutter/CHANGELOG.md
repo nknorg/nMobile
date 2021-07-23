@@ -1,3 +1,7 @@
+## 0.1.7
+
+* Add txPool params in publishText
+
 ## 0.1.6
 
 * Add getHeight, getNonce
