@@ -5,11 +5,12 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class SubscriberStatus {
+  static const int KickOut = -2;
+  static const int Unsubscribed = -1;
   static const int None = 0;
   static const int InvitedSend = 1;
   static const int InvitedReceipt = 2;
   static const int Subscribed = 3;
-  static const int Unsubscribed = 4;
 }
 
 class SubscriberSchema {
@@ -35,6 +36,11 @@ class SubscriberSchema {
     this.permPage,
     this.data,
   });
+
+  bool get canBeInvited {
+    int _status = (status ?? SubscriberStatus.None);
+    return _status != SubscriberStatus.Subscribed;
+  }
 
   bool get canBeKick {
     int _status = (status ?? SubscriberStatus.None);
