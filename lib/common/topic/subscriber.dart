@@ -34,6 +34,37 @@ class SubscriberCommon with Tag {
   }
 
   /// ***********************************************************************************************************
+  /// ************************************************** count **************************************************
+  /// ***********************************************************************************************************
+
+  // caller = everyone
+  Future<int> getSubscribersCount(String? topicName, {bool? isPrivate, Uint8List? subscriberHashPrefix}) async {
+    if (topicName == null || topicName.isEmpty) return 0;
+    int count = 0;
+    if (isPrivate ?? isPrivateTopicReg(topicName)) {
+      count = (await _mergePermissionsAndSubscribers(topicName, meta: true, txPool: true, subscriberHashPrefix: subscriberHashPrefix)).length;
+    } else {
+      count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
+    }
+    logger.d("$TAG - getSubscribersCount - topicName:$topicName - isPrivate:${isPrivate ?? isPrivateTopicReg(topicName)} - count:$count");
+    return count;
+  }
+
+  Future<int> _clientGetSubscribersCount(String? topicName, {Uint8List? subscriberHashPrefix}) async {
+    if (topicName == null || topicName.isEmpty) return 0;
+    int? count;
+    try {
+      count = await clientCommon.client?.getSubscribersCount(
+        topic: genTopicHash(topicName),
+        subscriberHashPrefix: subscriberHashPrefix,
+      );
+    } catch (e) {
+      handleError(e);
+    }
+    return count ?? 0;
+  }
+
+  /// ***********************************************************************************************************
   /// ********************************************** subscribers ************************************************
   /// ***********************************************************************************************************
 
@@ -243,40 +274,6 @@ class SubscriberCommon with Tag {
     }
     logger.d("$TAG - _clientGetSubscribers - offset:$offset - limit:$limit - results:$prefixResult");
     return prefixResult ?? Map();
-  }
-
-  /// ***********************************************************************************************************
-  /// ************************************************** count **************************************************
-  /// ***********************************************************************************************************
-
-  // caller = everyone
-  Future<int> getSubscribersCount(String? topicName, {bool? isPrivate, Uint8List? subscriberHashPrefix}) async {
-    if (topicName == null || topicName.isEmpty) return 0;
-    int count = 0; // TODO:GG 要修改
-    if (isPrivate ?? isPrivateTopicReg(topicName)) {
-      int count1 = await queryCountByTopic(topicName, status: SubscriberStatus.InvitedSend);
-      int count2 = await queryCountByTopic(topicName, status: SubscriberStatus.InvitedReceipt);
-      int count3 = await queryCountByTopic(topicName, status: SubscriberStatus.Subscribed);
-      count = count1 + count2 + count3;
-    } else {
-      count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
-    }
-    return count;
-  }
-
-  Future<int> _clientGetSubscribersCount(String? topicName, {Uint8List? subscriberHashPrefix}) async {
-    if (topicName == null || topicName.isEmpty) return 0;
-    int? count;
-    try {
-      count = await clientCommon.client?.getSubscribersCount(
-        topic: genTopicHash(topicName),
-        subscriberHashPrefix: subscriberHashPrefix,
-      );
-      logger.d("$TAG - _clientGetSubscribersCount - count:$count");
-    } catch (e) {
-      handleError(e);
-    }
-    return count ?? 0;
   }
 
   /// ***********************************************************************************************************
