@@ -453,7 +453,8 @@ class TopicCommon with Tag {
     }
 
     // send message
-    // TODO:GG topic  need new protocol(event:channelKick)
+    MessageSchema? _msg = await chatOutCommon.sendTopicKickOut(topicName, clientAddress);
+    if (_msg == null) return null;
     Toast.show("已提出"); // TODO:GG local kick
     return _subscriber;
   }
