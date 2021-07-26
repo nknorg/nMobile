@@ -311,8 +311,6 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
-    } else if (msgType == MessageContentType.topicUnsubscribe) {
-      contentWidget = SizedBox.shrink();
     } else if (msgType == MessageContentType.topicInvitation) {
       contentWidget = Label(
         prefix + _localizations.channel_invitation,

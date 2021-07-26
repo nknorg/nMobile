@@ -104,6 +104,10 @@ class ChatInCommon with Tag {
         await _receiveTopicInvitation(received);
         chatOutCommon.sendReceipt(received); // await
         break;
+      case MessageContentType.topicKickOut:
+        await _receiveTopicKickOut(received);
+        chatOutCommon.sendReceipt(received); // await
+        break;
     }
     if (!received.canDisplayAndRead) {
       chatCommon.updateMessageStatus(received, MessageStatus.ReceivedRead);
@@ -455,11 +459,6 @@ class ChatInCommon with Tag {
     }
     // subscriber
     await topicCommon.onUnsubscribe(received.topic, received.from);
-    // DB
-    MessageSchema? schema = await _messageStorage.insert(received);
-    if (schema == null) return;
-    // display
-    _onSavedSink.add(schema);
   }
 
   // NO topic (1 to 1)
@@ -476,5 +475,17 @@ class ChatInCommon with Tag {
     if (schema == null) return;
     // display
     _onSavedSink.add(schema);
+  }
+
+  // NO single
+  Future _receiveTopicKickOut(MessageSchema received) async {
+    // duplicated
+    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
+    if (exists.isNotEmpty) {
+      logger.d("$TAG - _receiveTopicKickOut - duplicated - schema:$exists");
+      return;
+    }
+    // subscriber
+    await topicCommon.onKickOut(received.topic, received.from);
   }
 }
