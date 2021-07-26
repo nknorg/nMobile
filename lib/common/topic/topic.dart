@@ -41,7 +41,7 @@ class TopicCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty) return null;
     List<TopicSchema> topics = await queryList();
     topics.forEach((TopicSchema topic) async {
-      // TODO:GG 测试续订
+      // TODO:GG  测试续订
       await checkExpireAndPermission(topic.topic, enableFirst: false, emptyAdd: false);
     });
   }
@@ -486,6 +486,7 @@ class TopicCommon with Tag {
   // caller = everyone
   Future<SubscriberSchema?> onUnsubscribe(String? topicName, String? clientAddress) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
+    // topic exist
     TopicSchema? _topic = await topicCommon.queryByTopic(topicName);
     if (_topic == null) {
       logger.d("$TAG - onUnsubscribe - new - topic:$_topic");
@@ -496,55 +497,51 @@ class TopicCommon with Tag {
       return null;
     }
 
+    // subscriber update
+    SubscriberSchema? _subscriber = await subscriberCommon.onUnsubscribe(topicName, clientAddress);
+    if (_subscriber == null) {
+      logger.w("$TAG - onUnsubscribe - subscriber is null - topicName:$topicName - clientAddress:$clientAddress");
+      return null;
+    }
+
     // private + owner
-    if (_topic.isPrivate && _topic.isOwner(clientCommon.address) && clientCommon.address?.isNotEmpty == true) {
+    if (_topic.isPrivate && _topic.isOwner(clientCommon.address) && clientCommon.address != clientAddress) {
       List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, _topic.isPrivate, clientCommon.address);
-      int? permPage = permission[0];
+      int? permPage = permission[0] ?? _subscriber.permPage;
       bool acceptAll = permission[1];
       bool? isAccept = permission[2];
       if (!acceptAll && isAccept == true) {
         // DB modify
-        SubscriberSchema? _subscriber = await subscriberCommon.onUnsubscribe(topicName, clientAddress, permPage: permPage);
-        if (_subscriber == null || _subscriber.permPage == null) {
-          logger.w("$TAG - onUnsubscribe - permPage is null - topicName:$topicName - clientAddress:$clientAddress");
+        if (permPage == null) {
+          logger.w("$TAG - onUnsubscribe - permPage is null - permission:$permission");
           return null;
+        } else {
+          if (_subscriber.permPage != permPage) {
+            await subscriberCommon.setPermPage(_subscriber.id, permPage, notify: true);
+            _subscriber.permPage = permPage; // if (success)
+          }
         }
         // meta update
-        Map<String, dynamic> meta = await _getMetaByNodePage(topicName, _subscriber.permPage!);
+        Map<String, dynamic> meta = await _getMetaByNodePage(topicName, permPage);
         _subscriber.status = SubscriberStatus.None;
-        meta = await _buildMetaByAppend(topicName, meta, _subscriber);
+        meta = await _buildMetaByAppend(topicName, meta, _subscriber); // TODO:GG 测试meta
         _subscriber.status = SubscriberStatus.Unsubscribed;
         bool subscribeSuccess = await _clientSubscribe(topicName, fee: 0, permissionPage: permPage, meta: meta);
         if (!subscribeSuccess) {
           logger.w("$TAG - onUnsubscribe - clientSubscribe error - permPage:$permPage - meta:$meta");
           return null;
         }
-        // DB delete
-        await subscriberCommon.delete(_subscriber.id, notify: true);
       }
     }
-    // TODO:GG 如果是群主，则需要把所有人的权限都清空
-    // // private + normal
-    // bool canSendMessage = true;
-    // if (exists.isPrivate && !exists.isOwner(clientCommon.address)) {
-    //   List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, exists.isPrivate, clientCommon.address);
-    //   permPage = permission[0];
-    //   bool acceptAll = permission[1];
-    //   bool? isAccept = permission[2];
-    //   bool? isReject = permission[3];
-    //   if (!acceptAll && isReject == true) {
-    //     // can contact owner to modify rejects TODO:GG 测试黑名单
-    //     canSendMessage = false;
-    //     return [null, null];
-    //   } else if (!acceptAll && isAccept != true) {
-    //     // not owner invited TODO:GG 测试普通成员邀请
-    //     canSendMessage = false;
-    //   }
-    // }
 
-    // TODO:GG 群主收到其他成员的， 需要更新meta
-    // TODO:GG 如果是退订者是群主， 那么自己也退订
-    // subscriber
+    // owner unsubscribe
+    if (_topic.isPrivate && _topic.isOwner(clientAddress)) {
+      // do nothing now
+    }
+
+    // DB delete
+    await subscriberCommon.delete(_subscriber.id, notify: true);
+    return _subscriber;
   }
 
   Future<SubscriberSchema?> onKickOut(String? topicName, String? clientAddress) async {
