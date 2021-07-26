@@ -41,7 +41,7 @@ class TopicCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty) return null;
     List<TopicSchema> topics = await queryList();
     topics.forEach((TopicSchema topic) async {
-      // TODO:GG  测试续订
+      // TODO:GG 测试续订
       await checkExpireAndPermission(topic.topic, enableFirst: false, emptyAdd: false);
     });
   }
@@ -459,6 +459,73 @@ class TopicCommon with Tag {
     return _subscriber;
   }
 
+  Future<Map<String, dynamic>> _buildMetaByAppend(String? topicName, Map<String, dynamic> meta, SubscriberSchema? append) async {
+    if (topicName == null || topicName.isEmpty || append == null) return Map();
+    // permPage
+    if ((append.permPage ?? -1) <= 0) {
+      append.permPage = (await subscriberCommon.findPermissionFromNode(topicName, true, append.clientAddress))[0];
+    }
+
+    // node meta
+    List<dynamic> acceptList = meta['accept'] ?? [];
+    List<dynamic> rejectList = meta['reject'] ?? [];
+    if (append.status == SubscriberStatus.InvitedSend || append.status == SubscriberStatus.InvitedReceipt || append.status == SubscriberStatus.Subscribed) {
+      // add to accepts
+      rejectList = rejectList.where((element) => !element.toString().contains(append.clientAddress)).toList();
+      if (acceptList.where((element) => element.toString().contains(append.clientAddress)).toList().isEmpty) {
+        acceptList.add({'addr': append.clientAddress});
+      }
+    } else if (append.status == SubscriberStatus.Unsubscribed) {
+      // add to rejects
+      acceptList = acceptList.where((element) => !element.toString().contains(append.clientAddress)).toList();
+      if (rejectList.where((element) => element.toString().contains(append.clientAddress)).toList().isEmpty) {
+        rejectList.add({'addr': append.clientAddress});
+      }
+    } else {
+      // remove from all
+      acceptList = acceptList.where((element) => !element.toString().contains(append.clientAddress)).toList();
+      rejectList = rejectList.where((element) => !element.toString().contains(append.clientAddress)).toList();
+    }
+
+    // DB meta (maybe in txPool)
+    List<SubscriberSchema> subscribers = await subscriberCommon.queryListByTopicPerm(topicName, append.permPage);
+    subscribers.forEach((SubscriberSchema element) {
+      if (element.clientAddress.isNotEmpty == true && element.clientAddress != append.clientAddress) {
+        int updateAt = element.updateAt ?? DateTime.now().millisecondsSinceEpoch;
+        if ((DateTime.now().millisecondsSinceEpoch - updateAt).abs() < Settings.txPoolDelayMs) {
+          logger.i("$TAG - _buildMetaByAppend - subscriber update just now, maybe in txPool - element:$element");
+          if (append.status == SubscriberStatus.InvitedSend || append.status == SubscriberStatus.InvitedReceipt || append.status == SubscriberStatus.Subscribed) {
+            // add to accepts
+            rejectList = rejectList.where((e) => !e.toString().contains(element.clientAddress)).toList();
+            if (acceptList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
+              acceptList.add({'addr': element.clientAddress}); // TODO:GG 测试正确性
+            }
+          } else if (append.status == SubscriberStatus.Unsubscribed) {
+            // add to rejects
+            acceptList = acceptList.where((e) => !e.toString().contains(element.clientAddress)).toList();
+            if (rejectList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
+              rejectList.add({'addr': element.clientAddress}); // TODO:GG 测试正确性
+            }
+          } else {
+            // remove from all
+            acceptList = acceptList.where((e) => !e.toString().contains(element.clientAddress)).toList();
+            rejectList = rejectList.where((e) => !e.toString().contains(element.clientAddress)).toList();
+          }
+        }
+      }
+    });
+
+    // new meta
+    meta['accept'] = acceptList;
+    meta['reject'] = rejectList;
+    logger.d("$TAG - _buildMetaByAppend - append:$append - meta:${meta.toString()}");
+    return meta;
+  }
+
+  /// ***********************************************************************************************************
+  /// *********************************************** callback **************************************************
+  /// ***********************************************************************************************************
+
   // caller = everyone
   Future<SubscriberSchema?> onSubscribe(String? topicName, String? clientAddress) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
@@ -473,7 +540,7 @@ class TopicCommon with Tag {
       return null;
     }
 
-    // permission modify in invited
+    // permission modify in invitee action
 
     // subscriber update
     SubscriberSchema? _subscriber = await subscriberCommon.onSubscribe(topicName, clientAddress, null);
@@ -540,76 +607,60 @@ class TopicCommon with Tag {
       // do nothing now
     }
 
-    // DB delete
+    // DB update
+    bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) - 1, notify: true);
+    if (setSuccess) _topic.count = (_topic.count ?? 1) - 1;
     await subscriberCommon.delete(_subscriber.id, notify: true);
+
+    // subscribers sync
+    subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate); // await
     return _subscriber;
   }
 
+  // caller = everyone
   Future<SubscriberSchema?> onKickOut(String? topicName, String? clientAddress) async {
-    // TODO:GG kickOut
-  }
-
-  Future<Map<String, dynamic>> _buildMetaByAppend(String? topicName, Map<String, dynamic> meta, SubscriberSchema? append) async {
-    if (topicName == null || topicName.isEmpty || append == null) return Map();
-    // permPage
-    if ((append.permPage ?? -1) <= 0) {
-      append.permPage = (await subscriberCommon.findPermissionFromNode(topicName, true, append.clientAddress))[0];
+    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
+    // topic exist
+    TopicSchema? _topic = await topicCommon.queryByTopic(topicName);
+    if (_topic == null) {
+      logger.d("$TAG - onKickOut - new - topic:$_topic");
+      _topic = await add(TopicSchema.create(topicName), notify: true, checkDuplicated: false);
+    }
+    if (_topic == null) {
+      logger.w("$TAG - onKickOut - null - topicName:$topicName");
+      return null;
     }
 
-    // node meta
-    List<dynamic> acceptList = meta['accept'] ?? [];
-    List<dynamic> rejectList = meta['reject'] ?? [];
-    if (append.status == SubscriberStatus.InvitedSend || append.status == SubscriberStatus.InvitedReceipt || append.status == SubscriberStatus.Subscribed) {
-      // add to accepts
-      rejectList = rejectList.where((element) => !element.toString().contains(append.clientAddress)).toList();
-      if (acceptList.where((element) => element.toString().contains(append.clientAddress)).toList().isEmpty) {
-        acceptList.add({'addr': append.clientAddress});
-      }
-    } else if (append.status == SubscriberStatus.Unsubscribed) {
-      // add to rejects
-      acceptList = acceptList.where((element) => !element.toString().contains(append.clientAddress)).toList();
-      if (rejectList.where((element) => element.toString().contains(append.clientAddress)).toList().isEmpty) {
-        rejectList.add({'addr': append.clientAddress});
-      }
+    // subscriber update
+    SubscriberSchema? _subscriber = await subscriberCommon.onKickOut(topicName, clientAddress);
+    if (_subscriber == null) {
+      logger.w("$TAG - onKickOut - subscriber is null - topicName:$topicName - clientAddress:$clientAddress");
+      return null;
+    }
+
+    // permission modify in kick action
+
+    // self unsubscribe
+    if (clientAddress == clientCommon.address) {
+      bool exitSuccess = await _clientUnsubscribe(topicName, fee: 0);
+      if (!exitSuccess) return null;
+      bool setSuccess = await setJoined(_topic.id, false, notify: true);
+      if (setSuccess) _topic.joined = false;
+    }
+
+    // DB update
+    if (clientAddress == clientCommon.address) {
+      await subscriberCommon.deleteByTopic(topicName);
+      await delete(_topic.id, notify: true);
     } else {
-      // remove from all
-      acceptList = acceptList.where((element) => !element.toString().contains(append.clientAddress)).toList();
-      rejectList = rejectList.where((element) => !element.toString().contains(append.clientAddress)).toList();
+      bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) - 1, notify: true);
+      if (setSuccess) _topic.count = (_topic.count ?? 1) - 1;
+      await subscriberCommon.delete(_subscriber.id, notify: true);
+
+      // subscribers sync
+      subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate); // await
     }
-
-    // DB meta (maybe in txPool)
-    List<SubscriberSchema> subscribers = await subscriberCommon.queryListByTopicPerm(topicName, append.permPage);
-    subscribers.forEach((SubscriberSchema element) {
-      if (element.clientAddress.isNotEmpty == true && element.clientAddress != append.clientAddress) {
-        int updateAt = element.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-        if ((DateTime.now().millisecondsSinceEpoch - updateAt).abs() < Settings.txPoolDelayMs) {
-          logger.i("$TAG - _buildMetaByAppend - subscriber update just now, maybe in txPool - element:$element");
-          if (append.status == SubscriberStatus.InvitedSend || append.status == SubscriberStatus.InvitedReceipt || append.status == SubscriberStatus.Subscribed) {
-            // add to accepts
-            rejectList = rejectList.where((e) => !e.toString().contains(element.clientAddress)).toList();
-            if (acceptList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
-              acceptList.add({'addr': element.clientAddress}); // TODO:GG 测试正确性
-            }
-          } else if (append.status == SubscriberStatus.Unsubscribed) {
-            // add to rejects
-            acceptList = acceptList.where((e) => !e.toString().contains(element.clientAddress)).toList();
-            if (rejectList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
-              rejectList.add({'addr': element.clientAddress}); // TODO:GG 测试正确性
-            }
-          } else {
-            // remove from all
-            acceptList = acceptList.where((e) => !e.toString().contains(element.clientAddress)).toList();
-            rejectList = rejectList.where((e) => !e.toString().contains(element.clientAddress)).toList();
-          }
-        }
-      }
-    });
-
-    // new meta
-    meta['accept'] = acceptList;
-    meta['reject'] = rejectList;
-    logger.d("$TAG - _buildMetaByAppend - append:$append - meta:${meta.toString()}");
-    return meta;
+    return _subscriber;
   }
 
   /// ***********************************************************************************************************
