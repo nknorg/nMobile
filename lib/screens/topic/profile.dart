@@ -166,9 +166,9 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     );
     await topicCommon.invitee(
       _topicSchema?.topic,
-      address,
       _topicSchema?.isPrivate == true,
       _topicSchema?.isOwner(clientCommon.address) == true,
+      address,
     );
   }
 
