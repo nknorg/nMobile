@@ -184,14 +184,14 @@ class SubscriberCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone
-  Future<List<dynamic>> findPermissionFromNode(String? topicName, bool isPrivate, String? clientAddress) async {
+  Future<List<dynamic>> findPermissionFromNode(String? topicName, bool isPrivate, String? clientAddress, {bool txPool = true}) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return [null, null];
     if (!isPrivate) {
       logger.w("$TAG - findPermissionFromNode - isPrivate = false");
       return [null, true, true, false];
     }
     // permissions
-    List<dynamic> result = await _getPermissionsFromNode(topicName);
+    List<dynamic> result = await _getPermissionsFromNode(topicName, txPool: txPool);
     List<SubscriberSchema> subscribers = result[0];
     bool _acceptAll = result[0];
     if (_acceptAll) {
