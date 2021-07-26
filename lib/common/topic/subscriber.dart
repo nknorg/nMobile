@@ -183,12 +183,12 @@ class SubscriberCommon with Tag {
   /// ********************************************** permission *************************************************
   /// ***********************************************************************************************************
 
-  // caller = everyone, topic = private
-  Future<List<dynamic>> findPermissionFromNode(String? topicName, String? clientAddress) async {
+  // caller = everyone
+  Future<List<dynamic>> findPermissionFromNode(String? topicName, bool isPrivate, String? clientAddress) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return [null, null];
-    if (!isPrivateTopicReg(topicName)) {
+    if (!isPrivate) {
       logger.w("$TAG - findPermissionFromNode - isPrivate = false");
-      return [null, true];
+      return [null, true, true, false];
     }
     // permissions
     List<dynamic> result = await _getPermissionsFromNode(topicName);
@@ -196,18 +196,19 @@ class SubscriberCommon with Tag {
     bool _acceptAll = result[0];
     if (_acceptAll) {
       logger.i("$TAG - findPermissionFromNode - acceptAll = true");
-      return [null, true];
+      return [null, _acceptAll, true, false];
     }
     // find
     List<SubscriberSchema> finds = subscribers.where((element) => element.clientAddress == clientAddress).toList();
     if (finds.isNotEmpty) {
       int? permPage = finds[0].permPage;
       bool isAccept = finds[0].status == InitialAcceptStatus;
+      bool isReject = finds[0].status == InitialRejectStatus;
       logger.d("$TAG - findPermissionFromNode - permPage:$permPage - isAccept:$isAccept");
-      return [permPage, isAccept];
+      return [permPage, false, isAccept, isReject];
     }
     logger.i("$TAG - findPermissionFromNode - null");
-    return [null, null];
+    return [null, _acceptAll, null, null];
   }
 
   Future<List<dynamic>> _getPermissionsFromNode(String? topicName, {bool txPool = true, Uint8List? subscriberHashPrefix, Map<String, dynamic>? clientGetSubscribers}) async {
@@ -354,12 +355,12 @@ class SubscriberCommon with Tag {
     }
     if (subscriber == null) return null;
     // status
-    if (subscriber.status != SubscriberStatus.InvitedSend && subscriber.status != SubscriberStatus.InvitedReceipt && subscriber.status != SubscriberStatus.Subscribed) {
+    if (subscriber.status != SubscriberStatus.InvitedSend) {
       bool success = await setStatus(subscriber.id, SubscriberStatus.InvitedSend, notify: true);
       if (success) subscriber.status = SubscriberStatus.InvitedSend;
     }
     // permPage
-    if (subscriber.permPage != permPage && permPage != null) {
+    if (subscriber.permPage != permPage) {
       bool success = await setPermPage(subscriber.id, permPage, notify: true);
       if (success) subscriber.permPage = permPage;
     }
@@ -367,23 +368,18 @@ class SubscriberCommon with Tag {
   }
 
   // status: InvitedReceipt (caller = owner)
-  Future<SubscriberSchema?> onInvitedReceipt(String? topicName, String? clientAddress, {int? permPage}) async {
+  Future<SubscriberSchema?> onInvitedReceipt(String? topicName, String? clientAddress) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
     SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
     if (subscriber == null) {
-      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.InvitedReceipt, permPage), notify: true);
+      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.InvitedReceipt, null), notify: true);
     }
     if (subscriber == null) return null;
     // status
-    if (subscriber.status != SubscriberStatus.InvitedReceipt && subscriber.status != SubscriberStatus.Subscribed) {
+    if (subscriber.status != SubscriberStatus.InvitedReceipt) {
       bool success = await setStatus(subscriber.id, SubscriberStatus.InvitedReceipt, notify: true);
       if (success) subscriber.status = SubscriberStatus.InvitedReceipt;
-    }
-    // permPage
-    if (subscriber.permPage != permPage && permPage != null) {
-      bool success = await setPermPage(subscriber.id, permPage, notify: true);
-      if (success) subscriber.permPage = permPage;
     }
     return subscriber;
   }
