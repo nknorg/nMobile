@@ -8,10 +8,12 @@ import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
+import 'package:nmobile/utils/utils.dart';
 
 import '../locator.dart';
 
@@ -38,7 +40,7 @@ class ChatInCommon with Tag {
     ContactSchema? contact = await chatCommon.contactHandle(message);
     chatCommon.deviceInfoHandle(message, contact); // await
     // topic
-    chatCommon.topicHandle(message); // await
+    await chatCommon.topicHandle(message);
     chatCommon.subscriberHandle(message); // await
     // session
     chatCommon.sessionHandle(message); // await
@@ -428,6 +430,44 @@ class ChatInCommon with Tag {
     }
   }
 
+  // NO single
+  Future _receiveTopicSubscribe(MessageSchema received) async {
+    // duplicated
+    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
+    if (exists.isNotEmpty) {
+      logger.d("$TAG - _receiveTopicSubscribe - duplicated - schema:$exists");
+      return;
+    }
+    // subscriber
+    subscriberCommon.onSubscribe(received.topic, received.from, null).then((value) {
+      subscriberCommon.refreshSubscribers(received.topic, meta: isPrivateTopicReg(received.topic ?? "")); // await
+    });
+    // DB
+    MessageSchema? schema = await _messageStorage.insert(received);
+    if (schema == null) return;
+    // display
+    _onSavedSink.add(schema);
+  }
+
+  // NO single
+  Future _receiveTopicUnsubscribe(MessageSchema received, {TopicSchema? topic}) async {
+    // duplicated
+    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
+    if (exists.isNotEmpty) {
+      logger.d("$TAG - _receiveTopicUnsubscribe - duplicated - schema:$exists");
+      return;
+    }
+    // TODO:GG 群主收到其他成员的，需要更新meta
+    // TODO:GG 如果是退订者是群主，那么自己也退订
+    // subscriber
+    subscriberCommon.onUnsubscribe(received.topic, received.from); // await
+    // DB
+    MessageSchema? schema = await _messageStorage.insert(received);
+    if (schema == null) return;
+    // display
+    _onSavedSink.add(schema);
+  }
+
   // NO topic (1 to 1)
   Future _receiveTopicInvitation(MessageSchema received) async {
     // duplicated
@@ -436,40 +476,7 @@ class ChatInCommon with Tag {
       logger.d("$TAG - _receiveTopicInvitation - duplicated - schema:$exists");
       return;
     }
-    // DB
-    MessageSchema? schema = await _messageStorage.insert(received);
-    if (schema == null) return;
-    // display
-    _onSavedSink.add(schema);
-  }
-
-  // NO single
-  Future _receiveTopicSubscribe(MessageSchema received) async {
-    // duplicated
-    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
-    if (exists.isNotEmpty) {
-      logger.d("$TAG - _receiveTopicSubscribed - duplicated - schema:$exists");
-      return;
-    }
-    // subscriber
-    subscriberCommon.onSubscribe(received.topic, received.from); // await
-    // DB
-    MessageSchema? schema = await _messageStorage.insert(received);
-    if (schema == null) return;
-    // display
-    _onSavedSink.add(schema);
-  }
-
-  // NO single
-  Future _receiveTopicUnsubscribe(MessageSchema received) async {
-    // duplicated
-    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
-    if (exists.isNotEmpty) {
-      logger.d("$TAG - _receiveTopicUnsubscribe - duplicated - schema:$exists");
-      return;
-    }
-    // subscriber
-    subscriberCommon.onUnsubscribe(received.topic, received.from); // await
+    // permission checked in message click
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);
     if (schema == null) return;
