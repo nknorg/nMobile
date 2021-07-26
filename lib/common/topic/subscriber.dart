@@ -412,9 +412,9 @@ class SubscriberCommon with Tag {
     // subscriber
     SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
     if (subscriber == null) {
-      logger.d("$TAG - onUnsubscribe - subscriber is null - topicName:$topicName - clientAddress:$clientAddress");
-      return null;
+      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.Unsubscribed, permPage), notify: true);
     }
+    if (subscriber == null) return null;
     // status
     if (subscriber.status != SubscriberStatus.Unsubscribed) {
       bool success = await setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
@@ -436,9 +436,9 @@ class SubscriberCommon with Tag {
     // subscriber
     SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
     if (subscriber == null) {
-      logger.d("$TAG - onKickOut - subscriber is null - topicName:$topicName - clientAddress:$clientAddress");
-      return null;
+      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.Unsubscribed, permPage), notify: true);
     }
+    if (subscriber == null) return null;
     // status
     if (subscriber.status != SubscriberStatus.Unsubscribed) {
       bool success = await setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
