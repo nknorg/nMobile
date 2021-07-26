@@ -96,11 +96,11 @@ class ChatMessageItem extends StatelessWidget {
       case MessageContentType.topicSubscribe:
         contentsWidget.add(_topicSubscribeWidget(context));
         break;
-      case MessageContentType.topicUnsubscribe:
-        break;
+      // case MessageContentType.topicUnsubscribe:
       case MessageContentType.topicInvitation:
         contentsWidget.add(_topicInvitedWidget(context));
         break;
+      // case MessageContentType.topicKickOut:
     }
 
     return Column(children: contentsWidget);

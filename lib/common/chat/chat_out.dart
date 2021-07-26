@@ -80,7 +80,7 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display (1 to 1)
   Future sendContactResponse(ContactSchema? target, String requestType, {ContactSchema? me, int tryCount = 1}) async {
-    if (clientCommon.address == null || clientCommon.address!.isEmpty || target == null || target.clientAddress.isEmpty) return;
+    if (target == null || target.clientAddress.isEmpty) return;
     if (tryCount > 3) return;
     ContactSchema? _me = me ?? await contactCommon.getMe();
     try {
@@ -291,7 +291,6 @@ class ChatOutCommon with Tag {
       );
       String data = MessageData.getTopicSubscribe(send);
       await _sendAndDisplay(send, data);
-      // await chatCommon.clientPublishData(genTopicHash(send.topic!), data);
       logger.d("$TAG - sendTopicSubscribe - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -307,15 +306,8 @@ class ChatOutCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty || topic == null || topic.isEmpty) return;
     if (tryCount > 3) return;
     try {
-      MessageSchema send = MessageSchema.fromSend(
-        Uuid().v4(),
-        clientCommon.address!,
-        MessageContentType.topicUnsubscribe,
-        topic: topic,
-      );
-      String data = MessageData.getTopicUnSubscribe(send);
-      await _sendAndDisplay(send, data);
-      // await chatCommon.clientPublishData(genTopicHash(send.topic!), data);
+      String data = MessageData.getTopicUnSubscribe(topic);
+      await chatCommon.clientPublishData(genTopicHash(topic), data);
       logger.d("$TAG - sendTopicUnSubscribe - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -327,8 +319,8 @@ class ChatOutCommon with Tag {
   }
 
   // NO topic (1 to 1)
-  Future<MessageSchema?> sendTopicInvitee(String? clientAddress, String? topicName) async {
-    if (clientAddress == null || clientAddress.isEmpty || topicName == null || topicName.isEmpty) return null;
+  Future<MessageSchema?> sendTopicInvitee(String? clientAddress, String? topic) async {
+    if (clientAddress == null || clientAddress.isEmpty || topic == null || topic.isEmpty) return null;
     if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
       // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
       return null;
@@ -338,10 +330,27 @@ class ChatOutCommon with Tag {
       clientCommon.address!,
       MessageContentType.topicInvitation,
       to: clientAddress,
-      content: topicName,
+      content: topic,
     );
-    String data = MessageData.getTopicInvitee(schema, topicName);
+    String data = MessageData.getTopicInvitee(schema);
     return _sendAndDisplay(schema, data);
+  }
+
+  // NO DB NO single
+  Future sendTopicKickOut(String? topic, String? targetAddress, {int tryCount = 1}) async {
+    if (topic == null || topic.isEmpty || targetAddress == null || targetAddress.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
+    if (tryCount > 3) return;
+    try {
+      String data = MessageData.getTopicKickOut(topic, targetAddress);
+      await chatCommon.clientPublishData(genTopicHash(topic), data);
+      logger.d("$TAG - sendTopicKickOut - success - data:$data");
+    } catch (e) {
+      handleError(e);
+      logger.w("$TAG - sendTopicKickOut - fail - tryCount:$tryCount - topic:$topic");
+      await Future.delayed(Duration(seconds: 2), () {
+        return sendTopicKickOut(topic, targetAddress, tryCount: ++tryCount);
+      });
+    }
   }
 
   Future<MessageSchema?> resend(
@@ -454,7 +463,7 @@ class ChatOutCommon with Tag {
   _sendPush(MessageSchema message, ContactSchema? contact, TopicSchema? topic) async {
     if (!message.canDisplayAndRead) return;
     if (topic != null) {
-      // TODO:GG topic get all subscribe token and list.send
+      // TODO:GG topic  get all subscribe token and list.send
       return;
     }
     if (contact?.deviceToken == null || contact!.deviceToken!.isEmpty) return;
@@ -491,7 +500,7 @@ class ChatOutCommon with Tag {
     await SendPush.send(contact.deviceToken!, title, content);
   }
 
-  // TODO:GG topic???
+  // TODO:GG topic ???
   Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message, DeviceInfoSchema? deviceInfo) async {
     if (!deviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) return null;
     List results = await _convert2Pieces(message);

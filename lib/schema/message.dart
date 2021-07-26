@@ -37,6 +37,7 @@ class MessageContentType {
   static const String topicSubscribe = 'event:subscribe';
   static const String topicUnsubscribe = 'event:unsubscribe';
   static const String topicInvitation = 'event:channelInvitation';
+  static const String topicKickOut = 'event:channelKickOut';
 
   // SUPPORT:START
   static const String nknImage = 'nknImage';
@@ -379,29 +380,40 @@ class MessageData {
   static String getTopicSubscribe(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
+      'topic': schema.topic,
       'contentType': MessageContentType.topicSubscribe,
-      'topic': schema.topic,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
 
-  static String getTopicUnSubscribe(MessageSchema schema) {
+  static String getTopicUnSubscribe(String topicName) {
     Map data = {
-      'id': schema.msgId,
+      'id': Uuid().v4(),
+      'topic': topicName,
       'contentType': MessageContentType.topicUnsubscribe,
-      'topic': schema.topic,
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
 
-  static String getTopicInvitee(MessageSchema schema, String topicName) {
+  static String getTopicInvitee(MessageSchema schema) {
     Map data = {
       'id': schema.msgId,
       'contentType': MessageContentType.topicInvitation,
-      'content': topicName,
+      'content': schema.content,
       'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+    };
+    return jsonEncode(data);
+  }
+
+  static String getTopicKickOut(String topic, String targetAddress) {
+    Map data = {
+      'id': Uuid().v4(),
+      'topic': topic,
+      'contentType': MessageContentType.topicKickOut,
+      'content': targetAddress,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
@@ -475,7 +487,7 @@ class MessageSchema extends Equatable {
 
   // ++ Session
   bool get canDisplay {
-    bool isEvent = contentType == MessageContentType.contactOptions || contentType == MessageContentType.topicSubscribe || contentType == MessageContentType.topicUnsubscribe;
+    bool isEvent = contentType == MessageContentType.contactOptions || contentType == MessageContentType.topicSubscribe; // || contentType == MessageContentType.topicUnsubscribe || contentType == MessageContentType.topicKickOut
     return canDisplayAndRead || isEvent;
   }
 
