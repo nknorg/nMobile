@@ -8,12 +8,10 @@ import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:nmobile/utils/utils.dart';
 
 import '../locator.dart';
 
@@ -439,9 +437,7 @@ class ChatInCommon with Tag {
       return;
     }
     // subscriber
-    subscriberCommon.onSubscribe(received.topic, received.from, null).then((value) {
-      subscriberCommon.refreshSubscribers(received.topic, meta: isPrivateTopicReg(received.topic ?? "")); // await
-    });
+    await topicCommon.onSubscribe(received.topic, received.from); // await
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);
     if (schema == null) return;
@@ -450,17 +446,15 @@ class ChatInCommon with Tag {
   }
 
   // NO single
-  Future _receiveTopicUnsubscribe(MessageSchema received, {TopicSchema? topic}) async {
+  Future _receiveTopicUnsubscribe(MessageSchema received) async {
     // duplicated
     List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
     if (exists.isNotEmpty) {
       logger.d("$TAG - _receiveTopicUnsubscribe - duplicated - schema:$exists");
       return;
     }
-    // TODO:GG 群主收到其他成员的，需要更新meta
-    // TODO:GG 如果是退订者是群主，那么自己也退订
     // subscriber
-    subscriberCommon.onUnsubscribe(received.topic, received.from); // await
+    await topicCommon.onUnsubscribe(received.topic, received.from);
     // DB
     MessageSchema? schema = await _messageStorage.insert(received);
     if (schema == null) return;
