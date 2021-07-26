@@ -253,9 +253,9 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                   Loading.show();
                   await topicCommon.kick(
                     topic.topic,
-                    subscriber.clientAddress,
                     topic.isPrivate,
                     topic.isOwner(clientCommon.address),
+                    subscriber.clientAddress,
                   );
                   Loading.dismiss();
                   Toast.show(S.of(context).rejected);
@@ -273,9 +273,9 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
             Loading.show();
             await topicCommon.invitee(
               topic.topic,
-              subscriber.clientAddress,
               topic.isPrivate,
               topic.isOwner(clientCommon.address),
+              subscriber.clientAddress,
             );
             Loading.dismiss();
             Toast.show(S.of(context).invitation_sent);
