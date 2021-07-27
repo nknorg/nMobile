@@ -364,9 +364,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       title: _localizations.tip,
       content: _localizations.delete_friend_confirm_title,
       agree: Button(
+        width: double.infinity,
         text: _localizations.delete_contact,
         backgroundColor: application.theme.strongColor,
-        width: double.infinity,
         onPressed: () async {
           Navigator.pop(this.context);
           bool success = await contactCommon.delete(_contactSchema?.id, notify: true);
@@ -375,10 +375,10 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         },
       ),
       reject: Button(
-        text: _localizations.cancel,
-        backgroundColor: application.theme.backgroundLightColor,
-        fontColor: application.theme.fontColor2,
         width: double.infinity,
+        text: _localizations.cancel,
+        fontColor: application.theme.fontColor2,
+        backgroundColor: application.theme.backgroundLightColor,
         onPressed: () => Navigator.pop(this.context),
       ),
     );

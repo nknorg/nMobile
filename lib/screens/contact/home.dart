@@ -396,19 +396,19 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               ),
               agree: Button(
+                width: double.infinity,
                 text: _localizations.delete_contact,
                 backgroundColor: application.theme.strongColor,
-                width: double.infinity,
                 onPressed: () async {
                   Navigator.pop(context);
                   await contactCommon.delete(item.id, notify: true);
                 },
               ),
               reject: Button(
-                text: _localizations.cancel,
-                backgroundColor: application.theme.backgroundLightColor,
-                fontColor: application.theme.fontColor2,
                 width: double.infinity,
+                text: _localizations.cancel,
+                fontColor: application.theme.fontColor2,
+                backgroundColor: application.theme.backgroundLightColor,
                 onPressed: () => Navigator.pop(context),
               ),
             )
@@ -490,9 +490,9 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               ),
               agree: Button(
+                width: double.infinity,
                 text: _localizations.delete,
                 backgroundColor: application.theme.strongColor,
-                width: double.infinity,
                 onPressed: () async {
                   Navigator.pop(context);
                   Loading.show();
@@ -502,10 +502,10 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 },
               ),
               reject: Button(
-                text: _localizations.cancel,
-                backgroundColor: application.theme.backgroundLightColor,
-                fontColor: application.theme.fontColor2,
                 width: double.infinity,
+                text: _localizations.cancel,
+                fontColor: application.theme.fontColor2,
+                backgroundColor: application.theme.backgroundLightColor,
                 onPressed: () => Navigator.pop(context),
               ),
             )
