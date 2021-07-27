@@ -55,7 +55,7 @@ class ChatCommon with Tag {
     } else {
       // profile
       if (exist.profileUpdateAt == null || DateTime.now().millisecondsSinceEpoch > (exist.profileUpdateAt! + Settings.profileExpireMs)) {
-        logger.d("$TAG - contactHandle - sendRequestHeader - schema:$exist");
+        logger.d("$TAG - contactHandle - sendRequestHeader - contact:$exist");
         chatOutCommon.sendContactRequest(exist, RequestType.header); // await
       } else {
         double between = ((exist.profileUpdateAt! + Settings.profileExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
@@ -75,7 +75,7 @@ class ChatCommon with Tag {
           contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true); // await
         } else if ((updateBurnAfterAt ?? 0) <= exist.options!.updateBurnAfterAt!) {
           // mine update latest
-          deviceInfoCommon.queryLatest(exist.id).then((deviceInfo) {
+          deviceInfoCommon.queryLatest(exist.clientAddress).then((deviceInfo) {
             if (deviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
               if (exist == null) return;
               chatOutCommon.sendContactOptionsBurn(
@@ -95,13 +95,13 @@ class ChatCommon with Tag {
     if (contact == null || contact.id == null || contact.id == 0) return null;
     if (message.contentType == MessageContentType.deviceRequest || message.contentType == MessageContentType.deviceInfo) return null;
     // duplicated
-    DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.id);
+    DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.clientAddress);
     if (latest == null) {
       logger.d("$TAG - deviceInfoHandle - new - request - contact:$contact");
       chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
     } else {
       if (latest.updateAt == null || DateTime.now().millisecondsSinceEpoch > (latest.updateAt! + Settings.deviceInfoExpireMs)) {
-        logger.d("$TAG - deviceInfoHandle - exist - request - schema:$latest");
+        logger.d("$TAG - deviceInfoHandle - exist - request - deviceInfo:$latest");
         chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
       } else {
         double between = ((latest.updateAt! + Settings.deviceInfoExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
@@ -226,12 +226,12 @@ class ChatCommon with Tag {
   }
 
   // receipt(receive) != read(look)
-  MessageSchema updateMessageStatus(MessageSchema schema, int status, {bool notify = false}) {
-    schema = MessageStatus.set(schema, status);
-    _messageStorage.updateMessageStatus(schema).then((success) {
-      if (success && notify) _onUpdateSink.add(schema);
+  MessageSchema updateMessageStatus(MessageSchema message, int status, {bool notify = false}) {
+    message = MessageStatus.set(message, status);
+    _messageStorage.updateMessageStatus(message).then((success) {
+      if (success && notify) _onUpdateSink.add(message);
     });
-    return schema;
+    return message;
   }
 
   Future<int> unreadCount() {

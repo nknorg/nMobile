@@ -36,6 +36,8 @@ class ClientCommon with Tag {
 
   Uint8List? get publicKey => client?.publicKey;
 
+  int signInAt = 0;
+
   late int status;
 
   // ignore: close_sinks
@@ -56,6 +58,12 @@ class ClientCommon with Tag {
     status = ClientConnectStatus.disconnected;
     statusStream.listen((int event) {
       status = event;
+      if (event == ClientConnectStatus.connected) {
+        int nowAt = DateTime.now().millisecondsSinceEpoch;
+        if ((nowAt - signInAt) > 1 * 60 * 60 * 1000) {
+          signInAt = nowAt;
+        }
+      }
     });
     onErrorStream.listen((dynamic event) {
       // TODO:GG client error
