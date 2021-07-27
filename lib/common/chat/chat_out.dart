@@ -259,12 +259,12 @@ class ChatOutCommon with Tag {
       DateTime timeNow = DateTime.now();
       await Future.delayed(Duration(milliseconds: (message.sendTime ?? timeNow).millisecondsSinceEpoch - timeNow.millisecondsSinceEpoch));
       String data = MessageData.getPiece(message);
-      if (message.isTopic) {
-        OnMessage? onResult = await chatCommon.clientPublishData(genTopicHash(message.topic!), data); // TODO:GG topic send
-        message.pid = onResult?.messageId;
-      } else if (message.to != null) {
+      if (message.to?.isNotEmpty == true) {
         OnMessage? onResult = await chatCommon.clientSendData(message.to, data);
         message.pid = onResult?.messageId;
+      } else {
+        logger.w("$TAG - sendPiece - message target is empty - message:$message");
+        return null;
       }
       // logger.d("$TAG - sendPiece - success - index:${schema.index} - total:${schema.total} - time:${timeNow.millisecondsSinceEpoch} - message:$message - data:$data");
       double percent = (message.index ?? 0) / (message.total ?? 1);
@@ -308,7 +308,7 @@ class ChatOutCommon with Tag {
     if (tryCount > 3) return;
     try {
       String data = MessageData.getTopicUnSubscribe(topic);
-      await chatCommon.clientPublishData(genTopicHash(topic), data); // TODO:GG topic send
+      await chatCommon.clientPublishData(genTopicHash(topic), data); // its ok
       logger.d("$TAG - sendTopicUnSubscribe - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -343,7 +343,7 @@ class ChatOutCommon with Tag {
     if (tryCount > 3) return;
     try {
       String data = MessageData.getTopicKickOut(topic, targetAddress);
-      await chatCommon.clientPublishData(genTopicHash(topic), data); // TODO:GG topic send
+      await chatCommon.clientPublishData(genTopicHash(topic), data); // its ok
       logger.d("$TAG - sendTopicKickOut - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -486,6 +486,7 @@ class ChatOutCommon with Tag {
     Uint8List? pid;
     List<Future> futures = [];
     _subscribers.forEach((SubscriberSchema subscriber) {
+      message.to = subscriber.clientAddress;
       futures.add(deviceInfoCommon.queryLatest(subscriber.clientAddress).then((DeviceInfoSchema? deviceInfo) {
         return _sendByPiecesIfNeed(message, deviceInfo);
       }).then((Uint8List? _pid) {
@@ -515,7 +516,7 @@ class ChatOutCommon with Tag {
   _sendPush(MessageSchema message, ContactSchema? contact, TopicSchema? topic) async {
     if (!message.canDisplayAndRead) return;
     if (topic != null) {
-      // TODO:GG topic get all subscribe token and list.send
+      // TODO:GG  topic get all subscribe token and list.send
       return;
     }
     if (contact?.deviceToken == null || contact!.deviceToken!.isEmpty) return;
