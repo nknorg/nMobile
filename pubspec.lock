@@ -503,7 +503,7 @@ packages:
       path: "plugins/nkn-sdk-flutter"
       relative: true
     source: path
-    version: "0.1.5"
+    version: "0.1.7"
   package_config:
     dependency: transitive
     description:
