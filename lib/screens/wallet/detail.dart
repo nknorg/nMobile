@@ -148,16 +148,13 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
         child: Column(
           children: <Widget>[
             SizedBox(height: 12),
-            Hero(
-              tag: 'avatar:${this._wallet?.address}',
-              child: WalletAvatar(
-                width: 60,
-                height: 60,
-                walletType: this._wallet?.type ?? WalletType.nkn,
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                ethTop: 16,
-                ethRight: 12,
-              ),
+            WalletAvatar(
+              width: 60,
+              height: 60,
+              walletType: this._wallet?.type ?? WalletType.nkn,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              ethTop: 16,
+              ethRight: 12,
             ),
             BlocBuilder<WalletBloc, WalletState>(
               builder: (context, state) {
