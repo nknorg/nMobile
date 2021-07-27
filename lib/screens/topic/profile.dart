@@ -110,6 +110,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       if (exist != null) return;
       TopicSchema? added = await topicCommon.add(this._topicSchema, notify: true, checkDuplicated: false);
       if (added == null) return;
+      subscriberCommon.refreshSubscribers(topicName, meta: added.isPrivate); // await
       setState(() {
         this._topicSchema = added;
       });
