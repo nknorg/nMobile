@@ -373,9 +373,9 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
           title: _localizations.delete_wallet_confirm_title,
           content: _localizations.delete_wallet_confirm_text,
           agree: Button(
+            width: double.infinity,
             text: _localizations.delete_wallet,
             backgroundColor: application.theme.strongColor,
-            width: double.infinity,
             onPressed: () async {
               _walletBloc?.add(DeleteWallet(this._wallet!));
               // client close
@@ -394,10 +394,10 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
             },
           ),
           reject: Button(
-            text: _localizations.cancel,
-            backgroundColor: application.theme.backgroundLightColor,
-            fontColor: application.theme.fontColor2,
             width: double.infinity,
+            text: _localizations.cancel,
+            fontColor: application.theme.fontColor2,
+            backgroundColor: application.theme.backgroundLightColor,
             onPressed: () => Navigator.pop(context),
           ),
         );

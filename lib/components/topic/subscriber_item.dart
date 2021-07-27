@@ -245,9 +245,9 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                     )
                   : SizedBox.shrink(),
               agree: Button(
+                width: double.infinity,
                 text: _localizations.ok,
                 backgroundColor: application.theme.strongColor,
-                width: double.infinity,
                 onPressed: () async {
                   Navigator.pop(this.context);
                   Loading.show();
@@ -262,10 +262,10 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                 },
               ),
               reject: Button(
-                text: _localizations.cancel,
-                backgroundColor: application.theme.backgroundLightColor,
-                fontColor: application.theme.fontColor2,
                 width: double.infinity,
+                text: _localizations.cancel,
+                fontColor: application.theme.fontColor2,
+                backgroundColor: application.theme.backgroundLightColor,
                 onPressed: () => Navigator.pop(this.context),
               ),
             );
