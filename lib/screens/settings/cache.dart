@@ -112,10 +112,10 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                             },
                           ),
                           reject: Button(
-                            backgroundColor: application.theme.backgroundLightColor,
-                            fontColor: application.theme.fontColor2,
-                            text: _localizations.cancel,
                             width: double.infinity,
+                            text: _localizations.cancel,
+                            fontColor: application.theme.fontColor2,
+                            backgroundColor: application.theme.backgroundLightColor,
                             onPressed: () => Navigator.of(context).pop(),
                           ),
                         );
@@ -168,6 +168,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                             softWrap: true,
                           ),
                           agree: Button(
+                            width: double.infinity,
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: <Widget>[
@@ -187,7 +188,6 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                               ],
                             ),
                             backgroundColor: application.theme.strongColor,
-                            width: double.infinity,
                             onPressed: () async {
                               // TODO:GG cache
                               await DB.currentDatabase?.close();
@@ -200,10 +200,10 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                             },
                           ),
                           reject: Button(
-                            backgroundColor: application.theme.backgroundLightColor,
-                            fontColor: application.theme.fontColor2,
-                            text: _localizations.cancel,
                             width: double.infinity,
+                            text: _localizations.cancel,
+                            fontColor: application.theme.fontColor2,
+                            backgroundColor: application.theme.backgroundLightColor,
                             onPressed: () => Navigator.of(context).pop(),
                           ),
                         );
