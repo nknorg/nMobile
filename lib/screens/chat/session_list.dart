@@ -225,9 +225,9 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                   content: S.of(context).delete_contact_confirm_title, // TODO:GG locale delete session
                   hasCloseButton: true,
                   agree: Button(
+                    width: double.infinity,
                     text: S.of(context).delete_contact,
                     backgroundColor: application.theme.strongColor,
-                    width: double.infinity,
                     onPressed: () async {
                       Navigator.pop(this.context);
                       await sessionCommon.delete(item.targetId, notify: true);

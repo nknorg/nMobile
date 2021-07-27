@@ -350,9 +350,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                     ModalDialog.of(context).confirm(
                       title: "confirm resend?", // TODO:GG locale resend title
                       agree: Button(
+                        width: double.infinity,
                         text: _localizations.send_message, // TODO:GG locale resend action
                         backgroundColor: application.theme.strongColor,
-                        width: double.infinity,
                         onPressed: () {
                           widget.onResend?.call(_message.msgId);
                           Navigator.pop(this.context);

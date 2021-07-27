@@ -184,9 +184,9 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
         title: _localizations.tip,
         content: _localizations.leave_group_confirm_title,
         agree: Button(
+          width: double.infinity,
           text: _localizations.unsubscribe,
           backgroundColor: application.theme.strongColor,
-          width: double.infinity,
           onPressed: () async {
             Navigator.pop(this.context);
             Loading.show();
@@ -199,10 +199,10 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
           },
         ),
         reject: Button(
-          text: _localizations.cancel,
-          backgroundColor: application.theme.backgroundLightColor,
-          fontColor: application.theme.fontColor2,
           width: double.infinity,
+          text: _localizations.cancel,
+          fontColor: application.theme.fontColor2,
+          backgroundColor: application.theme.backgroundLightColor,
           onPressed: () => Navigator.pop(this.context),
         ),
       );
