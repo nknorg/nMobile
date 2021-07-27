@@ -62,14 +62,11 @@ class WalletItem extends StatelessWidget {
       padding: this.padding ?? EdgeInsets.only(left: 16, right: 16),
       child: Row(
         children: [
-          Hero(
-            tag: 'avatar:${this.wallet.address}',
-            child: WalletAvatar(
-              width: 48,
-              height: 48,
-              walletType: this.walletType,
-              padding: EdgeInsets.only(right: 20, top: 16, bottom: 16),
-            ),
+          WalletAvatar(
+            width: 48,
+            height: 48,
+            walletType: this.walletType,
+            padding: EdgeInsets.only(right: 20, top: 16, bottom: 16),
           ),
           Expanded(
             child: Column(
