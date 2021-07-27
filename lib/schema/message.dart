@@ -387,10 +387,10 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getTopicUnSubscribe(String topicName) {
+  static String getTopicUnSubscribe(String topic) {
     Map data = {
       'id': Uuid().v4(),
-      'topic': topicName,
+      'topic': topic,
       'contentType': MessageContentType.topicUnsubscribe,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
