@@ -516,7 +516,25 @@ class ChatOutCommon with Tag {
   _sendPush(MessageSchema message, ContactSchema? contact, TopicSchema? topic) async {
     if (!message.canDisplayAndRead) return;
     if (topic != null) {
-      // TODO:GG  topic get all subscribe token and list.send
+      // subscribers
+      List<SubscriberSchema> _subscribers = [];
+      if ((DateTime.now().millisecondsSinceEpoch - clientCommon.signInAt) <= 20 * 1000) {
+        List<SubscriberSchema> result = await subscriberCommon.mergeSubscribersAndPermissionsFromNode(topic.topic, meta: topic.isPrivate);
+        _subscribers = result.where((element) => element.status == SubscriberStatus.Subscribed).toList();
+        logger.d("$TAG - _sendPush - _subscribers from node - counts:${_subscribers.length} - topic:$topic - message:$message");
+      } else {
+        _subscribers = await subscriberCommon.queryListByTopic(topic.topic, status: SubscriberStatus.Subscribed);
+        logger.d("$TAG - _sendPush - _subscribers from DB - counts:${_subscribers.length} - topic:$topic - message:$message");
+      }
+      if (_subscribers.isEmpty) {
+        logger.w("$TAG - _sendPush - _subscribers is empty - topic:$topic - message:$message");
+        return null;
+      }
+      // send push
+      _subscribers.forEach((SubscriberSchema element) async {
+        ContactSchema? _contact = await element.getContact(emptyAdd: false);
+        _sendPush(message, _contact, null); // await
+      });
       return;
     }
     if (contact?.deviceToken == null || contact!.deviceToken!.isEmpty) return;
