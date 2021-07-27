@@ -105,13 +105,10 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
                       padding: const EdgeInsets.only(top: 32),
                       child: Column(
                         children: <Widget>[
-                          Hero(
-                            tag: 'avatar:$_address',
-                            child: WalletAvatar(
-                              width: 48,
-                              height: 48,
-                              walletType: this._walletType ?? WalletType.nkn,
-                            ),
+                          WalletAvatar(
+                            width: 48,
+                            height: 48,
+                            walletType: this._walletType ?? WalletType.nkn,
                           ),
                           Padding(
                             padding: const EdgeInsets.only(top: 16, bottom: 40),
