@@ -38,9 +38,9 @@ class ChatCommon with Tag {
     return await clientCommon.client?.sendText([dest], data);
   }
 
-  Future<OnMessage?> clientPublishData(String? topic, String data) async {
+  Future<OnMessage?> clientPublishData(String? topic, String data, {bool txPool = true}) async {
     if (topic == null || topic.isEmpty) return null;
-    return await clientCommon.client?.publishText(topic, data);
+    return await clientCommon.client?.publishText(topic, data, txPool: txPool);
   }
 
   Future<ContactSchema?> contactHandle(MessageSchema message) async {

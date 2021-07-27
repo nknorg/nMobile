@@ -37,12 +37,16 @@ class TopicCommon with Tag {
     _updateController.close();
   }
 
-  checkAllTopics() async {
+  checkAllTopics({bool subscribers = false}) async {
     if (clientCommon.address == null || clientCommon.address!.isEmpty) return null;
     List<TopicSchema> topics = await queryList();
-    topics.forEach((TopicSchema topic) async {
-      // TODO:GG 测试续订
-      await checkExpireAndPermission(topic.topic, enableFirst: false, emptyAdd: false);
+    topics.forEach((TopicSchema topic) {
+      // TODO:GG  测试续订
+      checkExpireAndPermission(topic.topic, enableFirst: false, emptyAdd: false).then((value) {
+        if (value != null && subscribers) {
+          subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate);
+        }
+      }); // await
     });
   }
 
@@ -155,11 +159,11 @@ class TopicCommon with Tag {
         bool? isAccept = permission[2];
         bool? isReject = permission[3];
         if (!acceptAll && isReject == true) {
-          logger.i("$TAG - checkExpireAndPermission - can contact owner to modify rejects - topic:$exists"); // TODO:GG 测试黑名单
+          logger.i("$TAG - checkExpireAndPermission - can contact owner to modify rejects - topic:$exists"); // TODO:GG  测试黑名单
           canSendMessage = false;
           return null;
         } else if (!acceptAll && isAccept != true) {
-          logger.i("$TAG - checkExpireAndPermission - not owner invited - topic:$exists"); // TODO:GG 测试普通成员邀请
+          logger.i("$TAG - checkExpireAndPermission - not owner invited - topic:$exists"); // TODO:GG  测试普通成员邀请
           canSendMessage = false;
         }
       }
@@ -498,13 +502,13 @@ class TopicCommon with Tag {
             // add to accepts
             rejectList = rejectList.where((e) => !e.toString().contains(element.clientAddress)).toList();
             if (acceptList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
-              acceptList.add({'addr': element.clientAddress}); // TODO:GG 测试正确性
+              acceptList.add({'addr': element.clientAddress}); // TODO:GG  测试正确性
             }
           } else if (append.status == SubscriberStatus.Unsubscribed) {
             // add to rejects
             acceptList = acceptList.where((e) => !e.toString().contains(element.clientAddress)).toList();
             if (rejectList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
-              rejectList.add({'addr': element.clientAddress}); // TODO:GG 测试正确性
+              rejectList.add({'addr': element.clientAddress}); // TODO:GG  测试正确性
             }
           } else {
             // remove from all
@@ -592,7 +596,7 @@ class TopicCommon with Tag {
         // meta update
         Map<String, dynamic> meta = await _getMetaByNodePage(topicName, permPage);
         _subscriber.status = SubscriberStatus.None;
-        meta = await _buildMetaByAppend(topicName, meta, _subscriber); // TODO:GG 测试meta
+        meta = await _buildMetaByAppend(topicName, meta, _subscriber); // TODO:GG  测试meta
         _subscriber.status = SubscriberStatus.Unsubscribed;
         bool subscribeSuccess = await _clientSubscribe(topicName, fee: 0, permissionPage: permPage, meta: meta);
         if (!subscribeSuccess) {
