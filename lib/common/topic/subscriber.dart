@@ -86,15 +86,15 @@ class SubscriberCommon with Tag {
     // insert node data
     futures.clear();
     for (SubscriberSchema nodeItem in nodeSubscribers) {
-      bool find = false;
+      bool findDB = false;
       for (SubscriberSchema dbItem in dbSubscribers) {
         if (dbItem.clientAddress == nodeItem.clientAddress) {
-          find = true;
+          findDB = true;
           break;
         }
       }
       // different with DB in node
-      if (!find) {
+      if (!findDB) {
         logger.i("$TAG - refreshSubscribers - node add because DB no find - nodeSub:$nodeItem");
         futures.add(add(nodeItem, notify: true));
       }

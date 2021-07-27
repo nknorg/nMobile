@@ -11,24 +11,26 @@ class DeviceInfoCommon with Tag {
 
   DeviceInfoCommon();
 
-  Future<DeviceInfoSchema?> add(DeviceInfoSchema? schema, {bool replace = false}) async {
-    if (schema == null || schema.contactId == 0) return null;
-    if (replace) {
-      DeviceInfoSchema? exist = await _deviceInfoStorage.queryByDeviceId(schema.contactId, schema.deviceId);
-      if (exist != null) {
-        bool success = await _deviceInfoStorage.update(exist.id, schema.data);
-        return success ? schema : exist;
+  Future<DeviceInfoSchema?> set(DeviceInfoSchema? schema) async {
+    if (schema == null || schema.contactAddress.isEmpty) return null;
+    DeviceInfoSchema? exist = await _deviceInfoStorage.queryByDeviceId(schema.contactAddress, schema.deviceId);
+    if (exist == null) {
+      schema.createAt = schema.createAt ?? DateTime.now().millisecondsSinceEpoch;
+      schema.updateAt = schema.updateAt ?? DateTime.now().millisecondsSinceEpoch;
+      exist = await _deviceInfoStorage.insert(schema);
+    } else {
+      bool success = await _deviceInfoStorage.update(exist.id, schema.data);
+      if (success) {
+        exist.updateAt = DateTime.now().millisecondsSinceEpoch;
+        exist.data = schema.data;
       }
     }
-    schema.createAt = schema.createAt ?? DateTime.now().millisecondsSinceEpoch;
-    schema.updateAt = schema.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-    DeviceInfoSchema? added = await _deviceInfoStorage.insert(schema);
-    return added;
+    return exist;
   }
 
-  Future<DeviceInfoSchema?> queryLatest(int? contactId) async {
-    if (contactId == null || contactId == 0) return null;
-    return await _deviceInfoStorage.queryLatest(contactId);
+  Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {
+    if (contactAddress == null || contactAddress.isEmpty) return null;
+    return await _deviceInfoStorage.queryLatest(contactAddress);
   }
 
   // DeviceInfoSchema createMe() {
