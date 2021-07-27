@@ -119,21 +119,36 @@ class ChatCommon with Tag {
     if (exists == null) {
       logger.d("$TAG - topicHandle - new - topic:${message.topic} ");
       exists = await topicCommon.add(TopicSchema.create(message.topic), notify: true, checkDuplicated: false);
+      // expire + permission + subscribers
+      if (exists != null) {
+        topicCommon.checkExpireAndPermission(exists.topic, enableFirst: false, emptyAdd: false).then((value) {
+          logger.i("$TAG - topicHandle - checkExpireAndPermission - topic:$exists ");
+          if (value != null) subscriberCommon.refreshSubscribers(exists?.topic, meta: exists?.isPrivate == true);
+        }); // await
+      }
     }
     return exists;
   }
 
-  Future<SubscriberSchema?> subscriberHandle(MessageSchema message) async {
-    return null;
-    // if (!message.isTopic) return null;
-    // if (message.contentType == MessageContentType.topicSubscribe || message.contentType == MessageContentType.topicUnsubscribe) return null;
-    // // duplicated
-    // SubscriberSchema? exist = await subscriberCommon.queryByTopicChatId(message.topic, message.from);
-    // if (exist == null) {
-    //   logger.d("$TAG - subscriberHandle - new - topic:${message.topic} - from:${message.from}");
-    //   exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None));
-    // }
-    // return exist;
+  Future<SubscriberSchema?> subscriberHandle(MessageSchema message, TopicSchema? topic) async {
+    if (topic == null || topic.id == null || topic.id == 0) return null;
+    if (!message.isTopic) return null;
+    if (message.contentType == MessageContentType.topicSubscribe || message.contentType == MessageContentType.topicUnsubscribe) return null;
+    // duplicated
+    SubscriberSchema? exist = await subscriberCommon.queryByTopicChatId(message.topic, message.from);
+    if (exist == null) {
+      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic.topic, topic.isPrivate, message.from);
+      int? permPage = permission[0];
+      bool acceptAll = permission[0];
+      bool isReject = permission[3];
+      if (!acceptAll && isReject) {
+        logger.w("$TAG - subscriberHandle - cant add reject - from:${message.from} - permission:$permission - topic:$topic");
+      } else {
+        logger.i("$TAG - subscriberHandle - new - from:${message.from} - permPage:$permPage - topic:$topic");
+        exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage));
+      }
+    }
+    return exist;
   }
 
   Future<SessionSchema?> sessionHandle(MessageSchema message) async {
