@@ -15,9 +15,9 @@ class DeviceInfoStorage with Tag {
     final createSql = '''
       CREATE TABLE $tableName (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        contact_address TEXT,
         create_at INTEGER,
         update_at INTEGER,
-        contact_id INTEGER,
         device_id TEXT,
         data TEXT
       )''';
@@ -25,14 +25,14 @@ class DeviceInfoStorage with Tag {
     db.execute(createSql);
 
     // index
-    await db.execute('CREATE UNIQUE INDEX unique_index_contact_id ON $tableName (contact_id)');
+    await db.execute('CREATE UNIQUE INDEX unique_index_contact_address ON $tableName (contact_address)');
     await db.execute('CREATE INDEX index_device_id ON $tableName (device_id)');
-    await db.execute('CREATE INDEX index_contact_id_update_at ON $tableName (contact_id, update_at)');
-    await db.execute('CREATE INDEX index_contact_id_device_id_update_at ON $tableName (contact_id, device_id, update_at)');
+    await db.execute('CREATE INDEX index_contact_address_update_at ON $tableName (contact_address, update_at)');
+    await db.execute('CREATE INDEX index_contact_address_device_id_update_at ON $tableName (contact_address, device_id, update_at)');
   }
 
   Future<DeviceInfoSchema?> insert(DeviceInfoSchema? schema) async {
-    if (schema == null || schema.contactId == 0) return null;
+    if (schema == null || schema.contactAddress.isEmpty) return null;
     try {
       Map<String, dynamic> entity = schema.toMap();
       int? id = await db?.insert(tableName, entity);
@@ -49,48 +49,48 @@ class DeviceInfoStorage with Tag {
     return null;
   }
 
-  Future<DeviceInfoSchema?> queryLatest(int? contactId) async {
-    if (contactId == null || contactId == 0) return null;
+  Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {
+    if (contactAddress == null || contactAddress.isEmpty) return null;
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: 'contact_id = ?',
-        whereArgs: [contactId],
+        where: 'contact_address = ?',
+        whereArgs: [contactAddress],
         offset: 0,
         limit: 1,
         orderBy: 'update_at DESC',
       );
       if (res != null && res.length > 0) {
         DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
-        logger.d("$TAG - queryLatest - success - contactId:$contactId - schema:$schema");
+        logger.d("$TAG - queryLatest - success - contactAddress:$contactAddress - schema:$schema");
         return schema;
       }
-      logger.d("$TAG - queryLatest - empty - contactId:$contactId");
+      logger.d("$TAG - queryLatest - empty - contactAddress:$contactAddress");
     } catch (e) {
       handleError(e);
     }
     return null;
   }
 
-  Future<DeviceInfoSchema?> queryByDeviceId(int? contactId, String? deviceId) async {
-    if (contactId == null || contactId == 0 || deviceId == null || deviceId.isEmpty) return null;
+  Future<DeviceInfoSchema?> queryByDeviceId(String? contactAddress, String? deviceId) async {
+    if (contactAddress == null || contactAddress.isEmpty || deviceId == null || deviceId.isEmpty) return null;
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: 'contact_id = ? AND device_id = ?',
-        whereArgs: [contactId, deviceId],
+        where: 'contact_address = ? AND device_id = ?',
+        whereArgs: [contactAddress, deviceId],
         offset: 0,
         limit: 1,
         orderBy: 'update_at DESC',
       );
       if (res != null && res.length > 0) {
         DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
-        logger.d("$TAG - queryByDeviceId - success - contactId:$contactId - schema:$schema");
+        logger.d("$TAG - queryByDeviceId - success - contactAddress:$contactAddress - schema:$schema");
         return schema;
       }
-      logger.d("$TAG - queryByDeviceId - empty - contactId:$contactId");
+      logger.d("$TAG - queryByDeviceId - empty - contactAddress:$contactAddress");
     } catch (e) {
       handleError(e);
     }

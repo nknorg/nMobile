@@ -4,7 +4,7 @@ import 'package:nmobile/utils/utils.dart';
 
 class DeviceInfoSchema {
   int? id; // <- id
-  int contactId; // (required) <-> contact_id
+  String contactAddress; // (required) <-> contact_address
   int? createAt; // <-> create_at
   int? updateAt; // <-> update_at
 
@@ -14,9 +14,9 @@ class DeviceInfoSchema {
 
   DeviceInfoSchema({
     this.id,
+    required this.contactAddress,
     this.createAt,
     this.updateAt,
-    required this.contactId,
     this.deviceId,
     this.data,
   }) {
@@ -77,9 +77,9 @@ class DeviceInfoSchema {
       data = new Map<String, dynamic>();
     }
     Map<String, dynamic> map = {
+      'contact_address': contactAddress,
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contact_id': contactId,
       'device_id': deviceId,
       'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
     };
@@ -89,9 +89,9 @@ class DeviceInfoSchema {
   static DeviceInfoSchema fromMap(Map e) {
     var deviceInfo = DeviceInfoSchema(
       id: e['id'],
+      contactAddress: e['contact_address'] ?? "",
       createAt: e['create_at'],
       updateAt: e['update_at'],
-      contactId: e['contact_id'] ?? 0,
       deviceId: e['device_id'],
     );
 
@@ -110,6 +110,6 @@ class DeviceInfoSchema {
 
   @override
   String toString() {
-    return 'DeviceInfoSchema{id: $id, createAt: $createAt, updateAt: $updateAt, contactId: $contactId, deviceId: $deviceId, data: $data}';
+    return 'DeviceInfoSchema{id: $id, contactAddress: $contactAddress, createAt: $createAt, updateAt: $updateAt, deviceId: $deviceId, data: $data}';
   }
 }
