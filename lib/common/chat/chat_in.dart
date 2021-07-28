@@ -478,6 +478,6 @@ class ChatInCommon with Tag {
 
   // NO single
   Future _receiveTopicKickOut(MessageSchema received) async {
-    await topicCommon.onKickOut(received.topic, received.from);
+    await topicCommon.onKickOut(received.topic, received.content);
   }
 }
