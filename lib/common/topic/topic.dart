@@ -38,10 +38,10 @@ class TopicCommon with Tag {
   }
 
   checkAllTopics({bool subscribers = false}) async {
-    if (clientCommon.address == null || clientCommon.address!.isEmpty) return null;
+    if (clientCommon.address == null || clientCommon.address!.isEmpty) return;
     List<TopicSchema> topics = await queryList();
     topics.forEach((TopicSchema topic) {
-      // TODO:GG 测试续订
+      // TODO:GG  测试续订
       checkExpireAndPermission(topic.topic, enableFirst: false, emptyAdd: false).then((value) {
         if (value != null && subscribers) {
           subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate);
@@ -145,29 +145,33 @@ class TopicCommon with Tag {
       }
     }
 
+    // private + normal
+    int? permPage;
+    if (exists.isPrivate && !exists.isOwner(clientCommon.address)) {
+      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, exists.isPrivate, clientCommon.address);
+      permPage = permission[0];
+      bool? acceptAll = permission[1];
+      bool? isAccept = permission[2];
+      bool? isReject = permission[3];
+      if (!(acceptAll == true) && isAccept != true) {
+        logger.i("$TAG - checkExpireAndPermission - not owner invited - topic:$exists");
+        return null;
+      } else if (!(acceptAll == true) && isReject == true) {
+        logger.i("$TAG - checkExpireAndPermission - can contact owner to modify rejects - topic:$exists");
+        return null;
+      } else if (acceptAll == true || isAccept == true) {
+        if (!noSubscribed) {
+          SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(topicName, clientCommon.address);
+          noSubscribed = _me?.status != SubscriberStatus.Subscribed;
+          logger.i("$TAG - checkExpireAndPermission - subscribe but not permission - noSubscribed:$noSubscribed");
+        }
+      }
+    }
+
     // subscribe / permission
     int? globalHeight = await clientCommon.client?.getHeight();
     bool shouldResubscribe = await exists.shouldResubscribe(globalHeight: globalHeight);
     if (noSubscribed || shouldResubscribe) {
-      // private + normal
-      int? permPage;
-      bool canSendMessage = true;
-      if (exists.isPrivate && !exists.isOwner(clientCommon.address)) {
-        List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, exists.isPrivate, clientCommon.address);
-        permPage = permission[0];
-        bool? acceptAll = permission[1];
-        bool? isAccept = permission[2];
-        bool? isReject = permission[3];
-        if (!(acceptAll == true) && isReject == true) {
-          logger.i("$TAG - checkExpireAndPermission - can contact owner to modify rejects - topic:$exists"); // TODO:GG 测试黑名单
-          canSendMessage = false;
-          return null;
-        } else if (!(acceptAll == true) && isAccept != true) {
-          logger.i("$TAG - checkExpireAndPermission - not owner invited - topic:$exists"); // TODO:GG 测试普通成员邀请
-          canSendMessage = false;
-        }
-      }
-
       // client subscribe
       bool subscribeSuccess = await _clientSubscribe(topicName, fee: fee);
       if (!subscribeSuccess) {
@@ -199,7 +203,7 @@ class TopicCommon with Tag {
       }
 
       // send message
-      if (noSubscribed && canSendMessage) {
+      if (noSubscribed) {
         logger.i("$TAG - subscribe - first - topic:$exists");
         Future.delayed(Duration(seconds: 2), () {
           chatOutCommon.sendTopicSubscribe(topicName);
@@ -393,7 +397,7 @@ class TopicCommon with Tag {
       appendPermPage = permission[0] ?? (await subscriberCommon.queryMaxPermPageByTopic(topicName));
       acceptAll = permission[1];
       bool? isReject = permission[3];
-      if (!(acceptAll == true) && !isOwner && isReject == true) {
+      if (!(acceptAll == true) && !isOwner && (isReject == true)) {
         // just owner can invitee reject item
         Toast.show("此人已经被拉黑，不允许普通成员邀请"); // TODO:GG locale invitee
         return null;
@@ -437,7 +441,7 @@ class TopicCommon with Tag {
 
     // check permission
     List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, isPrivate, clientAddress);
-    int? permPage = _subscriber.permPage ?? permission[0];
+    int? permPage = permission[0] ?? _subscriber.permPage;
     bool? acceptAll = permission[1];
 
     // update DB
@@ -459,9 +463,8 @@ class TopicCommon with Tag {
     }
 
     // send message
-    MessageSchema? _msg = await chatOutCommon.sendTopicKickOut(topicName, clientAddress);
-    if (_msg == null) return null;
-    Toast.show("已提出"); // TODO:GG local kick
+    await chatOutCommon.sendTopicKickOut(topicName, clientAddress);
+    Toast.show(S.of(Global.appContext).rejected);
     return _subscriber;
   }
 
@@ -504,13 +507,13 @@ class TopicCommon with Tag {
             // add to accepts
             rejectList = rejectList.where((e) => !e.toString().contains(element.clientAddress)).toList();
             if (acceptList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
-              acceptList.add({'addr': element.clientAddress}); // TODO:GG 测试正确性
+              acceptList.add({'addr': element.clientAddress}); // TODO:GG  测试正确性
             }
           } else if (append.status == SubscriberStatus.Unsubscribed) {
             // add to rejects
             acceptList = acceptList.where((e) => !e.toString().contains(element.clientAddress)).toList();
             if (rejectList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
-              rejectList.add({'addr': element.clientAddress}); // TODO:GG 测试正确性
+              rejectList.add({'addr': element.clientAddress}); // TODO:GG  测试正确性
             }
           } else {
             // remove from all
@@ -524,7 +527,7 @@ class TopicCommon with Tag {
     // new meta
     meta['accept'] = acceptList;
     meta['reject'] = rejectList;
-    logger.d("$TAG - _buildMetaByAppend - append:$append - meta:${meta.toString()}");
+    logger.d("$TAG - _buildMetaByAppend - permPage:${append.permPage} - meta:${meta.toString()}");
     return meta;
   }
 
@@ -580,7 +583,7 @@ class TopicCommon with Tag {
 
     // private + owner
     if (_topic.isPrivate && _topic.isOwner(clientCommon.address) && clientCommon.address != clientAddress) {
-      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, _topic.isPrivate, clientCommon.address);
+      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, _topic.isPrivate, clientAddress);
       int? permPage = permission[0] ?? _subscriber.permPage;
       bool? acceptAll = permission[1];
       bool? isAccept = permission[2];
@@ -598,7 +601,7 @@ class TopicCommon with Tag {
         // meta update
         Map<String, dynamic> meta = await _getMetaByNodePage(topicName, permPage);
         _subscriber.status = SubscriberStatus.None;
-        meta = await _buildMetaByAppend(topicName, meta, _subscriber); // TODO:GG 测试meta
+        meta = await _buildMetaByAppend(topicName, meta, _subscriber);
         _subscriber.status = SubscriberStatus.Unsubscribed;
         bool subscribeSuccess = await _clientSubscribe(topicName, fee: 0, permissionPage: permPage, meta: meta);
         if (!subscribeSuccess) {

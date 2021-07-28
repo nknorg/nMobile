@@ -60,6 +60,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   StreamSubscription? _onTopicUpdateStreamSubscription;
   StreamSubscription? _onTopicDeleteStreamSubscription;
+  StreamSubscription? _onSubscriberUpdateStreamSubscription;
   StreamSubscription? _onContactUpdateStreamSubscription;
 
   StreamSubscription? _onMessageReceiveStreamSubscription;
@@ -105,7 +106,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
 
     // subscriber
-    subscriberCommon.updateStream.where((event) => (event.topic == _topic?.topic) && (_topic?.topic.isNotEmpty == true)).listen((event) {
+    _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => (event.topic == _topic?.topic) && (_topic?.topic.isNotEmpty == true)).listen((event) {
       subscriberCommon.refreshSubscribers(_topic?.topic, meta: _topic?.isPrivate == true).then((value) {
         _refreshTopicJoined();
       });
@@ -166,6 +167,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     _onTopicUpdateStreamSubscription?.cancel();
     _onTopicDeleteStreamSubscription?.cancel();
+    _onSubscriberUpdateStreamSubscription?.cancel();
     _onContactUpdateStreamSubscription?.cancel();
 
     _onInputChangeController.close();
@@ -210,6 +212,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
       joined = _me?.status == SubscriberStatus.Subscribed;
     }
+    if (!joined) subscriberCommon.refreshSubscribers(_topic?.topic, meta: _topic?.isPrivate == true);
     if (_isJoined != joined) {
       setState(() {
         _isJoined = joined;
