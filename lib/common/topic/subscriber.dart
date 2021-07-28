@@ -123,7 +123,7 @@ class SubscriberCommon with Tag {
     });
 
     // permissions
-    List<dynamic> permissionsResult = [[], true];
+    List<dynamic> permissionsResult = [<SubscriberSchema>[], true];
     if (meta) {
       permissionsResult = await _getPermissionsFromNode(
         topicName,
@@ -133,11 +133,11 @@ class SubscriberCommon with Tag {
       );
     }
     List<SubscriberSchema> permissions = permissionsResult[0];
-    bool _acceptAll = permissionsResult[1];
+    bool? _acceptAll = permissionsResult[1];
 
     // merge
     List<SubscriberSchema> results = [];
-    if (_acceptAll) {
+    if (_acceptAll == true) {
       results = subscribers;
       results = results.map((e) {
         e.status = SubscriberStatus.Subscribed;
@@ -185,7 +185,9 @@ class SubscriberCommon with Tag {
 
   // caller = everyone
   Future<List<dynamic>> findPermissionFromNode(String? topicName, bool isPrivate, String? clientAddress, {bool txPool = true}) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return [null, null];
+    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) {
+      return [null, null, null, null];
+    }
     if (!isPrivate) {
       logger.w("$TAG - findPermissionFromNode - isPrivate = false");
       return [null, true, true, false];
@@ -193,8 +195,8 @@ class SubscriberCommon with Tag {
     // permissions
     List<dynamic> result = await _getPermissionsFromNode(topicName, txPool: txPool);
     List<SubscriberSchema> subscribers = result[0];
-    bool _acceptAll = result[0];
-    if (_acceptAll) {
+    bool? _acceptAll = result[1];
+    if (_acceptAll == true) {
       logger.i("$TAG - findPermissionFromNode - acceptAll = true");
       return [null, _acceptAll, true, false];
     }
@@ -212,7 +214,7 @@ class SubscriberCommon with Tag {
   }
 
   Future<List<dynamic>> _getPermissionsFromNode(String? topicName, {bool txPool = true, Uint8List? subscriberHashPrefix, Map<String, dynamic>? clientGetSubscribers}) async {
-    if (topicName == null || topicName.isEmpty) return [];
+    if (topicName == null || topicName.isEmpty) return [[], null];
     // permissions + subscribers
     Map<String, dynamic> noMergeResults = clientGetSubscribers ??
         await _clientGetSubscribers(
@@ -425,9 +427,10 @@ class SubscriberCommon with Tag {
       bool success = await setPermPage(subscriber.id, permPage, notify: true);
       if (success) subscriber.permPage = permPage;
     }
-    // delete
-    bool success = await delete(subscriber.id, notify: true);
-    return success ? subscriber : null;
+    // delete (just node sync can delete)
+    // bool success = await delete(subscriber.id, notify: true);
+    // return success ? subscriber : null;
+    return subscriber;
   }
 
   // status: Kick (caller = owner)
@@ -449,9 +452,10 @@ class SubscriberCommon with Tag {
       bool success = await setPermPage(subscriber.id, permPage, notify: true);
       if (success) subscriber.permPage = permPage;
     }
-    // delete
-    bool success = await delete(subscriber.id, notify: true);
-    return success ? subscriber : null;
+    // delete (just node sync can delete)
+    // bool success = await delete(subscriber.id, notify: true);
+    // return success ? subscriber : null;
+    return subscriber;
   }
 
   /// ***********************************************************************************************************

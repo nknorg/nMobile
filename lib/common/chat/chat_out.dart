@@ -478,8 +478,6 @@ class ChatOutCommon with Tag {
       }
       return onResult?.messageId;
     }
-    // subscriber
-    await chatCommon.subscriberHandle(message, topic);
     // subscribers
     List<SubscriberSchema> _subscribers = [];
     int signInBetween = DateTime.now().millisecondsSinceEpoch - clientCommon.signInAt;
@@ -499,6 +497,15 @@ class ChatOutCommon with Tag {
         chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
       }
       return onResult?.messageId;
+    }
+    // subscriber
+    SubscriberSchema? _from = await chatCommon.subscriberHandle(message, topic);
+    if (_from != null) {
+      var result = _subscribers.where((element) => element.clientAddress == _from.clientAddress).toList();
+      if (result.isEmpty) {
+        logger.w("$TAG - _sendWithTopic - _subscribers not contains from - from:$_from - topic:$topic - message:$message - msgData:$msgData");
+        _subscribers.add(_from);
+      }
     }
     // sendData
     Uint8List? pid;
