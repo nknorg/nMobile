@@ -170,11 +170,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     } else {
       _offset = _subscriberList.length;
     }
-    var messages = await subscriberCommon.queryListByTopic(
-      this._topicSchema?.topic,
-      offset: _offset,
-      limit: 20,
-    );
+    var messages = await subscriberCommon.queryListByTopic(this._topicSchema?.topic, offset: _offset, limit: 20);
     messages.sort((a, b) => (_topicSchema?.isPrivate == true) ? (_topicSchema?.isOwner(b.clientAddress) == true ? 1 : (b.clientAddress == clientCommon.address ? 1 : -1)) : (b.clientAddress == clientCommon.address ? 1 : -1));
     setState(() {
       _subscriberList = refresh ? messages : _subscriberList + messages; // maybe addStream

@@ -46,7 +46,7 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
-    if (received.from.isEmpty || received.isTopic) return;
+    if (received.from.isEmpty || received.isTopic) return; // topic no receipt, just send message to myself
     if (tryCount > 3) return;
     try {
       String data = MessageData.getReceipt(received.msgId);
@@ -227,7 +227,7 @@ class ChatOutCommon with Tag {
       burningUpdateAt: contact?.options?.updateBurnAfterAt,
     );
     String? data = await MessageData.getImage(message);
-    return _sendAndDisplay(message, data, deviceInfo: deviceInfo);
+    return _sendAndDisplay(message, data);
   }
 
   Future<MessageSchema?> sendAudio(File? content, double? durationS, {ContactSchema? contact, TopicSchema? topic}) async {
@@ -267,8 +267,10 @@ class ChatOutCommon with Tag {
         return null;
       }
       // logger.d("$TAG - sendPiece - success - index:${schema.index} - total:${schema.total} - time:${timeNow.millisecondsSinceEpoch} - message:$message - data:$data");
-      double percent = (message.index ?? 0) / (message.total ?? 1);
-      _onPieceOutSink.add({"msg_id": message.msgId, "percent": percent});
+      if (!message.isTopic) {
+        double percent = (message.index ?? 0) / (message.total ?? 1);
+        _onPieceOutSink.add({"msg_id": message.msgId, "percent": percent});
+      }
       return message;
     } catch (e) {
       handleError(e);
@@ -370,7 +372,6 @@ class ChatOutCommon with Tag {
           MessageData.getText(message),
           contact: contact,
           topic: topic,
-          deviceInfo: deviceInfo,
           resend: true,
         );
       case MessageContentType.media:
@@ -381,7 +382,6 @@ class ChatOutCommon with Tag {
           await MessageData.getImage(message),
           contact: contact,
           topic: topic,
-          deviceInfo: deviceInfo,
           resend: true,
         );
       case MessageContentType.audio:
@@ -390,7 +390,6 @@ class ChatOutCommon with Tag {
           await MessageData.getAudio(message),
           contact: contact,
           topic: topic,
-          deviceInfo: deviceInfo,
           resend: true,
         );
     }
@@ -401,7 +400,6 @@ class ChatOutCommon with Tag {
     MessageSchema? message,
     String? msgData, {
     ContactSchema? contact,
-    DeviceInfoSchema? deviceInfo,
     TopicSchema? topic,
     bool resend = false,
   }) async {
@@ -418,10 +416,8 @@ class ChatOutCommon with Tag {
     _onSavedSink.add(message); // resend already delete fail item in listview
     // contact
     contact = contact ?? await chatCommon.contactHandle(message);
-    DeviceInfoSchema? _deviceInfo = deviceInfo ?? await chatCommon.deviceInfoHandle(message, contact);
     // topic
     topic = topic ?? await chatCommon.topicHandle(message);
-    chatCommon.subscriberHandle(message, topic); // await
     // session
     chatCommon.sessionHandle(message); // await
     // SDK
@@ -429,17 +425,12 @@ class ChatOutCommon with Tag {
     try {
       if (message.isTopic) {
         pid = await _sendWithTopic(topic, message, msgData);
-        logger.d("$TAG - _sendAndDisplay - to_topic - to:${message.topic} - pid:$pid");
+        logger.d("$TAG - _sendAndDisplay - with_topic - to:${message.topic} - pid:$pid");
       } else if (message.to?.isNotEmpty == true) {
-        pid = await _sendByPiecesIfNeed(message, _deviceInfo);
-        if (pid == null || pid.isEmpty) {
-          pid = (await chatCommon.clientSendData(message.to!, msgData))?.messageId;
-          logger.d("$TAG - _sendAndDisplay - to_contact - to:${message.to} - pid:$pid - deviceInfo:$_deviceInfo");
-        } else {
-          logger.d("$TAG - _sendAndDisplay - to_contact_pieces - to:${message.to} - pid:$pid - deviceInfo:$_deviceInfo");
-        }
+        pid = await _sendWithContact(contact, message, msgData);
+        logger.d("$TAG - _sendAndDisplay - with_contact - to:${message.to} - pid:$pid");
       } else {
-        logger.e("$TAG - _sendAndDisplay - to_null - message:$message");
+        logger.e("$TAG - _sendAndDisplay - with_null - message:$message");
       }
     } catch (e) {
       handleError(e);
@@ -453,24 +444,47 @@ class ChatOutCommon with Tag {
     // pid
     message.pid = pid;
     _messageStorage.updatePid(message.msgId, message.pid); // await
-    // status
-    message = chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
-    // notification
-    _sendPush(message, contact, topic); // await
     return message;
+  }
+
+  Future<Uint8List?> _sendWithContact(ContactSchema? contact, MessageSchema? message, String? msgData) async {
+    if (message == null || msgData == null) return null;
+    // deviceInfo
+    DeviceInfoSchema? _deviceInfo = await chatCommon.deviceInfoHandle(message, contact);
+    logger.d("$TAG - _sendWithContact - info - _deviceInfo:$_deviceInfo - contact:$contact - message:$message - msgData:$msgData");
+    // send message
+    Uint8List? pid = await _sendByPiecesIfNeed(message, _deviceInfo);
+    if (pid?.isNotEmpty == true) {
+      logger.d("$TAG - _sendAndDisplay - to_contact_pieces - to:${message.to} - pid:$pid - deviceInfo:$_deviceInfo");
+    } else {
+      logger.d("$TAG - _sendAndDisplay - to_contact - to:${message.to} - deviceInfo:$_deviceInfo");
+      pid = (await chatCommon.clientSendData(message.to!, msgData))?.messageId;
+    }
+    // success
+    if (pid?.isNotEmpty == true) {
+      chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
+      _sendPush(message, contact?.deviceToken); // await
+    }
   }
 
   Future<Uint8List?> _sendWithTopic(TopicSchema? topic, MessageSchema? message, String? msgData) async {
     if (message == null || msgData == null) return null;
     // topic
     if (topic == null) {
-      logger.w("$TAG - _sendWithTopic - topic == null - message:$message - msgData:$msgData");
-      OnMessage? onResult = await chatCommon.clientPublishData(genTopicHash(message.topic!), msgData); // noCheckPermission
+      logger.w("$TAG - _sendWithTopic - topic is null - message:$message - msgData:$msgData");
+      OnMessage? onResult = await chatCommon.clientPublishData(genTopicHash(message.topic!), msgData); // permission checked in received
+      if (onResult?.messageId.isNotEmpty == true) {
+        chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
+      }
       return onResult?.messageId;
     }
+    // subscriber
+    await chatCommon.subscriberHandle(message, topic);
     // subscribers
     List<SubscriberSchema> _subscribers = [];
-    if ((DateTime.now().millisecondsSinceEpoch - clientCommon.signInAt) <= 20 * 1000) {
+    int signInBetween = DateTime.now().millisecondsSinceEpoch - clientCommon.signInAt;
+    int createBetween = DateTime.now().millisecondsSinceEpoch - (topic.createAt ?? DateTime.now().millisecondsSinceEpoch);
+    if (signInBetween <= 20 * 1000 || createBetween <= 20 * 1000) {
       List<SubscriberSchema> result = await subscriberCommon.mergeSubscribersAndPermissionsFromNode(topic.topic, meta: topic.isPrivate);
       _subscribers = result.where((element) => element.status == SubscriberStatus.Subscribed).toList();
       logger.d("$TAG - _sendWithTopic - _subscribers from node - counts:${_subscribers.length} - topic:$topic - message:$message - msgData:$msgData");
@@ -480,24 +494,39 @@ class ChatOutCommon with Tag {
     }
     if (_subscribers.isEmpty) {
       logger.w("$TAG - _sendWithTopic - _subscribers is empty - topic:$topic - message:$message - msgData:$msgData");
-      return null;
+      OnMessage? onResult = await chatCommon.clientPublishData(genTopicHash(message.topic!), msgData); // permission checked in received
+      if (onResult?.messageId.isNotEmpty == true) {
+        chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
+      }
+      return onResult?.messageId;
     }
     // sendData
     Uint8List? pid;
     List<Future> futures = [];
     _subscribers.forEach((SubscriberSchema subscriber) {
-      message.to = subscriber.clientAddress;
       futures.add(deviceInfoCommon.queryLatest(subscriber.clientAddress).then((DeviceInfoSchema? deviceInfo) {
-        return _sendByPiecesIfNeed(message, deviceInfo);
+        // deviceInfo
+        logger.d("$TAG - _sendWithTopic - send_by_pieces - deviceInfo:$deviceInfo - subscriber:$subscriber");
+        return _sendByPiecesIfNeed(message, deviceInfo, to: subscriber.clientAddress);
       }).then((Uint8List? _pid) {
-        if (_pid == null || _pid.isEmpty) {
-          logger.d("$TAG - _sendWithTopic - to_subscriber - to:${subscriber.clientAddress} - subscriber:$subscriber");
-          return chatCommon.clientSendData(message.to!, msgData);
-        } else {
+        // send data (no pieces)
+        if (_pid?.isNotEmpty == true) {
           logger.d("$TAG - _sendWithTopic - to_subscriber_pieces - to:${subscriber.clientAddress} - subscriber:$subscriber - pid:$_pid");
-          return Future.value(OnMessage(messageId: _pid, data: null, src: null, type: null, encrypted: null));
+          if (subscriber.clientAddress == clientCommon.address) {
+            chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
+          }
+          return Future.value(OnMessage(messageId: _pid!, data: null, src: null, type: null, encrypted: null));
+        } else {
+          logger.d("$TAG - _sendWithTopic - to_subscriber - to:${subscriber.clientAddress} - subscriber:$subscriber");
+          return chatCommon.clientSendData(subscriber.clientAddress, msgData).then((value) {
+            if ((value?.messageId.isNotEmpty == true) && (subscriber.clientAddress == clientCommon.address)) {
+              chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
+            }
+            return value;
+          });
         }
       }).then((OnMessage? onResult) {
+        // pid
         var _pid = onResult?.messageId;
         if ((_pid != null) && (pid == null)) {
           logger.d("$TAG - _sendWithTopic - find_pid_first - pid:$_pid - subscriber:$subscriber");
@@ -507,37 +536,22 @@ class ChatOutCommon with Tag {
           logger.d("$TAG - _sendWithTopic - find_pid_last - pid:$_pid - subscriber:$subscriber");
           pid = _pid;
         }
+        if (_pid?.isNotEmpty == true) {
+          return subscriber.getContact(emptyAdd: false);
+        }
+        return Future.value(null);
+      }).then((ContactSchema? contact) {
+        // notification
+        return _sendPush(message, contact?.deviceToken);
       }));
     });
     await Future.wait(futures);
     return pid;
   }
 
-  _sendPush(MessageSchema message, ContactSchema? contact, TopicSchema? topic) async {
+  _sendPush(MessageSchema message, String? deviceToken) async {
     if (!message.canDisplayAndRead) return;
-    if (topic != null) {
-      // subscribers
-      List<SubscriberSchema> _subscribers = [];
-      if ((DateTime.now().millisecondsSinceEpoch - clientCommon.signInAt) <= 20 * 1000) {
-        List<SubscriberSchema> result = await subscriberCommon.mergeSubscribersAndPermissionsFromNode(topic.topic, meta: topic.isPrivate);
-        _subscribers = result.where((element) => element.status == SubscriberStatus.Subscribed).toList();
-        logger.d("$TAG - _sendPush - _subscribers from node - counts:${_subscribers.length} - topic:$topic - message:$message");
-      } else {
-        _subscribers = await subscriberCommon.queryListByTopic(topic.topic, status: SubscriberStatus.Subscribed);
-        logger.d("$TAG - _sendPush - _subscribers from DB - counts:${_subscribers.length} - topic:$topic - message:$message");
-      }
-      if (_subscribers.isEmpty) {
-        logger.w("$TAG - _sendPush - _subscribers is empty - topic:$topic - message:$message");
-        return null;
-      }
-      // send push
-      _subscribers.forEach((SubscriberSchema element) async {
-        ContactSchema? _contact = await element.getContact(emptyAdd: false);
-        _sendPush(message, _contact, null); // await
-      });
-      return;
-    }
-    if (contact?.deviceToken == null || contact!.deviceToken!.isEmpty) return;
+    if (deviceToken == null || deviceToken.isEmpty == true) return;
 
     S localizations = S.of(Global.appContext);
 
@@ -568,10 +582,10 @@ class ChatOutCommon with Tag {
     //     break;
     // }
 
-    await SendPush.send(contact.deviceToken!, title, content);
+    await SendPush.send(deviceToken, title, content);
   }
 
-  Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message, DeviceInfoSchema? deviceInfo) async {
+  Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message, DeviceInfoSchema? deviceInfo, {String? to}) async {
     if (!deviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) return null;
     List results = await _convert2Pieces(message);
     if (results.isEmpty) return null;
@@ -593,7 +607,7 @@ class ChatOutCommon with Tag {
         message.msgId,
         message.from,
         MessageContentType.piece,
-        to: message.to,
+        to: to ?? message.to,
         topic: message.topic,
         content: base64Encode(data),
         options: message.options,

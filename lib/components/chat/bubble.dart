@@ -302,7 +302,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   Widget _getTip(bool self) {
     S _localizations = S.of(context);
     bool isSending = _msgStatus == MessageStatus.Sending;
-    bool hasProgress = _message.content is File;
+    bool hasProgress = (_message.content is File) && !_message.isTopic;
 
     bool showSending = isSending && !hasProgress;
     bool showProgress = isSending && hasProgress && _uploadProgress < 1;

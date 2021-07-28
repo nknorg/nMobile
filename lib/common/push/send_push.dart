@@ -49,6 +49,7 @@ class SendPush {
         },
       });
       await Common.sendPushAPNS(deviceToken, payload);
+      logger.d("SendPush - sendPushMessage - apns - success - payload:$payload");
       return true;
     } catch (e) {
       handleError(e);
@@ -102,10 +103,10 @@ class SendPush {
       );
       // response
       if (response.statusCode == 200) {
-        logger.d("SendPush - sendPushMessage - success - body:$body");
+        logger.d("SendPush - sendPushMessage - fcm - success - body:$body");
         return true;
       } else {
-        logger.e("SendPush - sendPushMessage - fail - code:${response.statusCode} - body:$body");
+        logger.e("SendPush - sendPushMessage - fcm - fail - code:${response.statusCode} - body:$body");
         return false;
       }
     } catch (e) {

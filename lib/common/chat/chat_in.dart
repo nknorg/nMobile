@@ -35,6 +35,11 @@ class ChatInCommon with Tag {
 
   Future onClientMessage(MessageSchema? message, {bool needWait = false}) async {
     if (message == null) return;
+    // topic msg published callback can be used receipt
+    if (message.isTopic && !message.isOutbound && (message.from == message.to || message.from == clientCommon.address)) {
+      message.contentType = MessageContentType.receipt;
+      message.content = message.msgId;
+    }
     // contact
     ContactSchema? contact = await chatCommon.contactHandle(message);
     chatCommon.deviceInfoHandle(message, contact); // await
