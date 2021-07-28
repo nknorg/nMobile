@@ -9,7 +9,6 @@ import 'package:nmobile/components/contact/item.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/subscriber.dart';
@@ -258,7 +257,6 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                     subscriber.clientAddress,
                   );
                   Loading.dismiss();
-                  Toast.show(S.of(context).rejected);
                 },
               ),
               reject: Button(
@@ -278,7 +276,6 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
               subscriber.clientAddress,
             );
             Loading.dismiss();
-            Toast.show(S.of(context).invitation_sent);
           }
         },
       ),

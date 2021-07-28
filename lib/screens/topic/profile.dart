@@ -165,12 +165,14 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
+    Loading.show();
     await topicCommon.invitee(
       _topicSchema?.topic,
       _topicSchema?.isPrivate == true,
       _topicSchema?.isOwner(clientCommon.address) == true,
       address,
     );
+    Loading.dismiss();
   }
 
   _statusAction(bool nextSubscribe) async {
