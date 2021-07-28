@@ -450,6 +450,12 @@ class ChatOutCommon with Tag {
 
   Future<Uint8List?> _sendWithTopic(TopicSchema? topic, MessageSchema? message, String? msgData) async {
     if (message == null || msgData == null) return null;
+    // me
+    SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(message.topic, clientCommon.address);
+    if (_me == null || (topic?.isPrivate == true && (_me.status != SubscriberStatus.Subscribed))) {
+      logger.w("$TAG - _sendWithTopic - subscriber me is wrong - me:$_me - message:$message");
+      return null;
+    }
     // topic
     if (topic == null) {
       logger.w("$TAG - _sendWithTopic - topic is null - message:$message - msgData:$msgData");
@@ -459,17 +465,11 @@ class ChatOutCommon with Tag {
       }
       return onResult?.messageId;
     }
-    // me
-    SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(message.topic, clientCommon.address);
-    if (_me == null || (topic.isPrivate && (_me.status != SubscriberStatus.Subscribed))) {
-      logger.w("$TAG - _sendWithTopic - subscriber me is wrong - me:$_me - message:$message");
-      return null;
-    }
     // subscribers
     List<SubscriberSchema> _subscribers = [];
     int signInBetween = DateTime.now().millisecondsSinceEpoch - clientCommon.signInAt;
     int createBetween = DateTime.now().millisecondsSinceEpoch - (topic.createAt ?? DateTime.now().millisecondsSinceEpoch);
-    if (signInBetween <= 20 * 1000 || createBetween <= 10 * 1000) {
+    if (signInBetween <= 30 * 1000 || createBetween <= 20 * 1000) {
       List<SubscriberSchema> result = await subscriberCommon.mergeSubscribersAndPermissionsFromNode(topic.topic, meta: topic.isPrivate);
       _subscribers = result.where((element) => element.status == SubscriberStatus.Subscribed).toList();
       logger.d("$TAG - _sendWithTopic - _subscribers from node - counts:${_subscribers.length} - topic:$topic - message:$message - msgData:$msgData");
@@ -541,42 +541,6 @@ class ChatOutCommon with Tag {
     });
     await Future.wait(futures);
     return pid;
-  }
-
-  _sendPush(MessageSchema message, String? deviceToken) async {
-    if (!message.canDisplayAndRead) return;
-    if (deviceToken == null || deviceToken.isEmpty == true) return;
-
-    S localizations = S.of(Global.appContext);
-
-    String title = localizations.new_message;
-    // if (topic != null) {
-    //   title = '[${topic.topicShort}] ${contact?.displayName}';
-    // } else if (contact != null) {
-    //   title = contact.displayName;
-    // }
-
-    String content = localizations.you_have_new_message;
-    // switch (message.contentType) {
-    //   case ContentType.text:
-    //   case ContentType.textExtension:
-    //     content = message.content;
-    //     break;
-    //   case ContentType.media:
-    //   case ContentType.image:
-    //   case ContentType.nknImage:
-    //     content = '[${localizations.image}]';
-    //     break;
-    //   case ContentType.audio:
-    //     content = '[${localizations.audio}]';
-    //     break;
-    //   case ContentType.topicSubscribe:
-    //   case ContentType.topicUnsubscribe:
-    //   case ContentType.topicInvitation:
-    //     break;
-    // }
-
-    await SendPush.send(deviceToken, title, content);
   }
 
   Future<Uint8List?> _sendByPiecesIfNeed(MessageSchema message, DeviceInfoSchema? deviceInfo, {String? to}) async {
@@ -657,5 +621,41 @@ class ChatOutCommon with Tag {
       parity = minPiecesTotal ~/ piecesParity;
     }
     return [base64Data, bytesLength, total, parity];
+  }
+
+  _sendPush(MessageSchema message, String? deviceToken) async {
+    if (!message.canDisplayAndRead) return;
+    if (deviceToken == null || deviceToken.isEmpty == true) return;
+
+    S localizations = S.of(Global.appContext);
+
+    String title = localizations.new_message;
+    // if (topic != null) {
+    //   title = '[${topic.topicShort}] ${contact?.displayName}';
+    // } else if (contact != null) {
+    //   title = contact.displayName;
+    // }
+
+    String content = localizations.you_have_new_message;
+    // switch (message.contentType) {
+    //   case ContentType.text:
+    //   case ContentType.textExtension:
+    //     content = message.content;
+    //     break;
+    //   case ContentType.media:
+    //   case ContentType.image:
+    //   case ContentType.nknImage:
+    //     content = '[${localizations.image}]';
+    //     break;
+    //   case ContentType.audio:
+    //     content = '[${localizations.audio}]';
+    //     break;
+    //   case ContentType.topicSubscribe:
+    //   case ContentType.topicUnsubscribe:
+    //   case ContentType.topicInvitation:
+    //     break;
+    // }
+
+    await SendPush.send(deviceToken, title, content);
   }
 }
