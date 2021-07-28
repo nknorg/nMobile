@@ -76,7 +76,9 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // session
     _sessionAddSubscription = sessionCommon.addStream.listen((SessionSchema event) {
-      _sessionList.insert(0, event);
+      if (_sessionList.where((element) => element.targetId == event.targetId).toList().isEmpty) {
+        _sessionList.insert(0, event);
+      }
       _sortMessages();
     });
     _sessionDeleteSubscription = sessionCommon.deleteStream.listen((String event) {
