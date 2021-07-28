@@ -55,6 +55,9 @@ class SubscriberCommon with Tag {
       if ((DateTime.now().millisecondsSinceEpoch - updateAt).abs() < Settings.txPoolDelayMs) {
         logger.i("$TAG - refreshSubscribers - DB update just now, maybe in tx pool - dbSub:$dbItem");
         continue;
+      } else {
+        var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
+        logger.d("$TAG - refreshSubscribers - DB update to long - between:${betweenS}s");
       }
       SubscriberSchema? findNode;
       for (SubscriberSchema nodeItem in nodeSubscribers) {
