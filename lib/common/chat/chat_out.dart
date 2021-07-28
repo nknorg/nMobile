@@ -364,45 +364,25 @@ class ChatOutCommon with Tag {
   }) async {
     if (message == null) return null;
     message = chatCommon.updateMessageStatus(message, MessageStatus.Sending);
+    String? msgData;
     switch (message.contentType) {
       case MessageContentType.text:
       case MessageContentType.textExtension:
-        return await _sendAndDisplay(
-          message,
-          MessageData.getText(message),
-          contact: contact,
-          topic: topic,
-          resend: true,
-        );
+        msgData = MessageData.getText(message);
+        break;
       case MessageContentType.media:
       case MessageContentType.image:
       case MessageContentType.nknImage:
-        return await _sendAndDisplay(
-          message,
-          await MessageData.getImage(message),
-          contact: contact,
-          topic: topic,
-          resend: true,
-        );
+        msgData = await MessageData.getImage(message);
+        break;
       case MessageContentType.audio:
-        return await _sendAndDisplay(
-          message,
-          await MessageData.getAudio(message),
-          contact: contact,
-          topic: topic,
-          resend: true,
-        );
+        msgData = await MessageData.getAudio(message);
+        break;
     }
-    return message;
+    return await _sendAndDisplay(message, msgData, contact: contact, topic: topic, resend: true);
   }
 
-  Future<MessageSchema?> _sendAndDisplay(
-    MessageSchema? message,
-    String? msgData, {
-    ContactSchema? contact,
-    TopicSchema? topic,
-    bool resend = false,
-  }) async {
+  Future<MessageSchema?> _sendAndDisplay(MessageSchema? message, String? msgData, {ContactSchema? contact, TopicSchema? topic, bool resend = false}) async {
     if (message == null || msgData == null) return null;
     // DB
     if (!resend) {
@@ -413,7 +393,7 @@ class ChatOutCommon with Tag {
     }
     if (message == null) return null;
     // display
-    _onSavedSink.add(message); // resend already delete fail item in listview
+    if (!resend) _onSavedSink.add(message); // resend just update sendTime
     // contact
     contact = contact ?? await chatCommon.contactHandle(message);
     // topic
@@ -479,11 +459,17 @@ class ChatOutCommon with Tag {
       }
       return onResult?.messageId;
     }
+    // me
+    SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(message.topic, clientCommon.address);
+    if (_me == null || (topic.isPrivate && (_me.status != SubscriberStatus.Subscribed))) {
+      logger.w("$TAG - _sendWithTopic - subscriber me is wrong - me:$_me - message:$message");
+      return null;
+    }
     // subscribers
     List<SubscriberSchema> _subscribers = [];
     int signInBetween = DateTime.now().millisecondsSinceEpoch - clientCommon.signInAt;
     int createBetween = DateTime.now().millisecondsSinceEpoch - (topic.createAt ?? DateTime.now().millisecondsSinceEpoch);
-    if (signInBetween <= 20 * 1000 || createBetween <= 20 * 1000) {
+    if (signInBetween <= 20 * 1000 || createBetween <= 10 * 1000) {
       List<SubscriberSchema> result = await subscriberCommon.mergeSubscribersAndPermissionsFromNode(topic.topic, meta: topic.isPrivate);
       _subscribers = result.where((element) => element.status == SubscriberStatus.Subscribed).toList();
       logger.d("$TAG - _sendWithTopic - _subscribers from node - counts:${_subscribers.length} - topic:$topic - message:$message - msgData:$msgData");
