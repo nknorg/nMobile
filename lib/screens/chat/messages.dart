@@ -19,6 +19,7 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/screens/topic/profile.dart';
@@ -101,6 +102,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
     _onTopicDeleteStreamSubscription = topicCommon.deleteStream.where((event) => event == _topic?.topic).listen((String topic) {
       Navigator.of(context).pop();
+    });
+
+    // subscriber
+    subscriberCommon.updateStream.where((event) => (event.topic == _topic?.topic) && (_topic?.topic.isNotEmpty == true)).listen((event) {
+      subscriberCommon.refreshSubscribers(_topic?.topic, meta: _topic?.isPrivate == true).then((value) {
+        _refreshTopicJoined();
+      });
     });
 
     // contact
@@ -198,6 +206,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   _refreshTopicJoined() async {
     if (_topic == null || clientCommon.address == null || clientCommon.address!.isEmpty) return;
     bool joined = await topicCommon.isJoined(_topic?.topic, clientCommon.address);
+    if (joined && (_topic?.isPrivate == true)) {
+      SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
+      joined = _me?.status == SubscriberStatus.Subscribed;
+    }
     if (_isJoined != joined) {
       setState(() {
         _isJoined = joined;
@@ -366,12 +378,14 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           },
                           onResend: (String msgId) async {
                             MessageSchema? find;
+                            var messages = _messages.where((e) {
+                              if (e.msgId != msgId) return true;
+                              find = e;
+                              return false;
+                            }).toList();
+                            if (find != null) messages.insert(0, find!);
                             this.setState(() {
-                              _messages = _messages.where((e) {
-                                if (e.msgId != msgId) return true;
-                                find = e;
-                                return false;
-                              }).toList();
+                              _messages = messages;
                             });
                             await chatOutCommon.resend(find, topic: _topic, contact: _contact);
                           },

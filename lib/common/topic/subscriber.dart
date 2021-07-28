@@ -518,7 +518,7 @@ class SubscriberCommon with Tag {
     int mexPermPage = await _subscriberStorage.queryMaxPermPageByTopic(topic);
     mexPermPage = mexPermPage < 0 ? 0 : mexPermPage;
     int maxPageCount = await queryCountByTopicPermPage(topic, mexPermPage);
-    if (maxPageCount > SubscriberSchema.PermPageSize) {
+    if (maxPageCount >= SubscriberSchema.PermPageSize) {
       mexPermPage++;
     }
     return mexPermPage;
