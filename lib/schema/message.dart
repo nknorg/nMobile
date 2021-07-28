@@ -59,54 +59,54 @@ class MessageOptions {
 
   static const KEY_PARENT_PIECE = "parent_piece";
 
-  static MessageSchema setAudioDuration(MessageSchema schema, double? durationS) {
-    if (schema.options == null) schema.options = Map<String, dynamic>();
-    schema.options![MessageOptions.KEY_AUDIO_DURATION] = durationS;
-    return schema;
+  static MessageSchema setAudioDuration(MessageSchema message, double? durationS) {
+    if (message.options == null) message.options = Map<String, dynamic>();
+    message.options![MessageOptions.KEY_AUDIO_DURATION] = durationS;
+    return message;
   }
 
-  static double? getAudioDuration(MessageSchema? schema) {
-    if (schema == null || schema.options == null || schema.options!.keys.length == 0) return null;
-    var duration = schema.options![MessageOptions.KEY_AUDIO_DURATION]?.toString();
+  static double? getAudioDuration(MessageSchema? message) {
+    if (message == null || message.options == null || message.options!.keys.length == 0) return null;
+    var duration = message.options![MessageOptions.KEY_AUDIO_DURATION]?.toString();
     if (duration == null || duration.isEmpty) return null;
     return double.parse(duration);
   }
 
-  static MessageSchema setContactBurning(MessageSchema schema, int deleteTimeSec, int? updateAt) {
-    if (schema.options == null) schema.options = Map<String, dynamic>();
-    schema.options![MessageOptions.KEY_DELETE_AFTER_SECONDS] = deleteTimeSec;
-    schema.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_AT] = updateAt;
-    return schema;
+  static MessageSchema setContactBurning(MessageSchema message, int deleteTimeSec, int? updateAt) {
+    if (message.options == null) message.options = Map<String, dynamic>();
+    message.options![MessageOptions.KEY_DELETE_AFTER_SECONDS] = deleteTimeSec;
+    message.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_AT] = updateAt;
+    return message;
   }
 
-  static List<int?> getContactBurning(MessageSchema? schema) {
-    if (schema == null || schema.options == null || schema.options!.keys.length == 0) return [];
-    var seconds = schema.options![MessageOptions.KEY_DELETE_AFTER_SECONDS]?.toString();
-    var update = schema.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_AT]?.toString();
+  static List<int?> getContactBurning(MessageSchema? message) {
+    if (message == null || message.options == null || message.options!.keys.length == 0) return [];
+    var seconds = message.options![MessageOptions.KEY_DELETE_AFTER_SECONDS]?.toString();
+    var update = message.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_AT]?.toString();
     int? t1 = (seconds == null || seconds.isEmpty) ? null : int.tryParse(seconds);
     int? t2 = (update == null || update.isEmpty) ? null : int.tryParse(update);
     return [t1, t2];
   }
 
-  static MessageSchema setDeviceToken(MessageSchema schema, String deviceToken) {
-    if (schema.options == null) schema.options = Map<String, dynamic>();
-    schema.options![MessageOptions.KEY_DEVICE_TOKEN] = deviceToken;
-    return schema;
+  static MessageSchema setDeviceToken(MessageSchema message, String deviceToken) {
+    if (message.options == null) message.options = Map<String, dynamic>();
+    message.options![MessageOptions.KEY_DEVICE_TOKEN] = deviceToken;
+    return message;
   }
 
-  static String? getDeviceToken(MessageSchema? schema) {
-    if (schema == null || schema.options == null || schema.options!.keys.length == 0) return null;
-    var deviceToken = schema.options![MessageOptions.KEY_DEVICE_TOKEN]?.toString();
+  static String? getDeviceToken(MessageSchema? message) {
+    if (message == null || message.options == null || message.options!.keys.length == 0) return null;
+    var deviceToken = message.options![MessageOptions.KEY_DEVICE_TOKEN]?.toString();
     return deviceToken;
   }
 
-  static Map<String, dynamic> createPiece(MessageSchema schema) {
+  static Map<String, dynamic> createPiece(MessageSchema message) {
     return {
-      KEY_PARENT_TYPE: schema.parentType,
-      KEY_BYTES_LENGTH: schema.bytesLength,
-      KEY_TOTAL: schema.total,
-      KEY_PARITY: schema.parity,
-      KEY_INDEX: schema.index,
+      KEY_PARENT_TYPE: message.parentType,
+      KEY_BYTES_LENGTH: message.bytesLength,
+      KEY_TOTAL: message.total,
+      KEY_PARITY: message.parity,
+      KEY_INDEX: message.index,
     };
   }
 
@@ -128,56 +128,56 @@ class MessageStatus {
   static const int Received = 200;
   static const int ReceivedRead = 210;
 
-  static MessageSchema set(MessageSchema schema, int status) {
+  static MessageSchema set(MessageSchema message, int status) {
     if (status == Sending) {
-      schema.isOutbound = true;
-      schema.isSendError = false;
-      schema.isSuccess = false;
-      schema.isRead = false;
+      message.isOutbound = true;
+      message.isSendError = false;
+      message.isSuccess = false;
+      message.isRead = false;
     } else if (status == SendFail) {
-      schema.isOutbound = true;
-      schema.isSendError = true;
-      schema.isSuccess = false;
-      schema.isRead = false;
+      message.isOutbound = true;
+      message.isSendError = true;
+      message.isSuccess = false;
+      message.isRead = false;
     } else if (status == SendSuccess) {
-      schema.isOutbound = true;
-      schema.isSendError = false;
-      schema.isSuccess = true;
-      schema.isRead = false;
+      message.isOutbound = true;
+      message.isSendError = false;
+      message.isSuccess = true;
+      message.isRead = false;
     } else if (status == SendWithReceipt) {
-      schema.isOutbound = true;
-      schema.isSendError = false;
-      schema.isSuccess = true;
-      schema.isRead = true;
+      message.isOutbound = true;
+      message.isSendError = false;
+      message.isSuccess = true;
+      message.isRead = true;
     }
     if (status == Received) {
-      schema.isOutbound = false;
-      schema.isSendError = false;
-      schema.isSuccess = true;
-      schema.isRead = false;
+      message.isOutbound = false;
+      message.isSendError = false;
+      message.isSuccess = true;
+      message.isRead = false;
     } else if (status == ReceivedRead) {
-      schema.isOutbound = false;
-      schema.isSendError = false;
-      schema.isSuccess = true;
-      schema.isRead = true;
+      message.isOutbound = false;
+      message.isSendError = false;
+      message.isSuccess = true;
+      message.isRead = true;
     }
-    return schema;
+    return message;
   }
 
-  static int get(MessageSchema schema) {
-    if (schema.isOutbound) {
-      if (schema.isSendError) {
-        // || schema.pid == null
+  static int get(MessageSchema message) {
+    if (message.isOutbound) {
+      if (message.isSendError) {
+        // || message.pid == null
         return SendFail;
-      } else if (schema.isSuccess && schema.isRead) {
+      } else if (message.isSuccess && message.isRead) {
         return SendWithReceipt;
-      } else if (schema.isSuccess) {
+      } else if (message.isSuccess) {
         return SendSuccess;
       } else {
         return Sending;
       }
     } else {
-      if (schema.isRead) {
+      if (message.isRead) {
         return ReceivedRead;
       } else {
         return Received;
@@ -245,12 +245,12 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getContactOptionsBurn(MessageSchema schema) {
-    List<int?> burningOptions = MessageOptions.getContactBurning(schema);
+  static String getContactOptionsBurn(MessageSchema message) {
+    List<int?> burningOptions = MessageOptions.getContactBurning(message);
     int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
     int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
     Map data = {
-      'id': schema.msgId,
+      'id': message.msgId,
       'contentType': MessageContentType.contactOptions,
       'optionType': '0',
       'content': {
@@ -260,21 +260,21 @@ class MessageData {
         'updateBurnAfterTime': updateBurnAfterAt,
         // SUPPORT:END
       },
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
 
-  static String getContactOptionsToken(MessageSchema schema) {
-    String? deviceToken = MessageOptions.getDeviceToken(schema);
+  static String getContactOptionsToken(MessageSchema message) {
+    String? deviceToken = MessageOptions.getDeviceToken(message);
     Map data = {
-      'id': schema.msgId,
+      'id': message.msgId,
       'contentType': MessageContentType.contactOptions,
       'optionType': '1',
       'content': {
         'deviceToken': deviceToken,
       },
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
@@ -300,89 +300,89 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getText(MessageSchema schema) {
+  static String getText(MessageSchema message) {
     Map map = {
-      'id': schema.msgId,
-      'contentType': schema.contentType,
-      'content': schema.content,
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'id': message.msgId,
+      'contentType': message.contentType,
+      'content': message.content,
+      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
-    if (schema.isTopic) {
-      map['topic'] = schema.topic;
+    if (message.isTopic) {
+      map['topic'] = message.topic;
     }
-    if (schema.options != null && schema.options!.keys.length > 0) {
-      map['options'] = schema.options;
+    if (message.options != null && message.options!.keys.length > 0) {
+      map['options'] = message.options;
     }
     return jsonEncode(map);
   }
 
-  static Future<String?> getImage(MessageSchema schema) async {
-    File? file = schema.content as File?;
+  static Future<String?> getImage(MessageSchema message) async {
+    File? file = message.content as File?;
     if (file == null) return null;
     String content = '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     Map data = {
-      'id': schema.msgId,
-      'contentType': schema.contentType,
+      'id': message.msgId,
+      'contentType': message.contentType,
       'content': content,
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
-    if (schema.isTopic) {
-      data['topic'] = schema.topic;
+    if (message.isTopic) {
+      data['topic'] = message.topic;
     }
-    if (schema.options != null && schema.options!.keys.length > 0) {
-      data['options'] = schema.options;
+    if (message.options != null && message.options!.keys.length > 0) {
+      data['options'] = message.options;
     }
     return jsonEncode(data);
   }
 
-  static Future<String?> getAudio(MessageSchema schema) async {
-    File? file = schema.content as File?;
+  static Future<String?> getAudio(MessageSchema message) async {
+    File? file = message.content as File?;
     if (file == null) return null;
     var mimeType = mime(file.path) ?? "";
     if (mimeType.split('aac').length <= 0) return null;
     String content = '![audio](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     Map data = {
-      'id': schema.msgId,
-      'contentType': schema.contentType,
+      'id': message.msgId,
+      'contentType': message.contentType,
       'content': content,
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
-    if (schema.isTopic) {
-      data['topic'] = schema.topic;
+    if (message.isTopic) {
+      data['topic'] = message.topic;
     }
-    if (schema.options != null && schema.options!.keys.length > 0) {
-      data['options'] = schema.options;
+    if (message.options != null && message.options!.keys.length > 0) {
+      data['options'] = message.options;
     }
     return jsonEncode(data);
   }
 
-  static String getPiece(MessageSchema schema) {
+  static String getPiece(MessageSchema message) {
     Map data = {
-      'id': schema.msgId,
-      'contentType': schema.contentType,
-      'content': schema.content,
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'parentType': schema.parentType ?? schema.contentType,
-      'bytesLength': schema.bytesLength,
-      'total': schema.total,
-      'parity': schema.parity,
-      'index': schema.index,
+      'id': message.msgId,
+      'contentType': message.contentType,
+      'content': message.content,
+      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'parentType': message.parentType ?? message.contentType,
+      'bytesLength': message.bytesLength,
+      'total': message.total,
+      'parity': message.parity,
+      'index': message.index,
     };
-    if (schema.isTopic) {
-      data['topic'] = schema.topic;
+    if (message.isTopic) {
+      data['topic'] = message.topic;
     }
-    if (schema.options != null && schema.options!.keys.length > 0) {
-      data['options'] = schema.options;
+    if (message.options != null && message.options!.keys.length > 0) {
+      data['options'] = message.options;
     }
     return jsonEncode(data);
   }
 
-  static String getTopicSubscribe(MessageSchema schema) {
+  static String getTopicSubscribe(MessageSchema message) {
     Map data = {
-      'id': schema.msgId,
-      'topic': schema.topic,
+      'id': message.msgId,
+      'topic': message.topic,
       'contentType': MessageContentType.topicSubscribe,
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
@@ -397,12 +397,12 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getTopicInvitee(MessageSchema schema) {
+  static String getTopicInvitee(MessageSchema message) {
     Map data = {
-      'id': schema.msgId,
+      'id': message.msgId,
       'contentType': MessageContentType.topicInvitation,
-      'content': schema.content,
-      'timestamp': schema.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'content': message.content,
+      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
