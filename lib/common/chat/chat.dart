@@ -143,6 +143,7 @@ class ChatCommon with Tag {
       bool? isReject = permission[3];
       if (!(acceptAll == true) && isReject == true) {
         logger.w("$TAG - subscriberHandle - cant add reject - from:${message.from} - permission:$permission - topic:$topic");
+        return null;
       } else {
         logger.i("$TAG - subscriberHandle - new - from:${message.from} - permPage:$permPage - topic:$topic");
         exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage));
