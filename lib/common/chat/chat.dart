@@ -139,9 +139,9 @@ class ChatCommon with Tag {
     if (exist == null) {
       List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic.topic, topic.isPrivate, message.from);
       int? permPage = permission[0];
-      bool acceptAll = permission[0];
-      bool isReject = permission[3];
-      if (!acceptAll && isReject) {
+      bool? acceptAll = permission[1];
+      bool? isReject = permission[3];
+      if (!(acceptAll == true) && isReject == true) {
         logger.w("$TAG - subscriberHandle - cant add reject - from:${message.from} - permission:$permission - topic:$topic");
       } else {
         logger.i("$TAG - subscriberHandle - new - from:${message.from} - permPage:$permPage - topic:$topic");
