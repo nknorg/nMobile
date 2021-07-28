@@ -455,9 +455,9 @@ class ChatOutCommon with Tag {
     // send message
     Uint8List? pid = await _sendByPiecesIfNeed(message, _deviceInfo);
     if (pid?.isNotEmpty == true) {
-      logger.d("$TAG - _sendAndDisplay - to_contact_pieces - to:${message.to} - pid:$pid - deviceInfo:$_deviceInfo");
+      logger.d("$TAG - _sendWithContact - to_contact_pieces - to:${message.to} - pid:$pid - deviceInfo:$_deviceInfo");
     } else {
-      logger.d("$TAG - _sendAndDisplay - to_contact - to:${message.to} - deviceInfo:$_deviceInfo");
+      logger.d("$TAG - _sendWithContact - to_contact - to:${message.to} - deviceInfo:$_deviceInfo");
       pid = (await chatCommon.clientSendData(message.to!, msgData))?.messageId;
     }
     // success
@@ -465,6 +465,7 @@ class ChatOutCommon with Tag {
       chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
       _sendPush(message, contact?.deviceToken); // await
     }
+    return pid;
   }
 
   Future<Uint8List?> _sendWithTopic(TopicSchema? topic, MessageSchema? message, String? msgData) async {
