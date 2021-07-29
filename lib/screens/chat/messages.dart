@@ -211,7 +211,14 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (joined && (_topic?.isPrivate == true)) {
       SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
       joined = _me?.status == SubscriberStatus.Subscribed;
-      if (!joined) subscriberCommon.refreshSubscribers(_topic?.topic, meta: _topic?.isPrivate == true);
+      if (!joined) {
+        logger.i("$TAG - _refreshTopicJoined expire ok but status wrong - me:$_me");
+        subscriberCommon.refreshSubscribers(_topic?.topic, meta: _topic?.isPrivate == true).then((value) async {
+          await Future.delayed(Duration(seconds: 2), () {
+            _refreshTopicJoined();
+          });
+        });
+      }
     }
     if (_isJoined != joined) {
       setState(() {

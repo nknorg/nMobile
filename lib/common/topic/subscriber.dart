@@ -71,14 +71,29 @@ class SubscriberCommon with Tag {
         logger.i("$TAG - refreshSubscribers - DB delete because node no find - DB:$dbItem");
         futures.add(delete(dbItem.id, notify: true));
       } else {
+        // status
         if (dbItem.status != findNode.status) {
           if (findNode.status == SubscriberStatus.InvitedSend && dbItem.status == SubscriberStatus.InvitedReceipt) {
             logger.i("$TAG - refreshSubscribers - DB is receive invited so no update - DB:$dbItem - node:$findNode");
           } else {
-            logger.i("$TAG - refreshSubscribers - DB set receipt to sync node - DB:$dbItem - node:$findNode");
-            futures.add(setStatus(dbItem.id, findNode.status, notify: true));
+            if (findNode.status == SubscriberStatus.Unsubscribed) {
+              logger.i("$TAG - refreshSubscribers - DB delete to sync node - DB:$dbItem - node:$findNode");
+              futures.add(delete(dbItem.id, notify: true));
+            } else {
+              logger.i("$TAG - refreshSubscribers - DB update to sync node - DB:$dbItem - node:$findNode");
+              futures.add(setStatus(dbItem.id, findNode.status, notify: true));
+            }
           }
-        } else if (dbItem.permPage != findNode.permPage && findNode.permPage != null) {
+        } else {
+          if (dbItem.status == SubscriberStatus.Unsubscribed) {
+            logger.i("$TAG - refreshSubscribers - DB same node, and status is unsubscribe - DB:$dbItem - node:$findNode");
+            futures.add(delete(dbItem.id, notify: true));
+          } else {
+            logger.d("$TAG - refreshSubscribers - DB same node - DB:$dbItem - node:$findNode");
+          }
+        }
+        // prmPage
+        if (dbItem.permPage != findNode.permPage && findNode.permPage != null && findNode.status != SubscriberStatus.Unsubscribed) {
           logger.i("$TAG - refreshSubscribers - DB set permPage to sync node - DB:$dbItem - node:$findNode");
           futures.add(setPermPage(dbItem.id, findNode.permPage, notify: true));
         }
@@ -97,7 +112,7 @@ class SubscriberCommon with Tag {
         }
       }
       // different with DB in node
-      if (!findDB) {
+      if (!findDB && nodeItem.status != SubscriberStatus.Unsubscribed) {
         logger.i("$TAG - refreshSubscribers - node add because DB no find - nodeSub:$nodeItem");
         futures.add(add(nodeItem, notify: true));
       }

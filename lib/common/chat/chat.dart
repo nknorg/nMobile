@@ -117,10 +117,16 @@ class ChatCommon with Tag {
     // duplicated
     TopicSchema? exists = await topicCommon.queryByTopic(message.topic);
     if (exists == null) {
+      TopicSchema? newAdd = TopicSchema.create(message.topic);
+      int expireHeight = await topicCommon.getExpireAtByNode(message.topic, clientCommon.address);
+      newAdd?.joined = expireHeight > 0 ? true : false;
+      newAdd?.subscribeAt = expireHeight > 0 ? DateTime.now().millisecondsSinceEpoch : null;
+      newAdd?.expireBlockHeight = expireHeight > 0 ? expireHeight : null;
       logger.d("$TAG - topicHandle - new - topic:${message.topic} ");
-      exists = await topicCommon.add(TopicSchema.create(message.topic), notify: true, checkDuplicated: false);
+      exists = await topicCommon.add(newAdd, notify: true, checkDuplicated: false);
       // expire + permission + subscribers
       if (exists != null) {
+        logger.d("$TAG - topicHandle - expireHeight:$expireHeight - topic:$exists ");
         topicCommon.checkExpireAndSubscribe(exists.topic).then((value) {
           logger.i("$TAG - topicHandle - checkExpireAndPermission - topic:$exists ");
           if (value != null) subscriberCommon.refreshSubscribers(exists?.topic, meta: exists?.isPrivate == true);
@@ -149,6 +155,8 @@ class ChatCommon with Tag {
         exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage));
         subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
       }
+    } else if (exist.status != SubscriberStatus.Subscribed) {
+      subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
     }
     return exist;
   }

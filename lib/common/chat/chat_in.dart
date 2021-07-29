@@ -450,13 +450,12 @@ class ChatInCommon with Tag {
     // subscriber
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
     await topicCommon.onSubscribe(received.topic, received.from); // await
+    if (_subscriber?.status == SubscriberStatus.Subscribed) return;
     // DB
-    if (_subscriber?.status != SubscriberStatus.Subscribed) {
-      MessageSchema? inserted = await _messageStorage.insert(received);
-      if (inserted == null) return;
-      // display
-      _onSavedSink.add(inserted);
-    }
+    MessageSchema? inserted = await _messageStorage.insert(received);
+    if (inserted == null) return;
+    // display
+    _onSavedSink.add(inserted);
   }
 
   // NO single
