@@ -41,7 +41,7 @@ class TopicCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty) return;
     List<TopicSchema> topics = await queryList();
     topics.forEach((TopicSchema topic) {
-      // TODO:GG topic 测试续订
+      // TODO:GG topic  测试续订
       checkExpireAndSubscribe(topic.topic).then((value) {
         if (value != null && subscribers) {
           subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate);
@@ -70,7 +70,7 @@ class TopicCommon with Tag {
       return null;
     }
 
-    // permission(private + normal) TODO:GG 时效
+    // permission(private + normal) TODO:GG  时效
     int? permPage;
     bool forceSubscribe = false;
     if (exists.isPrivate && !exists.isOwner(clientCommon.address)) {
@@ -148,11 +148,10 @@ class TopicCommon with Tag {
 
     // check expire
     bool noSubscribed;
+    int expireHeight = await _getExpireAtByNode(exists.topic, clientCommon.address);
     if (!exists.joined || exists.subscribeAt == null || exists.subscribeAt! <= 0 || exists.expireBlockHeight == null || exists.expireBlockHeight! <= 0) {
-      // topic(DB) no joined
-      int expireHeight = await _getExpireAtByNode(exists.topic, clientCommon.address);
       if (expireHeight > 0) {
-        // topic(node) is joined
+        // DB no joined + node is joined
         noSubscribed = false;
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
         if ((DateTime.now().millisecondsSinceEpoch - createAt).abs() > Settings.txPoolDelayMs) {
@@ -165,11 +164,12 @@ class TopicCommon with Tag {
             exists.expireBlockHeight = expireHeight;
           }
         } else {
-          logger.w("$TAG - checkExpireAndSubscribe - DB expire but node not expire, maybe in txPool - topic:$exists");
+          var betweenS = (DateTime.now().millisecondsSinceEpoch - createAt) / 1000;
+          logger.w("$TAG - checkExpireAndSubscribe - DB expire but node not expire, maybe in txPool - between:${betweenS}s - topic:$exists");
           return null;
         }
       } else {
-        // topic(node) no joined
+        // DB no joined + node no joined
         noSubscribed = true;
         if (enableFirst) {
           logger.d("$TAG - checkExpireAndSubscribe - no subscribe history - topic:$exists");
@@ -179,21 +179,20 @@ class TopicCommon with Tag {
         }
       }
     } else {
-      // topic(DB) is joined
-      int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-      int expireHeight = await _getExpireAtByNode(exists.topic, clientCommon.address);
       if (expireHeight <= 0) {
-        // topic(node) no joined
+        // DB is joined + node no joined
         noSubscribed = true;
+        int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
         if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt).abs() > Settings.txPoolDelayMs) {
           logger.i("$TAG - checkExpireAndSubscribe - db no expire but node expire - topic:$exists");
           bool success = await setJoined(exists.id, false, notify: true);
           if (success) exists.joined = false;
         } else {
-          logger.d("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool - topic:$exists");
+          var betweenS = (DateTime.now().millisecondsSinceEpoch - createAt) / 1000;
+          logger.d("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool - between:${betweenS}s - topic:$exists");
         }
       } else {
-        // topic(node) is joined
+        // DB is joined + node is joined
         noSubscribed = false;
         logger.d("$TAG - checkExpireAndSubscribe - OK OK OK OK OK - topic:$exists");
       }
@@ -343,7 +342,6 @@ class TopicCommon with Tag {
     return expireHeight >= globalHeight;
   }
 
-  // TODO:GG 没有txPool
   Future<int> _getExpireAtByNode(String? topicName, String? clientAddress) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return 0;
     String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
@@ -352,15 +350,17 @@ class TopicCommon with Tag {
     return int.tryParse(expiresAt) ?? 0;
   }
 
-  // TODO:GG 没有txPool
   Future<Map<String, dynamic>> _getMetaByNodePage(String? topicName, int permPage) async {
     if (topicName == null || topicName.isEmpty) return Map();
     String? ownerPubKey = getPubKeyFromTopicOrChatId(topicName);
     String indexWithPubKey = '__${permPage}__.__permission__.$ownerPubKey';
     Map<String, dynamic> result = await _clientGetSubscription(topicName, indexWithPubKey);
     if (result['meta']?.toString().isNotEmpty == true) {
-      return jsonFormat(result['meta']) ?? Map();
+      Map<String, dynamic> meta = jsonFormat(result['meta']) ?? Map();
+      logger.d("$TAG - _getMetaByNodePage - meta:$meta");
+      return meta;
     }
+    logger.d("$TAG - _getMetaByNodePage - meta is null");
     return Map();
   }
 
@@ -515,19 +515,22 @@ class TopicCommon with Tag {
             // add to accepts
             rejectList = rejectList.where((e) => !e.toString().contains(element.clientAddress)).toList();
             if (acceptList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
-              acceptList.add({'addr': element.clientAddress}); // TODO:GG topic 测试正确性
+              acceptList.add({'addr': element.clientAddress}); // TODO:GG topic  测试正确性
             }
           } else if (append.status == SubscriberStatus.Unsubscribed) {
             // add to rejects
             acceptList = acceptList.where((e) => !e.toString().contains(element.clientAddress)).toList();
             if (rejectList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
-              rejectList.add({'addr': element.clientAddress}); // TODO:GG topic 测试正确性
+              rejectList.add({'addr': element.clientAddress}); // TODO:GG topic  测试正确性
             }
           } else {
             // remove from all
             acceptList = acceptList.where((e) => !e.toString().contains(element.clientAddress)).toList();
             rejectList = rejectList.where((e) => !e.toString().contains(element.clientAddress)).toList();
           }
+        } else {
+          var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
+          logger.d("$TAG - _buildMetaByAppend - subscriber update to long - between:${betweenS}s - subscriber:$element");
         }
       }
     });
