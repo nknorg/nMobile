@@ -41,7 +41,6 @@ class TopicCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty) return;
     List<TopicSchema> topics = await queryList();
     topics.forEach((TopicSchema topic) {
-      // TODO:GG topic 测试续订
       checkExpireAndSubscribe(topic.topic).then((value) {
         if (value != null && subscribers) {
           subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate);
