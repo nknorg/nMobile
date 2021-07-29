@@ -293,7 +293,7 @@ class ChatOutCommon with Tag {
         topic: topic,
       );
       String data = MessageData.getTopicSubscribe(send);
-      await _sendAndDisplay(send, data);
+      await _sendAndDisplay(send, data, display: false);
       logger.d("$TAG - sendTopicSubscribe - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -382,24 +382,31 @@ class ChatOutCommon with Tag {
     return await _sendAndDisplay(message, msgData, contact: contact, topic: topic, resend: true);
   }
 
-  Future<MessageSchema?> _sendAndDisplay(MessageSchema? message, String? msgData, {ContactSchema? contact, TopicSchema? topic, bool resend = false}) async {
+  Future<MessageSchema?> _sendAndDisplay(
+    MessageSchema? message,
+    String? msgData, {
+    ContactSchema? contact,
+    TopicSchema? topic,
+    bool resend = false,
+    bool display = true,
+  }) async {
     if (message == null || msgData == null) return null;
     // DB
-    if (!resend) {
+    if (!resend && display) {
       message = await _messageStorage.insert(message);
-    } else {
+    } else if (resend) {
       message.sendTime = DateTime.now();
       _messageStorage.updateSendTime(message.msgId, message.sendTime); // await
     }
     if (message == null) return null;
     // display
-    if (!resend) _onSavedSink.add(message); // resend just update sendTime
+    if (!resend && display) _onSavedSink.add(message); // resend just update sendTime
     // contact
     contact = contact ?? await chatCommon.contactHandle(message);
     // topic
     topic = topic ?? await chatCommon.topicHandle(message);
     // session
-    chatCommon.sessionHandle(message); // await
+    if (display) chatCommon.sessionHandle(message); // await
     // SDK
     Uint8List? pid;
     try {
