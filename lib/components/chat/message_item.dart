@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/chat/bubble.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -298,7 +299,9 @@ class ChatMessageItem extends StatelessWidget {
                     );
                     if (topic?.isNotEmpty == true) {
                       Loading.show();
-                      TopicSchema? result = await topicCommon.subscribe(topic);
+                      int sendAt = message.sendTime?.millisecondsSinceEpoch ?? 0;
+                      bool isJustNow = (DateTime.now().millisecondsSinceEpoch - sendAt) < Settings.txPoolDelayMs;
+                      TopicSchema? result = await topicCommon.subscribe(topic, skipPermission: isJustNow);
                       Loading.dismiss();
                       if (result != null) Toast.show(_localizations.subscribed);
                     }

@@ -41,7 +41,7 @@ class TopicCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty) return;
     List<TopicSchema> topics = await queryList();
     topics.forEach((TopicSchema topic) {
-      // TODO:GG topic  测试续订
+      // TODO:GG topic 测试续订
       checkExpireAndSubscribe(topic.topic).then((value) {
         if (value != null && subscribers) {
           subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate);
@@ -55,7 +55,7 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = self(owner/normal)
-  Future<TopicSchema?> subscribe(String? topicName, {double fee = 0}) async {
+  Future<TopicSchema?> subscribe(String? topicName, {bool skipPermission = false, double fee = 0}) async {
     if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
 
     // topic exist
@@ -70,7 +70,7 @@ class TopicCommon with Tag {
       return null;
     }
 
-    // permission(private + normal) TODO:GG  时效
+    // permission(private + normal)
     int? permPage;
     bool forceSubscribe = false;
     if (exists.isPrivate && !exists.isOwner(clientCommon.address)) {
@@ -80,19 +80,25 @@ class TopicCommon with Tag {
       bool? isAccept = permission[2];
       bool? isReject = permission[3];
       bool permissionOk = false;
-      if (!(acceptAll == true)) {
-        if (isReject == true) {
-          Toast.show("你已被踢出该群，无法再次加入!"); // TODO:GG local kick
-          return null;
-        } else if (isAccept != true) {
-          Toast.show("请联系群主重新邀请您"); // TODO:GG local invitee
-          return null;
+      if (skipPermission) {
+        logger.d("$TAG - subscribe - skipPermission - schema:$exists");
+        permissionOk = true;
+      } else {
+        if (!(acceptAll == true)) {
+          if (isReject == true) {
+            Toast.show("你已被踢出该群，无法再次加入!"); // TODO:GG locale kick
+            return null;
+          } else if (isAccept != true) {
+            Toast.show("请联系群主重新邀请您"); // TODO:GG locale invitee
+            return null;
+          } else {
+            logger.d("$TAG - subscribe - is_accept ok - schema:$exists");
+            permissionOk = true;
+          }
         } else {
+          logger.d("$TAG - subscribe - accept all - schema:$exists");
           permissionOk = true;
         }
-      } else {
-        // all client can subscribe
-        permissionOk = true;
       }
       if (permissionOk) {
         SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(topicName, clientCommon.address);
@@ -154,7 +160,7 @@ class TopicCommon with Tag {
         // DB no joined + node is joined
         noSubscribed = false;
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-        if ((DateTime.now().millisecondsSinceEpoch - createAt).abs() > Settings.txPoolDelayMs) {
+        if ((DateTime.now().millisecondsSinceEpoch - createAt) > Settings.txPoolDelayMs) {
           logger.d("$TAG - checkExpireAndSubscribe - DB expire but node not expire - topic:$exists");
           int subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
           bool success = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireHeight, notify: true);
@@ -183,7 +189,7 @@ class TopicCommon with Tag {
         // DB is joined + node no joined
         noSubscribed = true;
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-        if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt).abs() > Settings.txPoolDelayMs) {
+        if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt) > Settings.txPoolDelayMs) {
           logger.i("$TAG - checkExpireAndSubscribe - db no expire but node expire - topic:$exists");
           bool success = await setJoined(exists.id, false, notify: true);
           if (success) exists.joined = false;
@@ -325,7 +331,7 @@ class TopicCommon with Tag {
     if (topicName == null || topicName.isEmpty) return false;
     TopicSchema? exists = await queryByTopic(topicName);
     int createAt = exists?.createAt ?? DateTime.now().millisecondsSinceEpoch;
-    if (exists != null && (DateTime.now().millisecondsSinceEpoch - createAt).abs() < Settings.txPoolDelayMs) {
+    if (exists != null && (DateTime.now().millisecondsSinceEpoch - createAt) < Settings.txPoolDelayMs) {
       logger.i("$TAG - isJoined - createAt just now, maybe in txPool - topicName:$topicName - clientAddress:$clientAddress");
       return exists.joined; // maybe in txPool
     }
@@ -509,19 +515,19 @@ class TopicCommon with Tag {
     subscribers.forEach((SubscriberSchema element) {
       if (element.clientAddress.isNotEmpty == true && element.clientAddress != append.clientAddress) {
         int updateAt = element.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-        if ((DateTime.now().millisecondsSinceEpoch - updateAt).abs() < Settings.txPoolDelayMs) {
+        if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.txPoolDelayMs) {
           logger.i("$TAG - _buildMetaByAppend - subscriber update just now, maybe in txPool - element:$element");
           if (append.status == SubscriberStatus.InvitedSend || append.status == SubscriberStatus.InvitedReceipt || append.status == SubscriberStatus.Subscribed) {
             // add to accepts
             rejectList = rejectList.where((e) => !e.toString().contains(element.clientAddress)).toList();
             if (acceptList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
-              acceptList.add({'addr': element.clientAddress}); // TODO:GG topic  测试正确性
+              acceptList.add({'addr': element.clientAddress}); // TODO:GG topic 测试正确性
             }
           } else if (append.status == SubscriberStatus.Unsubscribed) {
             // add to rejects
             acceptList = acceptList.where((e) => !e.toString().contains(element.clientAddress)).toList();
             if (rejectList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
-              rejectList.add({'addr': element.clientAddress}); // TODO:GG topic  测试正确性
+              rejectList.add({'addr': element.clientAddress}); // TODO:GG topic 测试正确性
             }
           } else {
             // remove from all
