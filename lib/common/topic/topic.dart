@@ -41,7 +41,7 @@ class TopicCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty) return;
     List<TopicSchema> topics = await queryList();
     topics.forEach((TopicSchema topic) {
-      // TODO:GG topic 测试续订
+      // TODO:GG topic  测试续订
       checkExpireAndSubscribe(topic.topic).then((value) {
         if (value != null && subscribers) {
           subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate);
@@ -134,10 +134,6 @@ class TopicCommon with Tag {
     await subscriberCommon.refreshSubscribers(topicName, meta: exists.isPrivate);
     await setCount(exists.id, (exists.count ?? 0) + 1, notify: true);
     await Future.delayed(Duration(seconds: 1));
-
-    // send message
-    await chatOutCommon.sendTopicSubscribe(topicName);
-    await Future.delayed(Duration(seconds: 1));
     return exists;
   }
 
@@ -225,6 +221,9 @@ class TopicCommon with Tag {
         exists.expireBlockHeight = expireHeight;
       }
       logger.i("$TAG - checkExpireAndSubscribe - _clientSubscribe success - topic:$exists");
+
+      // send message
+      await chatOutCommon.sendTopicSubscribe(topicName);
     }
     return exists;
   }
@@ -282,8 +281,8 @@ class TopicCommon with Tag {
     TopicSchema? exists = await queryByTopic(topicName);
     bool setSuccess = await setJoined(exists?.id, false, notify: true);
     if (setSuccess) exists?.joined = false;
-    setSuccess = await setCount(exists?.id, (exists?.count ?? 1) - 1, notify: true);
-    if (setSuccess) exists?.count = (exists.count ?? 1) - 1;
+    // setSuccess = await setCount(exists?.id, (exists?.count ?? 1) - 1, notify: true);
+    // if (setSuccess) exists?.count = (exists.count ?? 1) - 1;
 
     // DB(topic+subscriber) delete
     await subscriberCommon.onUnsubscribe(topicName, clientCommon.address);
@@ -393,6 +392,10 @@ class TopicCommon with Tag {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
     if (clientAddress == clientCommon.address) {
       Toast.show(S.of(Global.appContext).invite_yourself_error);
+      return null;
+    }
+    if (isPrivate && !isOwner) {
+      Toast.show(S.of(Global.appContext).member_no_auth_invite);
       return null;
     }
 
@@ -517,17 +520,17 @@ class TopicCommon with Tag {
         int updateAt = element.updateAt ?? DateTime.now().millisecondsSinceEpoch;
         if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.txPoolDelayMs) {
           logger.i("$TAG - _buildMetaByAppend - subscriber update just now, maybe in txPool - element:$element");
-          if (append.status == SubscriberStatus.InvitedSend || append.status == SubscriberStatus.InvitedReceipt || append.status == SubscriberStatus.Subscribed) {
+          if (element.status == SubscriberStatus.InvitedSend || element.status == SubscriberStatus.InvitedReceipt || element.status == SubscriberStatus.Subscribed) {
             // add to accepts
             rejectList = rejectList.where((e) => !e.toString().contains(element.clientAddress)).toList();
             if (acceptList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
-              acceptList.add({'addr': element.clientAddress}); // TODO:GG topic 测试正确性
+              acceptList.add({'addr': element.clientAddress});
             }
-          } else if (append.status == SubscriberStatus.Unsubscribed) {
+          } else if (element.status == SubscriberStatus.Unsubscribed) {
             // add to rejects
             acceptList = acceptList.where((e) => !e.toString().contains(element.clientAddress)).toList();
             if (rejectList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
-              rejectList.add({'addr': element.clientAddress}); // TODO:GG topic 测试正确性
+              rejectList.add({'addr': element.clientAddress});
             }
           } else {
             // remove from all
