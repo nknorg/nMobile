@@ -8,6 +8,7 @@ import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
@@ -447,12 +448,15 @@ class ChatInCommon with Tag {
       return;
     }
     // subscriber
+    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
     await topicCommon.onSubscribe(received.topic, received.from); // await
     // DB
-    MessageSchema? inserted = await _messageStorage.insert(received);
-    if (inserted == null) return;
-    // display
-    _onSavedSink.add(inserted);
+    if (_subscriber?.status != SubscriberStatus.Subscribed) {
+      MessageSchema? inserted = await _messageStorage.insert(received);
+      if (inserted == null) return;
+      // display
+      _onSavedSink.add(inserted);
+    }
   }
 
   // NO single
