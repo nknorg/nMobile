@@ -52,7 +52,7 @@ class SubscriberCommon with Tag {
     for (SubscriberSchema dbItem in dbSubscribers) {
       // filter in txPool
       int updateAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-      if ((DateTime.now().millisecondsSinceEpoch - updateAt).abs() < Settings.txPoolDelayMs) {
+      if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.txPoolDelayMs) {
         logger.i("$TAG - refreshSubscribers - DB update just now, maybe in tx pool - dbSub:$dbItem");
         continue;
       } else {
