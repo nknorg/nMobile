@@ -121,7 +121,7 @@ class ChatCommon with Tag {
       exists = await topicCommon.add(TopicSchema.create(message.topic), notify: true, checkDuplicated: false);
       // expire + permission + subscribers
       if (exists != null) {
-        topicCommon.checkExpireAndPermission(exists.topic, enableFirst: false, emptyAdd: false).then((value) {
+        topicCommon.checkExpireAndSubscribe(exists.topic).then((value) {
           logger.i("$TAG - topicHandle - checkExpireAndPermission - topic:$exists ");
           if (value != null) subscriberCommon.refreshSubscribers(exists?.topic, meta: exists?.isPrivate == true);
         }); // await
@@ -147,6 +147,7 @@ class ChatCommon with Tag {
       } else {
         logger.i("$TAG - subscriberHandle - new - from:${message.from} - permPage:$permPage - topic:$topic");
         exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage));
+        subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
       }
     }
     return exist;
