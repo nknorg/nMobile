@@ -41,12 +41,12 @@ class TopicCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty) return;
     List<TopicSchema> topics = await queryList();
     topics.forEach((TopicSchema topic) {
-      // TODO:GG  测试续订
-      checkExpireAndPermission(topic.topic, enableFirst: false, emptyAdd: false).then((value) {
+      // TODO:GG topic 测试续订
+      checkExpireAndSubscribe(topic.topic).then((value) {
         if (value != null && subscribers) {
           subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate);
         }
-      }); // await
+      });
     });
   }
 
@@ -57,38 +57,92 @@ class TopicCommon with Tag {
   // caller = self(owner/normal)
   Future<TopicSchema?> subscribe(String? topicName, {double fee = 0}) async {
     if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
-    // check expire/permission
-    TopicSchema? _topic = await checkExpireAndPermission(topicName, enableFirst: true, emptyAdd: true);
-    if (_topic == null) {
+
+    // topic exist
+    TopicSchema? exists = await queryByTopic(topicName);
+    if (exists == null) {
+      logger.d("$TAG - subscribe - new - schema:$exists");
+      exists = await add(TopicSchema.create(topicName), notify: true, checkDuplicated: false);
+      // refreshSubscribers later
+    }
+    if (exists == null) {
+      logger.w("$TAG - subscribe - null - topicName:$topicName");
+      return null;
+    }
+
+    // permission(private + normal) TODO:GG 时效
+    int? permPage;
+    bool forceSubscribe = false;
+    if (exists.isPrivate && !exists.isOwner(clientCommon.address)) {
+      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, exists.isPrivate, clientCommon.address);
+      permPage = permission[0];
+      bool? acceptAll = permission[1];
+      bool? isAccept = permission[2];
+      bool? isReject = permission[3];
+      bool permissionOk = false;
+      if (!(acceptAll == true)) {
+        if (isReject == true) {
+          Toast.show("你已被踢出该群，无法再次加入!"); // TODO:GG local kick
+          return null;
+        } else if (isAccept != true) {
+          Toast.show("请联系群主重新邀请您"); // TODO:GG local invitee
+          return null;
+        } else {
+          permissionOk = true;
+        }
+      } else {
+        // all client can subscribe
+        permissionOk = true;
+      }
+      if (permissionOk) {
+        SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(topicName, clientCommon.address);
+        forceSubscribe = _me?.status != SubscriberStatus.Subscribed;
+        if (forceSubscribe) logger.i("$TAG - subscribe - subscriber has not permission but need subscribe force");
+      }
+    }
+
+    // check expire
+    exists = await checkExpireAndSubscribe(topicName, enableFirst: true, forceSubscribe: forceSubscribe, fee: fee);
+    if (exists == null) {
       Toast.show(S.of(Global.appContext).failure);
       return null;
     }
     await Future.delayed(Duration(seconds: 1));
 
     // pull subscribers
-    if (_topic.isPrivate) {
-      await subscriberCommon.refreshSubscribers(topicName, meta: true);
+    if (exists.isPrivate && exists.isOwner(clientCommon.address)) {
+      // private + owner
+      SubscriberSchema? _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, 0);
+      Map<String, dynamic> meta = await _getMetaByNodePage(topicName, 0);
+      meta = await _buildMetaByAppend(topicName, meta, _subscriberMe);
+      bool permissionSuccess = await _clientSubscribe(topicName, fee: fee, permissionPage: 0, meta: meta);
+      if (!permissionSuccess) {
+        logger.w("$TAG - subscribe - owner subscribe permission fail - topic:$exists");
+        await delete(exists.id, notify: true);
+        return null;
+      }
     } else {
-      await subscriberCommon.refreshSubscribers(topicName, meta: false);
+      // public / private + normal
+      await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage);
     }
+    await subscriberCommon.refreshSubscribers(topicName, meta: exists.isPrivate);
+    await setCount(exists.id, (exists.count ?? 0) + 1, notify: true);
+    await Future.delayed(Duration(seconds: 1));
 
-    // wait db+node sync
-    await Future.delayed(Duration(seconds: 2));
-    return _topic;
+    // send message
+    await chatOutCommon.sendTopicSubscribe(topicName);
+    await Future.delayed(Duration(seconds: 1));
+    return exists;
   }
 
   // caller = self(owner/normal)
-  Future<TopicSchema?> checkExpireAndPermission(String? topicName, {bool enableFirst = false, bool emptyAdd = false, double fee = 0}) async {
+  Future<TopicSchema?> checkExpireAndSubscribe(String? topicName, {bool enableFirst = false, bool forceSubscribe = false, double fee = 0}) async {
     if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
 
     // topic exist
     TopicSchema? exists = await queryByTopic(topicName);
-    if (exists == null && emptyAdd) {
-      logger.d("$TAG - checkExpireAndPermission - new - schema:$exists");
-      exists = await add(TopicSchema.create(topicName), notify: true, checkDuplicated: false);
-    }
     if (exists == null) {
-      logger.w("$TAG - checkExpireAndPermission - null - topicName:$topicName");
+      logger.w("$TAG - checkExpireAndSubscribe - null - topicName:$topicName");
       return null;
     }
 
@@ -102,7 +156,7 @@ class TopicCommon with Tag {
         noSubscribed = false;
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
         if ((DateTime.now().millisecondsSinceEpoch - createAt).abs() > Settings.txPoolDelayMs) {
-          logger.d("$TAG - checkExpireAndPermission - DB expire but node not expire - topic:$exists");
+          logger.d("$TAG - checkExpireAndSubscribe - DB expire but node not expire - topic:$exists");
           int subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
           bool success = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireHeight, notify: true);
           if (success) {
@@ -111,16 +165,16 @@ class TopicCommon with Tag {
             exists.expireBlockHeight = expireHeight;
           }
         } else {
-          logger.w("$TAG - checkExpireAndPermission - DB expire but node not expire, maybe in txPool - topic:$exists");
+          logger.w("$TAG - checkExpireAndSubscribe - DB expire but node not expire, maybe in txPool - topic:$exists");
           return null;
         }
       } else {
         // topic(node) no joined
         noSubscribed = true;
         if (enableFirst) {
-          logger.d("$TAG - checkExpireAndPermission - no subscribe history - topic:$exists");
+          logger.d("$TAG - checkExpireAndSubscribe - no subscribe history - topic:$exists");
         } else {
-          logger.i("$TAG - checkExpireAndPermission - enableFirst is false - topic:$exists");
+          logger.i("$TAG - checkExpireAndSubscribe - enableFirst is false - topic:$exists");
           return null;
         }
       }
@@ -132,50 +186,27 @@ class TopicCommon with Tag {
         // topic(node) no joined
         noSubscribed = true;
         if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt).abs() > Settings.txPoolDelayMs) {
-          logger.i("$TAG - checkExpireAndPermission - db no expire but node expire - topic:$exists");
+          logger.i("$TAG - checkExpireAndSubscribe - db no expire but node expire - topic:$exists");
           bool success = await setJoined(exists.id, false, notify: true);
           if (success) exists.joined = false;
         } else {
-          logger.d("$TAG - checkExpireAndPermission - DB not expire but node expire, maybe in txPool - topic:$exists");
+          logger.d("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool - topic:$exists");
         }
       } else {
         // topic(node) is joined
         noSubscribed = false;
-        logger.d("$TAG - checkExpireAndPermission - OK OK OK OK OK - topic:$exists");
+        logger.d("$TAG - checkExpireAndSubscribe - OK OK OK OK OK - topic:$exists");
       }
     }
 
-    // private + normal
-    int? permPage;
-    if (exists.isPrivate && !exists.isOwner(clientCommon.address)) {
-      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, exists.isPrivate, clientCommon.address);
-      permPage = permission[0];
-      bool? acceptAll = permission[1];
-      bool? isAccept = permission[2];
-      bool? isReject = permission[3];
-      if (!(acceptAll == true) && isAccept != true) {
-        logger.i("$TAG - checkExpireAndPermission - not owner invited - topic:$exists");
-        return null;
-      } else if (!(acceptAll == true) && isReject == true) {
-        logger.i("$TAG - checkExpireAndPermission - can contact owner to modify rejects - topic:$exists");
-        return null;
-      } else if (acceptAll == true || isAccept == true) {
-        if (!noSubscribed) {
-          SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(topicName, clientCommon.address);
-          noSubscribed = _me?.status != SubscriberStatus.Subscribed;
-          logger.i("$TAG - checkExpireAndPermission - subscribe but not permission - noSubscribed:$noSubscribed");
-        }
-      }
-    }
-
-    // subscribe / permission
+    // subscribe
     int? globalHeight = await clientCommon.client?.getHeight();
     bool shouldResubscribe = await exists.shouldResubscribe(globalHeight: globalHeight);
-    if (noSubscribed || shouldResubscribe) {
+    if (forceSubscribe || noSubscribed || shouldResubscribe) {
       // client subscribe
       bool subscribeSuccess = await _clientSubscribe(topicName, fee: fee);
       if (!subscribeSuccess) {
-        logger.w("$TAG - checkExpireAndPermission - _clientSubscribe fail - topic:$exists");
+        logger.w("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - topic:$exists");
         return null;
       }
 
@@ -188,33 +219,7 @@ class TopicCommon with Tag {
         exists.subscribeAt = subscribeAt;
         exists.expireBlockHeight = expireHeight;
       }
-
-      // private + owner
-      if (exists.isPrivate && exists.isOwner(clientCommon.address)) {
-        permPage = 0;
-        SubscriberSchema? _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage);
-        Map<String, dynamic> meta = await _getMetaByNodePage(topicName, permPage);
-        meta = await _buildMetaByAppend(topicName, meta, _subscriberMe);
-        bool permissionSuccess = await _clientSubscribe(topicName, fee: fee, permissionPage: permPage, meta: meta);
-        if (!permissionSuccess) {
-          logger.w("$TAG - checkExpireAndPermission - _clientPermission fail - topic:$exists");
-          return null;
-        }
-      }
-
-      // send message
-      if (noSubscribed) {
-        logger.i("$TAG - subscribe - first - topic:$exists");
-        Future.delayed(Duration(seconds: 2), () {
-          chatOutCommon.sendTopicSubscribe(topicName);
-        }); // await
-      }
-
-      // DB(topic+subscriber) update
-      if (noSubscribed) {
-        await setCount(exists.id, (exists.count ?? 0) + 1, notify: true);
-        await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage);
-      }
+      logger.i("$TAG - checkExpireAndSubscribe - _clientSubscribe success - topic:$exists");
     }
     return exists;
   }
@@ -266,6 +271,7 @@ class TopicCommon with Tag {
     // client unsubscribe
     bool exitSuccess = await _clientUnsubscribe(topicName, fee: fee);
     if (!exitSuccess) return null;
+    await Future.delayed(Duration(seconds: 1));
 
     // topic update
     TopicSchema? exists = await queryByTopic(topicName);
@@ -280,7 +286,7 @@ class TopicCommon with Tag {
     await delete(exists?.id, notify: true);
 
     // wait db+node sync
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(Duration(seconds: 1));
     return exists;
   }
 
@@ -337,6 +343,7 @@ class TopicCommon with Tag {
     return expireHeight >= globalHeight;
   }
 
+  // TODO:GG 没有txPool
   Future<int> _getExpireAtByNode(String? topicName, String? clientAddress) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return 0;
     String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
@@ -345,6 +352,7 @@ class TopicCommon with Tag {
     return int.tryParse(expiresAt) ?? 0;
   }
 
+  // TODO:GG 没有txPool
   Future<Map<String, dynamic>> _getMetaByNodePage(String? topicName, int permPage) async {
     if (topicName == null || topicName.isEmpty) return Map();
     String? ownerPubKey = getPubKeyFromTopicOrChatId(topicName);
@@ -507,13 +515,13 @@ class TopicCommon with Tag {
             // add to accepts
             rejectList = rejectList.where((e) => !e.toString().contains(element.clientAddress)).toList();
             if (acceptList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
-              acceptList.add({'addr': element.clientAddress}); // TODO:GG  测试正确性
+              acceptList.add({'addr': element.clientAddress}); // TODO:GG topic 测试正确性
             }
           } else if (append.status == SubscriberStatus.Unsubscribed) {
             // add to rejects
             acceptList = acceptList.where((e) => !e.toString().contains(element.clientAddress)).toList();
             if (rejectList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
-              rejectList.add({'addr': element.clientAddress}); // TODO:GG  测试正确性
+              rejectList.add({'addr': element.clientAddress}); // TODO:GG topic 测试正确性
             }
           } else {
             // remove from all
@@ -541,10 +549,6 @@ class TopicCommon with Tag {
     // topic exist
     TopicSchema? _topic = await queryByTopic(topicName);
     if (_topic == null) {
-      logger.d("$TAG - onSubscribe - new - topic:$_topic");
-      _topic = await add(TopicSchema.create(topicName), notify: true, checkDuplicated: false);
-    }
-    if (_topic == null) {
       logger.w("$TAG - onSubscribe - null - topicName:$topicName");
       return null;
     }
@@ -556,7 +560,9 @@ class TopicCommon with Tag {
     if (_subscriber == null) return null;
 
     // subscribers sync
-    subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate); // await
+    Future.delayed(Duration(seconds: 1), () {
+      subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
+    });
     return _subscriber;
   }
 
@@ -565,10 +571,6 @@ class TopicCommon with Tag {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
     // topic exist
     TopicSchema? _topic = await topicCommon.queryByTopic(topicName);
-    if (_topic == null) {
-      logger.d("$TAG - onUnsubscribe - new - topic:$_topic");
-      _topic = await add(TopicSchema.create(topicName), notify: true, checkDuplicated: false);
-    }
     if (_topic == null) {
       logger.w("$TAG - onUnsubscribe - null - topicName:$topicName");
       return null;
@@ -622,7 +624,9 @@ class TopicCommon with Tag {
     // await subscriberCommon.delete(_subscriber.id, notify: true);
 
     // subscribers sync
-    subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate); // await
+    Future.delayed(Duration(seconds: 1), () {
+      subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
+    });
     return _subscriber;
   }
 
@@ -631,10 +635,6 @@ class TopicCommon with Tag {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
     // topic exist
     TopicSchema? _topic = await topicCommon.queryByTopic(topicName);
-    if (_topic == null) {
-      logger.d("$TAG - onKickOut - new - topic:$_topic");
-      _topic = await add(TopicSchema.create(topicName), notify: true, checkDuplicated: false);
-    }
     if (_topic == null) {
       logger.w("$TAG - onKickOut - null - topicName:$topicName");
       return null;
@@ -667,7 +667,9 @@ class TopicCommon with Tag {
       // await subscriberCommon.delete(_subscriber.id, notify: true);
 
       // subscribers sync
-      subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate); // await
+      Future.delayed(Duration(seconds: 1), () {
+        subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
+      });
     }
     return _subscriber;
   }

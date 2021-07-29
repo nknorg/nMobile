@@ -140,14 +140,20 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
       setState(() {
         this._topicSchema = added;
       });
+      // check
+      topicCommon.checkExpireAndSubscribe(topicName).then((value) {
+        subscriberCommon.refreshSubscribers(topicName, meta: added.isPrivate).then((value) {
+          _getDataSubscribers(true);
+        });
+      }); // await
     });
 
     // topic
     _refreshMembersCount(); // await
 
     // subscribers
-    subscriberCommon.refreshSubscribers(this._topicSchema?.topic, meta: this._topicSchema?.isPrivate == true).then((value) async {
-      await _getDataSubscribers(true);
+    subscriberCommon.refreshSubscribers(this._topicSchema?.topic, meta: this._topicSchema?.isPrivate == true).then((value) {
+      _getDataSubscribers(true);
     });
     _getDataSubscribers(true);
   }
