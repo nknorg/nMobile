@@ -41,7 +41,7 @@ class TopicCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty) return;
     List<TopicSchema> topics = await queryList();
     topics.forEach((TopicSchema topic) {
-      // TODO:GG topic  测试续订
+      // TODO:GG topic 测试续订
       checkExpireAndSubscribe(topic.topic).then((value) {
         if (value != null && subscribers) {
           subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate);
@@ -61,8 +61,13 @@ class TopicCommon with Tag {
     // topic exist
     TopicSchema? exists = await queryByTopic(topicName);
     if (exists == null) {
-      logger.d("$TAG - subscribe - new - schema:$exists");
-      exists = await add(TopicSchema.create(topicName), notify: true, checkDuplicated: false);
+      TopicSchema? newAdd = TopicSchema.create(topicName);
+      int expireHeight = await getExpireAtByNode(topicName, clientCommon.address);
+      newAdd?.joined = expireHeight > 0 ? true : false;
+      newAdd?.subscribeAt = expireHeight > 0 ? DateTime.now().millisecondsSinceEpoch : null;
+      newAdd?.expireBlockHeight = expireHeight > 0 ? expireHeight : null;
+      logger.d("$TAG - subscribe - new - expireHeight:$expireHeight - schema:$newAdd");
+      exists = await add(newAdd, notify: true, checkDuplicated: false);
       // refreshSubscribers later
     }
     if (exists == null) {
@@ -150,7 +155,7 @@ class TopicCommon with Tag {
 
     // check expire
     bool noSubscribed;
-    int expireHeight = await _getExpireAtByNode(exists.topic, clientCommon.address);
+    int expireHeight = await getExpireAtByNode(exists.topic, clientCommon.address);
     if (!exists.joined || exists.subscribeAt == null || exists.subscribeAt! <= 0 || exists.expireBlockHeight == null || exists.expireBlockHeight! <= 0) {
       if (expireHeight > 0) {
         // DB no joined + node is joined
@@ -186,17 +191,21 @@ class TopicCommon with Tag {
         noSubscribed = true;
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
         if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt) > Settings.txPoolDelayMs) {
-          logger.i("$TAG - checkExpireAndSubscribe - db no expire but node expire - topic:$exists");
-          bool success = await setJoined(exists.id, false, notify: true);
-          if (success) exists.joined = false;
+          logger.i("$TAG - checkExpireAndSubscribe - DB no expire but node expire - topic:$exists");
+          bool success = await setJoined(exists.id, false, subscribeAt: 0, expireBlockHeight: 0, notify: true);
+          if (success) {
+            exists.joined = false;
+            exists.subscribeAt = 0;
+            exists.expireBlockHeight = 0;
+          }
         } else {
           var betweenS = (DateTime.now().millisecondsSinceEpoch - createAt) / 1000;
           logger.d("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool - between:${betweenS}s - topic:$exists");
         }
       } else {
         // DB is joined + node is joined
-        noSubscribed = false;
         logger.d("$TAG - checkExpireAndSubscribe - OK OK OK OK OK - topic:$exists");
+        noSubscribed = false;
       }
     }
 
@@ -221,9 +230,12 @@ class TopicCommon with Tag {
         exists.expireBlockHeight = expireHeight;
       }
       logger.i("$TAG - checkExpireAndSubscribe - _clientSubscribe success - topic:$exists");
-
-      // send message
-      await chatOutCommon.sendTopicSubscribe(topicName);
+      // send messages
+      subscriberCommon.refreshSubscribers(topicName, meta: exists.isPrivate).then((value) {
+        chatOutCommon.sendTopicSubscribe(topicName); // await
+      });
+    } else {
+      logger.d("$TAG - checkExpireAndSubscribe - _clientSubscribe no need subscribe - topic:$exists");
     }
     return exists;
   }
@@ -279,8 +291,12 @@ class TopicCommon with Tag {
 
     // topic update
     TopicSchema? exists = await queryByTopic(topicName);
-    bool setSuccess = await setJoined(exists?.id, false, notify: true);
-    if (setSuccess) exists?.joined = false;
+    bool setSuccess = await setJoined(exists?.id, false, subscribeAt: 0, expireBlockHeight: 0, notify: true);
+    if (setSuccess) {
+      exists?.joined = false;
+      exists?.subscribeAt = 0;
+      exists?.expireBlockHeight = 0;
+    }
     // setSuccess = await setCount(exists?.id, (exists?.count ?? 1) - 1, notify: true);
     // if (setSuccess) exists?.count = (exists.count ?? 1) - 1;
 
@@ -334,7 +350,7 @@ class TopicCommon with Tag {
       logger.i("$TAG - isJoined - createAt just now, maybe in txPool - topicName:$topicName - clientAddress:$clientAddress");
       return exists.joined; // maybe in txPool
     }
-    int expireHeight = await _getExpireAtByNode(exists?.topic, clientAddress);
+    int expireHeight = await getExpireAtByNode(exists?.topic, clientAddress);
     if (expireHeight <= 0) {
       logger.i("$TAG - isJoined - expireHeight <= 0 - topicName:$topicName - clientAddress:$clientAddress");
       return false;
@@ -347,7 +363,7 @@ class TopicCommon with Tag {
     return expireHeight >= globalHeight;
   }
 
-  Future<int> _getExpireAtByNode(String? topicName, String? clientAddress) async {
+  Future<int> getExpireAtByNode(String? topicName, String? clientAddress) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return 0;
     String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
     Map<String, dynamic> result = await _clientGetSubscription(topicName, pubKey);
@@ -665,8 +681,12 @@ class TopicCommon with Tag {
     if (clientAddress == clientCommon.address) {
       bool exitSuccess = await _clientUnsubscribe(topicName, fee: 0);
       if (!exitSuccess) return null;
-      bool setSuccess = await setJoined(_topic.id, false, notify: true);
-      if (setSuccess) _topic.joined = false;
+      bool setSuccess = await setJoined(_topic.id, false, subscribeAt: 0, expireBlockHeight: 0, notify: true);
+      if (setSuccess) {
+        _topic.joined = false;
+        _topic.subscribeAt = 0;
+        _topic.expireBlockHeight = 0;
+      }
     }
 
     // DB update (just node sync can delete)
