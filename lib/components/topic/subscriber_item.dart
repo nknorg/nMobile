@@ -186,7 +186,22 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     }
     String marksText = marks.isNotEmpty ? "(${marks.join(", ")})" : " ";
 
-    Color textColor = !(topic?.isPrivate == true) ? application.theme.successColor : ((status == SubscriberStatus.InvitedSend || status == SubscriberStatus.InvitedReceipt || status == SubscriberStatus.Subscribed) ? application.theme.successColor : ((status == SubscriberStatus.Unsubscribed) ? application.theme.fallColor : application.theme.fontColor2));
+    Color textColor;
+    if (topic?.isPrivate == true) {
+      if (status == SubscriberStatus.InvitedSend) {
+        textColor = application.theme.fontColor1;
+      } else if (status == SubscriberStatus.InvitedReceipt) {
+        textColor = application.theme.primaryColor;
+      } else if (status == SubscriberStatus.Subscribed) {
+        textColor = application.theme.successColor;
+      } else if (status == SubscriberStatus.Unsubscribed) {
+        textColor = application.theme.fallColor;
+      } else {
+        textColor = application.theme.fontColor2;
+      }
+    } else {
+      textColor = application.theme.successColor;
+    }
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,

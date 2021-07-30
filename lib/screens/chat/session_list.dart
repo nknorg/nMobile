@@ -69,7 +69,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     // client
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
       if (status == ClientConnectStatus.connected) {
-        topicCommon.checkAllTopics(subscribers: !checked);
+        topicCommon.checkAllTopics();
         checked = true;
       }
     });

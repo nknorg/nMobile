@@ -45,7 +45,7 @@ class SubscriberCommon with Tag {
     if (topicName == null || topicName.isEmpty) return [];
 
     List<SubscriberSchema> dbSubscribers = await queryListByTopic(topicName);
-    List<SubscriberSchema> nodeSubscribers = await mergeSubscribersAndPermissionsFromNode(topicName, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix);
+    List<SubscriberSchema> nodeSubscribers = await _mergeSubscribersAndPermissionsFromNode(topicName, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix);
 
     // delete/update DB data
     List<Future> futures = [];
@@ -71,31 +71,26 @@ class SubscriberCommon with Tag {
         logger.i("$TAG - refreshSubscribers - DB delete because node no find - DB:$dbItem");
         futures.add(delete(dbItem.id, notify: true));
       } else {
-        // status
-        if (dbItem.status != findNode.status) {
-          if (findNode.status == SubscriberStatus.InvitedSend && dbItem.status == SubscriberStatus.InvitedReceipt) {
-            logger.i("$TAG - refreshSubscribers - DB is receive invited so no update - DB:$dbItem - node:$findNode");
-          } else {
-            if (findNode.status == SubscriberStatus.Unsubscribed) {
-              logger.i("$TAG - refreshSubscribers - DB delete to sync node - DB:$dbItem - node:$findNode");
-              futures.add(delete(dbItem.id, notify: true));
+        if (findNode.status == SubscriberStatus.Unsubscribed) {
+          logger.i("$TAG - refreshSubscribers - DB has,but node is unsubscribe - DB:$dbItem - node:$findNode");
+          futures.add(delete(dbItem.id, notify: true));
+        } else {
+          // status
+          if (dbItem.status != findNode.status) {
+            if (findNode.status == SubscriberStatus.InvitedSend && dbItem.status == SubscriberStatus.InvitedReceipt) {
+              logger.i("$TAG - refreshSubscribers - DB is receive invited so no update - DB:$dbItem - node:$findNode");
             } else {
               logger.i("$TAG - refreshSubscribers - DB update to sync node - DB:$dbItem - node:$findNode");
               futures.add(setStatus(dbItem.id, findNode.status, notify: true));
             }
-          }
-        } else {
-          if (dbItem.status == SubscriberStatus.Unsubscribed) {
-            logger.i("$TAG - refreshSubscribers - DB same node, and status is unsubscribe - DB:$dbItem - node:$findNode");
-            futures.add(delete(dbItem.id, notify: true));
           } else {
             logger.d("$TAG - refreshSubscribers - DB same node - DB:$dbItem - node:$findNode");
           }
-        }
-        // prmPage
-        if (dbItem.permPage != findNode.permPage && findNode.permPage != null && findNode.status != SubscriberStatus.Unsubscribed) {
-          logger.i("$TAG - refreshSubscribers - DB set permPage to sync node - DB:$dbItem - node:$findNode");
-          futures.add(setPermPage(dbItem.id, findNode.permPage, notify: true));
+          // prmPage
+          if (dbItem.permPage != findNode.permPage && findNode.permPage != null) {
+            logger.i("$TAG - refreshSubscribers - DB set permPage to sync node - DB:$dbItem - node:$findNode");
+            futures.add(setPermPage(dbItem.id, findNode.permPage, notify: true));
+          }
         }
       }
     }
@@ -121,7 +116,7 @@ class SubscriberCommon with Tag {
   }
 
   // caller = everyone, meta = isPrivate
-  Future<List<SubscriberSchema>> mergeSubscribersAndPermissionsFromNode(String? topicName, {bool meta = false, bool txPool = true, Uint8List? subscriberHashPrefix}) async {
+  Future<List<SubscriberSchema>> _mergeSubscribersAndPermissionsFromNode(String? topicName, {bool meta = false, bool txPool = true, Uint8List? subscriberHashPrefix}) async {
     if (topicName == null || topicName.isEmpty) return [];
     // permissions + subscribers
     Map<String, dynamic> noMergeResults = await _clientGetSubscribers(
@@ -168,7 +163,7 @@ class SubscriberCommon with Tag {
         for (int j = 0; j < permissions.length; j++) {
           SubscriberSchema permission = permissions[j];
           if (subscriber.clientAddress.isNotEmpty && subscriber.clientAddress == permission.clientAddress) {
-            logger.d("$TAG - mergeSubscribersAndPermissionsFromNode - subscribers && permission - permission:$permission");
+            logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - subscribers && permission - permission:$permission");
             if (permission.status == InitialAcceptStatus) {
               permission.status = SubscriberStatus.Subscribed;
             } else if (permission.status == InitialRejectStatus) {
@@ -180,20 +175,19 @@ class SubscriberCommon with Tag {
           }
         }
         if (!find) {
+          logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - no invited but in subscribe - subscriber:$subscriber");
           results.add(subscriber);
         }
       }
       for (int i = 0; i < permissions.length; i++) {
         SubscriberSchema permission = permissions[i];
         if (subscribers.where((element) => element.clientAddress.isNotEmpty && element.clientAddress == permission.clientAddress).toList().isEmpty) {
-          logger.d("$TAG - mergeSubscribersAndPermissionsFromNode - subscribers !! permission - permission:$permission");
-          if (permission.status != InitialRejectStatus) {
-            results.add(permission); // filter just rejects item
-          }
+          logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - no subscribe but in permission - permission:$permission");
+          results.add(permission);
         }
       }
     }
-    logger.d("$TAG - mergeSubscribersAndPermissionsFromNode - results:$results");
+    logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - results:$results");
     return results;
   }
 
