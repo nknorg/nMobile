@@ -495,11 +495,11 @@ class SubscriberCommon with Tag {
     return success;
   }
 
-  Future<int> deleteByTopic(String? topic) async {
-    if (topic == null || topic.isEmpty) return 0;
-    int count = await _subscriberStorage.deleteByTopic(topic);
-    return count;
-  }
+  // Future<int> deleteByTopic(String? topic) async {
+  //   if (topic == null || topic.isEmpty) return 0;
+  //   int count = await _subscriberStorage.deleteByTopic(topic);
+  //   return count;
+  // }
 
   Future<SubscriberSchema?> query(int? subscriberId) {
     return _subscriberStorage.query(subscriberId);
