@@ -107,9 +107,11 @@ class ClientCommon with Tag {
 
   Future<Client?> _connect(Wallet? wallet) async {
     if (wallet == null || wallet.seed.isEmpty) return null;
+    // status
+    _statusSink.add(ClientConnectStatus.connecting);
+
     // client create
     ClientConfig config = ClientConfig(seedRPCServerAddr: await Global.getSeedRpcList());
-    _statusSink.add(ClientConnectStatus.connecting);
     client = await Client.create(wallet.seed, config: config);
 
     // client error
@@ -118,12 +120,15 @@ class ClientCommon with Tag {
       _onErrorSink.add(event);
     });
 
+    // topics
+    await topicCommon.checkAllTopics();
+
     // client connect
     Completer completer = Completer();
     _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
       logger.i("$TAG - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");
-      _statusSink.add(ClientConnectStatus.connected);
       SettingsStorage().addSeedRpcServers(event.rpcServers!);
+      _statusSink.add(ClientConnectStatus.connected);
       if (!completer.isCompleted) completer.complete();
     });
 
