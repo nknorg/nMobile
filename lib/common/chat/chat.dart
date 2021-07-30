@@ -127,10 +127,7 @@ class ChatCommon with Tag {
       // expire + permission + subscribers
       if (exists != null) {
         logger.d("$TAG - topicHandle - expireHeight:$expireHeight - topic:$exists ");
-        topicCommon.checkExpireAndSubscribe(exists.topic).then((value) {
-          logger.i("$TAG - topicHandle - checkExpireAndPermission - topic:$exists ");
-          if (value != null) subscriberCommon.refreshSubscribers(exists?.topic, meta: exists?.isPrivate == true);
-        }); // await
+        topicCommon.checkExpireAndSubscribe(exists.topic, refreshSubscribers: true); // await
       }
     }
     return exists;
@@ -143,20 +140,29 @@ class ChatCommon with Tag {
     // duplicated
     SubscriberSchema? exist = await subscriberCommon.queryByTopicChatId(message.topic, message.from);
     if (exist == null) {
-      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic.topic, topic.isPrivate, message.from);
-      int? permPage = permission[0];
-      bool? acceptAll = permission[1];
-      bool? isReject = permission[3];
-      if (!(acceptAll == true) && isReject == true) {
-        logger.w("$TAG - subscriberHandle - cant add reject - from:${message.from} - permission:$permission - topic:$topic");
-        return null;
+      if (topic.isPrivate != true) {
+        exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, null));
       } else {
-        logger.i("$TAG - subscriberHandle - new - from:${message.from} - permPage:$permPage - topic:$topic");
-        exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage));
-        subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
+        List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic.topic, topic.isPrivate, message.from);
+        int? permPage = permission[0];
+        bool? acceptAll = permission[1];
+        bool? isReject = permission[3];
+        if (acceptAll == true) {
+          exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
+        } else {
+          if (isReject == true) {
+            logger.w("$TAG - subscriberHandle - cant add reject - from:${message.from} - permission:$permission - topic:$topic");
+            return null;
+          } else {
+            logger.i("$TAG - subscriberHandle - new subscriber - from:${message.from} - permission:$permission - topic:$topic");
+            exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage));
+            subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
+          }
+        }
       }
     } else if (exist.status != SubscriberStatus.Subscribed) {
-      subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
+      logger.w("$TAG - subscriberHandle - diff status - from:${message.from} - status:${exist.status} - topic:$topic");
+      // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
     }
     return exist;
   }
