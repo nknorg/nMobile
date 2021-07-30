@@ -387,10 +387,10 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getTopicUnSubscribe(String topic) {
+  static String getTopicUnSubscribe(MessageSchema message) {
     Map data = {
-      'id': Uuid().v4(),
-      'topic': topic,
+      'id': message.msgId,
+      'topic': message.topic,
       'contentType': MessageContentType.topicUnsubscribe,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
@@ -407,12 +407,12 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getTopicKickOut(String topic, String targetAddress) {
+  static String getTopicKickOut(MessageSchema message) {
     Map data = {
-      'id': Uuid().v4(),
-      'topic': topic,
+      'id': message.msgId,
+      'topic': message.topic,
       'contentType': MessageContentType.topicKickOut,
-      'content': targetAddress,
+      'content': message.content,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);

@@ -309,8 +309,14 @@ class ChatOutCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty || topic == null || topic.isEmpty) return;
     if (tryCount > 3) return;
     try {
-      String data = MessageData.getTopicUnSubscribe(topic);
-      await chatCommon.clientPublishData(genTopicHash(topic), data); // its ok
+      MessageSchema send = MessageSchema.fromSend(
+        Uuid().v4(),
+        clientCommon.address!,
+        MessageContentType.topicUnsubscribe,
+        topic: topic,
+      );
+      String data = MessageData.getTopicUnSubscribe(send);
+      await _sendAndDisplay(send, data);
       logger.d("$TAG - sendTopicUnSubscribe - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -344,8 +350,15 @@ class ChatOutCommon with Tag {
     if (topic == null || topic.isEmpty || targetAddress == null || targetAddress.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
     if (tryCount > 3) return;
     try {
-      String data = MessageData.getTopicKickOut(topic, targetAddress);
-      await chatCommon.clientPublishData(genTopicHash(topic), data); // its ok
+      MessageSchema send = MessageSchema.fromSend(
+        Uuid().v4(),
+        clientCommon.address!,
+        MessageContentType.topicKickOut,
+        topic: topic,
+        content: targetAddress,
+      );
+      String data = MessageData.getTopicKickOut(send);
+      await _sendAndDisplay(send, data, displaySelf: false);
       logger.d("$TAG - sendTopicKickOut - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -459,7 +472,7 @@ class ChatOutCommon with Tag {
     if (topic == null || message == null || msgData == null) return null;
     // me
     SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(message.topic, message.from); // chatOutCommon.handleSubscribe();
-    if (_me == null || (topic.isPrivate == true && (_me.status != SubscriberStatus.Subscribed))) {
+    if (_me?.status != SubscriberStatus.Subscribed) {
       logger.w("$TAG - _sendWithTopic - subscriber me is wrong - me:$_me - message:$message");
       return null;
     }
