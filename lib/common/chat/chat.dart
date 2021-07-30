@@ -113,7 +113,7 @@ class ChatCommon with Tag {
 
   Future<TopicSchema?> topicHandle(MessageSchema message) async {
     if (!message.isTopic) return null;
-    if (!message.canDisplay) return null;
+    if (!message.canDisplay && !message.isTopicAction) return null;
     // duplicated
     TopicSchema? exists = await topicCommon.queryByTopic(message.topic);
     if (exists == null) {
@@ -136,7 +136,7 @@ class ChatCommon with Tag {
   Future<SubscriberSchema?> subscriberHandle(MessageSchema message, TopicSchema? topic) async {
     if (topic == null || topic.id == null || topic.id == 0) return null;
     if (!message.isTopic) return null;
-    if (message.contentType == MessageContentType.topicSubscribe || message.contentType == MessageContentType.topicUnsubscribe) return null;
+    if (message.isTopicAction) return null;
     // duplicated
     SubscriberSchema? exist = await subscriberCommon.queryByTopicChatId(message.topic, message.from);
     if (exist == null) {

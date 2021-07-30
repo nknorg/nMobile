@@ -491,6 +491,10 @@ class MessageSchema extends Equatable {
     return canDisplayAndRead || isEvent;
   }
 
+  bool get isTopicAction {
+    return contentType == MessageContentType.topicSubscribe || contentType == MessageContentType.topicUnsubscribe || contentType == MessageContentType.topicInvitation || contentType == MessageContentType.topicKickOut;
+  }
+
   Future<ContactSchema?> getSender({bool emptyAdd = false}) async {
     ContactSchema? _contact = await contactCommon.queryByClientAddress(from);
     if (_contact != null || !emptyAdd) return _contact;
