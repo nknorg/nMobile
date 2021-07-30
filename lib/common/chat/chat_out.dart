@@ -13,6 +13,7 @@ import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
@@ -285,6 +286,9 @@ class ChatOutCommon with Tag {
   Future sendTopicSubscribe(String? topic, {int tryCount = 1}) async {
     if (clientCommon.address == null || clientCommon.address!.isEmpty || topic == null || topic.isEmpty) return;
     if (tryCount > 3) return;
+    SessionSchema? _session = await sessionCommon.query(topic);
+    SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(topic, clientCommon.address);
+    bool msgDisplaySelf = (_session == null) || (_me?.status != SubscriberStatus.Subscribed);
     try {
       MessageSchema send = MessageSchema.fromSend(
         Uuid().v4(),
@@ -293,7 +297,7 @@ class ChatOutCommon with Tag {
         topic: topic,
       );
       String data = MessageData.getTopicSubscribe(send);
-      await _sendAndDisplay(send, data, display: false);
+      await _sendAndDisplay(send, data, displaySelf: msgDisplaySelf);
       logger.d("$TAG - sendTopicSubscribe - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -388,11 +392,11 @@ class ChatOutCommon with Tag {
     ContactSchema? contact,
     TopicSchema? topic,
     bool resend = false,
-    bool display = true,
+    bool displaySelf = true,
   }) async {
     if (message == null || msgData == null) return null;
     // DB
-    if (!resend && display) {
+    if (!resend && displaySelf) {
       message = await _messageStorage.insert(message);
     } else if (resend) {
       message.sendTime = DateTime.now();
@@ -400,13 +404,13 @@ class ChatOutCommon with Tag {
     }
     if (message == null) return null;
     // display
-    if (!resend && display) _onSavedSink.add(message); // resend just update sendTime
+    if (!resend && displaySelf) _onSavedSink.add(message); // resend just update sendTime
     // contact
     contact = contact ?? await chatCommon.contactHandle(message);
     // topic
     topic = topic ?? await chatCommon.topicHandle(message);
     // session
-    if (display) chatCommon.sessionHandle(message); // await
+    if (displaySelf) chatCommon.sessionHandle(message); // await
     // SDK
     Uint8List? pid;
     try {
@@ -456,34 +460,15 @@ class ChatOutCommon with Tag {
   }
 
   Future<Uint8List?> _sendWithTopic(TopicSchema? topic, MessageSchema? message, String? msgData) async {
-    if (message == null || msgData == null) return null;
+    if (topic == null || message == null || msgData == null) return null;
     // me
     SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(message.topic, clientCommon.address);
-    if (_me == null || (topic?.isPrivate == true && (_me.status != SubscriberStatus.Subscribed))) {
+    if (_me == null || (topic.isPrivate == true && (_me.status != SubscriberStatus.Subscribed))) {
       logger.w("$TAG - _sendWithTopic - subscriber me is wrong - me:$_me - message:$message");
       return null;
     }
-    // topic
-    if (topic == null) {
-      logger.w("$TAG - _sendWithTopic - topic is null - message:$message - msgData:$msgData");
-      OnMessage? onResult = await chatCommon.clientPublishData(genTopicHash(message.topic!), msgData); // permission checked in received
-      if (onResult?.messageId.isNotEmpty == true) {
-        chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
-      }
-      return onResult?.messageId;
-    }
     // subscribers
-    List<SubscriberSchema> _subscribers = [];
-    int signInBetween = DateTime.now().millisecondsSinceEpoch - clientCommon.signInAt;
-    int createBetween = DateTime.now().millisecondsSinceEpoch - (topic.createAt ?? DateTime.now().millisecondsSinceEpoch);
-    if (signInBetween <= 30 * 1000 || createBetween <= 20 * 1000) {
-      List<SubscriberSchema> result = await subscriberCommon.mergeSubscribersAndPermissionsFromNode(topic.topic, meta: topic.isPrivate);
-      _subscribers = result.where((element) => element.status == SubscriberStatus.Subscribed).toList();
-      logger.d("$TAG - _sendWithTopic - _subscribers from node - counts:${_subscribers.length} - topic:$topic - message:$message - msgData:$msgData");
-    } else {
-      _subscribers = await subscriberCommon.queryListByTopic(topic.topic, status: SubscriberStatus.Subscribed);
-      logger.d("$TAG - _sendWithTopic - _subscribers from DB - counts:${_subscribers.length} - topic:$topic - message:$message - msgData:$msgData");
-    }
+    List<SubscriberSchema> _subscribers = await subscriberCommon.queryListByTopic(topic.topic, status: SubscriberStatus.Subscribed);
     if (_subscribers.isEmpty) {
       logger.w("$TAG - _sendWithTopic - _subscribers is empty - topic:$topic - message:$message - msgData:$msgData");
       OnMessage? onResult = await chatCommon.clientPublishData(genTopicHash(message.topic!), msgData); // permission checked in received
