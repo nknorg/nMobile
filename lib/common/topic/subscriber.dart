@@ -374,7 +374,7 @@ class SubscriberCommon with Tag {
       if (success) subscriber.status = SubscriberStatus.InvitedSend;
     }
     // permPage
-    if (subscriber.permPage != permPage) {
+    if (subscriber.permPage != permPage && permPage != null) {
       bool success = await setPermPage(subscriber.id, permPage, notify: true);
       if (success) subscriber.permPage = permPage;
     }
