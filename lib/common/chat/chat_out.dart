@@ -13,7 +13,6 @@ import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
@@ -286,9 +285,6 @@ class ChatOutCommon with Tag {
   Future sendTopicSubscribe(String? topic, {int tryCount = 1}) async {
     if (clientCommon.address == null || clientCommon.address!.isEmpty || topic == null || topic.isEmpty) return;
     if (tryCount > 3) return;
-    SessionSchema? _session = await sessionCommon.query(topic);
-    SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(topic, clientCommon.address);
-    bool msgDisplaySelf = (_session == null) || (_me?.status != SubscriberStatus.Subscribed);
     try {
       MessageSchema send = MessageSchema.fromSend(
         Uuid().v4(),
@@ -297,7 +293,7 @@ class ChatOutCommon with Tag {
         topic: topic,
       );
       String data = MessageData.getTopicSubscribe(send);
-      await _sendAndDisplay(send, data, displaySelf: msgDisplaySelf);
+      await _sendAndDisplay(send, data);
       logger.d("$TAG - sendTopicSubscribe - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -462,14 +458,14 @@ class ChatOutCommon with Tag {
   Future<Uint8List?> _sendWithTopic(TopicSchema? topic, MessageSchema? message, String? msgData) async {
     if (topic == null || message == null || msgData == null) return null;
     // me
-    SubscriberSchema? _me = await chatCommon.subscriberHandle(message, topic);
+    SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(message.topic, message.from); // chatOutCommon.handleSubscribe();
     if (_me == null || (topic.isPrivate == true && (_me.status != SubscriberStatus.Subscribed))) {
       logger.w("$TAG - _sendWithTopic - subscriber me is wrong - me:$_me - message:$message");
       return null;
     }
     // subscribers
     List<SubscriberSchema> _subscribers = await subscriberCommon.queryListByTopic(topic.topic, status: SubscriberStatus.Subscribed);
-    if (_subscribers.isEmpty) {
+    if (_subscribers.isEmpty || (_subscribers.length == 1 && _subscribers.first.clientAddress == clientCommon.address && !topic.isOwner(clientCommon.address))) {
       logger.w("$TAG - _sendWithTopic - _subscribers is empty - topic:$topic - message:$message - msgData:$msgData");
       OnMessage? onResult = await chatCommon.clientPublishData(genTopicHash(message.topic!), msgData); // permission checked in received
       if (onResult?.messageId.isNotEmpty == true) {
@@ -494,31 +490,12 @@ class ChatOutCommon with Tag {
           return Future.value(OnMessage(messageId: _pid!, data: null, src: null, type: null, encrypted: null));
         } else {
           logger.d("$TAG - _sendWithTopic - to_subscriber - to:${subscriber.clientAddress} - subscriber:$subscriber");
-          int createBetween = DateTime.now().millisecondsSinceEpoch - (topic.createAt ?? DateTime.now().millisecondsSinceEpoch);
-          if (message.contentType == MessageContentType.topicSubscribe && createBetween > 10 * 1000) {
-            return deviceInfoCommon.queryLatest(subscriber.clientAddress).then((value) {
-              bool enable = deviceInfoCommon.isMsgSubscribeFrequent(value?.platform, value?.appVersion);
-              if (enable) {
-                logger.i("$TAG - _sendWithTopic - send subscribe is enable - to:${subscriber.clientAddress} - subscriber:$subscriber");
-                return chatCommon.clientSendData(subscriber.clientAddress, msgData).then((value) {
-                  if ((value?.messageId.isNotEmpty == true) && (subscriber.clientAddress == clientCommon.address)) {
-                    chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
-                  }
-                  return value;
-                });
-              } else {
-                logger.i("$TAG - _sendWithTopic - send subscribe not enable - to:${subscriber.clientAddress} - subscriber:$subscriber");
-                return Future.value(null);
-              }
-            });
-          } else {
-            return chatCommon.clientSendData(subscriber.clientAddress, msgData).then((value) {
-              if ((value?.messageId.isNotEmpty == true) && (subscriber.clientAddress == clientCommon.address)) {
-                chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
-              }
-              return value;
-            });
-          }
+          return chatCommon.clientSendData(subscriber.clientAddress, msgData).then((value) {
+            if ((value?.messageId.isNotEmpty == true) && (subscriber.clientAddress == clientCommon.address)) {
+              chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
+            }
+            return value;
+          });
         }
       }).then((OnMessage? onResult) {
         // pid
