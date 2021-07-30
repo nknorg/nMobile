@@ -99,24 +99,24 @@ class SubscriberStorage with Tag {
     return false;
   }
 
-  Future<int> deleteByTopic(String? topic) async {
-    if (topic == null || topic.isEmpty) return 0;
-    try {
-      int? count = await db?.delete(
-        tableName,
-        where: 'topic = ?',
-        whereArgs: [topic],
-      );
-      if (count != null && count > 0) {
-        logger.d("$TAG - deleteByTopic - success - topic:$topic");
-        return count;
-      }
-      logger.w("$TAG - deleteByTopic - fail - topic:$topic");
-    } catch (e) {
-      handleError(e);
-    }
-    return 0;
-  }
+  // Future<int> deleteByTopic(String? topic) async {
+  //   if (topic == null || topic.isEmpty) return 0;
+  //   try {
+  //     int? count = await db?.delete(
+  //       tableName,
+  //       where: 'topic = ?',
+  //       whereArgs: [topic],
+  //     );
+  //     if (count != null && count > 0) {
+  //       logger.d("$TAG - deleteByTopic - success - topic:$topic");
+  //       return count;
+  //     }
+  //     logger.w("$TAG - deleteByTopic - fail - topic:$topic");
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return 0;
+  // }
 
   Future<SubscriberSchema?> query(int? subscriberId) async {
     if (subscriberId == null || subscriberId == 0) return null;
