@@ -496,7 +496,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 onPressed: () async {
                   Navigator.pop(context);
                   Loading.show();
-                  await subscriberCommon.deleteByTopic(item.topic);
+                  // await subscriberCommon.deleteByTopic(item.topic);
                   await topicCommon.delete(item.id, notify: true);
                   Loading.dismiss();
                 },
