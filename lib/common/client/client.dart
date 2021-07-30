@@ -120,9 +120,6 @@ class ClientCommon with Tag {
       _onErrorSink.add(event);
     });
 
-    // topics
-    await topicCommon.checkAllTopics();
-
     // client connect
     Completer completer = Completer();
     _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
