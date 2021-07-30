@@ -37,16 +37,19 @@ class TopicCommon with Tag {
     _updateController.close();
   }
 
-  checkAllTopics({bool subscribers = false}) async {
+  Future checkAllTopics({bool refreshSubscribers = true, bool enablePublic = true, bool enablePrivate = true}) async {
     if (clientCommon.address == null || clientCommon.address!.isEmpty) return;
     List<TopicSchema> topics = await queryList();
+    List<Future> futures = [];
     topics.forEach((TopicSchema topic) {
-      checkExpireAndSubscribe(topic.topic).then((value) {
-        if (value != null && subscribers) {
-          subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate);
-        }
-      });
+      if (!topic.isPrivate && enablePublic) {
+        futures.add(checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers));
+      }
+      if (topic.isPrivate && enablePrivate) {
+        futures.add(checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers));
+      }
     });
+    await Future.wait(futures);
   }
 
   /// ***********************************************************************************************************
@@ -74,6 +77,16 @@ class TopicCommon with Tag {
       return null;
     }
 
+    // subscriber me
+    SubscriberSchema? _subscriberMe = await subscriberCommon.queryByTopicChatId(topicName, clientCommon.address);
+    if (_subscriberMe?.status == SubscriberStatus.Unsubscribed) {
+      int updateAt = _subscriberMe?.updateAt ?? DateTime.now().millisecondsSinceEpoch;
+      if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.txPoolDelayMs) {
+        Toast.show("操作频繁，请稍后再试"); // TODO:GG locale reject
+        return null;
+      }
+    }
+
     // permission(private + normal)
     int? permPage;
     bool forceSubscribe = false;
@@ -88,7 +101,7 @@ class TopicCommon with Tag {
         logger.d("$TAG - subscribe - skipPermission - schema:$exists");
         permissionOk = true;
       } else {
-        if (!(acceptAll == true)) {
+        if ((acceptAll != true)) {
           if (isReject == true) {
             Toast.show("你已被踢出该群，无法再次加入!"); // TODO:GG locale kick
             return null;
@@ -105,44 +118,52 @@ class TopicCommon with Tag {
         }
       }
       if (permissionOk) {
-        SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(topicName, clientCommon.address);
-        forceSubscribe = _me?.status != SubscriberStatus.Subscribed;
+        forceSubscribe = _subscriberMe?.status != SubscriberStatus.Subscribed;
         if (forceSubscribe) logger.i("$TAG - subscribe - subscriber has not permission but need subscribe force");
       }
     }
 
-    // check expire
-    exists = await checkExpireAndSubscribe(topicName, enableFirst: true, forceSubscribe: forceSubscribe, fee: fee);
+    // check expire + pull subscribers
+    exists = await checkExpireAndSubscribe(topicName, enableFirst: true, forceSubscribe: forceSubscribe, refreshSubscribers: true, fee: fee);
     if (exists == null) {
       Toast.show(S.of(Global.appContext).failure);
       return null;
     }
     await Future.delayed(Duration(seconds: 1));
 
-    // pull subscribers
+    // status + permission
     if (exists.isPrivate && exists.isOwner(clientCommon.address)) {
       // private + owner
-      SubscriberSchema? _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, 0);
+      _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, 0);
       Map<String, dynamic> meta = await _getMetaByNodePage(topicName, 0);
       meta = await _buildMetaByAppend(topicName, meta, _subscriberMe);
       bool permissionSuccess = await _clientSubscribe(topicName, fee: fee, permissionPage: 0, meta: meta);
       if (!permissionSuccess) {
         logger.w("$TAG - subscribe - owner subscribe permission fail - topic:$exists");
+        // await subscriberCommon.deleteByTopic(exists.topic);
         await delete(exists.id, notify: true);
         return null;
       }
     } else {
       // public / private + normal
-      await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage);
+      _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage);
     }
-    await subscriberCommon.refreshSubscribers(topicName, meta: exists.isPrivate);
-    await setCount(exists.id, (exists.count ?? 0) + 1, notify: true);
     await Future.delayed(Duration(seconds: 1));
+
+    // send messages
+    await chatOutCommon.sendTopicSubscribe(topicName);
+    await setCount(exists.id, (exists.count ?? 0) + 1, notify: true);
     return exists;
   }
 
   // caller = self(owner/normal)
-  Future<TopicSchema?> checkExpireAndSubscribe(String? topicName, {bool enableFirst = false, bool forceSubscribe = false, double fee = 0}) async {
+  Future<TopicSchema?> checkExpireAndSubscribe(
+    String? topicName, {
+    bool enableFirst = false,
+    bool forceSubscribe = false,
+    bool refreshSubscribers = false,
+    double fee = 0,
+  }) async {
     if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
 
     // topic exist
@@ -229,12 +250,12 @@ class TopicCommon with Tag {
         exists.expireBlockHeight = expireHeight;
       }
       logger.i("$TAG - checkExpireAndSubscribe - _clientSubscribe success - topic:$exists");
-      // send messages
-      subscriberCommon.refreshSubscribers(topicName, meta: exists.isPrivate).then((value) {
-        chatOutCommon.sendTopicSubscribe(topicName); // await
-      });
     } else {
       logger.d("$TAG - checkExpireAndSubscribe - _clientSubscribe no need subscribe - topic:$exists");
+    }
+    // subscribers
+    if (refreshSubscribers) {
+      await subscriberCommon.refreshSubscribers(topicName, meta: exists.isPrivate);
     }
     return exists;
   }
@@ -277,10 +298,6 @@ class TopicCommon with Tag {
   // caller = self
   Future<TopicSchema?> unsubscribe(String? topicName, {double fee = 0}) async {
     if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
-    // send message (before client unsubscribe)
-    await chatOutCommon.sendTopicUnSubscribe(topicName);
-    await Future.delayed(Duration(seconds: 1));
-
     // permission modify in message received
 
     // client unsubscribe
@@ -301,10 +318,11 @@ class TopicCommon with Tag {
 
     // DB(topic+subscriber) delete
     await subscriberCommon.onUnsubscribe(topicName, clientCommon.address);
-    await subscriberCommon.deleteByTopic(topicName);
+    // await subscriberCommon.deleteByTopic(topicName);
     await delete(exists?.id, notify: true);
 
-    // wait db+node sync
+    // send message
+    await chatOutCommon.sendTopicUnSubscribe(topicName);
     await Future.delayed(Duration(seconds: 1));
     return exists;
   }
@@ -429,7 +447,7 @@ class TopicCommon with Tag {
       appendPermPage = permission[0] ?? (await subscriberCommon.queryMaxPermPageByTopic(topicName));
       acceptAll = permission[1];
       bool? isReject = permission[3];
-      if (!(acceptAll == true) && !isOwner && (isReject == true)) {
+      if ((acceptAll != true) && !isOwner && (isReject == true)) {
         // just owner can invitee reject item
         Toast.show("此人已经被拉黑，不允许普通成员邀请"); // TODO:GG locale invitee
         return null;
@@ -441,7 +459,7 @@ class TopicCommon with Tag {
     if (_subscriber == null) return null;
 
     // update meta (private + owner + no_accept_all)
-    if (isPrivate && isOwner && !(acceptAll == true) && (appendPermPage != null)) {
+    if (isPrivate && isOwner && (acceptAll != true) && (appendPermPage != null)) {
       Map<String, dynamic> meta = await _getMetaByNodePage(topicName, appendPermPage);
       meta = await _buildMetaByAppend(topicName, meta, _subscriber);
       bool subscribeSuccess = await _clientSubscribe(topicName, fee: 0, permissionPage: appendPermPage, meta: meta);
@@ -475,13 +493,17 @@ class TopicCommon with Tag {
     List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, isPrivate, clientAddress);
     int? permPage = permission[0] ?? _subscriber.permPage;
     bool? acceptAll = permission[1];
+    if (permPage == null) {
+      Toast.show(S.of(Global.appContext).failure);
+      return null;
+    }
 
     // update DB
     _subscriber = await subscriberCommon.onKickOut(topicName, clientAddress, permPage: permPage);
     if (_subscriber == null) return null;
 
     // update meta (private + owner + no_accept_all)
-    if (!(acceptAll == true) && permPage != null) {
+    if (acceptAll != true) {
       Map<String, dynamic> meta = await _getMetaByNodePage(topicName, permPage);
       meta = await _buildMetaByAppend(topicName, meta, _subscriber);
       bool subscribeSuccess = await _clientSubscribe(topicName, fee: 0, permissionPage: permPage, meta: meta);
@@ -504,7 +526,7 @@ class TopicCommon with Tag {
     if (topicName == null || topicName.isEmpty || append == null) return Map();
     // permPage
     if ((append.permPage ?? -1) <= 0) {
-      append.permPage = (await subscriberCommon.findPermissionFromNode(topicName, true, append.clientAddress))[0];
+      append.permPage = (await subscriberCommon.findPermissionFromNode(topicName, true, append.clientAddress))[0] ?? 0;
     }
 
     // node meta
@@ -615,9 +637,9 @@ class TopicCommon with Tag {
       List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, _topic.isPrivate, clientAddress);
       int? permPage = permission[0] ?? _subscriber.permPage;
       bool? acceptAll = permission[1];
-      bool? isAccept = permission[2];
-      if (!(acceptAll == true) && isAccept == true) {
-        // DB modify
+      if (acceptAll == true) {
+        // do nothing
+      } else {
         if (permPage == null) {
           logger.w("$TAG - onUnsubscribe - permPage is null - permission:$permission");
           return null;
@@ -690,7 +712,7 @@ class TopicCommon with Tag {
 
     // DB update (just node sync can delete)
     if (clientAddress == clientCommon.address) {
-      await subscriberCommon.deleteByTopic(topicName);
+      // await subscriberCommon.deleteByTopic(topicName);
       await delete(_topic.id, notify: true);
     } else {
       bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) - 1, notify: true);
