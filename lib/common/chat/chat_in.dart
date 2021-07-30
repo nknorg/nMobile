@@ -449,8 +449,9 @@ class ChatInCommon with Tag {
     }
     // subscriber
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
+    bool historySubscribed = _subscriber?.status == SubscriberStatus.Subscribed;
     await topicCommon.onSubscribe(received.topic, received.from); // await
-    if (_subscriber?.status == SubscriberStatus.Subscribed) return;
+    if (historySubscribed) return;
     // DB
     MessageSchema? inserted = await _messageStorage.insert(received);
     if (inserted == null) return;

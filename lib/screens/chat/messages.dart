@@ -211,9 +211,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       logger.d("$TAG - _refreshTopicJoined - expire ok and subscriber me is - me:$_me");
       joined = _me?.status == SubscriberStatus.Subscribed;
     }
-    if (!joined) {
+    if (!joined && mounted) {
       topicCommon.checkExpireAndSubscribe(_topic?.topic, refreshSubscribers: true).then((value) async {
-        await Future.delayed(Duration(seconds: 1), () => _refreshTopicJoined());
+        await Future.delayed(Duration(seconds: 3), () => _refreshTopicJoined());
       });
     }
     if (_isJoined != joined) {
