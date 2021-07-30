@@ -141,10 +141,8 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
         this._topicSchema = added;
       });
       // check
-      topicCommon.checkExpireAndSubscribe(topicName).then((value) {
-        subscriberCommon.refreshSubscribers(topicName, meta: added.isPrivate).then((value) {
-          _getDataSubscribers(true);
-        });
+      topicCommon.checkExpireAndSubscribe(this._topicSchema?.topic, refreshSubscribers: true).then((value) {
+        _getDataSubscribers(true);
       }); // await
     });
 

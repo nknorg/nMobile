@@ -6,6 +6,7 @@ import 'package:nmobile/utils/logger.dart';
 
 class TaskService with Tag {
   static const KEY_WALLET_BALANCE = "wallet_balance";
+  static const KEY_TOPIC_CHECK = "topic_check";
   static const KEY_MSG_BURNING = "message_burning";
 
   Timer? _timer1;
@@ -13,6 +14,9 @@ class TaskService with Tag {
 
   Timer? _timer60;
   Map<String, Function(String)> tasks60 = Map<String, Function(String)>();
+
+  Timer? _timer300;
+  Map<String, Function(String)> _tasks300 = Map<String, Function(String)>();
 
   TaskService();
 
@@ -46,8 +50,18 @@ class TaskService with Tag {
           });
         });
 
+    // timer 300s
+    _timer300 = _timer300 ??
+        Timer.periodic(Duration(seconds: 300), (timer) {
+          _tasks300.keys.forEach((String key) {
+            // logger.d("TickHelper - tick");
+            _tasks300[key]?.call(key);
+          });
+        });
+
     // task
     addTask60(KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(), callNow: true);
+    addTask300(KEY_TOPIC_CHECK, (key) => topicCommon.checkAllTopics(), callNow: false);
   }
 
   uninstall() {
@@ -55,6 +69,8 @@ class TaskService with Tag {
     _timer1 = null;
     _timer60?.cancel();
     _timer60 = null;
+    _timer300?.cancel();
+    _timer300 = null;
   }
 
   void addTask1(String key, Function(String) func, {bool callNow = true}) {
@@ -75,5 +91,15 @@ class TaskService with Tag {
 
   void removeTask60(String key) {
     tasks60.remove(key);
+  }
+
+  void addTask300(String key, Function(String) func, {bool callNow = true}) {
+    logger.d("$Tag - addTask300 - key:$key - func:${func.toString()}");
+    if (callNow) func.call(key);
+    _tasks300[key] = func;
+  }
+
+  void removeTask300(String key) {
+    _tasks300.remove(key);
   }
 }

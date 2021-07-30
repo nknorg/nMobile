@@ -114,9 +114,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
         this._topicSchema = added;
       });
       // check
-      topicCommon.checkExpireAndSubscribe(topicName).then((value) {
-        subscriberCommon.refreshSubscribers(topicName, meta: added.isPrivate);
-      }); // await
+      topicCommon.checkExpireAndSubscribe(topicName, refreshSubscribers: true); // await
     });
 
     _refreshJoined(); // await
