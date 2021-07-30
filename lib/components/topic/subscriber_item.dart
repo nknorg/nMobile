@@ -179,7 +179,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
       } else if (status == SubscriberStatus.Subscribed) {
         marks.add(_localizations.accepted);
       } else if (status == SubscriberStatus.Unsubscribed) {
-        marks.add("已出群"); // TODO:GG locale unsubscribe
+        marks.add("已离群"); // TODO:GG locale unsubscribe
       } else {
         marks.add(_localizations.join_but_not_invite);
       }
