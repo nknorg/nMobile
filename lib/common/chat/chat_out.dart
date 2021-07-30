@@ -472,12 +472,17 @@ class ChatOutCommon with Tag {
     if (topic == null || message == null || msgData == null) return null;
     // me
     SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(message.topic, message.from); // chatOutCommon.handleSubscribe();
-    if (_me?.status != SubscriberStatus.Subscribed) {
+    bool checkStatus = message.contentType == MessageContentType.topicUnsubscribe;
+    if (!checkStatus && (_me?.status != SubscriberStatus.Subscribed)) {
       logger.w("$TAG - _sendWithTopic - subscriber me is wrong - me:$_me - message:$message");
       return null;
     }
     // subscribers
     List<SubscriberSchema> _subscribers = await subscriberCommon.queryListByTopic(topic.topic, status: SubscriberStatus.Subscribed);
+    if (message.contentType == MessageContentType.topicKickOut) {
+      logger.i("$TAG - _sendWithTopic - add kick people - clientAddress:${message.content}");
+      _subscribers.add(SubscriberSchema(topic: topic.topic, clientAddress: message.content));
+    }
     if (_subscribers.isEmpty || (_subscribers.length == 1 && _subscribers.first.clientAddress == clientCommon.address && !topic.isOwner(clientCommon.address))) {
       logger.w("$TAG - _sendWithTopic - _subscribers is empty - topic:$topic - message:$message - msgData:$msgData");
       OnMessage? onResult = await chatCommon.clientPublishData(genTopicHash(message.topic!), msgData); // permission checked in received
