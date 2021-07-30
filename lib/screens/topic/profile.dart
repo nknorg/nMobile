@@ -180,9 +180,9 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     S _localizations = S.of(this.context);
     if (nextSubscribe) {
       Loading.show();
-      await topicCommon.subscribe(_topicSchema?.topic);
+      TopicSchema? result = await topicCommon.subscribe(_topicSchema?.topic);
       Loading.dismiss();
-      Toast.show(_localizations.subscribed);
+      if (result != null) Toast.show(_localizations.subscribed);
     } else {
       ModalDialog.of(this.context).confirm(
         title: _localizations.tip,
