@@ -106,10 +106,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
 
     // subscriber
-    _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => (event.topic == _topic?.topic) && (_topic?.topic.isNotEmpty == true)).listen((event) {
-      subscriberCommon.refreshSubscribers(_topic?.topic, meta: _topic?.isPrivate == true).then((value) {
-        _refreshTopicJoined();
-      });
+    _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => (event.topic == _topic?.topic) && (event.clientAddress == clientCommon.address)).listen((event) {
+      _refreshTopicJoined();
     });
 
     // contact
@@ -210,15 +208,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     bool joined = await topicCommon.isJoined(_topic?.topic, clientCommon.address);
     if (joined && (_topic?.isPrivate == true)) {
       SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
+      logger.d("$TAG - _refreshTopicJoined - expire ok and subscriber me is - me:$_me");
       joined = _me?.status == SubscriberStatus.Subscribed;
-      if (!joined) {
-        logger.i("$TAG - _refreshTopicJoined expire ok but status wrong - me:$_me");
-        subscriberCommon.refreshSubscribers(_topic?.topic, meta: _topic?.isPrivate == true).then((value) async {
-          await Future.delayed(Duration(seconds: 2), () {
-            _refreshTopicJoined();
-          });
-        });
-      }
+    }
+    if (!joined) {
+      topicCommon.checkExpireAndSubscribe(_topic?.topic, refreshSubscribers: true).then((value) async {
+        await Future.delayed(Duration(seconds: 1), () => _refreshTopicJoined());
+      });
     }
     if (_isJoined != joined) {
       setState(() {

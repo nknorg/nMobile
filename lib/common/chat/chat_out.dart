@@ -462,7 +462,7 @@ class ChatOutCommon with Tag {
   Future<Uint8List?> _sendWithTopic(TopicSchema? topic, MessageSchema? message, String? msgData) async {
     if (topic == null || message == null || msgData == null) return null;
     // me
-    SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(message.topic, clientCommon.address);
+    SubscriberSchema? _me = await chatCommon.subscriberHandle(message, topic);
     if (_me == null || (topic.isPrivate == true && (_me.status != SubscriberStatus.Subscribed))) {
       logger.w("$TAG - _sendWithTopic - subscriber me is wrong - me:$_me - message:$message");
       return null;
@@ -477,22 +477,12 @@ class ChatOutCommon with Tag {
       }
       return onResult?.messageId;
     }
-    // subscriber
-    SubscriberSchema? _from = await chatCommon.subscriberHandle(message, topic);
-    if (_from != null) {
-      var result = _subscribers.where((element) => element.clientAddress == _from.clientAddress).toList();
-      if (result.isEmpty) {
-        logger.w("$TAG - _sendWithTopic - _subscribers not contains from - from:$_from - topic:$topic - message:$message - msgData:$msgData");
-        _subscribers.add(_from);
-      }
-    }
     // sendData
     Uint8List? pid;
     List<Future> futures = [];
     _subscribers.forEach((SubscriberSchema subscriber) {
       futures.add(deviceInfoCommon.queryLatest(subscriber.clientAddress).then((DeviceInfoSchema? deviceInfo) {
         // deviceInfo
-        logger.d("$TAG - _sendWithTopic - send_by_pieces - deviceInfo:$deviceInfo - subscriber:$subscriber");
         return _sendByPiecesIfNeed(message, deviceInfo, to: subscriber.clientAddress);
       }).then((Uint8List? _pid) {
         // send data (no pieces)
@@ -504,12 +494,31 @@ class ChatOutCommon with Tag {
           return Future.value(OnMessage(messageId: _pid!, data: null, src: null, type: null, encrypted: null));
         } else {
           logger.d("$TAG - _sendWithTopic - to_subscriber - to:${subscriber.clientAddress} - subscriber:$subscriber");
-          return chatCommon.clientSendData(subscriber.clientAddress, msgData).then((value) {
-            if ((value?.messageId.isNotEmpty == true) && (subscriber.clientAddress == clientCommon.address)) {
-              chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
-            }
-            return value;
-          });
+          int createBetween = DateTime.now().millisecondsSinceEpoch - (topic.createAt ?? DateTime.now().millisecondsSinceEpoch);
+          if (message.contentType == MessageContentType.topicSubscribe && createBetween > 10 * 1000) {
+            return deviceInfoCommon.queryLatest(subscriber.clientAddress).then((value) {
+              bool enable = deviceInfoCommon.isMsgSubscribeFrequent(value?.platform, value?.appVersion);
+              if (enable) {
+                logger.i("$TAG - _sendWithTopic - send subscribe is enable - to:${subscriber.clientAddress} - subscriber:$subscriber");
+                return chatCommon.clientSendData(subscriber.clientAddress, msgData).then((value) {
+                  if ((value?.messageId.isNotEmpty == true) && (subscriber.clientAddress == clientCommon.address)) {
+                    chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
+                  }
+                  return value;
+                });
+              } else {
+                logger.i("$TAG - _sendWithTopic - send subscribe not enable - to:${subscriber.clientAddress} - subscriber:$subscriber");
+                return Future.value(null);
+              }
+            });
+          } else {
+            return chatCommon.clientSendData(subscriber.clientAddress, msgData).then((value) {
+              if ((value?.messageId.isNotEmpty == true) && (subscriber.clientAddress == clientCommon.address)) {
+                chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
+              }
+              return value;
+            });
+          }
         }
       }).then((OnMessage? onResult) {
         // pid
