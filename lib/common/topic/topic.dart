@@ -96,31 +96,25 @@ class TopicCommon with Tag {
       bool? acceptAll = permission[1];
       bool? isAccept = permission[2];
       bool? isReject = permission[3];
-      bool permissionOk = false;
       if (skipPermission) {
         logger.d("$TAG - subscribe - skipPermission - schema:$exists");
-        permissionOk = true;
       } else {
         if ((acceptAll != true)) {
           if (isReject == true) {
-            Toast.show("你已被踢出该群，无法再次加入!"); // TODO:GG locale kick
+            Toast.show("你已被踢出该群，请联系群主重新邀请您"); // TODO:GG locale kick
             return null;
           } else if (isAccept != true) {
             Toast.show("请联系群主重新邀请您"); // TODO:GG locale invitee
             return null;
           } else {
             logger.d("$TAG - subscribe - is_accept ok - schema:$exists");
-            permissionOk = true;
           }
         } else {
           logger.d("$TAG - subscribe - accept all - schema:$exists");
-          permissionOk = true;
         }
       }
-      if (permissionOk) {
-        forceSubscribe = _subscriberMe?.status != SubscriberStatus.Subscribed;
-        if (forceSubscribe) logger.i("$TAG - subscribe - subscriber has not permission but need subscribe force");
-      }
+      forceSubscribe = _subscriberMe?.status != SubscriberStatus.Subscribed;
+      if (forceSubscribe) logger.i("$TAG - subscribe - subscriber has not permission but need subscribe force");
     }
 
     // check expire + pull subscribers
