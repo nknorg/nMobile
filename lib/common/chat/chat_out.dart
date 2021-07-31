@@ -316,7 +316,7 @@ class ChatOutCommon with Tag {
         topic: topic,
       );
       String data = MessageData.getTopicUnSubscribe(send);
-      await _sendAndDisplay(send, data);
+      await _sendAndDisplay(send, data, displaySelf: false);
       logger.d("$TAG - sendTopicUnSubscribe - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -457,7 +457,7 @@ class ChatOutCommon with Tag {
     if (pid?.isNotEmpty == true) {
       logger.d("$TAG - _sendWithContact - to_contact_pieces - to:${message.to} - pid:$pid - deviceInfo:$_deviceInfo");
     } else {
-      logger.d("$TAG - _sendWithContact - to_contact - to:${message.to} - deviceInfo:$_deviceInfo");
+      logger.d("$TAG - _sendWithContact - to_contact - to:${message.to} - msgData:$msgData");
       pid = (await chatCommon.clientSendData(message.to!, msgData))?.messageId;
     }
     // success
@@ -481,7 +481,8 @@ class ChatOutCommon with Tag {
     List<SubscriberSchema> _subscribers = await subscriberCommon.queryListByTopic(topic.topic, status: SubscriberStatus.Subscribed);
     if (message.contentType == MessageContentType.topicKickOut) {
       logger.i("$TAG - _sendWithTopic - add kick people - clientAddress:${message.content}");
-      _subscribers.add(SubscriberSchema(topic: topic.topic, clientAddress: message.content));
+      SubscriberSchema? kicked = SubscriberSchema.create(topic.topic, message.content, SubscriberStatus.None, null);
+      if (kicked != null) _subscribers.add(kicked);
     }
     if (_subscribers.isEmpty || (_subscribers.length == 1 && _subscribers.first.clientAddress == clientCommon.address && !topic.isOwner(clientCommon.address))) {
       logger.w("$TAG - _sendWithTopic - _subscribers is empty - topic:$topic - message:$message - msgData:$msgData");
