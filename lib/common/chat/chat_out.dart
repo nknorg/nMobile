@@ -484,7 +484,7 @@ class ChatOutCommon with Tag {
       SubscriberSchema? kicked = SubscriberSchema.create(topic.topic, message.content, SubscriberStatus.None, null);
       if (kicked != null) _subscribers.add(kicked);
     }
-    if (_subscribers.isEmpty || (_subscribers.length == 1 && _subscribers.first.clientAddress == clientCommon.address && !topic.isOwner(clientCommon.address))) {
+    if (_subscribers.isEmpty || (_subscribers.length == 1 && _subscribers.first.clientAddress == clientCommon.address && topic.isPrivate && !topic.isOwner(clientCommon.address))) {
       logger.w("$TAG - _sendWithTopic - _subscribers is empty - topic:$topic - message:$message - msgData:$msgData");
       OnMessage? onResult = await chatCommon.clientPublishData(genTopicHash(message.topic!), msgData); // permission checked in received
       if (onResult?.messageId.isNotEmpty == true) {
@@ -537,6 +537,10 @@ class ChatOutCommon with Tag {
       }));
     });
     await Future.wait(futures);
+    // do not forget delete
+    if (message.contentType == MessageContentType.topicUnsubscribe) {
+      await topicCommon.delete(topic.id, notify: true);
+    }
     return pid;
   }
 
