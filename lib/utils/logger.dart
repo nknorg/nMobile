@@ -1,6 +1,11 @@
 import 'package:logger/logger.dart';
 
-Logger logger = Logger(printer: PrettyPrinter());
+Logger logger = Logger(
+  filter: null,
+  printer: SimplePrinter(),
+  output: null,
+  level: Level.verbose,
+);
 
 mixin Tag {
   String get TAG => _tagInner(32, 5);
