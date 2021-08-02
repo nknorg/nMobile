@@ -82,7 +82,7 @@ class TopicCommon with Tag {
     if (_subscriberMe?.status == SubscriberStatus.Unsubscribed) {
       int updateAt = _subscriberMe?.updateAt ?? DateTime.now().millisecondsSinceEpoch;
       if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.txPoolDelayMs) {
-        Toast.show("操作频繁，请稍后再试"); // TODO:GG locale reject
+        Toast.show("刚离开本群，请稍后再试"); // TODO:GG locale reject
         return null;
       }
     }
@@ -186,8 +186,8 @@ class TopicCommon with Tag {
           }
         } else {
           var betweenS = (DateTime.now().millisecondsSinceEpoch - createAt) / 1000;
-          logger.w("$TAG - checkExpireAndSubscribe - DB expire but node not expire, maybe in txPool - between:${betweenS}s - topic:$exists");
-          return null;
+          logger.w("$TAG - checkExpireAndSubscribe - DB expire but node not expire, maybe in txPool, just return - between:${betweenS}s - topic:$exists");
+          if (!forceSubscribe) return exists;
         }
       } else {
         // DB no joined + node no joined
@@ -214,7 +214,7 @@ class TopicCommon with Tag {
           }
         } else {
           var betweenS = (DateTime.now().millisecondsSinceEpoch - createAt) / 1000;
-          logger.d("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool - between:${betweenS}s - topic:$exists");
+          logger.d("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool, just run - between:${betweenS}s - topic:$exists");
         }
       } else {
         // DB is joined + node is joined
@@ -312,8 +312,8 @@ class TopicCommon with Tag {
 
     // DB(topic+subscriber) delete
     await subscriberCommon.onUnsubscribe(topicName, clientCommon.address);
-    // await subscriberCommon.deleteByTopic(topicName);
-    await delete(exists?.id, notify: true);
+    // await subscriberCommon.deleteByTopic(topicName); // stay is useful
+    // await delete(exists?.id, notify: true); // do it later in chat out
 
     // send message
     await chatOutCommon.sendTopicUnSubscribe(topicName);
@@ -706,8 +706,8 @@ class TopicCommon with Tag {
 
     // DB update (just node sync can delete)
     if (clientAddress == clientCommon.address) {
-      // await subscriberCommon.deleteByTopic(topicName);
-      await delete(_topic.id, notify: true);
+      // await subscriberCommon.deleteByTopic(topicName); // stay is useful
+      await delete(_topic.id, notify: true); // do it now
     } else {
       bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) - 1, notify: true);
       if (setSuccess) _topic.count = (_topic.count ?? 1) - 1;
