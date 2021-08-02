@@ -495,6 +495,10 @@ class MessageSchema extends Equatable {
     return contentType == MessageContentType.topicSubscribe || contentType == MessageContentType.topicUnsubscribe || contentType == MessageContentType.topicInvitation || contentType == MessageContentType.topicKickOut;
   }
 
+  bool get needReceipt {
+    return contentType == MessageContentType.contactOptions || contentType == MessageContentType.text || contentType == MessageContentType.textExtension || contentType == MessageContentType.media || contentType == MessageContentType.image || contentType == MessageContentType.nknImage || contentType == MessageContentType.audio || contentType == MessageContentType.topicSubscribe || contentType == MessageContentType.topicInvitation;
+  }
+
   Future<ContactSchema?> getSender({bool emptyAdd = false}) async {
     ContactSchema? _contact = await contactCommon.queryByClientAddress(from);
     if (_contact != null || !emptyAdd) return _contact;
