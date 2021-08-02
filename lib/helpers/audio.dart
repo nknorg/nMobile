@@ -124,9 +124,13 @@ class AudioHelper with Tag {
     logger.d("$TAG - recordStart - recordId:$recordId");
     var status = await Permission.microphone.request();
     if (status != PermissionStatus.granted) {
+      await recordStop();
       throw RecordingPermissionException('Microphone permission not granted');
     }
-    if (status != PermissionStatus.granted) return null;
+    if (status != PermissionStatus.granted) {
+      await recordStop();
+      return null;
+    }
     // duplicated
     if (record.isRecording) {
       bool isSame = recordId == this.recordId;
@@ -135,12 +139,18 @@ class AudioHelper with Tag {
     }
     // save
     this.recordPath = savePath ?? await _getRecordPath();
-    if (recordPath == null || recordPath!.isEmpty) return null;
+    if (recordPath == null || recordPath!.isEmpty) {
+      await recordStop();
+      return null;
+    }
     // init
     FlutterSoundRecorder? _record = await record.openAudioSession(
       category: Sound.SessionCategory.record,
     );
-    if (_record == null) return null;
+    if (_record == null) {
+      await recordStop();
+      return null;
+    }
     record = _record;
     this.recordId = recordId;
     this.recordMaxDurationS = maxDurationS;

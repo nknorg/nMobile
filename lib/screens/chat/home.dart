@@ -53,6 +53,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     // me
     _refreshContactMe();
+
+    // TODO:GG auth
   }
 
   @override
