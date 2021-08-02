@@ -1,3 +1,5 @@
+import 'dart:async';
+
 class CacheEntry {
   final int? invalid;
   final String key;
@@ -8,6 +10,12 @@ class CacheEntry {
 
 class MemoryCache {
   static const String KEY_DRAFT = 'draft';
+
+  // ignore: close_sinks
+  StreamController<String> _draftUpdateController = StreamController<String>.broadcast();
+  StreamSink<String> get _draftUpdateSink => _draftUpdateController.sink;
+  Stream<String> get draftUpdateStream => _draftUpdateController.stream;
+
   Map<String, CacheEntry> _cacheMap = {};
 
   MemoryCache();
@@ -38,10 +46,12 @@ class MemoryCache {
   setDraft(String? targetId, String draft) {
     if (targetId == null) return;
     put('$targetId:$KEY_DRAFT', draft);
+    _draftUpdateSink.add(targetId);
   }
 
   removeDraft(String? targetId) {
     if (targetId == null) return;
     remove('$targetId:$KEY_DRAFT');
+    _draftUpdateSink.add(targetId);
   }
 }
