@@ -102,7 +102,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       _refreshTopicJoined();
     });
     _onTopicDeleteStreamSubscription = topicCommon.deleteStream.where((event) => event == _topic?.topic).listen((String topic) {
-      Navigator.of(context).pop();
+      Navigator.pop(this.context);
     });
 
     // subscriber
