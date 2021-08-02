@@ -193,10 +193,11 @@ class ChatOutCommon with Tag {
       // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
       return null;
     }
+    String contentType = ((contact?.options?.deleteAfterSeconds ?? 0) > 0) ? MessageContentType.textExtension : MessageContentType.text;
     MessageSchema message = MessageSchema.fromSend(
       Uuid().v4(),
       clientCommon.address!,
-      MessageContentType.text,
+      contentType,
       to: contact?.clientAddress,
       topic: topic?.topic,
       content: content,

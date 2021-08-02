@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/helpers/local_storage.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -11,6 +12,7 @@ import 'package:uuid/uuid.dart';
 
 class ContactCommon with Tag {
   ContactStorage _contactStorage = ContactStorage();
+  LocalStorage _localStorage = LocalStorage();
 
   StreamController<ContactSchema> _addController = StreamController<ContactSchema>.broadcast();
   StreamSink<ContactSchema> get _addSink => _addController.sink;
@@ -241,6 +243,17 @@ class ContactCommon with Tag {
         meUpdateSink.add(updated);
       }
     }
+  }
+
+  Future<bool> isNeedTipNotificationOpen(String? targetId) async {
+    if (targetId == null || targetId.isEmpty) return false;
+    var result = await _localStorage.get('NKN_MESSAGE_NOTIFICATION_ALERT:$targetId');
+    return result?.toString() != "1";
+  }
+
+  Future setNeedTipNotificationOpen(String? targetId) async {
+    if (targetId == null || targetId.isEmpty) return;
+    await _localStorage.set('NKN_MESSAGE_NOTIFICATION_ALERT:$targetId', "1");
   }
 
   bool isProfileVersionSame(String? v1, String? v2) {

@@ -621,15 +621,13 @@ class MessageSchema extends Equatable {
 
     MessageStatus.set(this, MessageStatus.Sending);
 
-    // burn
-    if (deleteAfterSeconds != null && deleteAfterSeconds > 0) {
-      if (this.contentType == MessageContentType.text) {
-        this.contentType = MessageContentType.textExtension;
-      }
-      MessageOptions.setContactBurning(this, deleteAfterSeconds, burningUpdateAt);
-    }
+    // duration
     if (audioDurationS != null && audioDurationS > 0) {
       MessageOptions.setAudioDuration(this, audioDurationS);
+    }
+    // burn
+    if (deleteAfterSeconds != null && deleteAfterSeconds > 0) {
+      MessageOptions.setContactBurning(this, deleteAfterSeconds, burningUpdateAt);
     }
   }
 
