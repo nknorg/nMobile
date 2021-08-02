@@ -6,10 +6,12 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/components/base/stateful.dart';
+import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/chat/bottom_menu.dart';
 import 'package:nmobile/components/chat/message_item.dart';
 import 'package:nmobile/components/chat/send_bar.dart';
 import 'package:nmobile/components/contact/header.dart';
+import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -191,16 +193,19 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   _insertMessage(MessageSchema? schema) {
     if (schema == null) return;
+    // read
     if (!schema.isOutbound) {
-      // read
       schema = chatCommon.updateMessageStatus(schema, MessageStatus.ReceivedRead);
       sessionCommon.setUnReadCount(_topic?.topic ?? _contact?.clientAddress, 0, notify: true); // await
       if (schema.canDisplayAndRead) Badge.onCountDown(1);
     }
+    // state
     setState(() {
       logger.d("$TAG - messages insert 0:$schema");
       _messages.insert(0, schema!);
     });
+    // tip
+    Future.delayed(Duration(seconds: 1), () => _tipNotificationOpen()); // await
   }
 
   _refreshTopicJoined() async {
@@ -235,6 +240,39 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     setState(() {
       _showBottomMenu = false;
     });
+  }
+
+  _tipNotificationOpen() async {
+    bool need = await contactCommon.isNeedTipNotificationOpen((_topic?.id ?? _contact?.id)?.toString());
+    if (!need) return;
+    bool? isOpen = _topic?.options?.notificationOpen ?? _contact?.options?.notificationOpen;
+    if (isOpen == null || isOpen == true) return;
+    // check
+    int sendCount = 0, receiveCount = 0;
+    for (var i = 0; i < _messages.length; i++) {
+      if (_messages[i].isOutbound) {
+        sendCount++;
+      } else {
+        receiveCount++;
+      }
+      if (sendCount >= 3 && receiveCount >= 3) break;
+    }
+    if (sendCount < 3 || receiveCount < 3) return;
+    // tip dialog
+    ModalDialog.of(this.context).confirm(
+      title: S.of(context).tip_open_send_device_token,
+      hasCloseButton: true,
+      agree: Button(
+        width: double.infinity,
+        text: S.of(context).ok,
+        backgroundColor: application.theme.primaryColor,
+        onPressed: () {
+          Navigator.pop(this.context);
+          _toggleNotificationOpen();
+        },
+      ),
+    );
+    await contactCommon.setNeedTipNotificationOpen((_topic?.id ?? _contact?.id)?.toString());
   }
 
   _toggleNotificationOpen() async {
