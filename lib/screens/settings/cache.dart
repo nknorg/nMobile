@@ -75,7 +75,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                     child: TextButton(
                       style: _buttonStyle(top: true),
                       onPressed: () async {
-                        await ModalDialog.of(context).confirm(
+                        await ModalDialog.of(this.context).confirm(
                           titleWidget: Label(
                             _localizations.tips,
                             type: LabelType.h3,
@@ -116,7 +116,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                             text: _localizations.cancel,
                             fontColor: application.theme.fontColor2,
                             backgroundColor: application.theme.backgroundLightColor,
-                            onPressed: () => Navigator.of(context).pop(),
+                            onPressed: () => Navigator.pop(this.context),
                           ),
                         );
                       },
@@ -156,7 +156,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                     child: TextButton(
                       style: _buttonStyle(bottom: true),
                       onPressed: () async {
-                        await ModalDialog.of(context).confirm(
+                        await ModalDialog.of(this.context).confirm(
                           titleWidget: Label(
                             _localizations.tips,
                             type: LabelType.h3,
@@ -196,7 +196,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                               setState(() {
                                 _dbSize = formatFlowSize(size, unitArr: ['B', 'KB', 'MB', 'GB']);
                               });
-                              Navigator.of(context).pop();
+                              Navigator.pop(this.context);
                             },
                           ),
                           reject: Button(
@@ -204,7 +204,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                             text: _localizations.cancel,
                             fontColor: application.theme.fontColor2,
                             backgroundColor: application.theme.backgroundLightColor,
-                            onPressed: () => Navigator.of(context).pop(),
+                            onPressed: () => Navigator.pop(this.context),
                           ),
                         );
                       },

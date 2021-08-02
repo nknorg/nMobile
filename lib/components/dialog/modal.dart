@@ -22,7 +22,7 @@ class ModalDialog extends StatelessWidget {
   List<Widget>? actions;
 
   close() {
-    Navigator.of(context).pop();
+    Navigator.pop(this.context);
   }
 
   show({
