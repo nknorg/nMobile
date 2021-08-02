@@ -82,7 +82,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
 
   _onNotBackedUpTipClicked() {
     S _localizations = S.of(context);
-    ModalDialog dialog = ModalDialog.of(context);
+    ModalDialog dialog = ModalDialog.of(this.context);
     dialog.show(
       title: _localizations.d_not_backed_up_title,
       content: _localizations.d_not_backed_up_desc,
@@ -115,7 +115,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
         // String keyStore = await ws.getKeystore();
         // EthWallet ethWallet = Ethereum.restoreWallet(
         //     name: ws.name, keystore: keyStore, password: password);
-        // Navigator.of(context)
+        // Navigator.pop(this.context)
         //     .pushNamed(NknWalletExportScreen.routeName, arguments: {
         //   'wallet': null,
         //   'keystore': ethWallet.keystore,

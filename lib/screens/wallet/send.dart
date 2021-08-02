@@ -198,10 +198,10 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
         if (_wallet.type == WalletType.eth) {
           final result = _transferETH(keystore, password);
-          Navigator.pop(context, result);
+          Navigator.pop(this.context, result);
         } else {
           final result = _transferNKN(keystore, password);
-          Navigator.pop(context, result);
+          Navigator.pop(this.context, result);
         }
       }).onError((error, stackTrace) {
         handleError(error, stackTrace: stackTrace);
@@ -302,7 +302,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                 logger.d("$TAG - wallet send scan ETH - address:$qrData");
                 _sendToController.text = qrData.toString();
               } else {
-                ModalDialog.of(context).show(
+                ModalDialog.of(this.context).show(
                   content: _localizations.error_unknown_nkn_qrcode,
                   hasCloseButton: true,
                 );

@@ -62,7 +62,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     TopicSchema? _topic = await topicCommon.subscribe(topicName, fee: fee);
     Loading.dismiss();
     if (_topic == null) return false;
-    Navigator.pop(context);
+    Navigator.pop(this.context);
     ChatMessagesScreen.go(Global.appContext, _topic);
     return true;
   }

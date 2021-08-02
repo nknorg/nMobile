@@ -347,7 +347,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                   height: 50,
                   padding: EdgeInsets.zero,
                   onPressed: () {
-                    ModalDialog.of(context).confirm(
+                    ModalDialog.of(this.context).confirm(
                       title: "confirm resend?", // TODO:GG locale resend title
                       agree: Button(
                         width: double.infinity,
