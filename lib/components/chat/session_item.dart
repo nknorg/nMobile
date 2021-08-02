@@ -33,6 +33,7 @@ class ChatSessionItem extends BaseStateFulWidget {
 class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   StreamSubscription? _updateTopicSubscription;
   StreamSubscription? _updateContactSubscription;
+  StreamSubscription? _updateDraftSubscription;
 
   TopicSchema? _topic;
   ContactSchema? _contact;
@@ -103,12 +104,17 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         _contact = event;
       });
     });
+    // draft
+    _updateDraftSubscription = memoryCache.draftUpdateStream.where((event) => event == widget.session.targetId).listen((String event) {
+      setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _updateTopicSubscription?.cancel();
     _updateContactSubscription?.cancel();
+    _updateDraftSubscription?.cancel();
     super.dispose();
   }
 
