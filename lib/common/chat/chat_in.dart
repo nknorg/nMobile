@@ -73,7 +73,6 @@ class ChatInCommon with Tag {
         break;
       case MessageContentType.contactOptions:
         await _receiveContactOptions(received, contact: contact);
-        chatOutCommon.sendReceipt(received); // await
         break;
       case MessageContentType.deviceRequest:
         _receiveDeviceRequest(received, contact: contact); // await
@@ -84,37 +83,33 @@ class ChatInCommon with Tag {
       case MessageContentType.text:
       case MessageContentType.textExtension:
         await _receiveText(received);
-        chatOutCommon.sendReceipt(received); // await
         break;
       case MessageContentType.media:
       case MessageContentType.image:
       case MessageContentType.nknImage:
         await _receiveImage(received);
-        chatOutCommon.sendReceipt(received); // await
         break;
       case MessageContentType.audio:
         await _receiveAudio(received);
-        chatOutCommon.sendReceipt(received); // await
         break;
       case MessageContentType.piece:
         await _receivePiece(received);
         break;
       case MessageContentType.topicSubscribe:
         await _receiveTopicSubscribe(received);
-        chatOutCommon.sendReceipt(received); // await
         break;
       case MessageContentType.topicUnsubscribe:
         await _receiveTopicUnsubscribe(received);
-        chatOutCommon.sendReceipt(received); // await
         break;
       case MessageContentType.topicInvitation:
         await _receiveTopicInvitation(received);
-        chatOutCommon.sendReceipt(received); // await
         break;
       case MessageContentType.topicKickOut:
         await _receiveTopicKickOut(received);
-        chatOutCommon.sendReceipt(received); // await
         break;
+    }
+    if (received.needReceipt) {
+      chatOutCommon.sendReceipt(received); // await
     }
     if (!received.canDisplayAndRead) {
       chatCommon.updateMessageStatus(received, MessageStatus.ReceivedRead);
