@@ -87,7 +87,7 @@ class _SelectScreenState extends BaseStateFulWidgetState<SelectScreen> {
                           shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: index == 0 ? Radius.circular(12) : Radius.zero, bottom: index == list.length - 1 ? Radius.circular(12) : Radius.zero))),
                         ),
                         onPressed: () {
-                          Navigator.of(context).pop(item.value);
+                          Navigator.of(this.context).pop(item.value);
                         },
                         child: SizedBox(
                           height: 56,

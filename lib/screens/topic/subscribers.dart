@@ -4,16 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/topic/header.dart';
 import 'package:nmobile/components/topic/subscriber_item.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/profile.dart';
+import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class TopicSubscribersScreen extends BaseStateFulWidget {
@@ -73,7 +77,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
       _refreshMembersCount(); // await
     });
     _deleteTopicSubscription = topicCommon.deleteStream.where((event) => event == _topicSchema?.topic).listen((String topic) {
-      Navigator.of(context).pop();
+      Navigator.pop(this.context);
     });
 
     // subscriber listen
@@ -181,6 +185,25 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     });
   }
 
+  _invitee() async {
+    if (_topicSchema == null) return;
+    String? address = await BottomDialog.of(context).showInput(
+      title: S.of(context).invite_members,
+      inputTip: S.of(context).send_to,
+      inputHint: S.of(context).enter_or_select_a_user_pubkey,
+      validator: Validator.of(context).identifierNKN(),
+      contactSelect: true,
+    );
+    Loading.show();
+    await topicCommon.invitee(
+      _topicSchema?.topic,
+      _topicSchema?.isPrivate == true,
+      _topicSchema?.isOwner(clientCommon.address) == true,
+      address,
+    );
+    Loading.dismiss();
+  }
+
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(this.context);
@@ -196,6 +219,17 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
       header: Header(
         backgroundColor: application.theme.backgroundColor4,
         title: _localizations.channel_members,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              icon: Asset.image('chat/invisit-blue.png', width: 24, color: Colors.white),
+              onPressed: () {
+                _invitee();
+              },
+            ),
+          ),
+        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

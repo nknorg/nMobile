@@ -198,7 +198,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                       text: _localizations.done,
                       width: double.infinity,
                       onPressed: () {
-                        Navigator.of(context).pop();
+                        Navigator.pop(this.context);
                       },
                     ),
                   ),

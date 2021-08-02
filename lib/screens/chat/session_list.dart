@@ -205,7 +205,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                 ),
               ),
               onPressed: () async {
-                Navigator.of(context).pop();
+                Navigator.pop(this.context);
                 bool top = !item.isTop;
                 sessionCommon.setTop(item.targetId, top, notify: true);
               },
@@ -224,8 +224,8 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                 ),
               ),
               onPressed: () async {
-                Navigator.of(context).pop();
-                ModalDialog.of(context).confirm(
+                Navigator.pop(this.context);
+                ModalDialog.of(this.context).confirm(
                   content: S.of(context).delete_contact_confirm_title, // TODO:GG locale delete session
                   hasCloseButton: true,
                   agree: Button(

@@ -87,7 +87,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
 
         Loading.dismiss();
         Toast.show(_localizations.success);
-        Navigator.pop(context);
+        Navigator.pop(this.context);
       } catch (e) {
         Loading.dismiss();
         handleError(e);

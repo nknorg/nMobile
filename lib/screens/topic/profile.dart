@@ -78,7 +78,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       _refreshMembersCount(); // await
     });
     _deleteTopicSubscription = topicCommon.deleteStream.where((event) => event == _topicSchema?.topic).listen((String topic) {
-      Navigator.of(context).pop();
+      Navigator.pop(this.context);
     });
   }
 
@@ -159,6 +159,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
   }
 
   _invitee() async {
+    if (_topicSchema == null) return;
     String? address = await BottomDialog.of(context).showInput(
       title: S.of(context).invite_members,
       inputTip: S.of(context).send_to,

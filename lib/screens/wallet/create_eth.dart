@@ -52,7 +52,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
     //   Ethereum.saveWallet(ethWallet: eth, walletsBloc: _walletsBloc);
     //
     //   // Password
-    //   Navigator.of(context).pushReplacementNamed(AppScreen.routeName, arguments: {
+    //   Navigator.pop(this.context).pushReplacementNamed(AppScreen.routeName, arguments: {
     //   AppScreen.argIndex: 1,
     //   });
     // }

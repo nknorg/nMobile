@@ -197,7 +197,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
 
   _onTapContactItem(ContactSchema item) async {
     if (this._isSelect) {
-      Navigator.pop(context, item);
+      Navigator.pop(this.context, item);
     } else {
       ContactProfileScreen.go(context, schema: item);
     }
@@ -387,7 +387,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           color: Colors.red,
           icon: Icons.delete,
           onTap: () => {
-            ModalDialog.of(context).confirm(
+            ModalDialog.of(this.context).confirm(
               title: _localizations.delete_contact_confirm_title,
               contentWidget: ContactItem(
                 contact: item,
@@ -400,7 +400,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 text: _localizations.delete_contact,
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
-                  Navigator.pop(context);
+                  Navigator.pop(this.context);
                   await contactCommon.delete(item.id, notify: true);
                 },
               ),
@@ -409,7 +409,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 text: _localizations.cancel,
                 fontColor: application.theme.fontColor2,
                 backgroundColor: application.theme.backgroundLightColor,
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(this.context),
               ),
             )
           },
@@ -481,7 +481,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           color: Colors.red,
           icon: Icons.delete,
           onTap: () => {
-            ModalDialog.of(context).confirm(
+            ModalDialog.of(this.context).confirm(
               title: "删除群聊吗?", // TODO:GG locale delete topic
               contentWidget: TopicItem(
                 topic: item,
@@ -494,7 +494,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 text: _localizations.delete,
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
-                  Navigator.pop(context);
+                  Navigator.pop(this.context);
                   Loading.show();
                   // await subscriberCommon.deleteByTopic(item.topic);
                   await topicCommon.delete(item.id, notify: true);
@@ -506,7 +506,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 text: _localizations.cancel,
                 fontColor: application.theme.fontColor2,
                 backgroundColor: application.theme.backgroundLightColor,
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(this.context),
               ),
             )
           },

@@ -92,7 +92,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
 
         Loading.dismiss();
         Toast.show(_localizations.success);
-        Navigator.pop(context);
+        Navigator.pop(this.context);
       } catch (e) {
         Loading.dismiss();
         handleError(e);

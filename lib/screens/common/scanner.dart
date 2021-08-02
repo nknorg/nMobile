@@ -47,7 +47,7 @@ class ScannerScreenState extends BaseStateFulWidgetState<ScannerScreen> {
     this.controller = controller;
 
     controller.scannedDataStream.listen((Barcode scanData) {
-      Navigator.of(context).pop(scanData.code);
+      Navigator.of(this.context).pop(scanData.code);
       controller.dispose();
     });
   }
@@ -81,7 +81,7 @@ class ScannerScreenState extends BaseStateFulWidgetState<ScannerScreen> {
                   color: application.theme.fontColor2,
                 ),
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.pop(this.context);
                 },
               ),
             ),

@@ -331,7 +331,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
             // final ethWallet = await Ethereum.restoreWalletSaved(
             //     schema: widget.wallet, password: password);
             //
-            // Navigator.of(context)
+            // Navigator.pop(this.context)
             //     .pushNamed(NknWalletExportScreen.routeName, arguments: {
             //   'wallet': null,
             //   'keystore': ethWallet.keystore,
@@ -366,7 +366,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
         break;
       case 1: // delete
         if (_wallet == null) return;
-        ModalDialog.of(context).confirm(
+        ModalDialog.of(this.context).confirm(
           title: _localizations.delete_wallet_confirm_title,
           content: _localizations.delete_wallet_confirm_text,
           agree: Button(
@@ -395,7 +395,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
             text: _localizations.cancel,
             fontColor: application.theme.fontColor2,
             backgroundColor: application.theme.backgroundLightColor,
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(this.context),
           ),
         );
         break;
