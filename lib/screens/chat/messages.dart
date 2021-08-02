@@ -434,6 +434,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                 onSendPress: (String content) async {
                   return await chatOutCommon.sendText(content, topic: _topic, contact: _contact);
                 },
+                onInputFocus: (bool focus) {
+                  if (focus && _showBottomMenu) {
+                    setState(() {
+                      _showBottomMenu = false;
+                    });
+                  }
+                },
                 onRecordTap: (bool visible, bool complete, int durationMs) async {
                   if (visible) {
                     String? savePath = await audioHelper.recordStart(

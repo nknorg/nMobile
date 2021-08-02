@@ -22,6 +22,7 @@ class ChatSendBar extends BaseStateFulWidget {
   final bool? enable;
   final VoidCallback? onMenuPressed;
   final Function(String)? onSendPress;
+  final Function(bool)? onInputFocus;
   final Function(bool, bool, int)? onRecordTap;
   final Function(bool, bool)? onRecordLock;
   final Stream<Map<String, dynamic>>? onChangeStream;
@@ -32,6 +33,7 @@ class ChatSendBar extends BaseStateFulWidget {
     this.enable,
     this.onMenuPressed,
     this.onSendPress,
+    this.onInputFocus,
     this.onRecordTap,
     this.onRecordLock,
     this.onChangeStream,
@@ -47,8 +49,8 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
 
   StreamSubscription? _onChangeSubscription;
   StreamSubscription? _onRecordProgressSubscription;
-  TextEditingController _sendController = TextEditingController();
-  FocusNode _sendFocusNode = FocusNode();
+  TextEditingController _inputController = TextEditingController();
+  FocusNode _inputFocusNode = FocusNode();
 
   String? _draft;
   bool _canSendText = false;
@@ -65,18 +67,21 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
   @override
   void initState() {
     super.initState();
-    // onChange
+    // input
     _onChangeSubscription = widget.onChangeStream?.listen((event) {
       String? type = event["type"];
       if (type == null || type.isEmpty) return;
       if (type == ChatSendBar.ChangeTypeReplace) {
-        _sendController.text = event["content"] ?? "";
+        _inputController.text = event["content"] ?? "";
       } else if (type == ChatSendBar.ChangeTypeAppend) {
-        _sendController.text += event["content"] ?? "";
+        _inputController.text += event["content"] ?? "";
       }
       setState(() {
-        _canSendText = _sendController.text.isNotEmpty;
+        _canSendText = _inputController.text.isNotEmpty;
       });
+    });
+    _inputFocusNode.addListener(() {
+      widget.onInputFocus?.call(_inputFocusNode.hasFocus);
     });
     // record
     _onRecordProgressSubscription = audioHelper.onRecordProgressStream.listen((event) {
@@ -102,7 +107,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
     // draft
     _draft = memoryCache.getDraft(widget.targetId);
     if (_draft?.isNotEmpty == true) {
-      _sendController.text = _draft!;
+      _inputController.text = _draft!;
       _canSendText = true;
     }
   }
@@ -228,9 +233,9 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
   }
 
   _onSendText() {
-    String content = _sendController.text;
+    String content = _inputController.text;
     if (content.isEmpty) return;
-    _sendController.clear();
+    _inputController.clear();
     setState(() {
       _canSendText = false;
     });
@@ -371,11 +376,11 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                                     ),
                                     maxLines: 5,
                                     minLines: 1,
-                                    controller: _sendController,
-                                    focusNode: _sendFocusNode,
+                                    controller: _inputController,
+                                    focusNode: _inputFocusNode,
                                     textInputAction: TextInputAction.newline,
                                     onChanged: (val) {
-                                      String draft = _sendController.text;
+                                      String draft = _inputController.text;
                                       if (draft.isNotEmpty) {
                                         memoryCache.setDraft(widget.targetId, draft);
                                       } else {
