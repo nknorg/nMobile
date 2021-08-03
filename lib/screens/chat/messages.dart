@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/common/push/device_token.dart';
@@ -30,6 +31,8 @@ import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/path.dart';
+import 'package:uuid/uuid.dart';
 
 class ChatMessagesScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/messages';
@@ -529,7 +532,25 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                 show: _showBottomMenu,
                 onPickedImage: (File picked) async {
                   FocusScope.of(context).requestFocus(FocusNode());
-                  return await chatOutCommon.sendImage(picked, topic: _topic, contact: _contact);
+                  // save
+                  if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return null;
+                  String? imagePath = Path.getCompleteFile(Path.createLocalFile(
+                    hexEncode(clientCommon.publicKey!),
+                    SubDirType.chat,
+                    "${Uuid().v4()}.${Path.getFileExt(picked) ?? "jpg"}",
+                    chatTarget: _topic?.topic ?? _contact?.clientAddress ?? "",
+                  ));
+                  if (imagePath == null || imagePath.isEmpty) return null;
+                  var outputFile = File(imagePath);
+                  if (await outputFile.exists()) {
+                    await outputFile.delete();
+                  }
+                  outputFile = await outputFile.create(recursive: true);
+                  outputFile = await picked.copy(outputFile.path);
+                  picked.delete(); // await
+                  logger.i("$TAG - onPickedImage - create chat file - path:${outputFile.path}");
+                  // send message
+                  return await chatOutCommon.sendImage(outputFile, topic: _topic, contact: _contact);
                 },
               ),
             ],

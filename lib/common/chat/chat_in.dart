@@ -314,7 +314,7 @@ class ChatInCommon with Tag {
       return;
     }
     // File
-    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: isPieceCombine ? "jpg" : null);
+    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: isPieceCombine ? "jpg" : null, chatTarget: received.from);
     if (received.content == null) return;
     // DB
     MessageSchema? inserted = await _messageStorage.insert(received);
@@ -345,7 +345,7 @@ class ChatInCommon with Tag {
       return;
     }
     // File
-    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: isPieceCombine ? "aac" : null);
+    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: isPieceCombine ? "aac" : null, chatTarget: received.from);
     if (received.content == null) return;
     // DB
     MessageSchema? inserted = await _messageStorage.insert(received);
