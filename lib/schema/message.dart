@@ -499,9 +499,11 @@ class MessageSchema extends Equatable {
     return contentType == MessageContentType.contactOptions || contentType == MessageContentType.text || contentType == MessageContentType.textExtension || contentType == MessageContentType.media || contentType == MessageContentType.image || contentType == MessageContentType.nknImage || contentType == MessageContentType.audio || contentType == MessageContentType.topicSubscribe || contentType == MessageContentType.topicInvitation;
   }
 
+  ContactSchema? contact;
   Future<ContactSchema?> getSender({bool emptyAdd = false}) async {
-    ContactSchema? _contact = await contactCommon.queryByClientAddress(from);
-    if (_contact != null || !emptyAdd) return _contact;
+    if (contact != null) return contact;
+    contact = await contactCommon.queryByClientAddress(from);
+    if (contact != null || !emptyAdd) return contact;
     return await contactCommon.addByType(from, ContactType.stranger, notify: true, checkDuplicated: false);
   }
 
