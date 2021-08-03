@@ -27,6 +27,7 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/screens/topic/profile.dart';
 import 'package:nmobile/screens/topic/subscribers.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
@@ -247,10 +248,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   _tipNotificationOpen() async {
     if (this._topic != null || this._contact == null) return;
-    bool need = await contactCommon.isNeedTipNotificationOpen((_topic?.id ?? _contact?.id)?.toString());
-    if (!need) return;
     bool? isOpen = _topic?.options?.notificationOpen ?? _contact?.options?.notificationOpen;
     if (isOpen == null || isOpen == true) return;
+    SettingsStorage settings = SettingsStorage();
+    bool need = await settings.isNeedTipNotificationOpen((_topic?.id ?? _contact?.id)?.toString());
+    if (!need) return;
     // check
     int sendCount = 0, receiveCount = 0;
     for (var i = 0; i < _messages.length; i++) {
@@ -276,7 +278,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         },
       ),
     );
-    await contactCommon.setNeedTipNotificationOpen((_topic?.id ?? _contact?.id)?.toString());
+    await settings.setNeedTipNotificationOpen((_topic?.id ?? _contact?.id)?.toString());
   }
 
   _toggleNotificationOpen() async {
