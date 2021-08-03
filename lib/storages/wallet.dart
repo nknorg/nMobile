@@ -13,7 +13,7 @@ class WalletStorage with Tag {
   static const String KEY_KEYSTORE = 'KEYSTORES';
   static const String KEY_PASSWORD = 'PASSWORDS';
   static const String KEY_BACKUP = 'BACKUP';
-  static const String KEY_DEFAULT_ADDRESS = 'WALLET_DEFAULT_ADDRESS';
+  static const String KEY_DEFAULT_ADDRESS = 'WALLET_DEFAULT_ADDRESS'; // not support 'default_d_chat_wallet_address'
 
   final LocalStorage _localStorage = LocalStorage();
   final SecureStorage _secureStorage = SecureStorage();
