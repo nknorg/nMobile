@@ -46,10 +46,8 @@ void handleError(
   String? show = getErrorShow(error);
   if (show != null && show.isNotEmpty) {
     Toast.show(show);
-  } else {
-    if (toast?.isNotEmpty == true) {
-      Toast.show(toast);
-    }
+  } else if (toast?.isNotEmpty == true) {
+    Toast.show(toast);
   }
 }
 
