@@ -117,6 +117,6 @@ class LocalStorage {
     keys.forEach((key) {
       log += "K:::$key --- V:::${prefs.get(key)}\n";
     });
-    logger.i("LocalStorage - debugInfo ---> $log");
+    logger.wtf("LocalStorage - debugInfo ---> $log");
   }
 }
