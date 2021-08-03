@@ -138,7 +138,7 @@ class AudioHelper with Tag {
       if (isSame) return null;
     }
     // save
-    this.recordPath = savePath ?? await _getRecordPath();
+    this.recordPath = savePath ?? await _getRecordPath(recordId);
     if (recordPath == null || recordPath!.isEmpty) {
       await recordStop();
       return null;
@@ -198,15 +198,20 @@ class AudioHelper with Tag {
     return;
   }
 
-  Future<String?> _getRecordPath() async {
-    if (clientCommon.publicKey == null) return null;
-    String? recordPath = Path.getCompleteFile(Path.createLocalFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, "${Uuid().v4()}.aac"));
+  Future<String?> _getRecordPath(String? targetId) async {
+    if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return null;
+    String? recordPath = Path.getCompleteFile(Path.createLocalFile(
+      hexEncode(clientCommon.publicKey!),
+      SubDirType.chat,
+      "${Uuid().v4()}.aac",
+      chatTarget: targetId,
+    ));
     if (recordPath == null || recordPath.isEmpty) return null;
     var outputFile = File(recordPath);
     if (await outputFile.exists()) {
       await outputFile.delete();
     }
-    await outputFile.create(recursive: true);
+    outputFile = await outputFile.create(recursive: true);
     return outputFile.path;
   }
 }
