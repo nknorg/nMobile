@@ -51,13 +51,13 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
 
       String name = _nameController.text;
       String password = _passwordController.text;
-      logger.d("$TAG - name:$name, password:$password");
+      logger.i("$TAG - name:$name, password:$password");
 
       Wallet result = await Wallet.create(null, config: WalletConfig(password: password));
       if (result.address.isEmpty || result.keystore.isEmpty) return;
 
       WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);
-      logger.d("$TAG - wallet create - ${wallet.toString()}");
+      logger.i("$TAG - wallet create - ${wallet.toString()}");
 
       _walletBloc.add(AddWallet(wallet, result.keystore, password: password));
 

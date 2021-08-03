@@ -68,7 +68,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
       String keystore = _keystoreController.text;
       String name = _nameController.text;
       String password = _passwordController.text;
-      logger.d("$TAG - keystore:$keystore, name:$name, password:$password");
+      logger.i("$TAG - keystore:$keystore, name:$name, password:$password");
 
       try {
         if (widget.walletType == WalletType.nkn) {
@@ -76,7 +76,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
           if (result.address.isEmpty || result.keystore.isEmpty) return;
 
           WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);
-          logger.d("$TAG - import_nkn - ${wallet.toString()}");
+          logger.i("$TAG - import_nkn - ${wallet.toString()}");
 
           _walletBloc.add(AddWallet(wallet, result.keystore, password: password));
         } else {
@@ -153,13 +153,13 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                           allowMultiple: false,
                           type: FileType.any,
                         );
-                        logger.d("$TAG - result:$result");
+                        logger.i("$TAG - result:$result");
                         if (result != null && result.files.isNotEmpty) {
                           String? path = result.files.first.path;
                           if (path == null) return;
                           File picked = File(path);
                           String keystore = picked.readAsStringSync();
-                          logger.d("$TAG - picked:$keystore");
+                          logger.i("$TAG - picked:$keystore");
 
                           setState(() => _keystoreController.text = keystore);
                         }

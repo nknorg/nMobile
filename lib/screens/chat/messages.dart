@@ -201,7 +201,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
     // state
     setState(() {
-      logger.d("$TAG - messages insert 0:$schema");
+      logger.i("$TAG - messages insert 0:$schema");
       _messages.insert(0, schema!);
     });
     // tip
@@ -213,7 +213,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     bool joined = await topicCommon.isJoined(_topic?.topic, clientCommon.address);
     if (joined && (_topic?.isPrivate == true)) {
       SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
-      logger.d("$TAG - _refreshTopicJoined - expire ok and subscriber me is - me:$_me");
+      logger.i("$TAG - _refreshTopicJoined - expire ok and subscriber me is - me:$_me");
       joined = _me?.status == SubscriberStatus.Subscribed;
     }
     if (!joined && mounted) {

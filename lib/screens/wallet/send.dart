@@ -190,7 +190,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   _readyTransfer() async {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
-      logger.d("$TAG - amount:$_amount, sendTo:$_sendTo, fee:$_fee");
+      logger.i("$TAG - amount:$_amount, sendTo:$_sendTo, fee:$_fee");
 
       authorization.getWalletPassword(_wallet.address, context: context).then((String? password) async {
         if (password == null || password.isEmpty) return;
@@ -278,7 +278,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
             ),
             onPressed: () async {
               var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
-              logger.d("$TAG - QR_DATA:$qrData");
+              logger.i("$TAG - QR_DATA:$qrData");
               if (qrData == null) return;
               // json
               var jsonFormat;
@@ -291,15 +291,15 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
               }
               // data
               if (jsonFormat) {
-                logger.d("$TAG - wallet send scan - address:${jsonData['address']} amount:${jsonData['amount']}");
+                logger.i("$TAG - wallet send scan - address:${jsonData['address']} amount:${jsonData['amount']}");
                 _sendToController.text = jsonData['address'] ?? "";
                 _amountController.text = jsonData['amount']?.toString() ?? "";
               } else if (_wallet.type == WalletType.nkn && verifyAddress(qrData.toString())) {
-                logger.d("$TAG - wallet send scan NKN - address:$qrData");
+                logger.i("$TAG - wallet send scan NKN - address:$qrData");
                 _sendToController.text = qrData.toString();
               } else if (_wallet.type == WalletType.eth) {
                 // && verifyEthAddress(qrData) TODO:GG eth address
-                logger.d("$TAG - wallet send scan ETH - address:$qrData");
+                logger.i("$TAG - wallet send scan ETH - address:$qrData");
                 _sendToController.text = qrData.toString();
               } else {
                 ModalDialog.of(this.context).show(
@@ -371,7 +371,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                     wallet: _wallet,
                                     onTapWave: false,
                                     onSelected: (WalletSchema picked) {
-                                      logger.d("$TAG - wallet picked - $picked");
+                                      logger.i("$TAG - wallet picked - $picked");
                                       setState(() {
                                         _wallet = picked;
                                       });
